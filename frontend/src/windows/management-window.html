@@ -463,13 +463,13 @@
             <div class="mgmt-card-intro">
               <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-sliders"/></svg> <span data-i18n="mgmt.theme_title">Desktop Theme & Accent</span></div>
               <div class="mgmt-card-intro-desc" data-i18n="mgmt.theme_desc">Personalize the color palette, windows, and accent styling of your ZettNAS desktop environment.</div>
-              <div style="margin-top: 6px;">
+              <div class="thm-x">
                 <span id="desktop-theme-active-badge" class="desktop-theme-active-badge" data-sample>CYBER TEAL</span>
               </div>
             </div>
             <div class="mgmt-detail-body">
-              <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 12px; letter-spacing: 0.5px;" data-i18n="mgmt.theme_presets_label">Color presets</div>
+              <div class="drawer-card thm-box">
+                <div class="thm-xs-bold-muted" data-i18n="mgmt.theme_presets_label">Color presets</div>
                 <div class="theme-palette-grid" role="radiogroup" aria-label="Desktop Theme Presets" data-i18n-aria-label="ui.desktop_theme_presets">
                   <button class="desktop-theme-preset theme-preset-card active" data-theme-id="cyber" role="radio" aria-checked="true" aria-label="Cyber Teal: Signature Cyan & Obsidian" data-i18n-aria-label="ui.cyber_teal_signature_cyan_obsidian">
                     <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #00f0ff 50%, #25c2a0 50%); border: 2px solid #00f0ff;"></div>
@@ -545,12 +545,12 @@
                 </div>
 
                 <!-- Custom Desktop Accent Color -->
-                <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--zn-line-6);">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.custom_accent_label">Custom accent color</label>
+                <div class="thm-box-2">
+                  <div class="thm-row">
+                    <label class="thm-xs-bold-muted-2" data-i18n="settings.custom_accent_label">Custom accent color</label>
                     <button id="desktop-theme-reset-accent-btn" class="btn-pill-toggle is-small" data-i18n="settings.reset_accent">↺ Reset to Theme Color</button>
                   </div>
-                  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <div class="thm-row-2">
                     <div class="custom-color-chips">
                       <button class="desktop-color-chip color-chip-btn" data-color="#00f0ff" style="background:#00f0ff;" title="Cyan" data-i18n-title="ui.cyan"></button>
                       <button class="desktop-color-chip color-chip-btn" data-color="#38bdf8" style="background:#38bdf8;" title="Sky Blue" data-i18n-title="ui.sky_blue"></button>
@@ -560,38 +560,38 @@
                       <button class="desktop-color-chip color-chip-btn" data-color="#f43f5e" style="background:#f43f5e;" title="Crimson" data-i18n-title="settings.theme_chip_crimson"></button>
                       <button class="desktop-color-chip color-chip-btn" data-color="#ec4899" style="background:#ec4899;" title="Pink" data-i18n-title="ui.pink"></button>
                     </div>
-                    <div style="display:flex; align-items:center; gap:6px; margin-left:auto;">
-                      <input type="color" id="desktop-custom-color-picker" value="#00f0ff" style="width:28px; height:28px; border:none; padding:0; background:none; cursor:pointer; border-radius:4px;">
-                      <span id="desktop-custom-hex-val" style="font-size:var(--zn-fs-xs); font-family:monospace; color:var(--muted);">#00F0FF</span>
+                    <div class="thm-row-3">
+                      <input class="thm-box-3" type="color" id="desktop-custom-color-picker" value="#00f0ff">
+                      <span class="thm-xs-muted" id="desktop-custom-hex-val">#00F0FF</span>
                       <span id="desktop-contrast-badge" class="desktop-contrast-badge" style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(34, 197, 94, 0.15); color: var(--lt-t-22c55eff, #22c55e); border: 1px solid rgba(34, 197, 94, 0.35);" data-sample>AA PASS</span>
                     </div>
                   </div>
                 </div>
 
                 <!-- Wallpaper Harmony Palette Extractor -->
-                <div class="wallpaper-palette-extractor-wrap" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--zn-line-6);">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div class="wallpaper-palette-extractor-wrap thm-box-4">
+                  <div class="thm-row">
                     <div>
-                      <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.wallpaper_harmony_label">Colors from the wallpaper</div>
-                      <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;" data-i18n="settings.wallpaper_harmony_desc">Extracts harmonious accents directly from active wallpaper.</div>
+                      <div class="thm-xs-bold-muted-2" data-i18n="settings.wallpaper_harmony_label">Colors from the wallpaper</div>
+                      <div class="thm-xs-muted-2" data-i18n="settings.wallpaper_harmony_desc">Extracts harmonious accents directly from active wallpaper.</div>
                     </div>
                     <button id="extract-palette-btn" class="btn-pill-toggle is-small">
-                      <svg class="ic" style="width:11px; height:11px;"><use href="#i-sliders"/></svg>
+                      <svg class="ic thm-size"><use href="#i-sliders"/></svg>
                       <span aria-hidden="true">🪄</span> <span data-i18n="settings.extract_palette_btn">Sample Wallpaper</span>
                     </button>
                   </div>
-                  <div id="wallpaper-extracted-chips" class="custom-color-chips" style="min-height: 28px; display:flex; gap:8px; align-items:center;">
-                    <span style="font-size:var(--zn-fs-xs); color:var(--muted); font-style:italic;" data-i18n="mw.click_sample_wallpaper_to_extract_colors">Click "Sample Wallpaper" to extract colors...</span>
+                  <div id="wallpaper-extracted-chips" class="custom-color-chips thm-row-4">
+                    <span class="thm-xs-muted-3" data-i18n="mw.click_sample_wallpaper_to_extract_colors">Click "Sample Wallpaper" to extract colors...</span>
                   </div>
                 </div>
 
                 <!-- Theme Backup, Sharing & Reset -->
-                <div class="theme-backup-share-wrap" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--zn-line-6); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div class="theme-backup-share-wrap thm-row-box">
                   <div>
-                    <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.theme_backup_label">Save and load themes</div>
-                    <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;" data-i18n="settings.theme_backup_desc">Export your custom appearance style to share or restore defaults.</div>
+                    <div class="thm-xs-bold-muted-2" data-i18n="settings.theme_backup_label">Save and load themes</div>
+                    <div class="thm-xs-muted-2" data-i18n="settings.theme_backup_desc">Export your custom appearance style to share or restore defaults.</div>
                   </div>
-                  <div style="display:flex; gap:6px; align-items:center;">
+                  <div class="thm-row-5">
                     <input type="file" id="theme-import-file" accept=".json,.zett-theme.json" style="display:none;">
                     <button type="button" id="theme-export-btn" class="btn-pill-toggle is-small"><span aria-hidden="true">⬆</span> <span data-i18n="settings.theme_export_btn">Export Theme</span></button>
                     <button type="button" id="theme-import-btn" class="btn-pill-toggle is-small"><span aria-hidden="true">⬇</span> <span data-i18n="settings.theme_import_btn">Import Theme</span></button>
@@ -615,27 +615,27 @@
             </div>
 
             <div class="mgmt-detail-body">
-              <div style="display:flex; flex-direction:column; gap: 16px;">
+              <div class="gls-col">
                 
                 <!-- Card 1: Acrylic Material & Blur -->
-                <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
+                <div class="drawer-card gls-box">
+                  <div class="gls-row">
                     <div>
-                      <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong);" data-i18n="mgmt.acrylic_material_title">Acrylic Glass Material</div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;" data-i18n="mgmt.acrylic_material_desc">Controls window and drawer backdrop-filter blur and surface translucency.</div>
+                      <div class="gls-fs135-bold-strong" data-i18n="mgmt.acrylic_material_title">Acrylic Glass Material</div>
+                      <div class="gls-xs-muted" data-i18n="mgmt.acrylic_material_desc">Controls window and drawer backdrop-filter blur and surface translucency.</div>
                     </div>
                     <button id="glass-reset-btn" class="btn-pill-toggle is-small" title="Reset glass settings to defaults" data-i18n-title="ui.reset_glass_settings_to_defaults" data-i18n="mgmt.reset_glass">↺ Reset Glass Defaults</button>
                   </div>
 
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid var(--zn-line-6); padding-top: 14px;">
+                  <div class="gls-grid-box">
                     <!-- Acrylic Blur Radius -->
                     <div>
-                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                        <label for="glass-blur-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.glass_blur_label">Glass blur</label>
+                      <div class="gls-row-2">
+                        <label class="gls-xs-bold-muted" for="glass-blur-slider" data-i18n="mgmt.glass_blur_label">Glass blur</label>
                         <span id="glass-blur-val" style="font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff)); font-weight: 600;">24px</span>
                       </div>
-                      <input type="range" id="glass-blur-slider" min="0" max="40" value="24" step="2" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Acrylic Blur Radius" data-i18n-aria-label="ui.acrylic_blur_radius">
-                      <div style="display:flex; justify-content:space-between; font-size:var(--zn-fs-xs); color:var(--muted); margin-top:3px;">
+                      <input type="range" id="glass-blur-slider" min="0" max="40" value="24" step="2" class="tz-range-slider gls-size" aria-label="Acrylic Blur Radius" data-i18n-aria-label="ui.acrylic_blur_radius">
+                      <div class="gls-row-xs-muted">
                         <span data-sample>0px (Transparent)</span>
                         <span data-sample>24px (Standard)</span>
                         <span data-sample>40px (Ultra-Deep)</span>
@@ -644,12 +644,12 @@
 
                     <!-- Glass Opacity -->
                     <div>
-                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                        <label for="glass-opacity-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.glass_opacity_label">Glass opacity</label>
+                      <div class="gls-row-2">
+                        <label class="gls-xs-bold-muted" for="glass-opacity-slider" data-i18n="mgmt.glass_opacity_label">Glass opacity</label>
                         <span id="glass-opacity-val" style="font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff)); font-weight: 600;">72%</span>
                       </div>
-                      <input type="range" id="glass-opacity-slider" min="30" max="95" value="72" step="1" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Glass Surface Opacity" data-i18n-aria-label="ui.glass_surface_opacity">
-                      <div style="display:flex; justify-content:space-between; font-size:var(--zn-fs-xs); color:var(--muted); margin-top:3px;">
+                      <input type="range" id="glass-opacity-slider" min="30" max="95" value="72" step="1" class="tz-range-slider gls-size" aria-label="Glass Surface Opacity" data-i18n-aria-label="ui.glass_surface_opacity">
+                      <div class="gls-row-xs-muted">
                         <span data-sample>30% (High Sheer)</span>
                         <span data-sample>72% (Balanced)</span>
                         <span data-sample>95% (Near Solid)</span>
@@ -659,30 +659,30 @@
                 </div>
 
                 <!-- Card 2: Window Geometry & Specular Lighting -->
-                <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                  <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong); margin-bottom: 12px;" data-i18n="mgmt.window_geometry_title">Window Geometry & Lighting</div>
+                <div class="drawer-card gls-box">
+                  <div class="gls-fs135-bold-strong-2" data-i18n="mgmt.window_geometry_title">Window Geometry & Lighting</div>
 
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                  <div class="gls-grid">
                     <!-- Window Corner Curvature -->
                     <div>
-                      <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.window_radius_label">Window corners</label>
-                      <div class="window-radius-selector" style="display:flex; gap:6px;" role="radiogroup" aria-label="Window Corner Curvature" data-i18n-aria-label="ui.window_corner_curvature">
-                        <button type="button" class="btn-pill-toggle window-radius-btn" data-radius="6px" role="radio" aria-checked="false" style="flex: 1;" data-i18n="mw.sharp_6px">Sharp (6px)</button>
-                        <button type="button" class="btn-pill-toggle window-radius-btn active" data-radius="12px" role="radio" aria-checked="true" style="flex: 1;" data-i18n="mw.modern_12px">Modern (12px)</button>
-                        <button type="button" class="btn-pill-toggle window-radius-btn" data-radius="20px" role="radio" aria-checked="false" style="flex: 1;" data-i18n="mw.rounded_20px">Rounded (20px)</button>
+                      <label class="gls-xs-bold-muted-2" data-i18n="mgmt.window_radius_label">Window corners</label>
+                      <div class="window-radius-selector gls-row-3" role="radiogroup" aria-label="Window Corner Curvature" data-i18n-aria-label="ui.window_corner_curvature">
+                        <button type="button" class="btn-pill-toggle window-radius-btn gls-grow" data-radius="6px" role="radio" aria-checked="false" data-i18n="mw.sharp_6px">Sharp (6px)</button>
+                        <button type="button" class="btn-pill-toggle window-radius-btn active gls-grow" data-radius="12px" role="radio" aria-checked="true" data-i18n="mw.modern_12px">Modern (12px)</button>
+                        <button type="button" class="btn-pill-toggle window-radius-btn gls-grow" data-radius="20px" role="radio" aria-checked="false" data-i18n="mw.rounded_20px">Rounded (20px)</button>
                       </div>
                     </div>
 
                     <!-- Specular Border Glow -->
                     <div>
-                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                        <label for="window-glow-toggle" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.window_glow_label">Window edge glow</label>
-                        <label class="switch-toggle" style="position:relative; display:inline-block; width:38px; height:20px; cursor:pointer;">
-                          <input type="checkbox" id="window-glow-toggle" style="opacity:0; width:0; height:0;" aria-label="Toggle Specular Border Highlight" data-i18n-aria-label="ui.toggle_specular_border_highlight">
+                      <div class="gls-row-2">
+                        <label class="gls-xs-bold-muted" for="window-glow-toggle" data-i18n="mgmt.window_glow_label">Window edge glow</label>
+                        <label class="switch-toggle gls-size-2">
+                          <input class="gls-size-3" type="checkbox" id="window-glow-toggle" aria-label="Toggle Specular Border Highlight" data-i18n-aria-label="ui.toggle_specular_border_highlight">
                           <span class="slider-round" style="position:absolute; inset:0; background:var(--zn-glaze-15); border-radius:20px; transition:0.3s;"></span>
                         </label>
                       </div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4;" data-i18n="mgmt.window_glow_desc">
+                      <div class="gls-xs-muted-2" data-i18n="mgmt.window_glow_desc">
                         Renders an active specular accent rim around the active foreground window, docking bar, and modal sheets.
                       </div>
                     </div>
@@ -690,19 +690,19 @@
                 </div>
 
                 <!-- Card 3: Performance & Hardware Efficiency Mode -->
-                <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="drawer-card gls-box">
+                  <div class="gls-row-4">
                     <div>
-                      <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong); display: flex; align-items: center; gap: 6px;">
+                      <div class="gls-row-fs135-bold-strong">
                         <svg class="ic" style="width:14px; height:14px; color:var(--lt-ink-brand, var(--brand, #00f0ff));"><use href="#i-zap"/></svg>
                         <span data-i18n="mgmt.eco_mode_title">Eco & Performance Mode</span>
                       </div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;" data-i18n="mgmt.eco_mode_desc">
+                      <div class="gls-xs-muted" data-i18n="mgmt.eco_mode_desc">
                         Disables GPU-heavy backdrop blur filters for smoother 60 FPS performance on low-power homelab CPUs.
                       </div>
                     </div>
-                    <label class="switch-toggle" style="position:relative; display:inline-block; width:38px; height:20px; cursor:pointer;">
-                      <input type="checkbox" id="eco-mode-toggle" style="opacity:0; width:0; height:0;" aria-label="Toggle Eco & Performance Mode" data-i18n-aria-label="ui.toggle_eco_performance_mode">
+                    <label class="switch-toggle gls-size-2">
+                      <input class="gls-size-3" type="checkbox" id="eco-mode-toggle" aria-label="Toggle Eco & Performance Mode" data-i18n-aria-label="ui.toggle_eco_performance_mode">
                       <span class="slider-round" style="position:absolute; inset:0; background:var(--zn-glaze-15); border-radius:20px; transition:0.3s;"></span>
                     </label>
                   </div>
@@ -818,26 +818,26 @@
             </div>
 
             <div class="mgmt-detail-body">
-              <div style="display:flex; flex-direction:column; gap: 16px;">
+              <div class="scr-col">
 
                 <!-- Card 1: Master Enable & Idle Timeout -->
-                <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
+                <div class="drawer-card scr-box">
+                  <div class="scr-row">
                     <div>
-                      <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong);" data-i18n="mgmt.screensaver_enable_title">Enable Screensaver</div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;" data-i18n="mgmt.screensaver_enable_desc">Engages the animated screensaver after a period of user inactivity.</div>
+                      <div class="scr-fs135-bold-strong" data-i18n="mgmt.screensaver_enable_title">Enable Screensaver</div>
+                      <div class="scr-xs-muted" data-i18n="mgmt.screensaver_enable_desc">Engages the animated screensaver after a period of user inactivity.</div>
                     </div>
-                    <label class="switch-toggle" style="position:relative; display:inline-block; width:38px; height:20px; cursor:pointer;">
-                      <input type="checkbox" id="screensaver-enable-toggle" checked style="opacity:0; width:0; height:0;" aria-label="Toggle Screensaver Active State" data-i18n-aria-label="ui.toggle_screensaver_active_state">
+                    <label class="switch-toggle scr-size">
+                      <input class="scr-size-2" type="checkbox" id="screensaver-enable-toggle" checked aria-label="Toggle Screensaver Active State" data-i18n-aria-label="ui.toggle_screensaver_active_state">
                       <span class="slider-round" style="position:absolute; inset:0; background:var(--zn-glaze-15); border-radius:20px; transition:0.3s;"></span>
                     </label>
                   </div>
 
-                  <div style="padding-top: 12px; border-top: 1px solid var(--zn-line-6);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                      <label for="screensaver-timeout-select" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.screensaver_timeout_label">Start after</label>
+                  <div class="scr-box-2">
+                    <div class="scr-row-2">
+                      <label class="scr-xs-bold-muted" for="screensaver-timeout-select" data-i18n="mgmt.screensaver_timeout_label">Start after</label>
                     </div>
-                    <select id="screensaver-timeout-select" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
+                    <select id="screensaver-timeout-select" class="tz-select-input scr-xs-strong-box">
                       <option value="1" data-i18n="mgmt.screensaver_timeout_1m">1 Minute (Testing)</option>
                       <option value="5" data-i18n="mgmt.screensaver_timeout_5m">5 Minutes</option>
                       <option value="10" selected data-i18n="mgmt.screensaver_timeout_10m">10 Minutes (Default)</option>
@@ -849,55 +849,55 @@
                 </div>
 
                 <!-- Card 2: Animation Style / Mode Selector -->
-                <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                  <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 10px;" data-i18n="mgmt.screensaver_style_label">Screen saver style</div>
+                <div class="drawer-card scr-box">
+                  <div class="scr-xs-bold-muted-2" data-i18n="mgmt.screensaver_style_label">Screen saver style</div>
                   
-                  <div class="screensaver-styles-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;" role="radiogroup" aria-label="Screensaver Style" data-i18n-aria-label="ui.screensaver_style">
+                  <div class="screensaver-styles-grid scr-grid" role="radiogroup" aria-label="Screensaver Style" data-i18n-aria-label="ui.screensaver_style">
                     <!-- Matrix Rain -->
                     <div class="screensaver-style-card active" data-mode="matrix_rain" role="radio" aria-checked="true" tabindex="0" style="padding: 14px; background: var(--zn-shade-35); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 8px; cursor: pointer; transition: all 0.2s ease;">
-                      <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 6px;">
-                        <span style="font-size: 16px;">🟩</span>
-                        <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="mgmt.screensaver_style_matrix">Matrix Digital Rain</span>
+                      <div class="scr-row-3">
+                        <span class="scr-fs16">🟩</span>
+                        <span class="scr-xs-bold-strong" data-i18n="mgmt.screensaver_style_matrix">Matrix Digital Rain</span>
                       </div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4;" data-i18n="mw.cybernetic_vertical_cascading_green_code_streams">Cybernetic vertical cascading green code streams on pure OLED black.</div>
+                      <div class="scr-xs-muted-2" data-i18n="mw.cybernetic_vertical_cascading_green_code_streams">Cybernetic vertical cascading green code streams on pure OLED black.</div>
                     </div>
 
                     <!-- Retro Clock -->
                     <div class="screensaver-style-card" data-mode="retro_clock" role="radio" aria-checked="false" tabindex="0" style="padding: 14px; background: var(--zn-shade-35); border: 1px solid var(--zn-line-10); border-radius: 8px; cursor: pointer; transition: all 0.2s ease;">
-                      <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 6px;">
-                        <span style="font-size: 16px;">🕰️</span>
-                        <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="mgmt.screensaver_style_clock">Retro Nixie Clock</span>
+                      <div class="scr-row-3">
+                        <span class="scr-fs16">🕰️</span>
+                        <span class="scr-xs-bold-strong" data-i18n="mgmt.screensaver_style_clock">Retro Nixie Clock</span>
                       </div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4;" data-i18n="mw.glowing_digital_clock_with_soft_anti">Glowing digital clock with soft anti-burn-in drift to protect OLED displays.</div>
+                      <div class="scr-xs-muted-2" data-i18n="mw.glowing_digital_clock_with_soft_anti">Glowing digital clock with soft anti-burn-in drift to protect OLED displays.</div>
                     </div>
 
                     <!-- Starfield -->
                     <div class="screensaver-style-card" data-mode="starfield" role="radio" aria-checked="false" tabindex="0" style="padding: 14px; background: var(--zn-shade-35); border: 1px solid var(--zn-line-10); border-radius: 8px; cursor: pointer; transition: all 0.2s ease;">
-                      <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 6px;">
-                        <span style="font-size: 16px;">✨</span>
-                        <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="mgmt.screensaver_style_starfield">Hyperspace Starfield</span>
+                      <div class="scr-row-3">
+                        <span class="scr-fs16">✨</span>
+                        <span class="scr-xs-bold-strong" data-i18n="mgmt.screensaver_style_starfield">Hyperspace Starfield</span>
                       </div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4;" data-sample>3D perspective deep-space hyperspace warp speed stars.</div>
+                      <div class="scr-xs-muted-2" data-sample>3D perspective deep-space hyperspace warp speed stars.</div>
                     </div>
                   </div>
                 </div>
 
                 <!-- Card 3: Security & Lock Option -->
-                <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="drawer-card scr-box">
+                  <div class="scr-row-4">
                     <div>
-                      <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong);" data-i18n="mgmt.screensaver_lock_title">Require Password on Wake</div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;" data-i18n="mgmt.screensaver_lock_desc">Immediately locks the desktop session when the screensaver is dismissed.</div>
+                      <div class="scr-fs135-bold-strong" data-i18n="mgmt.screensaver_lock_title">Require Password on Wake</div>
+                      <div class="scr-xs-muted" data-i18n="mgmt.screensaver_lock_desc">Immediately locks the desktop session when the screensaver is dismissed.</div>
                     </div>
-                    <label class="switch-toggle" style="position:relative; display:inline-block; width:38px; height:20px; cursor:pointer;">
-                      <input type="checkbox" id="screensaver-lock-toggle" style="opacity:0; width:0; height:0;" aria-label="Toggle Require Password on Wake" data-i18n-aria-label="ui.toggle_require_password_on_wake">
+                    <label class="switch-toggle scr-size">
+                      <input class="scr-size-2" type="checkbox" id="screensaver-lock-toggle" aria-label="Toggle Require Password on Wake" data-i18n-aria-label="ui.toggle_require_password_on_wake">
                       <span class="slider-round" style="position:absolute; inset:0; background:var(--zn-glaze-15); border-radius:20px; transition:0.3s;"></span>
                     </label>
                   </div>
                 </div>
 
                 <!-- Card 4: Action Buttons (Preview & Reset) -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 4px;">
+                <div class="scr-row-5">
                   <button type="button" id="screensaver-preview-btn" class="btn-pill-toggle btn-primary-accent">
                     <span aria-hidden="true">👁️</span> <span data-i18n="mgmt.screensaver_preview_btn">Preview Screensaver</span>
                   </button>
@@ -1258,34 +1258,34 @@
 
           <!-- Sub-tab 7: Calendar & Day Reminders Pane -->
           <div id="mgmt-pane-calendar" class="mgmt-tab-pane" style="display: none;">
-            <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div class="mgmt-card-intro cal-row">
               <div>
                 <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-calendar"/></svg> <span data-i18n="cal.modal_title">Calendar & Day Reminders</span></div>
                 <div class="mgmt-card-intro-desc" data-i18n="cal.modal_desc">Organize your schedule, track maintenance reminders, tasks, and sync external Google/iCal feeds.</div>
               </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
+              <div class="cal-row-2">
                 <button type="button" id="btn-cal-sync-now" class="btn-pill-toggle" style="margin: 0; background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.3); color: var(--zn-text-accent);" title="Sync external calendar feeds now" data-i18n-title="ui.sync_external_calendar_feeds_now">
                   🔄 <span data-i18n="cal.sync_now">Sync Feeds</span>
                 </button>
-                <button type="button" id="btn-cal-export-ics" class="btn-pill-toggle" style="margin: 0;" title="Export all notes and events to .ics" data-i18n-title="ui.export_all_notes_and_events">
+                <button type="button" id="btn-cal-export-ics" class="btn-pill-toggle cal-x" title="Export all notes and events to .ics" data-i18n-title="ui.export_all_notes_and_events">
                   📤 <span data-i18n="cal.export_ics">Export .ics</span>
                 </button>
               </div>
             </div>
 
-            <div class="mgmt-detail-body" style="padding: 0; margin-top: 14px;">
-              <div id="modal-calendar-notes" class="drawer-card" style="padding: 0; background: var(--zn-glaze-3); border-radius: 10px; border: 1px solid var(--zn-line-8); display: grid; grid-template-columns: 340px 1fr; min-height: 560px; overflow: hidden;">
+            <div class="mgmt-detail-body cal-x-2">
+              <div id="modal-calendar-notes" class="drawer-card cal-grid-box">
                 
                 <!-- Left Column: Calendar View & Feeds Management -->
-                <div style="border-right: 1px solid var(--zn-line-8); background: var(--zn-shade-20); padding: 18px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;">
+                <div class="cal-col-box">
                   
                   <!-- Month Navigator -->
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div id="modal-cal-month-title" style="font-size: 15px; font-weight: 800; color: var(--zn-text-strong); letter-spacing: 0.5px;" data-sample>October 2026</div>
-                    <div style="display: flex; align-items: center; gap: 4px;">
-                      <button type="button" id="btn-modal-cal-prev" class="btn-icon" style="padding: 3px 8px; font-size: var(--zn-fs-xs); background: var(--zn-glaze-8); border: 1px solid var(--zn-line-10); border-radius: 5px; color: var(--zn-text-soft); cursor: pointer;">◀</button>
-                      <button type="button" id="btn-modal-cal-today" class="btn-pill-toggle is-small" style="margin: 0;" data-i18n="mw.today">Today</button>
-                      <button type="button" id="btn-modal-cal-next" class="btn-icon" style="padding: 3px 8px; font-size: var(--zn-fs-xs); background: var(--zn-glaze-8); border: 1px solid var(--zn-line-10); border-radius: 5px; color: var(--zn-text-soft); cursor: pointer;">▶</button>
+                  <div class="cal-row-3">
+                    <div class="cal-fs15-bold-strong" id="modal-cal-month-title" data-sample>October 2026</div>
+                    <div class="cal-row-4">
+                      <button type="button" id="btn-modal-cal-prev" class="btn-icon cal-xs-soft-box">◀</button>
+                      <button type="button" id="btn-modal-cal-today" class="btn-pill-toggle is-small cal-x" data-i18n="mw.today">Today</button>
+                      <button type="button" id="btn-modal-cal-next" class="btn-icon cal-xs-soft-box">▶</button>
                     </div>
                   </div>
 
@@ -1295,46 +1295,46 @@
                   </div>
 
                   <!-- Legend / Indicators -->
-                  <div style="display: flex; align-items: center; gap: 12px; font-size: var(--zn-fs-xs); color: var(--muted); flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #38bdf8;"></span> <span data-i18n="mw.note_reminder">Note / Reminder</span></div>
-                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span> <span data-i18n="wid.note_type_task">Task</span></div>
-                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #eab308;"></span> <span data-i18n="mw.synced_feed">Synced Feed</span></div>
-                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #ec4899;"></span> <span data-i18n="wid.legend_holiday">Holiday</span></div>
+                  <div class="cal-row-xs-muted">
+                    <div class="cal-row-4"><span style="width: 7px; height: 7px; border-radius: 50%; background: #38bdf8;"></span> <span data-i18n="mw.note_reminder">Note / Reminder</span></div>
+                    <div class="cal-row-4"><span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span> <span data-i18n="wid.note_type_task">Task</span></div>
+                    <div class="cal-row-4"><span style="width: 7px; height: 7px; border-radius: 50%; background: #eab308;"></span> <span data-i18n="mw.synced_feed">Synced Feed</span></div>
+                    <div class="cal-row-4"><span style="width: 7px; height: 7px; border-radius: 50%; background: #ec4899;"></span> <span data-i18n="wid.legend_holiday">Holiday</span></div>
                   </div>
 
-                  <div style="height: 1px; background: var(--zn-glaze-8);"></div>
+                  <div class="cal-box"></div>
 
                   <!-- Connected External Calendar Feeds -->
-                  <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span style="font-size: var(--zn-fs-xs); font-weight: 800; text-transform: uppercase; color: var(--zn-text-muted); letter-spacing: 0.5px;" data-i18n="cal.synced_feeds">Calendar Feeds (Google, iCal)</span>
-                      <button type="button" id="btn-toggle-add-feed" class="btn-pill-toggle is-small" style="margin: 0;"><span aria-hidden="true">+</span> <span data-i18n="mw.add_feed">Add Feed</span></button>
+                  <div class="cal-col">
+                    <div class="cal-row-3">
+                      <span class="cal-xs-bold-muted" data-i18n="cal.synced_feeds">Calendar Feeds (Google, iCal)</span>
+                      <button type="button" id="btn-toggle-add-feed" class="btn-pill-toggle is-small cal-x"><span aria-hidden="true">+</span> <span data-i18n="mw.add_feed">Add Feed</span></button>
                     </div>
 
                     <!-- Add Feed Drawer / Form (hidden by default) -->
-                    <div id="cal-add-feed-form" style="display: none; background: var(--zn-shade-30); border: 1px solid var(--zn-line-10); border-radius: 8px; padding: 10px; flex-direction: column; gap: 8px;">
-                      <input type="text" id="cal-feed-name-input" placeholder="Feed Name (e.g. Google Calendar)" data-i18n-placeholder="ui.feed_name_e_g_google" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 5px 8px; color: var(--zn-text-strong); border-radius: 5px; font-size: var(--zn-fs-xs);" aria-label="Feed Name (e.g. Google Calendar)" data-i18n-aria-label="ui.feed_name_e_g_google" />
-                      <input type="url" id="cal-feed-url-input" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 5px 8px; color: var(--zn-text-strong); border-radius: 5px; font-size: var(--zn-fs-xs);" aria-label="https://calendar.google.com/calendar/ical/.../basic.ics" />
-                      <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <select id="cal-feed-color-select" style="background: var(--zn-shade-40); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 5px; font-size: var(--zn-fs-xs); padding: 3px 6px;">
+                    <div class="cal-box-2" id="cal-add-feed-form" style="display: none;">
+                      <input class="cal-xs-strong-box" type="text" id="cal-feed-name-input" placeholder="Feed Name (e.g. Google Calendar)" data-i18n-placeholder="ui.feed_name_e_g_google" aria-label="Feed Name (e.g. Google Calendar)" data-i18n-aria-label="ui.feed_name_e_g_google" />
+                      <input class="cal-xs-strong-box" type="url" id="cal-feed-url-input" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics" aria-label="https://calendar.google.com/calendar/ical/.../basic.ics" />
+                      <div class="cal-row-3">
+                        <select class="cal-xs-strong-box-2" id="cal-feed-color-select">
                           <option value="#38bdf8" data-i18n="ui.sky_blue">Sky Blue</option>
                           <option value="#10b981" data-i18n="ui.emerald">Emerald</option>
                           <option value="#f59e0b" data-i18n="ui.amber">Amber</option>
                           <option value="#ec4899" data-i18n="ui.rose">Rose</option>
                           <option value="#8b5cf6" data-i18n="ui.violet">Violet</option>
                         </select>
-                        <div style="display: flex; gap: 6px;">
-                          <button type="button" id="btn-cancel-add-feed" class="btn-pill-toggle is-small" style="margin: 0;" data-i18n="mw.cancel">Cancel</button>
-                          <button type="button" id="btn-submit-add-feed" class="btn-pill-toggle is-primary is-small" style="margin: 0;" data-i18n="ui.connect_sync">Connect & Sync</button>
+                        <div class="cal-row-5">
+                          <button type="button" id="btn-cancel-add-feed" class="btn-pill-toggle is-small cal-x" data-i18n="mw.cancel">Cancel</button>
+                          <button type="button" id="btn-submit-add-feed" class="btn-pill-toggle is-primary is-small cal-x" data-i18n="ui.connect_sync">Connect & Sync</button>
                         </div>
                       </div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.3;">
+                      <div class="cal-xs-muted">
                         💡 <em data-i18n="mw.to_sync_google_calendar_in_google">To sync Google Calendar: In Google Calendar Settings &gt; Integrate calendar &gt; Copy "Secret address in iCal format" (.ics) URL.</em>
                       </div>
                     </div>
 
                     <!-- Connected Feeds List -->
-                    <div id="cal-feeds-list" style="display: flex; flex-direction: column; gap: 6px;">
+                    <div class="cal-col-2" id="cal-feeds-list">
                       <!-- Rendered by JS -->
                     </div>
                   </div>
@@ -1345,12 +1345,12 @@
                 <div style="display: flex; flex-direction: column; height: 100%; overflow: hidden; background: var(--lt-b-00000026, rgba(0,0,0,0.15));">
                   
                   <!-- Agenda Header -->
-                  <div style="padding: 16px 20px; border-bottom: 1px solid var(--zn-line-8); display: flex; justify-content: space-between; align-items: center; background: var(--zn-glaze-2);">
+                  <div class="cal-row-box">
                     <div>
-                      <div id="modal-cal-selected-date-str" style="font-size: 16px; font-weight: 800; color: var(--zn-text-strong);" data-sample>Monday, October 19, 2026</div>
-                      <div id="modal-cal-selected-sub" style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;" data-sample>0 notes or reminders scheduled</div>
+                      <div class="cal-fs16-bold-strong" id="modal-cal-selected-date-str" data-sample>Monday, October 19, 2026</div>
+                      <div class="cal-xs-muted-2" id="modal-cal-selected-sub" data-sample>0 notes or reminders scheduled</div>
                     </div>
-                    <div style="display: flex; gap: 6px;">
+                    <div class="cal-row-5">
                       <button type="button" id="btn-cal-filter-all" class="cal-filter-pill active" data-filter="all" data-i18n="mw.all">All</button>
                       <button type="button" id="btn-cal-filter-notes" class="cal-filter-pill" data-filter="note" data-i18n="mw.notes">Notes</button>
                       <button type="button" id="btn-cal-filter-reminders" class="cal-filter-pill" data-filter="reminder" data-i18n="mw.reminders">Reminders</button>
@@ -1360,26 +1360,26 @@
                   </div>
 
                   <!-- Add Note / Reminder Composer Box -->
-                  <div style="padding: 14px 20px; border-bottom: 1px solid var(--zn-line-8); background: var(--zn-shade-25); display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                      <input type="text" id="cal-new-note-title" placeholder="Add a note, reminder, or task for this day..." data-i18n-placeholder="ui.add_a_note_reminder_or" style="flex: 1; border: 1px solid var(--zn-line-14); background: var(--zn-shade-30); padding: 7px 12px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); outline: none;" aria-label="Add a note, reminder, or task for this day..." data-i18n-aria-label="ui.add_a_note_reminder_or" />
-                      <input type="time" id="cal-new-note-time" value="12:00" style="border: 1px solid var(--zn-line-14); background: var(--zn-shade-30); padding: 6px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace);" />
-                      <select id="cal-new-note-type" style="border: 1px solid var(--zn-line-14); background: var(--zn-shade-35); padding: 6px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
+                  <div class="cal-col-box-2">
+                    <div class="cal-row-6">
+                      <input class="cal-xs-strong-box-grow" type="text" id="cal-new-note-title" placeholder="Add a note, reminder, or task for this day..." data-i18n-placeholder="ui.add_a_note_reminder_or" aria-label="Add a note, reminder, or task for this day..." data-i18n-aria-label="ui.add_a_note_reminder_or" />
+                      <input class="cal-xs-strong-box-3" type="time" id="cal-new-note-time" value="12:00" />
+                      <select class="cal-xs-strong-box-4" id="cal-new-note-type">
                         <option value="note" data-i18n="wid.note_type_note">Note</option>
                         <option value="reminder" data-i18n="wid.note_type_reminder">Reminder</option>
                         <option value="task" data-i18n="wid.note_type_task">Task</option>
                         <option value="event" data-i18n="wid.note_type_event">Event</option>
                       </select>
-                      <button type="button" id="btn-cal-save-note" class="btn-pill-toggle is-primary is-small" style="white-space: nowrap;">+ Add</button>
+                      <button type="button" id="btn-cal-save-note" class="btn-pill-toggle is-primary is-small cal-x-3">+ Add</button>
                     </div>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                      <input type="text" id="cal-new-note-desc" placeholder="Optional details / description..." data-i18n-placeholder="ui.optional_details_description" style="flex: 1; border: 1px solid var(--zn-line-8); background: var(--zn-shade-20); padding: 5px 10px; color: var(--zn-text-soft); border-radius: 5px; font-size: var(--zn-fs-xs); outline: none;" aria-label="Optional details / description..." data-i18n-aria-label="ui.optional_details_description" />
-                      <input type="text" id="cal-new-note-category" placeholder="Category (e.g. Work, Maintenance)" data-i18n-placeholder="ui.category_e_g_work_maintenance" style="width: 220px; border: 1px solid var(--zn-line-8); background: var(--zn-shade-20); padding: 5px 10px; color: var(--zn-text-soft); border-radius: 5px; font-size: var(--zn-fs-xs); outline: none;" aria-label="Category (e.g. Work, Maintenance)" data-i18n-aria-label="ui.category_e_g_work_maintenance" />
+                    <div class="cal-row-6">
+                      <input class="cal-xs-soft-box-grow" type="text" id="cal-new-note-desc" placeholder="Optional details / description..." data-i18n-placeholder="ui.optional_details_description" aria-label="Optional details / description..." data-i18n-aria-label="ui.optional_details_description" />
+                      <input class="cal-xs-soft-box-2" type="text" id="cal-new-note-category" placeholder="Category (e.g. Work, Maintenance)" data-i18n-placeholder="ui.category_e_g_work_maintenance" aria-label="Category (e.g. Work, Maintenance)" data-i18n-aria-label="ui.category_e_g_work_maintenance" />
                     </div>
                   </div>
 
                   <!-- Agenda Items List -->
-                  <div id="modal-cal-agenda-list" style="flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px;">
+                  <div class="cal-col-3" id="modal-cal-agenda-list">
                     <!-- Populated dynamically via JS -->
                   </div>
 
@@ -1395,51 +1395,51 @@
               <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="settings.language_title">Time, Language & Regional Settings</span></div>
               <div class="mgmt-card-intro-desc" data-i18n="settings.language_desc">Select your preferred system language, desktop timezone, and clock display formatting.</div>
             </div>
-            <div class="mgmt-detail-body" style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="mgmt-detail-body lng-col">
               
               <!-- Timezone & Clock Settings Card -->
-              <div id="modal-clock-timezone" class="drawer-card" style="padding: 20px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8); max-width: 680px;">
-                <div class="card-headline" style="margin-bottom: 14px;">
-                  <span class="card-head-title" style="font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 16px;">🕒</span>
+              <div id="modal-clock-timezone" class="drawer-card lng-box">
+                <div class="card-headline lng-x">
+                  <span class="card-head-title lng-row-fs14-bold">
+                    <span class="lng-fs16">🕒</span>
                     <span data-i18n="tz.modal_title">Timezone & Clock Settings</span>
                   </span>
-                  <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; line-height: 1.4;" data-i18n="tz.card_desc">Your time zone and 12 or 24 hours, for every time ZettNAS shows you, on every device you sign in to.</div>
+                  <div class="lng-xs-muted" data-i18n="tz.card_desc">Your time zone and 12 or 24 hours, for every time ZettNAS shows you, on every device you sign in to.</div>
                 </div>
 
                 <!-- Live Clock Preview Card -->
-                <div class="tz-preview-card" style="background: var(--zn-shade-35); border: 1px solid var(--zn-line-10); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden; margin-bottom: 16px;">
-                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div class="tz-preview-card lng-row-box">
+                  <div class="lng-col-2">
                     <div style="font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; color: var(--lt-ink-brand, var(--brand, #00f0ff)); letter-spacing: 0.8px;" data-i18n="tz.preview_label">Active Clock Preview</div>
-                    <div style="display: flex; align-items: baseline; gap: 6px;">
-                      <div id="modal-tz-preview-time" style="font-size: 32px; font-weight: 800; font-family: var(--font-mono, monospace); color: var(--zn-text-strong); line-height: 1;">--:--</div>
-                      <div id="modal-tz-preview-sec" style="font-size: 18px; opacity: 0.65; font-family: var(--font-mono, monospace); color: var(--zn-text-strong);">:--</div>
+                    <div class="lng-row">
+                      <div class="lng-fs32-bold-strong" id="modal-tz-preview-time">--:--</div>
+                      <div class="lng-fs18-strong" id="modal-tz-preview-sec">:--</div>
                       <div id="modal-tz-preview-ampm" style="font-size: 13px; font-weight: 800; color: var(--lt-ink-brand, var(--brand, #00f0ff));"></div>
                     </div>
-                    <div id="modal-tz-preview-date" style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 500;">--</div>
+                    <div class="lng-xs-muted-2" id="modal-tz-preview-date">--</div>
                   </div>
-                  <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                  <div class="lng-col-3">
                     <div id="modal-tz-active-pill" class="suite-badge" style="background: var(--lt-b-00f0ff26, rgba(0,240,255,0.15)); color: var(--lt-ink-brand, var(--brand, #00f0ff)); border-color: var(--lt-r-00f0ff59, rgba(0,240,255,0.35)); font-size: var(--zn-fs-xs); font-weight: 700; padding: 3px 10px; border-radius: 6px;" data-sample>Local Time (Auto)</div>
                     <!-- 12H / 24H Toggle -->
-                    <div class="tz-format-toggle-group" role="radiogroup" aria-label="Clock format" data-i18n-aria-label="tz.format" style="display: flex; background: var(--zn-glaze-6); border: 1px solid var(--zn-line-10); border-radius: 6px; padding: 2px;">
-                      <button type="button" id="btn-tz-fmt-12" class="tz-fmt-btn" role="radio" aria-checked="false" style="padding: 4px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border: none; background: transparent; color: var(--zn-text-muted); border-radius: 4px; cursor: pointer;" data-i18n="tz.h12">12 h</button>
+                    <div class="tz-format-toggle-group lng-row-box-2" role="radiogroup" aria-label="Clock format" data-i18n-aria-label="tz.format">
+                      <button type="button" id="btn-tz-fmt-12" class="tz-fmt-btn lng-xs-bold-muted-box" role="radio" aria-checked="false" data-i18n="tz.h12">12 h</button>
                       <button type="button" id="btn-tz-fmt-24" class="tz-fmt-btn active" role="radio" aria-checked="true" style="padding: 4px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border: none; background: var(--brand, #00f0ff); color: #000; border-radius: 4px; cursor: pointer;" data-i18n="tz.h24">24 h</button>
                     </div>
                   </div>
                 </div>
 
                 <!-- Quick Action / Auto-detect -->
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px;">
-                  <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text);" data-i18n="tz.select_heading">Select Desktop Timezone</div>
-                  <button type="button" id="btn-tz-use-browser" class="btn-pill-toggle" style="margin: 0; background: var(--zn-glaze-8); border-color: var(--zn-line-15); color: var(--zn-text-strong);">
+                <div class="lng-row-2">
+                  <div class="lng-xs-bold" data-i18n="tz.select_heading">Select Desktop Timezone</div>
+                  <button type="button" id="btn-tz-use-browser" class="btn-pill-toggle lng-strong-box">
                     📍 <span data-i18n="tz.use_local">Use Local System Timezone</span>
                   </button>
                 </div>
 
                 <!-- Search Input & Region Filter Pills -->
-                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
-                  <input type="text" id="tz-search-input" class="tz-select-input" placeholder="Search cities, countries, or timezones (e.g. New York, Tokyo, London, Berlin, UTC)..." data-i18n-placeholder="ui.search_cities_countries_or_timezones" style="width: 100%; border: 1px solid var(--zn-line-14); background: var(--zn-shade-30); padding: 8px 12px; color: var(--zn-text-strong); border-radius: 8px; font-size: var(--zn-fs-xs); outline: none;" aria-label="Search cities, countries, or timezones (e.g. New York, Tokyo, London, Berlin, UTC)..." data-i18n-aria-label="ui.search_cities_countries_or_timezones" />
-                  <div id="tz-region-pills" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <div class="lng-col-4">
+                  <input type="text" id="tz-search-input" class="tz-select-input lng-xs-strong-box" placeholder="Search cities, countries, or timezones (e.g. New York, Tokyo, London, Berlin, UTC)..." data-i18n-placeholder="ui.search_cities_countries_or_timezones" aria-label="Search cities, countries, or timezones (e.g. New York, Tokyo, London, Berlin, UTC)..." data-i18n-aria-label="ui.search_cities_countries_or_timezones" />
+                  <div class="lng-row-3" id="tz-region-pills">
                     <button type="button" class="tz-region-pill active" data-region="all" data-i18n="tz.region_all">All</button>
                     <button type="button" class="tz-region-pill" data-region="Americas" data-i18n="tz.region_americas">Americas</button>
                     <button type="button" class="tz-region-pill" data-region="Europe" data-i18n="tz.region_europe">Europe</button>
@@ -1450,15 +1450,15 @@
                 </div>
 
                 <!-- Timezone List Scroll Area -->
-                <div id="tz-items-list" tabindex="0" role="listbox" aria-label="Time zones" data-i18n-aria-label="ui.time_zones" style="max-height: 240px; overflow-y: auto; border: 1px solid var(--zn-line-8); border-radius: 8px; background: var(--zn-shade-25); display: flex; flex-direction: column; padding: 4px; margin-bottom: 12px;">
+                <div class="lng-col-box" id="tz-items-list" tabindex="0" role="listbox" aria-label="Time zones" data-i18n-aria-label="ui.time_zones">
                   <!-- Populated dynamically via JS -->
                 </div>
 
                 <!-- Custom IANA Input -->
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                  <label for="tz-custom-input" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); white-space: nowrap;" data-i18n="tz.custom">Other zone (IANA name):</label>
-                  <input type="text" id="tz-custom-input" placeholder="e.g. America/Toronto, Asia/Seoul, UTC" data-i18n-placeholder="ph.timezone" style="flex: 1; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 6px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
-                  <button type="button" id="btn-tz-apply-custom" class="btn-pill-toggle" style="margin: 0;" data-i18n="tz.use_zone">Use it</button>
+                <div class="lng-row-4">
+                  <label class="lng-xs-bold-muted" for="tz-custom-input" data-i18n="tz.custom">Other zone (IANA name):</label>
+                  <input class="lng-xs-strong-box-grow" type="text" id="tz-custom-input" placeholder="e.g. America/Toronto, Asia/Seoul, UTC" data-i18n-placeholder="ph.timezone" />
+                  <button type="button" id="btn-tz-apply-custom" class="btn-pill-toggle lng-x-2" data-i18n="tz.use_zone">Use it</button>
                 </div>
 
                 <label class="tz-server-row" id="tz-server-row" hidden>
@@ -1467,23 +1467,23 @@
                 </label>
 
                 <!-- Save Actions -->
-                <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--zn-line-8); padding-top: 14px;">
+                <div class="lng-row-box-3">
                   <button type="button" id="modal-clock-tz-cancel-btn" class="btn-pill-toggle is-small" data-i18n="tz.undo">Discard changes</button>
                   <button type="button" id="modal-clock-tz-save-btn" class="btn-pill-toggle is-primary is-small" data-i18n="tz.save">Save</button>
                 </div>
               </div>
 
               <!-- Display Language & Localization Card -->
-              <div class="drawer-card" style="padding: 20px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8); max-width: 680px;">
+              <div class="drawer-card lng-box">
                 <div class="card-headline">
-                  <span class="card-head-title" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;" data-i18n="settings.language_title">Display Language & Localization</span>
+                  <span class="card-head-title lng-fs14-bold" data-i18n="settings.language_title">Display Language & Localization</span>
                 </div>
-                <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="settings.language_desc">
+                <div class="lng-xs-muted-3" data-i18n="settings.language_desc">
                   Select your preferred language for the Web Studio desktop and hardware management controls.
                 </div>
-                <div style="margin-top: 10px;">
-                  <label for="mgmt-lang-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="settings.select_language">Language</label>
-                  <select id="mgmt-lang-select" class="language-picker-select tz-select-input" style="width: 100%; padding: 10px 14px; font-size: 13px; cursor: pointer; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); border-radius: 6px; color: var(--zn-text-strong);">
+                <div class="lng-x-3">
+                  <label class="lng-xs-bold-muted-2" for="mgmt-lang-select" data-i18n="settings.select_language">Language</label>
+                  <select id="mgmt-lang-select" class="language-picker-select tz-select-input lng-fs13-strong-box">
                     <option value="en" lang="en" translate="no">English</option>
                     <option value="de" lang="de" translate="no">Deutsch</option>
                     <option value="zh" lang="zh">简体中文</option>
@@ -3248,26 +3248,26 @@
                 </button>
               </div>
             </div>
-            <div id="mgmt-pane-security" class="mgmt-tab-pane" style="display: block;">
+            <div id="mgmt-pane-security" class="mgmt-tab-pane sec-x">
           <div class="mgmt-card-intro">
             <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.sec_title">Account Security & Credentials</span></div>
             <div class="mgmt-card-intro-desc" data-i18n="mgmt.sec_desc">Manage administrator login credentials, security preferences, and system provisioning.</div>
           </div>
           <div id="sec-default-pwd-warning" style="display:none; margin: 12px 0; padding: 12px 14px; background: rgba(235,87,87,0.18); border: 1px solid rgba(235,87,87,0.5); border-radius: 8px; color: var(--lt-t-ff6b6bff, #ff6b6b); font-size: var(--zn-fs-sm); font-weight: 600; line-height: 1.45;"><span aria-hidden="true">⚠️</span> <span data-i18n="mgmt.sec_default_warning">DEFAULT PASSWORD ACTIVE: Your server still uses its default or first-time password. Please set a custom password below immediately.</span></div>
           <div id="sec-advisor-card" class="sec-advisor-card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size: var(--zn-fs-sm); font-weight: 700; color: var(--zn-text-strong); display: flex; align-items: center; gap: 6px;">
-                <svg class="ic" style="width: 14px; height: 14px; color: var(--lt-ink-brand, var(--accent-cyan));"><use href="#i-chip"/></svg>
+            <div class="sec-row">
+              <span class="sec-row-sm-bold-strong">
+                <svg class="ic sec-brand"><use href="#i-chip"/></svg>
                 <span data-i18n="sec.advisor_title">Security Advisor Hardening Checklist</span>
               </span>
               <span id="sec-advisor-score-badge" class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--lt-t-25c2a0ff, #25c2a0); border: 1px solid rgba(37,194,160,0.3); font-size: var(--zn-fs-xs); font-weight: 700;" data-sample>Score: 100/100</span>
             </div>
-            <div id="sec-advisor-items" style="display: flex; flex-direction: column; gap: 6px; font-size: var(--zn-fs-xs);">
+            <div class="sec-col-xs" id="sec-advisor-items">
               <!-- Dynamic checklist items -->
             </div>
-            <div id="sec-disable-admin-container" style="display: none; padding-top: 8px; border-top: 1px solid var(--zn-line-8);">
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="sec.disable_admin_desc">Retire the default 'admin' account to harden system against automated brute-force attacks.</span>
+            <div class="sec-box" id="sec-disable-admin-container" style="display: none;">
+              <div class="sec-row-2">
+                <span class="sec-xs-muted" data-i18n="sec.disable_admin_desc">Retire the default 'admin' account to harden system against automated brute-force attacks.</span>
                 <button type="button" id="btn-disable-default-admin" class="btn-pill-toggle is-danger">
                   🔒 <span data-i18n="sec.disable_admin_btn">Disable Default Admin</span>
                 </button>
@@ -3275,27 +3275,27 @@
             </div>
           </div>
           <div class="mgmt-detail-body">
-            <div style="display:flex; flex-direction:column; gap: 14px;">
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+            <div class="sec-col">
+              <div class="sec-grid">
                 <div>
-                  <label for="sec-username" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_admin_user">Admin username</label>
-                  <input type="text" id="sec-username" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="admin">
+                  <label class="sec-xs-bold-muted" for="sec-username" data-i18n="mgmt.sec_admin_user">Admin username</label>
+                  <input type="text" id="sec-username" class="tz-select-input sec-strong-box" placeholder="admin">
                 </div>
                 <div>
-                  <label for="sec-email" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_email">Email for notifications</label>
-                  <input type="email" id="sec-email" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="admin@zettnas.local">
+                  <label class="sec-xs-bold-muted" for="sec-email" data-i18n="mgmt.sec_email">Email for notifications</label>
+                  <input type="email" id="sec-email" class="tz-select-input sec-strong-box" placeholder="admin@zettnas.local">
                 </div>
               </div>
 
-              <div style="border-top: 1px solid var(--zn-line-6); padding-top: 12px;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+              <div class="sec-box-2">
+                <div class="sec-grid">
                   <div>
-                    <label for="sec-new-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_new_pwd">NEW PASSWORD (Optional)</label>
-                    <input type="password" id="sec-new-pwd" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="New password (min. 8 characters)" data-i18n-placeholder="ui.new_password_min_8_characters" minlength="8" autocomplete="new-password">
+                    <label class="sec-xs-bold-warn" for="sec-new-pwd" data-i18n="mgmt.sec_new_pwd">NEW PASSWORD (Optional)</label>
+                    <input type="password" id="sec-new-pwd" class="tz-select-input sec-strong-box" placeholder="New password (min. 8 characters)" data-i18n-placeholder="ui.new_password_min_8_characters" minlength="8" autocomplete="new-password">
                   </div>
                   <div>
-                    <label for="sec-confirm-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_confirm_pwd">Confirm new password</label>
-                    <input type="password" id="sec-confirm-pwd" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" autocomplete="new-password">
+                    <label class="sec-xs-bold-warn" for="sec-confirm-pwd" data-i18n="mgmt.sec_confirm_pwd">Confirm new password</label>
+                    <input type="password" id="sec-confirm-pwd" class="tz-select-input sec-strong-box" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" autocomplete="new-password">
                   </div>
                 </div>
                 <div id="sec-pwd-mismatch-msg" style="display:none; color:var(--crit, #ff6b6b); font-size: var(--zn-fs-xs); font-weight:600; margin-top:6px; align-items:center; gap:4px;">
@@ -3303,17 +3303,17 @@
                 </div>
               </div>
 
-              <div style="border-top: 1px solid var(--zn-line-6); padding-top: 12px;">
-                <label for="sec-cur-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--ok2); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_cur_pwd">CURRENT PASSWORD (Required to commit changes)</label>
-                <input type="password" id="sec-cur-pwd" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Enter current password" data-i18n-placeholder="ui.enter_current_password">
+              <div class="sec-box-2">
+                <label class="sec-xs-bold-ok" for="sec-cur-pwd" data-i18n="mgmt.sec_cur_pwd">CURRENT PASSWORD (Required to commit changes)</label>
+                <input type="password" id="sec-cur-pwd" class="tz-select-input sec-strong-box" placeholder="Enter current password" data-i18n-placeholder="ui.enter_current_password">
               </div>
 
-              <div style="display:flex; gap: 10px; margin-top: 6px;">
-                <button id="sec-save-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px;"><span aria-hidden="true">💾</span> <span data-i18n="mgmt.sec_save">Save</span></button>
+              <div class="sec-row-3">
+                <button id="sec-save-btn" class="suite-toolkit-btn sec-grow"><span aria-hidden="true">💾</span> <span data-i18n="mgmt.sec_save">Save</span></button>
                 <button id="sec-logout-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px; background: rgba(220,50,50,0.12); color: var(--crit); border-color: rgba(220,50,50,0.3);" data-i18n="mgmt.sec_logout">Sign out</button>
               </div>
 
-              <div style="border-top: 1px solid var(--zn-line-6); margin-top: 4px; padding-top: 14px;">
+              <div class="sec-box-3">
                 <button id="btn-launch-setup-wizard" class="btn-save-preset" style="width: 100%; justify-content:center; padding: 10px; font-size: var(--zn-fs-sm); background: rgba(224, 122, 56, 0.15); border-color: rgba(224, 122, 56, 0.4); color: var(--lt-t-f8fafcff, #f8fafc);"><span aria-hidden="true">🚀</span> <span data-i18n="mgmt.sec_wizard">Launch Initial Hardware Setup Wizard</span></button>
               </div>
 
@@ -3324,18 +3324,18 @@
               <div id="file-activity-mount" class="zn-card zn-card--divided" hidden></div>
 
               <!-- Scoped API Tokens -->
-              <div style="border-top: 1px solid var(--zn-line-6); margin-top: 14px; padding-top: 14px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                  <span style="font-weight:700; font-size: var(--zn-fs-sm); color:var(--zn-text-strong);" data-i18n="settings.api_tokens">API Tokens & Automation Keys</span>
+              <div class="sec-box-4">
+                <div class="sec-row-4">
+                  <span class="sec-sm-bold-strong" data-i18n="settings.api_tokens">API Tokens & Automation Keys</span>
                 </div>
-                <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 12px; line-height: 1.4;" data-i18n="mw.generate_scoped_api_tkns_for_third">
+                <div class="sec-xs-muted-2" data-i18n="mw.generate_scoped_api_tkns_for_third">
                   Generate scoped API tokens for third-party integrations (e.g., Home Assistant, Prometheus, or backup automation).
                 </div>
-                <div id="api-tokens-list" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
-                  <div style="font-size: var(--zn-fs-xs); color:var(--muted); text-align:center;" data-i18n="mw.loading">Loading...</div>
+                <div class="sec-col-2" id="api-tokens-list">
+                  <div class="sec-xs-muted-3" data-i18n="mw.loading">Loading...</div>
                 </div>
-                <div style="display: flex; gap: 8px;">
-                  <input type="text" id="new-token-name" placeholder="Token Name (e.g. Home Assistant)" data-i18n-placeholder="ui.token_name_e_g_home" class="tz-select-input" style="flex:1; background: var(--zn-shade-25); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); padding: 7px 12px; font-size: var(--zn-fs-sm); border-radius: 6px;" aria-label="Token Name (e.g. Home Assistant)" data-i18n-aria-label="ui.token_name_e_g_home">
+                <div class="sec-row-5">
+                  <input type="text" id="new-token-name" placeholder="Token Name (e.g. Home Assistant)" data-i18n-placeholder="ui.token_name_e_g_home" class="tz-select-input sec-sm-strong-box-grow" aria-label="Token Name (e.g. Home Assistant)" data-i18n-aria-label="ui.token_name_e_g_home">
                   <button id="btn-generate-token" class="btn-pill-toggle" style="color: var(--lt-ink-brand, var(--brand, #38bdf8)); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);" data-i18n="mw.generate">Generate</button>
                 </div>
                 <label for="new-token-kind" class="zn-sub is-spaced" data-i18n="tokens.kind_label">What it may do</label>
@@ -3354,8 +3354,8 @@
               <!-- Two-Factor Authentication Quick Access -->
               <div style="border-top: 1px solid var(--zn-line-6); margin-top: 14px; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; background: rgba(56,189,248,0.05); border: 1px solid rgba(56,189,248,0.2); border-radius: 8px; padding: 12px 14px;">
                 <div>
-                  <div style="font-weight:700; font-size: var(--zn-fs-sm); color:var(--zn-text-strong);"><span aria-hidden="true">🛡️</span> <span data-i18n="mw.two_factor_2fa">Two-Factor Authentication (2FA)</span></div>
-                  <div style="font-size: var(--zn-fs-xs); color:var(--muted); margin-top:2px;" data-i18n="mw.protect_your_account_with_rfc_6238">Protect your account with RFC 6238 TOTP authenticator app verification.</div>
+                  <div class="sec-sm-bold-strong"><span aria-hidden="true">🛡️</span> <span data-i18n="mw.two_factor_2fa">Two-Factor Authentication (2FA)</span></div>
+                  <div class="sec-xs-muted-4" data-i18n="mw.protect_your_account_with_rfc_6238">Protect your account with RFC 6238 TOTP authenticator app verification.</div>
                 </div>
                 <button type="button" class="btn-pill-toggle" id="btn-jump-to-2fa" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56,189,248,0.4);" data-sample>Configure 2FA →</button>
               </div>

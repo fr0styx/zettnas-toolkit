@@ -47,7 +47,7 @@ describe('Batch 2: Glassmorphism, Wallpaper Readability, OLED Theme & Specular G
     expect(html).toContain('id="glass-opacity-val"');
     expect(html).toContain('id="window-glow-toggle"');
     expect(html).toContain('id="glass-reset-btn"');
-    expect(html).toContain('class="window-radius-selector"');
+    expect(html).toMatch(/class="[^"]*\bwindow-radius-selector\b/);
     expect(html).toContain('data-radius="6px"');
     expect(html).toContain('data-radius="12px"');
     expect(html).toContain('data-radius="20px"');
