@@ -3515,7 +3515,7 @@
             <!-- Notifications & Alerts Pane -->
             <div id="mgmt-pane-notifications" class="mgmt-tab-pane" style="display: none;">
               <div id="push-device-card" class="zn-card zn-card--boxed"></div>
-              <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div class="mgmt-card-intro nt-head">
                 <div>
                   <div class="mgmt-card-intro-title">
                     <svg class="ic"><use href="#i-bell"/></svg>
@@ -3525,7 +3525,7 @@
                     Dispatch critical alerts (SMART failures, thermal warnings, UPS events, and copy jobs) to Discord, Telegram, Email, ntfy, or custom webhooks.
                   </div>
                 </div>
-                <div style="display:flex; gap:8px;">
+                <div class="nt-actions">
                   <button id="btn-send-test-alert" class="btn-pill-toggle" style="background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.35); color: var(--zn-text-accent);">
                     ⚡ <span data-i18n="mgmt.notif_btn_test_all">Send Test Alert</span>
                   </button>
@@ -3537,118 +3537,118 @@
 
               <div class="mgmt-detail-body">
                 <!-- Master Toggle Card -->
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); border-radius:10px; margin-bottom:16px;">
+                <div class="nt-topbar">
                   <div>
-                    <div style="font-size: var(--zn-fs-sm); font-weight:700; color:var(--zn-text-strong);" data-i18n="mgmt.notif_master_label">Master Notification Engine</div>
-                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); margin-top:2px;" data-i18n="mgmt.notif_master_desc">When disabled, no external notifications or chat webhooks will be dispatched.</div>
+                    <div class="nt-card-title" data-i18n="mgmt.notif_master_label">Master Notification Engine</div>
+                    <div class="nt-sub" data-i18n="mgmt.notif_master_desc">When disabled, no external notifications or chat webhooks will be dispatched.</div>
                   </div>
-                  <div style="display:flex; align-items:center; gap:10px;">
+                  <div class="nt-inline nt-inline--wide">
                     <span id="notif-master-status-badge" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(37,194,160,0.15); color:var(--ok2); border:1px solid rgba(37,194,160,0.4);" data-sample>Active</span>
-                    <label class="switch-toggle" for="notif-master-enabled" style="position:relative; display:inline-block; width:38px; height:20px; margin:0;" aria-label="Toggle Master Notification Engine" data-i18n-aria-label="ui.toggle_master_notification_engine">
-                      <input type="checkbox" id="notif-master-enabled" checked style="opacity:0; width:0; height:0;">
+                    <label class="switch-toggle nt-switch" for="notif-master-enabled" aria-label="Toggle Master Notification Engine" data-i18n-aria-label="ui.toggle_master_notification_engine">
+                      <input class="nt-switch-input" type="checkbox" id="notif-master-enabled" checked>
                       <span class="slider round" style="position:absolute; cursor:pointer; inset:0; background:var(--lt-b-ffffff33, rgba(255,255,255,0.2)); border-radius:20px; transition:.3s;"></span>
                     </label>
                   </div>
                 </div>
 
                 <!-- Alert Channels Header -->
-                <div style="font-size: var(--zn-fs-xs); font-weight:800; color:var(--muted); letter-spacing:0.8px; margin: 16px 0 10px;" data-i18n="mgmt.notif_channels_title">Where alerts go</div>
+                <div class="nt-section-head nt-section-head--tight" data-i18n="mgmt.notif_channels_title">Where alerts go</div>
 
                 <!-- Channels Grid -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                <div class="nt-grid-fill">
                   
                   <!-- Discord Card -->
-                  <div class="notif-channel-card" style="padding:14px; background:var(--zn-shade-25); border:1px solid var(--zn-line-8); border-radius:10px; display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:18px;">💬</span>
-                        <span style="font-size: var(--zn-fs-sm); font-weight:700; color:var(--zn-text-strong);">Discord</span>
+                  <div class="notif-channel-card nt-card">
+                    <div class="nt-row-between">
+                      <div class="nt-inline">
+                        <span class="nt-icon">💬</span>
+                        <span class="nt-card-title">Discord</span>
                       </div>
-                      <span id="notif-badge-discord" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:var(--zn-glaze-6); color:var(--muted); border:1px solid var(--zn-line-10);" data-sample>Off</span>
+                      <span class="nt-badge" id="notif-badge-discord" data-sample>Off</span>
                     </div>
-                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); line-height:1.4;" data-i18n="mw.rich_embed_alerts_to_any_discord">Rich embed alerts to any Discord channel via incoming webhook.</div>
-                    <div style="display:flex; gap:8px; margin-top:auto;">
-                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="discord" style="flex: 1;" data-i18n="mw.configure">Configure</button>
+                    <div class="nt-desc" data-i18n="mw.rich_embed_alerts_to_any_discord">Rich embed alerts to any Discord channel via incoming webhook.</div>
+                    <div class="nt-card-actions">
+                      <button class="notif-cfg-btn btn-pill-toggle nt-grow" data-channel="discord" data-i18n="mw.configure">Configure</button>
                       <button class="notif-test-btn btn-pill-toggle" data-channel="discord" title="Test Discord" data-i18n-title="ui.test_discord" data-i18n="mw.test">Test</button>
                     </div>
                   </div>
 
                   <!-- Telegram Card -->
-                  <div class="notif-channel-card" style="padding:14px; background:var(--zn-shade-25); border:1px solid var(--zn-line-8); border-radius:10px; display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:18px;">✈️</span>
-                        <span style="font-size: var(--zn-fs-sm); font-weight:700; color:var(--zn-text-strong);">Telegram</span>
+                  <div class="notif-channel-card nt-card">
+                    <div class="nt-row-between">
+                      <div class="nt-inline">
+                        <span class="nt-icon">✈️</span>
+                        <span class="nt-card-title">Telegram</span>
                       </div>
-                      <span id="notif-badge-telegram" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:var(--zn-glaze-6); color:var(--muted); border:1px solid var(--zn-line-10);" data-sample>Off</span>
+                      <span class="nt-badge" id="notif-badge-telegram" data-sample>Off</span>
                     </div>
-                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); line-height:1.4;" data-i18n="mw.instant_push_messages_to_your_telegram">Instant push messages to your Telegram bot or group chat.</div>
-                    <div style="display:flex; gap:8px; margin-top:auto;">
-                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="telegram" style="flex: 1;" data-i18n="mw.configure">Configure</button>
+                    <div class="nt-desc" data-i18n="mw.instant_push_messages_to_your_telegram">Instant push messages to your Telegram bot or group chat.</div>
+                    <div class="nt-card-actions">
+                      <button class="notif-cfg-btn btn-pill-toggle nt-grow" data-channel="telegram" data-i18n="mw.configure">Configure</button>
                       <button class="notif-test-btn btn-pill-toggle" data-channel="telegram" title="Test Telegram" data-i18n-title="ui.test_telegram" data-i18n="mw.test">Test</button>
                     </div>
                   </div>
 
                   <!-- Email Card -->
-                  <div class="notif-channel-card" style="padding:14px; background:var(--zn-shade-25); border:1px solid var(--zn-line-8); border-radius:10px; display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:18px;">✉️</span>
-                        <span style="font-size: var(--zn-fs-sm); font-weight:700; color:var(--zn-text-strong);" data-i18n="mw.email_smtp">Email (SMTP)</span>
+                  <div class="notif-channel-card nt-card">
+                    <div class="nt-row-between">
+                      <div class="nt-inline">
+                        <span class="nt-icon">✉️</span>
+                        <span class="nt-card-title" data-i18n="mw.email_smtp">Email (SMTP)</span>
                       </div>
-                      <span id="notif-badge-email" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:var(--zn-glaze-6); color:var(--muted); border:1px solid var(--zn-line-10);" data-sample>Off</span>
+                      <span class="nt-badge" id="notif-badge-email" data-sample>Off</span>
                     </div>
-                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); line-height:1.4;" data-i18n="mw.standard_smtp_delivery_with_tls_encryption">Standard SMTP delivery with TLS encryption to administrator inbox.</div>
-                    <div style="display:flex; gap:8px; margin-top:auto;">
-                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="email" style="flex: 1;" data-i18n="mw.configure">Configure</button>
+                    <div class="nt-desc" data-i18n="mw.standard_smtp_delivery_with_tls_encryption">Standard SMTP delivery with TLS encryption to administrator inbox.</div>
+                    <div class="nt-card-actions">
+                      <button class="notif-cfg-btn btn-pill-toggle nt-grow" data-channel="email" data-i18n="mw.configure">Configure</button>
                       <button class="notif-test-btn btn-pill-toggle" data-channel="email" title="Test Email" data-i18n-title="ui.test_email" data-i18n="mw.test">Test</button>
                     </div>
                   </div>
 
                   <!-- ntfy Card -->
-                  <div class="notif-channel-card" style="padding:14px; background:var(--zn-shade-25); border:1px solid var(--zn-line-8); border-radius:10px; display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:18px;">🔔</span>
-                        <span style="font-size: var(--zn-fs-sm); font-weight:700; color:var(--zn-text-strong);" data-i18n="mw.ntfy_push">ntfy Push</span>
+                  <div class="notif-channel-card nt-card">
+                    <div class="nt-row-between">
+                      <div class="nt-inline">
+                        <span class="nt-icon">🔔</span>
+                        <span class="nt-card-title" data-i18n="mw.ntfy_push">ntfy Push</span>
                       </div>
-                      <span id="notif-badge-ntfy" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:var(--zn-glaze-6); color:var(--muted); border:1px solid var(--zn-line-10);" data-sample>Off</span>
+                      <span class="nt-badge" id="notif-badge-ntfy" data-sample>Off</span>
                     </div>
-                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); line-height:1.4;" data-i18n="mw.lightweight_http_push_notifications_via_ntfy">Lightweight HTTP push notifications via ntfy.sh or self-hosted server.</div>
-                    <div style="display:flex; gap:8px; margin-top:auto;">
-                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="ntfy" style="flex: 1;" data-i18n="mw.configure">Configure</button>
+                    <div class="nt-desc" data-i18n="mw.lightweight_http_push_notifications_via_ntfy">Lightweight HTTP push notifications via ntfy.sh or self-hosted server.</div>
+                    <div class="nt-card-actions">
+                      <button class="notif-cfg-btn btn-pill-toggle nt-grow" data-channel="ntfy" data-i18n="mw.configure">Configure</button>
                       <button class="notif-test-btn btn-pill-toggle" data-channel="ntfy" title="Test ntfy" data-i18n-title="ui.test_ntfy" data-i18n="mw.test">Test</button>
                     </div>
                   </div>
 
                   <!-- Generic Webhook Card -->
-                  <div class="notif-channel-card" style="padding:14px; background:var(--zn-shade-25); border:1px solid var(--zn-line-8); border-radius:10px; display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:18px;">🌐</span>
-                        <span style="font-size: var(--zn-fs-sm); font-weight:700; color:var(--zn-text-strong);" data-i18n="mw.generic_webhook">Generic Webhook</span>
+                  <div class="notif-channel-card nt-card">
+                    <div class="nt-row-between">
+                      <div class="nt-inline">
+                        <span class="nt-icon">🌐</span>
+                        <span class="nt-card-title" data-i18n="mw.generic_webhook">Generic Webhook</span>
                       </div>
-                      <span id="notif-badge-webhook" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:var(--zn-glaze-6); color:var(--muted); border:1px solid var(--zn-line-10);" data-sample>Off</span>
+                      <span class="nt-badge" id="notif-badge-webhook" data-sample>Off</span>
                     </div>
-                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); line-height:1.4;" data-i18n="mw.custom_http_post_json_endpoint_for">Custom HTTP POST JSON endpoint for Home Assistant, Node-RED, or scripts.</div>
-                    <div style="display:flex; gap:8px; margin-top:auto;">
-                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="webhook" style="flex: 1;" data-i18n="mw.configure">Configure</button>
+                    <div class="nt-desc" data-i18n="mw.custom_http_post_json_endpoint_for">Custom HTTP POST JSON endpoint for Home Assistant, Node-RED, or scripts.</div>
+                    <div class="nt-card-actions">
+                      <button class="notif-cfg-btn btn-pill-toggle nt-grow" data-channel="webhook" data-i18n="mw.configure">Configure</button>
                       <button class="notif-test-btn btn-pill-toggle" data-channel="webhook" title="Test Webhook" data-i18n-title="ui.test_webhook" data-i18n="mw.test">Test</button>
                     </div>
                   </div>
 
                   <!-- Apprise Advanced Card -->
-                  <div class="notif-channel-card" style="padding:14px; background:var(--zn-shade-25); border:1px solid var(--zn-line-8); border-radius:10px; display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:18px;">🚀</span>
-                        <span style="font-size: var(--zn-fs-sm); font-weight:700; color:var(--zn-text-strong);" data-i18n="mw.apprise_100_services">Apprise (100+ Services)</span>
+                  <div class="notif-channel-card nt-card">
+                    <div class="nt-row-between">
+                      <div class="nt-inline">
+                        <span class="nt-icon">🚀</span>
+                        <span class="nt-card-title" data-i18n="mw.apprise_100_services">Apprise (100+ Services)</span>
                       </div>
-                      <span id="notif-badge-apprise" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:var(--zn-glaze-6); color:var(--muted); border:1px solid var(--zn-line-10);">0 URLs</span>
+                      <span class="nt-badge" id="notif-badge-apprise">0 URLs</span>
                     </div>
-                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); line-height:1.4;" data-i18n="mw.power_user_multi_target_list_supporting">Power-user multi-target list supporting Pushover, Slack, Gotify, Matrix, and more.</div>
-                    <div style="display:flex; gap:8px; margin-top:auto;">
-                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="apprise_raw" style="flex: 1;" data-i18n="mw.configure">Configure</button>
+                    <div class="nt-desc" data-i18n="mw.power_user_multi_target_list_supporting">Power-user multi-target list supporting Pushover, Slack, Gotify, Matrix, and more.</div>
+                    <div class="nt-card-actions">
+                      <button class="notif-cfg-btn btn-pill-toggle nt-grow" data-channel="apprise_raw" data-i18n="mw.configure">Configure</button>
                       <button class="notif-test-btn btn-pill-toggle" data-channel="apprise_raw" title="Test Apprise" data-i18n-title="ui.test_apprise" data-i18n="mw.test">Test</button>
                     </div>
                   </div>
@@ -3656,60 +3656,60 @@
                 </div>
 
                 <!-- Subsystem Event Triggers & Sensitivity -->
-                <div style="font-size: var(--zn-fs-xs); font-weight:800; color:var(--muted); letter-spacing:0.8px; margin: 20px 0 10px;" data-i18n="mgmt.notif_rules_title">What you are alerted about</div>
+                <div class="nt-section-head" data-i18n="mgmt.notif_rules_title">What you are alerted about</div>
                 
-                <div style="background:var(--zn-shade-25); border:1px solid var(--zn-line-8); border-radius:10px; padding:16px;">
-                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
+                <div class="nt-box">
+                  <div class="nt-grid">
                     
-                    <label for="notif-toggle-smart" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:var(--zn-text-strong);">
+                    <label class="nt-check" for="notif-toggle-smart">
                       <input type="checkbox" id="notif-toggle-smart" checked>
                       <span data-i18n="mw.s_m_a_r_t_drive">S.M.A.R.T. Drive Health & Sector Errors</span>
                     </label>
 
-                    <label for="notif-toggle-temp" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:var(--zn-text-strong);">
+                    <label class="nt-check" for="notif-toggle-temp">
                       <input type="checkbox" id="notif-toggle-temp" checked>
                       <span data-i18n="mw.thermal_overheat_warnings_cpu_hdd">Thermal Overheat Warnings (CPU / HDD)</span>
                     </label>
 
-                    <label for="notif-toggle-ups" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:var(--zn-text-strong);">
+                    <label class="nt-check" for="notif-toggle-ups">
                       <input type="checkbox" id="notif-toggle-ups" checked>
                       <span data-i18n="mw.ups_on_battery_low_battery_and">UPS On-Battery, Low-Battery & Shutdown</span>
                     </label>
 
-                    <label for="notif-toggle-fan" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:var(--zn-text-strong);">
+                    <label class="nt-check" for="notif-toggle-fan">
                       <input type="checkbox" id="notif-toggle-fan" checked>
                       <span data-i18n="mw.fan_stalls_and_hardware_cooling_anomalies">Fan Stalls & Hardware Cooling Anomalies</span>
                     </label>
 
-                    <label for="notif-toggle-copy" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:var(--zn-text-strong);">
+                    <label class="nt-check" for="notif-toggle-copy">
                       <input type="checkbox" id="notif-toggle-copy" checked>
                       <span data-i18n="mw.media_card_auto_ingest_completion_errors">Media Card Auto-Ingest Completion / Errors</span>
                     </label>
 
-                    <label for="notif-toggle-container" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:var(--zn-text-strong);">
+                    <label class="nt-check" for="notif-toggle-container">
                       <input type="checkbox" id="notif-toggle-container">
                       <span data-i18n="mw.container_crashes_and_oom_events">Container Crashes & OOM Events</span>
                     </label>
 
-                    <label for="notif-toggle-backup" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:var(--zn-text-strong);">
+                    <label class="nt-check" for="notif-toggle-backup">
                       <input type="checkbox" id="notif-toggle-backup">
                       <span data-i18n="mw.configuration_backup_and_snapshot_status">Configuration Backup & Snapshot Status</span>
                     </label>
 
                   </div>
 
-                  <div style="border-top:1px solid var(--zn-line-6); padding-top:14px; display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+                  <div class="nt-fields">
                     <div>
-                      <label for="notif-input-hdd-temp" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;" data-i18n="mw.hdd_temp_threshold_c">HDD TEMP THRESHOLD (°C)</label>
-                      <input type="number" id="notif-input-hdd-temp" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" min="30" max="80" value="50">
+                      <label class="nt-label" for="notif-input-hdd-temp" data-i18n="mw.hdd_temp_threshold_c">HDD TEMP THRESHOLD (°C)</label>
+                      <input type="number" id="notif-input-hdd-temp" class="tz-select-input nt-input" min="30" max="80" value="50">
                     </div>
                     <div>
-                      <label for="notif-input-cpu-temp" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;" data-i18n="mw.cpu_temp_threshold_c">CPU TEMP THRESHOLD (°C)</label>
-                      <input type="number" id="notif-input-cpu-temp" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" min="40" max="105" value="80">
+                      <label class="nt-label" for="notif-input-cpu-temp" data-i18n="mw.cpu_temp_threshold_c">CPU TEMP THRESHOLD (°C)</label>
+                      <input type="number" id="notif-input-cpu-temp" class="tz-select-input nt-input" min="40" max="105" value="80">
                     </div>
                     <div>
-                      <label for="notif-input-cooldown" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;" data-i18n="mw.alert_cooldown_minutes">ALERT COOLDOWN (MINUTES)</label>
-                      <input type="number" id="notif-input-cooldown" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" min="1" max="1440" value="30">
+                      <label class="nt-label" for="notif-input-cooldown" data-i18n="mw.alert_cooldown_minutes">ALERT COOLDOWN (MINUTES)</label>
+                      <input type="number" id="notif-input-cooldown" class="tz-select-input nt-input" min="1" max="1440" value="30">
                     </div>
                   </div>
                 </div>
