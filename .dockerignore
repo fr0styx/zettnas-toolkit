@@ -8,6 +8,7 @@
 !requirements.txt
 !requirements.lock
 !requirements-dev.txt
+!requirements-dev.lock
 !package.json
 !package-lock.json
 !vite.config.mjs
