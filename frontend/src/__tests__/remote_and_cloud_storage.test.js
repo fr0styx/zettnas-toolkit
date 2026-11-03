@@ -299,7 +299,7 @@ describe('Sprint 4: Remote & Cloud Storage Subsystem (Frontend)', () => {
 
     expect(postSpy).toHaveBeenCalledWith('/api/remotes/test', expect.objectContaining({ type: 'onedrive' }));
     const testResult = document.getElementById('new-remote-test-result');
-    expect(testResult.textContent).toContain('Connection Verified');
+    expect(testResult.textContent).toContain('Files found: file.txt');
 
     // Test form submit
     const nameInput = document.getElementById('new-remote-name');
@@ -388,7 +388,7 @@ describe('Sprint 4: Remote & Cloud Storage Subsystem (Frontend)', () => {
     const card = document.querySelector('.oauth-assistant-card');
     expect(card).not.toBeNull();
     expect(card.textContent).toContain('Connect Microsoft OneDrive');
-    expect(card.textContent).toContain('No Terminal Required');
+    expect(card.textContent).toContain('Sign in here, no terminal needed');
 
     const browserBtn = document.getElementById('btn-oauth-browser');
     const qrBtn = document.getElementById('btn-oauth-qr');
@@ -429,7 +429,7 @@ describe('Sprint 4: Remote & Cloud Storage Subsystem (Frontend)', () => {
 
     // 5. Assert status indicator shows success
     const statusEl = document.getElementById('oauth-assistant-status');
-    expect(statusEl.textContent).toContain('Authentication Successful');
+    expect(statusEl.textContent).toContain('Signed in.');
   });
 
   it('handles deleting remote storage with showConfirmToast instead of window.confirm', async () => {
@@ -532,12 +532,12 @@ describe('Sprint 4: Remote & Cloud Storage Subsystem (Frontend)', () => {
     expect(testBtn.classList.contains('tested-green')).toBe(true);
     expect(testBtn.textContent).toContain('Connection Successful');
     expect(testResult.style.display).toBe('block');
-    expect(testResult.textContent).toContain('Connection Test Successful');
+    expect(testResult.textContent).toContain('Connection works.');
 
     // Modifying form resets green state
     form.dispatchEvent(new Event('input'));
     expect(testBtn.classList.contains('tested-green')).toBe(false);
-    expect(testBtn.textContent).toContain('Test Connection');
+    expect(testBtn.textContent).toContain('Test connection');
   });
 });
 

@@ -12,6 +12,47 @@ import { emptyStateHtml } from './empty-state.js';
 
 // An icon next to translated words: screen readers skip it and the words stay plain (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
+
+const NOTE_TONES = {
+  info: ['rgba(56, 189, 248, 0.12)', 'rgba(56, 189, 248, 0.3)', '#38bdf8'],
+  busy: ['rgba(14, 165, 233, 0.15)', 'rgba(14, 165, 233, 0.3)', '#38bdf8'],
+  ok: ['rgba(34, 197, 94, 0.18)', 'rgba(34, 197, 94, 0.4)', '#4ade80'],
+  error: ['rgba(239, 68, 68, 0.15)', 'rgba(239, 68, 68, 0.3)', '#f87171'],
+};
+
+function hiddenIcon(icon) {
+  const s = document.createElement('span');
+  s.setAttribute('aria-hidden', 'true');
+  s.textContent = icon;
+  return s;
+}
+
+/** A coloured status line: an icon screen readers skip, a bold lead, then the rest (NUX-20). */
+function showNote(el, tone, icon, lead, rest = '') {
+  if (!el) return;
+  const [background, border, color] = NOTE_TONES[tone];
+  Object.assign(el.style, { display: 'block', background, border: `1px solid ${border}`, color });
+  const nodes = [hiddenIcon(icon), ' '];
+  if (lead) nodes.push(Object.assign(document.createElement('strong'), { textContent: lead }), ' ');
+  if (rest) nodes.push(rest);
+  el.replaceChildren(...nodes);
+}
+
+/** A button's label: the icon hidden from screen readers, then the words. */
+function setLabel(btn, icon, text) {
+  if (!btn) return;
+  const s = document.createElement('span');
+  s.append(hiddenIcon(icon), ` ${text}`);
+  btn.replaceChildren(s);
+}
+
+/** One line of text in a list area, as a node rather than markup. */
+function noteIn(el, text, css) {
+  const d = document.createElement('div');
+  d.style.cssText = css;
+  d.textContent = text;
+  el.replaceChildren(d);
+}
 /**
  * ZettNAS Physical Chassis Twin & Storage Topology Visualizer
  * - Parametric SVG chassis twin (Compact Dual, Desktop Tower, Enterprise Rackmount)
@@ -1451,14 +1492,15 @@ export async function openSftpUsersModal(onSuccess) {
       const users = Array.isArray(usersRes) ? usersRes : (usersRes?.users || []);
       const sampleUser = users[0]?.username || 'username';
       const port = status?.port || 2222;
+      const command = `sftp -P ${port} ${sampleUser}@${hostIp}`; // a command, the same in every language
 
       if (quickHint) {
-        quickHint.textContent = `sftp -P ${port} ${sampleUser}@${hostIp}`;
+        quickHint.textContent = command;
       }
 
       if (copyBtn) {
         copyBtn.onclick = () => {
-          copyTextToClipboard(`sftp -P ${port} ${sampleUser}@${hostIp}`);
+          copyTextToClipboard(command);
           showToast(t('toast.sftp_command_copied_to_clipboard', 'SFTP command copied to clipboard.'), 'info');
         };
       }
@@ -1900,7 +1942,7 @@ export async function fetchAndRenderRemoteStorage(container) {
           ZettEventBus.emit('fm:refresh');
           ZettEventBus.emit('storage:mount_changed', { name, path: `/mnt/remotes/${name}`, action: 'mount' });
         } catch (e) {
-          showToast(t('toast.mount_failed', 'Mount failed: {message}', { message: e.message || 'Error' }), 'error');
+          showToast(t('toast.mount_failed', 'Mount failed: {message}', { message: e.message || t('ui.error', 'Error') }), 'error');
           fetchAndRenderRemoteStorage(container);
         }
       });
@@ -1920,7 +1962,7 @@ export async function fetchAndRenderRemoteStorage(container) {
           ZettEventBus.emit('fm:refresh');
           ZettEventBus.emit('storage:mount_changed', { name, path: `/mnt/remotes/${name}`, action: 'unmount' });
         } catch (e) {
-          showToast(t('toast.unmount_failed', 'Unmount failed: {message}', { message: e.message || 'Error' }), 'error');
+          showToast(t('toast.unmount_failed', 'Unmount failed: {message}', { message: e.message || t('ui.error', 'Error') }), 'error');
           fetchAndRenderRemoteStorage(container);
         }
       });
@@ -2044,7 +2086,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
   if (testBtn) {
     testBtn.classList.remove('tested-green');
     testBtn.disabled = false;
-    testBtn.innerHTML = '<span>⚡ Test Connection</span>';
+    setLabel(testBtn, '⚡', t('chassis.test_connection', 'Test connection'));
   }
 
   // Register with DockManager as a real desktop window
@@ -2208,20 +2250,20 @@ export async function openNewCloudRemoteModal(onSuccess) {
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--zn-line-6); padding-bottom: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 18px;">🔑</span>
-                  <span style="font-size: 13px; font-weight: 700; color: var(--zn-text-strong); letter-spacing: 0.3px;">Connect ${escapeHtml(provTitle)}</span>
+                  <span style="font-size: 13px; font-weight: 700; color: var(--zn-text-strong); letter-spacing: 0.3px;">${escapeHtml(t('chassis.oauth_connect', 'Connect {name}', { name: provTitle }))}</span>
                 </div>
                 <span style="font-size: var(--zn-fs-xs); padding: 2px 8px; background: rgba(34, 197, 94, 0.15); color: var(--lt-t-4ade80ff, #4ade80); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; font-weight: 600;">
-                  No Terminal Required · In-App OAuth
+                  ${t('chassis.oauth_badge', 'Sign in here, no terminal needed')}
                 </span>
               </div>
 
               <!-- Auth Mode Switcher (Tabs) -->
               <div style="display: flex; gap: 6px; margin-bottom: 12px; background: var(--zn-shade-30); padding: 3px; border-radius: 6px; border: 1px solid var(--zn-line-6);">
                 <button type="button" id="tab-oauth-desktop" style="flex: 1; padding: 6px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border-radius: 4px; border: none; cursor: pointer; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s;">
-                  <span>💻 Desktop 1-Click</span>
+                  <span>${ico('💻')} ${t('chassis.oauth_tab_desktop', 'On this computer')}</span>
                 </button>
                 <button type="button" id="tab-oauth-qr" class="btn-pill-toggle is-ghost is-small" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                  <span>📱 Mobile QR Code</span>
+                  <span>${ico('📱')} ${t('chassis.oauth_tab_qr', 'With a phone (QR code)')}</span>
                 </button>
               </div>
 
@@ -2232,7 +2274,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 </button>
 
                 <div style="margin-top: 8px; margin-bottom: 12px; padding: 8px 10px; background: rgba(14, 165, 233, 0.07); border: 1px dashed rgba(14, 165, 233, 0.28); border-radius: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-soft); line-height: 1.45;">
-                  <strong style="color: var(--zn-text-accent);">📌 What to expect:</strong> After approving login in Microsoft, the new tab will show <code style="color:var(--zn-text-crit); background:rgba(239,68,68,0.15); padding:1px 4px; border-radius:3px;">This site can't be reached (localhost:53682)</code>. <strong>This is completely normal!</strong> Simply copy the address bar from that tab and paste it in Step 2 below.
+                  <strong style="color: var(--zn-text-accent);">${ico('📌')} ${t('chassis.oauth_expect', 'What to expect:')}</strong> ${t('chassis.oauth_expect_1', 'After you approve the sign-in, the new tab shows')} <code style="color:var(--zn-text-crit); background:rgba(239,68,68,0.15); padding:1px 4px; border-radius:3px;">This site can't be reached (localhost:53682)</code>. <strong>${t('chassis.oauth_expect_2', 'That is normal.')}</strong> ${t('chassis.oauth_expect_3', 'Copy the address from that tab and paste it in step 2 below.')}
                 </div>
               </div>
 
@@ -2240,11 +2282,11 @@ export async function openNewCloudRemoteModal(onSuccess) {
               <div id="oauth-qr-panel" style="display: none; margin-bottom: 12px;">
                 <div id="oauth-qr-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; background: var(--zn-shade-35); border: 1px dashed rgba(14, 165, 233, 0.35); border-radius: 8px;">
                   <div id="oauth-qr-target" style="display: inline-flex; align-items: center; justify-content: center; padding: 8px; background: #ffffff; border-radius: 8px; min-width: 140px; min-height: 140px; box-shadow: 0 4px 14px rgba(0,0,0,0.6);">
-                    <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-0284c7ff, #0284c7); font-weight: 600;">⏳ Initializing QR code...</div>
+                    <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-0284c7ff, #0284c7); font-weight: 600;">${ico('⏳')} ${t('chassis.qr_loading', 'Making the QR code…')}</div>
                   </div>
                   <div style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text); margin-top: 8px; display: flex; align-items: center; gap: 6px;">
-                    <span>📱 Scan with your phone or tablet camera to sign in</span>
-                    <button type="button" id="btn-oauth-qr" class="btn-pill-toggle is-small" title="${t('ui.refresh_qr_code', 'Refresh QR Code')}">🔄 Refresh</button>
+                    <span>${ico('📱')} ${t('chassis.qr_scan', 'Scan with your phone or tablet camera to sign in')}</span>
+                    <button type="button" id="btn-oauth-qr" class="btn-pill-toggle is-small" title="${t('ui.refresh_qr_code', 'Refresh QR Code')}">${ico('🔄')} ${t('common.refresh', 'Refresh')}</button>
                   </div>
                 </div>
               </div>
@@ -2255,20 +2297,20 @@ export async function openNewCloudRemoteModal(onSuccess) {
               <!-- Step 2: Code Relay Input & Complete button -->
               <div id="oauth-step2-box" style="padding-top: 12px; border-top: 1px solid var(--zn-line-8);">
                 <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                  <span style="color: var(--zn-text-accent);">Step 2:</span>
-                  <span>If browser says "This site can't be reached", paste the resulting URL from your address bar here:</span>
+                  <span style="color: var(--zn-text-accent);">${t('chassis.step2', 'Step 2:')}</span>
+                  <span>${t('chassis.step2_title', 'If the browser says “This site can’t be reached”, paste the address from its address bar here:')}</span>
                 </div>
                 <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); line-height: 1.45; margin-bottom: 8px;">
-                  When Microsoft/Google finishes logging in, copy the full address from your browser address bar and paste it below:
+                  ${t('chassis.step2_desc', 'When the sign-in finishes, copy the full address from the browser’s address bar and paste it below:')}
                 </div>
                 <div style="display: flex; gap: 6px;">
                   <input type="text" id="oauth-redirect-url" class="tz-select-input" placeholder="http://localhost:53682/?code=M.R3_... or full redirect URL" style="flex: 1; font-family: monospace; font-size: var(--zn-fs-xs);" />
                   <button type="button" id="btn-oauth-paste" class="btn-pill-toggle is-small" style="white-space: nowrap;">
-                    📋 Paste
+                    ${ico('📋')} ${t('chassis.paste', 'Paste')}
                   </button>
                 </div>
                 <button type="button" id="btn-oauth-exchange" style="margin-top: 10px; width: 100%; padding: 10px 14px; background: var(--ok2, #22c55e); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); font-weight: 700; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);">
-                  <span>✓ Complete & Populate Token</span>
+                  <span>${ico('✓')} ${t('chassis.oauth_finish', 'Finish sign-in')}</span>
                 </button>
               </div>
             </div>
@@ -2294,7 +2336,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                     </label>
                     ${prov.authorize_cmd ? `
                       <button type="button" class="remote-copy-cmd-btn" data-cmd="${escapeHtml(prov.authorize_cmd)}" style="background:rgba(14,165,233,0.15); border:1px solid rgba(14,165,233,0.3); color:var(--zn-text-accent); font-size:var(--zn-fs-xs); font-weight:600; padding:2px 8px; border-radius:4px; cursor:pointer;">
-                        📋 Copy: ${escapeHtml(prov.authorize_cmd)}
+                        ${ico('📋')} ${escapeHtml(t('chassis.copy_cmd', 'Copy: {cmd}', { cmd: prov.authorize_cmd }))}
                       </button>
                     ` : ''}
                   </div>
@@ -2385,11 +2427,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 nameInput.value = prov.type === 'onedrive' ? 'onedrive-personal' : `${prov.type}-cloud`;
               }
               if (statusEl) {
-                statusEl.style.display = 'block';
-                statusEl.style.background = 'rgba(34, 197, 94, 0.18)';
-                statusEl.style.border = '1px solid rgba(34, 197, 94, 0.4)';
-                statusEl.style.color = '#4ade80';
-                statusEl.innerHTML = '✅ <strong>Authentication Successful!</strong> Token verified & auto-populated below. You may now click <em>⚡ Test Connection</em> or <em>Save & Connect Remote</em>.';
+                showNote(statusEl, 'ok', '✅', t('chassis.oauth_ok', 'Signed in.'), t('chassis.oauth_ok_desc', 'The sign-in is filled in below. Test the connection or save the cloud drive.'));
               }
               const desktopP = dynamicFields.querySelector('#oauth-desktop-panel');
               const qrP = dynamicFields.querySelector('#oauth-qr-panel');
@@ -2425,21 +2463,26 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 }
                 if (directLink) {
                   directLink.innerHTML = `
-                    <div style="color: var(--zn-text-muted); font-size: var(--zn-fs-xs); margin-bottom: 2px;">Can't scan QR code?</div>
+                    <div style="color: var(--zn-text-muted); font-size: var(--zn-fs-xs); margin-bottom: 2px;">${t('chassis.qr_cant', 'Can’t scan the QR code?')}</div>
                     <a href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer" style="color: var(--zn-text-accent); text-decoration: underline; font-weight: 600;">
-                      🔗 Open Direct Login Page
+                      ${ico('🔗')} ${t('chassis.qr_direct', 'Open the sign-in page')}
                     </a>
                   `;
                 }
               } catch (qErr) {
                 qrTarget.innerHTML = `
                   <div style="padding: 12px; text-align: center;">
-                    <div style="color: var(--zn-text-crit); font-size: var(--zn-fs-xs); margin-bottom: 6px;">Could not display QR code</div>
-                    <a href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer" style="color: var(--zn-text-accent); text-decoration: underline; font-size: var(--zn-fs-xs); font-weight: 600;">Click here to log in directly</a>
+                    <div style="color: var(--zn-text-crit); font-size: var(--zn-fs-xs); margin-bottom: 6px;">${t('chassis.qr_failed', 'Could not show the QR code')}</div>
+                    <a href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer" style="color: var(--zn-text-accent); text-decoration: underline; font-size: var(--zn-fs-xs); font-weight: 600;">${t('chassis.qr_direct_link', 'Sign in directly instead')}</a>
                   </div>
                 `;
               }
             };
+
+            const qrReadyNote = () => showNote(statusEl, 'info', '📱', t('chassis.qr_ready', 'QR code ready:'),
+              t('chassis.qr_ready_desc', 'Scan it with your phone camera to sign in there, or follow step 2 below.'));
+            const signInOpenedNote = () => showNote(statusEl, 'info', '🌐', t('chassis.signin_opened', 'Sign-in window opened:'),
+              t('chassis.signin_opened_desc', 'Sign in to your account. When the page says “This site can’t be reached”, copy the full address from the address bar and paste it in step 2 below.'));
 
             const startOAuth = async (isQr = false, forceNew = false) => {
               // Reuse existing active session if available
@@ -2447,24 +2490,12 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 if (isQr) {
                   if (qrBox) qrBox.style.display = 'block';
                   await renderQrCode(_currentOAuthSession);
-                  if (statusEl) {
-                    statusEl.style.display = 'block';
-                    statusEl.style.background = 'rgba(56, 189, 248, 0.12)';
-                    statusEl.style.border = '1px solid rgba(56, 189, 248, 0.3)';
-                    statusEl.style.color = '#38bdf8';
-                    statusEl.innerHTML = '📱 <strong>QR Code Ready:</strong> Scan with your phone camera to sign in on mobile, or follow Step 2 below.';
-                  }
+                  qrReadyNote();
                 } else {
                   if (typeof window !== 'undefined' && window.open) {
                     window.open(_currentOAuthSession.auth_url, '_blank');
                   }
-                  if (statusEl) {
-                    statusEl.style.display = 'block';
-                    statusEl.style.background = 'rgba(56, 189, 248, 0.12)';
-                    statusEl.style.border = '1px solid rgba(56, 189, 248, 0.3)';
-                    statusEl.style.color = '#38bdf8';
-                    statusEl.innerHTML = '🌐 <strong>Sign-in window opened:</strong> Log in to your account. When redirected to the page saying <em>"This site can\'t be reached"</em>, copy the full address from your URL bar and paste it in Step 2 below.';
-                  }
+                  signInOpenedNote();
                   if (urlInput) {
                     setTimeout(() => urlInput.focus(), 200);
                   }
@@ -2481,20 +2512,14 @@ export async function openNewCloudRemoteModal(onSuccess) {
 
               if (browserBtn) {
                 browserBtn.disabled = true;
-                browserBtn.innerHTML = '<span>⏳ Starting Authorization...</span>';
+                setLabel(browserBtn, '⏳', t('chassis.oauth_starting', 'Starting the sign-in…'));
               }
               if (qrBtn) qrBtn.disabled = true;
               if (qrTarget && isQr) {
-                qrTarget.innerHTML = '<div style="font-size: var(--zn-fs-xs); color: var(--lt-t-0284c7ff, #0284c7); font-weight: 600;">⏳ Initializing QR code...</div>';
+                noteIn(qrTarget, t('chassis.qr_loading', 'Making the QR code…'), 'font-size: var(--zn-fs-xs); color: var(--lt-t-0284c7ff, #0284c7); font-weight: 600;');
               }
 
-              if (statusEl) {
-                statusEl.style.display = 'block';
-                statusEl.style.background = 'rgba(14, 165, 233, 0.15)';
-                statusEl.style.border = '1px solid rgba(14, 165, 233, 0.3)';
-                statusEl.style.color = '#38bdf8';
-                statusEl.innerHTML = '⏳ Contacting NAS to start OAuth authorization session...';
-              }
+              showNote(statusEl, 'busy', '⏳', '', t('chassis.oauth_starting', 'Starting the sign-in…'));
 
               try {
                 const res = await api.post('/api/remotes/oauth/start', {
@@ -2508,22 +2533,12 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   if (isQr) {
                     if (qrBox) qrBox.style.display = 'block';
                     await renderQrCode(res);
-                    if (statusEl) {
-                      statusEl.style.background = 'rgba(56, 189, 248, 0.12)';
-                      statusEl.style.border = '1px solid rgba(56, 189, 248, 0.3)';
-                      statusEl.style.color = '#38bdf8';
-                      statusEl.innerHTML = '📱 <strong>QR Code Ready:</strong> Scan with your phone camera to sign in on mobile, or follow Step 2 below.';
-                    }
+                    qrReadyNote();
                   } else {
                     if (typeof window !== 'undefined' && window.open) {
                       window.open(res.auth_url, '_blank');
                     }
-                    if (statusEl) {
-                      statusEl.style.background = 'rgba(56, 189, 248, 0.12)';
-                      statusEl.style.border = '1px solid rgba(56, 189, 248, 0.3)';
-                      statusEl.style.color = '#38bdf8';
-                      statusEl.innerHTML = '🌐 <strong>Sign-in window opened:</strong> Log in to your account. When redirected to the page saying <em>"This site can\'t be reached"</em>, copy the full address from your URL bar and paste it in Step 2 below.';
-                    }
+                    signInOpenedNote();
                     if (urlInput) {
                       setTimeout(() => urlInput.focus(), 300);
                     }
@@ -2543,18 +2558,12 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   }, 2500);
                 }
               } catch (err) {
-                if (statusEl) {
-                  statusEl.style.display = 'block';
-                  statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
-                  statusEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-                  statusEl.style.color = '#f87171';
-                  statusEl.innerHTML = `❌ Failed to start authorization: ${escapeHtml(err.message || 'Unknown error')}`;
-                }
+                showNote(statusEl, 'error', '❌', '', t('chassis.oauth_start_failed', 'Could not start the sign-in: {error}', { error: err.message || t('toast.unknown_error', 'Unknown error') }));
                 if (isQr && qrTarget) {
                   qrTarget.innerHTML = `
                     <div style="padding: 12px; text-align: center; color: var(--lt-t-ef4444ff, #ef4444); font-size: var(--zn-fs-xs);">
-                      <div>❌ ${escapeHtml(err.message || 'Failed to start authorization')}</div>
-                      <button type="button" class="btn-retry-qr" style="margin-top: 8px; padding: 4px 10px; font-size: var(--zn-fs-xs); background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: var(--zn-text-strong); border-radius: 4px; cursor: pointer;">🔄 Retry</button>
+                      <div>${ico('❌')} ${escapeHtml(err.message || t('chassis.oauth_start_failed_short', 'Could not start the sign-in'))}</div>
+                      <button type="button" class="btn-retry-qr" style="margin-top: 8px; padding: 4px 10px; font-size: var(--zn-fs-xs); background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: var(--zn-text-strong); border-radius: 4px; cursor: pointer;">${ico('🔄')} ${t('chassis.retry', 'Retry')}</button>
                     </div>
                   `;
                   const retryBtn = qrTarget.querySelector('.btn-retry-qr');
@@ -2565,7 +2574,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
               } finally {
                 if (browserBtn) {
                   browserBtn.disabled = false;
-                  browserBtn.innerHTML = `<span>🌐 ${escapeHtml(brandBtnLabel)}</span>`;
+                  setLabel(browserBtn, '🌐', brandBtnLabel);
                 }
                 if (qrBtn) qrBtn.disabled = false;
               }
@@ -2632,13 +2641,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                     if (urlInput && !urlInput.value.trim()) {
                       urlInput.value = clip.trim();
                       showToast(t('toast.detected_oauth_redirect_url_from_clipboard', 'Detected OAuth redirect URL from clipboard!'), 'info');
-                      if (statusEl) {
-                        statusEl.style.display = 'block';
-                        statusEl.style.background = 'rgba(34, 197, 94, 0.15)';
-                        statusEl.style.border = '1px solid rgba(34, 197, 94, 0.35)';
-                        statusEl.style.color = '#4ade80';
-                        statusEl.innerHTML = '📋 <strong>Redirect URL detected in clipboard!</strong> Auto-filled in Step 2. Click <strong>✓ Complete & Populate Token</strong> to finish.';
-                      }
+                      showNote(statusEl, 'ok', '📋', t('chassis.clip_found', 'Sign-in address found on the clipboard.'), t('chassis.clip_found_desc', 'It is filled in at step 2. Click “Finish sign-in” to finish.'));
                       if (exchangeBtn) {
                         exchangeBtn.focus();
                       }
@@ -2663,14 +2666,8 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   return;
                 }
                 exchangeBtn.disabled = true;
-                exchangeBtn.innerHTML = '<span>⏳ Exchanging Token...</span>';
-                if (statusEl) {
-                  statusEl.style.display = 'block';
-                  statusEl.style.background = 'rgba(14, 165, 233, 0.15)';
-                  statusEl.style.border = '1px solid rgba(14, 165, 233, 0.3)';
-                  statusEl.style.color = '#38bdf8';
-                  statusEl.innerHTML = '⏳ Contacting authorization server to exchange code for token...';
-                }
+                setLabel(exchangeBtn, '⏳', t('chassis.oauth_finishing', 'Finishing the sign-in…'));
+                showNote(statusEl, 'busy', '⏳', '', t('chassis.oauth_finishing', 'Finishing the sign-in…'));
 
                 try {
                   const exRes = await api.post('/api/remotes/oauth/exchange', {
@@ -2688,16 +2685,10 @@ export async function openNewCloudRemoteModal(onSuccess) {
                     throw new Error(exRes?.error || 'Token exchange failed');
                   }
                 } catch (err) {
-                  if (statusEl) {
-                    statusEl.style.display = 'block';
-                    statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
-                    statusEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-                    statusEl.style.color = '#f87171';
-                    statusEl.innerHTML = `❌ Token Exchange Error: ${escapeHtml(err.message || 'Failed to exchange code')}`;
-                  }
+                  showNote(statusEl, 'error', '❌', '', t('chassis.oauth_finish_failed', 'Could not finish the sign-in: {error}', { error: err.message || t('toast.unknown_error', 'Unknown error') }));
                 } finally {
                   exchangeBtn.disabled = false;
-                  exchangeBtn.innerHTML = '<span>✓ Complete & Populate Token</span>';
+                  setLabel(exchangeBtn, '✓', t('chassis.oauth_finish', 'Finish sign-in'));
                 }
               };
             }
@@ -2714,7 +2705,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   btn.textContent = t('ui.copied', '✅ Copied!');
                   showToast(t('toast.copied_command', 'Copied command: {cmd}', { cmd: cmd }), 'info');
                   setTimeout(() => {
-                    btn.textContent = `📋 Copy: ${cmd}`;
+                    setLabel(btn, '📋', t('chassis.copy_cmd', 'Copy: {cmd}', { cmd }));
                   }, 2000);
                 }
               }
@@ -2746,13 +2737,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
         testBtn.disabled = true;
         testBtn.classList.remove('tested-green');
         testBtn.innerHTML = `<span>${t('remotes.test_btn_testing', '⏳ Testing Connection...')}</span>`;
-        if (testResult) {
-          testResult.style.display = 'block';
-          testResult.style.background = 'rgba(56, 189, 248, 0.12)';
-          testResult.style.border = '1px solid rgba(56, 189, 248, 0.3)';
-          testResult.style.color = '#38bdf8';
-          testResult.innerHTML = '<span>🔄 Validating credentials and connecting to remote...</span>';
-        }
+        showNote(testResult, 'info', '🔄', '', t('chassis.testing', 'Checking the sign-in details and connecting…'));
 
         try {
           const res = await api.post('/api/remotes/test', {
@@ -2779,43 +2764,25 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 driveTypeSelect.dispatchEvent(new Event('change', { bubbles: true }));
               }
             }
-            if (testResult) {
-              testResult.style.display = 'block';
-              testResult.style.background = 'rgba(34, 197, 94, 0.18)';
-              testResult.style.border = '1px solid rgba(34, 197, 94, 0.4)';
-              testResult.style.color = '#4ade80';
-              const sample = (res.items_sample && res.items_sample.length > 0)
-                ? ` (Files found: ${res.items_sample.slice(0, 3).join(', ')})`
-                : '';
-              testResult.innerHTML = `✅ <strong>Connection Test Successful: Connection Verified!</strong> Valid credentials and remote accessible${sample}.`;
-            }
+            const found = (res.items_sample || []).slice(0, 3).join(', ');
+            showNote(testResult, 'ok', '✅', t('chassis.test_ok', 'Connection works.'), found
+              ? t('chassis.test_ok_files', 'The sign-in details are valid and the cloud drive answers. Files found: {files}.', { files: found })
+              : t('chassis.test_ok_desc', 'The sign-in details are valid and the cloud drive answers.'));
           } else {
             testBtn.classList.remove('tested-green');
-            testBtn.innerHTML = '<span>⚡ Test Connection</span>';
-            if (testResult) {
-              testResult.style.display = 'block';
-              testResult.style.background = 'rgba(239, 68, 68, 0.15)';
-              testResult.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-              testResult.style.color = '#f87171';
-              testResult.innerHTML = `❌ <strong>Connection Failed:</strong> ${escapeHtml(res?.error || 'Authentication error')}`;
-            }
+            setLabel(testBtn, '⚡', t('chassis.test_connection', 'Test connection'));
+            showNote(testResult, 'error', '❌', t('chassis.test_failed', 'Connection failed:'), res?.error || t('chassis.test_refused', 'The sign-in was refused'));
             showToast(res?.error || 'Connection test failed', 'error');
           }
         } catch (err) {
           testBtn.classList.remove('tested-green');
-          testBtn.innerHTML = '<span>⚡ Test Connection</span>';
-          if (testResult) {
-            testResult.style.display = 'block';
-            testResult.style.background = 'rgba(239, 68, 68, 0.15)';
-            testResult.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-            testResult.style.color = '#f87171';
-            testResult.innerHTML = `❌ <strong>Connection Failed:</strong> ${escapeHtml(err.message || 'Error communicating with host')}`;
-          }
+          setLabel(testBtn, '⚡', t('chassis.test_connection', 'Test connection'));
+          showNote(testResult, 'error', '❌', t('chassis.test_failed', 'Connection failed:'), err.message || t('chassis.test_no_answer', 'No answer from the NAS'));
           showToast(err.message || 'Error testing connection', 'error');
         } finally {
           testBtn.disabled = false;
           if (!testBtn.classList.contains('tested-green')) {
-            testBtn.innerHTML = '<span>⚡ Test Connection</span>';
+            setLabel(testBtn, '⚡', t('chassis.test_connection', 'Test connection'));
           }
         }
       };
@@ -2824,7 +2791,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
     const resetTestGreen = () => {
       if (testBtn && testBtn.classList.contains('tested-green')) {
         testBtn.classList.remove('tested-green');
-        testBtn.innerHTML = '<span>⚡ Test Connection</span>';
+        setLabel(testBtn, '⚡', t('chassis.test_connection', 'Test connection'));
       }
       if (testResult) {
         testResult.style.display = 'none';
@@ -2877,7 +2844,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
           if (onSuccess) onSuccess();
         } catch (err) {
           if (errorBox) {
-            errorBox.textContent = err.message || 'Failed to connect remote';
+            errorBox.textContent = err.message || t('chassis.remote_failed', 'Could not connect the cloud drive');
             errorBox.style.display = 'block';
           }
         } finally {
@@ -2940,22 +2907,22 @@ export async function openCreateStoragePoolModal(onSuccess) {
     const fs = fsSelect?.value || 'btrfs';
     if (fs === 'zfs') {
       profileSelect.innerHTML = `
-        <option value="raidz2" selected>RAIDZ2 (Dual Parity - 4+ Drives - Recommended)</option>
-        <option value="raidz1">RAIDZ1 (Single Parity - 3+ Drives)</option>
-        <option value="raidz3">RAIDZ3 (Triple Parity - 5+ Drives)</option>
-        <option value="mirror">ZFS Mirror (2+ Drives)</option>
-        <option value="single">Single / Stripe (No Parity)</option>
+        <option value="raidz2" selected>${t('chassis.p_raidz2', 'RAIDZ2 (two parity drives, 4+ drives, recommended)')}</option>
+        <option value="raidz1">${t('chassis.p_raidz1', 'RAIDZ1 (one parity drive, 3+ drives)')}</option>
+        <option value="raidz3">${t('chassis.p_raidz3', 'RAIDZ3 (three parity drives, 5+ drives)')}</option>
+        <option value="mirror">${t('chassis.p_zmirror', 'ZFS mirror (2+ drives)')}</option>
+        <option value="single">${t('chassis.p_stripe', 'Single / stripe (no parity)')}</option>
       `;
     } else if (fs === 'btrfs') {
       profileSelect.innerHTML = `
-        <option value="raid1" selected>RAID 1 (Mirroring - 2+ Drives)</option>
-        <option value="raid10">RAID 10 (Striped Mirrors - 4+ Drives)</option>
-        <option value="raid0">RAID 0 (Striping - Fast, No Redundancy)</option>
-        <option value="single">Single (JBOD Drive)</option>
+        <option value="raid1" selected>${t('chassis.p_raid1', 'RAID 1 (mirror, 2+ drives)')}</option>
+        <option value="raid10">${t('chassis.p_raid10', 'RAID 10 (striped mirrors, 4+ drives)')}</option>
+        <option value="raid0">${t('chassis.p_raid0', 'RAID 0 (striping: fast, no redundancy)')}</option>
+        <option value="single">${t('chassis.p_jbod', 'Single (JBOD drive)')}</option>
       `;
     } else {
       profileSelect.innerHTML = `
-        <option value="single" selected>Single Volume (Standard Drive)</option>
+        <option value="single" selected>${t('chassis.p_single', 'Single volume (one drive)')}</option>
       `;
     }
   };
@@ -2966,7 +2933,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
 
   // Populate available physical disks
   if (disksContainer) {
-    disksContainer.innerHTML = '<div style="color:var(--muted); font-size:var(--zn-fs-xs);">Scanning available physical disks...</div>';
+    noteIn(disksContainer, t('chassis.scanning_disks', 'Looking for free drives…'), 'color:var(--muted); font-size:var(--zn-fs-xs);');
     try {
       const overview = await api.get('/api/storage/overview').catch(() => null);
       let disksList = overview?.unassigned_disks;
@@ -2984,7 +2951,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
       });
 
       if (filtered.length === 0) {
-        disksContainer.innerHTML = '<div style="color:var(--muted); font-size:var(--zn-fs-xs);">No unassigned disks available.</div>';
+        noteIn(disksContainer, t('chassis.no_free_disks', 'No free drives.'), 'color:var(--muted); font-size:var(--zn-fs-xs);');
       } else {
         disksContainer.innerHTML = filtered.map((d) => `
           <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); cursor:pointer;">
@@ -2994,7 +2961,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
         `).join('');
       }
     } catch (dErr) {
-      disksContainer.innerHTML = '<div style="color:var(--muted); font-size:var(--zn-fs-xs);">Failed to scan disks.</div>';
+      noteIn(disksContainer, t('chassis.scan_failed', 'Could not look for drives.'), 'color:var(--muted); font-size:var(--zn-fs-xs);');
     }
   }
 
@@ -3044,7 +3011,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
             const erase = await new Promise((resolve) => {
               showConfirmToast(
                 'Disks contain data',
-                `${escapeHtml(err.message)}<br><br>Erase everything on them and continue?`,
+                `${escapeHtml(err.message)}<br><br>${escapeHtml(t('chassis.erase_continue', 'Erase everything on them and continue?'))}`,
                 () => resolve(true),
                 () => resolve(false)
               );
@@ -3062,7 +3029,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
         if (onSuccess) onSuccess();
       } catch (err) {
         if (errorBox) {
-          errorBox.textContent = err.message || 'Failed to create storage pool';
+          errorBox.textContent = err.message || t('chassis.pool_create_failed', 'Could not create the storage pool');
           errorBox.style.display = 'block';
         }
       } finally {
@@ -3136,15 +3103,15 @@ export function openCreateNetworkShareModal(onSuccess) {
   const usersMatrix = document.getElementById('create-share-users-matrix');
   const usersCount = document.getElementById('create-share-users-count');
   if (usersMatrix) {
-    usersMatrix.innerHTML = '<div style="font-size:var(--zn-fs-xs); color:var(--muted); padding:4px;">Loading user accounts...</div>';
+    noteIn(usersMatrix, t('chassis.loading_users', 'Loading accounts…'), 'font-size:var(--zn-fs-xs); color:var(--muted); padding:4px;');
     api.get('/api/auth/users').then((data) => {
       const users = Array.isArray(data) ? data : (data?.users || []);
       if (!users.length) {
-        usersMatrix.innerHTML = '<div style="font-size:var(--zn-fs-xs); color:var(--muted); padding:4px;">No custom users found. Defaulting to system access.</div>';
+        noteIn(usersMatrix, t('chassis.no_users', 'No accounts yet: the system’s access rules apply.'), 'font-size:var(--zn-fs-xs); color:var(--muted); padding:4px;');
         if (usersCount) usersCount.textContent = t('ui.0_users', '0 Users');
         return;
       }
-      if (usersCount) usersCount.textContent = `${users.length} Users`;
+      if (usersCount) usersCount.textContent = t('chassis.users_count', '{count, plural, one {# user} other {# users}}', { count: users.length });
       usersMatrix.innerHTML = users.map((u) => {
         const uname = u.username || u.name || 'user';
         const role = u.role || 'user';
@@ -3162,14 +3129,14 @@ export function openCreateNetworkShareModal(onSuccess) {
                 <input type="radio" name="perm-${uname}" value="ro" style="accent-color:#38bdf8; width:12px; height:12px;" /> RO
               </label>
               <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:var(--zn-fs-xs); color:var(--zn-text-crit);">
-                <input type="radio" name="perm-${uname}" value="deny" style="accent-color:#f87171; width:12px; height:12px;" /> Deny
+                <input type="radio" name="perm-${uname}" value="deny" style="accent-color:#f87171; width:12px; height:12px;" /> ${t('chassis.deny', 'Deny')}
               </label>
             </div>
           </div>
         `;
       }).join('');
     }).catch(() => {
-      usersMatrix.innerHTML = '<div style="font-size:var(--zn-fs-xs); color:var(--muted); padding:4px;">Standard user access rules apply.</div>';
+      noteIn(usersMatrix, t('chassis.standard_rules', 'The usual access rules apply.'), 'font-size:var(--zn-fs-xs); color:var(--muted); padding:4px;');
       if (usersCount) usersCount.textContent = t('ui.standard', 'Standard');
     });
   }
@@ -3253,7 +3220,7 @@ export function openCreateNetworkShareModal(onSuccess) {
         if (onSuccess) onSuccess();
       } catch (err) {
         if (errorBox) {
-          errorBox.textContent = err.message || 'Failed to create share';
+          errorBox.textContent = err.message || t('chassis.share_create_failed', 'Could not create the share');
           errorBox.style.display = 'block';
         }
       } finally {
@@ -3294,11 +3261,11 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
 
   async function loadSnapshots() {
     if (!listMount) return;
-    listMount.innerHTML = '<div style="padding:15px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);">Loading snapshots...</div>';
+    noteIn(listMount, t('chassis.loading_snapshots', 'Loading snapshots…'), 'padding:15px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);');
     try {
       const snaps = await api.get(`/api/storage/pools/${poolId}/snapshots`);
       if (!Array.isArray(snaps) || snaps.length === 0) {
-        listMount.innerHTML = '<div style="padding:20px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);">No active subvolume snapshots found.</div>';
+        noteIn(listMount, t('chassis.no_snapshots', 'No snapshots yet.'), 'padding:20px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);');
         return;
       }
 
@@ -3308,10 +3275,10 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
           <table class="copy-history-table" style="width:100%;">
             <thead>
               <tr>
-                <th>Snapshot Name</th>
-                <th>Path</th>
-                <th>Created</th>
-                <th>Action</th>
+                <th>${t('chassis.col_snapshot', 'Snapshot')}</th>
+                <th>${t('chassis.col_path', 'Path')}</th>
+                <th>${t('chassis.col_created', 'Created')}</th>
+                <th>${t('chassis.col_action', 'Action')}</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -3336,10 +3303,10 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
             <td>
               <div style="display:flex; gap:6px; align-items:center;">
                 <button class="btn-snap-restore btn-pill-toggle is-small" data-snap="${escapeHtml(s.name)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--zn-text-warn);">
-                  ⏪ Revert
+                  ${ico('⏪')} ${t('chassis.revert', 'Restore')}
                 </button>
                 <button class="btn-snap-del btn-pill-toggle is-danger is-small" data-snap="${escapeHtml(s.name)}">
-                  🗑️ Delete
+                  ${ico('🗑️')} ${t('chassis.delete', 'Delete')}
                 </button>
               </div>
             </td>
@@ -3355,7 +3322,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
         }
       );
     } catch (err) {
-      listMount.innerHTML = `<div style="padding:15px; color:var(--zn-text-crit); font-size:var(--zn-fs-xs);">Error loading snapshots: ${escapeHtml(err.message || '')}</div>`;
+      noteIn(listMount, t('chassis.snapshots_failed', 'Could not load snapshots: {error}', { error: err.message || '' }), 'padding:15px; color:var(--zn-text-crit); font-size:var(--zn-fs-xs);');
     }
   }
 
@@ -3497,7 +3464,7 @@ export function openRenameStoragePoolModal(poolId, currentName, onSuccess) {
         if (onSuccess) onSuccess();
       } catch (err) {
         if (errorBox) {
-          errorBox.textContent = err.message || 'Failed to rename storage pool';
+          errorBox.textContent = err.message || t('chassis.rename_failed', 'Could not rename the storage pool');
           errorBox.style.display = 'block';
         }
       } finally {

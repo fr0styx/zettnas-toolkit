@@ -5,7 +5,7 @@
  "frontend/src/client-logger.js": 34,
  "frontend/src/components/auth.js": 42,
  "frontend/src/components/chart-zoom.js": 2,
- "frontend/src/components/chassis-visualizer.js": 181,
+ "frontend/src/components/chassis-visualizer.js": 143,
  "frontend/src/components/container-modal.js": 76,
  "frontend/src/components/container-network-map.js": 1,
  "frontend/src/components/containers-manager.js": 50,
