@@ -1,6 +1,6 @@
 {
   "raw_toasts": 0,
-  "hardcoded_ui": 263,
+  "hardcoded_ui": 250,
   "missing_plurals": 0,
   "to_fixed": 70,
   "emoji_strings": 137,
@@ -11,7 +11,7 @@
     "frontend/src/components/dock/dock-manager.js": 1,
     "frontend/src/components/dock/user-flyout.js": 1,
     "frontend/src/components/encrypted-folders.js": 1,
-    "frontend/src/components/fan-control.js": 21,
+    "frontend/src/components/fan-control.js": 8,
     "frontend/src/components/file-manager.js": 11,
     "frontend/src/components/file-preview-modal.js": 2,
     "frontend/src/components/management.js": 18,

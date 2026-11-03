@@ -115,7 +115,7 @@ export function updateFanCurveWorkstation(s) {
   if ($('zp-z1-pwm')) {
     const el = $('zp-z1-pwm');
     if (fc.zone1_zero_rpm || fc.zone1_pwm === 0) {
-      el.textContent = 'PWM: 0 (PASSIVE)';
+      el.textContent = t('fan.pwm_passive', 'PWM: 0 (PASSIVE)');
       el.style.color = '#38bdf8';
     } else {
       el.textContent = `PWM: ${fc.zone1_pwm}`;
@@ -126,7 +126,7 @@ export function updateFanCurveWorkstation(s) {
   if ($('zp-z2-pwm')) {
     const el = $('zp-z2-pwm');
     if (fc.zone2_zero_rpm || fc.zone2_pwm === 0) {
-      el.textContent = 'PWM: 0 (PASSIVE)';
+      el.textContent = t('fan.pwm_passive', 'PWM: 0 (PASSIVE)');
       el.style.color = '#38bdf8';
     } else {
       el.textContent = `PWM: ${fc.zone2_pwm}`;
@@ -134,22 +134,22 @@ export function updateFanCurveWorkstation(s) {
     }
   }
   if ($('zp-cpu-temp')) $('zp-cpu-temp').textContent = `${fc.cpu_temp}°C`;
-  if ($('zp-cpu-pwm')) $('zp-cpu-pwm').textContent = fc.ctrl_cpu_fan ? `PWM: ${fc.cpu_pwm}` : 'BIOS Auto';
+  if ($('zp-cpu-pwm')) $('zp-cpu-pwm').textContent = fc.ctrl_cpu_fan ? `PWM: ${fc.cpu_pwm}` : t('fan.bios_auto', 'BIOS Auto');
 
   const hBadge = $('hysteresis-badge');
   if (hBadge) {
     if (fc.disk_hold_remaining > 0) {
-      hBadge.textContent = `HOLD: ACTIVE (${fc.disk_hold_remaining}s)`;
+      hBadge.textContent = t('fan.hold_active', 'HOLD: ACTIVE ({s}s)', { s: fc.disk_hold_remaining });
       hBadge.style.background = 'rgba(245,183,49,0.15)';
       hBadge.style.color = 'var(--warn)';
       hBadge.style.borderColor = 'rgba(245,183,49,0.4)';
     } else if (fc.ctrl_cpu_fan && fc.cpu_hold_remaining > 0) {
-      hBadge.textContent = `CPU HOLD (${fc.cpu_hold_remaining}s)`;
+      hBadge.textContent = t('fan.cpu_hold', 'CPU HOLD ({s}s)', { s: fc.cpu_hold_remaining });
       hBadge.style.background = 'rgba(245,183,49,0.15)';
       hBadge.style.color = 'var(--warn)';
       hBadge.style.borderColor = 'rgba(245,183,49,0.4)';
     } else {
-      hBadge.textContent = 'HOLD: READY';
+      hBadge.textContent = t('fan.hold_ready', 'HOLD: READY');
       hBadge.style.background = 'rgba(51,209,122,0.15)';
       hBadge.style.color = 'var(--ok)';
       hBadge.style.borderColor = 'rgba(51,209,122,0.35)';
@@ -215,13 +215,13 @@ export function updateFanCurveWorkstation(s) {
   const fanStatusBadge = $('fan-status-badge');
   if (fanStatusBadge && fc.driver_mode) {
     if (fc.driver_mode === 'mmio') {
-      fanStatusBadge.textContent = 'MMIO FALLBACK';
+      fanStatusBadge.textContent = t('fan.mmio', 'MMIO FALLBACK');
       fanStatusBadge.title = t('ui.direct_mmio_memory_access_userspace', 'Direct MMIO Memory Access (Userspace Fallback - No kernel module needed)');
       fanStatusBadge.style.background = 'rgba(56, 189, 248, 0.15)';
       fanStatusBadge.style.color = '#38bdf8';
       fanStatusBadge.style.borderColor = 'rgba(56, 189, 248, 0.4)';
     } else if (fc.driver_mode === 'hwmon') {
-      fanStatusBadge.textContent = 'KERNEL HWMON';
+      fanStatusBadge.textContent = t('fan.hwmon', 'KERNEL HWMON');
       fanStatusBadge.title = t('ui.kernel_module_hwmon_driver_active', 'Kernel module hwmon driver active');
       fanStatusBadge.style.background = 'rgba(51, 209, 122, 0.15)';
       fanStatusBadge.style.color = 'var(--ok)';
@@ -868,7 +868,7 @@ export function initAcousticCalibration() {
         badge.style.color = '#eab308';
         badge.style.borderColor = 'rgba(234,179,8,0.35)';
       }
-      if (statusEl) statusEl.textContent = t('settings.sweep_running') || 'Sweep Running...';
+      if (statusEl) statusEl.textContent = t('settings.sweep_running', 'Sweep Running...');
       if (stepEl) stepEl.textContent = t('fan.step', 'Step {step}/{total} ({pwm} PWM)', { step: data.step || 0, total: data.total_steps || 0, pwm: data.current_pwm || 58 });
     } else {
       btnStart.style.display = 'inline-flex';
@@ -877,7 +877,7 @@ export function initAcousticCalibration() {
       if (progressWrap) progressWrap.style.display = 'none';
       if (badge) {
         if (data.completed_at) {
-          badge.textContent = 'COMPLETE';
+          badge.textContent = t('fan.complete', 'COMPLETE');
           badge.style.background = 'rgba(34,197,94,0.15)';
           badge.style.color = '#22c55e';
           badge.style.borderColor = 'rgba(34,197,94,0.35)';
@@ -889,14 +889,14 @@ export function initAcousticCalibration() {
         }
       }
       if (statusEl) {
-        statusEl.textContent = data.completed_at ? (t('settings.sweep_complete') || 'Calibration Complete') : 'Idle';
+        statusEl.textContent = data.completed_at ? t('settings.sweep_complete', 'Calibration Complete') : t('fan.idle', 'Idle');
       }
       if (stepEl && data.completed_at) {
-        stepEl.textContent = `${data.results?.length || 0} Steps Analyzed`;
+        stepEl.textContent = t('fan.steps', '{count, plural, one {# Step Analyzed} other {# Steps Analyzed}}', { count: data.results?.length || 0 });
       }
       if (wasRunning && data.completed_at) {
         wasRunning = false;
-        showToast(t('settings.sweep_complete') || 'Calibration Complete', 'success');
+        showToast(t('settings.sweep_complete', 'Calibration Complete'), 'success');
       }
     }
   }
