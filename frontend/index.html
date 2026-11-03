@@ -1675,7 +1675,7 @@
         </div>
       </div>
 
-      <div id="screen" class="hardware-screen-canvas">
+      <div id="screen" class="hardware-screen-canvas" translate="no">
         <header>
           <div class="h-left">
             <span class="nas-name" id="nasName">NAS</span>
@@ -1857,21 +1857,21 @@
           <div class="lcd-page" id="lcd-page-2" data-page-index="2">
             <div class="lcd-page-header-banner">
               <span class="lph-title"><svg class="ic ic-sm"><use href="#i-net"/></svg> NETWORK & STORAGE I/O TELEMETRY</span>
-              <span class="lph-stat" id="lcd-net-summary" data-i18n="ix.interface_live">INTERFACE LIVE</span>
+              <span class="lph-stat" id="lcd-net-summary">INTERFACE LIVE</span>
             </div>
             <div class="net-io-grid">
               <div class="net-io-panel">
-                <div class="nio-head"><span class="nio-dir rx" data-i18n="ix.inbound_rx">INBOUND (RX)</span><span class="nio-rate" id="lcd-nio-rx">0.0 MB/s</span></div>
+                <div class="nio-head"><span class="nio-dir rx">INBOUND (RX)</span><span class="nio-rate" id="lcd-nio-rx">0.0 MB/s</span></div>
                 <div class="nio-bar-bg"><div class="nio-bar-fill rx" id="lcd-nio-rx-bar" style="width:0%"></div></div>
                 <div class="nio-sub"><span id="lcd-nio-rx-peak" data-sample>Peak: 0 MB/s</span><span data-sample>Target: 10 GbE</span></div>
               </div>
               <div class="net-io-panel">
-                <div class="nio-head"><span class="nio-dir tx" data-i18n="ix.outbound_tx">OUTBOUND (TX)</span><span class="nio-rate" id="lcd-nio-tx">0.0 MB/s</span></div>
+                <div class="nio-head"><span class="nio-dir tx">OUTBOUND (TX)</span><span class="nio-rate" id="lcd-nio-tx">0.0 MB/s</span></div>
                 <div class="nio-bar-bg"><div class="nio-bar-fill tx" id="lcd-nio-tx-bar" style="width:0%"></div></div>
                 <div class="nio-sub"><span id="lcd-nio-tx-peak" data-sample>Peak: 0 MB/s</span><span id="lcd-nio-ip">IP: 0.0.0.0</span></div>
               </div>
               <div class="net-io-panel">
-                <div class="nio-head"><span class="nio-dir io" data-i18n="ix.storage_i_o">STORAGE I/O</span><span class="nio-rate" id="lcd-nio-disk-total">0.0 MB/s</span></div>
+                <div class="nio-head"><span class="nio-dir io">STORAGE I/O</span><span class="nio-rate" id="lcd-nio-disk-total">0.0 MB/s</span></div>
                 <div class="nio-bar-bg"><div class="nio-bar-fill io" id="lcd-nio-io-bar" style="width:0%"></div></div>
                 <div class="nio-sub"><span id="lcd-nio-uptime">up --</span><span id="lcd-nio-disks-active" data-sample>Active</span></div>
               </div>
@@ -1887,7 +1887,7 @@
             <div class="unraid-copy-grid">
               <div class="uc-panel">
                 <div class="uc-title-row">
-                  <span class="uc-title" data-i18n="ix.array_status">ARRAY STATUS</span>
+                  <span class="uc-title">ARRAY STATUS</span>
                   <span class="uc-state-badge" id="lcd-uc-array-badge">STARTED</span>
                 </div>
                 <div class="uc-stat-line" id="lcd-uc-disks-stat" data-sample>Disks: 2 Assigned • 0 Errors</div>
@@ -1902,7 +1902,7 @@
 
               <div class="uc-panel">
                 <div class="uc-title-row">
-                  <span class="uc-title" data-i18n="ix.media_ingest_engine">MEDIA INGEST ENGINE</span>
+                  <span class="uc-title">MEDIA INGEST ENGINE</span>
                   <span class="uc-state-badge" id="lcd-uc-copy-badge">IDLE</span>
                 </div>
                 <div class="uc-stat-line" id="lcd-uc-media-slots">SD: Slot Empty • TF: Slot Empty</div>
