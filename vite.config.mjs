@@ -1,10 +1,16 @@
 import { defineConfig } from 'vite';
 import { iconsAtBuildTime } from './frontend/scripts/icons-build.mjs';
 
+// HTML comments are notes for us, not bytes for the browser (FE-01 first-load budget)
+export const stripHtmlComments = () => ({
+  name: 'zn-strip-html-comments',
+  transformIndexHtml: { order: 'post', handler: (html) => html.replace(/<!--(?!\[if)[\s\S]*?-->\n?/g, '') },
+});
+
 export default defineConfig({
   root: 'frontend',
   // emoji in index.html and the window templates become icons at build time (PERF-8)
-  plugins: [iconsAtBuildTime()],
+  plugins: [iconsAtBuildTime(), stripHtmlComments()],
   build: {
     outDir: '../static',
     emptyOutDir: false,

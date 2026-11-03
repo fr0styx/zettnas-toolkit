@@ -543,7 +543,7 @@ async function loadCurrentItem() {
 
       if (res.type === 'media') {
         const isVideo = ['.mp4', '.mkv', '.webm', '.mov', '.avi'].includes(res.ext);
-        metaEl.textContent = `${isVideo ? 'Video' : 'Audio'}${szStr}`;
+        metaEl.textContent = `${isVideo ? t('ql.video', 'Video') : t('ql.audio', 'Audio')}${szStr}`;
         const streamUrl = `/api/fs/stream?path=${encodeURIComponent(_currentPath)}`;
         if (isVideo) {
           // Formats this browser can't play (iPhone HEVC in Firefox, MKV, AC-3 audio…) stream converted
@@ -558,7 +558,7 @@ async function loadCurrentItem() {
           const compat = media ? !canPlayHere(media, _currentName) : false;
           if (media && media.video) {
             const v = media.video;
-            metaEl.textContent = `Video${szStr} • ${v.width}×${v.height} • ${codecName(v.codec)}${media.duration ? ` • ${formatDuration(media.duration)}` : ''}`;
+            metaEl.textContent = `${t('ql.video', 'Video')}${szStr} • ${v.width}×${v.height} • ${codecName(v.codec)}${media.duration ? ` • ${formatDuration(media.duration)}` : ''}`;
           }
           renderVideoPlayer(bodyEl, compat ? compatStreamUrl(forPath, 0) : streamUrl, { ...res, media, compat });
           addGalleryNav(bodyEl);
@@ -576,7 +576,7 @@ async function loadCurrentItem() {
         bodyEl.innerHTML = `<iframe src="${pdfUrl}" style="width:100%; height:100%; border:none; border-radius:6px;"></iframe>`;
       } else if (res.type === 'text') {
         const lines = res.lines_count || 1;
-        metaEl.textContent = `${lines} line${lines === 1 ? '' : 's'}${szStr}${res.truncated ? ' (first 64KB)' : ''}`;
+        metaEl.textContent = `${t('ql.lines', '{count, plural, one {# line} other {# lines}}', { count: lines })}${szStr}${res.truncated ? ` ${t('ql.first_64kb', '(first 64 KB)')}` : ''}`;
         if (/\.(md|markdown)$/i.test(_currentName || '')) {
           bodyEl.innerHTML = `<article class="quicklook-markdown">${renderMarkdown(res.content || '')}</article>`;
         } else {
