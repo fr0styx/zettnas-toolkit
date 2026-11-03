@@ -9,6 +9,7 @@ import { makeDraggable, bringToFront } from '../dock.js';
 import { createTerminalView } from '../terminal-view.js';
 import { vmState } from './state.js';
 import { isCompact, isTouch } from '../../device.js';
+import { setIconLabel } from '../../ui/primitives.js';
 
 // An icon next to translated words: screen readers skip it (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
@@ -81,12 +82,12 @@ export function setConsoleFocus(focused) {
   const pill = consoleWin.querySelector('#vm-console-kbd-pill');
   if (pill) {
     if (focused) {
-      pill.textContent = t('ui.captured', '⌨️ Captured');
+      setIconLabel(pill, '⌨️', t('ui.captured', 'Captured'));
       pill.style.color = '#38bdf8';
       pill.style.borderColor = 'rgba(14, 165, 233, 0.4)';
       pill.setAttribute('title', t('ui.keyboard_captured_by_vm_console', 'Keyboard captured by VM console. Click outside or minimize to release.'));
     } else {
-      pill.textContent = t('ui.click_to_capture', '⌨️ Click to capture');
+      setIconLabel(pill, '⌨️', t('ui.click_to_capture', 'Click to capture'));
       pill.style.color = 'var(--muted)';
       pill.style.borderColor = 'rgba(255, 255, 255, 0.1)';
       pill.setAttribute('title', t('vcon.kbd_released', 'Keyboard released to the desktop. Click the console to capture it.'));
@@ -1056,7 +1057,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
             <span class="toolbar-stat"><span class="stat-dot-pulse"></span> 60 FPS</span>
             <span class="toolbar-stat" id="vm-console-resolution-stat">${initialMode === 'cli' ? '80 × 25 TTY' : '1920 × 1080'}</span>
             <span class="toolbar-stat" id="vm-console-adapter-stat" style="color: ${initialMode === 'cli' ? '#34d399' : '#38bdf8'};">${initialMode === 'cli' ? 'Serial TTY' : 'VirtIO-GPU'}</span>
-            <span class="toolbar-stat" id="vm-console-kbd-pill" style="color: var(--zn-text-accent); font-weight: 500; cursor: pointer;" title="${t('ui.keyboard_captured_by_vm_console', 'Keyboard captured by VM console. Click outside or minimize to release.')}">${t('ui.captured', '⌨️ Captured')}</span>
+            <span class="toolbar-stat" id="vm-console-kbd-pill" style="color: var(--zn-text-accent); font-weight: 500; cursor: pointer;" title="${t('ui.keyboard_captured_by_vm_console', 'Keyboard captured by VM console. Click outside or minimize to release.')}"><span aria-hidden="true">⌨️</span> ${t('ui.captured', 'Captured')}</span>
           </div>
           <div class="console-toolbar-right">
             <button class="btn-console-act" id="btn-vnc-softkbd" title="${t('vm.soft_kbd', 'Keyboard')}">

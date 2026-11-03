@@ -1946,10 +1946,10 @@ export function updateMediaSlots(mediaSlots) {
 
   // Surface toast on card insertion (0 -> >0 transition) ONLY if not in ejected state
   if (_prevClientMediaSlots.sd !== null && _prevClientMediaSlots.sd === 0 && sdSize > 0 && !sdEjected) {
-    showToast(t('toast.sd_card_detected_gb_ready_for', '📷 SD Card Detected ({value} GB): Ready for import', { value: formatFixed(sdSize / 1e9, 1) }), 'info');
+    showToast(t('toast.sd_card_detected_gb_ready_for', 'SD Card Detected ({value} GB): Ready for import', { value: formatFixed(sdSize / 1e9, 1) }), 'info');
   }
   if (_prevClientMediaSlots.tf !== null && _prevClientMediaSlots.tf === 0 && tfSize > 0 && !tfEjected) {
-    showToast(t('toast.tf_microsd_detected_gb_ready_for', '📷 TF (MicroSD) Detected ({value} GB): Ready for import', { value: formatFixed(tfSize / 1e9, 1) }), 'info');
+    showToast(t('toast.tf_microsd_detected_gb_ready_for', 'TF (MicroSD) Detected ({value} GB): Ready for import', { value: formatFixed(tfSize / 1e9, 1) }), 'info');
   }
   _prevClientMediaSlots.sd = sdSize;
   _prevClientMediaSlots.tf = tfSize;

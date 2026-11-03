@@ -23,6 +23,7 @@ import {
 import '../styles/files-lazy.css'; // shared with the explorer (PERF-9)
 import '../styles/viewer-lazy.css'; // the viewer's own sheet loads with this code (PERF-9)
 let _activePreviewModal = null;
+import { setIconLabel } from '../ui/primitives.js';
 let _previewAbortController = null;
 let _previewKeydownListener = null;
 let _activeVideoController = null;
@@ -475,7 +476,7 @@ async function loadCurrentItem() {
     if (infoBtn) infoBtn.style.display = 'none';
     if (filmstripBtn) filmstripBtn.style.display = 'none';
 
-    metaEl.textContent = t('ui.nvme_rag_cache_zero_disk', '💤 Search without waking drives');
+    setIconLabel(metaEl, '💤', t('ui.nvme_rag_cache_zero_disk', 'Search without waking drives'));
     const isPhoto = isImageFile(_currentName);
     const thumbHtml = isPhoto && _currentAiMeta.thumbnailUrl
       ? `<img src="${escapeHtml(_currentAiMeta.thumbnailUrl)}" class="quicklook-img" alt="${escapeHtml(_currentName)}" style="max-height:360px; border-radius:8px; object-fit:contain;" />`

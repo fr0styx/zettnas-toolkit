@@ -180,7 +180,7 @@ export async function testSingleChannel(channel) {
     if (res?.success) {
       showToast(t('toast.delivered_in_ms', '✓ {channel}: Delivered in {latency_ms}ms', { channel: channel.toUpperCase(), latency_ms: res.latency_ms }), 'success');
     } else {
-      showToast(t('toast.message', '⚠️ {channel}: {message}', { channel: channel.toUpperCase(), message: res.message || t('ntf.delivery_failed', 'Delivery failed') }), 'error');
+      showToast(t('toast.message', '{channel}: {message}', { channel: channel.toUpperCase(), message: res.message || t('ntf.delivery_failed', 'Delivery failed') }), 'error');
     }
   } catch (err) {
     showToast(t('toast.test_failed_for', 'Test failed for {channel}: {error}', { channel: channel, error: err.message }), 'error');

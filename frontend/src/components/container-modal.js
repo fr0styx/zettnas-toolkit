@@ -15,6 +15,7 @@ import { openStackModal } from './stack-modal.js';
 import { createTerminalView } from './terminal-view.js';
 
 import { formatDateTime, formatFixed, formatTime } from '../format.js';
+import { setIconLabel } from '../ui/primitives.js';
 
 // An icon next to translated words: screen readers skip it and the words stay plain (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
@@ -802,7 +803,7 @@ async function loadContainerDetails(cid) {
           showToast(t('toast.resource_update_failed', 'Resource update failed: {error}', { error: err.message }), 'error');
         } finally {
           applyResBtn.disabled = false;
-          applyResBtn.textContent = t('ui.apply_tuning', '💾 Apply Tuning');
+          setIconLabel(applyResBtn, '💾', t('ui.apply_tuning', 'Apply Tuning'));
         }
       });
     }
@@ -1039,7 +1040,7 @@ function renderPortsTab(details) {
             showToast(t('toast.port_reconfiguration_failed', 'Port reconfiguration failed: {error}', { error: err.message }), 'error');
           } finally {
             applyPortsBtn.disabled = false;
-            applyPortsBtn.textContent = t('ui.recreate_container_with_new_ports', '🚀 Recreate Container with New Ports');
+            setIconLabel(applyPortsBtn, '🚀', t('ui.recreate_container_with_new_ports', 'Recreate Container with New Ports'));
           }
         },
         null,
@@ -1212,7 +1213,7 @@ async function loadContainerCompose(cid) {
         badgeEl.style.color = '#38bdf8';
         badgeEl.style.background = 'rgba(56, 189, 248, 0.15)';
       } else {
-        badgeEl.textContent = t('ui.synthesized_compose_spec_v3_8', '✨ Synthesized Compose Spec v3.8');
+        setIconLabel(badgeEl, '✨', t('ui.synthesized_compose_spec_v3_8', 'Synthesized Compose Spec v3.8'));
         badgeEl.style.color = 'var(--ok2)';
         badgeEl.style.background = 'rgba(37, 194, 160, 0.15)';
       }
@@ -1441,7 +1442,7 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
 
   const confirmBtn = document.getElementById('cdm-confirm-btn');
   confirmBtn.disabled = false;
-  confirmBtn.textContent = t('ui.destroy_container', '💥 Destroy Container');
+  setIconLabel(confirmBtn, '💥', t('ui.destroy_container', 'Destroy Container'));
 
   confirmBtn.onclick = async () => {
     const archiveData = document.getElementById('cdm-archive')?.checked ?? true;
@@ -1469,7 +1470,7 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
     } catch (err) {
       showToast(t('toast.failed_to_destroy_container', 'Failed to destroy container: {error}', { error: err.message }), 'error');
       confirmBtn.disabled = false;
-      confirmBtn.textContent = t('ui.destroy_container', '💥 Destroy Container');
+      setIconLabel(confirmBtn, '💥', t('ui.destroy_container', 'Destroy Container'));
     }
   };
 }
@@ -1763,7 +1764,7 @@ async function renderContainerEditTab(cid) {
         });
 
         saveBtn.disabled = true;
-        saveBtn.textContent = t('ui.recreating_container_2', '⏳ Recreating Container...');
+        setIconLabel(saveBtn, '⏳', t('ui.recreating_container_2', 'Recreating Container...'));
         statusMsg.style.display = 'block';
         statusMsg.style.background = 'rgba(14,165,233,0.15)';
         statusMsg.style.color = '#38bdf8';
@@ -1809,7 +1810,7 @@ async function renderContainerEditTab(cid) {
           showToast(t('toast.recreation_failed', 'Recreation failed: {error}', { error: err.message }), 'error');
         } finally {
           saveBtn.disabled = false;
-          saveBtn.textContent = t('ui.save_recreate_container', '💾 Save & Recreate Container');
+          setIconLabel(saveBtn, '💾', t('ui.save_recreate_container', 'Save & Recreate Container'));
         }
       },
       null,

@@ -9,6 +9,7 @@ import { makeDraggable, bringToFront, DockManager } from './dock.js';
 
 import { formatBytes as formatSize, formatDateTime, formatFixed } from '../format.js';
 import { emptyStateHtml } from './empty-state.js';
+import { setIconLabel } from '../ui/primitives.js';
 
 // An icon next to translated words: screen readers skip it and the words stay plain (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
@@ -105,7 +106,7 @@ export async function triggerLocateDisk(devName, targetElement = null) {
 
   // 3. Screen reader a11y announcement & user toast
   announceA11y(`Locating drive ${devName}. Physical bay indicator flashing.`);
-  showToast(t('toast.locating_drive_dev_pulsing_physical_activity', '⚡ Locating drive /dev/{devName}: Pulsing physical activity LED and backplane indicator for 5s to identify bay.', { devName: devName }), 'info');
+  showToast(t('toast.locating_drive_dev_pulsing_physical_activity', 'Locating drive /dev/{devName}: Pulsing physical activity LED and backplane indicator for 5s to identify bay.', { devName: devName }), 'info');
 
   // 4. Issue backend hardware strobe request
   try {
@@ -865,7 +866,7 @@ function bindTopologyTreeEvents(tree, container) {
         async () => {
           try {
             exportBtn.disabled = true;
-            exportBtn.textContent = t('ui.ejecting', '⏳ Ejecting...');
+            setIconLabel(exportBtn, '⏳', t('ui.ejecting', 'Ejecting...'));
             const res = await api.post(`/api/storage/pools/${encodeURIComponent(pid)}/export`, { force: false });
             showToast(res.message || `Pool '${pid}' safely ejected. You may disconnect the cable.`, 'success');
             fetchAndRenderStorageTopology(container);
@@ -891,7 +892,7 @@ function bindTopologyTreeEvents(tree, container) {
             }
           } finally {
             exportBtn.disabled = false;
-            exportBtn.textContent = t('ui.safely_eject', '⏏️ Safely Eject');
+            setIconLabel(exportBtn, '⏏️', t('ui.safely_eject', 'Safely Eject'));
           }
         },
         null,
@@ -907,7 +908,7 @@ function bindTopologyTreeEvents(tree, container) {
       const fstype = importBtn.dataset.fsType || 'zfs';
       try {
         importBtn.disabled = true;
-        importBtn.textContent = t('ui.importing', '⏳ Importing...');
+        setIconLabel(importBtn, '⏳', t('ui.importing', 'Importing...'));
         await api.post('/api/storage/pools/import', { pool_id: pid, fs_type: fstype });
         showToast(t('toast.successfully_imported_storage_pool', 'Successfully imported storage pool \'{pid}\'!', { pid: pid }), 'success');
         fetchAndRenderStorageTopology(container);
@@ -992,7 +993,7 @@ export async function fetchAndRenderStorageTopology(container) {
             const fstype = importBtn.dataset.fsType || 'zfs';
             try {
               importBtn.disabled = true;
-              importBtn.textContent = t('ui.importing', '⏳ Importing...');
+              setIconLabel(importBtn, '⏳', t('ui.importing', 'Importing...'));
               await api.post('/api/storage/pools/import', { pool_id: pid, fs_type: fstype });
               showToast(t('toast.successfully_imported_storage_pool', 'Successfully imported storage pool \'{pid}\'!', { pid: pid }), 'success');
               fetchAndRenderStorageTopology(container);
@@ -2736,7 +2737,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
 
         testBtn.disabled = true;
         testBtn.classList.remove('tested-green');
-        testBtn.innerHTML = `<span>${t('remotes.test_btn_testing', '⏳ Testing Connection...')}</span>`;
+        testBtn.innerHTML = `<span><span aria-hidden="true">⏳</span> ${t('remotes.test_btn_testing', 'Testing Connection...')}</span>`;
         showNote(testResult, 'info', '🔄', '', t('chassis.testing', 'Checking the sign-in details and connecting…'));
 
         try {
@@ -2748,7 +2749,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
           if (res && res.success) {
             playChirp(880, 0.12, 'sine');
             testBtn.classList.add('tested-green');
-            testBtn.innerHTML = `<span>${t('remotes.test_btn_success', '✅ Connection Successful')}</span>`;
+            testBtn.innerHTML = `<span><span aria-hidden="true">✅</span> ${t('remotes.test_btn_success', 'Connection Successful')}</span>`;
             showToast(t('remotes.test_success', 'Connection test successful! Valid credentials and remote accessible.'), 'ok');
             if (res.drive_id) {
               const driveIdInput = dynamicFields?.querySelector('input[name="drive_id"]');
@@ -3035,7 +3036,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = t('ui.provision_storage_pool', '🚀 Provision Storage Pool');
+          setIconLabel(submitBtn, '🚀', t('ui.provision_storage_pool', 'Provision Storage Pool'));
         }
       }
     };
@@ -3226,7 +3227,7 @@ export function openCreateNetworkShareModal(onSuccess) {
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = t('ui.provision_share', '📁 Provision Share');
+          setIconLabel(submitBtn, '📁', t('ui.provision_share', 'Provision Share'));
         }
       }
     };
@@ -3470,7 +3471,7 @@ export function openRenameStoragePoolModal(poolId, currentName, onSuccess) {
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = t('ui.apply_rename', '✏️ Apply Rename');
+          setIconLabel(submitBtn, '✏️', t('ui.apply_rename', 'Apply Rename'));
         }
       }
     };

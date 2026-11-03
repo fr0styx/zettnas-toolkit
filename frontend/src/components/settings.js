@@ -16,6 +16,7 @@ import { showToast, showActionToast, showPromptToast, showConfirmToast } from '.
 import { applyGlassSettings, applyWallpaperReadability } from './wallpapers.js';
 import { applyDockSettings } from './dock.js';
 import { initGlassTimePickers } from './time-picker.js';
+import { setIconLabel } from '../ui/primitives.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -269,7 +270,7 @@ export function initSettings() {
       localStorage.setItem(storageLockKey, isLocked);
       container.classList.toggle('locked', isLocked);
       if (lockBtn) {
-        lockBtn.textContent = isLocked ? t('settings.btn_locked', '🔒 Locked') : t('settings.btn_reorder', '🔓 Reorder');
+        setIconLabel(lockBtn, isLocked ? '🔒' : '🔓', isLocked ? t('settings.btn_locked', 'Locked') : t('settings.btn_reorder', 'Reorder'));
         lockBtn.classList.toggle('unlocked', !isLocked);
       }
       container.querySelectorAll('.draggable-card').forEach((card) => {
@@ -279,7 +280,7 @@ export function initSettings() {
 
     _cardReorderUpdaters.push(() => {
       if (lockBtn) {
-        lockBtn.textContent = isLocked ? t('settings.btn_locked', '🔒 Locked') : t('settings.btn_reorder', '🔓 Reorder');
+        setIconLabel(lockBtn, isLocked ? '🔒' : '🔓', isLocked ? t('settings.btn_locked', 'Locked') : t('settings.btn_reorder', 'Reorder'));
       }
     });
 

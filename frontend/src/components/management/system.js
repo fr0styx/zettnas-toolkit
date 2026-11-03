@@ -9,6 +9,7 @@ import { escapeHtml, copyTextToClipboard } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { collectClientEnvironment, getClientLogs } from '../../client-logger.js';
 import { formatDateTime, formatTime } from '../../format.js';
+import { setIconLabel } from '../../ui/primitives.js';
 
 const UPDATE_CHANNELS = ['stable', 'beta', 'edge'];
 let _currentUpdateChannel = 'stable';
@@ -344,7 +345,7 @@ export async function applySystemUpdate() {
         showToast(res?.message || 'Update initiated. Reconnecting...', 'info');
 
         if (res && res.auto_restarting === false) {
-          if (progressTitle) progressTitle.textContent = t('ui.image_pulled', '📦 Image Pulled');
+          if (progressTitle) setIconLabel(progressTitle, '📦', t('ui.image_pulled', 'Image Pulled'));
           if (progressDesc) {
             progressDesc.innerHTML = `${escapeHtml(res.message || 'Latest image downloaded.')}<br><br><span style="color:var(--lt-ink-brand, var(--brand, #00f0ff));font-weight:600;">${escapeHtml(t('sysu.restart_to_finish', 'Please restart the container in Unraid or Docker to finalize.'))}</span>`;
           }

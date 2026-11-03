@@ -1702,7 +1702,7 @@
                     <button class="btn-pill-toggle" data-mesh-filter="tailscale">Tailscale</button>
                     <button class="btn-pill-toggle" data-mesh-filter="wireguard" translate="no">WireGuard</button>
                   </div>
-                  <button class="btn-pill-toggle" id="btn-wg-gen-client-config" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56, 189, 248, 0.4);" data-i18n="ui.generate_client_conf">🔑 Generate Client .conf</button>
+                  <button class="btn-pill-toggle" id="btn-wg-gen-client-config" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56, 189, 248, 0.4);"><span aria-hidden="true">🔑</span> <span data-i18n="ui.generate_client_conf">Generate Client .conf</span></button>
                   <button class="btn-pill-toggle" id="btn-refresh-wireguard" title="Refresh Mesh VPN Status" data-i18n-title="ui.refresh_mesh_vpn_status"><span aria-hidden="true">🔄</span> <span data-i18n="vm.refresh">Refresh</span></button>
                 </div>
               </div>
@@ -1916,7 +1916,7 @@
                       <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-download"/></svg> <span data-i18n="net.tailscale_taildrop">Taildrop Inbox (Zero-Trust AirDrop)</span></div>
                       <div style="display:flex; align-items:center; gap:6px;">
                         <span class="mgmt-app-pill" id="ts-taildrop-badge" style="font-size:var(--zn-fs-xs); padding:2px 8px;">0 files</span>
-                        <button class="btn-pill-toggle is-small" id="btn-ts-taildrop-fetch" title="Fetch pending files from Taildrop queue" data-i18n-title="ui.fetch_pending_files_from_taildrop" data-i18n="net.tailscale_taildrop_fetch">📥 Fetch</button>
+                        <button class="btn-pill-toggle is-small" id="btn-ts-taildrop-fetch" title="Fetch pending files from Taildrop queue" data-i18n-title="ui.fetch_pending_files_from_taildrop"><span aria-hidden="true">📥</span> <span data-i18n="net.tailscale_taildrop_fetch">Fetch</span></button>
                         <button class="btn-pill-toggle is-small" id="btn-ts-taildrop-open" title="Open Taildrop folder in Files app" data-i18n-title="ui.open_taildrop_folder_in_files"><span aria-hidden="true">📂</span> <span data-i18n="net.tailscale_taildrop_open">Files</span></button>
                       </div>
                     </div>
@@ -5418,7 +5418,7 @@
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
         <button type="button" id="modal-create-pool-cancel-btn" class="btn-pill-toggle is-small" data-i18n="common.cancel">Cancel</button>
-        <button type="submit" id="create-pool-submit-btn" class="btn-pill-toggle is-primary is-small" data-i18n="ui.provision_storage_pool">🚀 Provision Storage Pool</button>
+        <button type="submit" id="create-pool-submit-btn" class="btn-pill-toggle is-primary is-small"><span aria-hidden="true">🚀</span> <span data-i18n="ui.provision_storage_pool">Provision Storage Pool</span></button>
       </div>
     </form>
   </div>
@@ -5585,7 +5585,7 @@
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
         <button type="button" id="modal-create-share-cancel-btn" class="btn-pill-toggle is-small" data-i18n="mw.cancel">Cancel</button>
-        <button type="submit" id="create-share-submit-btn" class="btn-pill-toggle is-primary is-small" data-i18n="ui.provision_share">📁 Provision Share</button>
+        <button type="submit" id="create-share-submit-btn" class="btn-pill-toggle is-primary is-small"><span aria-hidden="true">📁</span> <span data-i18n="ui.provision_share">Provision Share</span></button>
       </div>
     </form>
   </div>

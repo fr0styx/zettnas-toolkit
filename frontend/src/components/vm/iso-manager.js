@@ -10,6 +10,7 @@ import { vmState } from './state.js';
 import { openVmCreateModal } from './create-modal.js';
 import { loadVmDashboard } from '../vm-manager.js';
 import { formatFixed } from '../../format.js';
+import { setIconLabel } from '../../ui/primitives.js';
 
 // An icon next to translated words: screen readers skip it (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
@@ -464,7 +465,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           }
           if (btn) {
             btn.disabled = true;
-            btn.textContent = t('ui.downloading', '⏳ Downloading...');
+            setIconLabel(btn, '⏳', t('ui.downloading', 'Downloading...'));
           }
         } else if (task.status === 'completed') {
           clearInterval(_isoPollTimers[catalogId]);
@@ -496,7 +497,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           }
           if (btn) {
             btn.disabled = false;
-            btn.textContent = t('ui.retry', '⬇ Retry');
+            setIconLabel(btn, '⬇', t('ui.retry', 'Retry'));
             btn.style.opacity = '1';
           }
           showToast(t('toast.download_failed', 'Download failed: {error}', { error: task.error || 'Error' }), 'error');
@@ -566,7 +567,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
       btn.onclick = async () => {
         const id = btn.dataset.id;
         btn.disabled = true;
-        btn.textContent = t('ui.connecting_2', '⏳ Connecting...');
+        setIconLabel(btn, '⏳', t('ui.connecting_2', 'Connecting...'));
 
         const targetProg = modal.querySelector(`#prog-wrap-${id}`);
         const targetStat = modal.querySelector(`#prog-stat-${id}`);
@@ -593,7 +594,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
             targetStat.style.color = '#ef4444';
           }
           btn.disabled = false;
-          btn.textContent = t('ui.retry', '⬇ Retry');
+          setIconLabel(btn, '⬇', t('ui.retry', 'Retry'));
         }
       };
     });

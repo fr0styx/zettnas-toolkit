@@ -63,9 +63,9 @@ describe('alert channel words (NUX-20)', () => {
   it('says why a test message was not delivered', async () => {
     const post = vi.spyOn(api, 'post').mockResolvedValue({ success: false, message: 'bad URL' });
     await testSingleChannel('discord');
-    expect(showToast).toHaveBeenLastCalledWith('⚠️ DISCORD: bad URL', 'error');
+    expect(showToast).toHaveBeenLastCalledWith('DISCORD: bad URL', 'error');
     post.mockResolvedValue({ success: false });
     await testSingleChannel('discord');
-    expect(showToast).toHaveBeenLastCalledWith('⚠️ DISCORD: Delivery failed', 'error');
+    expect(showToast).toHaveBeenLastCalledWith('DISCORD: Delivery failed', 'error');
   });
 });

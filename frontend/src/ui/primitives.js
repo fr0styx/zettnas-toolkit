@@ -52,3 +52,15 @@ export function uiPaneHeader({ title = '', desc = '', iconName = '' } = {}) {
     html`<div class="mgmt-card-intro"><div class="mgmt-card-intro-title">${icon(iconName)}<span>${title}</span></div>${d}</div>`
   );
 }
+
+/**
+ * Writes "icon words" into el with the icon in an aria-hidden span (UX-35): the icon stays out
+ * of the translated text and screen readers read only the words. textContent stays "icon words".
+ */
+export function setIconLabel(el, icon, text) {
+  if (!el) return;
+  const mark = document.createElement('span');
+  mark.setAttribute('aria-hidden', 'true');
+  mark.textContent = icon;
+  el.replaceChildren(mark, ` ${text}`);
+}

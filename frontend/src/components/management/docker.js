@@ -20,6 +20,7 @@ const ico = (e) => `<span aria-hidden="true">${e}</span>`;
 // A value set in bold inside translated words: the value escaped, the words from the locale
 const bold = (v) => `<strong>${escapeHtml(String(v))}</strong>`;
 import { renderShareFolders, shareFolderPicks } from '../share-folder-picker.js';
+import { setIconLabel } from '../../ui/primitives.js';
 
 let _storageRoot = '/mnt/user/appdata'; // until the server says where this host keeps app data
 let _dockerContainersList = [];
@@ -1550,7 +1551,7 @@ export async function openAppDeployModal(appId) {
         banner.style.border = '1px solid var(--ok2, #25c2a0)';
         banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">${ico('✓')} ${t('dk.alongside_lead', 'Install alongside:')}</span> ${t('dk.alongside', 'Suggested name {name} on free port {port}.', { name: bold(suggestedContainerName), port: bold(suggestedPort) })}`;
       }
-      if (deployConfirmBtn) deployConfirmBtn.textContent = t('ui.deploy_new_instance', '🚀 Deploy New Instance');
+      if (deployConfirmBtn) setIconLabel(deployConfirmBtn, '🚀', t('ui.deploy_new_instance', 'Deploy New Instance'));
     } else if (resolveData.conflict_detected) {
       if (nameInput) nameInput.value = appId;
       if (portInput) portInput.value = suggestedPort;
@@ -1599,7 +1600,7 @@ export async function openAppDeployModal(appId) {
     banner.innerHTML = `<span style="color:var(--lt-t-ff8080ff, #ff8080); font-weight:bold;">${ico('⚠️')} ${t('dk.replace_lead', 'Stop & replace:')}</span> ${t('dk.replace_existing', 'The container {name} is stopped and replaced on port {port}. Saved data stays.', { name: bold(defaultContainerName), port: bold(defaultPort) })}`;
 
     if (deployConfirmBtn) {
-      deployConfirmBtn.textContent = t('ui.stop_replace_launch', '🔄 Stop, Replace & Launch');
+      setIconLabel(deployConfirmBtn, '🔄', t('ui.stop_replace_launch', 'Stop, Replace & Launch'));
       setDeployButtonTone(deployConfirmBtn, 'danger');
       deployConfirmBtn.disabled = false;
       deployConfirmBtn.style.opacity = '1';
@@ -1638,7 +1639,7 @@ export async function openAppDeployModal(appId) {
     banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">${ico('✓')} ${t('dk.new_lead', 'New copy:')}</span> ${t('dk.new_instance', 'Setting up {name} on free port {port}, next to the one already there.', { name: bold(suggestedContainerName), port: bold(suggestedPort) })}`;
 
     if (deployConfirmBtn) {
-      deployConfirmBtn.textContent = t('ui.deploy_new_instance', '🚀 Deploy New Instance');
+      setIconLabel(deployConfirmBtn, '🚀', t('ui.deploy_new_instance', 'Deploy New Instance'));
       setDeployButtonTone(deployConfirmBtn, 'brand');
       deployConfirmBtn.disabled = false;
       deployConfirmBtn.style.opacity = '1';
@@ -2528,7 +2529,7 @@ export async function openAppSourcesModal() {
     if (btnLissy) {
       btnLissy.onclick = async () => {
         btnLissy.disabled = true;
-        btnLissy.textContent = t('ui.adding_syncing', '⏳ Adding & Syncing...');
+        setIconLabel(btnLissy, '⏳', t('ui.adding_syncing', 'Adding & Syncing...'));
         try {
           await api.post('/api/docker/catalog/sources', {
             name: 'Lissy93 Templates',
@@ -2562,7 +2563,7 @@ export async function openAppSourcesModal() {
           return;
         }
         btnCustom.disabled = true;
-        btnCustom.textContent = t('ui.syncing_2', '⏳ Syncing...');
+        setIconLabel(btnCustom, '⏳', t('ui.syncing_2', 'Syncing...'));
         statusEl.style.display = 'block';
         statusEl.style.background = 'rgba(14,165,233,0.15)';
         statusEl.style.color = '#38bdf8';

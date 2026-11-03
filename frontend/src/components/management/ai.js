@@ -14,6 +14,7 @@ import { installPhotoFilters, selectedPhotoFilters, hasPhotoFilters } from './ph
 import { installDuplicatesButton } from './duplicates.js';
 import { installAiAccess } from './ai-access.js';
 import { formatDateTime, formatFixed, formatNumber, formatTime } from '../../format.js';
+import { setIconLabel } from '../../ui/primitives.js';
 
 // An icon next to translated words: screen readers skip it (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
@@ -537,12 +538,12 @@ export async function pullHuggingFaceModel(repoId, activate = true) {
         if (statusEl) {
           statusEl.textContent = `⚠️ ${t('ait.pulled_warn', 'Pulled {repo} — {warning}', { repo: res.model?.hf_repo || cleanRepo, warning: res.warning_message })}`;
         }
-        showToast(t('toast.hf_pulled_warning', '⚠️ Added {model}: {warning}', { model: res.model?.name || cleanRepo, warning: res.warning_message }), 'warn');
+        showToast(t('toast.hf_pulled_warning', 'Added {model}: {warning}', { model: res.model?.name || cleanRepo, warning: res.warning_message }), 'warn');
       } else {
         if (statusEl) {
           statusEl.textContent = `✅ ${t('ait.pulled_ok', 'Pulled {repo} from Hugging Face (Fits your hardware).', { repo: res.model?.hf_repo || cleanRepo })}`;
         }
-        showToast(t('toast.hf_pulled', '🤗 Added and selected {model} from Hugging Face', { model: res.model?.name || cleanRepo }), 'success');
+        showToast(t('toast.hf_pulled', 'Added and selected {model} from Hugging Face', { model: res.model?.name || cleanRepo }), 'success');
       }
       await fetchAndRenderAiStatus();
     }
@@ -963,7 +964,7 @@ export async function flushAiIndex() {
     ),
     async () => {
       const feedbackEl = document.getElementById('ai-index-run-feedback');
-      if (feedbackEl) feedbackEl.textContent = t('ui.flushing_rag_index_database', '⏳ Emptying the AI search index...');
+      if (feedbackEl) setIconLabel(feedbackEl, '⏳', t('ui.flushing_rag_index_database', 'Emptying the AI search index...'));
       showToast(t('toast.flushing_rag_index_database', 'Emptying the AI search index...'), 'info');
       try {
         const res = await api.post('/api/ai/index/flush');

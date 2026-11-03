@@ -4,6 +4,7 @@
 import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { setIconLabel } from '../ui/primitives.js';
 
 export async function initSsoLogin(win = window) {
   const btn = document.getElementById('login-sso-btn');
@@ -55,7 +56,7 @@ export async function renderSsoPanel() {
   host.replaceChildren();
   const title = document.createElement('div');
   title.className = 'zn-title';
-  title.textContent = t('sso.title', '🔑 Single sign-on (OpenID Connect)');
+  setIconLabel(title, '🔑', t('sso.title', 'Single sign-on (OpenID Connect)'));
   const desc = document.createElement('div');
   desc.className = 'zn-muted';
   desc.textContent = t('sso.desc', 'Let people sign in with Authentik, Keycloak, Authelia or another OpenID Connect provider. Register ZettNAS there with this redirect URI: {uri}', { uri: cfg.redirect_uri });

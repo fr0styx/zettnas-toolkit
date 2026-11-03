@@ -14,6 +14,7 @@ import { t } from '../../i18n.js';
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
 import { formatBytes as formatSize, formatDateTime, formatFixed, formatNumber } from '../../format.js';
 import { showServeLink } from './ai.js';
+import { setIconLabel } from '../../ui/primitives.js';
 
 export async function fetchAndRenderCopyHistory() {
   const tbody = document.getElementById('copy-history-tbody');
@@ -320,7 +321,7 @@ export async function fetchAndRenderWireguard() {
         if (tsConnectedView) tsConnectedView.style.display = 'none';
         if (tsDownBtn) tsDownBtn.style.display = 'none';
         if (tsUpBtn) {
-          tsUpBtn.textContent = t('net.tailscale_deploy_btn', '⚡ 1-Click Deploy Tailscale');
+          setIconLabel(tsUpBtn, '⚡', t('net.tailscale_deploy_btn', '1-Click Deploy Tailscale'));
           tsUpBtn.dataset.mode = 'deploy';
         }
         if (tsExtContainer) {
@@ -357,7 +358,7 @@ export async function fetchAndRenderWireguard() {
         if (tsConnectedView) tsConnectedView.style.display = 'flex';
         if (tsDownBtn) tsDownBtn.style.display = 'inline-block';
         if (tsUpBtn) {
-          tsUpBtn.textContent = t('ui.connect_tailscale', '🚀 Connect Tailscale');
+          setIconLabel(tsUpBtn, '🚀', t('ui.connect_tailscale', 'Connect Tailscale'));
           tsUpBtn.dataset.mode = 'connect';
         }
 
@@ -575,14 +576,14 @@ export async function fetchAndRenderWireguard() {
             startTailscaleAuthPolling();
           }
           if (tsUpBtn) {
-            tsUpBtn.textContent = t('ui.log_in_to_tailscale', '🔗 Log in to Tailscale');
+            setIconLabel(tsUpBtn, '🔗', t('ui.log_in_to_tailscale', 'Log in to Tailscale'));
             tsUpBtn.dataset.mode = 'login';
             tsUpBtn.dataset.authUrl = ts.auth_url || '';
           }
         } else {
           if (tsAuthPrompt) tsAuthPrompt.style.display = 'none';
           if (tsUpBtn) {
-            tsUpBtn.textContent = t('ui.connect_tailscale', '🚀 Connect Tailscale');
+            setIconLabel(tsUpBtn, '🚀', t('ui.connect_tailscale', 'Connect Tailscale'));
             tsUpBtn.dataset.mode = 'connect';
             tsUpBtn.dataset.authUrl = '';
           }
@@ -618,7 +619,7 @@ export async function fetchAndRenderWireguard() {
     try {
       if (btn) {
         btn.disabled = true;
-        btn.textContent = t('net.tailscale_deploying', '⏳ Deploying Container...');
+        setIconLabel(btn, '⏳', t('net.tailscale_deploying', 'Deploying Container...'));
       }
       showToast(t('toast.deploying_official_tailscale_container_to_docker', 'Deploying official Tailscale container to Docker...'), 'info');
 
@@ -639,7 +640,7 @@ export async function fetchAndRenderWireguard() {
         if (tsUpBtn) {
           tsUpBtn.dataset.authUrl = res.auth_url;
           tsUpBtn.dataset.mode = 'login';
-          tsUpBtn.textContent = t('ui.log_in_to_tailscale', '🔗 Log in to Tailscale');
+          setIconLabel(tsUpBtn, '🔗', t('ui.log_in_to_tailscale', 'Log in to Tailscale'));
         }
         if (tsCopyAuthUrlBtn) {
           tsCopyAuthUrlBtn.onclick = () => {
@@ -661,7 +662,7 @@ export async function fetchAndRenderWireguard() {
       if (btn) {
         btn.disabled = false;
         if (btn.dataset.mode === 'login') {
-          btn.textContent = t('ui.log_in_to_tailscale', '🔗 Log in to Tailscale');
+          setIconLabel(btn, '🔗', t('ui.log_in_to_tailscale', 'Log in to Tailscale'));
         } else {
           btn.textContent = origText;
         }
@@ -735,7 +736,7 @@ export async function fetchAndRenderWireguard() {
           if (tsAuthLink) tsAuthLink.href = res.auth_url;
           tsUpBtn.dataset.authUrl = res.auth_url;
           tsUpBtn.dataset.mode = 'login';
-          tsUpBtn.textContent = t('ui.log_in_to_tailscale', '🔗 Log in to Tailscale');
+          setIconLabel(tsUpBtn, '🔗', t('ui.log_in_to_tailscale', 'Log in to Tailscale'));
           if (tsCopyAuthUrlBtn) {
             tsCopyAuthUrlBtn.onclick = () => {
               copyText(res.auth_url)
@@ -755,11 +756,11 @@ export async function fetchAndRenderWireguard() {
       } finally {
         tsUpBtn.disabled = false;
         if (tsUpBtn.dataset.mode === 'login') {
-          tsUpBtn.textContent = t('ui.log_in_to_tailscale', '🔗 Log in to Tailscale');
+          setIconLabel(tsUpBtn, '🔗', t('ui.log_in_to_tailscale', 'Log in to Tailscale'));
         } else if (tsUpBtn.dataset.mode === 'deploy') {
-          tsUpBtn.textContent = t('net.tailscale_deploy_btn', '⚡ 1-Click Deploy Tailscale');
+          setIconLabel(tsUpBtn, '⚡', t('net.tailscale_deploy_btn', '1-Click Deploy Tailscale'));
         } else {
-          tsUpBtn.textContent = t('ui.connect_tailscale', '🚀 Connect Tailscale');
+          setIconLabel(tsUpBtn, '🚀', t('ui.connect_tailscale', 'Connect Tailscale'));
         }
       }
     });
@@ -1007,7 +1008,7 @@ export async function fetchAndRenderWireguard() {
         showToast(t('toast.failed_to_fetch_taildrop_files', 'Failed to fetch Taildrop files: {message}', { message: e.message }), 'error');
       } finally {
         btnTsTaildropFetch.disabled = false;
-        btnTsTaildropFetch.textContent = t('net.tailscale_taildrop_fetch', '📥 Fetch');
+        setIconLabel(btnTsTaildropFetch, '📥', t('net.tailscale_taildrop_fetch', 'Fetch'));
       }
     });
   }
@@ -1152,7 +1153,7 @@ export async function fetchAndRenderWireguard() {
     genBtn.addEventListener('click', async () => {
       try {
         genBtn.disabled = true;
-        genBtn.textContent = t('ui.generating_2', '🔑 Generating...');
+        setIconLabel(genBtn, '🔑', t('ui.generating_2', 'Generating...'));
         const cfg = await api.post('/api/network/mesh-vpn/wireguard/client-config', {
           server_endpoint: (window.location.hostname || '127.0.0.1') + ':51820',
           client_address: '10.100.0.2/24',
@@ -1273,7 +1274,7 @@ export async function fetchAndRenderWireguard() {
         showToast(t('toast.failed_to_generate_wireguard_config', 'Failed to generate WireGuard config: {error}', { error: err.message }), 'error');
       } finally {
         genBtn.disabled = false;
-        genBtn.textContent = t('ui.generate_client_conf', '🔑 Generate Client .conf');
+        setIconLabel(genBtn, '🔑', t('ui.generate_client_conf', 'Generate Client .conf'));
       }
     });
   }
