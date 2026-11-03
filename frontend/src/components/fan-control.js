@@ -377,7 +377,7 @@ export function initFanControl() {
     if (fanPwmVal) {
       if (profile === 'manual') {
         const val = pct !== undefined ? pct : (fanPwmSlider ? fanPwmSlider.value : 60);
-        fanPwmVal.textContent = `${val}% (Manual Active)`;
+        fanPwmVal.textContent = t('fan.manual_active', '{pct}% (Manual Active)', { pct: val });
         fanPwmVal.style.color = 'var(--ok2)';
         fanPwmVal.style.opacity = '1';
         fanPwmVal.style.fontWeight = '700';

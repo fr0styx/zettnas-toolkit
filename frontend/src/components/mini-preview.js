@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { state, defaultVis, defaultSizes } from '../state.js';
 import { showToast } from '../toast.js';
+import { t } from '../i18n.js';
 
 const $ = (id) => document.getElementById(id);
 let isDraggingPreview = false;
@@ -148,7 +149,7 @@ export function evaluateActivePreset() {
   });
 
   if (presetBadge) {
-    presetBadge.textContent = activeKey ? activeKey.toUpperCase() : 'CUSTOM';
+    presetBadge.textContent = (activeKey ? t(`settings.badge_${activeKey}`, activeKey) : t('settings.badge_custom', 'Custom')).toUpperCase();
   }
 }
 
