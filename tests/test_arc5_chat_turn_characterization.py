@@ -16,6 +16,7 @@ import types
 
 import pytest
 
+from backend import __version__
 from backend.services import ai_chat_agent as agent
 
 GOLDEN = os.path.join(os.path.dirname(__file__), "golden", "chat_turn.json")
@@ -129,7 +130,9 @@ def _run_all(monkeypatch, tools):
                     _stub(m, tools, mode, seen)
                     out = agent._run_agentic_chat_turn(msg, copy.deepcopy(history), web, True, None, ADMIN)
                 results[f"{mode}|web{int(web)}|{msg}"] = {"out": _normalise(out), "model_saw": seen}
-    return json.loads(json.dumps(results, sort_keys=True, default=str))
+    # the version in "who are you" changes with every release, not with the chat turn
+    text = json.dumps(results, sort_keys=True, default=str).replace(__version__, "<version>")
+    return json.loads(text)
 
 
 def test_a_chat_turn_matches_the_recording(monkeypatch):

@@ -1,6 +1,12 @@
 # ZettNAS Toolkit - Release Changelog
 
-## Unreleased
+## v1.11.0 (2026-11-03)
+### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
+
+Everything from the October audit (plan v2.0 and v2.1) since 1.10.3. New installs get the safer defaults: private
+shares, no access until it is given, NFS limited to your network. Existing installs keep their settings, and the
+Security Advisor shows what is looser than the new defaults with a one-click fix for each. Nothing to do before
+upgrading.
 
 #### Security
 
