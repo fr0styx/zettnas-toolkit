@@ -822,7 +822,7 @@ export class FileManagerWindow {
     // New folder button
     this.newFolderBtn?.addEventListener('click', () => {
       const promptMsg = t('fm.prompt_new_folder', 'Enter new folder name:');
-      showPromptToast('New Folder', promptMsg, '', (name) => {
+      showPromptToast(t('fm.new_folder', 'New Folder'), promptMsg, '', (name) => {
         if (name) {
           api.post('/api/mkdir', { path: this.currentPath + '/' + name })
             .then(() => {

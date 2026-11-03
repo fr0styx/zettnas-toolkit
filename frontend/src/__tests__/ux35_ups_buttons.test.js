@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { initUpsDrawerControls } from '../components/management/ups.js';
 import { api } from '../api.js';
+import { showToast, showConfirmToast } from '../toast.js';
 
 vi.mock('../toast.js', () => ({
   showToast: vi.fn(),
@@ -47,5 +48,21 @@ describe('UPS drawer buttons (UX-35)', () => {
       expect(btn.textContent).toBe('🔌 Test Connection');
       expect(icon(btn)).toBe('🔌');
     }
+  });
+
+  it('the battery self-test asks first, then reports', async () => {
+    document.body.insertAdjacentHTML('beforeend', '<button id="btn-run-ups-selftest"></button>');
+    vi.spyOn(api, 'get').mockResolvedValue({});
+    await initUpsDrawerControls();
+    byId('btn-run-ups-selftest').click();
+    const [title, msg, onOk] = showConfirmToast.mock.calls.at(-1);
+    expect(title).toBe('Run a battery self-test?');
+    expect(msg).toContain('about 10 seconds');
+    const post = vi.spyOn(api, 'post').mockResolvedValueOnce({});
+    await onOk();
+    expect(showToast.mock.calls.at(-1)).toEqual(['Battery self-test started.', 'success']);
+    post.mockResolvedValueOnce({ message: 'Self-test running' });
+    await onOk();
+    expect(showToast.mock.calls.at(-1)).toEqual(['Self-test running', 'success']);
   });
 });

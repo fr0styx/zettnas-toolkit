@@ -744,8 +744,8 @@ async function start2FASetup() {
 
 export function disable2FA() {
   showPromptToast(
-    'Disable Two-Factor Authentication',
-    'Enter your account password to confirm disabling Two-Factor Authentication:',
+    t('mfa.disable_title', 'Turn off two-factor sign-in'),
+    t('mfa.disable_pwd_prompt', 'Enter your password to turn off two-factor sign-in:'),
     '',
     (pwd) => {
       if (!pwd) return;

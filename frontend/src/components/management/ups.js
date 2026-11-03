@@ -786,13 +786,13 @@ export function initUpsDrawerControls() {
   const btnSelfTest = document.getElementById('btn-run-ups-selftest');
   btnSelfTest?.addEventListener('click', () => {
     showConfirmToast(
-      'Run Diagnostic Battery Self-Test?',
-      'This commands the UPS inverter to perform a 10-second internal battery discharge test under active load.',
+      t('ups.selftest_title', 'Run a battery self-test?'),
+      t('ups.selftest_msg', 'The UPS runs on its battery for about 10 seconds under the current load to check it.'),
       async () => {
         try {
           showToast(t('toast.initiating_battery_self_test', 'Initiating battery self-test...'), 'info');
           const res = await api.post('/api/ups/self-test');
-          showToast(res.message || 'Battery self-test command sent successfully!', 'success');
+          showToast(res.message || t('ups.selftest_sent', 'Battery self-test started.'), 'success');
           fetchAndRenderUpsTelemetry();
         } catch (err) {
           showToast(t('toast.self_test_failed', 'Self-test failed: {error}', { error: err.message }), 'error');

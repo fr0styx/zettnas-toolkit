@@ -114,7 +114,7 @@ export async function selectWallpaper(filename) {
 export async function renameWallpaper(oldName) {
   if (!oldName) return;
   showPromptToast(
-    'Rename Wallpaper',
+    t('wp.rename_title', 'Rename wallpaper'),
     t('wp.rename_msg', 'Enter a new name for {name}:', { name: `<strong>${escapeHtml(oldName)}</strong>` }),
     oldName,
     async (newName) => {
@@ -149,7 +149,7 @@ export async function renameWallpaper(oldName) {
 export async function deleteWallpaper(filename) {
   if (!filename) return;
   showConfirmToast(
-    'Delete Wallpaper',
+    t('wp.delete_title', 'Delete wallpaper'),
     t('wp.delete_msg', 'Delete the wallpaper {name}? This can’t be undone.', { name: `<strong>${escapeHtml(filename)}</strong>` }),
     async () => {
       try {

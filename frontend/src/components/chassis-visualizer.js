@@ -839,19 +839,19 @@ function bindTopologyTreeEvents(tree, container) {
       e.stopPropagation();
       const pid = destroyBtn.dataset.poolId;
       showConfirmToast(
-        'Destroy Pool',
-        `Are you sure you want to destroy pool '${pid}'? All mounted data will be unmounted.`,
+        t('chassis.destroy_pool', 'Destroy Pool'),
+        t('chassis.destroy_pool_msg', 'Destroy pool "{pool}"? Its data is unmounted.', { pool: pid }),
         async () => {
           try {
             await api.delete(`/api/storage/pools/${pid}`, { confirmed: true });
             showToast(t('toast.pool_destroyed', 'Pool \'{pid}\' destroyed.', { pid: pid }), 'info');
             fetchAndRenderStorageTopology(container);
           } catch (err) {
-            showToast(err.message || 'Failed to destroy pool', 'error');
+            showToast(err.message || t('chassis.destroy_pool_failed', 'Could not destroy the pool'), 'error');
           }
         },
         null,
-        { okText: 'Destroy Pool', cancelText: t('common.cancel', 'Cancel') }
+        { okText: t('chassis.destroy_pool', 'Destroy Pool'), cancelText: t('common.cancel', 'Cancel') }
       );
       return;
     }
@@ -861,34 +861,34 @@ function bindTopologyTreeEvents(tree, container) {
       e.stopPropagation();
       const pid = exportBtn.dataset.poolId;
       showConfirmToast(
-        'Safely Eject Pool',
-        `Safely flush write cache and export/detach pool '${pid}'? Make sure no active file transfers are running.`,
+        t('chassis.eject_pool', 'Safely Eject Pool'),
+        t('chassis.eject_pool_msg', 'Write everything to the disks and detach pool "{pool}"? Make sure no file copies are running.', { pool: pid }),
         async () => {
           try {
             exportBtn.disabled = true;
             setIconLabel(exportBtn, '⏳', t('ui.ejecting', 'Ejecting...'));
             const res = await api.post(`/api/storage/pools/${encodeURIComponent(pid)}/export`, { force: false });
-            showToast(res.message || `Pool '${pid}' safely ejected. You may disconnect the cable.`, 'success');
+            showToast(res.message || t('chassis.pool_ejected_unplug', 'Pool "{pool}" was ejected. You can unplug it now.', { pool: pid }), 'success');
             fetchAndRenderStorageTopology(container);
           } catch (err) {
             if (err.message && err.message.includes('force=true')) {
               showConfirmToast(
-                'Force Export Pool',
-                `${err.message}\n\nDo you want to FORCE export and unmount anyway?`,
+                t('chassis.force_eject_title', 'Force eject pool'),
+                `${err.message}\n\n${t('chassis.force_eject_q', 'Eject and unmount it anyway?')}`,
                 async () => {
                   try {
                     const res = await api.post(`/api/storage/pools/${encodeURIComponent(pid)}/export`, { force: true });
-                    showToast(res.message || `Pool '${pid}' safely ejected.`, 'success');
+                    showToast(res.message || t('chassis.pool_ejected', 'Pool "{pool}" was ejected.', { pool: pid }), 'success');
                     fetchAndRenderStorageTopology(container);
                   } catch (e2) {
-                    showToast(e2.message || 'Failed to force eject pool', 'error');
+                    showToast(e2.message || t('chassis.force_eject_failed', 'Could not force-eject the pool'), 'error');
                   }
                 },
                 null,
-                { okText: 'Force Eject', cancelText: t('common.cancel', 'Cancel') }
+                { okText: t('chassis.force_eject', 'Force eject'), cancelText: t('common.cancel', 'Cancel') }
               );
             } else {
-              showToast(err.message || 'Failed to safely eject pool', 'error');
+              showToast(err.message || t('chassis.eject_failed', 'Could not eject the pool'), 'error');
             }
           } finally {
             exportBtn.disabled = false;
@@ -896,7 +896,7 @@ function bindTopologyTreeEvents(tree, container) {
           }
         },
         null,
-        { okText: 'Safely Eject', cancelText: t('common.cancel', 'Cancel') }
+        { okText: t('ui.safely_eject', 'Safely Eject'), cancelText: t('common.cancel', 'Cancel') }
       );
       return;
     }
@@ -1408,15 +1408,15 @@ function bindSharesGridEvents(grid, container) {
       e.stopPropagation();
       const sName = delBtn.dataset.shareName;
       showConfirmToast(
-        'Remove Share',
-        `Are you sure you want to remove share '${sName}'?`,
+        t('shares.remove_share', 'Remove Share'),
+        t('chassis.remove_share_msg', 'Remove the share "{name}"?', { name: sName }),
         async () => {
           try {
             await api.delete(`/api/storage/shares/${sName}`, { confirmed: true });
             showToast(t('toast.share_removed', 'Share \'{sName}\' removed.', { sName: sName }), 'info');
             fetchAndRenderNetworkShares(container);
           } catch (err) {
-            showToast(err.message || 'Failed to delete share', 'error');
+            showToast(err.message || t('chassis.remove_share_failed', 'Could not remove the share'), 'error');
           }
         },
         null,
@@ -1531,8 +1531,8 @@ export async function openSftpUsersModal(onSuccess) {
             btn.onclick = () => {
               const username = btn.dataset.user;
               showConfirmToast(
-                'Delete SFTP User',
-                `Delete SFTP user '${username}'?`,
+                t('chassis.sftp_delete_title', 'Delete SFTP user'),
+                t('chassis.sftp_delete_msg', 'Delete SFTP user "{name}"?', { name: username }),
                 async () => {
                   btn.disabled = true;
                   try {
@@ -1546,7 +1546,7 @@ export async function openSftpUsersModal(onSuccess) {
                   }
                 },
                 null,
-                { okText: 'Delete User', cancelText: t('common.cancel', 'Cancel') }
+                { okText: t('chassis.sftp_delete_ok', 'Delete user'), cancelText: t('common.cancel', 'Cancel') }
               );
             };
           });
@@ -2619,8 +2619,8 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   }
                 } catch (_) {}
                 showPromptToast(
-                  'Paste Redirect URL',
-                  'Paste the redirect URL from your browser address bar:',
+                  t('chassis.paste_redirect_title', 'Paste the redirect address'),
+                  t('chassis.paste_redirect_msg', 'Paste the address your browser went to after signing in:'),
                   '',
                   (manual) => {
                     if (manual && manual.trim()) {
@@ -2870,7 +2870,7 @@ if (typeof window !== 'undefined') {
  */
 function askPoolPrompt(title, msg, inputType) {
   return new Promise((resolve) => {
-    showPromptToast(title, msg, '', (v) => resolve(v ? v.trim() : null), () => resolve(null), { inputType, okText: 'Continue' });
+    showPromptToast(title, msg, '', (v) => resolve(v ? v.trim() : null), () => resolve(null), { inputType, okText: t('common.continue', 'Continue') });
   });
 }
 
@@ -2990,12 +2990,16 @@ export async function openCreateStoragePoolModal(onSuccess) {
       // Formatting erases the disks (SEC-08): typed pool name + password, then an explicit
       // second yes if the server finds existing data on them.
       const typed = await askPoolPrompt(
-        'Erase and format disks',
-        `Every selected disk (${disks.join(', ')}) will be erased. Type the pool name "${name}" to confirm.`,
+        t('chassis.erase_title', 'Erase and format disks'),
+        t('chassis.erase_msg', 'Every selected disk ({disks}) will be erased. Type the pool name "{name}" to confirm.', { disks: disks.join(', '), name }),
         'text'
       );
       if (typed === null) return;
-      const password = await askPoolPrompt('Confirm with your password', 'Enter your ZettNAS password to create the pool.', 'password');
+      const password = await askPoolPrompt(
+        t('chassis.confirm_pwd_title', 'Confirm with your password'),
+        t('chassis.confirm_pwd_msg', 'Enter your ZettNAS password to create the pool.'),
+        'password'
+      );
       if (password === null) return;
 
       if (submitBtn) {
@@ -3011,7 +3015,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
           if (err && err.error === 'disks_not_safe' && err.body && err.body.erasable) {
             const erase = await new Promise((resolve) => {
               showConfirmToast(
-                'Disks contain data',
+                t('chassis.disks_have_data', 'Disks contain data'),
                 `${escapeHtml(err.message)}<br><br>${escapeHtml(t('chassis.erase_continue', 'Erase everything on them and continue?'))}`,
                 () => resolve(true),
                 () => resolve(false)
