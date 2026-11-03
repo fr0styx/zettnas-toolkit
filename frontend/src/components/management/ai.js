@@ -15,6 +15,9 @@ import { installDuplicatesButton } from './duplicates.js';
 import { installAiAccess } from './ai-access.js';
 import { formatDateTime, formatNumber, formatTime } from '../../format.js';
 
+// An icon next to translated words: screen readers skip it (UX-35)
+const ico = (e) => `<span aria-hidden="true">${e}</span>`;
+
 // ============================================================================
 // ZettAI — Multi-Modal Local RAG & Visual Search Engine Controller
 // ============================================================================
@@ -218,7 +221,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
     activeLlmLabel.textContent = currentActive;
   }
   if (activeLlmPill) {
-    activeLlmPill.title = `Model in use: ${currentActive}. It answers in Ask Zetty and AI search.`;
+    activeLlmPill.title = t('ait.model_in_use', 'Model in use: {model}. It answers in Ask Zetty and AI search.', { model: currentActive });
   }
   const chatModelBadge = document.getElementById('ai-chat-active-model-badge');
   if (chatModelBadge) {
@@ -239,9 +242,9 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
       const fType = btn.dataset.hfFilter || 'all';
       btn.classList.toggle('active', fType === 'all' || fType === 'compatible');
       if (fType === 'all') {
-        btn.textContent = `2026+ Releases (${allModels.length})`;
+        btn.textContent = t('ait.releases', '2026+ Releases ({count})', { count: allModels.length });
       } else if (fType === 'compatible') {
-        btn.textContent = `✅ Fits Hardware (${allModels.length})`;
+        btn.textContent = `✅ ${t('ait.fits', 'Fits Hardware ({count})', { count: allModels.length })}`;
       }
     });
   }
@@ -260,7 +263,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
   const filteredModels = allModels;
 
   if (filteredModels.length === 0) {
-    gridEl.innerHTML = `<div style="grid-column:1 / -1; padding:14px; text-align:center; color:var(--muted,#94a3b8); font-size:var(--zn-fs-xs); border:1px dashed var(--zn-line-12); border-radius:8px;">No models match the selected hardware filter.</div>`;
+    gridEl.innerHTML = `<div style="grid-column:1 / -1; padding:14px; text-align:center; color:var(--muted,#94a3b8); font-size:var(--zn-fs-xs); border:1px dashed var(--zn-line-12); border-radius:8px;">${t('ait.no_models', 'No models match the selected hardware filter.')}</div>`;
     return;
   }
 
@@ -316,8 +319,8 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:5px; font-size:var(--zn-fs-xs);">
           ${m.target_device ? `<span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fca5a5' : '#6ee7b7'};">⚡ ${escapeHtml(m.target_device)}</span>` : ''}
-          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fdba74' : '#bae6fd'};">💾 ~${m.vram_or_ram_gb ?? m.est_ram_gb ?? 2.0} GB Model${m.min_ram_gb ? ` (${m.min_ram_gb}GB+ Host)` : ''}</span>
-          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-f8fafcff, #f8fafc);" title="Hugging Face Release Date: ${escapeHtml(releaseDateText)}">📅 ${escapeHtml(releaseDateText)}</span>
+          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fdba74' : '#bae6fd'};">${ico('💾')} ${t('ait.model_gb', '~{gb} GB Model', { gb: m.vram_or_ram_gb ?? m.est_ram_gb ?? 2.0 })}${m.min_ram_gb ? t('ait.host_gb', ' ({gb}GB+ Host)', { gb: m.min_ram_gb }) : ''}</span>
+          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-f8fafcff, #f8fafc);" title="${escapeHtml(t('ait.release_date', 'Hugging Face Release Date: {date}', { date: releaseDateText }))}">📅 ${escapeHtml(releaseDateText)}</span>
           ${m.estimated_speed ? `<span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-fde68aff, #fde68a);">🚀 ${escapeHtml(m.estimated_speed)}</span>` : ''}
         </div>
         ${hasWarn ? `
@@ -485,7 +488,7 @@ export async function searchHuggingFaceModels(query = '') {
     if (res && Array.isArray(res.models)) {
       const warnCount = res.models.filter((m) => m.fits_hardware === false || m.hardware_warning).length;
       if (statusEl) {
-        statusEl.textContent = `🤗 Showing ${res.models.length} Hugging Face release models (${res.models.length - warnCount} fit your hardware, ${warnCount} flagged with hardware warning).`;
+        statusEl.textContent = `🤗 ${t('ait.hf_showing', 'Showing {count} Hugging Face release models ({fit} fit your hardware, {warn} flagged with hardware warning).', { count: res.models.length, fit: res.models.length - warnCount, warn: warnCount })}`;
       }
       if (resetBtn) {
         resetBtn.style.display = 'inline-block';
@@ -503,7 +506,7 @@ export async function searchHuggingFaceModels(query = '') {
     return res;
   } catch (err) {
     if (statusEl) {
-      statusEl.textContent = `⚠️ Hugging Face Hub search error: ${err.message}`;
+      statusEl.textContent = `⚠️ ${t('ait.hf_error', 'Hugging Face Hub search error: {error}', { error: err.message })}`;
     }
     showToast(t('toast.hugging_face_search_failed', 'Hugging Face search failed: {error}', { error: err.message }), 'error');
     return null;
@@ -532,12 +535,12 @@ export async function pullHuggingFaceModel(repoId, activate = true) {
       }
       if (res.hardware_warning && res.warning_message) {
         if (statusEl) {
-          statusEl.textContent = `⚠️ Pulled ${res.model?.hf_repo || cleanRepo} — ${res.warning_message}`;
+          statusEl.textContent = `⚠️ ${t('ait.pulled_warn', 'Pulled {repo} — {warning}', { repo: res.model?.hf_repo || cleanRepo, warning: res.warning_message })}`;
         }
         showToast(t('toast.hf_pulled_warning', '⚠️ Added {model}: {warning}', { model: res.model?.name || cleanRepo, warning: res.warning_message }), 'warn');
       } else {
         if (statusEl) {
-          statusEl.textContent = `✅ Pulled ${res.model?.hf_repo || cleanRepo} from Hugging Face (Fits your hardware).`;
+          statusEl.textContent = `✅ ${t('ait.pulled_ok', 'Pulled {repo} from Hugging Face (Fits your hardware).', { repo: res.model?.hf_repo || cleanRepo })}`;
         }
         showToast(t('toast.hf_pulled', '🤗 Added and selected {model} from Hugging Face', { model: res.model?.name || cleanRepo }), 'success');
       }
@@ -546,7 +549,7 @@ export async function pullHuggingFaceModel(repoId, activate = true) {
     return res;
   } catch (err) {
     if (statusEl) {
-      statusEl.textContent = `⚠️ Failed to pull from Hugging Face: ${err.message}`;
+      statusEl.textContent = `⚠️ ${t('ait.pull_failed', 'Failed to pull from Hugging Face: {error}', { error: err.message })}`;
     }
     showToast(t('toast.failed_to_pull_model_from_hugging', 'Failed to pull model from Hugging Face: {error}', { error: err.message }), 'error');
     return null;
@@ -597,7 +600,7 @@ export function renderAiLearningResultsData(data = {}) {
   if (listEl) {
     const failedFiles = Array.isArray(data.failed_files) ? data.failed_files : [];
     if (failedFiles.length === 0) {
-      listEl.innerHTML = `<div style="padding:8px 10px; border-radius:6px; background:rgba(34,197,94,0.08); color:var(--lt-t-86efacff, #86efac);">✓ All learned files succeeded with 0 errors.</div>`;
+      listEl.innerHTML = `<div style="padding:8px 10px; border-radius:6px; background:rgba(34,197,94,0.08); color:var(--lt-t-86efacff, #86efac);">✓ ${t('ait.all_learned', 'All learned files succeeded with 0 errors.')}</div>`;
     } else {
       listEl.innerHTML = failedFiles.map((f) => `
         <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 8px; border-bottom:1px solid var(--zn-line-6);">
@@ -754,9 +757,9 @@ export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, zettaiS
     const sleepCnt = Number(standbyGuard.sleeping_disks_count || 0);
     const runCnt = Number(standbyGuard.running_disks_count || 0);
     if (sleepCnt > 0 || runCnt > 0) {
-      guardText.textContent = `Standby Guard (${runCnt} Active, ${sleepCnt} Sleeping)`;
+      guardText.textContent = t('ait.guard', 'Standby Guard ({running} Active, {sleeping} Sleeping)', { running: runCnt, sleeping: sleepCnt });
       if (guardBadge) {
-        guardBadge.title = `Standby Guard: Active (0 Wakeups • ${runCnt} Running, ${sleepCnt} Sleeping)`;
+        guardBadge.title = t('ait.guard_title', 'Standby Guard: Active (0 Wakeups • {running} Running, {sleeping} Sleeping)', { running: runCnt, sleeping: sleepCnt });
       }
     }
   }
@@ -821,10 +824,10 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
   if (summaryEl) {
     summaryEl.textContent = _aiWatchedPaths.length > 0
       ? _aiWatchedPaths.join(', ')
-      : 'No folders checked — click to select folders for RAG';
+      : t('ait.no_folders', 'No folders checked — click to select folders for RAG');
   }
   if (countBadgeEl) {
-    countBadgeEl.textContent = `${_aiWatchedPaths.length} Checked`;
+    countBadgeEl.textContent = t('ait.checked', '{count} Checked', { count: _aiWatchedPaths.length });
   }
 
   // Render compact checked chips below dropdown
@@ -882,7 +885,7 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
   const sharesContainer = document.getElementById('ai-discovered-shares-list');
   if (sharesContainer) {
     if (mergedFolders.length === 0) {
-      sharesContainer.innerHTML = `<span style="font-size:var(--zn-fs-xs); color:var(--muted); padding:6px 8px;">No NAS folders discovered yet. Use Browse or Add Folder below.</span>`;
+      sharesContainer.innerHTML = `<span style="font-size:var(--zn-fs-xs); color:var(--muted); padding:6px 8px;">${t('ait.no_shares', 'No NAS folders discovered yet. Use Browse or Add Folder below.')}</span>`;
     } else {
       sharesContainer.innerHTML = mergedFolders.map((f) => {
         const isWatched = _aiWatchedPaths.includes(f.path);
@@ -972,7 +975,7 @@ export async function flushAiIndex() {
         );
         return res;
       } catch (err) {
-        if (feedbackEl) feedbackEl.textContent = `✕ Flush failed: ${err.message}`;
+        if (feedbackEl) feedbackEl.textContent = `✕ ${t('ait.flush_failed', 'Flush failed: {error}', { error: err.message })}`;
         showToast(t('toast.failed_to_flush_rag_index', 'Could not empty the AI search index: {error}', { error: err.message }), 'error');
         return null;
       }
@@ -1033,7 +1036,7 @@ export async function syncAiWatchedFolders(respectStandby = true, background = t
   const feedbackEl = document.getElementById('ai-index-run-feedback');
   const pathsToSync = Array.isArray(_aiWatchedPaths) && _aiWatchedPaths.length > 0 ? _aiWatchedPaths : ['/mnt/user'];
   if (feedbackEl) {
-    feedbackEl.textContent = `⏳ Starting spindown-safe sync across ${pathsToSync.length} watched folder(s)...`;
+    feedbackEl.textContent = `⏳ ${t('ait.sync_start', 'Starting spindown-safe sync across {count, plural, one {# watched folder} other {# watched folders}}...', { count: pathsToSync.length })}`;
   }
   try {
     const res = await api.post('/api/media/index', {
@@ -1065,7 +1068,7 @@ export async function syncAiWatchedFolders(respectStandby = true, background = t
     }
     return res;
   } catch (err) {
-    if (feedbackEl) feedbackEl.textContent = `⚠️ Sync failed: ${err.message}`;
+    if (feedbackEl) feedbackEl.textContent = `⚠️ ${t('ait.sync_failed', 'Sync failed: {error}', { error: err.message })}`;
     showToast(t('toast.sync_failed', 'Sync failed: {error}', { error: err.message }), 'error');
     return null;
   }
@@ -1273,7 +1276,7 @@ export function initAiKnowledgeEngine() {
       const respect = respectCb ? Boolean(respectCb.checked) : true;
       syncBtn.disabled = true;
       const origHtml = syncBtn.innerHTML;
-      syncBtn.innerHTML = '<span aria-hidden="true">⏳</span> <span>Syncing Shares...</span>';
+      syncBtn.innerHTML = '<span aria-hidden="true">⏳</span> <span>' + escapeHtml(t('ait.syncing', 'Syncing Shares...')) + '</span>';
       try {
         await syncAiWatchedFolders(respect, true);
       } finally {
@@ -1917,7 +1920,7 @@ export async function fetchAndRenderAiStatus() {
       activeLlmLabel.textContent = activeModelId || '—';
     }
     if (activeLlmPill) {
-      activeLlmPill.title = `Model in use: ${activeModelId} on ${hwName}. It answers in Ask Zetty and AI search.`;
+      activeLlmPill.title = t('ait.model_in_use_on', 'Model in use: {model} on {hw}. It answers in Ask Zetty and AI search.', { model: activeModelId, hw: hwName });
     }
     const chatModelBadge = document.getElementById('ai-chat-active-model-badge');
     if (chatModelBadge) {
@@ -1938,14 +1941,14 @@ export async function fetchAndRenderAiStatus() {
     const topDot = document.getElementById('topbar-ai-accel-dot');
     const topPill = document.getElementById('topbar-ai-accel-pill');
     const isReindexing = Boolean(reindexStatus && reindexStatus.status === 'running');
-    if (topText && !isReindexing) topText.textContent = cfg.respect_standby === false ? tierShort : `${tierShort} • Standby Safe`;
+    if (topText && !isReindexing) topText.textContent = cfg.respect_standby === false ? tierShort : t('ait.standby_safe', '{tier} • Standby Safe', { tier: tierShort });
     if (topLabel) topLabel.textContent = `AI: ${tierShort}`;
     if (topDot && !isReindexing) {
       topDot.style.background = tierNum === 1 ? '#3bf58b' : tierNum === 2 ? '#38bdf8' : '#a78bfa';
       topDot.style.boxShadow = tierNum === 1 ? '0 0 6px #3bf58b' : tierNum === 2 ? '0 0 6px #38bdf8' : '0 0 6px #a78bfa';
     }
     if (topPill) {
-      topPill.title = `ZettAI Active Accelerator: ${hwName} (NPU → GPU → CPU Priority) • ${totalFiles} Indexed Files`;
+      topPill.title = t('ait.accel', 'ZettAI Active Accelerator: {hw} (NPU → GPU → CPU Priority) • {count, plural, one {# Indexed File} other {# Indexed Files}}', { hw: hwName, count: totalFiles });
     }
 
     // Sidebar & Hub Badges
@@ -1953,7 +1956,7 @@ export async function fetchAndRenderAiStatus() {
     if (sideBadge && !isReindexing) sideBadge.textContent = tierShort;
     const hubPill = document.getElementById('mgmt-hub-ai-pill');
     if (hubPill) {
-      hubPill.textContent = `${tierBadge} • ${totalFiles} Files`;
+      hubPill.textContent = t('ait.files', '{tier} • {count, plural, one {# File} other {# Files}}', { tier: tierBadge, count: totalFiles });
     }
 
     // Section Telemetry Ribbon (#ai-accel-active-label in index.html & #ai-active-tier-pill in tests)
@@ -1961,9 +1964,9 @@ export async function fetchAndRenderAiStatus() {
     const accelChainPill = document.getElementById('ai-accel-chain-pill');
     if (activeLabel) {
       const compactHwName = String(hwName).replace(/\s*\([^)]*\)/g, '').trim() || tierShort;
-      activeLabel.textContent = `Tier ${tierNum}: ${compactHwName}`;
+      activeLabel.textContent = t('ait.tier', 'Tier {n}: {hw}', { n: tierNum, hw: compactHwName });
       if (accelChainPill) {
-        accelChainPill.title = `Tier ${tierNum}: ${tierShort} Active (${hwName})`;
+        accelChainPill.title = t('ait.tier_active', 'Tier {n}: {tier} Active ({hw})', { n: tierNum, tier: tierShort, hw: hwName });
       }
     }
     const tierPill = document.getElementById('ai-active-tier-pill');
@@ -2005,26 +2008,26 @@ export async function fetchAndRenderAiStatus() {
 
     t1List.forEach((t1) => {
       t1.textContent = tierNum === 1
-        ? `✓ ACTIVE: ${hwName}`
-        : 'Standby / Not Detected — Automatically promoted when /dev/accel/accel0, /dev/rknpu, or /dev/hailo0 is present.';
+        ? `✓ ${t('ait.active_hw', 'ACTIVE: {hw}', { hw: hwName })}`
+        : t('ait.t1_standby', 'Standby / Not Detected — Automatically promoted when /dev/accel/accel0, /dev/rknpu, or /dev/hailo0 is present.');
       t1.style.color = tierNum === 1 ? '#3bf58b' : 'var(--muted)';
     });
 
     const secGpuLabel = hw.secondary_gpu || (hw.has_igpu ? 'Intel Arc / QuickSync iGPU (/dev/dri/renderD128)' : '');
     t2List.forEach((t2) => {
       t2.textContent = tierNum === 2
-        ? `✓ ACTIVE: ${hwName}`
+        ? `✓ ${t('ait.active_hw', 'ACTIVE: {hw}', { hw: hwName })}`
         : tierNum === 1
-          ? `✓ Ready as Secondary Fallback${secGpuLabel ? `: ${secGpuLabel}` : ' (Tier 1 NPU currently active)'}`
-          : 'Standby / Not Detected — Automatically promoted when /dev/nvidia0 or /dev/dri/renderD128 is present.';
+          ? `✓ ${t('ait.secondary', 'Ready as Secondary Fallback')}${secGpuLabel ? `: ${secGpuLabel}` : t('ait.secondary_npu', ' (Tier 1 NPU currently active)')}`
+          : t('ait.t2_standby', 'Standby / Not Detected — Automatically promoted when /dev/nvidia0 or /dev/dri/renderD128 is present.');
       t2.style.color = (tierNum === 2 || (tierNum === 1 && secGpuLabel)) ? '#38bdf8' : 'var(--muted)';
     });
 
     t3List.forEach((t3) => {
       const dimFallback = stats.actual_embedding_dim || stats.embedding_dim || 768;
       t3.textContent = tierNum === 3
-        ? `✓ ACTIVE: ${hwName} (${hw.execution_provider || 'CPUExecutionProvider'})`
-        : `✓ Ready as Universal Fallback (${dimFallback}-d EmbeddingGemma 2 MRL Engine)`;
+        ? `✓ ${t('ait.active_hw', 'ACTIVE: {hw}', { hw: hwName })} (${hw.execution_provider || 'CPUExecutionProvider'})`
+        : `✓ ${t('ait.universal', 'Ready as Universal Fallback ({dim}-d EmbeddingGemma 2 MRL Engine)', { dim: dimFallback })}`;
       t3.style.color = tierNum === 3 ? '#c4b5fd' : 'var(--ok2, #25c2a0)';
     });
 
@@ -2034,19 +2037,19 @@ export async function fetchAndRenderAiStatus() {
       const defItems = res.standby_guard?.deferred_queue || res.sync_progress?.deferred_queue || [];
       const defCount = stats.deferred_queue_count ?? defItems.length ?? 0;
       const defDetail = defItems.length > 0
-        ? ` <span style="color:var(--zn-text-warn);">(${defItems.map((d) => `${escapeHtml(d.path)}${d.backing_dev ? ` [${escapeHtml(d.backing_dev)}]` : ''}`).join(', ')} — ⚡ auto-learns on spin-up)</span>`
-        : (defCount > 0 ? ' <span style="color:var(--lt-t-6ee7b7ff, #6ee7b7);">(⚡ auto-learns on spin-up)</span>' : '');
+        ? ` <span style="color:var(--zn-text-warn);">(${defItems.map((d) => `${escapeHtml(d.path)}${d.backing_dev ? ` [${escapeHtml(d.backing_dev)}]` : ''}`).join(', ')} — ${ico('⚡')} ${t('ait.auto_learns', 'auto-learns on spin-up')})</span>`
+        : (defCount > 0 ? ` <span style="color:var(--lt-t-6ee7b7ff, #6ee7b7);">(${ico('⚡')} ${t('ait.auto_learns', 'auto-learns on spin-up')})</span>` : '');
       const dimLabel = stats.actual_embedding_dim || stats.embedding_dim || 768;
       const modelRaw = stats.actual_embedding_model || stats.embedding_model || 'EmbeddingGemma 2';
       const modelDisplayName = modelRaw.includes('embeddinggemma') ? 'EmbeddingGemma 2 MRL' : modelRaw;
       const totalVideos = stats.total_videos || 0;
-      const videoDetail = totalVideos > 0 ? `, ${totalVideos} videos` : '';
+      const videoDetail = totalVideos > 0 ? t('ait.videos', ', {videos} videos', { videos: totalVideos }) : '';
       dbSummary.innerHTML = `
-        <div>• <strong>Indexed Files:</strong> ${totalFiles} (${totalDocs} documents/recipes, ${totalPhotos} photos${videoDetail})</div>
-        <div>• <strong>Semantic Chunks &amp; Vectors:</strong> ${totalChunks} (${dimLabel}-d ${escapeHtml(modelDisplayName)} + FTS5 BM25)</div>
-        <div>• <strong>Deferred Standby Queue:</strong> ${defCount} path(s) waiting for drive wake${defDetail}</div>
+        <div>• <strong>${t('ait.indexed_files', 'Indexed Files:')}</strong> ${totalFiles} (${t('ait.indexed_detail', '{docs} documents/recipes, {photos} photos', { docs: totalDocs, photos: totalPhotos })}${videoDetail})</div>
+        <div>• <strong>${escapeHtml(t('ait.chunks', 'Semantic Chunks & Vectors:'))}</strong> ${totalChunks} (${dimLabel}-d ${escapeHtml(modelDisplayName)} + FTS5 BM25)</div>
+        <div>• <strong>${t('ait.deferred', 'Deferred Standby Queue:')}</strong> ${t('ait.deferred_detail', '{count, plural, one {# path} other {# paths}} waiting for drive wake', { count: defCount })}${defDetail}</div>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-          <span>• <strong>NVMe Index Footprint:</strong> ${sizeKb} KB (<code>${escapeHtml(stats.db_path || '/app/data/rag_index.db')}</code>)</span>
+          <span>• <strong>${t('ait.footprint', 'NVMe Index Footprint:')}</strong> ${sizeKb} KB (<code>${escapeHtml(stats.db_path || '/app/data/rag_index.db')}</code>)</span>
           ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle is-danger is-small" title="${t('ui.flush_existing_rag_index_vector', 'Delete what AI search has learned and start again')}"><span aria-hidden="true">🗑️</span> <span>Flush &amp; Start Fresh</span></button>` : ''}
         </div>
       `;
@@ -2090,14 +2093,14 @@ function renderStructuredCardHtml(card) {
             <span style="font-weight: 800; font-size: 13.5px; color: var(--zn-text-strong);">${escapeHtml(card.title || 'Structured Recipe Card')}</span>
           </div>
           <div style="display: flex; gap: 6px; font-size: var(--zn-fs-xs);">
-            ${card.prep_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-6ee7b7ff, #6ee7b7);">⏱ Prep: ${escapeHtml(card.prep_time)}</span>` : ''}
-            ${card.cook_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-fde68aff, #fde68a);">🔥 Cook: ${escapeHtml(card.cook_time)}</span>` : ''}
-            ${card.servings ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-bae6fdff, #bae6fd);">🍽 Serves: ${escapeHtml(card.servings)}</span>` : ''}
+            ${card.prep_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-6ee7b7ff, #6ee7b7);">${ico('⏱')} ${escapeHtml(t('ait.prep', 'Prep: {v}', { v: card.prep_time }))}</span>` : ''}
+            ${card.cook_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-fde68aff, #fde68a);">${ico('🔥')} ${escapeHtml(t('ait.cook', 'Cook: {v}', { v: card.cook_time }))}</span>` : ''}
+            ${card.servings ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-bae6fdff, #bae6fd);">${ico('🍽')} ${escapeHtml(t('ait.serves', 'Serves: {v}', { v: card.servings }))}</span>` : ''}
           </div>
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; font-size: var(--zn-fs-xs);">
-          ${ings ? `<div><div style="font-weight: 700; color: var(--lt-t-6ee7b7ff, #6ee7b7); margin-bottom: 4px; text-transform: uppercase; font-size: var(--zn-fs-xs);">Ingredients</div><ul style="margin: 0; padding-left: 16px; color: var(--zn-text); line-height: 1.5;">${ings}</ul></div>` : ''}
-          ${steps ? `<div><div style="font-weight: 700; color: var(--lt-t-93c5fdff, #93c5fd); margin-bottom: 4px; text-transform: uppercase; font-size: var(--zn-fs-xs);">Instructions</div><ol style="margin: 0; padding-left: 16px; color: var(--zn-text); line-height: 1.5;">${steps}</ol></div>` : ''}
+          ${ings ? `<div><div style="font-weight: 700; color: var(--lt-t-6ee7b7ff, #6ee7b7); margin-bottom: 4px; text-transform: uppercase; font-size: var(--zn-fs-xs);">${t('ait.ingredients', 'Ingredients')}</div><ul style="margin: 0; padding-left: 16px; color: var(--zn-text); line-height: 1.5;">${ings}</ul></div>` : ''}
+          ${steps ? `<div><div style="font-weight: 700; color: var(--lt-t-93c5fdff, #93c5fd); margin-bottom: 4px; text-transform: uppercase; font-size: var(--zn-fs-xs);">${t('ait.instructions', 'Instructions')}</div><ol style="margin: 0; padding-left: 16px; color: var(--zn-text); line-height: 1.5;">${steps}</ol></div>` : ''}
         </div>
       </div>
     `;
@@ -2128,11 +2131,11 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
 
   if (askBtn) {
     askBtn.disabled = true;
-    askBtn.innerHTML = '<span aria-hidden="true">⏳</span> <span>Thinking...</span>';
+    askBtn.innerHTML = '<span aria-hidden="true">⏳</span> <span>' + escapeHtml(t('ait.thinking', 'Thinking...')) + '</span>';
   }
   const loadingHtml = `
     <div style="padding: 16px; text-align: center; color: var(--muted); font-size: var(--zn-fs-xs);">
-      ✨ Searching local vector &amp; FTS5 index (Zero Disk Spindown Wake)...
+      ✨ ${escapeHtml(t('aiq.searching', 'Searching local vector & FTS5 index (Zero Disk Spindown Wake)...'))}
     </div>
   `;
   if (outTest) outTest.innerHTML = loadingHtml;
@@ -2164,7 +2167,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
         <div class="ai-citation-card" data-path="${escapeHtml(fPath)}" data-name="${escapeHtml(fName)}" data-file-id="${c.file_id}" data-excerpt="${escapeHtml(cleanExcerpt)}" style="background: var(--zn-glaze-3); border: 1px solid var(--lt-r-ffffff17, rgba(255,255,255,0.09)); border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: border-color 0.2s;">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
             <span style="font-weight: 700; font-size: var(--zn-fs-xs); color: var(--zn-text-accent);">[${cIdx}] 📄 ${escapeHtml(fName)}</span>
-            <span style="font-size: var(--zn-fs-xs); padding: 1px 6px; border-radius: 4px; background: rgba(16,185,129,0.12); color: var(--lt-t-6ee7b7ff, #6ee7b7);">💤 Cached</span>
+            <span style="font-size: var(--zn-fs-xs); padding: 1px 6px; border-radius: 4px; background: rgba(16,185,129,0.12); color: var(--lt-t-6ee7b7ff, #6ee7b7);">💤 ${t('aiq.cached', 'Cached')}</span>
           </div>
           <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: monospace; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(secTitle)}</div>
           <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-top: 6px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
@@ -2178,7 +2181,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
       ? `
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">
-            Grounded Document Citations (${citations.length})
+            ${t('aiq.citations', 'Grounded Document Citations ({count})', { count: citations.length })}
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px;">
             ${citationCardsListHtml}
@@ -2191,7 +2194,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
       ? `
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">
-            Matching Visual Assets (${photos.length})
+            ${t('aiq.visuals', 'Matching Visual Assets ({count})', { count: photos.length })}
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 10px;">
             ${photos.map((p) => buildVisualPhotoCardHtml(p)).join('')}
@@ -2219,7 +2222,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 15px;">🧠</span>
-            <span style="font-weight: 800; font-size: var(--zn-fs-xs); color: var(--zn-text-strong);">ZettAI Grounded Synthesis</span>
+            <span style="font-weight: 800; font-size: var(--zn-fs-xs); color: var(--zn-text-strong);">${t('aiq.synthesis', 'ZettAI Grounded Synthesis')}</span>
             <span class="ai-llm-proof-badge" style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(168,85,247,0.16); border: 1px solid rgba(192,132,252,0.45); color: var(--lt-t-e9d5ffff, #e9d5ff);" title="${escapeHtml(llmTel.runtime_mode || 'No AI model (built-in tools only)')}">🤖 ${escapeHtml(activeLlmId)}</span>
           </div>
           <div style="display: flex; align-items: center; gap: 7px; font-size: var(--zn-fs-xs); color: var(--muted);">
@@ -2229,7 +2232,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
             <span>•</span>
             <span>${res.elapsed_ms || llmTel.elapsed_ms || 0} ms</span>
             <span>•</span>
-            <span style="color: var(--lt-t-6ee7b7ff, #6ee7b7);">💤 Standby Safe</span>
+            <span style="color: var(--lt-t-6ee7b7ff, #6ee7b7);">💤 ${t('aiq.standby_safe', 'Standby Safe')}</span>
             <button type="button" class="btn-ai-dismiss-synthesis btn-pill-toggle is-small" style="margin-left: 4px;" title="${t('ui.hide_synthesis_card', 'Hide synthesis card')}">✕</button>
           </div>
         </div>
@@ -2273,7 +2276,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
 
     return res;
   } catch (err) {
-    const errHtml = `<div style="padding: 16px; color: var(--crit, #ff5c5c); font-size: var(--zn-fs-xs);">RAG Query Error: ${escapeHtml(err.message || String(err))}</div>`;
+    const errHtml = `<div style="padding: 16px; color: var(--crit, #ff5c5c); font-size: var(--zn-fs-xs);">${escapeHtml(t('aiq.rag_error', 'RAG Query Error: {error}', { error: err.message || String(err) }))}</div>`;
     if (outTest) outTest.innerHTML = errHtml;
     if (answerCard && !options.unifiedMode) {
       answerCard.style.display = 'block';
@@ -2312,7 +2315,7 @@ function buildVisualPhotoCardHtml(item) {
              </div>`
         }
         <span title="${escapeHtml(matchReason)}" style="position: absolute; top: 6px; left: 6px; max-width: calc(100% - 82px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--lt-b-0f172ad9, rgba(15,23,42,0.85)); color: var(--zn-text-accent);">${catIcon} ${escapeHtml(matchReason)}</span>
-        <span style="position: absolute; top: 6px; right: 6px; font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--lt-b-000000b8, rgba(0,0,0,0.72)); color: var(--lt-t-6ee7b7ff, #6ee7b7); white-space: nowrap;">${isFav ? '⭐ ' : ''}💤 Cached</span>
+        <span style="position: absolute; top: 6px; right: 6px; font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--lt-b-000000b8, rgba(0,0,0,0.72)); color: var(--lt-t-6ee7b7ff, #6ee7b7); white-space: nowrap;">${isFav ? '⭐ ' : ''}💤 ${t('aiq.cached', 'Cached')}</span>
       </div>
       <div style="padding: 8px 10px; display: flex; flex-direction: column; gap: 4px;">
         <div style="font-weight: 700; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(fName)}">${escapeHtml(fName)}</div>
@@ -2359,27 +2362,27 @@ export function renderAiPreviewInspector(item) {
       : ''
     }
     <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin-bottom:10px; display:flex; flex-direction:column; gap:4px;">
-      <div><strong style="color:var(--zn-text-muted);">Location:</strong> <code style="font-size:var(--zn-fs-xs); color:var(--zn-text-accent); word-break:break-all;">${escapeHtml(fPath)}</code></div>
+      <div><strong style="color:var(--zn-text-muted);">${t('aiq.location', 'Location:')}</strong> <code style="font-size:var(--zn-fs-xs); color:var(--zn-text-accent); word-break:break-all;">${escapeHtml(fPath)}</code></div>
       ${(item.also_at || []).length ? `<div class="ai-also-at"><strong>${escapeHtml(t('ai.also_at', 'The same file is also at:'))}</strong> ${item.also_at.map((p) => `<code>${escapeHtml(p)}</code>`).join(', ')}</div>` : ''}
-      <div><strong style="color:var(--zn-text-muted);">Match Mode:</strong> <span style="color:var(--lt-t-6ee7b7ff, #6ee7b7);">${escapeHtml(item.match_reason || 'Semantic Vector')}</span></div>
+      <div><strong style="color:var(--zn-text-muted);">${t('aiq.match_mode', 'Match Mode:')}</strong> <span style="color:var(--lt-t-6ee7b7ff, #6ee7b7);">${escapeHtml(item.match_reason || t('aiq.semantic', 'Semantic Vector'))}</span></div>
       ${item.excerpt ? `<div style="margin-top:4px; padding:8px; border-radius:6px; background:var(--zn-shade-30); font-size:var(--zn-fs-xs); color:var(--zn-text); max-height:90px; overflow-y:auto;">${escapeHtml(item.excerpt)}</div>` : ''}
     </div>
     <!-- 5 Official ZettAI File Actions (#apps/zettai/search) -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
       <button type="button" id="btn-ai-inspector-open" class="btn-pill-toggle" style="background: rgba(14,165,233,0.22); border: 1px solid rgba(14,165,233,0.5); color: var(--zn-text-strong);">
-        👁️ Open File
+        👁️ ${t('aiq.open_file', 'Open File')}
       </button>
       <button type="button" id="btn-ai-inspector-location" class="btn-pill-toggle" style="background: rgba(37,194,160,0.18); border: 1px solid rgba(37,194,160,0.45); color: var(--lt-t-6ee7b7ff, #6ee7b7);" title="${t('ui.open_parent_folder_in_file', 'Open parent folder in File Manager')}">
-        📂 Open Location
+        📂 ${t('aiq.open_location', 'Open Location')}
       </button>
       <button type="button" id="btn-ai-inspector-download" class="btn-pill-toggle">
-        ⬇️ Download
+        ⬇️ ${t('aiq.download', 'Download')}
       </button>
       <button type="button" id="btn-ai-inspector-favorite" class="btn-pill-toggle" style="font-size:var(--zn-fs-xs); padding:6px 8px; cursor:pointer; color:${isFav ? '#fbbf24' : '#cbd5e1'};">
-        ${isFav ? '⭐ Favorited' : '☆ Favorite'}
+        ${isFav ? `⭐ ${t('aiq.favorited', 'Favorited')}` : `☆ ${t('aiq.favorite', 'Favorite')}`}
       </button>
       <button type="button" id="btn-ai-inspector-share" class="btn-pill-toggle" style="grid-column: 1 / -1;">
-        🔗 Share File Path / Link
+        🔗 ${t('aiq.share', 'Share File Path / Link')}
       </button>
     </div>
   `;
@@ -2573,7 +2576,7 @@ export async function runAiVisualSearch(rawQuery = null) {
 
   if (q) _recordAiSearchHistory(q);
 
-  grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--muted); font-size: var(--zn-fs-xs);">🔍 Searching visual &amp; multi-modal index...</div>`;
+  grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--muted); font-size: var(--zn-fs-xs);">🔍 ${escapeHtml(t('aiq.visual_searching', 'Searching visual & multi-modal index...'))}</div>`;
 
   const modalityParam = _aiSelectedFileType === 'all' ? 'photo' : _aiSelectedFileType;
 
@@ -2602,11 +2605,11 @@ export async function runAiVisualSearch(rawQuery = null) {
       if (autoColors.length || autoScenes.length || q) {
         intentBanner.style.display = 'block';
         intentBanner.innerHTML = `
-          <strong>🧠 Parsed Visual Intent:</strong>
-          ${autoColors.length ? `<span style="margin-left:6px; color:var(--zn-text-accent);">🎨 Color: <b>${escapeHtml(autoColors.join(', '))}</b></span>` : ''}
-          ${autoScenes.length ? `<span style="margin-left:8px; color:var(--lt-t-6ee7b7ff, #6ee7b7);">🏷️ Scene: <b>${escapeHtml(autoScenes.join(', '))}</b></span>` : ''}
-          <span style="margin-left:8px; color:var(--lt-t-c7d2feff, #c7d2fe);">⚡ Mode: <b>${escapeHtml((_aiSelectedMatchTab || 'semantic').toUpperCase())}</b></span>
-          <span style="margin-left:8px; color:var(--muted);">• 🛡️💤 Zero Disk Wakeups</span>
+          <strong>🧠 ${t('aiq.intent', 'Parsed Visual Intent:')}</strong>
+          ${autoColors.length ? `<span style="margin-left:6px; color:var(--zn-text-accent);">🎨 ${t('aiq.color', 'Color:')} <b>${escapeHtml(autoColors.join(', '))}</b></span>` : ''}
+          ${autoScenes.length ? `<span style="margin-left:8px; color:var(--lt-t-6ee7b7ff, #6ee7b7);">🏷️ ${t('aiq.scene', 'Scene:')} <b>${escapeHtml(autoScenes.join(', '))}</b></span>` : ''}
+          <span style="margin-left:8px; color:var(--lt-t-c7d2feff, #c7d2fe);">⚡ ${t('aiq.mode', 'Mode:')} <b>${escapeHtml((_aiSelectedMatchTab || 'semantic').toUpperCase())}</b></span>
+          <span style="margin-left:8px; color:var(--muted);">• 🛡️💤 ${t('aiq.zero_wake', 'Zero Disk Wakeups')}</span>
         `;
       } else {
         intentBanner.style.display = 'none';
@@ -2641,7 +2644,7 @@ export async function runAiVisualSearch(rawQuery = null) {
     if (results.length === 0) {
       grid.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 28px; color: var(--muted); font-size: var(--zn-fs-xs);">
-          No matching files found for <strong>${escapeHtml(q || _aiSelectedColor || _aiSelectedScene || 'current filter')}</strong>. Click <strong>Sync Shares</strong> above or configure folders in the <em>⚙️ AI Configuration</em> tab.
+          ${escapeHtml(t('aiq.no_match', 'No matching files found for {q}. Click {sync} above or configure folders in the {config} tab.', { q: '\u0001', sync: '\u0002', config: '\u0003' })).replace('\u0001', () => `<strong>${escapeHtml(q || _aiSelectedColor || _aiSelectedScene || t('aiq.current_filter', 'current filter'))}</strong>`).replace('\u0002', () => `<strong>${escapeHtml(t('aiq.sync_shares', 'Sync Shares'))}</strong>`).replace('\u0003', () => `<em>⚙️ ${escapeHtml(t('aiq.ai_config', 'AI Configuration'))}</em>`)}
         </div>
       `;
       return res;
@@ -2651,7 +2654,7 @@ export async function runAiVisualSearch(rawQuery = null) {
     bindAiResultCardClicks(grid);
     return res;
   } catch (err) {
-    grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--crit, #ff5c5c); font-size: var(--zn-fs-xs);">Visual search failed: ${escapeHtml(err.message || String(err))}</div>`;
+    grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--crit, #ff5c5c); font-size: var(--zn-fs-xs);">${escapeHtml(t('aiq.visual_failed', 'Visual search failed: {error}', { error: err.message || String(err) }))}</div>`;
     return null;
   }
 }
@@ -2661,7 +2664,7 @@ export async function runAiPathIndex(targetPath = null, respectStandby = true) {
   const feedbackEl = document.getElementById('ai-index-run-feedback');
   runBtns.forEach((b) => {
     b.disabled = true;
-    b.innerHTML = '<span aria-hidden="true">⏳</span> <span>Indexing...</span>';
+    b.innerHTML = '<span aria-hidden="true">⏳</span> <span>' + escapeHtml(t('aiq.indexing', 'Indexing...')) + '</span>';
   });
 
   let targets;
@@ -2677,7 +2680,7 @@ export async function runAiPathIndex(targetPath = null, respectStandby = true) {
 
   const displayTarget = targets.length === 1 ? targets[0] : `${targets.length} watched folder(s)`;
   if (feedbackEl) {
-    feedbackEl.textContent = `⏳ Scanning ${displayTarget} (Spindown-Safe Incremental Indexer)...`;
+    feedbackEl.textContent = `⏳ ${t('aiq.scanning', 'Scanning {target} (Spindown-Safe Incremental Indexer)...', { target: displayTarget })}`;
   }
   try {
     const res = await api.post('/api/media/index', {
@@ -2703,7 +2706,7 @@ export async function runAiPathIndex(targetPath = null, respectStandby = true) {
     return res;
   } catch (err) {
     if (feedbackEl) {
-      feedbackEl.textContent = `⚠️ Indexing failed: ${err.message}`;
+      feedbackEl.textContent = `⚠️ ${t('aiq.index_failed', 'Indexing failed: {error}', { error: err.message })}`;
     }
     showToast(t('toast.indexing_failed', 'Indexing failed: {error}', { error: err.message }), 'error');
     return null;
@@ -2736,10 +2739,10 @@ function _bindAiConfirmHandler() {
     try {
       const out = await api.post(`/api/ai/actions/${encodeURIComponent(actionId)}/confirm`, {});
       const ok = out && out.status === 'ok';
-      if (status) status.textContent = ok ? `Done: ${out.message || out.summary || 'OK'}` : `Not run: ${out?.error || out?.status || 'unknown error'}`;
+      if (status) status.textContent = ok ? t('aiq.done', 'Done: {v}', { v: out.message || out.summary || 'OK' }) : t('aiq.not_run', 'Not run: {v}', { v: out?.error || out?.status || t('aiq.unknown_error', 'unknown error') });
       showToast(ok ? `${out.summary || 'Action'} done` : `${out?.summary || 'Action'} failed: ${out?.error || ''}`, ok ? 'success' : 'error');
     } catch (err) {
-      if (status) status.textContent = `Not run: ${err.message}`;
+      if (status) status.textContent = t('aiq.not_run', 'Not run: {v}', { v: err.message });
       showToast(t('toast.action_failed_2', 'Action failed: {error}', { error: err.message }), 'error');
     }
   });
@@ -2752,8 +2755,8 @@ function _buildAiActionProposalsHtml(toolsCalled) {
   return proposals.map((tc) => `
       <div class="ai-chat-action-proposal" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 10px; border-radius:8px; background:rgba(245,158,11,0.10); border:1px solid rgba(251,191,36,0.38);">
         <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-fde68aff, #fde68a);">⏸️ ${escapeHtml(tc.action_summary || tc.tool)}</span>
-        <button type="button" class="btn ai-chat-confirm-action" data-action-id="${escapeHtml(tc.action_id)}" data-decision="confirm" style="font-size:var(--zn-fs-xs); padding:3px 10px;">Confirm</button>
-        <button type="button" class="btn ai-chat-confirm-action" data-action-id="${escapeHtml(tc.action_id)}" data-decision="cancel" style="font-size:var(--zn-fs-xs); padding:3px 10px; opacity:0.8;">Cancel</button>
+        <button type="button" class="btn ai-chat-confirm-action" data-action-id="${escapeHtml(tc.action_id)}" data-decision="confirm" style="font-size:var(--zn-fs-xs); padding:3px 10px;">${t('aiq.confirm', 'Confirm')}</button>
+        <button type="button" class="btn ai-chat-confirm-action" data-action-id="${escapeHtml(tc.action_id)}" data-decision="cancel" style="font-size:var(--zn-fs-xs); padding:3px 10px; opacity:0.8;">${t('common.cancel', 'Cancel')}</button>
         <span class="ai-chat-action-status" style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft);"></span>
       </div>`).join('');
 }
@@ -2761,7 +2764,7 @@ function _buildAiActionProposalsHtml(toolsCalled) {
 function _buildAiExternalNoteHtml(res) {
   const ext = Array.isArray(res?.external_services) ? res.external_services : [];
   if (!ext.length) return '';
-  return `<div class="ai-chat-external-note" style="font-size:var(--zn-fs-xs); color:var(--zn-text-warn); padding-top:2px;" title="${t('ui.this_answer_used_services_outside', 'This answer used services outside your NAS')}">🌐 Data left this device: ${escapeHtml(ext.join(', '))}</div>`;
+  return `<div class="ai-chat-external-note" style="font-size:var(--zn-fs-xs); color:var(--zn-text-warn); padding-top:2px;" title="${t('ui.this_answer_used_services_outside', 'This answer used services outside your NAS')}">🌐 ${escapeHtml(t('aiq.data_left', 'Data left this device: {services}', { services: ext.join(', ') }))}</div>`;
 }
 
 // Remember the Web toggle per browser (a convenience; the server default is off).
@@ -2825,13 +2828,13 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
       <div class="ai-chat-folder-banner" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 6px 10px; border-radius: 8px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.28); margin-bottom: 2px;">
         <div style="display: flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs);">
           <span aria-hidden="true">📁</span>
-          <span style="font-weight: 700; color: var(--lt-t-7dd3fcff, #7dd3fc);">Folder Scope:</span>
+          <span style="font-weight: 700; color: var(--lt-t-7dd3fcff, #7dd3fc);">${t('aiq.scope', 'Folder Scope:')}</span>
           <code style="color: var(--lt-t-e0f2feff, #e0f2fe); font-size: var(--zn-fs-xs); background: var(--zn-shade-25); padding: 1px 5px; border-radius: 4px;">${escapeHtml(folderPath)}</code>
-          ${folderManifest && folderManifest.total_files ? `<span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted);">(${folderManifest.total_files} files)</span>` : ''}
+          ${folderManifest && folderManifest.total_files ? `<span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted);">${t('aiq.scope_files', '({count, plural, one {# file} other {# files}})', { count: folderManifest.total_files })}</span>` : ''}
         </div>
         ${groundingScore === null ? `
           <div style="display: flex; align-items: center; gap: 5px;">
-            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-soft); background: rgba(148,163,184,0.14); border: 1px solid rgba(148,163,184,0.35); padding: 1px 7px; border-radius: 999px;" title="${t('ui.this_answer_s_support_in', 'This answer\'s support in the sources wasn\'t measured.')}">Unverified</span>
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-soft); background: rgba(148,163,184,0.14); border: 1px solid rgba(148,163,184,0.35); padding: 1px 7px; border-radius: 999px;" title="${t('ui.this_answer_s_support_in', 'This answer\'s support in the sources wasn\'t measured.')}">${t('aiq.unverified', 'Unverified')}</span>
           </div>
         ` : ''}
         ${groundingScore !== null ? `
@@ -2839,7 +2842,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
             <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: ${groundingScore >= 80 ? '#34d399' : (groundingScore >= 50 ? '#fbbf24' : '#f87171')}; background: ${groundingScore >= 80 ? 'rgba(52,211,153,0.14)' : 'rgba(251,191,36,0.14)'}; border: 1px solid ${groundingScore >= 80 ? 'rgba(52,211,153,0.35)' : 'rgba(251,191,36,0.35)'}; padding: 1px 7px; border-radius: 999px;">
               🎯 ${res.grounding_detail
                 ? escapeHtml(t('ai.grounded_sentences', '{n} of {total} sentences backed by the sources', { n: res.grounding_detail.supported, total: res.grounding_detail.total }))
-                : `${groundingScore}% Grounded (${escapeHtml(cragGrade.toUpperCase() || 'HIGH')})`}
+                : escapeHtml(t('aiq.grounded_grade', '{pct}% Grounded ({grade})', { pct: groundingScore, grade: cragGrade.toUpperCase() || 'HIGH' }))}
             </span>
             ${unsupportedHtml(res.grounding_detail)}
           </div>
@@ -2900,7 +2903,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
     ? `
       <details class="ai-chat-web-sources" style="margin-top: 2px; font-size: var(--zn-fs-xs);">
         <summary style="cursor: pointer; color: var(--zn-text-muted); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 6px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); width: fit-content; user-select: none;">
-          <span>🌐 Sources (${webSources.length})</span>
+          <span>🌐 ${t('aiq.sources', 'Sources ({count})', { count: webSources.length })}</span>
         </summary>
         <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; padding-left: 2px;">
           ${webSources.slice(0, 5).map((ws) => `<a href="${escapeHtml(ws.url)}" target="_blank" rel="noopener noreferrer" style="padding: 2px 8px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); color: var(--zn-text-accent); text-decoration: none; font-weight: 600; font-size: var(--zn-fs-xs);">${escapeHtml(ws.title || ws.source || 'Source')} ↗</a>`).join('')}
@@ -2917,7 +2920,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
         <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted);">(${escapeHtml(runtimeMode)})</span>
       </div>
       <div style="display: flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-muted);">
-        ${!folderPath && groundingScore !== null ? `<span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-ok); padding: 0 5px; border-radius: 999px; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3);">🎯 ${groundingScore}% Grounded</span><span>•</span>` : ''}
+        ${!folderPath && groundingScore !== null ? `<span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-ok); padding: 0 5px; border-radius: 999px; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3);">🎯 ${t('aiq.grounded', '{pct}% Grounded', { pct: groundingScore })}</span><span>•</span>` : ''}
         ${tokSec ? `<span style="color: var(--lt-t-fde68aff, #fde68a);">🚀 ${tokSec} tok/s</span>` : ''}
         <span>•</span>
         <span>${elapsedMs} ms</span>
@@ -3110,7 +3113,7 @@ export async function selectAiConversation(convId) {
         userMsgEl.className = 'ai-chat-msg ai-chat-msg-user';
         userMsgEl.dataset.convId = convId;
         userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(14, 165, 233, 0.22); border: 1px solid rgba(56, 189, 248, 0.45); color: #f8fafc; font-size: var(--zn-fs-xs); line-height: 1.45;';
-        userMsgEl.innerHTML = `<div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-7dd3fcff, #7dd3fc); margin-bottom:3px;">🧑 You</div><div>${escapeHtml(m.content)}</div>`;
+        userMsgEl.innerHTML = `<div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-7dd3fcff, #7dd3fc); margin-bottom:3px;">🧑 ${t('aiq.you', 'You')}</div><div>${escapeHtml(m.content)}</div>`;
         listEl.appendChild(userMsgEl);
       } else if (m.role === 'assistant') {
         const botMsgEl = document.createElement('div');
@@ -3467,8 +3470,8 @@ export function _formatChatMarkdown(rawText, sources = null) {
     thoughtHtml = `
       <details class="ai-thought-disclosure" style="margin: 4px 0 10px; border-radius: 8px; background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(168, 85, 247, 0.28); padding: 7px 10px; font-size: var(--zn-fs-xs);">
         <summary style="cursor: pointer; font-weight: 700; color: var(--zn-text-ai); display: inline-flex; align-items: center; gap: 6px; user-select: none;">
-          <span>🧠 Thought Process</span>
-          <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-weight: 400;">(click to view chain of thought)</span>
+          <span>🧠 ${t('aiq.thoughts', 'Thought Process')}</span>
+          <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-weight: 400;">${t('aiq.thoughts_hint', '(click to view chain of thought)')}</span>
         </summary>
         <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(168, 85, 247, 0.2); color: var(--zn-text-soft); font-size: var(--zn-fs-xs); line-height: 1.5; font-style: italic;">
           ${thoughtContent.replace(/\n/g, '<br/>')}
@@ -3507,7 +3510,7 @@ export function _formatChatMarkdown(rawText, sources = null) {
       (item.code.includes('services:') && (item.code.includes('image:') || item.code.includes('build:') || item.code.includes('ports:')));
 
     const deployBtnHtml = isComposeYaml
-      ? `<button type="button" class="btn-deploy-stack-code" data-action="deploy-compose-code" style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(52, 211, 153, 0.45); border-radius: 4px; color: var(--lt-t-6ee7b7ff, #6ee7b7); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px;">🚀 Deploy Stack</button>`
+      ? `<button type="button" class="btn-deploy-stack-code" data-action="deploy-compose-code" style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(52, 211, 153, 0.45); border-radius: 4px; color: var(--lt-t-6ee7b7ff, #6ee7b7); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px;">🚀 ${t('aiq.deploy', 'Deploy Stack')}</button>`
       : '';
 
     return `<div class="ai-chat-code-block" style="margin: 8px 0; border-radius: 8px; background: var(--lt-b-020617e0, rgba(2, 6, 23, 0.88)); border: 1px solid rgba(56, 189, 248, 0.3); overflow: hidden;">
@@ -3515,7 +3518,7 @@ export function _formatChatMarkdown(rawText, sources = null) {
         <span style="font-weight: 700; color: var(--lt-t-7dd3fcff, #7dd3fc);">${escapeHtml(item.lang)}</span>
         <div style="display: flex; align-items: center;">
           ${deployBtnHtml}
-          <button type="button" class="btn-copy-code" data-action="copy-code" style="background: var(--zn-glaze-6); border: 1px solid var(--zn-line-18); border-radius: 4px; color: var(--zn-text-soft); font-size: var(--zn-fs-xs); padding: 2px 7px; cursor: pointer;">Copy</button>
+          <button type="button" class="btn-copy-code" data-action="copy-code" style="background: var(--zn-glaze-6); border: 1px solid var(--zn-line-18); border-radius: 4px; color: var(--zn-text-soft); font-size: var(--zn-fs-xs); padding: 2px 7px; cursor: pointer;">${t('catalog.copy', 'Copy')}</button>
         </div>
       </div>
       <pre style="margin: 0; padding: 10px 12px; overflow-x: auto; font-family: 'JetBrains Mono', Consolas, monospace; font-size: var(--zn-fs-xs); line-height: 1.5; color: var(--zn-text);"><code>${escapedCode}</code></pre>
@@ -3630,7 +3633,7 @@ export async function sendAiChatMessage(rawMessage = null) {
   if (inputEl) inputEl.value = '';
   if (sendBtn) {
     sendBtn.disabled = true;
-    sendBtn.innerHTML = '<span><span class="ai-typing-dot" style="width:5px;height:5px;margin-right:3px;"></span></span> <span>Generating...</span>';
+    sendBtn.innerHTML = '<span><span class="ai-typing-dot" style="width:5px;height:5px;margin-right:3px;"></span></span> <span>' + escapeHtml(t('aiq.generating', 'Generating...')) + '</span>';
   }
 
   // Web search and weather send the question outside the NAS: only when the user turns it on (AI-06).
@@ -3644,7 +3647,7 @@ export async function sendAiChatMessage(rawMessage = null) {
     const userMsgEl = document.createElement('div');
     userMsgEl.className = 'ai-chat-msg ai-chat-msg-user';
     userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(14, 165, 233, 0.22); border: 1px solid rgba(56, 189, 248, 0.45); color: #f8fafc; font-size: var(--zn-fs-xs); line-height: 1.45;';
-    userMsgEl.innerHTML = `<div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-7dd3fcff, #7dd3fc); margin-bottom:3px;">🧑 You</div><div>${escapeHtml(msg)}</div>`;
+    userMsgEl.innerHTML = `<div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-7dd3fcff, #7dd3fc); margin-bottom:3px;">🧑 ${t('aiq.you', 'You')}</div><div>${escapeHtml(msg)}</div>`;
     listEl.appendChild(userMsgEl);
 
     const pendingEl = document.createElement('div');
@@ -3654,7 +3657,7 @@ export async function sendAiChatMessage(rawMessage = null) {
       pendingEl.style.cssText = 'align-self: flex-start; max-width: 85%; padding: 10px 14px; border-radius: 10px; background: rgba(30, 20, 50, 0.75); border: 1px solid rgba(192, 132, 252, 0.4); display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(168, 85, 247, 0.15);';
       pendingEl.innerHTML = `
         <span class="ai-thinking-brain" style="font-size: 15px;">🧠</span>
-        <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-e9d5ffff, #e9d5ff);">Thinking</span>
+        <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-e9d5ffff, #e9d5ff);">${t('aiq.thinking', 'Thinking')}</span>
         <span class="ai-thinking-dots" style="color: var(--zn-text-ai); font-weight: 800; letter-spacing: 2px;">
           <span class="ai-dot-1">.</span><span class="ai-dot-2">.</span><span class="ai-dot-3">.</span>
         </span>
@@ -3668,7 +3671,7 @@ export async function sendAiChatMessage(rawMessage = null) {
           <span class="ai-typing-dot"></span>
           <span class="ai-typing-dot"></span>
         </div>
-        <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft);">Processing with <strong style="color: var(--zn-text-accent);">${escapeHtml(activeModel)}</strong>...</span>
+        <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft);">${escapeHtml(t('aiq.processing', 'Processing with {model}...', { model: '\u0001' })).replace('\u0001', () => `<strong style="color: var(--zn-text-accent);">${escapeHtml(activeModel)}</strong>`)}</span>
       `;
     }
     listEl.appendChild(pendingEl);
@@ -3774,7 +3777,7 @@ export async function sendAiChatMessage(rawMessage = null) {
               <div style="display: flex; align-items: center; gap: 6px;">
                 <span class="ai-chat-model-pill" style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--lt-t-e9d5ffff, #e9d5ff); padding: 1px 8px; border-radius: 999px; background: rgba(168,85,247,0.18); border: 1px solid rgba(192,132,252,0.45);">🤖 ${escapeHtml(activeModel)}</span>
                 <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-accent); display: inline-flex; align-items: center; gap: 4px;">
-                  <span class="ai-typing-dot" style="width: 5px; height: 5px;"></span> Streaming
+                  <span class="ai-typing-dot" style="width: 5px; height: 5px;"></span> ${t('aiq.streaming', 'Streaming')}
                 </span>
               </div>
             </div>
@@ -3830,7 +3833,7 @@ export async function sendAiChatMessage(rawMessage = null) {
                   pill.className = 'ai-chat-tool-pill ai-chat-tool-running';
                   pill.dataset.toolName = toolName;
                   pill.style.cssText = 'font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(56,189,248,0.16); border: 1px solid rgba(56,189,248,0.42); color: #7dd3fc;';
-                  pill.textContent = `⚡ Running ${toolName}...`;
+                  pill.textContent = `⚡ ${t('aiq.running_tool', 'Running {tool}...', { tool: toolName })}`;
                   toolsTraceEl.appendChild(pill);
                 }
               } else if (currentEvent === 'tool_done') {
@@ -3876,8 +3879,8 @@ export async function sendAiChatMessage(rawMessage = null) {
                   thoughtDetailsEl.style.cssText = 'margin: 4px 0 10px; border-radius: 8px; background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(168, 85, 247, 0.28); padding: 7px 10px; font-size: var(--zn-fs-xs);';
                   thoughtDetailsEl.innerHTML = `
                     <summary style="cursor: pointer; font-weight: 700; color: var(--zn-text-ai); display: inline-flex; align-items: center; gap: 6px; user-select: none;">
-                      <span>🧠 Thought Process</span>
-                      <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-weight: 400;">(reasoning in real time...)</span>
+                      <span>🧠 ${t('aiq.thoughts', 'Thought Process')}</span>
+                      <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-weight: 400;">${t('aiq.thoughts_live', '(reasoning in real time...)')}</span>
                     </summary>
                     <div class="ai-thought-content" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(168, 85, 247, 0.2); color: var(--zn-text-soft); font-size: var(--zn-fs-xs); line-height: 1.5; font-style: italic;"></div>
                   `;
@@ -4001,7 +4004,7 @@ export async function sendAiChatMessage(rawMessage = null) {
       const errEl = document.createElement('div');
       errEl.className = 'ai-chat-msg ai-chat-msg-error';
       errEl.style.cssText = 'padding: 10px 14px; border-radius: 10px; background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(248, 113, 113, 0.45); color: #fecaca; font-size: var(--zn-fs-xs);';
-      errEl.textContent = `⚠️ Zetty could not answer: ${err.message || String(err)}`;
+      errEl.textContent = `⚠️ ${t('aiq.no_answer', 'Zetty could not answer: {error}', { error: err.message || String(err) })}`;
       listEl.appendChild(errEl);
       listEl.scrollTop = listEl.scrollHeight;
     }
@@ -4057,13 +4060,13 @@ export function updateAiReindexProgress(data) {
 
   if (sidebarBadge) {
     sidebarBadge.dataset.reindexing = '1';
-    sidebarBadge.textContent = `${pct}% Re-index`;
+    sidebarBadge.textContent = t('aiq.reindex_badge', '{pct}% Re-index', { pct });
     sidebarBadge.style.background = 'rgba(234, 179, 8, 0.2)';
     sidebarBadge.style.color = '#fbbf24';
   }
 
   if (topText) {
-    topText.textContent = `Re-indexing ${pct}% • ${etaText}`;
+    topText.textContent = t('aiq.reindexing', 'Re-indexing {pct}% • {eta}', { pct, eta: etaText });
   }
 
   // Update top banner

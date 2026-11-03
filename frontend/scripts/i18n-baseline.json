@@ -1,6 +1,6 @@
 {
   "raw_toasts": 0,
-  "hardcoded_ui": 1206,
+  "hardcoded_ui": 1106,
   "missing_plurals": 0,
   "to_fixed": 70,
   "emoji_strings": 137,
@@ -19,7 +19,7 @@
     "frontend/src/components/file-preview-modal.js": 2,
     "frontend/src/components/led-control.js": 4,
     "frontend/src/components/management.js": 44,
-    "frontend/src/components/management/ai.js": 111,
+    "frontend/src/components/management/ai.js": 11,
     "frontend/src/components/management/disks.js": 5,
     "frontend/src/components/management/notifications.js": 22,
     "frontend/src/components/management/security.js": 1,
