@@ -39,7 +39,7 @@ describe('Phase 3: Container App Catalog & Web Terminal', () => {
     initContainerModal();
     const termBtn = document.querySelector('.ci-tab-btn[data-tab="terminal"]');
     expect(termBtn).toBeTruthy();
-    expect(termBtn.textContent).toContain('Web Terminal');
+    expect(termBtn.textContent).toContain('Terminal');
 
     const termPane = document.getElementById('ci-pane-terminal');
     expect(termPane).toBeTruthy();

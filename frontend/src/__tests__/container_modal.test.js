@@ -168,15 +168,15 @@ describe('Container Inspector & Docker Compose Viewer - Phase 2', () => {
 
     // 2. Ports Tab verification
     const portsContent = document.getElementById('ci-ports-content');
-    expect(portsContent.innerHTML).toContain('Web Interface Detected');
+    expect(portsContent.innerHTML).toContain('Web page found');
     expect(portsContent.innerHTML).toContain(':8096');
-    expect(portsContent.innerHTML).toContain('Primary Web UI');
+    expect(portsContent.innerHTML).toContain('Main web page');
     expect(portsContent.innerHTML).toContain(':8920');
 
     // 3. Mounts Tab verification & File Explorer deep-link
     const mountsContent = document.getElementById('ci-mounts-content');
     expect(mountsContent.innerHTML).toContain('/mnt/user/appdata/jellyfin');
-    expect(mountsContent.innerHTML).toContain('APPDATA');
+    expect(mountsContent.innerHTML).toContain('APP DATA');
     expect(mountsContent.innerHTML).toContain('/mnt/user/media');
 
     // Test File Explorer event emission on click
@@ -401,7 +401,7 @@ describe('Container Inspector & Docker Compose Viewer - Phase 2', () => {
     // Wait for pre-check available badge
     const statusEl = document.getElementById('ci-port-check-0');
     await vi.waitFor(() => {
-      expect(statusEl.textContent).toContain('Port 8097 Available');
+      expect(statusEl.textContent).toContain('Port 8097 is free');
     });
 
     // Test conflict detection with in_use_by container name
@@ -409,7 +409,7 @@ describe('Container Inspector & Docker Compose Viewer - Phase 2', () => {
     firstInput.dispatchEvent(new window.Event('input', { bubbles: true }));
 
     await vi.waitFor(() => {
-      expect(statusEl.textContent).toContain('Port 8080 Conflict');
+      expect(statusEl.textContent).toContain('Port 8080 is in use');
       expect(statusEl.textContent).toContain('traefik');
     });
 
@@ -417,7 +417,7 @@ describe('Container Inspector & Docker Compose Viewer - Phase 2', () => {
     firstInput.value = '8097';
     firstInput.dispatchEvent(new window.Event('input', { bubbles: true }));
     await vi.waitFor(() => {
-      expect(statusEl.textContent).toContain('Port 8097 Available');
+      expect(statusEl.textContent).toContain('Port 8097 is free');
     });
 
     // Click Apply Ports button
