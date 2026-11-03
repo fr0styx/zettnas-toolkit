@@ -124,7 +124,7 @@ export async function fetchAndRenderReplication() {
           const id = btn.dataset.id;
           try {
             btn.disabled = true;
-            btn.textContent = t('ui.running_2', '⏳ Running...');
+            setIconLabel(btn, '⏳', t('ui.running_2', 'Running...'));
             await api.post(`/api/storage/replication/jobs/${encodeURIComponent(id)}/run`);
             showToast(t('toast.replication_pipeline_dispatched', 'Replication pipeline \'{id}\' dispatched.', { id: id }), 'success');
             setTimeout(fetchAndRenderReplication, 1000);
@@ -132,7 +132,7 @@ export async function fetchAndRenderReplication() {
             showToast(t('toast.replication_failed', 'Replication failed: {message}', { message: e.message }), 'error');
           } finally {
             btn.disabled = false;
-            btn.textContent = t('ui.run', '▶ Run');
+            setIconLabel(btn, '▶', t('ui.run', 'Run'));
           }
         });
       });
@@ -385,7 +385,7 @@ export async function fetchAndRenderWireguard() {
               keyExpiryDisplay.textContent = `⚠️ ${t('net.expiry_soon', 'Expires in {count, plural, one {# day} other {# days}}', { count: ts.key_expiry_days })}`;
               keyExpiryDisplay.style.color = '#fbbf24';
             } else {
-              keyExpiryDisplay.textContent = t('ui.key_expired', '❌ Key Expired');
+              setIconLabel(keyExpiryDisplay, '❌', t('ui.key_expired', 'Key Expired'));
               keyExpiryDisplay.style.color = '#f87171';
             }
           } else {
@@ -819,7 +819,7 @@ export async function fetchAndRenderWireguard() {
         showToast(t('toast.re_authentication_failed', 'Re-authentication failed: {error}', { error: err.message }), 'error');
       } finally {
         btnTsReauth.disabled = false;
-        btnTsReauth.textContent = t('net.tailscale_reauth_btn', '⚡ Re-auth');
+        setIconLabel(btnTsReauth, '⚡', t('net.tailscale_reauth_btn', 'Re-auth'));
       }
     });
   }
@@ -1079,14 +1079,14 @@ export async function fetchAndRenderWireguard() {
           showToast(t('toast.pinged', 'Pinged {ip}: {latency} ({route})', { ip: ip, latency: res.latency, route: res.route || 'direct' }), 'success');
         } else {
           if (resSpan) {
-            resSpan.textContent = t('ui.failed_2', '❌ Failed');
+            setIconLabel(resSpan, '❌', t('ui.failed_2', 'Failed'));
             resSpan.style.color = '#f87171';
           }
           showToast(t('toast.ping_failed_or_timed_out', 'Ping {ip} failed or timed out.', { ip: ip }), 'warning');
         }
       } catch (err) {
         if (resSpan) {
-          resSpan.textContent = t('ui.error_3', '❌ Error');
+          setIconLabel(resSpan, '❌', t('ui.error_3', 'Error'));
           resSpan.style.color = '#f87171';
         }
       } finally {

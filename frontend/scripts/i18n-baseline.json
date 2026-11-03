@@ -3,7 +3,7 @@
   "hardcoded_ui": 204,
   "missing_plurals": 0,
   "to_fixed": 38,
-  "emoji_strings": 24,
+  "emoji_strings": 18,
   "per_file": {
     "frontend/index.html": 6,
     "frontend/src/components/containers-manager.js": 2,
