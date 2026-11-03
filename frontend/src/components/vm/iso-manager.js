@@ -10,6 +10,9 @@ import { vmState } from './state.js';
 import { openVmCreateModal } from './create-modal.js';
 import { loadVmDashboard } from '../vm-manager.js';
 
+// An icon next to translated words: screen readers skip it (UX-35)
+const ico = (e) => `<span aria-hidden="true">${e}</span>`;
+
 /**
  * Official OS Catalog Data Definition
  */
@@ -129,7 +132,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
       <div class="os-window-header" id="iso-win-header" style="cursor: move;">
         <div class="os-window-title" style="display: flex; align-items: center; gap: 8px;">
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/></svg>
-          <span>ISO Storage & Official OS Catalog</span>
+          <span>${t('vmm.iso_library', 'ISO library')}</span>
         </div>
         <div class="os-window-controls">
           <button class="win-btn min-btn" id="iso-win-min" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
@@ -141,10 +144,10 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
       <!-- Navigation Tabs -->
       <div class="iso-modal-tabs" style="display: flex; gap: 8px; padding: 10px 18px; background: var(--zn-shade-25); border-bottom: 1px solid var(--zn-line-6); flex-shrink: 0;">
         <button id="tab-btn-catalog" class="btn-pill-toggle active" style="flex: 1;">
-          <span>🌐 Official ISO Catalog</span>
+          <span>${ico('🌐')} ${t('viso.tab_catalog', 'Download catalog')}</span>
         </button>
         <button id="tab-btn-local" class="btn-pill-toggle" style="flex: 1;">
-          <span>📁 Local Storage ISOs (/mnt/user/isos)</span>
+          <span>${ico('📁')} ${t('viso.tab_local', 'On this NAS ({path})', { path: '/mnt/user/isos' })}</span>
         </button>
       </div>
 
@@ -152,7 +155,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
         <!-- Tab 1: Official Catalog -->
         <div id="tab-content-catalog">
           <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 14px;">
-            Verified, turnkey operating system images ready for 1-click download directly to your storage pool (<code style="color: var(--zn-text-accent);">/mnt/user/isos</code>).
+            ${t('viso.catalog_desc', 'Checked operating system images you can download to your storage pool in one click')} (<code style="color: var(--zn-text-accent);">/mnt/user/isos</code>).
           </div>
           <div class="catalog-grid" id="catalog-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px;">
             <!-- Rendered by renderCatalogCards() -->
@@ -164,10 +167,10 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           <!-- Dropzone -->
           <div id="iso-dropzone" class="iso-dropzone" style="border: 2px dashed rgba(14,165,233,0.4); border-radius: 8px; padding: 24px; text-align: center; background: rgba(14,165,233,0.03); cursor: pointer; transition: all 0.2s;">
             <div style="font-size: 28px; margin-bottom: 8px;">💿</div>
-            <div style="font-weight: 700; color: var(--zn-text-strong); font-size: 13px;">Drag & Drop ISO files here to upload</div>
-            <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">Destination: <code style="color: var(--zn-text-accent);">/mnt/user/isos</code> • Supports .iso, .img up to 50 GB</div>
+            <div style="font-weight: 700; color: var(--zn-text-strong); font-size: 13px;">${t('viso.drop', 'Drag ISO files here to upload them')}</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">${t('viso.dest', 'Saved to:')} <code style="color: var(--zn-text-accent);">/mnt/user/isos</code> • ${t('viso.types', '.iso and .img files up to 50 GB')}</div>
             <input type="file" id="iso-file-input" accept=".iso,.img" style="display: none;" />
-            <button id="btn-browse-iso" class="btn-pill-toggle" style="margin-top: 12px;">Select ISO File...</button>
+            <button id="btn-browse-iso" class="btn-pill-toggle" style="margin-top: 12px;">${t('viso.browse', 'Choose an ISO file…')}</button>
           </div>
 
           <!-- Upload Progress Card -->
@@ -184,8 +187,8 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           <!-- Existing Local Files Table -->
           <div style="margin-top: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">Discovered Images in /mnt/user/isos</div>
-              <button id="btn-refresh-local-isos" class="btn-pill-toggle is-small">↺ Refresh</button>
+              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('viso.found', 'Images in {path}', { path: '/mnt/user/isos' })}</div>
+              <button id="btn-refresh-local-isos" class="btn-pill-toggle is-small">${ico('↺')} ${t('vm.refresh', 'Refresh')}</button>
             </div>
             <div id="local-iso-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
           </div>
@@ -197,7 +200,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
 
     // Register with DockManager
     if (window.DockManager) {
-      window.DockManager.register('vm-iso-manager', modal, '#i-vm', 'ISO Storage & Catalog');
+      window.DockManager.register('vm-iso-manager', modal, '#i-vm', t('vmm.iso_library', 'ISO library'));
     }
 
     makeDraggable(modal, modal.querySelector('#iso-win-header'));
@@ -379,7 +382,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
     if (!localList) return;
 
     if (!vmState.isos || vmState.isos.length === 0) {
-      localList.innerHTML = `<div style="font-size: var(--zn-fs-xs); color: var(--muted); padding: 12px 0;">No local ISO images discovered in /mnt/user/isos.</div>`;
+      localList.innerHTML = `<div style="font-size: var(--zn-fs-xs); color: var(--muted); padding: 12px 0;">${t('viso.none', 'No ISO images in {path} yet.', { path: '/mnt/user/isos' })}</div>`;
     } else {
       localList.innerHTML = vmState.isos.map((iso) => `
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 6px;">
@@ -392,7 +395,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           </div>
           <div style="display: flex; align-items: center; gap: 8px; margin-left: 12px; flex-shrink: 0;">
             <span style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-muted);">${iso.size_formatted}</span>
-            <button class="btn-pill-toggle btn-boot-iso" data-path="${escapeHtml(iso.path)}" style="background: rgba(14,165,233,0.18); color: var(--zn-text-accent); border-color: rgba(14,165,233,0.35);">▶ Boot VM</button>
+            <button class="btn-pill-toggle btn-boot-iso" data-path="${escapeHtml(iso.path)}" style="background: rgba(14,165,233,0.18); color: var(--zn-text-accent); border-color: rgba(14,165,233,0.35);">${ico('▶')} ${t('viso.boot', 'Create VM')}</button>
             <button class="btn-pill-toggle btn-delete-iso is-danger" data-path="${escapeHtml(iso.path)}" data-name="${escapeHtml(iso.name)}" title="${t('ui.delete_iso_from_storage', 'Delete ISO from storage')}">🗑</button>
           </div>
         </div>
@@ -415,7 +418,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           const name = btn.dataset.name;
           showConfirmToast(
             t('vms.delete_iso_title', 'Delete ISO Image'),
-            `Are you sure you want to delete '${name}' from storage? This cannot be undone.`,
+            t('viso.delete_q', 'Delete “{name}” from storage? This can’t be undone.', { name }),
             async () => {
               try {
                 await api.delete(`/api/vms/isos?path=${encodeURIComponent(path)}`);
@@ -455,7 +458,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
 
         if (task.status === 'downloading') {
           if (targetStat) {
-            targetStat.textContent = `Downloading... ${task.speed_mb_s || 0} MB/s (${task.progress_pct || 0}%)`;
+            targetStat.textContent = t('viso.downloading', 'Downloading… {speed} MB/s ({pct}%)', { speed: task.speed_mb_s || 0, pct: task.progress_pct || 0 });
             targetStat.style.color = '#38bdf8';
           }
           if (btn) {
@@ -487,7 +490,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           clearInterval(_isoPollTimers[catalogId]);
           delete _isoPollTimers[catalogId];
           if (targetStat) {
-            targetStat.textContent = `Failed: ${task.error || 'Verification error'}`;
+            targetStat.textContent = t('viso.failed', 'Failed: {error}', { error: task.error || t('viso.checksum', 'the checksum did not match') });
             targetStat.style.color = '#ef4444';
           }
           if (btn) {
@@ -518,7 +521,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
             <div>
               <span style="font-size: var(--zn-fs-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: var(--zn-text-accent);">${item.badge}</span>
-              ${inStorage ? `<span style="font-size: var(--zn-fs-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--zn-text-ok); margin-left: 6px;">✓ In Storage</span>` : ''}
+              ${inStorage ? `<span style="font-size: var(--zn-fs-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--zn-text-ok); margin-left: 6px;">${ico('✓')} ${t('viso.in_storage', 'On this NAS')}</span>` : ''}
               <div style="font-weight: 700; color: var(--zn-text-strong); font-size: 13px; margin-top: 4px;">${escapeHtml(item.name)}</div>
             </div>
             <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted);">${item.size_formatted}</span>
@@ -528,7 +531,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           <!-- Download Progress Bar (Hidden by default or shown if in-flight) -->
           <div id="prog-wrap-${item.id}" style="${inStorage ? 'display: block;' : 'display: none;'} margin-bottom: 10px;">
             <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); margin-bottom: 4px;">
-              <span id="prog-stat-${item.id}" style="color: ${inStorage ? '#34d399' : '#38bdf8'};">${inStorage ? 'Downloaded to /mnt/user/isos' : 'Ready'}</span>
+              <span id="prog-stat-${item.id}" style="color: ${inStorage ? '#34d399' : '#38bdf8'};">${inStorage ? t('ui.downloaded_to_mnt_user_isos', 'Downloaded to /mnt/user/isos') : t('viso.ready', 'Ready')}</span>
               <span id="prog-pct-${item.id}" style="color: var(--zn-text-strong); font-weight: 700;">${inStorage ? '100%' : '0%'}</span>
             </div>
             <div style="height: 6px; border-radius: 3px; background: var(--zn-glaze-10); overflow: hidden;">
@@ -541,14 +544,14 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
             <div style="display: flex; gap: 6px;">
               ${inStorage ? `
                 <button class="btn-pill-toggle btn-boot-catalog-iso" data-filename="${escapeHtml(item.filename)}" style="background: rgba(14,165,233,0.18); color: var(--zn-text-accent); border-color: rgba(14,165,233,0.35);">
-                  ▶ Boot VM
+                  ${ico('▶')} ${t('viso.boot', 'Create VM')}
                 </button>
                 <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" disabled style="padding: 5px 10px; font-size: var(--zn-fs-xs); font-weight: 700; background: rgba(16,185,129,0.2); color: var(--zn-text-ok); border-color: #34d399;">
-                  ✓ Ready
+                  ${ico('✓')} ${t('viso.ready', 'Ready')}
                 </button>
               ` : `
                 <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" style="padding: 5px 12px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--accent-cyan, #0ea5e9); color: var(--zn-text-strong);">
-                  <span>⬇ Download</span>
+                  <span>${ico('⬇')} ${t('viso.download', 'Download')}</span>
                 </button>
               `}
             </div>
@@ -585,7 +588,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
         } catch (err) {
           showToast(t('toast.failed_to_initiate_download', 'Failed to initiate download: {error}', { error: err.message }), 'error');
           if (targetStat) {
-            targetStat.textContent = `Error: ${err.message}`;
+            targetStat.textContent = t('viso.error', 'Error: {error}', { error: err.message });
             targetStat.style.color = '#ef4444';
           }
           btn.disabled = false;

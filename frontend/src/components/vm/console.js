@@ -10,6 +10,28 @@ import { createTerminalView } from '../terminal-view.js';
 import { vmState } from './state.js';
 import { isCompact, isTouch } from '../../device.js';
 
+// An icon next to translated words: screen readers skip it (UX-35)
+const ico = (e) => `<span aria-hidden="true">${e}</span>`;
+
+const CONSOLE_STATUS = {
+  live: ['vcon.st_live', 'Live', 'ok'],
+  connecting: ['vcon.st_connecting', 'Connecting…', 'warn'],
+  reconnecting: ['vcon.st_reconnecting', 'Reconnecting ({s} s)…', 'warn'],
+  disconnected: ['vcon.st_disconnected', 'Disconnected', 'crit'],
+  tty_connecting: ['vcon.st_tty_connecting', 'Terminal connecting…', 'warn'],
+  tty_live: ['vcon.st_tty_live', 'Terminal live', 'ok'],
+  tty_closed: ['vcon.st_tty_closed', 'Terminal closed', 'crit'],
+  tty_error: ['vcon.st_tty_error', 'Terminal error', 'crit'],
+};
+
+/** Shows the console's connection state in the title bar pill, in words and colour. */
+export function setConsoleStatus(pill, kind, params) {
+  if (!pill) return;
+  const [key, words, tone] = CONSOLE_STATUS[kind];
+  pill.textContent = `● ${t(key, words, params)}`;
+  pill.style.color = `var(--zn-text-${tone})`;
+}
+
 /**
  * Universal Clipboard Helper
  * Robust copy support with modern Clipboard API and fallback to execCommand('copy')
@@ -62,12 +84,12 @@ export function setConsoleFocus(focused) {
       pill.textContent = t('ui.captured', '⌨️ Captured');
       pill.style.color = '#38bdf8';
       pill.style.borderColor = 'rgba(14, 165, 233, 0.4)';
-      pill.setAttribute('title', 'Keyboard captured by VM console. Click outside or minimize to release.');
+      pill.setAttribute('title', t('ui.keyboard_captured_by_vm_console', 'Keyboard captured by VM console. Click outside or minimize to release.'));
     } else {
       pill.textContent = t('ui.click_to_capture', '⌨️ Click to capture');
       pill.style.color = 'var(--muted)';
       pill.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-      pill.setAttribute('title', 'Keyboard released to desktop. Click console to capture keyboard.');
+      pill.setAttribute('title', t('vcon.kbd_released', 'Keyboard released to the desktop. Click the console to capture it.'));
     }
   }
 }
@@ -684,13 +706,10 @@ export function _scheduleConsoleReconnect(container, vmId, vmName, mode) {
 
   if (_consoleReconnectAttempts >= 5) {
     const statusPill = document.getElementById('vm-console-status-pill');
-    if (statusPill) {
-      statusPill.textContent = '● DISCONNECTED';
-      statusPill.style.color = '#f87171';
-    }
-    showConsoleBanner('disconnected', `Connection to ${vmName} lost. Maximum reconnection attempts reached.`, [
+    setConsoleStatus(statusPill, 'disconnected');
+    showConsoleBanner('disconnected', t('vcon.gave_up', 'Lost the connection to {name} after 5 tries.', { name: vmName }), [
       {
-        label: 'Reconnect Now',
+        label: t('vcon.reconnect_now', 'Reconnect now'),
         primary: true,
         onClick: () => {
           _consoleReconnectAttempts = 0;
@@ -703,19 +722,13 @@ export function _scheduleConsoleReconnect(container, vmId, vmName, mode) {
 
   const statusPill = document.getElementById('vm-console-status-pill');
   let countdown = 5;
-  if (statusPill) {
-    statusPill.textContent = `● RECONNECTING (${countdown}s)...`;
-    statusPill.style.color = '#fbbf24';
-  }
+  setConsoleStatus(statusPill, 'reconnecting', { s: countdown });
 
   const triggerNow = () => {
     cancelConsoleReconnect();
     _consoleReconnectAttempts++;
-    if (statusPill) {
-      statusPill.textContent = '● CONNECTING...';
-      statusPill.style.color = '#fbbf24';
-    }
-    showConsoleBanner('connecting', `Reconnecting to ${vmName} display (Attempt ${_consoleReconnectAttempts}/5)...`);
+    setConsoleStatus(statusPill, 'connecting');
+    showConsoleBanner('connecting', t('vcon.reconnecting_to', 'Reconnecting to {name} (try {n} of 5)…', { name: vmName, n: _consoleReconnectAttempts }));
     const win = document.getElementById('vm-console-window');
     if (mode === 'gui') {
       const vncWrap = win ? win.querySelector('#vm-vnc-container') : container;
@@ -728,13 +741,10 @@ export function _scheduleConsoleReconnect(container, vmId, vmName, mode) {
 
   const cancelRec = () => {
     cancelConsoleReconnect();
-    if (statusPill) {
-      statusPill.textContent = '● DISCONNECTED';
-      statusPill.style.color = '#f87171';
-    }
-    showConsoleBanner('disconnected', 'Disconnected from VM console', [
+    setConsoleStatus(statusPill, 'disconnected');
+    showConsoleBanner('disconnected', t('vcon.disconnected', 'Disconnected from the VM console'), [
       {
-        label: 'Reconnect Now',
+        label: t('vcon.reconnect_now', 'Reconnect now'),
         primary: true,
         onClick: () => {
           _consoleReconnectAttempts = 0;
@@ -744,9 +754,9 @@ export function _scheduleConsoleReconnect(container, vmId, vmName, mode) {
     ]);
   };
 
-  showConsoleBanner('disconnected', `Connection lost. Reconnecting in ${countdown}s (Attempt ${_consoleReconnectAttempts + 1}/5)...`, [
-    { label: 'Reconnect Now', primary: true, onClick: triggerNow },
-    { label: 'Cancel', primary: false, onClick: cancelRec },
+  showConsoleBanner('disconnected', t('vcon.lost', 'Connection lost. Reconnecting in {s} s (try {n} of 5)…', { s: countdown, n: _consoleReconnectAttempts + 1 }), [
+    { label: t('vcon.reconnect_now', 'Reconnect now'), primary: true, onClick: triggerNow },
+    { label: t('common.cancel', 'Cancel'), primary: false, onClick: cancelRec },
   ]);
 
   const tick = () => {
@@ -757,13 +767,11 @@ export function _scheduleConsoleReconnect(container, vmId, vmName, mode) {
       return;
     }
     if (countdown > 0) {
-      if (statusPill) {
-        statusPill.textContent = `● RECONNECTING (${countdown}s)...`;
-      }
+      setConsoleStatus(statusPill, 'reconnecting', { s: countdown });
       const banner = document.getElementById('vm-console-banner');
       const txt = banner?.querySelector('.banner-text');
       if (txt) {
-        txt.textContent = `Connection lost. Reconnecting in ${countdown}s (Attempt ${_consoleReconnectAttempts + 1}/5)...`;
+        txt.textContent = t('vcon.lost', 'Connection lost. Reconnecting in {s} s (try {n} of 5)…', { s: countdown, n: _consoleReconnectAttempts + 1 });
       }
       _reconnectTimer = setTimeout(tick, 1000);
     } else {
@@ -823,10 +831,7 @@ async function initRealVncClient(container, vmId, vmName) {
     _activeRfb = null;
   }
   const statusPill = document.getElementById('vm-console-status-pill');
-  if (statusPill) {
-    statusPill.textContent = '● CONNECTING...';
-    statusPill.style.color = '#fbbf24';
-  }
+  setConsoleStatus(statusPill, 'connecting');
 
   try {
     let tokenRes = null;
@@ -872,10 +877,7 @@ async function initRealVncClient(container, vmId, vmName) {
       rfb.focusOnClick = true;
 
       rfb.addEventListener('connect', () => {
-        if (statusPill) {
-          statusPill.textContent = '● LIVE';
-          statusPill.style.color = '#34d399';
-        }
+        setConsoleStatus(statusPill, 'live');
         const resStat = document.getElementById('vm-console-resolution-stat');
         if (resStat && rfb._fbWidth) {
           resStat.textContent = `${rfb._fbWidth} × ${rfb._fbHeight}`;
@@ -904,10 +906,7 @@ async function initRealVncClient(container, vmId, vmName) {
       });
 
       rfb.addEventListener('disconnect', (e) => {
-        if (statusPill) {
-          statusPill.textContent = '● DISCONNECTED';
-          statusPill.style.color = '#f87171';
-        }
+        setConsoleStatus(statusPill, 'disconnected');
         if (e && e.detail && !e.detail.clean) {
           showToast(t('toast.console_disconnected', 'Console disconnected: {reason}', { reason: e.detail.reason || 'Connection closed' }), 'warning');
         }
@@ -943,10 +942,7 @@ async function initRealSerialTerminal(container, vmId, vmName) {
     _activeSerialWs = null;
   }
   const statusPill = document.getElementById('vm-console-status-pill');
-  if (statusPill) {
-    statusPill.textContent = '● TTY CONNECTING...';
-    statusPill.style.color = '#fbbf24';
-  }
+  setConsoleStatus(statusPill, 'tty_connecting');
 
   const host = container ? container.querySelector('#vm-cli-output') : null;
   const view = ensureSerialView(host, vmId);
@@ -972,10 +968,7 @@ async function initRealSerialTerminal(container, vmId, vmName) {
       const ws = new WebSocket(wsUrl);
       ws.binaryType = 'arraybuffer';
       ws.onopen = () => {
-        if (statusPill) {
-          statusPill.textContent = '● TTY LIVE';
-          statusPill.style.color = '#34d399';
-        }
+        setConsoleStatus(statusPill, 'tty_live');
         appendOutput(`\x1b[32m[Connected to serial console. Press Enter if screen is blank.]\x1b[0m\r\n\r\n`);
         if (view) view.focus();
         else container?.focus();
@@ -984,10 +977,7 @@ async function initRealSerialTerminal(container, vmId, vmName) {
         if (e.data) appendOutput(typeof e.data === 'string' ? e.data : new Uint8Array(e.data));
       };
       ws.onclose = () => {
-        if (statusPill) {
-          statusPill.textContent = '● TTY CLOSED';
-          statusPill.style.color = '#f87171';
-        }
+        setConsoleStatus(statusPill, 'tty_closed');
         appendOutput(`\r\n\x1b[31m[Serial connection closed]\x1b[0m\r\n`);
         const consoleWin = document.getElementById('vm-console-window');
         if (consoleWin && !consoleWin._userClosing) {
@@ -995,10 +985,7 @@ async function initRealSerialTerminal(container, vmId, vmName) {
         }
       };
       ws.onerror = () => {
-        if (statusPill) {
-          statusPill.textContent = '● TTY ERROR';
-          statusPill.style.color = '#f87171';
-        }
+        setConsoleStatus(statusPill, 'tty_error');
       };
 
       if (container) {
@@ -1043,8 +1030,8 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         <div class="os-window-header" id="vm-console-header">
           <div class="os-window-title" style="display: flex; align-items: center; gap: 8px;">
             <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            <span id="vm-console-title-text">VM Console: ${escapeHtml(vmName)}</span>
-            <span id="vm-console-status-pill" class="console-status-pill">● LIVE</span>
+            <span id="vm-console-title-text">${escapeHtml(t('vcon.title', 'VM Console: {name}', { name: vmName }))}</span>
+            <span id="vm-console-status-pill" class="console-status-pill">● ${t('vcon.st_live', 'Live')}</span>
           </div>
           <div class="os-window-controls">
             <button class="win-btn min-btn" id="vm-console-min" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
@@ -1069,7 +1056,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
             <span class="toolbar-stat"><span class="stat-dot-pulse"></span> 60 FPS</span>
             <span class="toolbar-stat" id="vm-console-resolution-stat">${initialMode === 'cli' ? '80 × 25 TTY' : '1920 × 1080'}</span>
             <span class="toolbar-stat" id="vm-console-adapter-stat" style="color: ${initialMode === 'cli' ? '#34d399' : '#38bdf8'};">${initialMode === 'cli' ? 'Serial TTY' : 'VirtIO-GPU'}</span>
-            <span class="toolbar-stat" id="vm-console-kbd-pill" style="color: var(--zn-text-accent); font-weight: 500; cursor: pointer;" title="${t('ui.keyboard_captured_by_vm_console', 'Keyboard captured by VM console. Click outside or minimize to release.')}">⌨️ Captured</span>
+            <span class="toolbar-stat" id="vm-console-kbd-pill" style="color: var(--zn-text-accent); font-weight: 500; cursor: pointer;" title="${t('ui.keyboard_captured_by_vm_console', 'Keyboard captured by VM console. Click outside or minimize to release.')}">${t('ui.captured', '⌨️ Captured')}</span>
           </div>
           <div class="console-toolbar-right">
             <button class="btn-console-act" id="btn-vnc-softkbd" title="${t('vm.soft_kbd', 'Keyboard')}">
@@ -1080,27 +1067,27 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
             </button>
             <div class="dropdown-sendkey-wrap" style="position: relative;">
               <button class="btn-console-act" id="btn-vnc-keys" title="${t('ui.send_special_key', 'Send Special Key')}">
-                <span>Send Key ▾</span>
+                <span>${t('vcon.send_key', 'Send key')} ${ico('▾')}</span>
               </button>
               <div id="menu-vnc-keys" class="vnc-keys-menu" style="display: none;">
                 <button class="vnc-key-item" data-key="Tab">Tab</button>
                 <button class="vnc-key-item" data-key="Escape">Escape</button>
                 <button class="vnc-key-item" data-key="Ctrl+C">Ctrl + C</button>
-                <button class="vnc-key-item" data-key="Super">Super / Windows</button>
-                <button class="vnc-key-item" data-key="F12">F12 (Boot Menu)</button>
+                <button class="vnc-key-item" data-key="Super">${t('vcon.super', 'Super / Windows key')}</button>
+                <button class="vnc-key-item" data-key="F12">${t('vcon.f12', 'F12 (boot menu)')}</button>
               </div>
             </div>
             <button class="btn-console-act" id="btn-vnc-clipboard" title="${t('ui.paste_text_to_guest', 'Paste text to guest')}">
-              <span>📋 Paste Text</span>
+              <span>${ico('📋')} ${t('vcon.paste', 'Paste text')}</span>
             </button>
             <button class="btn-console-act" id="btn-vnc-popout" title="${t('vm.popout', 'Separate Window')}">
               <span>↗ ${t('vm.popout', 'Separate Window')}</span>
             </button>
             <button class="btn-console-act" id="btn-vnc-reconnect" title="${t('ui.reconnect_stream', 'Reconnect stream')}">
-              <span>↻ Reconnect</span>
+              <span>${ico('↻')} ${t('vcon.reconnect', 'Reconnect')}</span>
             </button>
             <button class="btn-console-act" id="btn-vnc-fullscreen" title="${t('ctx.fullscreen', 'Toggle Fullscreen')}">
-              <span>⛶ Fullscreen</span>
+              <span>${ico('⛶')} ${t('vcon.fullscreen', 'Full screen')}</span>
             </button>
           </div>
         </div>
@@ -1314,14 +1301,14 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         const isMobile = isCompact();
         if (isMobile) {
           showBottomSheet({
-            title: 'Send Special Key',
+            title: t('ui.send_special_key', 'Send Special Key'),
             subtitle: consoleWin._vmName || vmName,
             items: [
               { icon: '⇥', label: 'Tab', onClick: () => { _sendKeyToRfb(0xff09, 'Tab'); showToast(t('toast.sent_key_tab_to_guest_vm', "Sent key 'Tab' to guest VM"), 'info'); } },
               { icon: '⎋', label: 'Escape', onClick: () => { _sendKeyToRfb(0xff1b, 'Escape'); showToast(t('toast.sent_key_escape_to_guest_vm', "Sent key 'Escape' to guest VM"), 'info'); } },
               { icon: '🛑', label: 'Ctrl + C', onClick: () => { _sendCtrlCToRfb(); showToast(t('toast.sent_key_ctrl_c_to_guest', "Sent key 'Ctrl+C' to guest VM"), 'info'); } },
-              { icon: '🪟', label: 'Super / Windows Key', onClick: () => { _sendKeyToRfb(0xffeb, 'MetaLeft'); showToast(t('toast.sent_key_super_to_guest_vm', "Sent key 'Super' to guest VM"), 'info'); } },
-              { icon: '⚙️', label: 'F12 (Boot Menu)', onClick: () => { _sendKeyToRfb(0xffcb, 'F12'); showToast(t('toast.sent_key_f12_to_guest_vm', "Sent key 'F12' to guest VM"), 'info'); } },
+              { icon: '🪟', label: t('vcon.super', 'Super / Windows key'), onClick: () => { _sendKeyToRfb(0xffeb, 'MetaLeft'); showToast(t('toast.sent_key_super_to_guest_vm', "Sent key 'Super' to guest VM"), 'info'); } },
+              { icon: '⚙️', label: t('vcon.f12', 'F12 (boot menu)'), onClick: () => { _sendKeyToRfb(0xffcb, 'F12'); showToast(t('toast.sent_key_f12_to_guest_vm', "Sent key 'F12' to guest VM"), 'info'); } },
               { icon: '⚡', label: 'Ctrl + Alt + Del', destructive: true, onClick: () => { consoleWin.querySelector('#btn-vnc-cad')?.click(); } },
             ],
           });
@@ -1482,7 +1469,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         adpStat.textContent = t('vm.display_virtio_gpu', 'VirtIO-GPU');
         adpStat.style.color = '#38bdf8';
       }
-      if (titleTxt) titleTxt.textContent = `VM Console: ${consoleWin._vmName || vmName} (KVM GUI)`;
+      if (titleTxt) titleTxt.textContent = t('vcon.title_mode', 'VM Console: {name} ({mode})', { name: consoleWin._vmName || vmName, mode: t('vm.mode_gui', 'KVM GUI') });
 
       if (vncWrap) vncWrap.style.display = 'flex';
       if (cliWrap) cliWrap.style.display = 'none';
@@ -1507,7 +1494,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         adpStat.textContent = t('vm.mode_tty', 'Serial TTY');
         adpStat.style.color = '#34d399';
       }
-      if (titleTxt) titleTxt.textContent = `VM Console: ${consoleWin._vmName || vmName} (Serial TTY)`;
+      if (titleTxt) titleTxt.textContent = t('vcon.title_mode', 'VM Console: {name} ({mode})', { name: consoleWin._vmName || vmName, mode: t('vm.mode_tty', 'Serial TTY') });
 
       if (vncWrap) vncWrap.style.display = 'none';
       if (cliWrap) cliWrap.style.display = 'block';
@@ -1545,7 +1532,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
 
   if (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct')) {
     consoleWin.classList.add('vm-console-standalone');
-    document.title = `VM Console: ${vmName} - ZettNAS`;
+    document.title = `${t('vcon.title', 'VM Console: {name}', { name: vmName })} - ZettNAS`;
   }
 
   setConsoleMode(initialMode || 'gui');

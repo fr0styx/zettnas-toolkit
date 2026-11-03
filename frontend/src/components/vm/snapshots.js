@@ -41,11 +41,11 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--zn-line-8); padding: 8px 18px; background: var(--lt-b-00000026, rgba(0,0,0,0.15));">
         <button type="button" id="tab-btn-snaps" class="btn-pill-toggle active">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span>QCOW2 Checkpoints</span>
+          <span>${t('vsn.tab_snaps', 'Snapshots (QCOW2)')}</span>
         </button>
         <button type="button" id="tab-btn-backups" class="btn-pill-toggle">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span>Backups (.tar.gz)</span>
+          <span>${t('vsn.tab_backups', 'Backups (.tar.gz)')}</span>
         </button>
       </div>
 
@@ -54,8 +54,8 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         <div id="vm-pane-snapshots" style="display: flex; flex-direction: column; gap: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
             <div>
-              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">QCOW2 Checkpoints & State Snapshots</div>
-              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Live memory + disk snapshots while running; disk snapshots while offline.</div>
+              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vsn.snaps_title', 'Snapshots of this VM')}</div>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('vsn.snaps_desc', 'While the VM runs, a snapshot saves its memory and disk; while it is off, the disk only.')}</div>
             </div>
             <button type="button" id="btn-take-snapshot" class="btn-pill-toggle" style="background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.35); color: var(--zn-text-accent);">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -65,19 +65,19 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
 
           <!-- Create Snapshot Form -->
           <div id="vm-snap-create-form" style="display: none; background: var(--zn-shade-30); border: 1px solid rgba(14,165,233,0.3); border-radius: 8px; padding: 12px; flex-direction: column; gap: 10px;">
-            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-accent);">Create New Checkpoint Snapshot</div>
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-accent);">${t('vsn.new_title', 'New snapshot')}</div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <input type="text" id="vm-snap-name-input" placeholder="${t('vm.snapshot_name', 'Snapshot Name')}" style="flex: 1; min-width: 160px; padding: 6px 10px; border-radius: 4px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);" />
               <input type="text" id="vm-snap-desc-input" placeholder="${t('vm.snapshot_desc', 'Description (optional)')}" style="flex: 2; min-width: 200px; padding: 6px 10px; border-radius: 4px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);" />
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 8px;">
-              <button type="button" id="btn-cancel-take-snapshot" class="btn-pill-toggle">Cancel</button>
-              <button type="button" id="btn-submit-take-snapshot" class="btn-pill-toggle is-primary">Save Snapshot</button>
+              <button type="button" id="btn-cancel-take-snapshot" class="btn-pill-toggle">${t('common.cancel', 'Cancel')}</button>
+              <button type="button" id="btn-submit-take-snapshot" class="btn-pill-toggle is-primary">${t('ui.save_snapshot', 'Save Snapshot')}</button>
             </div>
           </div>
 
           <div id="vm-snapshots-container" style="background: var(--zn-shade-20); border: 1px solid var(--zn-line-6); border-radius: 8px; overflow: hidden; min-height: 120px;">
-            <div style="color: var(--muted); text-align: center; padding: 28px; font-size: var(--zn-fs-xs);">Loading snapshots...</div>
+            <div style="color: var(--muted); text-align: center; padding: 28px; font-size: var(--zn-fs-xs);">${t('vsn.loading', 'Loading snapshots…')}</div>
           </div>
         </div>
 
@@ -85,17 +85,17 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         <div id="vm-pane-backups" style="display: none; flex-direction: column; gap: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
             <div>
-              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">Full VM backups</div>
-              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Self-contained archives (.tar.gz) containing complete hardware specs and virtual disk images.</div>
+              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vsn.bk_title', 'Full VM backups')}</div>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('vsn.bk_desc', 'Archives (.tar.gz) that hold the VM’s settings and its disks.')}</div>
             </div>
             <button type="button" id="btn-create-hyper-backup" class="btn-pill-toggle" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: var(--zn-text-ok);">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>+ Back up now</span>
+              <span>${t('ui.create_hyper_backup', '+ Back up now')}</span>
             </button>
           </div>
 
           <div id="vm-backups-container" style="background: var(--zn-shade-20); border: 1px solid var(--zn-line-6); border-radius: 8px; overflow: hidden; min-height: 120px;">
-            <div style="color: var(--muted); text-align: center; padding: 28px; font-size: var(--zn-fs-xs);">Loading backups…</div>
+            <div style="color: var(--muted); text-align: center; padding: 28px; font-size: var(--zn-fs-xs);">${t('vsn.bk_loading', 'Loading backups…')}</div>
           </div>
         </div>
       </div>
@@ -206,11 +206,11 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         <table style="width: 100%; border-collapse: collapse; font-size: var(--zn-fs-xs); text-align: left;">
           <thead>
             <tr style="border-bottom: 1px solid var(--zn-line-8); background: var(--zn-glaze-2); color: var(--muted);">
-              <th style="padding: 8px 12px;">Tag / Name</th>
-              <th style="padding: 8px 12px;">Timestamp</th>
-              <th style="padding: 8px 12px;">Size</th>
-              <th style="padding: 8px 12px;">Mode</th>
-              <th style="padding: 8px 12px; text-align: right;">Actions</th>
+              <th style="padding: 8px 12px;">${t('vsn.h_name', 'Name')}</th>
+              <th style="padding: 8px 12px;">${t('vsn.h_time', 'Taken')}</th>
+              <th style="padding: 8px 12px;">${t('vsn.h_size', 'Size')}</th>
+              <th style="padding: 8px 12px;">${t('vsn.h_mode', 'Type')}</th>
+              <th style="padding: 8px 12px; text-align: right;">${t('vsn.h_actions', 'Actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -224,7 +224,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
                 <td style="padding: 8px 12px; color: var(--muted);">${escapeHtml(s.size_formatted || s.vm_size || '—')}</td>
                 <td style="padding: 8px 12px;">
                   <span style="font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: var(--zn-text-accent);">
-                    ${s.is_live ? 'Live Memory + Disk' : 'QCOW2 Disk'}
+                    ${s.is_live ? t('vsn.live', 'Memory and disk') : t('vsn.disk', 'Disk only')}
                   </span>
                 </td>
                 <td style="padding: 8px 12px; text-align: right;">
@@ -249,7 +249,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         b.onclick = () => {
           const snapName = b.dataset.name;
           showConfirmToast(
-            `Revert VM '${targetVm.name}' to checkpoint '${snapName}'? Runtime modifications will be rolled back.`,
+            t('vsn.revert_q', 'Go back to the snapshot “{snap}” of {name}? Changes made since then are lost.', { snap: snapName, name: targetVm.name }),
             async () => {
               try {
                 await api.post(`/api/vms/${vmId}/snapshots/${encodeURIComponent(snapName)}/revert`);
@@ -268,7 +268,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         b.onclick = () => {
           const snapName = b.dataset.name;
           showConfirmToast(
-            `Delete snapshot '${snapName}'? This action cannot be undone.`,
+            t('vsn.del_q', 'Delete the snapshot “{snap}”? This can’t be undone.', { snap: snapName }),
             async () => {
               try {
                 await api.delete(`/api/vms/${vmId}/snapshots/${encodeURIComponent(snapName)}`, { confirmed: true });
@@ -282,7 +282,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         };
       });
     } catch (err) {
-      container.innerHTML = `<div style="color: var(--crit); text-align: center; padding: 24px; font-size: var(--zn-fs-xs);">Failed to load snapshots: ${escapeHtml(err.message || err.detail)}</div>`;
+      container.innerHTML = `<div style="color: var(--crit); text-align: center; padding: 24px; font-size: var(--zn-fs-xs);">${escapeHtml(t('vsn.load_failed', 'Could not load the snapshots: {error}', { error: err.message || err.detail }))}</div>`;
     }
   }
 
@@ -297,7 +297,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         container.innerHTML = `
           <div style="color: var(--muted); text-align: center; padding: 32px 20px; font-size: var(--zn-fs-xs); display: flex; flex-direction: column; align-items: center; gap: 8px;">
             <span style="font-size: 24px; opacity: 0.6;">💾</span>
-            <span>No backups of this VM yet. "Back up now" saves its settings and disks in one archive.</span>
+            <span>${t('vsn.no_backups', 'No backups of this VM yet. “Back up now” saves its settings and disks in one archive.')}</span>
           </div>
         `;
         return;
@@ -307,10 +307,10 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         <table style="width: 100%; border-collapse: collapse; font-size: var(--zn-fs-xs); text-align: left;">
           <thead>
             <tr style="border-bottom: 1px solid var(--zn-line-8); background: var(--zn-glaze-2); color: var(--muted);">
-              <th style="padding: 8px 12px;">Backup ID / File</th>
-              <th style="padding: 8px 12px;">Created</th>
-              <th style="padding: 8px 12px;">Size</th>
-              <th style="padding: 8px 12px; text-align: right;">Actions</th>
+              <th style="padding: 8px 12px;">${t('vsn.h_backup', 'Backup / file')}</th>
+              <th style="padding: 8px 12px;">${t('vsn.h_created', 'Created')}</th>
+              <th style="padding: 8px 12px;">${t('vsn.h_size', 'Size')}</th>
+              <th style="padding: 8px 12px; text-align: right;">${t('vsn.h_actions', 'Actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -326,11 +326,11 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
                   <div style="display: flex; gap: 6px; justify-content: flex-end;">
                     <button class="btn-pill-toggle btn-bk-restore" data-id="${escapeHtml(b.id)}" style="color: var(--zn-text-ok); border-color: rgba(16,185,129,0.3);">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-                      <span>Restore</span>
+                      <span>${t('vsn.restore', 'Restore')}</span>
                     </button>
                     <button class="btn-pill-toggle btn-bk-del is-danger" data-id="${escapeHtml(b.id)}">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                      <span>Delete</span>
+                      <span>${t('vm.delete', 'Delete')}</span>
                     </button>
                   </div>
                 </td>
@@ -344,7 +344,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         b.onclick = () => {
           const bId = b.dataset.id;
           showConfirmToast(
-            `Restore VM '${targetVm.name}' from backup '${bId}'? Existing virtual disks and settings will be restored.`,
+            t('vsn.restore_q', 'Restore {name} from the backup “{id}”? Its disks and settings are replaced by the backup’s.', { name: targetVm.name, id: bId }),
             async () => {
               try {
                 await api.post(`/api/vms/backups/${encodeURIComponent(bId)}/restore`);
@@ -363,7 +363,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         b.onclick = () => {
           const bId = b.dataset.id;
           showConfirmToast(
-            `Delete backup '${bId}'? This can't be undone.`,
+            t('vsn.del_bk_q', 'Delete the backup “{id}”? This can’t be undone.', { id: bId }),
             async () => {
               try {
                 await api.delete(`/api/vms/backups/${encodeURIComponent(bId)}`, { confirmed: true });
@@ -377,7 +377,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         };
       });
     } catch (err) {
-      container.innerHTML = `<div style="color: var(--crit); text-align: center; padding: 24px; font-size: var(--zn-fs-xs);">Could not load backups: ${escapeHtml(err.message || err.detail)}</div>`;
+      container.innerHTML = `<div style="color: var(--crit); text-align: center; padding: 24px; font-size: var(--zn-fs-xs);">${escapeHtml(t('vsn.bk_failed', 'Could not load the backups: {error}', { error: err.message || err.detail }))}</div>`;
     }
   }
 
