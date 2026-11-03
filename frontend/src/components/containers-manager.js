@@ -28,6 +28,9 @@ import {
   initSynchronizedTableScrollbars,
 } from './docker-table.js';
 
+// An icon next to translated words: screen readers skip it (UX-35)
+const ico = (e) => `<span aria-hidden="true">${e}</span>`;
+
 let containersWindow = null;
 let _cwContainersList = [];
 let _cwUpdatesCache = null;
@@ -91,36 +94,36 @@ export function initContainersManager() {
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
               <div class="cw-docker-status-chip" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: var(--zn-fs-xs); font-weight: 600; background: rgba(16,185,129,0.15); color: var(--zn-text-ok); border: 1px solid rgba(16,185,129,0.3);">
                 <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#34d399; box-shadow:0 0 6px #34d399;"></span>
-                <span id="cw-stat-daemon">Docker Socket Active</span>
+                <span id="cw-stat-daemon">${t('cw.daemon', 'Docker Socket Active')}</span>
                 <span style="opacity:0.35;">•</span>
-                <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); font-weight:500;">Live Sync</span>
+                <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); font-weight:500;">${t('cw.live', 'Live Sync')}</span>
               </div>
               <div style="display: inline-flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs); color: var(--muted);">
-                <span>Total: <strong id="cw-count-all" style="color: var(--zn-text-strong);">0</strong></span>
+                <span>${t('cw.total', 'Total:')} <strong id="cw-count-all" style="color: var(--zn-text-strong);">0</strong></span>
                 <span>•</span>
-                <span style="color: var(--zn-text-ok);">Running: <strong id="cw-count-running">0</strong></span>
+                <span style="color: var(--zn-text-ok);">${t('cw.running', 'Running:')} <strong id="cw-count-running">0</strong></span>
                 <span>•</span>
-                <span style="color: var(--zn-text-muted);">Stopped: <strong id="cw-count-stopped">0</strong></span>
-                <span id="cw-count-updates-wrap" style="display: none;">• <span style="color: var(--zn-text-warn);">Updates: <strong id="cw-count-updates">0</strong></span></span>
+                <span style="color: var(--zn-text-muted);">${t('cw.stopped', 'Stopped:')} <strong id="cw-count-stopped">0</strong></span>
+                <span id="cw-count-updates-wrap" style="display: none;">• <span style="color: var(--zn-text-warn);">${t('cw.updates', 'Updates:')} <strong id="cw-count-updates">0</strong></span></span>
               </div>
             </div>
 
             <!-- Quick Action Buttons -->
             <div class="cw-action-btns-wrap" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
               <button id="btn-cw-check-updates" class="btn-pill-toggle" title="${t('ui.check_remote_registries_for_container', 'Check remote registries for container image updates')}">
-                <span style="color: var(--ok2, #25c2a0);">✓</span> <span>Check Updates</span>
+                <span style="color: var(--ok2, #25c2a0);">✓</span> <span>${t('cw.check_updates', 'Check for updates')}</span>
               </button>
               <button id="btn-cw-update-all" class="btn-pill-toggle" style="display: none; color: var(--zn-text-warn); border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="${t('ui.update_all_containers_with_available', 'Update all containers with available image updates')}">
-                <span aria-hidden="true">↑</span> <span>Update All (<span id="cw-updates-count-badge">0</span>)</span>
+                <span aria-hidden="true">↑</span> <span>${t('cw.update_all', 'Update all')} (<span id="cw-updates-count-badge">0</span>)</span>
               </button>
               <button id="btn-cw-stacks" class="btn-pill-toggle" title="${t('ui.manage_docker_compose_stacks', 'Manage Docker Compose Stacks')}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8));">
-                <span aria-hidden="true">📁</span> <span>Compose Stacks</span>
+                <span aria-hidden="true">📁</span> <span>${t('cw.stacks', 'Compose stacks')}</span>
               </button>
               <button id="btn-cw-netmap" class="btn-pill-toggle" title="${t('cw.netmap_title', 'Container Network Map')}">
                 <span aria-hidden="true">🕸️</span> <span data-i18n="cw.netmap_btn">${t('cw.netmap_btn', 'Network Map')}</span>
               </button>
               <button id="btn-cw-prune" class="btn-pill-toggle" title="${t('ui.clean_up_unused_container_images', 'Clean up unused container images, stopped containers, and volumes')}">
-                <span aria-hidden="true">🧹</span> <span>Prune</span>
+                <span aria-hidden="true">🧹</span> <span>${t('cw.prune', 'Clean up')}</span>
               </button>
               <button id="btn-cw-catalog" class="btn-pill-toggle is-primary">
                 <span aria-hidden="true">📦</span> <span>${t('apps.get_apps', 'Get apps')}</span>
@@ -173,7 +176,7 @@ export function initContainersManager() {
                 </tr>
               </thead>
               <tbody id="cw-docker-containers-tbody">
-                <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Scanning Docker socket...</td></tr>
+                <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">${t('cw.scanning', 'Looking for containers…')}</td></tr>
               </tbody>
             </table>
           </div>
@@ -184,35 +187,35 @@ export function initContainersManager() {
           <div id="cw-docker-bulk-bar" class="docker-floating-bulk-bar" style="display: none;">
             <div class="bulk-bar-info">
               <span id="cw-docker-bulk-count" class="bulk-bar-count">0</span>
-              <span>selected</span>
+              <span>${t('cw.selected', 'selected')}</span>
             </div>
             <div class="bulk-bar-actions">
-              <button class="btn-bulk-action" data-bulk="start" title="${t('ui.start_selected_containers', 'Start selected containers')}">▶ Start</button>
-              <button class="btn-bulk-action" data-bulk="stop" title="${t('ui.stop_selected_containers', 'Stop selected containers')}">⏹ Stop</button>
-              <button class="btn-bulk-action" data-bulk="restart" title="${t('ui.restart_selected_containers', 'Restart selected containers')}">🔄 Restart</button>
-              <button class="btn-bulk-action" data-bulk="pause" title="${t('ui.pause_selected_containers', 'Pause selected containers')}">⏸ Pause</button>
-              <button class="btn-bulk-action" data-bulk="unpause" title="${t('ui.resume_selected_containers', 'Resume selected containers')}">⏵ Resume</button>
-              <button class="btn-bulk-action btn-bulk-delete" data-bulk="delete" title="${t('ui.delete_selected_containers', 'Delete selected containers')}">🗑️ Delete</button>
+              <button class="btn-bulk-action" data-bulk="start" title="${t('ui.start_selected_containers', 'Start selected containers')}">${ico('▶')} ${t('vm.start', 'Start')}</button>
+              <button class="btn-bulk-action" data-bulk="stop" title="${t('ui.stop_selected_containers', 'Stop selected containers')}">${ico('⏹')} ${t('stk.stop', 'Stop')}</button>
+              <button class="btn-bulk-action" data-bulk="restart" title="${t('ui.restart_selected_containers', 'Restart selected containers')}">${ico('🔄')} ${t('vmm.restart', 'Restart')}</button>
+              <button class="btn-bulk-action" data-bulk="pause" title="${t('ui.pause_selected_containers', 'Pause selected containers')}">${ico('⏸')} ${t('cw.pause', 'Pause')}</button>
+              <button class="btn-bulk-action" data-bulk="unpause" title="${t('ui.resume_selected_containers', 'Resume selected containers')}">${ico('⏵')} ${t('cw.resume', 'Resume')}</button>
+              <button class="btn-bulk-action btn-bulk-delete" data-bulk="delete" title="${t('ui.delete_selected_containers', 'Delete selected containers')}">${ico('🗑️')} ${t('vm.delete', 'Delete')}</button>
               <button class="btn-bulk-action btn-bulk-cancel" data-bulk="cancel" title="${t('ui.deselect_all', 'Deselect all')}">✕</button>
             </div>
           </div>
           <div id="cw-docker-catalog-wrap" style="display: none; flex-direction: column; gap: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: var(--zn-shade-25); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 10px 14px;">
               <div class="cw-catalog-filter-pills" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                <button class="btn-pill-toggle cw-cat-btn active" data-cat="all">All</button>
-                <button class="btn-pill-toggle cw-cat-btn" data-cat="media">Media</button>
-                <button class="btn-pill-toggle cw-cat-btn" data-cat="productivity">Productivity</button>
-                <button class="btn-pill-toggle cw-cat-btn" data-cat="utilities">Utilities</button>
-                <button class="btn-pill-toggle cw-cat-btn" data-cat="security">Security</button>
-                <button class="btn-pill-toggle cw-cat-btn" data-cat="smart_home">Smart Home</button>
-                <button class="btn-pill-toggle cw-cat-btn" data-cat="downloaders">Downloaders</button>
+                <button class="btn-pill-toggle cw-cat-btn active" data-cat="all">${t('cw.cat_all', 'All')}</button>
+                <button class="btn-pill-toggle cw-cat-btn" data-cat="media">${t('cw.cat_media', 'Media')}</button>
+                <button class="btn-pill-toggle cw-cat-btn" data-cat="productivity">${t('cw.cat_productivity', 'Productivity')}</button>
+                <button class="btn-pill-toggle cw-cat-btn" data-cat="utilities">${t('cw.cat_utilities', 'Utilities')}</button>
+                <button class="btn-pill-toggle cw-cat-btn" data-cat="security">${t('cw.cat_security', 'Security')}</button>
+                <button class="btn-pill-toggle cw-cat-btn" data-cat="smart_home">${t('cw.cat_smart_home', 'Smart home')}</button>
+                <button class="btn-pill-toggle cw-cat-btn" data-cat="downloaders">${t('cw.cat_downloaders', 'Downloaders')}</button>
               </div>
               <div style="position: relative;">
                 <input type="text" id="cw-catalog-search-input" placeholder="${t('ui.search_templates_apps_images', 'Search templates, apps, images...')}" class="tz-text-input" style="font-size: var(--zn-fs-xs); padding: 4px 10px; width: 220px; height: 26px; border-radius: 4px;">
               </div>
             </div>
             <div id="cw-catalog-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
-              <div style="text-align: center; color: var(--muted); padding: 24px; grid-column: 1 / -1;">Loading application catalog...</div>
+              <div style="text-align: center; color: var(--muted); padding: 24px; grid-column: 1 / -1;">${t('cw.loading_catalog', 'Loading the app catalog…')}</div>
             </div>
           </div>
         </div>
@@ -293,7 +296,7 @@ export function initContainersManager() {
     btnCheckUpdates.onclick = async () => {
       btnCheckUpdates.disabled = true;
       const orig = btnCheckUpdates.innerHTML;
-      btnCheckUpdates.innerHTML = '<span aria-hidden="true">⏳</span> <span>Checking...</span>';
+      btnCheckUpdates.innerHTML = '<span aria-hidden="true">⏳</span> <span>' + escapeHtml(t('cw.checking', 'Checking…')) + '</span>';
       try {
         const res = await api.post('/api/docker/updates/check');
         _cwUpdatesCache = res;
@@ -318,8 +321,8 @@ export function initContainersManager() {
   if (btnUpdateAll) {
     btnUpdateAll.onclick = () => {
       showConfirmToast(
-        'Update All Containers',
-        'Are you sure you want to pull latest images and update all containers with available updates?',
+        t('cw.update_all_title', 'Update all containers?'),
+        t('cw.update_all_msg', 'This pulls the latest images and updates every container that has an update.'),
         async () => {
           btnUpdateAll.disabled = true;
           showToast(t('toast.batch_container_update_initiated', 'Batch container update initiated...'), 'info');
@@ -335,7 +338,7 @@ export function initContainersManager() {
           }
         },
         null,
-        { okText: '↑ Update All', cancelText: 'Cancel', isUpdate: true }
+        { okText: `↑ ${t('cw.update_all', 'Update all')}`, cancelText: t('common.cancel', 'Cancel'), isUpdate: true }
       );
     };
   }
@@ -1109,7 +1112,7 @@ function bindCwTableEvents(tbody) {
         if (c.stack) {
           items.push({
             icon: '📁',
-            label: `Manage Stack: ${c.stack}`,
+            label: t('cw.manage_stack', 'Manage stack: {name}', { name: c.stack }),
             onClick: () => openStackModal(c.stack),
           });
         }
@@ -1117,7 +1120,7 @@ function bindCwTableEvents(tbody) {
         if (hasUpdate) {
           items.push({
             icon: '⬆️',
-            label: 'Update to Latest Image',
+            label: t('cw.update_latest', 'Update to the latest image'),
             onClick: () => {
               actBtn.parentElement.querySelector('[data-action="update-single"]')?.click();
             },
@@ -1126,7 +1129,7 @@ function bindCwTableEvents(tbody) {
 
         items.push({
           icon: '💾',
-          label: 'Backup App Data & Config',
+          label: t('cw.backup', 'Back up app data and settings'),
           onClick: () => {
             actBtn.parentElement.querySelector('[data-action="backup"]')?.click();
           },
@@ -1134,14 +1137,14 @@ function bindCwTableEvents(tbody) {
 
         items.push({
           icon: '🗑️',
-          label: `Delete "${cname}"`,
+          label: t('cw.delete', 'Delete “{name}”', { name: cname }),
           destructive: true,
           onClick: () => openContainerDeleteModal(cid, cname, c.image),
         });
 
         showBottomSheet({
           title: cname,
-          subtitle: `State: ${(c.state || '').toUpperCase()} • ${c.image || 'Docker Container'}`,
+          subtitle: `${t('cw.state', 'State: {state}', { state: (c.state || '').toUpperCase() })} • ${c.image || t('cw.container', 'Docker container')}`,
           items,
         });
         return;
@@ -1159,8 +1162,8 @@ function bindCwTableEvents(tbody) {
 
       if (act === 'update-single') {
         showConfirmToast(
-          `Update Container "${cname}"`,
-          `Pull the latest image and update <strong>${escapeHtml(cname)}</strong> to its newest release?<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">All volumes, persistent paths, and environment settings will be preserved intact.</span>`,
+          t('cw.update_one_title', 'Update “{name}”?', { name: cname }),
+          `${escapeHtml(t('cw.update_one_msg', 'This pulls the latest image and updates {name} to its newest release.', { name: cname })).replace(escapeHtml(cname), () => `<strong>${escapeHtml(cname)}</strong>`)}<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(t('cw.update_keeps', 'Volumes, folders and environment settings stay as they are.'))}</span>`,
           async () => {
             actBtn.disabled = true;
             const originalContent = actBtn.innerHTML;
@@ -1180,8 +1183,8 @@ function bindCwTableEvents(tbody) {
           },
           null,
           {
-            okText: '⬆️ Update Now',
-            cancelText: 'Cancel',
+            okText: `⬆️ ${t('cw.update_now', 'Update now')}`,
+            cancelText: t('common.cancel', 'Cancel'),
             isUpdate: true,
             allowHtml: true,
           }

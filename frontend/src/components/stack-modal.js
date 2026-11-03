@@ -12,6 +12,9 @@ import { openContainerModal } from './container-modal.js';
 import { lintCompose, composeRiskSummary } from '../compose-lint.js';
 
 import { t } from '../i18n.js';
+
+// An icon next to translated words: screen readers skip it (UX-35)
+const ico = (e) => `<span aria-hidden="true">${e}</span>`;
 let _activeStackName = null;
 let _activeStackDetails = null;
 let _fromCopilot = false; // compose text came from an AI answer (AI-22)
@@ -27,8 +30,8 @@ export function initStackModal() {
         <div id="stack-inspector-header" class="smart-modal-header" style="cursor:move; user-select:none; display:flex; justify-content:space-between; align-items:center;">
           <div style="display:flex; align-items:center; gap:8px; min-width:0;">
             <span style="font-size:16px;">📁</span>
-            <span id="stack-header-title" style="font-weight:700; color:var(--zn-text-strong); font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Stack Inspector</span>
-            <span id="stack-header-origin" class="ci-badge" style="font-size:var(--zn-fs-xs); padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border:1px solid rgba(56,189,248,0.3);">Compose Stack</span>
+            <span id="stack-header-title" style="font-weight:700; color:var(--zn-text-strong); font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${t('stk.title', 'Stack Inspector')}</span>
+            <span id="stack-header-origin" class="ci-badge" style="font-size:var(--zn-fs-xs); padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border:1px solid rgba(56,189,248,0.3);">${t('stk.badge', 'Compose stack')}</span>
             <span id="stack-header-status" class="ci-state-pill" style="display:none;"></span>
           </div>
           <div class="os-window-controls" style="display:flex; gap:6px; align-items:center;">
@@ -45,18 +48,18 @@ export function initStackModal() {
             <span id="stack-path-label" style="font-family:var(--font-mono, monospace); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:420px;"></span>
           </div>
           <div style="display:flex; gap:6px; align-items:center;">
-            <button class="btn-pill-toggle is-small" id="stack-action-start" style="color: var(--ok2, #10b981);">▶ Start</button>
-            <button class="btn-pill-toggle is-danger is-small" id="stack-action-stop">⏹ Stop</button>
-            <button class="btn-pill-toggle is-small" id="stack-action-restart">↻ Restart</button>
-            <button class="btn-pill-toggle is-small" id="stack-action-redeploy" style="background: rgba(14,165,233,0.2); border-color: rgba(56,189,248,0.4); color: var(--zn-text-accent);">⬆️ Redeploy / Up</button>
+            <button class="btn-pill-toggle is-small" id="stack-action-start" style="color: var(--ok2, #10b981);">${ico('▶')} ${t('vm.start', 'Start')}</button>
+            <button class="btn-pill-toggle is-danger is-small" id="stack-action-stop">${ico('⏹')} ${t('stk.stop', 'Stop')}</button>
+            <button class="btn-pill-toggle is-small" id="stack-action-restart">${ico('↻')} ${t('vmm.restart', 'Restart')}</button>
+            <button class="btn-pill-toggle is-small" id="stack-action-redeploy" style="background: rgba(14,165,233,0.2); border-color: rgba(56,189,248,0.4); color: var(--zn-text-accent);">${ico('⬆️')} ${t('stk.redeploy', 'Redeploy')}</button>
           </div>
         </div>
 
         <!-- Navigation Tabs -->
         <div class="ci-nav-tabs" style="display:flex; gap:4px; padding:8px 14px; background:var(--zn-shade-30); border-bottom:1px solid var(--zn-line-8);">
-          <button class="btn-pill-toggle stack-tab-btn active" data-tab="compose">📄 Compose Setup (compose.yaml)</button>
-          <button class="btn-pill-toggle stack-tab-btn" data-tab="env">⚙️ Environment (.env)</button>
-          <button class="btn-pill-toggle stack-tab-btn" data-tab="services">📦 Services & Containers (<span id="stack-tab-services-count">0</span>)</button>
+          <button class="btn-pill-toggle stack-tab-btn active" data-tab="compose">${ico('📄')} ${t('stk.tab_compose', 'Compose file (compose.yaml)')}</button>
+          <button class="btn-pill-toggle stack-tab-btn" data-tab="env">${ico('⚙️')} ${t('stk.tab_env', 'Environment (.env)')}</button>
+          <button class="btn-pill-toggle stack-tab-btn" data-tab="services">${ico('📦')} ${t('stk.tab_services', 'Services')} (<span id="stack-tab-services-count">0</span>)</button>
         </div>
 
         <!-- Tab Content Panes -->
@@ -65,10 +68,10 @@ export function initStackModal() {
           <!-- 1. Compose Tab -->
           <div id="stack-pane-compose" class="stack-pane" style="display:flex; flex-direction:column; flex:1; gap:8px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:var(--zn-fs-xs); color:var(--muted);">Edit the Docker Compose YAML definition. Changes are applied when saved or redeployed.</span>
+              <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('stk.compose_hint', 'Edit the Compose file. Changes apply when you save or redeploy.')}</span>
               <div style="display:flex; gap:6px;">
-                <button class="btn-pill-toggle" id="stack-compose-copy-btn">📋 Copy YAML</button>
-                <button class="btn-pill-toggle" id="stack-compose-reset-btn">↺ Reload</button>
+                <button class="btn-pill-toggle" id="stack-compose-copy-btn">${ico('📋')} ${t('stk.copy_yaml', 'Copy YAML')}</button>
+                <button class="btn-pill-toggle" id="stack-compose-reset-btn">${ico('↺')} ${t('stk.reload', 'Reload')}</button>
               </div>
             </div>
             <div style="flex:1; min-height:280px; position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--zn-line-12); border-radius:6px; display:flex;">
@@ -79,8 +82,8 @@ export function initStackModal() {
           <!-- 2. Env Tab -->
           <div id="stack-pane-env" class="stack-pane" style="display:none; flex-direction:column; flex:1; gap:8px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:var(--zn-fs-xs); color:var(--muted);">Environment variables (.env) passed into this compose stack during runtime.</span>
-              <button class="btn-pill-toggle" id="stack-env-copy-btn">📋 Copy .env</button>
+              <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('stk.env_hint', 'Environment variables (.env) the stack’s containers get when they start.')}</span>
+              <button class="btn-pill-toggle" id="stack-env-copy-btn">${ico('📋')} ${t('stk.copy_env', 'Copy .env')}</button>
             </div>
             <div style="flex:1; min-height:280px; position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--zn-line-12); border-radius:6px; display:flex;">
               <textarea id="stack-env-editor" spellcheck="false" placeholder="# KEY=VALUE" style="flex:1; width:100%; height:100%; min-height:280px; background:transparent; border:none; outline:none; resize:none; padding:12px; color:var(--zn-text-bright); font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.55; box-sizing:border-box;"></textarea>
@@ -98,9 +101,9 @@ export function initStackModal() {
         <div style="padding:10px 14px; background:var(--lt-b-00000080, rgba(0,0,0,0.5)); border-top:1px solid var(--zn-line-8); display:flex; justify-content:space-between; align-items:center;">
           <div id="stack-modal-msg" style="font-size:var(--zn-fs-xs); color:var(--muted);"></div>
           <div style="display:flex; gap:8px;">
-            <button class="btn-pill-toggle" id="stack-cancel-btn">Cancel</button>
-            <button class="btn-pill-toggle" id="stack-save-btn" style="background: var(--zn-glaze-10);">Save Configuration</button>
-            <button class="btn-pill-toggle is-primary" id="stack-save-redeploy-btn">Save & Redeploy Stack</button>
+            <button class="btn-pill-toggle" id="stack-cancel-btn">${t('common.cancel', 'Cancel')}</button>
+            <button class="btn-pill-toggle" id="stack-save-btn" style="background: var(--zn-glaze-10);">${t('stk.save', 'Save')}</button>
+            <button class="btn-pill-toggle is-primary" id="stack-save-redeploy-btn">${t('stk.save_redeploy', 'Save and redeploy')}</button>
           </div>
         </div>
       </div>
@@ -113,7 +116,7 @@ export function initStackModal() {
 
   // Register with DockManager
   if (DockManager && typeof DockManager.register === 'function') {
-    DockManager.register('stack-inspector', overlay, '#i-grid', 'Stack Inspector', true);
+    DockManager.register('stack-inspector', overlay, '#i-grid', t('stk.title', 'Stack Inspector'), true);
   }
 
   win.addEventListener('mousedown', () => bringToFront(win));
@@ -272,11 +275,11 @@ export async function openStackModal(stackName, initialYaml = null) {
   switchStackTab('compose');
 
   if (initialYaml !== null) {
-    document.getElementById('stack-header-title').textContent = `Deploy Stack: ${_activeStackName}`;
+    document.getElementById('stack-header-title').textContent = t('stk.deploy_title', 'Deploy stack: {name}', { name: _activeStackName });
     const statusPill = document.getElementById('stack-header-status');
     if (statusPill) statusPill.style.display = 'none';
     const originPill = document.getElementById('stack-header-origin');
-    if (originPill) originPill.textContent = 'COPILOT TEMPLATE';
+    if (originPill) originPill.textContent = t('stk.from_ai', 'AI template');
     const pathLabel = document.getElementById('stack-path-label');
     if (pathLabel) pathLabel.textContent = t('ui.ready_to_deploy_via_compose', 'Ready to Deploy via Compose Engine');
     const composeEd = document.getElementById('stack-compose-editor');
@@ -287,17 +290,17 @@ export async function openStackModal(stackName, initialYaml = null) {
     const risks = lintCompose(initialYaml);
     if (msgEl) {
       msgEl.textContent = risks.length
-        ? `Review before deploying. This AI-written stack asks for host access:\n${composeRiskSummary(risks)}`
-        : 'Loaded an AI-written Compose file. Review it, then click "Save & Redeploy Stack".';
+        ? t('stk.review_risky', 'Review before deploying. This AI-written stack asks for host access:\n{risks}', { risks: composeRiskSummary(risks) })
+        : t('stk.review', 'Loaded an AI-written Compose file. Review it, then click “Save and redeploy”.');
       msgEl.style.whiteSpace = 'pre-line';
       msgEl.style.color = risks.some((r) => r.level === 'danger') ? '#fca5a5' : '';
     }
     return;
   }
 
-  document.getElementById('stack-header-title').textContent = `Stack: ${_activeStackName}`;
+  document.getElementById('stack-header-title').textContent = t('stk.stack', 'Stack: {name}', { name: _activeStackName });
   document.getElementById('stack-header-status').style.display = 'none';
-  document.getElementById('stack-compose-editor').value = 'Loading stack configuration...';
+  document.getElementById('stack-compose-editor').value = t('stk.loading', 'Loading the stack…');
   document.getElementById('stack-env-editor').value = '';
   document.getElementById('stack-modal-msg').textContent = t('ui.fetching_stack_setup', 'Fetching stack setup...');
 
@@ -306,7 +309,7 @@ export async function openStackModal(stackName, initialYaml = null) {
     _activeStackDetails = data;
     renderStackDetails(data);
   } catch (err) {
-    document.getElementById('stack-modal-msg').textContent = `Failed loading stack: ${err.message}`;
+    document.getElementById('stack-modal-msg').textContent = t('stk.load_failed', 'Could not load the stack: {error}', { error: err.message });
     showToast(t('toast.failed_loading_stack', 'Failed loading stack: {error}', { error: err.message }), 'error');
   }
 }
@@ -332,7 +335,7 @@ if (typeof window !== 'undefined') {
 }
 
 function renderStackDetails(data) {
-  document.getElementById('stack-header-title').textContent = `Stack: ${data.name}`;
+  document.getElementById('stack-header-title').textContent = t('stk.stack', 'Stack: {name}', { name: data.name });
 
   // Origin pill
   const originEl = document.getElementById('stack-header-origin');
@@ -350,13 +353,13 @@ function renderStackDetails(data) {
     statusEl.style.background = isRunning ? 'rgba(16,185,129,0.15)' : (isPartial ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)');
     statusEl.style.color = isRunning ? '#10b981' : (isPartial ? '#f59e0b' : '#ef4444');
     statusEl.style.border = `1px solid ${isRunning ? 'rgba(16,185,129,0.3)' : (isPartial ? 'rgba(245,158,11,0.3)' : 'rgba(239,68,68,0.3)')}`;
-    statusEl.textContent = `● ${data.running_count}/${data.total_count} Running`;
+    statusEl.textContent = `● ${t('stk.running', '{running}/{total} Running', { running: data.running_count, total: data.total_count })}`;
   }
 
   // Path label
   const pathLabel = document.getElementById('stack-path-label');
   if (pathLabel) {
-    const displayPath = data.config_file || data.working_dir || (data.location_type === 'synthesized' ? 'Live Synthesized Specification' : 'Docker Compose Project');
+    const displayPath = data.config_file || data.working_dir || (data.location_type === 'synthesized' ? t('stk.synth', 'Rebuilt from the running containers') : t('stk.project', 'Docker Compose project'));
     pathLabel.textContent = displayPath;
     pathLabel.title = displayPath;
   }
@@ -370,7 +373,7 @@ function renderStackDetails(data) {
   // Fill textareas
   document.getElementById('stack-compose-editor').value = data.compose_yaml || '';
   document.getElementById('stack-env-editor').value = data.env_content || '';
-  document.getElementById('stack-modal-msg').textContent = data.has_real_file ? 'Loaded from on-disk configuration' : 'Reconstructed live from running services';
+  document.getElementById('stack-modal-msg').textContent = data.has_real_file ? t('stk.from_disk', 'Loaded from the Compose file on disk') : t('stk.synth', 'Rebuilt from the running containers');
 
   // Render Services list
   renderServicesList(data.containers || []);
@@ -381,7 +384,7 @@ function renderServicesList(containers) {
   if (!containerEl) return;
 
   if (!containers.length) {
-    containerEl.innerHTML = '<div style="color:var(--muted); font-size:var(--zn-fs-xs); grid-column:1/-1;">No active containers detected for this stack.</div>';
+    containerEl.innerHTML = '<div style="color:var(--muted); font-size:var(--zn-fs-xs); grid-column:1/-1;">' + escapeHtml(t('stk.no_containers', 'No containers found for this stack.')) + '</div>';
     return;
   }
 
@@ -389,13 +392,13 @@ function renderServicesList(containers) {
   containers.forEach((c) => {
     const isRunning = c.state === 'running';
     const stateBadge = isRunning
-      ? '<span style="font-size:var(--zn-fs-xs); color:var(--lt-t-10b981ff, #10b981); font-weight:700;">● Running</span>'
-      : '<span style="font-size:var(--zn-fs-xs); color:var(--lt-t-ef4444ff, #ef4444); font-weight:700;">● Stopped</span>';
+      ? '<span style="font-size:var(--zn-fs-xs); color:var(--lt-t-10b981ff, #10b981); font-weight:700;">● ' + escapeHtml(t('stk.svc_running', 'Running')) + '</span>'
+      : '<span style="font-size:var(--zn-fs-xs); color:var(--lt-t-ef4444ff, #ef4444); font-weight:700;">● ' + escapeHtml(t('stk.svc_stopped', 'Stopped')) + '</span>';
 
     const portsHtml = (c.ports || []).map((p) => {
       const hp = p.host_port ? `${p.host_port}➔` : '';
       return `<code style="font-size:var(--zn-fs-xs); background:var(--zn-glaze-6); padding:1px 4px; border-radius:3px;">${hp}${p.container_port}/${p.proto}</code>`;
-    }).join(' ') || '<span style="font-size:var(--zn-fs-xs); color:var(--muted);">Host Network / None</span>';
+    }).join(' ') || '<span style="font-size:var(--zn-fs-xs); color:var(--muted);">' + escapeHtml(t('stk.no_ports', 'Host network / none')) + '</span>';
 
     html += `
       <div class="drawer-card" style="padding:12px; background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); border-radius:8px; display:flex; flex-direction:column; gap:8px;">
@@ -411,13 +414,13 @@ function renderServicesList(containers) {
         </div>
 
         <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
-          <span style="font-size:var(--zn-fs-xs); color:var(--muted);">Ports:</span>
+          <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('stk.ports', 'Ports:')}</span>
           ${portsHtml}
         </div>
 
         <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:4px;">
-          ${c.webui_url ? `<a href="${escapeHtml(c.webui_url)}" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size:var(--zn-fs-xs); padding:2px 8px; text-decoration:none; color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8));">🌐 WebUI</a>` : ''}
-          <button class="btn-pill-toggle stack-inspect-container-btn is-small" data-cid="${escapeHtml(c.id)}">🔍 Inspect Container</button>
+          ${c.webui_url ? `<a href="${escapeHtml(c.webui_url)}" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size:var(--zn-fs-xs); padding:2px 8px; text-decoration:none; color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8));">${ico('🌐')} ${t('stk.webui', 'Web UI')}</a>` : ''}
+          <button class="btn-pill-toggle stack-inspect-container-btn is-small" data-cid="${escapeHtml(c.id)}">${ico('🔍')} ${t('stk.inspect', 'Container details')}</button>
         </div>
       </div>
     `;
@@ -445,8 +448,8 @@ async function saveStack(redeployAfterSave = false) {
   if (_fromCopilot && risks.length) {
     const ok = await new Promise((resolve) => {
       showConfirmToast(
-        'Deploy a stack with host access?',
-        `This Compose file came from an AI answer and asks for:\n${composeRiskSummary(risks)}`,
+        t('stk.risk_title', 'Deploy a stack with host access?'),
+        t('stk.risk_msg', 'This Compose file came from an AI answer and asks for:\n{risks}', { risks: composeRiskSummary(risks) }),
         () => resolve(true),
         () => resolve(false),
       );
@@ -473,11 +476,11 @@ async function saveStack(redeployAfterSave = false) {
         await triggerStackAction('redeploy');
       }
     } else {
-      if (msgEl) msgEl.textContent = `Error: ${res.error}`;
-      showToast(res.error || 'Failed saving stack', 'error');
+      if (msgEl) msgEl.textContent = t('viso.error', 'Error: {error}', { error: res.error });
+      showToast(res.error || t('stk.save_failed', 'Could not save the stack'), 'error');
     }
   } catch (err) {
-    if (msgEl) msgEl.textContent = `Error: ${err.message}`;
+    if (msgEl) msgEl.textContent = t('viso.error', 'Error: {error}', { error: err.message });
     showToast(t('toast.save_failed', 'Save failed: {error}', { error: err.message }), 'error');
   }
 }
@@ -490,21 +493,21 @@ async function triggerStackAction(action) {
     showToast(t('toast.executing_stack', 'Executing stack {action}...', { action: action }), 'info');
   }
 
-  if (msgEl) msgEl.textContent = `Executing ${action}...`;
+  if (msgEl) msgEl.textContent = t('stk.doing', 'Running “{action}”…', { action });
 
   try {
     const res = await api.post(`/api/docker/stacks/${encodeURIComponent(_activeStackName)}/action`, { action });
     if (res.success) {
       showToast(t('toast.stack_action_completed', 'Stack action \'{action}\' completed!', { action: action }), 'success');
-      if (msgEl) msgEl.textContent = `Action '${action}' successful`;
+      if (msgEl) msgEl.textContent = t('stk.done', '“{action}” done', { action });
       // Refresh stack details
       await openStackModal(_activeStackName);
     } else {
-      if (msgEl) msgEl.textContent = `Action failed: ${res.error}`;
-      showToast(res.error || `Action '${action}' failed`, 'error');
+      if (msgEl) msgEl.textContent = t('stk.failed', '“{action}” failed: {error}', { action, error: res.error });
+      showToast(res.error || t('stk.failed_short', '“{action}” failed', { action }), 'error');
     }
   } catch (err) {
-    if (msgEl) msgEl.textContent = `Action error: ${err.message}`;
+    if (msgEl) msgEl.textContent = t('stk.failed', '“{action}” failed: {error}', { action, error: err.message });
     showToast(t('toast.stack_action_failed', 'Stack action failed: {error}', { error: err.message }), 'error');
   }
 }
@@ -533,8 +536,8 @@ export async function openStackPickerModal(stacksInput = null) {
         <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; user-select:none; cursor:move;">
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:16px;">📁</span>
-            <span style="font-weight:700; color:var(--zn-text-strong); font-size:13.5px;">Docker Compose Stacks</span>
-            <span id="stack-picker-badge" class="ci-badge" style="font-size:var(--zn-fs-xs); padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border:1px solid rgba(56,189,248,0.3);">0 Stacks</span>
+            <span style="font-weight:700; color:var(--zn-text-strong); font-size:13.5px;">${t('stk.picker_title', 'Docker Compose stacks')}</span>
+            <span id="stack-picker-badge" class="ci-badge" style="font-size:var(--zn-fs-xs); padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border:1px solid rgba(56,189,248,0.3);">${t('stk.count', '{count, plural, one {# Stack} other {# Stacks}}', { count: 0 })}</span>
           </div>
           <div class="os-window-controls">
             <button class="win-btn close-btn" id="stack-picker-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
@@ -543,7 +546,7 @@ export async function openStackPickerModal(stacksInput = null) {
 
         <!-- Toolbar & Filter -->
         <div style="padding:12px 16px; background:var(--zn-shade-35); border-bottom:1px solid var(--zn-line-6); display:flex; flex-direction:column; gap:8px;">
-          <div style="font-size:var(--zn-fs-xs); color:var(--muted);">Select a Docker Compose stack to inspect services, modify setup YAML, or manage lifecycle:</div>
+          <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('stk.picker_hint', 'Pick a stack to see its services, edit its Compose file, or start and stop it:')}</div>
           <div style="position:relative; display:flex; align-items:center;">
             <span style="position:absolute; left:10px; font-size:var(--zn-fs-xs); color:var(--muted); pointer-events:none;">🔍</span>
             <input type="text" id="stack-picker-search" placeholder="${t('ui.filter_stacks_by_name_service', 'Filter stacks by name, service, or path...')}" class="tz-text-input" style="width:100%; padding:7px 10px 7px 30px; font-size:var(--zn-fs-xs); background:var(--zn-shade-40); border:1px solid var(--zn-line-12); border-radius:6px; color:var(--zn-text-strong); outline:none; box-sizing:border-box;">
@@ -556,8 +559,8 @@ export async function openStackPickerModal(stacksInput = null) {
 
         <!-- Footer -->
         <div style="padding:10px 16px; background:var(--lt-b-00000080, rgba(0,0,0,0.5)); border-top:1px solid var(--zn-line-8); display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:var(--zn-fs-xs); color:var(--muted); font-style:italic;">Click any stack card to open setup editor</span>
-          <button class="btn-pill-toggle" id="stack-picker-cancel-btn">Cancel</button>
+          <span style="font-size:var(--zn-fs-xs); color:var(--muted); font-style:italic;">${t('stk.picker_foot', 'Click a stack to open it')}</span>
+          <button class="btn-pill-toggle" id="stack-picker-cancel-btn">${t('common.cancel', 'Cancel')}</button>
         </div>
       </div>
     `;
@@ -582,7 +585,7 @@ export async function openStackPickerModal(stacksInput = null) {
   }
 
   const badge = overlay.querySelector('#stack-picker-badge');
-  if (badge) badge.textContent = `${stacks.length} Stack${stacks.length === 1 ? '' : 's'}`;
+  if (badge) badge.textContent = t('stk.count', '{count, plural, one {# Stack} other {# Stacks}}', { count: stacks.length });
 
   const searchInput = overlay.querySelector('#stack-picker-search');
   const listContainer = overlay.querySelector('#stack-picker-list');
@@ -600,7 +603,7 @@ export async function openStackPickerModal(stacksInput = null) {
     if (filtered.length === 0) {
       listContainer.innerHTML = `
         <div style="text-align:center; padding:32px 16px; color:var(--muted); font-size:var(--zn-fs-xs);">
-          No Compose stacks match "${escapeHtml(query)}"
+          ${escapeHtml(t('stk.no_match', 'No Compose stacks match "{q}"', { q: query }))}
         </div>
       `;
       return;
@@ -612,20 +615,20 @@ export async function openStackPickerModal(stacksInput = null) {
 
       let statusPill;
       if (isAllRunning) {
-        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--ok2, #10b981); background:rgba(16,185,129,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(16,185,129,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--ok2, #10b981); box-shadow:0 0 6px var(--ok2, #10b981);"></span> ${s.running_count}/${s.total_count} Running</span>`;
+        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--ok2, #10b981); background:rgba(16,185,129,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(16,185,129,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--ok2, #10b981); box-shadow:0 0 6px var(--ok2, #10b981);"></span> ${t('stk.running', '{running}/{total} Running', { running: s.running_count, total: s.total_count })}</span>`;
       } else if (isNoneRunning) {
-        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--muted); background:var(--zn-glaze-6); padding:2px 8px; border-radius:12px; border:1px solid var(--zn-line-10);"><span style="width:6px; height:6px; border-radius:50%; background:var(--muted);"></span> Stopped (${s.total_count})</span>`;
+        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--muted); background:var(--zn-glaze-6); padding:2px 8px; border-radius:12px; border:1px solid var(--zn-line-10);"><span style="width:6px; height:6px; border-radius:50%; background:var(--muted);"></span> ${t('stk.stopped_n', 'Stopped ({count})', { count: s.total_count })}</span>`;
       } else {
-        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--warn, #f5a623); background:rgba(245,166,35,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(245,166,35,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--warn, #f5a623); box-shadow:0 0 6px var(--warn, #f5a623);"></span> ${s.running_count}/${s.total_count} Running</span>`;
+        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--warn, #f5a623); background:rgba(245,166,35,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(245,166,35,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--warn, #f5a623); box-shadow:0 0 6px var(--warn, #f5a623);"></span> ${t('stk.running', '{running}/{total} Running', { running: s.running_count, total: s.total_count })}</span>`;
       }
 
       const servicesHtml = (s.services || []).slice(0, 6).map((svc) => `
         <span class="ci-badge" style="font-size:var(--zn-fs-xs); padding:2px 6px; border-radius:4px; background:var(--zn-glaze-6); color:var(--zn-text-soft); border:1px solid var(--zn-line-10); font-family:var(--font-mono, monospace);">${escapeHtml(svc)}</span>
       `).join('');
 
-      const moreCount = (s.services || []).length > 6 ? ` <span style="font-size:var(--zn-fs-xs); color:var(--muted);">+${s.services.length - 6} more</span>` : '';
+      const moreCount = (s.services || []).length > 6 ? ` <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('stk.more', '+{count} more', { count: s.services.length - 6 })}</span>` : '';
 
-      const pathStr = s.working_dir || s.config_files || 'Managed by Docker daemon';
+      const pathStr = s.working_dir || s.config_files || t('stk.daemon', 'Managed by Docker');
 
       return `
         <div class="stack-picker-card" data-stack="${escapeHtml(s.name)}" style="background:var(--zn-glaze-3); border:1px solid var(--lt-r-ffffff17, rgba(255,255,255,0.09)); border-radius:8px; padding:10px 14px; cursor:pointer; transition:all 0.16s cubic-bezier(0.16, 1, 0.3, 1); display:flex; flex-direction:column; gap:6px;">
@@ -642,7 +645,7 @@ export async function openStackPickerModal(stacksInput = null) {
           </div>
           ${servicesHtml ? `
             <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px; margin-top:2px;">
-              <span style="font-size:var(--zn-fs-xs); color:var(--muted); margin-right:2px;">Services:</span>
+              <span style="font-size:var(--zn-fs-xs); color:var(--muted); margin-right:2px;">${t('stk.services', 'Services:')}</span>
               ${servicesHtml}${moreCount}
             </div>
           ` : ''}

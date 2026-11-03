@@ -6,6 +6,16 @@ import { api } from '../api.js';
 import { state } from '../state.js';
 import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
+
+const tr = t; // the curve drag handler has a local `t` (temperature)
+
+/** Why a zone's fans wait in standby, in words. */
+export function standbyReason(fc, remaining) {
+  if (fc.storage_busy) return t('fan.why_storage', 'Storage busy');
+  if (fc.nvme_over_ceiling) return t('fan.why_nvme', 'NVMe cooling');
+  if (remaining !== undefined && remaining > 0) return t('fan.why_cooling_s', 'Cooling down {s}s', { s: remaining });
+  return t('fan.why_cooling', 'Cooling down');
+}
 import { showToast } from '../toast.js';
 
 const $ = (id) => document.getElementById(id);
@@ -83,7 +93,7 @@ export function renderCurveLines() {
       if (i < svgCoords.length) {
         handle.setAttribute('cx', svgCoords[i][0]);
         handle.setAttribute('cy', svgCoords[i][1]);
-        handle.setAttribute('title', `Node ${i + 1}: ${pts[i][0]}°C → ${pts[i][1]}% PWM`);
+        handle.setAttribute('title', t('fan.node', 'Point {n}: {temp}°C → {pct}% PWM', { n: i + 1, temp: pts[i][0], pct: pts[i][1] }));
         handle.style.display = 'block';
       } else {
         handle.style.display = 'none';
@@ -93,7 +103,7 @@ export function renderCurveLines() {
 
   const rangeVal = $('fan-curve-range-val');
   if (rangeVal && pts.length >= 2) {
-    rangeVal.textContent = `Ramp: ${pts[1][0]}°C – ${pts[pts.length - 2][0]}°C (${pts[1][1]}% – ${pts[pts.length - 2][1]}%)`;
+    rangeVal.textContent = t('fan.ramp', 'Ramp: {from}°C – {to}°C ({low}% – {high}%)', { from: pts[1][0], to: pts[pts.length - 2][0], low: pts[1][1], high: pts[pts.length - 2][1] });
   }
 }
 
@@ -155,15 +165,7 @@ export function updateFanCurveWorkstation(s) {
       badgeZ1.style.color = '#38bdf8';
       badgeZ1.style.borderColor = 'rgba(56, 189, 248, 0.4)';
     } else if (fc.zone1_standby) {
-      let detail = ' (Cooling down)';
-      if (fc.storage_busy) {
-        detail = ' (Storage busy)';
-      } else if (fc.nvme_over_ceiling) {
-        detail = ' (NVMe cooling)';
-      } else if (fc.zone1_standby_rem !== undefined && fc.zone1_standby_rem > 0) {
-        detail = ` (Cooling down ${fc.zone1_standby_rem}s)`;
-      }
-      badgeZ1.textContent = `Zone 1: Standby${detail}`;
+      badgeZ1.textContent = t('fan.standby', 'Zone {zone}: Standby ({why})', { zone: 1, why: standbyReason(fc, fc.zone1_standby_rem) });
       badgeZ1.style.background = 'rgba(245, 183, 49, 0.15)';
       badgeZ1.style.color = 'var(--warn)';
       badgeZ1.style.borderColor = 'rgba(245, 183, 49, 0.4)';
@@ -181,15 +183,7 @@ export function updateFanCurveWorkstation(s) {
       badgeZ2.style.color = '#38bdf8';
       badgeZ2.style.borderColor = 'rgba(56, 189, 248, 0.4)';
     } else if (fc.zone2_standby) {
-      let detail = ' (Cooling down)';
-      if (fc.storage_busy) {
-        detail = ' (Storage busy)';
-      } else if (fc.nvme_over_ceiling) {
-        detail = ' (NVMe cooling)';
-      } else if (fc.zone2_standby_rem !== undefined && fc.zone2_standby_rem > 0) {
-        detail = ` (Cooling down ${fc.zone2_standby_rem}s)`;
-      }
-      badgeZ2.textContent = `Zone 2: Standby${detail}`;
+      badgeZ2.textContent = t('fan.standby', 'Zone {zone}: Standby ({why})', { zone: 2, why: standbyReason(fc, fc.zone2_standby_rem) });
       badgeZ2.style.background = 'rgba(245, 183, 49, 0.15)';
       badgeZ2.style.color = 'var(--warn)';
       badgeZ2.style.borderColor = 'rgba(245, 183, 49, 0.4)';
@@ -296,14 +290,14 @@ export function updateFanCurveWorkstation(s) {
   const readout = $('curve-readout-text');
   if (readout) {
     if (state.selectedZoneFilter === 'zone1') {
-      readout.textContent = `Zone 1 Isolated: ${fc.zone1_temp}°C (${fc.zone1_pwm} PWM)`;
+      readout.textContent = t('fan.only_zone', 'Zone {zone} only: {temp}°C ({pwm} PWM)', { zone: 1, temp: fc.zone1_temp, pwm: fc.zone1_pwm });
     } else if (state.selectedZoneFilter === 'zone2') {
-      readout.textContent = `Zone 2 Isolated: ${fc.zone2_temp}°C (${fc.zone2_pwm} PWM)`;
+      readout.textContent = t('fan.only_zone', 'Zone {zone} only: {temp}°C ({pwm} PWM)', { zone: 2, temp: fc.zone2_temp, pwm: fc.zone2_pwm });
     } else if (state.selectedZoneFilter === 'cpu') {
-      readout.textContent = `CPU Isolated: ${fc.cpu_temp}°C (${fc.cpu_pwm || 'Auto'} PWM)`;
+      readout.textContent = t('fan.only_cpu', 'CPU only: {temp}°C ({pwm} PWM)', { temp: fc.cpu_temp, pwm: fc.cpu_pwm || t('fan.auto', 'Auto') });
     } else {
       const maxDisk = Math.max(fc.zone1_temp, fc.zone2_temp);
-      readout.textContent = `All Zones: Max Bay ${maxDisk}°C`;
+      readout.textContent = t('fan.all_zones', 'All zones: hottest bay {temp}°C', { temp: maxDisk });
     }
   }
 }
@@ -329,8 +323,8 @@ export function setZoneFilter(filterKey) {
     if (filterKey === 'all') {
       instruction.textContent = t('settings.fan_curve_desc', 'Displaying all thermal zones. Click a zone tachometer above or below to isolate.');
     } else {
-      const nameMap = { zone1: 'Zone 1 (Left Bays)', zone2: 'Zone 2 (Right Bays)', cpu: 'CPU Package' };
-      instruction.textContent = `Filtered to ${nameMap[filterKey]}. Only this zone is active on the graph.`;
+      const nameMap = { zone1: t('fan.zone1', 'Zone 1 (left bays)'), zone2: t('fan.zone2', 'Zone 2 (right bays)'), cpu: t('fan.cpu', 'CPU package') };
+      instruction.textContent = t('fan.filtered', 'Showing {zone} only. The other zones are hidden on the graph.', { zone: nameMap[filterKey] });
     }
   }
 
@@ -446,7 +440,7 @@ export function initFanControl() {
       renderCurveLines();
 
       const crv = $('fan-curve-range-val');
-      if (crv) crv.textContent = `Ramp: ${tMin}°C – ${tMax}°C`;
+      if (crv) crv.textContent = t('fan.ramp_short', 'Ramp: {from}°C – {to}°C', { from: tMin, to: tMax });
 
       updateFanUiState(prof, pct);
     } catch (e) {
@@ -567,7 +561,7 @@ export function initFanControl() {
 
         const readout = $('curve-readout-text');
         if (readout) {
-          readout.textContent = `Dragging Node ${dragIndex + 1}: ${t}°C • ${p}% PWM`;
+          readout.textContent = tr('fan.dragging', 'Moving point {n}: {temp}°C • {pct}% PWM', { n: dragIndex + 1, temp: t, pct: p });
         }
       });
     }
@@ -854,9 +848,9 @@ export function initAcousticCalibration() {
 
       if (summaryEl) {
         if (hasResonance) {
-          summaryEl.innerHTML = `<span style="color:var(--lt-t-f43f5eff, #f43f5e); font-weight:600;">⚠️ Chassis resonance detected at specific PWM steps. Consider adjusting curve around these frequencies.</span>`;
+          summaryEl.innerHTML = `<span style="color:var(--lt-t-f43f5eff, #f43f5e); font-weight:600;">⚠️ ${t('fan.resonance', 'Chassis resonance detected at some PWM steps. Consider adjusting the curve around these speeds.')}</span>`;
         } else if (data.completed_at) {
-          summaryEl.innerHTML = `<span style="color:var(--lt-t-22c55eff, #22c55e); font-weight:600;">✓ Excellent acoustic linearity across entire 58–183 PWM range. No chassis harmonics detected.</span>`;
+          summaryEl.innerHTML = `<span style="color:var(--lt-t-22c55eff, #22c55e); font-weight:600;">✓ ${t('fan.linear', 'Smooth across the whole 58–183 PWM range. No chassis resonance found.')}</span>`;
         }
       }
     }
@@ -869,13 +863,13 @@ export function initAcousticCalibration() {
       if (progressWrap) progressWrap.style.display = 'block';
       if (progressBar) progressBar.style.width = `${data.progress_pct || 0}%`;
       if (badge) {
-        badge.textContent = 'RUNNING';
+        badge.textContent = t('fan.sweep_running', 'RUNNING');
         badge.style.background = 'rgba(234,179,8,0.15)';
         badge.style.color = '#eab308';
         badge.style.borderColor = 'rgba(234,179,8,0.35)';
       }
       if (statusEl) statusEl.textContent = t('settings.sweep_running') || 'Sweep Running...';
-      if (stepEl) stepEl.textContent = `Step ${data.step || 0}/${data.total_steps || 0} (${data.current_pwm || 58} PWM)`;
+      if (stepEl) stepEl.textContent = t('fan.step', 'Step {step}/{total} ({pwm} PWM)', { step: data.step || 0, total: data.total_steps || 0, pwm: data.current_pwm || 58 });
     } else {
       btnStart.style.display = 'inline-flex';
       btnStop.style.display = 'none';
