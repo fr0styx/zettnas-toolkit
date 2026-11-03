@@ -46,13 +46,13 @@ describe('Phase 4: Spotlight Universal Command Palette & Desktop Workspace', () 
 
     filterSpotlightResults('quiet');
     const results = document.getElementById('spotlight-results');
-    expect(results.textContent).toContain('Fan Mode: Quiet');
+    expect(results.textContent).toContain('Fan mode: Quiet');
 
     filterSpotlightResults('>turbo');
-    expect(results.textContent).toContain('Fan Mode: Performance');
+    expect(results.textContent).toContain('Fan mode: Performance');
 
     filterSpotlightResults('oled');
-    expect(results.textContent).toContain('Theme: OLED Pure Black');
+    expect(results.textContent).toContain('Theme: pure black (OLED)');
   });
 
   it('registers custom spotlight items and executes them', () => {

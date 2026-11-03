@@ -135,7 +135,7 @@ export function renderFans(fans) {
     const isPassive = (i === 0 && fc.zone1_zero_rpm) || (i === 1 && fc.zone2_zero_rpm);
     if (dfRpm) {
       if (rpm === 0 && isPassive) {
-        dfRpm.textContent = '0 (PASSIVE)';
+        dfRpm.textContent = t('dash.rpm_passive', '0 (PASSIVE)');
         dfRpm.style.color = '#38bdf8';
       } else {
         dfRpm.textContent = rpm;
@@ -171,6 +171,27 @@ const ROLE_META = {
   os:    { label: 'OS',    icon: '#i-nvme', cls: 'r-os' },
 };
 
+/** A drive's name in titles, marked when it holds parity (NUX-20). */
+export function driveLabel(d, isParity) {
+  return isParity ? t('dash.parity_name', '{name} [PARITY]', { name: d.name }) : d.name;
+}
+
+/** The hover text of a drive tile: asleep, likely to fail, or how to open its health page. */
+export function driveTileTitle(d, isParity, isStandby) {
+  if (isStandby) return t('dash.drive_asleep', '{name} is asleep (spun down)', { name: driveLabel(d, isParity) });
+  if (d.risk === 'high' || d.risk === 'critical') {
+    const advice = d.risk_advice || t('dash.failing_advice', 'Back up its data and plan a replacement.');
+    return t('dash.drive_failing', '{name}: likely to fail soon. {advice}', { name: d.name, advice });
+  }
+  return t('dash.drive_open', 'Click to see the health of {name}', { name: driveLabel(d, isParity) });
+}
+
+/** The hover text of a drive chip in the console's bay row. */
+export function driveChipTitle(d, isParity, isStandby, devPathName) {
+  if (isStandby) return t('dash.drive_asleep', '{name} is asleep (spun down)', { name: driveLabel(d, isParity) });
+  return t('dash.chip_open', 'Drive {name} ({dev}): click to see its health', { name: driveLabel(d, isParity), dev: devPathName });
+}
+
 export function diskTile(d) {
   const isStandby = Boolean(d.standby || d.health === 'standby');
   const isParity = Boolean(d.is_parity || d.role === 'parity');
@@ -182,14 +203,10 @@ export function diskTile(d) {
   const el = document.createElement('div');
   el.className = 'disk ' + meta.cls + ' h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' disk-standby' : '') + (isParity ? ' disk-is-parity' : '');
   el.dataset.dev = d.dev || d.name;
-  el.title = isStandby
-    ? `${d.name}${isParity ? ' [PARITY]' : ''} is in standby (spun-down)`
-    : (d.risk === 'high' || d.risk === 'critical')
-      ? `${d.name}: likely to fail soon. ${d.risk_advice || 'Back up its data and plan a replacement.'}`
-      : `Click to inspect S.M.A.R.T. health for ${d.name}${isParity ? ' [PARITY]' : ''}`;
+  el.title = driveTileTitle(d, isParity, isStandby);
 
   const tempHtml = isStandby
-    ? `<div class="dt s-standby"><span class="standby-badge">STANDBY</span></div>`
+    ? `<div class="dt s-standby"><span class="standby-badge">${t('chassis.standby', 'STANDBY')}</span></div>`
     : `<div class="dt ${'s-' + lvl}"><span class="dt-temp">${temp == null ? '--' : temp}<span class="u">°C</span></span></div>`;
 
   const displayName = formatDiskDisplayName(d.name);
@@ -287,9 +304,7 @@ export function renderDisks(disks) {
       const w = isStandby ? 0 : (temp == null ? 0 : Math.max(8, Math.min(100, ((temp - 20) / 40) * 100)));
 
       tile.className = 'disk ' + meta.cls + ' h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' disk-standby' : '') + (isParity ? ' disk-is-parity' : '');
-      tile.title = isStandby
-        ? `${d.name}${isParity ? ' [PARITY]' : ''} is in standby (spun-down)`
-        : `Click to inspect S.M.A.R.T. health for ${d.name}${isParity ? ' [PARITY]' : ''}`;
+      tile.title = driveTileTitle({ ...d, risk: null }, isParity, isStandby);
 
       const nameEl = tile.querySelector('.dn');
       if (nameEl) nameEl.textContent = formatDiskDisplayName(d.name);
@@ -298,7 +313,7 @@ export function renderDisks(disks) {
       if (tempEl) {
         tempEl.className = 'dt ' + (isStandby ? 's-standby' : 's-' + lvl);
         tempEl.innerHTML = isStandby
-          ? `<span class="standby-badge">STANDBY</span>`
+          ? `<span class="standby-badge">${t('chassis.standby', 'STANDBY')}</span>`
           : `<span class="dt-temp">${temp == null ? '--' : temp}<span class="u">°C</span></span>`;
       }
 
@@ -332,7 +347,7 @@ export function updateRowTelemetryBadges(s) {
     const maxRpm = Math.max(...s.fans);
     const fc = s.fan_control || {};
     if (maxRpm === 0 && (fc.zone1_zero_rpm || fc.zone2_zero_rpm)) {
-      fanBadge.textContent = '0 RPM • PASSIVE';
+      fanBadge.textContent = t('dash.fans_passive', '0 RPM • PASSIVE');
       fanBadge.style.color = '#38bdf8';
     } else {
       fanBadge.textContent = `${maxRpm} RPM`;
@@ -340,7 +355,7 @@ export function updateRowTelemetryBadges(s) {
     }
   }
   if (netBadge && s.net) netBadge.textContent = `▲${s.net.tx} ▼${s.net.rx}`;
-  if (dskBadge && s.disks) dskBadge.textContent = `${s.disks.length} Drives Active`;
+  if (dskBadge && s.disks) dskBadge.textContent = t('dash.drives_active', '{count, plural, one {# drive active} other {# drives active}}', { count: s.disks.length });
 }
 
 export function updateChassisImageForTheme() {
@@ -841,7 +856,7 @@ export function updateStreamlineBayChips(disks) {
   }
 
   if (!disks || disks.length === 0) {
-    row.innerHTML = '<span style="color:var(--muted);font-size:10px;">No Disks Detected</span>';
+    row.innerHTML = '<span style="color:var(--muted);font-size:10px;">' + t('dash.no_disks', 'No drives found') + '</span>';
     return;
   }
 
@@ -857,7 +872,7 @@ export function updateStreamlineBayChips(disks) {
     const devPathName = formatDiskDisplayName(d.name);
     const roleLabel = isParity ? (d.parity_label === 'P2' ? 'PARITY 2' : 'PARITY') : meta.label;
     const tempHtml = isStandby
-      ? `<span class="sl-chip-temp s-standby"><span class="standby-badge">STANDBY</span></span>`
+      ? `<span class="sl-chip-temp s-standby"><span class="standby-badge">${t('chassis.standby', 'STANDBY')}</span></span>`
       : `<span class="sl-chip-temp">${d.temp == null ? '--' : d.temp + '°C'}</span>`;
 
     return `<div class="sl-chip-top">` +
@@ -885,9 +900,7 @@ export function updateStreamlineBayChips(disks) {
       chip.className = `sl-bay-chip ${meta.cls} h-${lvl}` + (d.active ? ' io-active' : '') + (isStandby ? ' chip-standby' : '') + (isParity ? ' chip-parity' : '');
       chip.dataset.dev = d.dev || d.name;
       const devPathName = formatDiskDisplayName(d.name);
-      chip.title = isStandby
-        ? `${d.name}${isParity ? ' [PARITY]' : ''} is in standby (spun-down)`
-        : `Disk ${d.name}${isParity ? ' [PARITY]' : ''} (${devPathName}) - Click to inspect SMART`;
+      chip.title = driveChipTitle(d, isParity, isStandby, devPathName);
       chip.innerHTML = buildChipInner(d);
       row.appendChild(chip);
     });
@@ -903,9 +916,7 @@ export function updateStreamlineBayChips(disks) {
       const lvl = isStandby ? 'standby' : (d.health || lvlDisk(d.temp));
       chip.className = `sl-bay-chip ${meta.cls} h-${lvl}` + (d.active ? ' io-active' : '') + (isStandby ? ' chip-standby' : '') + (isParity ? ' chip-parity' : '');
       const devPathName = formatDiskDisplayName(d.name);
-      chip.title = isStandby
-        ? `${d.name}${isParity ? ' [PARITY]' : ''} is in standby (spun-down)`
-        : `Disk ${d.name}${isParity ? ' [PARITY]' : ''} (${devPathName}) - Click to inspect SMART`;
+      chip.title = driveChipTitle(d, isParity, isStandby, devPathName);
       chip.innerHTML = buildChipInner(d);
     });
   }
@@ -1133,7 +1144,7 @@ export function updateUnraidTelemetry(unraid) {
     arrayPill.classList.remove('hidden');
     const statusEl = $('unraid-array-status');
     const dotEl = $('unraid-array-dot');
-    if (statusEl) statusEl.textContent = unraid.state || 'STARTED';
+    if (statusEl) statusEl.textContent = unraid.state || t('dash.started', 'STARTED');
     if (dotEl) {
       dotEl.style.background = unraid.is_healthy ? 'var(--ok2)' : unraid.color?.startsWith('yellow') ? 'var(--warn)' : 'var(--crit)';
     }
@@ -1157,7 +1168,7 @@ export function updateUnraidTelemetry(unraid) {
     if (m.active) {
       moverPill.classList.remove('hidden');
       const mStatus = $('unraid-mover-status');
-      if (mStatus) mStatus.textContent = m.remain_files ? `${m.remain_files} left` : 'Active';
+      if (mStatus) mStatus.textContent = m.remain_files ? t('dash.files_left', '{count, plural, one {# file left} other {# files left}}', { count: m.remain_files }) : t('net.active', 'Active');
     } else {
       moverPill.classList.add('hidden');
     }
@@ -1166,7 +1177,7 @@ export function updateUnraidTelemetry(unraid) {
   // Storage Card Badges
   if (storageBadge && storageText) {
     storageBadge.classList.remove('hidden');
-    storageText.textContent = `UNRAID: ${unraid.state || 'STARTED'}`;
+    storageText.textContent = t('dash.unraid_state', 'UNRAID: {state}', { state: unraid.state || t('dash.started', 'STARTED') });
     if (storageDot) {
       storageDot.style.background = unraid.is_healthy ? 'var(--ok2)' : 'var(--warn)';
     }
@@ -1177,7 +1188,7 @@ export function updateUnraidTelemetry(unraid) {
     if (p.active) {
       parityBox.classList.remove('hidden');
       parityBar.style.width = `${p.progress_pct || 0}%`;
-      parityTxt.textContent = `Parity: ${p.progress_pct || 0}% (${p.errors || 0} err)`;
+      parityTxt.textContent = t('dash.parity_progress', 'Parity: {pct}% ({errors, plural, one {# error} other {# errors}})', { pct: p.progress_pct || 0, errors: p.errors || 0 });
     } else {
       parityBox.classList.add('hidden');
     }
@@ -1608,10 +1619,10 @@ function initCopyToastControls() {
         abortDiv.id = 'copy-toast-abort-actions';
         abortDiv.style.cssText = 'margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);';
         abortDiv.innerHTML = `
-          <div style="font-size:11px; color:var(--zn-text-soft); margin-bottom:8px; font-weight:500;">Are you sure you want to completely abort the transfer? All incomplete files will be deleted.</div>
+          <div style="font-size:11px; color:var(--zn-text-soft); margin-bottom:8px; font-weight:500;">${t('dash.abort_q', 'Stop the transfer completely? Files not finished are deleted.')}</div>
           <div style="display:flex; gap:8px;">
-            <button id="copy-abort-btn-yes" class="btn-save-preset" style="flex:1; padding:6px; border-color:rgba(240,85,59,0.5); color:var(--crit);">Yes, Abort</button>
-            <button id="copy-abort-btn-no" class="btn-save-preset" style="flex:1; padding:6px;">Resume</button>
+            <button id="copy-abort-btn-yes" class="btn-save-preset" style="flex:1; padding:6px; border-color:rgba(240,85,59,0.5); color:var(--crit);">${t('dash.abort_yes', 'Yes, stop it')}</button>
+            <button id="copy-abort-btn-no" class="btn-save-preset" style="flex:1; padding:6px;">${t('dash.resume', 'Go on')}</button>
           </div>
         `;
         abortDiv.querySelector('#copy-abort-btn-yes')?.addEventListener('click', () => abortCopyConfirm(true));
@@ -1769,7 +1780,7 @@ export function updateCopyToast(copyState) {
 
     if ($('copy-toast-pct')) $('copy-toast-pct').textContent = copyState.status === 'awaiting_confirmation' ? 'WAIT' : `${pct}%`;
     if ($('copy-toast-bar')) $('copy-toast-bar').style.width = `${pct}%`;
-    if ($('copy-toast-file')) $('copy-toast-file').textContent = prog.file || (copyState.status === 'success' ? t('modal.copy_finished', 'Finished successfully.') : 'Preparing files...');
+    if ($('copy-toast-file')) $('copy-toast-file').textContent = prog.file || (copyState.status === 'success' ? t('modal.copy_finished', 'Finished successfully.') : t('dash.preparing', 'Preparing files…'));
 
     let statusText = 'COPYING...';
     let barColor = 'var(--ok2)';
@@ -1812,9 +1823,9 @@ export function updateCopyToast(copyState) {
         let filesLeftStr = '';
         if (prog.files_total) {
           const left = Math.max(0, prog.files_total - (prog.files_done || 0));
-          filesLeftStr = `${left} file${left === 1 ? '' : 's'} left • `;
+          filesLeftStr = `${t('dash.files_left', '{count, plural, one {# file left} other {# files left}}', { count: left })} • `;
         }
-        if ($('copy-toast-time')) $('copy-toast-time').textContent = `${filesLeftStr}${mbps} MB/s • ~${mins}m ${secs}s`;
+        if ($('copy-toast-time')) $('copy-toast-time').textContent = filesLeftStr + t('dash.eta', '{rate} MB/s • ~{mins} min {secs} s', { rate: mbps, mins, secs });
       } else {
         if ($('copy-toast-time')) $('copy-toast-time').textContent = t('ui.estimating_time', 'Estimating time...');
       }
@@ -1829,9 +1840,9 @@ export function updateCopyToast(copyState) {
         actionsDiv.id = 'copy-toast-actions';
         actionsDiv.style.cssText = 'display:flex; gap:8px; margin-top:10px;';
         actionsDiv.innerHTML = `
-          <button class="btn-save-preset" style="flex:1; padding:6px; font-size:11px;" id="copy-btn-skip">Skip</button>
-          <button class="btn-save-preset" style="flex:1; padding:6px; font-size:11px;" id="copy-btn-overwrite">Overwrite</button>
-          <button class="btn-save-preset" style="flex:1; padding:6px; font-size:11px; border-color:rgba(240,85,59,0.5); color:var(--crit);" id="copy-btn-cancel">Cancel</button>
+          <button class="btn-save-preset" style="flex:1; padding:6px; font-size:11px;" id="copy-btn-skip">${t('dash.skip', 'Skip')}</button>
+          <button class="btn-save-preset" style="flex:1; padding:6px; font-size:11px;" id="copy-btn-overwrite">${t('dash.overwrite', 'Overwrite')}</button>
+          <button class="btn-save-preset" style="flex:1; padding:6px; font-size:11px; border-color:rgba(240,85,59,0.5); color:var(--crit);" id="copy-btn-cancel">${t('common.cancel', 'Cancel')}</button>
         `;
         toast.querySelector('.smart-modal-body')?.appendChild(actionsDiv);
 
@@ -1967,7 +1978,7 @@ export function updateMediaSlots(mediaSlots) {
   const slotBadge = $('media-slot-info-badge');
   if (slotBadge) {
     if (sdSize > 0) {
-      slotBadge.textContent = `SD: ${(sdSize / 1e9).toFixed(1)} GB${sdEjected ? ' (EJECTED)' : ''}`;
+      slotBadge.textContent = `SD: ${(sdSize / 1e9).toFixed(1)} GB${sdEjected ? ` ${t('dash.ejected', '(EJECTED)')}` : ''}`;
       if (sdEjected) {
         slotBadge.style.background = 'rgba(234, 179, 8, 0.15)';
         slotBadge.style.color = '#eab308';
@@ -1978,7 +1989,7 @@ export function updateMediaSlots(mediaSlots) {
         slotBadge.style.borderColor = 'rgba(37,194,160,0.35)';
       }
     } else if (tfSize > 0) {
-      slotBadge.textContent = `TF: ${(tfSize / 1e9).toFixed(1)} GB${tfEjected ? ' (EJECTED)' : ''}`;
+      slotBadge.textContent = `TF: ${(tfSize / 1e9).toFixed(1)} GB${tfEjected ? ` ${t('dash.ejected', '(EJECTED)')}` : ''}`;
       if (tfEjected) {
         slotBadge.style.background = 'rgba(234, 179, 8, 0.15)';
         slotBadge.style.color = '#eab308';
@@ -1989,7 +2000,7 @@ export function updateMediaSlots(mediaSlots) {
         slotBadge.style.borderColor = 'rgba(37,194,160,0.35)';
       }
     } else {
-      slotBadge.textContent = 'SLOTS EMPTY';
+      slotBadge.textContent = t('dash.slots_empty', 'SLOTS EMPTY');
       slotBadge.style.background = 'rgba(255,255,255,0.05)';
       slotBadge.style.color = 'var(--muted)';
       slotBadge.style.borderColor = 'rgba(255,255,255,0.1)';

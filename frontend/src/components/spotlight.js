@@ -63,10 +63,10 @@ export function initSpotlight() {
         <div id="spotlight-results" role="listbox" aria-label="${t('spotlight.results', 'Results')}"></div>
         <div class="spotlight-footer">
           <div style="display:flex; gap:10px;">
-            <span><kbd class="spotlight-kbd-badge">↑</kbd> <kbd class="spotlight-kbd-badge">↓</kbd> Navigate</span>
-            <span><kbd class="spotlight-kbd-badge">↵</kbd> Select</span>
+            <span><kbd class="spotlight-kbd-badge">↑</kbd> <kbd class="spotlight-kbd-badge">↓</kbd> ${t('sp.nav', 'Navigate')}</span>
+            <span><kbd class="spotlight-kbd-badge">↵</kbd> ${t('sp.select', 'Select')}</span>
           </div>
-          <span>ZettNAS Spotlight</span>
+          <span>${t('sp.brand', 'ZettNAS Spotlight')}</span>
         </div>
       </div>
     </div>
@@ -115,13 +115,16 @@ export function initSpotlight() {
   _buildDefaultSpotlightItems();
 }
 
+// The typed commands, the same in every language
+const CMD = { snap: '>snap pool <id>', fan: '>fan <pct>%', locate: '>locate drive <dev>', isolate: '>isolate container <id>', trash: '>trash empty' };
+
 function _buildDefaultSpotlightItems() {
   _spotlightItems = [
     // Applications
     {
       id: 'app-mc',
       title: t('dock.management', 'Settings'),
-      subtitle: 'System dashboard, metrics, and services',
+      subtitle: t('sp.mc_sub', 'System dashboard, metrics, and services'),
       icon: '🖥️',
       category: 'app',
       keywords: ['dashboard', 'services', 'overview', 'hardware', 'unraid'],
@@ -132,8 +135,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'app-fm',
-      title: 'File Explorer',
-      subtitle: 'Browse storage shares, pools, and datasets',
+      title: t('sp.files', 'File Explorer'),
+      subtitle: t('sp.files_sub', 'Browse shares, pools and datasets'),
       icon: '📁',
       category: 'app',
       keywords: ['files', 'storage', 'browse', 'shares', 'disk'],
@@ -144,8 +147,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'app-screen',
-      title: 'ZettNAS IPS Display',
-      subtitle: 'Preview of the front screen',
+      title: t('sp.lcd', 'Front screen'),
+      subtitle: t('sp.lcd_sub', 'Preview of the front screen'),
       icon: '📟',
       category: 'app',
       keywords: ['lcd', 'display', 'screen', 'twin', 'front'],
@@ -156,8 +159,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'app-smart',
-      title: 'Drive Health',
-      subtitle: 'Every drive: is it healthy, why, and what to do; self-tests',
+      title: t('sp.health', 'Drive Health'),
+      subtitle: t('sp.health_sub', 'Every drive: is it healthy, why, and what to do; self-tests'),
       icon: '💽',
       category: 'app',
       keywords: ['drive', 'disk', 'smart', 's.m.a.r.t', 'health', 'temperature', 'self-test', 'sectors', 'replace'],
@@ -165,8 +168,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'app-catalog',
-      title: 'Homelab App Catalog',
-      subtitle: 'Tested 1-click Docker applications',
+      title: t('sp.catalog', 'App Catalog'),
+      subtitle: t('sp.catalog_sub', 'Tested apps that install in one click'),
       icon: '📦',
       category: 'app',
       keywords: ['docker', 'store', 'templates', 'jellyfin', 'plex', 'immich'],
@@ -179,8 +182,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'app-recycle',
-      title: 'Recycle Bin',
-      subtitle: 'Restore or permanently delete files',
+      title: t('dock.recycle_bin', 'Recycle Bin'),
+      subtitle: t('sp.bin_sub', 'Restore files or delete them for good'),
       icon: '🗑️',
       category: 'app',
       keywords: ['trash', 'recycle', 'bin', 'restore', 'delete'],
@@ -191,8 +194,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'app-zettai',
-      title: 'ZettAI — Local RAG & Visual Search',
-      subtitle: 'Ask questions about recipes, docs & search photos by scene/color (NPU → GPU)',
+      title: t('sp.ai', 'Ask Zetty and photo search'),
+      subtitle: t('sp.ai_sub', 'Ask about your recipes and documents, or find photos by scene or colour'),
       icon: '🧠',
       category: 'app',
       keywords: ['ai', 'rag', 'search', 'recipe', 'photos', 'pool', 'beach', 'car', 'npu', 'gpu'],
@@ -206,8 +209,8 @@ function _buildDefaultSpotlightItems() {
     // Direct Hardware & System Actions
     {
       id: 'act-quiet-fans',
-      title: 'Fan Mode: Quiet',
-      subtitle: 'Silent low-RPM fan acoustics profile',
+      title: t('sp.fan_quiet', 'Fan mode: Quiet'),
+      subtitle: t('sp.fan_quiet_sub', 'Slow, quiet fans'),
       icon: '🤫',
       category: 'action',
       keywords: ['fans', 'curve', 'quiet', 'silent', '>quiet'],
@@ -222,8 +225,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'act-perf-fans',
-      title: 'Fan Mode: Performance',
-      subtitle: 'Maximum airflow high-performance curve',
+      title: t('sp.fan_perf', 'Fan mode: Performance'),
+      subtitle: t('sp.fan_perf_sub', 'Most airflow, for heavy load'),
       icon: '🚀',
       category: 'action',
       keywords: ['fans', 'curve', 'turbo', 'performance', '>turbo'],
@@ -238,8 +241,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'act-spindown',
-      title: 'Spindown Inactive Disks',
-      subtitle: 'Initiate drive standby Spindown for idle drives',
+      title: t('sp.spindown', 'Spin down idle drives'),
+      subtitle: t('sp.spindown_sub', 'Put idle drives into standby now'),
       icon: '💤',
       category: 'action',
       keywords: ['standby', 'spindown', 'sleep', 'power', '>spindown'],
@@ -249,8 +252,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'act-theme-oled',
-      title: 'Theme: OLED Pure Black',
-      subtitle: 'Zero-emission high-contrast true black theme',
+      title: t('sp.theme_oled', 'Theme: pure black (OLED)'),
+      subtitle: t('sp.theme_oled_sub', 'True black with high contrast'),
       icon: '🌑',
       category: 'setting',
       keywords: ['theme', 'oled', 'dark', 'black', '>theme oled'],
@@ -262,8 +265,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'act-theme-cyber',
-      title: 'Theme: Cyber Teal',
-      subtitle: 'Neon teal high-tech aesthetic',
+      title: t('sp.theme_teal', 'Theme: teal'),
+      subtitle: t('sp.theme_teal_sub', 'Bright teal accents'),
       icon: '💠',
       category: 'setting',
       keywords: ['theme', 'cyber', 'teal', 'blue', '>theme cyber'],
@@ -275,8 +278,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'act-theme-amber',
-      title: 'Theme: Amber Gold',
-      subtitle: 'Warm terminal CRT amber palette',
+      title: t('sp.theme_amber', 'Theme: amber'),
+      subtitle: t('sp.theme_amber_sub', 'Warm amber, like an old terminal'),
       icon: '🔶',
       category: 'setting',
       keywords: ['theme', 'amber', 'gold', 'orange', '>theme amber'],
@@ -288,8 +291,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'act-refresh',
-      title: 'Refresh System Telemetry',
-      subtitle: 'Poll hardware stats, temperatures, and disks now',
+      title: t('sp.refresh', 'Refresh system readings'),
+      subtitle: t('sp.refresh_sub', 'Read hardware, temperatures and drives now'),
       icon: '🔄',
       category: 'action',
       keywords: ['refresh', 'reload', 'poll', 'telemetry', '>refresh'],
@@ -300,8 +303,8 @@ function _buildDefaultSpotlightItems() {
     // Tier 2: Spotlight Natural Language Actions
     {
       id: 'act-snap-pool',
-      title: 'Snapshot Pool (>snap pool <id>)',
-      subtitle: 'Trigger instant storage pool snapshot',
+      title: `${t('sp.snap', 'Snapshot a pool')} (${CMD.snap})`,
+      subtitle: t('sp.snap_sub', 'Take a snapshot of a storage pool now'),
       icon: '📸',
       category: 'action',
       keywords: ['snap', 'snapshot', 'pool', 'zfs', 'btrfs', '>snap'],
@@ -311,8 +314,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'act-fan-pct',
-      title: 'Fan Acoustic Override (>fan <pct>%)',
-      subtitle: 'Set custom fan PWM speed percentage (e.g. >fan 75%)',
+      title: `${t('sp.fan_set', 'Set fan speed')} (${CMD.fan})`,
+      subtitle: t('sp.fan_set_sub', 'Set the fans to a percentage, e.g. >fan 75%'),
       icon: '🌀',
       category: 'action',
       keywords: ['fan', 'speed', 'pwm', 'acoustic', 'turbo', 'quiet', '>fan'],
@@ -322,8 +325,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'act-locate-drive',
-      title: 'Locate Drive LED (>locate drive <dev>)',
-      subtitle: 'Strobe front drive bay LED to identify disk physical slot',
+      title: `${t('sp.locate', 'Find a drive by its light')} (${CMD.locate})`,
+      subtitle: t('sp.locate_sub', 'Blink the bay light to find the drive’s slot'),
       icon: '💡',
       category: 'action',
       keywords: ['locate', 'drive', 'disk', 'led', 'bay', 'strobe', '>locate'],
@@ -333,7 +336,7 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'act-trash-empty',
-      title: `${t('confirm.fs_trash_empty.title', 'Empty the Recycle Bin')} (>trash empty)`,
+      title: `${t('confirm.fs_trash_empty.title', 'Empty the Recycle Bin')} (${CMD.trash})`,
       subtitle: t('spotlight.empty_bins_sub', 'Permanently delete what every share\'s Recycle Bin holds'),
       icon: '🗑️',
       category: 'action',
@@ -342,8 +345,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'act-isolate-container',
-      title: 'Isolate Container (>isolate container <id>)',
-      subtitle: 'Stop container and isolate network interfaces',
+      title: `${t('sp.isolate', 'Isolate a container')} (${CMD.isolate})`,
+      subtitle: t('sp.isolate_sub', 'Stop the container and cut its network'),
       icon: '🛑',
       category: 'action',
       keywords: ['isolate', 'container', 'stop', 'docker', 'quarantine', '>isolate'],
@@ -368,8 +371,8 @@ export function parseNaturalLanguageAction(rawQuery) {
       : rawTarget;
     return {
       id: `dyn-snap-${targetPool}`,
-      title: `Snapshot Pool: ${targetPool}`,
-      subtitle: `Create instant atomic snapshot for pool '${targetPool}'`,
+      title: t('sp.snap_dyn', 'Snapshot pool: {pool}', { pool: targetPool }),
+      subtitle: t('sp.snap_dyn_sub', 'Take a snapshot of the pool {pool} now', { pool: targetPool }),
       icon: '📸',
       category: 'action',
       keywords: ['snap', 'snapshot', targetPool],
@@ -420,8 +423,8 @@ export function parseNaturalLanguageAction(rawQuery) {
     }
     return {
       id: `dyn-fan-${mode}`,
-      title: `Fan Acoustic Override: ${label}`,
-      subtitle: `Apply dynamic fan control setting (${label})`,
+      title: t('sp.fan_dyn', 'Fan speed: {label}', { label }),
+      subtitle: t('sp.fan_dyn_sub', 'Set the fans to {label}', { label }),
       icon: '🌀',
       category: 'action',
       keywords: ['fan', 'speed', mode],
@@ -435,8 +438,8 @@ export function parseNaturalLanguageAction(rawQuery) {
     const dev = locateMatch[1];
     return {
       id: `dyn-locate-${dev}`,
-      title: `Locate Drive: ${dev}`,
-      subtitle: `Strobe chassis bay indicator LED for device ${dev}`,
+      title: t('sp.locate_dyn', 'Find drive: {dev}', { dev }),
+      subtitle: t('sp.locate_dyn_sub', 'Blink the bay light of {dev}', { dev }),
       icon: '💡',
       category: 'action',
       keywords: ['locate', 'drive', dev],
@@ -471,8 +474,8 @@ export function parseNaturalLanguageAction(rawQuery) {
     const cId = isolateMatch[1];
     return {
       id: `dyn-isolate-${cId}`,
-      title: `Isolate Container: ${cId}`,
-      subtitle: `Stop container '${cId}' and isolate network ports`,
+      title: t('sp.isolate_dyn', 'Isolate container: {id}', { id: cId }),
+      subtitle: t('sp.isolate_dyn_sub', 'Stop {id} and cut its network', { id: cId }),
       icon: '🛑',
       category: 'action',
       keywords: ['isolate', 'container', cId],
@@ -553,10 +556,10 @@ export function filterSpotlightResults(query = '') {
     if (cleanPrompt) {
       const aiDynamicItem = {
         id: `dyn-zettai-${isPhoto ? 'photo' : 'ask'}`,
-        title: isPhoto ? `Visual Search: "${cleanPrompt}"` : `Ask ZettAI RAG: "${cleanPrompt}"`,
+        title: isPhoto ? t('sp.photo_dyn', 'Photo search: “{q}”', { q: cleanPrompt }) : t('sp.ask_dyn', 'Ask Zetty: “{q}”', { q: cleanPrompt }),
         subtitle: isPhoto
-          ? 'Search NAS photos by scene, object & perceptual HSV/LAB color (Zero Disk Wake)'
-          : 'Synthesize grounded answer with citations & structured recipe/doc cards',
+          ? t('sp.photo_dyn_sub', 'Find photos by scene, object or colour, without waking drives')
+          : t('sp.ask_dyn_sub', 'An answer from your files, with its sources'),
         icon: isPhoto ? '🖼️' : '✨',
         category: 'ai',
         keywords: ['ai', 'rag', cleanPrompt],
@@ -603,7 +606,7 @@ function renderSpotlightResults() {
   }
 
   if (_filteredItems.length === 0) {
-    resultsContainer.innerHTML = '<div style="padding:24px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);">No matching results found.</div>';
+    resultsContainer.innerHTML = '<div style="padding:24px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);">' + t('sp.no_results', 'Nothing found.') + '</div>';
     return;
   }
 

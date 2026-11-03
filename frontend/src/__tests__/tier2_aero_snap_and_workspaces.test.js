@@ -277,14 +277,14 @@ describe('Tier 2: Aero Snap 2.0, Single Desktop Invariant, Spotlight Actions & M
     it('parses natural language snapshot commands (>snap pool <id>)', () => {
       const action = parseNaturalLanguageAction('>snap pool ark');
       expect(action).not.toBeNull();
-      expect(action.title).toContain('Snapshot Pool: ark');
+      expect(action.title).toContain('Snapshot pool: ark');
       expect(action.category).toBe('action');
     });
 
     it('parses natural language fan overrides (>fan quiet / turbo / <pct>%)', () => {
       const quietAction = parseNaturalLanguageAction('>fan quiet');
       expect(quietAction).not.toBeNull();
-      expect(quietAction.title).toContain('Fan Acoustic Override: QUIET');
+      expect(quietAction.title).toContain('Fan speed: QUIET');
 
       const pctAction = parseNaturalLanguageAction('>fan 75%');
       expect(pctAction).not.toBeNull();
@@ -294,7 +294,7 @@ describe('Tier 2: Aero Snap 2.0, Single Desktop Invariant, Spotlight Actions & M
     it('parses natural language drive locate and trash purge commands', () => {
       const locateAction = parseNaturalLanguageAction('>locate drive sda');
       expect(locateAction).not.toBeNull();
-      expect(locateAction.title).toContain('Locate Drive: sda');
+      expect(locateAction.title).toContain('Find drive: sda');
 
       const trashAction = parseNaturalLanguageAction('>trash empty');
       expect(trashAction).not.toBeNull();
@@ -302,7 +302,7 @@ describe('Tier 2: Aero Snap 2.0, Single Desktop Invariant, Spotlight Actions & M
 
       const isolateAction = parseNaturalLanguageAction('>isolate container jellyfin');
       expect(isolateAction).not.toBeNull();
-      expect(isolateAction.title).toContain('Isolate Container: jellyfin');
+      expect(isolateAction.title).toContain('Isolate container: jellyfin');
     });
 
     it('integrates dynamic actions into filterSpotlightResults', () => {

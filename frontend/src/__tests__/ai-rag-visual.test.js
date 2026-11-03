@@ -332,10 +332,10 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     initSpotlight();
     filterSpotlightResults('? garlic pasta recipe');
     const resultsEl = document.getElementById('spotlight-results');
-    expect(resultsEl.textContent).toContain('Ask ZettAI RAG: "garlic pasta recipe"');
+    expect(resultsEl.textContent).toContain('Ask Zetty: “garlic pasta recipe”');
 
     filterSpotlightResults('photo: red car in pool');
-    expect(resultsEl.textContent).toContain('Visual Search: "red car in pool"');
+    expect(resultsEl.textContent).toContain('Photo search: “red car in pool”');
 
       // Verify 5-language localization parity
       for (const lang of ['en', 'de', 'zh', 'fr', 'es']) {
