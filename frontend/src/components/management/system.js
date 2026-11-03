@@ -110,9 +110,9 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
       const commitTag = about.commit ? ` (${about.commit})` : '';
       const channelLabel = channel === 'edge' ? 'Edge (Rolling)' : channel === 'beta' ? t('updates.channel_beta_label', 'Beta (3-day test)') : (about.release_channel || 'Stable');
       if (versionBadge) versionBadge.textContent = `${about.tag || 'v' + about.version}${commitTag} • ${channelLabel}`;
-      if (chassisEl) chassisEl.textContent = about.chassis_model || 'Standard / DIY';
+      if (chassisEl) chassisEl.textContent = about.chassis_model || t('sysu.chassis_diy', 'Standard / DIY');
       if (hostEl) hostEl.textContent = `${about.hostname || 'NAS'} (${about.platform || 'Linux'})`;
-      if (runtimeEl) runtimeEl.textContent = `${about.containerized ? 'Docker Container' : 'Native Host'} (Python ${about.python_version || '3.12'})`;
+      if (runtimeEl) runtimeEl.textContent = t('sysu.runtime', '{where} (Python {version})', { where: about.containerized ? t('sysu.in_docker', 'Docker Container') : t('sysu.native', 'Native Host'), version: about.python_version || '3.12' });
       if (uptimeEl && about.uptime_secs != null) {
         const d = Math.floor(about.uptime_secs / 86400);
         const h = Math.floor((about.uptime_secs % 86400) / 3600);
@@ -141,45 +141,45 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
         if (statusIcon) statusIcon.textContent = '🚀';
         if (statusTitle) {
           statusTitle.textContent = isEdge
-            ? `Update Available (Edge): ${data.latest_version}`
-            : `Update Available: ${data.latest_tag || 'v' + data.latest_version}`;
+            ? t('sysu.avail_edge', 'Update Available (Edge): {version}', { version: data.latest_version })
+            : t('sysu.avail', 'Update Available: {version}', { version: data.latest_tag || 'v' + data.latest_version });
           statusTitle.style.color = 'var(--warn, #f5a623)';
         }
         if (statusDesc) {
           statusDesc.textContent = isEdge
-            ? `Newer commit features are available on the main branch.`
-            : `A newer release of ZettNAS is available on GitHub.`;
+            ? t('sysu.newer_commit', 'Newer commit features are available on the main branch.')
+            : t('sysu.newer_release', 'A newer release of ZettNAS is available on GitHub.');
         }
         if (detailsBox) detailsBox.style.display = 'block';
-        if (releaseTitle) releaseTitle.textContent = data.release_name || `Release ${data.latest_tag}`;
+        if (releaseTitle) releaseTitle.textContent = data.release_name || t('sysu.release', 'Release {tag}', { tag: data.latest_tag });
         if (releaseLink) releaseLink.href = data.release_url || 'https://github.com/fr0styx/zettnas-toolkit/releases';
-        if (releaseNotes) releaseNotes.textContent = data.release_notes || 'No release notes provided.';
+        if (releaseNotes) releaseNotes.textContent = data.release_notes || t('sysu.no_notes', 'No release notes provided.');
 
         if (applyBtn && applyText) {
           applyBtn.style.display = 'flex';
           applyText.textContent = isEdge
-            ? `Install Latest Commit (${data.latest_version})`
-            : `Install Release ${data.latest_tag || 'v' + data.latest_version}`;
+            ? t('sysu.install_commit', 'Install Latest Commit ({version})', { version: data.latest_version })
+            : t('sysu.install_release', 'Install Release {version}', { version: data.latest_tag || 'v' + data.latest_version });
         }
       } else {
         if (statusIcon) statusIcon.textContent = '✅';
         if (statusTitle) {
           statusTitle.textContent = isEdge
-            ? `ZettNAS is up to date with main`
-            : `ZettNAS is up to date`;
+            ? t('sysu.uptodate_main', 'ZettNAS is up to date with main')
+            : t('sysu.uptodate', 'ZettNAS is up to date');
           statusTitle.style.color = 'var(--ok2, #25c2a0)';
         }
         if (statusDesc) {
           statusDesc.textContent = isEdge
-            ? `You are running the latest commit on the main branch (${data.latest_version || data.current_commit || 'latest'}).`
-            : `You are running the latest stable release (${data.latest_tag || 'v' + data.current_version}).`;
+            ? t('sysu.latest_commit', 'You are running the latest commit on the main branch ({version}).', { version: data.latest_version || data.current_commit || 'latest' })
+            : t('sysu.latest_release', 'You are running the latest stable release ({version}).', { version: data.latest_tag || 'v' + data.current_version });
         }
         if (detailsBox) detailsBox.style.display = 'none';
         if (applyBtn) applyBtn.style.display = 'none';
       }
       if (lastCheckedEl && data.checked_at) {
         const timeStr = formatTime(data.checked_at);
-        lastCheckedEl.textContent = `Checked: ${timeStr}`;
+        lastCheckedEl.textContent = t('sysu.checked', 'Checked: {time}', { time: timeStr });
       }
     }
   } catch (err) {
@@ -188,7 +188,7 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
       statusTitle.textContent = t('ui.unable_to_check_for_updates', 'Unable to check for updates');
       statusTitle.style.color = 'var(--crit, #ff6b6b)';
     }
-    if (statusDesc) statusDesc.textContent = err.message || 'Offline or network request failed.';
+    if (statusDesc) statusDesc.textContent = err.message || t('sysu.offline', 'Offline or network request failed.');
   } finally {
     if (btnIcon && btnText) {
       btnIcon.textContent = '🔄';
@@ -262,7 +262,7 @@ export async function refreshPreviousVersions() {
   }
   btn.style.display = _previousVersion ? 'flex' : 'none';
   if (_previousVersion && label) {
-    label.textContent = _previousVersion.version ? `Revert to v${_previousVersion.version}` : 'Revert to previous version';
+    label.textContent = _previousVersion.version ? t('sysu.revert_to', 'Revert to v{version}', { version: _previousVersion.version }) : t('sysu.revert_prev', 'Revert to previous version');
   }
   return _previousVersion;
 }
@@ -286,8 +286,8 @@ export async function revertSystemUpdate() {
       try {
         const res = await api.post('/api/system/updates/revert', { snapshot_id: prev.id, current_password: password }, { confirmed: true });
         if (overlay) overlay.style.display = 'block';
-        if (title) title.textContent = `Reverting to ${name}...`;
-        if (desc) desc.textContent = res?.message || 'Restoring the previous version and reconnecting...';
+        if (title) title.textContent = t('sysu.reverting', 'Reverting to {name}...', { name });
+        if (desc) desc.textContent = res?.message || t('sysu.restoring', 'Restoring the previous version and reconnecting...');
         let attempts = 0;
         let wentDown = false;
         const timer = setInterval(async () => {
@@ -311,7 +311,7 @@ export async function revertSystemUpdate() {
       }
     },
     null,
-    { inputType: 'password', okText: 'Revert', placeholder: 'Your password' }
+    { inputType: 'password', okText: t('sysu.revert', 'Revert'), placeholder: t('sysu.your_pw', 'Your password') }
   );
 }
 
@@ -346,13 +346,13 @@ export async function applySystemUpdate() {
         if (res && res.auto_restarting === false) {
           if (progressTitle) progressTitle.textContent = t('ui.image_pulled', '📦 Image Pulled');
           if (progressDesc) {
-            progressDesc.innerHTML = `${escapeHtml(res.message || 'Latest image downloaded.')}<br><br><span style="color:var(--lt-ink-brand, var(--brand, #00f0ff));font-weight:600;">Please restart the container in Unraid or Docker to finalize.</span>`;
+            progressDesc.innerHTML = `${escapeHtml(res.message || 'Latest image downloaded.')}<br><br><span style="color:var(--lt-ink-brand, var(--brand, #00f0ff));font-weight:600;">${escapeHtml(t('sysu.restart_to_finish', 'Please restart the container in Unraid or Docker to finalize.'))}</span>`;
           }
           if (applyBtn) applyBtn.disabled = false;
           return;
         }
 
-        if (progressDesc) progressDesc.textContent = res?.message || 'Restarting container and reconnecting...';
+        if (progressDesc) progressDesc.textContent = res?.message || t('sysu.restarting', 'Restarting container and reconnecting...');
 
         // Poll health endpoint until back online
         let attempts = 0;
@@ -447,7 +447,7 @@ export function openDiagnosticsPreviewModal(data) {
   if (!overlay || !data) return;
 
   if (mdEl) {
-    mdEl.textContent = data.support_markdown || 'No summary generated.';
+    mdEl.textContent = data.support_markdown || t('sysu.no_summary', 'No summary generated.');
   }
 
   if (banner) {
@@ -588,7 +588,7 @@ export async function copySupportMarkdown() {
   try {
     const mdEl = document.getElementById('diagnostics-preview-md');
     let md = '';
-    if (mdEl && mdEl.textContent && mdEl.textContent.trim().length > 0 && mdEl.textContent !== 'No summary generated.') {
+    if (mdEl && mdEl.textContent && mdEl.textContent.trim().length > 0 && mdEl.textContent !== t('sysu.no_summary', 'No summary generated.')) {
       md = mdEl.textContent;
     } else {
       if (targetBtn) {

@@ -12,8 +12,8 @@ export function renderUpsTelemetry(ups) {
   if (!ups) return;
   const isPermErr = Boolean(ups.permission_error);
   const upsVal = isPermErr
-    ? 'Perm Req'
-    : (ups.battery_charge_pct != null ? `${ups.battery_charge_pct}%` : (ups.available ? 'Active' : 'Offline'));
+    ? t('upx.perm_short', 'Perm Req')
+    : (ups.battery_charge_pct != null ? `${ups.battery_charge_pct}%` : (ups.available ? t('upx.active', 'Active') : t('upx.offline', 'Offline')));
   const upsPill = document.getElementById('mgmt-hub-ups-pill');
   if (upsPill) {
     upsPill.textContent = upsVal;
@@ -46,12 +46,12 @@ export function renderUpsTelemetry(ups) {
   const policyEl = document.getElementById('mgmt-ups-policy');
 
   if (statusEl) {
-    statusEl.textContent = isPermErr ? 'Permission Required' : (ups.status || (ups.available ? 'ONLINE' : 'Offline'));
+    statusEl.textContent = isPermErr ? t('upx.perm', 'Permission Required') : (ups.status || (ups.available ? t('upx.online', 'ONLINE') : t('upx.offline', 'Offline')));
     statusEl.style.color = isPermErr
       ? 'var(--err, #eb5757)'
       : (ups.available ? (ups.on_battery ? 'var(--warn)' : 'var(--ok2)') : 'var(--muted)');
   }
-  if (modelEl) modelEl.textContent = ups.model || 'Generic UPS';
+  if (modelEl) modelEl.textContent = ups.model || t('upx.generic', 'Generic UPS');
   if (chargeEl) {
     chargeEl.textContent = ups.battery_charge_pct != null ? `${ups.battery_charge_pct}%` : 'N/A';
     chargeEl.style.color = (ups.battery_charge_pct == null || ups.battery_charge_pct > 30) ? 'var(--ok2)' : 'var(--crit)';
@@ -69,7 +69,7 @@ export function renderUpsTelemetry(ups) {
     updateUpsConnCardState(currentUpsMode, ups);
   }
   if (battvEl) battvEl.textContent = ups.battery_volts != null ? `${ups.battery_volts} V` : 'N/A';
-  if (policyEl) policyEl.textContent = ups.active_policy ? `Policy: ${ups.active_policy}` : 'Runtime < 5m';
+  if (policyEl) policyEl.textContent = ups.active_policy ? t('upx.policy', 'Policy: {policy}', { policy: ups.active_policy }) : t('upx.runtime_lt', 'Runtime < 5m');
 
   // Digital Twin Nodes
   const flowContainer = document.getElementById('ups-power-flow-container');
@@ -97,7 +97,7 @@ export function renderUpsTelemetry(ups) {
 
   if (twinLinev) twinLinev.textContent = ups.line_volts != null ? `${ups.line_volts} V` : (ups.output_volts != null ? `${ups.output_volts} V` : (ups.available ? '120.0 V' : '-- V'));
   if (twinGridStatus) {
-    twinGridStatus.textContent = ups.on_battery ? 'AC Mains Disconnected' : (ups.line_freq_hz ? `${ups.line_freq_hz} Hz Nominal` : '120V / 60Hz Nominal');
+    twinGridStatus.textContent = ups.on_battery ? t('upx.mains_off', 'AC Mains Disconnected') : (ups.line_freq_hz ? t('upx.hz', '{hz} Hz Nominal', { hz: ups.line_freq_hz }) : t('upx.nominal', '120V / 60Hz Nominal'));
   }
   if (twinWatts) twinWatts.textContent = ups.power_watts != null ? `${ups.power_watts} W` : (ups.load_pct != null ? `${Math.round(ups.load_pct * ((ups.nominal_power_watts || 900) / 100))} W` : '-- W');
   if (twinBattVolts) {
@@ -127,7 +127,7 @@ export function renderUpsTelemetry(ups) {
     if (ups.on_battery) {
       emergencyBanner.style.display = 'flex';
       if (emergencyCountdown) {
-        emergencyCountdown.textContent = ups.time_left_min != null ? `~${ups.time_left_min}m remaining` : 'ON BATTERY';
+        emergencyCountdown.textContent = ups.time_left_min != null ? t('upx.remaining', '~{min}m remaining', { min: ups.time_left_min }) : t('upx.on_battery', 'ON BATTERY');
       }
     } else {
       emergencyBanner.style.display = 'none';
@@ -142,7 +142,7 @@ export async function fetchAndRenderUpsEvents() {
     const res = await api.get('/api/ups/events');
     const events = res && Array.isArray(res.events) ? res.events : [];
     if (!events.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--muted); padding:16px;">No power events or brownouts recorded. All power lines normal.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--muted); padding:16px;">' + escapeHtml(t('upx.no_events', 'No power events or brownouts recorded. All power lines normal.')) + '</td></tr>';
       return;
     }
     tbody.innerHTML = events.map(ev => {
@@ -296,17 +296,17 @@ export function updateUpsPolicySummary() {
 
   let policyDesc;
   if (policy === 'runtime_left') {
-    policyDesc = `Estimated Runtime < ${rtVal} min`;
+    policyDesc = t('upx.rule_runtime', 'Estimated Runtime < {min} min', { min: rtVal });
   } else if (policy === 'battery_pct') {
-    policyDesc = `Battery Charge < ${battVal}%`;
+    policyDesc = t('upx.rule_battery', 'Battery Charge < {pct}%', { pct: battVal });
   } else {
-    policyDesc = `Time on Battery > ${timerVal}s`;
+    policyDesc = t('upx.rule_timer', 'Time on Battery > {s}s', { s: timerVal });
   }
 
   if (dockerChecked) {
-    policyDesc += ' · Docker WAL flush';
+    policyDesc += t('upx.docker_flush', ' · Docker WAL flush');
   }
-  summaryText.textContent = `Active: ${policyDesc}`;
+  summaryText.textContent = t('upx.summary', 'Active: {policy}', { policy: policyDesc });
 }
 if (typeof window !== 'undefined') window.updateUpsPolicySummary = updateUpsPolicySummary;
 
@@ -667,7 +667,7 @@ export function initUpsDrawerControls() {
       const candidates = res && Array.isArray(res.candidates) ? res.candidates : [];
       if (!discoverContainer) return;
       if (candidates.length === 0) {
-        discoverContainer.innerHTML = `<div style="font-size:var(--zn-fs-xs); color:var(--muted); padding:6px 0;">No active UPS daemons or USB devices detected on local ports.</div>`;
+        discoverContainer.innerHTML = `<div style="font-size:var(--zn-fs-xs); color:var(--muted); padding:6px 0;">${t('upx.none_found', 'No active UPS daemons or USB devices detected on local ports.')}</div>`;
         return;
       }
       discoverContainer.innerHTML = candidates.map((cand, idx) => {
@@ -684,7 +684,7 @@ export function initUpsDrawerControls() {
             <div style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--zn-text-strong);">${escapeHtml(displayTitle)}</div>
             <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(typeLabel)} • <code>${escapeHtml(hostPort)}</code></div>
           </div>
-          <button type="button" class="btn-rect is-small">Apply</button>
+          <button type="button" class="btn-rect is-small">${t('upx.apply', 'Apply')}</button>
         </div>`;
       }).join('');
 
@@ -798,7 +798,7 @@ export function initUpsDrawerControls() {
         }
       },
       null,
-      { okText: '🔋 Run Self-Test', cancelText: 'Cancel' }
+      { okText: `🔋 ${t('upx.self_test', 'Run Self-Test')}`, cancelText: t('common.cancel', 'Cancel') }
     );
   });
 
@@ -806,8 +806,8 @@ export function initUpsDrawerControls() {
   const btnSimulate = document.getElementById('btn-ups-simulate');
   btnSimulate?.addEventListener('click', () => {
     showConfirmToast(
-      'Simulate Power Outage Drill?',
-      'This pretends the power fails for 15 seconds, so you can see the power diagram, the countdown banner and the event log react. <strong>The server will not shut down.</strong>',
+      t('upx.drill_title', 'Simulate Power Outage Drill?'),
+      `${escapeHtml(t('upx.drill_msg', 'This pretends the power fails for 15 seconds, so you can see the power diagram, the countdown banner and the event log react.'))} <strong>${escapeHtml(t('upx.no_shutdown', 'The server will not shut down.'))}</strong>`,
       async () => {
         try {
           showToast(t('toast.outage_drill_started_15s', 'Outage drill started (15s)...'), 'warn');

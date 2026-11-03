@@ -807,7 +807,7 @@
       <div class="desktop-widget" id="widget-drive-temp">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-storage"/></svg> <span data-i18n="widget.drive_temp">Drive Thermals</span></span>
-          <span class="widget-badge" id="w-drive-temp-summary">-- Disks</span>
+          <span class="widget-badge" id="w-drive-temp-summary" data-sample>-- Disks</span>
         </div>
         <div class="widget-drive-temp-grid" id="w-drive-temp-grid">
           <div style="font-size: var(--zn-fs-xs); color: var(--muted); text-align: center; padding: 6px 0;" data-sample>Scanning bays...</div>
@@ -1086,7 +1086,7 @@
       <div id="smart-pane-raw" class="smart-pane">
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
           <input type="text" id="smart-raw-filter" class="smart-raw-search-input" placeholder="Filter attributes (e.g. realloc, temp, pending, crc)..." data-i18n-placeholder="ui.filter_attributes_e_g_realloc" style="flex: 1; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 6px 10px; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); font-family: monospace;" aria-label="Filter attributes (e.g. realloc, temp, pending, crc)..." data-i18n-aria-label="ui.filter_attributes_e_g_realloc" />
-          <button id="smart-btn-copy-raw" class="smart-test-action-btn" style="background: var(--zn-glaze-6); border: 1px solid var(--zn-line-12); color: var(--zn-text-soft); font-size: var(--zn-fs-xs); font-weight: 600; padding: 5px 10px; border-radius: 4px; cursor: pointer;">📋 Copy Raw</button>
+          <button id="smart-btn-copy-raw" class="smart-test-action-btn" style="background: var(--zn-glaze-6); border: 1px solid var(--zn-line-12); color: var(--zn-text-soft); font-size: var(--zn-fs-xs); font-weight: 600; padding: 5px 10px; border-radius: 4px; cursor: pointer;"><span aria-hidden="true">📋</span> <span data-i18n="ix.copy_raw">Copy Raw</span></button>
         </div>
         <pre class="smart-raw-pre" id="smart-raw-output" style="max-height: none; flex: 1; margin: 0;">Querying telemetry...</pre>
       </div>
@@ -2012,7 +2012,7 @@
       <div class="cloud-remote-footer">
         <button type="button" id="modal-remote-cancel-btn" class="btn-cloud-cancel">Cancel</button>
         <button type="button" id="new-remote-test-btn" class="btn-cloud-test">
-          <span>⚡ Test Connection</span>
+          <span><span aria-hidden="true">⚡</span> <span data-i18n="ix.test_connection">Test Connection</span></span>
         </button>
         <button type="submit" id="new-remote-submit-btn" class="btn-cloud-submit">Save & Connect Remote</button>
       </div>
@@ -2039,7 +2039,7 @@
 
       <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--zn-line-8); padding-bottom: 8px;">
         <button type="button" class="btn-pill-toggle active" id="sideload-tab-url">URL</button>
-        <button type="button" class="btn-pill-toggle" id="sideload-tab-paste">YAML / JSON</button>
+        <button type="button" class="btn-pill-toggle" id="sideload-tab-paste" data-i18n="ix.yaml_json">YAML / JSON</button>
       </div>
 
       <div id="sideload-input-url-wrap">
@@ -2060,7 +2060,7 @@
       <div id="sideload-inspect-result" style="display: none; background: var(--zn-shade-30); border: 1px solid var(--zn-line-10); border-radius: 6px; padding: 12px;"></div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
-        <button type="button" id="modal-sideload-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
+        <button type="button" id="modal-sideload-cancel-btn" class="btn-pill-toggle is-small" data-i18n="ix.cancel">Cancel</button>
         <button type="button" id="btn-sideload-confirm" disabled class="btn-pill-toggle is-primary is-small" style="opacity: 0.5;" data-i18n="catalog.sideload_install_btn">Sideload & Save App</button>
       </div>
     </div>

@@ -451,9 +451,9 @@
 
                 <!-- Hidden elements for test and script compatibility -->
                 <select id="wallpaper-select" style="display:none;"><option value="" data-i18n="mw.default_gradient">Default Gradient</option></select>
-                <button id="wallpaper-clear-btn" style="display:none;">Set Active Wallpaper</button>
-                <button id="wallpaper-rename-btn" style="display:none;">Rename</button>
-                <button id="wallpaper-delete-btn" style="display:none;">Delete</button>
+                <button id="wallpaper-clear-btn" style="display:none;" data-i18n="mw.set_active_wallpaper">Set Active Wallpaper</button>
+                <button id="wallpaper-rename-btn" style="display:none;" data-i18n="mw.rename">Rename</button>
+                <button id="wallpaper-delete-btn" style="display:none;" data-i18n="mw.delete">Delete</button>
               </div>
             </div>
           </div>
@@ -1249,7 +1249,7 @@
 
                 <!-- Card 4: Reset Actions -->
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
-                  <button id="widget-reset-defaults-btn" class="btn-pill-toggle">↺ Reset to Defaults</button>
+                  <button id="widget-reset-defaults-btn" class="btn-pill-toggle"><span aria-hidden="true">↺</span> <span data-i18n="mw.reset_to_defaults">Reset to Defaults</span></button>
                 </div>
 
               </div>
@@ -1284,7 +1284,7 @@
                     <div id="modal-cal-month-title" style="font-size: 15px; font-weight: 800; color: var(--zn-text-strong); letter-spacing: 0.5px;" data-sample>October 2026</div>
                     <div style="display: flex; align-items: center; gap: 4px;">
                       <button type="button" id="btn-modal-cal-prev" class="btn-icon" style="padding: 3px 8px; font-size: var(--zn-fs-xs); background: var(--zn-glaze-8); border: 1px solid var(--zn-line-10); border-radius: 5px; color: var(--zn-text-soft); cursor: pointer;">◀</button>
-                      <button type="button" id="btn-modal-cal-today" class="btn-pill-toggle is-small" style="margin: 0;">Today</button>
+                      <button type="button" id="btn-modal-cal-today" class="btn-pill-toggle is-small" style="margin: 0;" data-i18n="mw.today">Today</button>
                       <button type="button" id="btn-modal-cal-next" class="btn-icon" style="padding: 3px 8px; font-size: var(--zn-fs-xs); background: var(--zn-glaze-8); border: 1px solid var(--zn-line-10); border-radius: 5px; color: var(--zn-text-soft); cursor: pointer;">▶</button>
                     </div>
                   </div>
@@ -1308,7 +1308,7 @@
                   <div style="display: flex; flex-direction: column; gap: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                       <span style="font-size: var(--zn-fs-xs); font-weight: 800; text-transform: uppercase; color: var(--zn-text-muted); letter-spacing: 0.5px;" data-i18n="cal.synced_feeds">Calendar Feeds (Google, iCal)</span>
-                      <button type="button" id="btn-toggle-add-feed" class="btn-pill-toggle is-small" style="margin: 0;">+ Add Feed</button>
+                      <button type="button" id="btn-toggle-add-feed" class="btn-pill-toggle is-small" style="margin: 0;"><span aria-hidden="true">+</span> <span data-i18n="mw.add_feed">Add Feed</span></button>
                     </div>
 
                     <!-- Add Feed Drawer / Form (hidden by default) -->
@@ -1324,7 +1324,7 @@
                           <option value="#8b5cf6">🟣 Violet</option>
                         </select>
                         <div style="display: flex; gap: 6px;">
-                          <button type="button" id="btn-cancel-add-feed" class="btn-pill-toggle is-small" style="margin: 0;">Cancel</button>
+                          <button type="button" id="btn-cancel-add-feed" class="btn-pill-toggle is-small" style="margin: 0;" data-i18n="mw.cancel">Cancel</button>
                           <button type="button" id="btn-submit-add-feed" class="btn-pill-toggle is-primary is-small" style="margin: 0;">Connect & Sync</button>
                         </div>
                       </div>
@@ -1614,7 +1614,7 @@
                 <!-- Visual Front-Panel Switch Jack Matrix -->
                 <div class="network-section-header">
                   <span class="network-section-title" data-i18n="mw.hardware_switch_ports_physical_jacks">HARDWARE SWITCH PORTS (PHYSICAL JACKS)</span>
-                  <span class="network-section-badge" id="net-active-ports-badge">-- Active</span>
+                  <span class="network-section-badge" id="net-active-ports-badge" data-sample>-- Active</span>
                 </div>
                 <div class="network-switch-chassis" id="network-switch-chassis">
                   <div class="network-switch-faceplate" id="network-switch-faceplate">
@@ -1850,7 +1850,7 @@
                             Route all mobile/laptop internet traffic encrypted through this NAS when traveling.
                           </div>
                           <div id="ts-exit-node-approval-hint" style="display:none; font-size:var(--zn-fs-xs); padding:6px 10px; border-radius:6px; border:1px solid rgba(245,158,11,0.25); background:rgba(245,158,11,0.08); color:var(--zn-text-warn); line-height:1.4; margin-top:4px;">
-                            ⚠️ Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:700;">Tailscale Admin Console ↗</a> (Machines → Edit route settings → Use as exit node).
+                            ⚠️ Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:700;"><span data-i18n="mw.tailscale_admin_console">Tailscale Admin Console</span> <span aria-hidden="true">↗</span></a> (Machines → Edit route settings → Use as exit node).
                           </div>
                         </div>
 
@@ -1992,7 +1992,7 @@
                       <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-key"/></svg> Client Configuration (.conf)</div>
                       <div style="display:flex; gap:6px; align-items:center;">
                         <button class="btn-pill-toggle is-small" id="btn-copy-wg-conf" style="display: none;" title="Copy WireGuard configuration to clipboard" data-i18n-title="ui.copy_wireguard_configuration_to_clipboard">📋 Copy</button>
-                        <button class="btn-pill-toggle is-small" id="btn-download-wg-conf" style="display: none;" title="Download WireGuard .conf profile" data-i18n-title="ui.download_wireguard_conf_profile">📥 Export .conf</button>
+                        <button class="btn-pill-toggle is-small" id="btn-download-wg-conf" style="display: none;" title="Download WireGuard .conf profile" data-i18n-title="ui.download_wireguard_conf_profile"><span aria-hidden="true">📥</span> <span data-i18n="mw.export_conf">Export .conf</span></button>
                       </div>
                     </div>
                     <div style="padding:12px; font-size:var(--zn-fs-xs); display:flex; flex-direction:column; gap:10px;">
@@ -2114,7 +2114,7 @@
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
                   <input type="text" id="net-ports-search" class="ci-input" placeholder="Filter port, service, container..." data-i18n-placeholder="ui.filter_port_service_container" style="width: 220px; font-size: var(--zn-fs-xs); padding: 4px 8px;" aria-label="Filter port, service, container..." data-i18n-aria-label="ui.filter_port_service_container">
-                  <button class="btn-pill-toggle" id="btn-refresh-net-ports">🔄 Refresh Ports</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-net-ports"><span aria-hidden="true">🔄</span> <span data-i18n="mw.refresh_ports">Refresh Ports</span></button>
                 </div>
               </div>
               <div class="mgmt-detail-body">
@@ -2239,12 +2239,12 @@
                       <span>selected</span>
                     </div>
                     <div class="bulk-bar-actions">
-                      <button class="btn-bulk-action" data-bulk="start" title="Start selected containers" data-i18n-title="ui.start_selected_containers">▶ Start</button>
-                      <button class="btn-bulk-action" data-bulk="stop" title="Stop selected containers" data-i18n-title="ui.stop_selected_containers">⏹ Stop</button>
-                      <button class="btn-bulk-action" data-bulk="restart" title="Restart selected containers" data-i18n-title="ui.restart_selected_containers">🔄 Restart</button>
-                      <button class="btn-bulk-action" data-bulk="pause" title="Pause selected containers" data-i18n-title="ui.pause_selected_containers">⏸ Pause</button>
+                      <button class="btn-bulk-action" data-bulk="start" title="Start selected containers" data-i18n-title="ui.start_selected_containers"><span aria-hidden="true">▶</span> <span data-i18n="mw.start">Start</span></button>
+                      <button class="btn-bulk-action" data-bulk="stop" title="Stop selected containers" data-i18n-title="ui.stop_selected_containers"><span aria-hidden="true">⏹</span> <span data-i18n="mw.stop">Stop</span></button>
+                      <button class="btn-bulk-action" data-bulk="restart" title="Restart selected containers" data-i18n-title="ui.restart_selected_containers"><span aria-hidden="true">🔄</span> <span data-i18n="mw.restart">Restart</span></button>
+                      <button class="btn-bulk-action" data-bulk="pause" title="Pause selected containers" data-i18n-title="ui.pause_selected_containers"><span aria-hidden="true">⏸</span> <span data-i18n="mw.pause">Pause</span></button>
                       <button class="btn-bulk-action" data-bulk="unpause" title="Resume selected containers" data-i18n-title="ui.resume_selected_containers" data-i18n="mw.resume">⏵ Resume</button>
-                      <button class="btn-bulk-action btn-bulk-delete" data-bulk="delete" title="Delete selected containers" data-i18n-title="ui.delete_selected_containers">🗑️ Delete</button>
+                      <button class="btn-bulk-action btn-bulk-delete" data-bulk="delete" title="Delete selected containers" data-i18n-title="ui.delete_selected_containers"><span aria-hidden="true">🗑️</span> <span data-i18n="mw.delete">Delete</span></button>
                       <button class="btn-bulk-action btn-bulk-cancel" data-bulk="cancel" title="Deselect all" data-i18n-title="ui.deselect_all">✕</button>
                     </div>
                   </div>
@@ -2719,7 +2719,7 @@
                   <div class="ups-radial-label" id="mgmt-ups-charge">--%</div>
                 </div>
                 <div class="ups-card-label" data-i18n="mgmt.ups_twin_battery">Battery</div>
-                <div class="ups-card-sub" id="mgmt-ups-runtime">-- min remaining</div>
+                <div class="ups-card-sub" id="mgmt-ups-runtime" data-sample>-- min remaining</div>
                 <div class="ups-card-meta" id="ups-twin-batt-volts">-- V • --°C</div>
               </div>
 
@@ -2737,7 +2737,7 @@
                 <div class="ups-card-icon">🖥️</div>
                 <div class="ups-card-label" data-i18n="mgmt.ups_twin_host">Host & Storage Load</div>
                 <div class="ups-card-val" id="ups-twin-watts">-- W</div>
-                <div class="ups-card-sub" id="mgmt-ups-load">-- % of Capacity</div>
+                <div class="ups-card-sub" id="mgmt-ups-load" data-sample>-- % of Capacity</div>
                 <div class="ups-card-meta" id="ups-twin-policy-badge" data-i18n="mw.policy_safe_shutdown">Policy: Safe Shutdown</div>
               </div>
             </div>
@@ -2943,7 +2943,7 @@
 
                   <!-- Auto-save note -->
                   <div style="margin-top:4px; padding-top:10px; border-top:1px dashed var(--zn-line-6); font-size:var(--zn-fs-xs); color:var(--muted); opacity:0.85;">
-                    ⚡ All parameters and thresholds save automatically to host configuration.
+                    <span aria-hidden="true">⚡</span> <span data-i18n="mw.all_parameters_and_thresholds_save_automatically">All parameters and thresholds save automatically to host configuration.</span>
                   </div>
                 </div>
               </div>
@@ -3030,8 +3030,8 @@
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.topo_desc">Hierarchical view of storage pools, parity protection drives, data array disks, and SSD cache tiers.</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
-                  <button class="btn-pill-toggle is-primary" id="btn-create-storage-pool" style="display: none;" title="Create New Storage Pool" data-i18n-title="ui.create_new_storage_pool">+ Create Pool</button>
-                  <button class="btn-pill-toggle" id="btn-manage-snapshots" style="display: none;" title="Manage Btrfs Snapshots" data-i18n-title="ui.manage_btrfs_snapshots">📸 Snapshots</button>
+                  <button class="btn-pill-toggle is-primary" id="btn-create-storage-pool" style="display: none;" title="Create New Storage Pool" data-i18n-title="ui.create_new_storage_pool"><span aria-hidden="true">+</span> <span data-i18n="mw.create_pool">Create Pool</span></button>
+                  <button class="btn-pill-toggle" id="btn-manage-snapshots" style="display: none;" title="Manage Btrfs Snapshots" data-i18n-title="ui.manage_btrfs_snapshots"><span aria-hidden="true">📸</span> <span data-i18n="mw.snapshots">Snapshots</span></button>
                   <button class="btn-pill-toggle" id="btn-refresh-topo" title="Refresh Topology" data-i18n-title="ui.refresh_topology" data-i18n="mgmt.refresh">🔄 Refresh</button>
                 </div>
               </div>
@@ -3083,7 +3083,7 @@
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.remotes_desc">Embedded Universal WebDAV server, FUSE cloud bucket mounting (/mnt/remotes), and automated offsite sync.</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
-                  <button class="btn-pill-toggle is-primary" id="btn-add-cloud-remote" title="Connect New Cloud Remote" data-i18n-title="ui.connect_new_cloud_remote">☁️ + Connect Cloud Remote</button>
+                  <button class="btn-pill-toggle is-primary" id="btn-add-cloud-remote" title="Connect New Cloud Remote" data-i18n-title="ui.connect_new_cloud_remote"><span aria-hidden="true">☁️</span> <span data-i18n="mw.connect_cloud_remote">+ Connect Cloud Remote</span></button>
                   <button class="btn-pill-toggle" id="btn-refresh-remotes" title="Refresh Remotes" data-i18n-title="ui.refresh_remotes" data-i18n="mgmt.refresh">🔄 Refresh</button>
                 </div>
               </div>
@@ -3166,8 +3166,8 @@
                   <div class="mgmt-card-intro-desc" data-i18n="mw.asynchronous_recursive_dataset_transfers_support">Asynchronous recursive dataset transfers supporting local pools and remote SSH/WireGuard endpoints with bandwidth throttling and retention.</div>
                 </div>
                 <div style="display:flex; gap:8px;">
-                  <button class="btn-pill-toggle is-primary" id="btn-create-replication-job" title="Create Replication Pipeline" data-i18n-title="ui.create_replication_pipeline">+ New Replication Pipeline</button>
-                  <button class="btn-pill-toggle" id="btn-refresh-replication" title="Refresh Replication Jobs" data-i18n-title="ui.refresh_replication_jobs">🔄 Refresh</button>
+                  <button class="btn-pill-toggle is-primary" id="btn-create-replication-job" title="Create Replication Pipeline" data-i18n-title="ui.create_replication_pipeline"><span aria-hidden="true">+</span> <span data-i18n="mw.new_replication_pipeline">New Replication Pipeline</span></button>
+                  <button class="btn-pill-toggle" id="btn-refresh-replication" title="Refresh Replication Jobs" data-i18n-title="ui.refresh_replication_jobs"><span aria-hidden="true">🔄</span> <span data-i18n="mw.refresh">Refresh</span></button>
                 </div>
               </div>
               <div class="mgmt-detail-body">
@@ -3338,7 +3338,7 @@
                 </div>
                 <div style="display: flex; gap: 8px;">
                   <input type="text" id="new-token-name" placeholder="Token Name (e.g. Home Assistant)" data-i18n-placeholder="ui.token_name_e_g_home" class="tz-select-input" style="flex:1; background: var(--zn-shade-25); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); padding: 7px 12px; font-size: var(--zn-fs-sm); border-radius: 6px;" aria-label="Token Name (e.g. Home Assistant)" data-i18n-aria-label="ui.token_name_e_g_home">
-                  <button id="btn-generate-token" class="btn-pill-toggle" style="color: var(--lt-ink-brand, var(--brand, #38bdf8)); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);">Generate</button>
+                  <button id="btn-generate-token" class="btn-pill-toggle" style="color: var(--lt-ink-brand, var(--brand, #38bdf8)); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);" data-i18n="mw.generate">Generate</button>
                 </div>
                 <label for="new-token-kind" class="zn-sub is-spaced" data-i18n="tokens.kind_label">What it may do</label>
                 <select id="new-token-kind" class="tz-select-input zn-token-kind">
@@ -3356,7 +3356,7 @@
               <!-- Two-Factor Authentication Quick Access -->
               <div style="border-top: 1px solid var(--zn-line-6); margin-top: 14px; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; background: rgba(56,189,248,0.05); border: 1px solid rgba(56,189,248,0.2); border-radius: 8px; padding: 12px 14px;">
                 <div>
-                  <div style="font-weight:700; font-size: var(--zn-fs-sm); color:var(--zn-text-strong);">🛡️ Two-Factor Authentication (2FA)</div>
+                  <div style="font-weight:700; font-size: var(--zn-fs-sm); color:var(--zn-text-strong);"><span aria-hidden="true">🛡️</span> <span data-i18n="mw.two_factor_2fa">Two-Factor Authentication (2FA)</span></div>
                   <div style="font-size: var(--zn-fs-xs); color:var(--muted); margin-top:2px;" data-i18n="mw.protect_your_account_with_rfc_6238">Protect your account with RFC 6238 TOTP authenticator app verification.</div>
                 </div>
                 <button type="button" class="btn-pill-toggle" id="btn-jump-to-2fa" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56,189,248,0.4);" data-sample>Configure 2FA →</button>
@@ -4085,7 +4085,7 @@
                   <span class="pulsing-dot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#00f0ff;"></span>
                   <strong style="color:var(--zn-text-strong);" data-i18n="ai.reindex_in_progress">Re-indexing Knowledge Base...</strong>
                   <span id="ai-reindex-univ-chunks" style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); font-family:monospace;">0 / 0 chunks</span>
-                  <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-ok); margin-left:4px;">🔒 100% Standby-Safe</span>
+                  <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-ok); margin-left:4px;"><span aria-hidden="true">🔒</span> <span data-i18n="mw.100_standby_safe">100% Standby-Safe</span></span>
                 </div>
                 <div style="display:flex; align-items:center; gap:12px;">
                   <span id="ai-reindex-univ-speed" style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted);">0 chunks/s</span>
@@ -4143,7 +4143,7 @@
                         <span id="ai-chat-active-title" class="ai-chat-active-title" title="Click pencil to rename" data-i18n-title="ui.click_pencil_to_rename">New Conversation</span>
                         <button type="button" id="btn-ai-chat-rename" class="btn-ai-icon-action" title="Rename conversation" data-i18n-title="ui.rename_conversation">✏️</button>
                       </div>
-                      <span id="ai-chat-active-model-badge" style="padding:3px 10px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(16,185,129,0.16); color:var(--zn-text-ok); border:1px solid rgba(16,185,129,0.4); white-space:nowrap;">
+                      <span id="ai-chat-active-model-badge" style="padding:3px 10px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(16,185,129,0.16); color:var(--zn-text-ok); border:1px solid rgba(16,185,129,0.4); white-space:nowrap;" data-sample>
                         🤖 Active LLM: DeepSeek-R1-Distill-Qwen-1.5B • ⚡ Tier 1 NPU
                       </span>
                     </div>
@@ -4216,17 +4216,17 @@
                   <div id="ai-search-filetype-bar" style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
                     <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted,#94a3b8); margin-right:2px;" data-i18n="ai.file_type_label">Type:</span>
                     <button type="button" class="btn-pill-toggle ai-filetype-chip active is-small" data-filetype="all" data-base-label="All" style="border-color: #38bdf8;" data-i18n="mw.all">All</button>
-                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="photos" data-base-label="📷 Images">📷 Images</button>
-                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="documents" data-base-label="📄 Documents">📄 Documents</button>
-                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="videos" data-base-label="🎬 Videos">🎬 Videos</button>
-                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="audio" data-base-label="🎵 Audio">🎵 Audio</button>
-                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="folders" data-base-label="📁 Folders">📁 Folders</button>
+                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="photos" data-base-label="📷 Images"><span aria-hidden="true">📷</span> <span data-i18n="mw.images">Images</span></button>
+                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="documents" data-base-label="📄 Documents"><span aria-hidden="true">📄</span> <span data-i18n="mw.documents">Documents</span></button>
+                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="videos" data-base-label="🎬 Videos"><span aria-hidden="true">🎬</span> <span data-i18n="mw.videos">Videos</span></button>
+                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="audio" data-base-label="🎵 Audio"><span aria-hidden="true">🎵</span> <span data-i18n="mw.audio">Audio</span></button>
+                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="folders" data-base-label="📁 Folders"><span aria-hidden="true">📁</span> <span data-i18n="mw.folders">Folders</span></button>
                   </div>
                   <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                     <div id="ai-search-match-tabs" style="display:inline-flex; background:var(--lt-b-0f172abf, rgba(15,23,42,0.75)); border:1px solid var(--zn-line-12); border-radius:7px; padding:2px;">
-                      <button type="button" class="btn-pill-toggle ai-match-tab active is-small" data-match-tab="semantic" style="border: none; background: rgba(14,165,233,0.28); color: var(--zn-text-strong);">✨ Semantic</button>
-                      <button type="button" class="btn-pill-toggle ai-match-tab is-small" data-match-tab="keyword" style="border: none; background: transparent; color: var(--zn-text-muted);">🔤 Keyword</button>
-                      <button type="button" class="btn-pill-toggle ai-match-tab is-small" data-match-tab="audio" style="border: none; background: transparent; color: var(--zn-text-muted);">🎙️ Audio</button>
+                      <button type="button" class="btn-pill-toggle ai-match-tab active is-small" data-match-tab="semantic" style="border: none; background: rgba(14,165,233,0.28); color: var(--zn-text-strong);"><span aria-hidden="true">✨</span> <span data-i18n="mw.semantic">Semantic</span></button>
+                      <button type="button" class="btn-pill-toggle ai-match-tab is-small" data-match-tab="keyword" style="border: none; background: transparent; color: var(--zn-text-muted);"><span aria-hidden="true">🔤</span> <span data-i18n="mw.by_word">Keyword</span></button>
+                      <button type="button" class="btn-pill-toggle ai-match-tab is-small" data-match-tab="audio" style="border: none; background: transparent; color: var(--zn-text-muted);"><span aria-hidden="true">🎙️</span> <span data-i18n="mw.audio">Audio</span></button>
                     </div>
                     <select id="ai-search-sort-select" aria-label="Sort search results" data-i18n-aria-label="ui.sort_search_results" class="tz-select-input" style="height:28px; padding:0 8px; font-size:var(--zn-fs-xs); border-radius:6px;">
                       <option value="relevance" data-i18n="ai.sort_relevance">Sort: AI Relevance</option>
@@ -4238,7 +4238,7 @@
 
                 <!-- Recent Query History (shown only when user has recent queries) -->
                 <div id="ai-history-bar" style="display:none; align-items:center; gap:5px; flex-wrap:wrap; padding-top:8px; margin-top:8px; border-top:1px solid var(--zn-line-7); font-size:var(--zn-fs-xs);">
-                  <span style="color:var(--muted,#94a3b8); font-weight:600;">🕘 History:</span>
+                  <span style="color:var(--muted,#94a3b8); font-weight:600;"><span aria-hidden="true">🕘</span> <span data-i18n="mw.history">History:</span></span>
                   <div id="ai-history-chips" style="display:flex; gap:5px; flex-wrap:wrap;"></div>
                   <button type="button" id="btn-ai-clear-history" class="btn-pill-toggle is-small" style="color: var(--zn-text-muted);" title="Clear search history" data-i18n-title="ui.clear_search_history">🗑️</button>
                 </div>
@@ -4329,8 +4329,8 @@
                 </div>
                 <ul style="margin:4px 0 0 18px; padding:0; color:var(--zn-text-soft); font-size:var(--zn-fs-xs); line-height:1.6;">
                   <li><strong data-i18n="mw.each_answer_says_how_it_was">Each answer says how it was made:</strong> in <em data-i18n="mw.ai_search">AI search</em> and <em data-i18n="mw.ask_zetty">Ask Zetty</em>, every reply shows the model, whether the NPU or the GPU ran it, how fast it was, and which tools it used.</li>
-                  <li><strong>🛠️ It can check this server for you:</strong> ask how busy the processor and memory are, which drives are asleep (it never wakes them), change the fan profile (<code>quiet</code>, <code>balanced</code>, <code>performance</code>), list or restart apps, or find files.</li>
-                  <li><strong>🌐 It can look things up on the web:</strong> ask a general question or paste a link, and it searches Wikipedia and DuckDuckGo and links its sources.</li>
+                  <li><strong><span aria-hidden="true">🛠️</span> <span data-i18n="mw.it_can_check_this_server_for">It can check this server for you:</span></strong> ask how busy the processor and memory are, which drives are asleep (it never wakes them), change the fan profile (<code>quiet</code>, <code>balanced</code>, <code>performance</code>), list or restart apps, or find files.</li>
+                  <li><strong><span aria-hidden="true">🌐</span> <span data-i18n="mw.it_can_look_things_up_on">It can look things up on the web:</span></strong> ask a general question or paste a link, and it searches Wikipedia and DuckDuckGo and links its sources.</li>
                 </ul>
               </div>
 
@@ -4417,7 +4417,7 @@
                       <div id="ai-hf-filter-pills" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                         <button type="button" class="btn-pill-toggle ai-hf-filter-btn active is-small" data-hf-filter="all" style="background: rgba(56,189,248,0.2); border: 1px solid rgba(56,189,248,0.45); color: var(--zn-text-accent);" data-i18n="ai.filter_all_2026">2026+ Releases</button>
                         <button type="button" class="btn-pill-toggle ai-hf-filter-btn is-small" data-hf-filter="compatible" style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); color: var(--zn-text-ok);" data-i18n="ai.filter_fits_hardware">✅ Fits Hardware</button>
-                        <button type="button" class="btn-pill-toggle ai-hf-filter-btn is-small" data-hf-filter="warning" style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.38); color: var(--zn-text-warn);">⚠️ Exceeds Hardware</button>
+                        <button type="button" class="btn-pill-toggle ai-hf-filter-btn is-small" data-hf-filter="warning" style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.38); color: var(--zn-text-warn);"><span aria-hidden="true">⚠️</span> <span data-i18n="mw.exceeds_hardware">Exceeds Hardware</span></button>
                       </div>
                       <div style="display:flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--zn-text-muted); background:var(--zn-shade-30); padding:2px 8px; border-radius:6px; border:1px solid var(--zn-line-8);">
                         <span data-i18n="ai.sort_models_label">Sort:</span>
@@ -4595,7 +4595,7 @@
                 <!-- ZettAI Learning Results & Failed Files Panel (Toggled inline) -->
                 <div id="ai-learning-results-panel" style="display:none; background:var(--lt-b-0f172abf, rgba(15,23,42,0.75)); border:1px solid rgba(99,102,241,0.45); border-radius:8px; padding:12px;">
                   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
-                    <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong);">📊 ZettAI Learning Results</div>
+                    <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong);"><span aria-hidden="true">📊</span> <span data-i18n="mw.zettai_learning_results">ZettAI Learning Results</span></div>
                     <div style="display:flex; align-items:center; gap:6px;">
                       <button type="button" id="btn-ai-relearn-failed" class="btn-pill-toggle is-small" style="background: rgba(99,102,241,0.25); border: 1px solid rgba(99,102,241,0.55); color: var(--zn-text-strong);">
                         <span aria-hidden="true">🔁</span> <span data-i18n="ai.relearn_failed_btn">Relearn Failed Files</span>
@@ -4613,7 +4613,7 @@
                       <strong id="ai-learn-failed-count" style="font-size:14px; color:var(--zn-text-crit);">0</strong>
                     </div>
                     <div style="padding:8px 10px; border-radius:6px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); display:flex; justify-content:space-between; align-items:center;">
-                      <span style="font-size:var(--zn-fs-xs); color:var(--lt-t-fde68aff, #fde68a); font-weight:700;">💤 Deferred (Standby)</span>
+                      <span style="font-size:var(--zn-fs-xs); color:var(--lt-t-fde68aff, #fde68a); font-weight:700;"><span aria-hidden="true">💤</span> <span data-i18n="mw.deferred_standby">Deferred (Standby)</span></span>
                       <strong id="ai-learn-deferred-count" style="font-size:14px; color:var(--zn-text-warn);">0</strong>
                     </div>
                   </div>
@@ -4663,7 +4663,7 @@
               <div style="background:var(--card); border:1px solid rgba(14,165,233,0.3); border-radius:10px; padding:14px; margin-top:12px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--zn-line-7);">
                   <div>
-                    <div style="font-size:13px; font-weight:700; color:var(--zn-text-strong);">🧬 Search index: model and size</div>
+                    <div style="font-size:13px; font-weight:700; color:var(--zn-text-strong);"><span aria-hidden="true">🧬</span> <span data-i18n="mw.search_index_model_and_size">Search index: model and size</span></div>
                     <div style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); margin-top:2px;" data-i18n="mw.choose_the_model_that_reads_your">Choose the model that reads your files for AI search and how large its index is, and measure how fast it is. Sleeping drives stay asleep.</div>
                   </div>
                   <div style="display:flex; align-items:center; gap:8px;">
@@ -4804,7 +4804,7 @@
           </div>
           <div style="display: flex; align-items: center; gap: 8px; background: var(--zn-shade-35); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 6px 10px;">
             <code style="font-family: monospace; font-size: var(--zn-fs-xs); color: var(--zn-text-accent); flex: 1; user-select: all;">tailscale serve --https=443 127.0.0.1:8082</code>
-            <button type="button" id="btn-copy-tailscale-serve" class="btn-pill-toggle is-small">📋 Copy</button>
+            <button type="button" id="btn-copy-tailscale-serve" class="btn-pill-toggle is-small"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
           </div>
         </div>
 
@@ -4826,7 +4826,7 @@
 
       <!-- Action Buttons -->
       <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid var(--zn-line-8);">
-        <button id="btn-modal-https-guide-close" type="button" class="btn-pill-toggle" style="background: var(--zn-glaze-6); border-color: var(--zn-line-15); color: var(--zn-text-soft);">
+        <button id="btn-modal-https-guide-close" type="button" class="btn-pill-toggle" style="background: var(--zn-glaze-6); border-color: var(--zn-line-15); color: var(--zn-text-soft);" data-i18n="mw.close">
           Close
         </button>
       </div>
@@ -5299,7 +5299,7 @@
 
     <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--zn-line-8); padding-top:14px;">
       <button class="btn-pill-toggle" data-action="hide-target" data-target="modal-notification-channel" data-i18n="mw.cancel">Cancel</button>
-      <button id="btn-save-channel-modal" class="btn-pill-toggle active is-primary">Save Channel</button>
+      <button id="btn-save-channel-modal" class="btn-pill-toggle active is-primary" data-i18n="mw.save_channel">Save Channel</button>
     </div>
 
   </div>
@@ -5348,7 +5348,7 @@
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
-        <button type="button" id="modal-webdav-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
+        <button type="button" id="modal-webdav-cancel-btn" class="btn-pill-toggle is-small" data-i18n="mw.cancel">Cancel</button>
         <button type="submit" class="btn-pill-toggle is-primary is-small" data-i18n="mw.save_and_restart_server">Save & Restart Server</button>
       </div>
     </form>
@@ -5586,7 +5586,7 @@
       <div id="create-share-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: var(--zn-text-crit); font-size: var(--zn-fs-xs);"></div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
-        <button type="button" id="modal-create-share-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
+        <button type="button" id="modal-create-share-cancel-btn" class="btn-pill-toggle is-small" data-i18n="mw.cancel">Cancel</button>
         <button type="submit" id="create-share-submit-btn" class="btn-pill-toggle is-primary is-small">📁 Provision Share</button>
       </div>
     </form>
@@ -5839,7 +5839,7 @@
         <label for="snapshot-readonly-input" style="font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer;" data-i18n="mw.read_only_protection_prevents_modification">Read-only protection (prevents modification)</label>
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-        <button type="button" id="modal-create-snapshot-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
+        <button type="button" id="modal-create-snapshot-cancel-btn" class="btn-pill-toggle is-small" data-i18n="mw.cancel">Cancel</button>
         <button type="submit" class="btn-pill-toggle is-primary is-small" data-i18n="mw.create_snapshot">Create Snapshot</button>
       </div>
     </form>

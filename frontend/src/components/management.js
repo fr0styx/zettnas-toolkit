@@ -220,22 +220,22 @@ export function updateManagementTelemetry(stats) {
     if (verEl) verEl.textContent = `Unraid ${unraid.version || ''}`;
     if (disksEl) {
       const d = unraid.disks || {};
-      disksEl.textContent = `${d.total || 0} Disks (${d.disabled || 0} disabled, ${d.invalid || 0} invalid)`;
+      disksEl.textContent = t('mgx.disks', '{count, plural, one {# Disk} other {# Disks}} ({disabled} disabled, {invalid} invalid)', { count: d.total || 0, disabled: d.disabled || 0, invalid: d.invalid || 0 });
     }
     if (parityEl) {
       const p = unraid.parity_check || {};
       if (p.active) {
-        parityEl.textContent = `Active (${p.action || 'Sync'} ${p.progress_pct || 0}%) • ${p.errors || 0} Errors`;
+        parityEl.textContent = t('mgx.parity_active', 'Active ({action} {pct}%) • {count, plural, one {# Error} other {# Errors}}', { action: p.action || t('mgx.sync', 'Sync'), pct: p.progress_pct || 0, count: p.errors || 0 });
         parityEl.style.color = 'var(--accent-cyan,#00f0ff)';
       } else {
-        parityEl.textContent = `Completed / Idle • ${p.errors || 0} Errors`;
+        parityEl.textContent = t('mgx.parity_idle', 'Completed / Idle • {count, plural, one {# Error} other {# Errors}}', { count: p.errors || 0 });
         parityEl.style.color = 'var(--ok2)';
       }
     }
     if (moverEl) {
       const m = unraid.mover || {};
       if (m.active) {
-        moverEl.textContent = `Active (${m.remain_files || 0} files left)`;
+        moverEl.textContent = t('mgx.mover_active', 'Active ({count, plural, one {# file} other {# files}} left)', { count: m.remain_files || 0 });
         moverEl.style.color = 'var(--warn)';
       } else {
         moverEl.textContent = t('ui.idle', 'Idle');
@@ -256,8 +256,8 @@ export function updateManagementTelemetry(stats) {
 
     const distroName = stats.os?.distro || stats.system?.os || stats.system?.distro || 'Linux';
     if (osNameEl) osNameEl.textContent = distroName;
-    if (hostEl) hostEl.textContent = stats.system?.hostname || stats.name || 'ZettNAS Host';
-    if (uptimeEl) uptimeEl.textContent = stats.system?.uptime_str || stats.os?.uptime || 'Active';
+    if (hostEl) hostEl.textContent = stats.system?.hostname || stats.name || t('mgx.host', 'ZettNAS Host');
+    if (uptimeEl) uptimeEl.textContent = stats.system?.uptime_str || stats.os?.uptime || t('mgx.active', 'Active');
     if (cpuEl) {
       const cpuName = stats.cpu?.model ? stats.cpu.model.replace(/\(R\)|\(TM\)/g, '').trim() : 'x86_64 / ARM64';
       const coresStr = stats.cpu?.cores ? ` (${stats.cpu.cores}T)` : '';
@@ -289,7 +289,7 @@ export function updateManagementTelemetry(stats) {
   if (govEl) govEl.textContent = stats.cpu?.governor || 'performance';
   if (cpuCoresEl) {
     const cores = stats.cpu?.cores || 1;
-    cpuCoresEl.textContent = `${cores} Threads / Cores`;
+    cpuCoresEl.textContent = t('mgx.cores', '{count, plural, one {# Thread / Core} other {# Threads / Cores}}', { count: cores });
   }
 
   // Option D: GPU Hardware Transcode Engine
@@ -303,27 +303,27 @@ export function updateManagementTelemetry(stats) {
 
     if (gpuBadge) {
       if (stats.gpu.ready) {
-        gpuBadge.textContent = 'ACCELERATION ACTIVE';
+        gpuBadge.textContent = t('mgx.gpu_active', 'ACCELERATION ACTIVE');
         gpuBadge.style.color = 'var(--ok2)';
         gpuBadge.style.borderColor = 'rgba(37,194,160,0.35)';
       } else {
-        gpuBadge.textContent = 'SOFTWARE ONLY';
+        gpuBadge.textContent = t('mgx.gpu_software', 'SOFTWARE ONLY');
         gpuBadge.style.color = 'var(--muted)';
         gpuBadge.style.borderColor = 'rgba(255,255,255,0.1)';
       }
     }
-    if (gpuNameEl) gpuNameEl.textContent = stats.gpu.model || 'No GPU Detected';
-    if (gpuDriverEl) gpuDriverEl.textContent = `Driver: ${stats.gpu.driver || 'none'}`;
+    if (gpuNameEl) gpuNameEl.textContent = stats.gpu.model || t('mgx.no_gpu', 'No GPU Detected');
+    if (gpuDriverEl) gpuDriverEl.textContent = t('mgx.driver', 'Driver: {name}', { name: stats.gpu.driver || t('mgx.none', 'none') });
     if (gpuNodeEl) {
-      gpuNodeEl.textContent = stats.gpu.render_node || 'No render node';
+      gpuNodeEl.textContent = stats.gpu.render_node || t('mgx.no_render_node', 'No render node');
       gpuNodeEl.style.display = stats.gpu.render_node ? 'inline-block' : 'none';
     }
-    if (gpuAccelEl) gpuAccelEl.textContent = stats.gpu.acceleration || 'Software CPU Only';
+    if (gpuAccelEl) gpuAccelEl.textContent = stats.gpu.acceleration || t('mgx.cpu_only', 'Software CPU Only');
     if (gpuCodecsEl && Array.isArray(stats.gpu.codecs)) {
       if (stats.gpu.codecs.length > 0) {
         gpuCodecsEl.innerHTML = stats.gpu.codecs.map(c => `<span class="gpu-codec-tag">${escapeHtml(c)}</span>`).join('');
       } else {
-        gpuCodecsEl.innerHTML = `<span class="gpu-codec-tag" style="color:var(--muted); border-color:var(--zn-line-10);">CPU Decode Only</span>`;
+        gpuCodecsEl.innerHTML = `<span class="gpu-codec-tag" style="color:var(--muted); border-color:var(--zn-line-10);">${t('mgx.cpu_decode', 'CPU Decode Only')}</span>`;
       }
     }
   }
@@ -344,26 +344,26 @@ export function updateManagementTelemetry(stats) {
     }
     if (npuBadge) {
       if (stats.npu.ready) {
-        npuBadge.textContent = 'NPU ACTIVE';
+        npuBadge.textContent = t('mgx.npu_active', 'NPU ACTIVE');
         npuBadge.style.color = '#c084fc';
         npuBadge.style.borderColor = 'rgba(168,85,247,0.35)';
       } else {
-        npuBadge.textContent = 'NPU OFFLINE';
+        npuBadge.textContent = t('mgx.npu_offline', 'NPU OFFLINE');
         npuBadge.style.color = 'var(--muted)';
         npuBadge.style.borderColor = 'rgba(255,255,255,0.1)';
       }
     }
-    if (npuNameEl) npuNameEl.textContent = stats.npu.model || 'No NPU Detected';
-    if (npuDriverEl) npuDriverEl.textContent = `Driver: ${stats.npu.driver || 'none'}`;
+    if (npuNameEl) npuNameEl.textContent = stats.npu.model || t('mgx.no_npu', 'No NPU Detected');
+    if (npuDriverEl) npuDriverEl.textContent = t('mgx.driver', 'Driver: {name}', { name: stats.npu.driver || t('mgx.none', 'none') });
     if (npuNodeEl) {
-      npuNodeEl.textContent = stats.npu.render_node || 'No node';
+      npuNodeEl.textContent = stats.npu.render_node || t('mgx.no_node', 'No node');
       npuNodeEl.style.display = stats.npu.render_node ? 'inline-block' : 'none';
     }
     if (npuClockEl) {
       const maxF = stats.npu.max_freq_mhz || 0;
-      npuClockEl.textContent = maxF > 0 ? `${maxF} MHz` : 'Dynamic Clock';
+      npuClockEl.textContent = maxF > 0 ? `${maxF} MHz` : t('mgx.dynamic_clock', 'Dynamic Clock');
     }
-    if (npuAccelEl) npuAccelEl.textContent = stats.npu.acceleration || 'AI Acceleration Ready';
+    if (npuAccelEl) npuAccelEl.textContent = stats.npu.acceleration || t('mgx.ai_ready', 'AI Acceleration Ready');
     if (npuFrameworksEl && Array.isArray(stats.npu.frameworks)) {
       if (stats.npu.frameworks.length > 0) {
         npuFrameworksEl.innerHTML = stats.npu.frameworks
@@ -373,7 +373,7 @@ export function updateManagementTelemetry(stats) {
           )
           .join('');
       } else {
-        npuFrameworksEl.innerHTML = `<span class="gpu-codec-tag" style="color:var(--muted); border-color:var(--zn-line-10);">CPU Fallback</span>`;
+        npuFrameworksEl.innerHTML = `<span class="gpu-codec-tag" style="color:var(--muted); border-color:var(--zn-line-10);">${t('mgx.cpu_fallback', 'CPU Fallback')}</span>`;
       }
     }
   }
@@ -393,10 +393,10 @@ export function updateManagementTelemetry(stats) {
   // Update Storage pill in Hub and Left Sidebar
   if (stats.disks && Array.isArray(stats.disks)) {
     const storagePill = document.getElementById('mgmt-hub-storage-pill');
-    if (storagePill) storagePill.textContent = `${stats.disks.length} Drives`;
+    if (storagePill) storagePill.textContent = t('mgx.drives', '{count, plural, one {# Drive} other {# Drives}}', { count: stats.disks.length });
     const sideStorageBadge = document.getElementById('mgmt-sidebar-storage-badge');
     if (sideStorageBadge) {
-      sideStorageBadge.textContent = `${stats.disks.length} Drives`;
+      sideStorageBadge.textContent = t('mgx.drives', '{count, plural, one {# Drive} other {# Drives}}', { count: stats.disks.length });
       sideStorageBadge.style.display = 'inline-block';
     }
 
@@ -466,10 +466,10 @@ export function updateManagementTelemetry(stats) {
   if (stats.vms && Array.isArray(stats.vms)) {
     const runningCount = stats.vms.filter(v => v.state === 'running').length;
     const vmsPill = document.getElementById('mgmt-hub-vms-pill');
-    if (vmsPill) vmsPill.textContent = `${runningCount} Running`;
+    if (vmsPill) vmsPill.textContent = t('mgx.running', '{count} Running', { count: runningCount });
     const sideVmsBadge = document.getElementById('mgmt-sidebar-vms-badge');
     if (sideVmsBadge) {
-      sideVmsBadge.textContent = `${stats.vms.length} VMs`;
+      sideVmsBadge.textContent = t('mgx.vms', '{count, plural, one {# VM} other {# VMs}}', { count: stats.vms.length });
       sideVmsBadge.style.display = stats.vms.length > 0 ? 'inline-block' : 'none';
     }
   }
