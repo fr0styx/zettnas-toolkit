@@ -6143,6 +6143,8 @@ export default {
   "dr.stealth_night": "隐身夜间",
   "dr.spectrum": "光谱",
   "dr.solid": "常亮",
+  "led.state_on": "开",
+  "led.state_off": "关",
   "dr.breathe": "呼吸",
   "dr.flow": "流动",
   "dr.chase": "追逐",

@@ -6143,6 +6143,8 @@ export default {
   "dr.stealth_night": "Nachtmodus",
   "dr.spectrum": "Spektrum",
   "dr.solid": "Durchgehend",
+  "led.state_on": "An",
+  "led.state_off": "Aus",
   "dr.breathe": "Atmen",
   "dr.flow": "Fließen",
   "dr.chase": "Lauflicht",

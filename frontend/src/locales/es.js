@@ -6143,6 +6143,8 @@ export default {
   "dr.stealth_night": "Noche discreta",
   "dr.spectrum": "Espectro",
   "dr.solid": "Fijo",
+  "led.state_on": "Encendido",
+  "led.state_off": "Apagado",
   "dr.breathe": "Respiración",
   "dr.flow": "Flujo",
   "dr.chase": "Persecución",

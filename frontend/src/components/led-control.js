@@ -57,7 +57,7 @@ export function initLedControl() {
     const stageGlow = $('virtual-chassis-lightbar');
 
     if (currentPower === 'off') {
-      if (previewTxt) previewTxt.textContent = 'OFF';
+      if (previewTxt) previewTxt.textContent = t('led.state_off', 'Off').toUpperCase();
       if (previewBar) {
         previewBar.style.background = '#1a2330';
         previewBar.style.boxShadow = 'none';
@@ -113,7 +113,7 @@ export function initLedControl() {
       animStyle = `barFlash ${dur} infinite steps(1)`;
     }
 
-    if (previewTxt) previewTxt.textContent = `${currentPower.toUpperCase()} • ${currentMode.toUpperCase()}`;
+    if (previewTxt) previewTxt.textContent = `${t('led.state_on', 'On')} • ${t(`dr.${currentMode}`, currentMode)}`.toUpperCase();
     if (previewBar) {
       previewBar.style.background = bgStyle;
       previewBar.style.backgroundSize = bgSize;
