@@ -4982,4 +4982,5 @@ export default {
   "fc.desktop": "On the ZettNAS desktop: in the office suite, open Calendar, choose Share in the family calendar’s menu, copy the subscription link and paste it under Calendar Feeds with + Add Feed.",
   "w.feed_meta": "{count, plural, one {# event} other {# events}} · {source}",
   "w.feed_family": "Family calendar",
+  "remote.publish_apps": "Turn on HTTPS for new apps",
 };

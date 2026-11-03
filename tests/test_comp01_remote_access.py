@@ -12,6 +12,7 @@ from backend.hardware.net import tailscale, tailscale_setup
 from backend.services import remote_access
 
 NAME = "zettnas.tail1234.ts.net"
+REAL_WEB_APPS = remote_access.web_apps
 
 # A stand-in for the tailscale CLI: what it is asked goes to calls.log, its state to state.json.
 FAKE_CLI = r"""
@@ -49,6 +50,11 @@ if args == ["serve", "status", "--json"]:
     sys.exit(0)
 if args[:1] == ["serve"] and args[1:2] == ["reset"]:
     state["served"] = []
+    save()
+    sys.exit(0)
+if args[:1] == ["serve"] and args[-1:] == ["off"]:
+    port = int(next(a for a in args if a.startswith("--https=")).split("=", 1)[1])
+    state["served"] = [p for p in state["served"] if p != port]
     save()
     sys.exit(0)
 if args[:1] == ["serve"]:
@@ -105,6 +111,7 @@ def cli(tmp_path, monkeypatch):
         tailscale, "_get_tailscale_container_info", lambda: {"exists": False, "running": False, "id": ""}
     )
     monkeypatch.setattr(remote_access, "immich_port", lambda: None)
+    monkeypatch.setattr(remote_access, "web_apps", lambda: [])
     return Cli(folder)
 
 
@@ -285,3 +292,59 @@ def test_the_api_answers_and_refuses_bad_input(cli, client, auth_headers):
     assert r.status_code == 200 and r.json()["auth_url"].startswith("https://login.tailscale.com/a/")
     r = client.post("/api/network/remote-access/disconnect", headers=auth_headers)
     assert r.status_code == 200 and r.json()["state"] == "Stopped"
+
+
+# --- NFEAT-5: every app with a web page gets an HTTPS address in the tailnet -------------------
+APPS = [{"name": "jellyfin", "port": 8096}, {"name": "paperless", "port": 8000}]
+
+
+def test_every_app_with_a_web_page_gets_https(cli, monkeypatch):
+    cli.sign_in()
+    monkeypatch.setattr(remote_access, "web_apps", lambda: APPS)
+    assert remote_access.status()["addresses"]["apps"] == [
+        {"name": "jellyfin", "url": f"http://{NAME}:8096/"},
+        {"name": "paperless", "url": f"http://{NAME}:8000/"},
+    ]
+    s = remote_access.publish()
+    serves = [c for c in cli.calls() if c[:2] == ["serve", "--bg"]]
+    assert serves[1:] == [
+        ["serve", "--bg", "--yes", "--https=18096", "http://127.0.0.1:8096"],
+        ["serve", "--bg", "--yes", "--https=18000", "http://127.0.0.1:8000"],
+    ]
+    assert s["addresses"]["apps"] == [
+        {"name": "jellyfin", "url": f"https://{NAME}:18096/"},
+        {"name": "paperless", "url": f"https://{NAME}:18000/"},
+    ]
+
+
+def test_an_app_that_is_gone_loses_its_address(cli, monkeypatch):
+    cli.sign_in()
+    monkeypatch.setattr(remote_access, "web_apps", lambda: APPS)
+    remote_access.publish()
+    monkeypatch.setattr(remote_access, "web_apps", lambda: APPS[:1])
+    s = remote_access.publish()
+    assert ["serve", "--https=18000", "off"] in cli.calls()
+    assert sorted(cli.state()["served"]) == [443, 18096]
+    assert [a["name"] for a in s["addresses"]["apps"]] == ["jellyfin"]
+
+
+def test_which_apps_have_a_web_page(cli, monkeypatch):
+    monkeypatch.setattr(remote_access, "immich_port", lambda: 2283)
+    containers = [
+        {"name": "jellyfin", "state": "running", "primary_port": 8096, "webui_url": "http://[HOST]:8096/"},
+        {"name": "jellyfin-copy", "state": "running", "primary_port": 8096, "webui_url": "http://[HOST]:8096/"},
+        {"name": "stopped", "state": "exited", "primary_port": 8989, "webui_url": "http://[HOST]:8989/"},
+        {"name": "speaks-https", "state": "running", "primary_port": 9443, "webui_url": "https://[HOST]:9443/"},
+        {"name": "zettnas", "state": "running", "primary_port": 8082, "webui_url": "http://[HOST]:8082/"},
+        {"name": "immich", "state": "running", "primary_port": 2283, "webui_url": "http://[HOST]:2283/"},
+        {"name": "too-high", "state": "running", "primary_port": 60000, "webui_url": "http://[HOST]:60000/"},
+        {"name": "no-port", "state": "running", "primary_port": None, "webui_url": ""},
+    ]
+    monkeypatch.setattr("backend.hardware.docker_stats.read_docker_containers", lambda: containers)
+    assert REAL_WEB_APPS() == [{"name": "jellyfin", "port": 8096}]
+
+    def broken():
+        raise OSError("no docker")
+
+    monkeypatch.setattr("backend.hardware.docker_stats.read_docker_containers", broken)
+    assert REAL_WEB_APPS() == []

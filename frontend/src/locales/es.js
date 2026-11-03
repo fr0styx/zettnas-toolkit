@@ -4982,4 +4982,5 @@ export default {
   "fc.desktop": "En el escritorio de ZettNAS: en la suite ofimática, abre Calendario, elige Compartir en el menú del calendario familiar, copia el enlace de suscripción y pégalo en Fuentes de calendario con + Añadir fuente.",
   "w.feed_meta": "{count, plural, one {# evento} other {# eventos}} · {source}",
   "w.feed_family": "Calendario familiar",
+  "remote.publish_apps": "Activar HTTPS para las apps nuevas",
 };

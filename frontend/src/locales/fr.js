@@ -4982,4 +4982,5 @@ export default {
   "fc.desktop": "Sur le bureau ZettNAS : dans la suite bureautique, ouvrez Agenda, choisissez Partager dans le menu du calendrier familial, copiez le lien d’abonnement et collez-le sous Flux de calendrier avec + Ajouter un flux.",
   "w.feed_meta": "{count, plural, one {# événement} other {# événements}} · {source}",
   "w.feed_family": "Calendrier familial",
+  "remote.publish_apps": "Activer HTTPS pour les nouvelles apps",
 };

@@ -1,6 +1,6 @@
 /**
  * "Use from anywhere" (COMP-01): join Tailscale, or a Headscale server of your own, scan the
- * sign-in link with the phone, turn on HTTPS addresses for ZettNAS and Immich, and scan the
+ * sign-in link with the phone, turn on HTTPS addresses for ZettNAS, Immich and the other apps, and scan the
  * address to open ZettNAS on the phone. No port is opened on the router.
  */
 import { api } from '../api.js';
@@ -108,16 +108,21 @@ function httpsHint(s) {
 async function connectedView(s) {
   const zettnas = (s.addresses || {}).zettnas || '';
   const immich = (s.addresses || {}).immich || '';
+  const apps = (s.addresses || {}).apps || [];
   const list = el(
     'ul',
     { class: 'zn-list remote-addresses' },
     zettnas ? el('li', {}, `${t('remote.addr_zettnas', 'ZettNAS')}: `, el('code', { text: zettnas })) : null,
     immich ? el('li', {}, `${t('remote.addr_immich', 'Immich (photo backup)')}: `, el('code', { text: immich })) : null,
+    ...apps.map((a) => el('li', {}, `${a.name}: `, el('code', { text: a.url }))),
   );
+  // an app installed after HTTPS was turned on still has a plain address (NFEAT-5)
+  const newApps = s.https && apps.some((a) => !a.url.startsWith('https://'));
   const actions = el(
     'div',
     { class: 'zn-row remote-actions' },
-    zettnas.startsWith('https://') ? null : button(t('remote.publish', 'Turn on HTTPS'), 'publish', true),
+    !zettnas.startsWith('https://') ? button(t('remote.publish', 'Turn on HTTPS'), 'publish', true)
+      : newApps ? button(t('remote.publish_apps', 'Turn on HTTPS for new apps'), 'publish', true) : null,
     button(t('remote.disconnect', 'Disconnect'), 'disconnect'),
   );
   return el(

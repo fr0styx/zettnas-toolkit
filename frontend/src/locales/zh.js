@@ -4982,4 +4982,5 @@ export default {
   "fc.desktop": "在 ZettNAS 桌面上：在办公套件中打开日历，在家庭日历的菜单中选择共享，复制订阅链接，然后在日历订阅中通过 + 添加订阅粘贴。",
   "w.feed_meta": "{count} 个日程 · {source}",
   "w.feed_family": "家庭日历",
+  "remote.publish_apps": "为新应用开启 HTTPS",
 };

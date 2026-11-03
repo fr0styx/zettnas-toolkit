@@ -83,6 +83,22 @@ describe('COMP-01: use from anywhere', () => {
     expect(mount.textContent).toContain('MagicDNS and HTTPS certificates');
   });
 
+  it('lists every app and offers HTTPS for one installed later (NFEAT-5)', async () => {
+    const zettnas = 'https://zettnas.tail1234.ts.net/';
+    const apps = [
+      { name: 'jellyfin', url: 'https://zettnas.tail1234.ts.net:18096/' },
+      { name: 'paperless', url: 'http://zettnas.tail1234.ts.net:8000/' },
+    ];
+    let mount = await mounted({ ...RUNNING, addresses: { zettnas, apps } });
+    const items = [...mount.querySelectorAll('.remote-addresses li')].map((li) => li.textContent);
+    expect(items).toContain('jellyfin: https://zettnas.tail1234.ts.net:18096/');
+    expect(items).toContain('paperless: http://zettnas.tail1234.ts.net:8000/');
+    expect(mount.querySelector('[data-remote="publish"]').textContent).toBe('Turn on HTTPS for new apps');
+    document.body.innerHTML = '';
+    mount = await mounted({ ...RUNNING, addresses: { zettnas, apps: apps.slice(0, 1) } });
+    expect(mount.querySelector('[data-remote="publish"]')).toBeNull();
+  });
+
   it('reports a failed connect and stays hidden without the API', async () => {
     const mount = await mounted({ state: 'Stopped' });
     api.post.mockRejectedValue(new Error('Tailscale could not start.'));
