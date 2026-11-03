@@ -225,12 +225,13 @@ export function renderWallpaperGallery(files, active, version) {
     const thumbUrl = `/api/wallpapers/thumb/${encodeURIComponent(f)}${v}`;
     const fullUrl = `/api/wallpapers/download/${encodeURIComponent(f)}${v}`;
 
+    const name = escapeHtml(f);
     card.innerHTML = `
       <div class="wallpaper-card-thumb-wrap">
-        <img class="wallpaper-card-thumb" src="${thumbUrl}" alt="${f}" loading="lazy" data-img-fallback="${fullUrl}">
+        <img class="wallpaper-card-thumb" src="${thumbUrl}" alt="${name}" loading="lazy" data-img-fallback="${fullUrl}">
         <div class="wallpaper-card-active-indicator" style="${isActive ? 'display:flex;' : 'display:none;'}">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-          <span>ACTIVE</span>
+          <span>${escapeHtml(t('wp.active', 'Active'))}</span>
         </div>
         <div class="wallpaper-card-actions">
           <button class="wallpaper-action-btn rename-btn" title="${t('ui.rename_image', 'Rename image')}" aria-label="${t('ui.rename_image', 'Rename image')}">
@@ -242,7 +243,7 @@ export function renderWallpaperGallery(files, active, version) {
         </div>
       </div>
       <div class="wallpaper-card-footer">
-        <span class="wallpaper-card-title" title="${f}">${f}</span>
+        <span class="wallpaper-card-title" title="${name}">${name}</span>
       </div>
     `;
 

@@ -2182,6 +2182,8 @@ export default {
   "fm.go_up": "Übergeordneter Ordner",
   "fm.refresh": "Aktualisieren",
   "fm.new_folder": "Neuer Ordner",
+  "wp.active": "Aktiv",
+  "fm.kind_folder": "Ordner",
   "fm.view_list": "Listenansicht",
   "fm.view_icon": "Symbolansicht",
   "fm.col_name": "Name",

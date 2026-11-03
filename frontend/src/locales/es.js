@@ -2182,6 +2182,8 @@ export default {
   "fm.go_up": "Subir nivel",
   "fm.refresh": "Actualizar",
   "fm.new_folder": "Nueva carpeta",
+  "wp.active": "Activo",
+  "fm.kind_folder": "Carpeta",
   "fm.view_list": "Vista de lista",
   "fm.view_icon": "Vista de iconos",
   "fm.col_name": "Nombre",

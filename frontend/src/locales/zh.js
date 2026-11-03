@@ -2182,6 +2182,8 @@ export default {
   "fm.go_up": "返回上一级",
   "fm.refresh": "刷新",
   "fm.new_folder": "新建文件夹",
+  "wp.active": "当前",
+  "fm.kind_folder": "文件夹",
   "fm.view_list": "列表视图",
   "fm.view_icon": "图标视图",
   "fm.col_name": "名称",

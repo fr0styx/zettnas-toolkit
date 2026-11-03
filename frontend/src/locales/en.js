@@ -2182,6 +2182,8 @@ export default {
   "fm.go_up": "Go Up",
   "fm.refresh": "Refresh",
   "fm.new_folder": "New Folder",
+  "wp.active": "Active",
+  "fm.kind_folder": "Folder",
   "fm.view_list": "List View",
   "fm.view_icon": "Icon View",
   "fm.col_name": "Name",

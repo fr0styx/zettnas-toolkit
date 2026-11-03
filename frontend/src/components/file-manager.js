@@ -2284,7 +2284,7 @@ export class FileManagerWindow {
           iconContent = fileSvg;
         }
 
-        const metaText = file.name === '..' ? '--' : (file.is_dir ? 'Folder' : formatBytes(file.size));
+        const metaText = file.name === '..' ? '--' : (file.is_dir ? escapeHtml(t('fm.kind_folder', 'Folder')) : formatBytes(file.size));
 
         // One grid cell per card (a row of the grid); display: contents keeps the card's layout
         card.innerHTML = `<div class="fm-card-cell" role="gridcell">

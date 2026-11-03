@@ -2182,6 +2182,8 @@ export default {
   "fm.go_up": "Dossier parent",
   "fm.refresh": "Actualiser",
   "fm.new_folder": "Nouveau dossier",
+  "wp.active": "Actif",
+  "fm.kind_folder": "Dossier",
   "fm.view_list": "Vue en liste",
   "fm.view_icon": "Vue en icônes",
   "fm.col_name": "Nom",
