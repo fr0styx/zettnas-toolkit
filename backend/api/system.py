@@ -1174,9 +1174,7 @@ def get_system_about():
         "platform": platform.platform(),
         "python_version": sys.version.split()[0],
         "uptime_secs": uptime_secs,
-        "containerized": os.path.exists("/.dockerenv")
-        or os.environ.get("CONTAINERIZED") == "1"
-        or os.path.exists("/app"),
+        "containerized": os.path.exists("/.dockerenv") or config.SETTINGS.containerized or os.path.exists("/app"),
         "github_repo": "https://github.com/fr0styx/zettnas-toolkit",
     }
 

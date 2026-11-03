@@ -9,7 +9,7 @@ from typing import Any
 
 import httpx
 
-from backend.config import logger
+from backend.config import SETTINGS, logger
 from backend.hardware.net import canary, common
 
 # get_network_topology has locals named listening_ports and vlans, hence the aliases
@@ -464,7 +464,7 @@ def read_network_rates():
 
     Z_STATE.prev_net_ifaces = prev_ifaces
 
-    env_iface = os.environ.get("HOST_NET_IFACE", "").strip()
+    env_iface = SETTINGS.host_net_iface.strip()
     if env_iface and env_iface in interfaces_info:
         target = interfaces_info[env_iface]
         combined_rx_rate = target["rx_rate"]

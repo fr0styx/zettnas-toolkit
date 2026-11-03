@@ -50,11 +50,7 @@ def cache_dir() -> str:
 
 
 def cache_limit_bytes() -> int:
-    try:
-        mb = int(os.environ.get("ZETTNAS_THUMB_CACHE_MB", "1024"))
-    except ValueError:
-        mb = 1024
-    return max(16, mb) * 1024 * 1024
+    return max(16, config.SETTINGS.thumb_cache_mb) * 1024 * 1024
 
 
 def _key(path: str, st: os.stat_result, limit: int) -> str:

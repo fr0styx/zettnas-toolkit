@@ -2,7 +2,7 @@ import os
 import threading
 import time
 
-from backend.config import logger
+from backend.config import SETTINGS, logger
 from backend.ignored_errors import ignored
 from backend.state import Z_STATE, add_event
 
@@ -123,8 +123,8 @@ def evaluate_system_alerts(unraid_data, ups_data):
             batt_thresh = float(ups_cfg.get("battery_threshold_pct", 20.0))
             time_thresh = float(ups_cfg.get("runtime_threshold_min", 5.0))
         except Exception:
-            batt_thresh = float(os.getenv("UPS_FAILSAFE_BATTERY_MIN", "20.0"))
-            time_thresh = float(os.getenv("UPS_FAILSAFE_RUNTIME_MIN", "5.0"))
+            batt_thresh = SETTINGS.ups_failsafe_battery_min
+            time_thresh = SETTINGS.ups_failsafe_runtime_min
 
         is_on_batt = any(k in status for k in ("OB", "ONBATT", "ON BATT", "LB", "LOWBATT"))
         is_online = any(k in status for k in ("OL", "ONLINE")) and not is_on_batt

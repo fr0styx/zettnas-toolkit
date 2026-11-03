@@ -80,6 +80,23 @@ class Settings:
     )
     show_os_disk: bool = _s("SHOW_OS_DISK", True, "Show the operating-system disk in the disk list.", group="Host")
     remotes_path: str = _s("REMOTES_PATH", "/mnt/remotes", "Where cloud and network remotes are mounted.", group="Host")
+    host_net_iface: str = _s(
+        "HOST_NET_IFACE",
+        "",
+        "Network interface whose traffic the dashboard shows; empty = all physical ones.",
+        group="Host",
+    )
+    containerized: bool = _s(
+        "CONTAINERIZED", False, "Say ZettNAS runs in a container when it can't tell by itself.", group="Host"
+    )
+    thumb_cache_mb: int = _s(
+        "ZETTNAS_THUMB_CACHE_MB",
+        1024,
+        "Size of the preview thumbnail cache, in MB (at least 16).",
+        lo=0,
+        hi=1048576,
+        group="Host",
+    )
     sync_route_threads: int = _s(
         "SYNC_ROUTE_THREADS",
         40,
@@ -175,6 +192,22 @@ class Settings:
     nut_host: str = _s("NUT_HOST", "127.0.0.1", "Network UPS Tools server.", group="Power")
     nut_port: int = _s("NUT_PORT", 3493, "Network UPS Tools port.", lo=1, hi=65535, group="Power")
     nut_name: str = _s("NUT_NAME", "ups", "UPS name on the NUT server.", group="Power")
+    ups_failsafe_battery_min: float = _s(
+        "UPS_FAILSAFE_BATTERY_MIN",
+        20.0,
+        "Battery percent that counts as low when the UPS settings can't be read.",
+        lo=0,
+        hi=100,
+        group="Power",
+    )
+    ups_failsafe_runtime_min: float = _s(
+        "UPS_FAILSAFE_RUNTIME_MIN",
+        5.0,
+        "Minutes of runtime that count as low when the UPS settings can't be read.",
+        lo=0,
+        hi=1440,
+        group="Power",
+    )
     # Front panel
     enable_fb: bool = _s("ENABLE_FB", True, "Drive the front LCD.", group="Front panel")
     lcd_fps: int = _s("LCD_FPS", 5, "Frames per second sent to the front LCD.", lo=1, hi=30, group="Front panel")
