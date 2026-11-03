@@ -108,10 +108,13 @@ class WebdavEngine:
                 logger.warning(f"Failed to update webdav config: {e}")
             logger.warning("[WEBDAV] Unsafe settings from an older version fixed: %s", ", ".join(fixed))
             try:
-                from backend.state import add_event
+                from backend.state import add_event, event_text
 
                 add_event(
-                    "warning", "WebDAV settings fixed", "WebDAV settings were made safe: " + "; ".join(fixed) + "."
+                    "warning",
+                    "WebDAV settings fixed",
+                    "WebDAV settings were made safe: " + "; ".join(fixed) + ".",
+                    event_text("webdav_fixed", changes="; ".join(fixed)),
                 )
             except Exception:
                 logger.debug("webdav_engine: could not record the settings event", exc_info=True)

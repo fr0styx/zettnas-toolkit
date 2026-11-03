@@ -1,8 +1,13 @@
+import dataclasses
+
+from backend import config as _config
 from backend.hardware.unraid import read_unraid_status
 
 
 def test_unraid_not_available_fallback(monkeypatch):
-    monkeypatch.setenv("UNRAID_EMHTTP_DIR", "/nonexistent_dir")
+    monkeypatch.setattr(
+        _config, "SETTINGS", dataclasses.replace(_config.SETTINGS, unraid_emhttp_dir="/nonexistent_dir")
+    )
     status = read_unraid_status(force=True)
     assert status["available"] is False
     assert status["state"] == "STANDALONE"

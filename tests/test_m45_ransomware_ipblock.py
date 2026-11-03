@@ -1,9 +1,11 @@
 """M4/M5: a simulated mass rename freezes writes, snapshots, blocks the source and alerts."""
 
+import dataclasses
 import json
 
 import pytest
 
+from backend import config as _config
 from backend.services import ip_block
 from backend.services import ransomware_guard as rg
 
@@ -87,7 +89,7 @@ def test_repeated_failed_logins_block_the_address(monkeypatch):
     assert ip_block.record_auth_failure("203.0.113.9")
     assert ip_block.is_blocked("203.0.113.9")
     assert not ip_block.block("127.0.0.1", "x")
-    monkeypatch.setenv("ZETTNAS_TRUSTED_IPS", "10.0.0.0/8")
+    monkeypatch.setattr(_config, "SETTINGS", dataclasses.replace(_config.SETTINGS, trusted_ips=("10.0.0.0/8",)))
     assert not ip_block.block("10.1.2.3", "x")
     assert ip_block.unblock("203.0.113.9") and not ip_block.is_blocked("203.0.113.9")
 

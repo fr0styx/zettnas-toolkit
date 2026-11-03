@@ -362,7 +362,7 @@ describe('Yak Wallpaper Switch, Card Reordering, and Dynamic Hardware Settings S
 
       expect(briVal.textContent).toBe('80%');
       expect(powerBtn.textContent).toBe('Turn Off');
-      expect(badge.textContent).toBe('LCD: 10 FPS ACTIVE');
+      expect(badge.textContent).toBe('LCD: ACTIVE');
       expect(postSpy).toHaveBeenCalledWith(
         '/api/screen',
         expect.objectContaining({ power: true, brightness: 80 })

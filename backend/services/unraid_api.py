@@ -22,6 +22,7 @@ from typing import Any
 import certifi
 import httpx
 
+from backend import config
 from backend.config import logger
 
 STATUS_QUERY = """
@@ -60,7 +61,7 @@ _EXTRA_CA = Path(__file__).resolve().parent.parent / "certs" / "isrg-root-yr-by-
 def _tls_verify() -> ssl.SSLContext | bool:
     """Public CAs plus Let's Encrypt Root YR cross-signed by X1, which Unraid's *.myunraid.net
     certificates chain to (backend/certs/README.md); UNRAID_API_CA adds another CA file."""
-    if os.environ.get("UNRAID_API_VERIFY_TLS", "1") == "0":
+    if not config.SETTINGS.unraid_api_verify_tls:
         return False
     ctx = ssl.create_default_context(cafile=certifi.where())
     for extra in (str(_EXTRA_CA), os.environ.get("UNRAID_API_CA", "")):

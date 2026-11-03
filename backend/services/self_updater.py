@@ -530,7 +530,13 @@ def report_last_update_result(data_dir: str) -> dict[str, Any] | None:
     if data["result"] in ("rolled_back", "not_applied"):
         title = "Update rolled back" if data["result"] == "rolled_back" else "Update not applied"
         message = f"{target}: {reason}. The previous version is running." if reason else f"{target}."
-        add_event("error", title, message)
+        rb = data["result"] == "rolled_back"
+        details = (
+            event_text("update_rolled_back" if rb else "update_not_applied", target=target, reason=reason)
+            if reason
+            else event_text("update_rolled_back_short" if rb else "update_not_applied_short", target=target)
+        )
+        add_event("error", title, message, details)
         try:
             from backend.services.notifications import send_notification
 

@@ -104,6 +104,14 @@
 
 #### Usability
 
+- **The rest of the activity log in your language** (NUX-3): sign-in, update, restart, app
+  install and cleanup, AI indexing, drive wear, virtual machine crash and network-undo entries.
+  Left in English: an alert repeated from its own text and the fan controller's setup warning.
+
+- **Settings, system and container messages in your language** (NUX-20): the LCD and copy-button
+  badges, the security score, the backup passphrase hint, drive and container counts, and the
+  catalog and container load errors.
+
 - **Virtual machine, ISO and network-setting entries in the activity log in your language**
   (NUX-3).
 
@@ -571,6 +579,15 @@
 
 #### Fixes
 
+- **A blocked address shows properly in the activity log**: the entry had its level, title and
+  message swapped, so it read "warning" with the reason as its title.
+
+- **The LCD badge no longer says 10 FPS**: the LCD has run at 5 FPS since PERF-20; the badge now
+  says "active".
+
+- **The memory sampler never fails a stats tick**: a history database without its table is
+  skipped and logged, not raised.
+
 - **The nightly AI answers check uses the model ZettNAS ships** (NAI-10): Ollama's `qwen3:4b` tag
   now means a newer model that always reasons at length before answering, which made the
   nightly answers job run past its 5.5-hour limit. It now pulls `qwen3:4b-q4_K_M`, the original
@@ -825,6 +842,12 @@
   chat reply before search, indexing and photo reading.
 
 #### Drives
+
+- **Shares on a ZFS pool get snapshots** (NREL-5): on plain Linux a new share on a ZFS pool is a
+  dataset of its own, so the default hourly and daily snapshots work on it, as they do on btrfs.
+  Its snapshots keep their ZettNAS names, show in Previous versions, and a locked one is held
+  in ZFS, so not even root can destroy it before its date. A share that is a plain folder on a
+  ZFS pool says why it can't be snapshotted. Rolling a ZFS share back copies the files back.
 
 - **Drive Health**: every drive with a plain verdict (Healthy, Keep an eye on it, Replace soon,
   Replace now), the reason, what to do and a button that does it; self-tests with progress and

@@ -64,6 +64,35 @@ def is_subvolume(path: str) -> bool:
         return False
 
 
+def _mount_rows(mounts: str = "/proc/mounts") -> list[tuple[str, str, str]]:
+    try:
+        with open(mounts, encoding="utf-8") as f:
+            rows = [line.split() for line in f]
+    except OSError:
+        return []
+    return [(r[0].replace("\\040", " "), r[1].replace("\\040", " "), r[2]) for r in rows if len(r) >= 3]
+
+
+def zfs_mounts(mounts: str = "/proc/mounts") -> dict[str, str]:
+    """Mounted ZFS datasets: dataset name -> mount point."""
+    return {dev: mnt for dev, mnt, fs in _mount_rows(mounts) if fs == "zfs"}
+
+
+def zfs_dataset_at(path: str, mounts: str = "/proc/mounts") -> str:
+    """The ZFS dataset mounted exactly at path ("" when there is none)."""
+    path = os.path.realpath(path)
+    return next((ds for ds, mnt in zfs_mounts(mounts).items() if mnt == path), "")
+
+
+ZFS_NAME_PROP = "org.zettnas:name"  # the snapshot's own name: ZFS names can't hold its "@"
+ZFS_HOLD_TAG = "zettnas-worm"  # a hold stops zfs destroy, even by root, until released
+
+
+def zfs_snapshot_part(name: str) -> str:
+    """A snapshot name ZFS accepts after the "@": letters, digits and _ . : - only."""
+    return re.sub(r"[^A-Za-z0-9_.:-]", "-", name)[:200] or "snapshot"
+
+
 class GenericLinuxStorageAdapter(StoragePlatformAdapter):
     """
     Generic Linux Storage Platform Adapter.
@@ -164,16 +193,25 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         return old
 
     def _make_share_dir(self, full_path: str) -> str:
-        """The share's folder (NREL-5). On btrfs it is a subvolume, so the default snapshots and
-        quotas work on it; elsewhere, or if that fails, a plain folder. Returns which it made."""
+        """The share's folder (NREL-5). On btrfs it is a subvolume and on ZFS a dataset, so the
+        default snapshots and quotas work on it; elsewhere, or if that fails, a plain folder.
+        Returns which it made."""
         from backend.hardware.pal.base import storage_tools
 
         parent = os.path.dirname(full_path.rstrip("/")) or "/"
-        if not os.path.exists(full_path) and fs_of(parent) == "btrfs" and storage_tools()["btrfs"]:
+        fs = "" if os.path.exists(full_path) else fs_of(parent)
+        if fs == "btrfs" and storage_tools()["btrfs"]:
             code, _, err = self._run_cmd(["btrfs", "subvolume", "create", full_path])
             if code == 0:
                 return "subvolume"
             logger.warning("[PAL] %s: no btrfs subvolume (%s); a plain folder instead", full_path, err)
+        elif fs == "zfs" and storage_tools()["zfs"] and zfs_dataset_at(parent):
+            # a dataset of its own, mounted at the share's path by inheritance, so it can be snapshotted
+            child = f"{zfs_dataset_at(parent)}/{os.path.basename(full_path.rstrip('/'))}"
+            code, _, err = self._run_cmd(["zfs", "create", child])
+            if code == 0 and os.path.isdir(full_path):
+                return "dataset"
+            logger.warning("[PAL] %s: no ZFS dataset (%s); a plain folder instead", full_path, err)
         try:
             os.makedirs(full_path, exist_ok=True)
         except OSError as e:
@@ -188,8 +226,9 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
         tools = storage_tools()
         has_cow = tools["btrfs"] or tools["zfs"]
-        # NREL-5: snapshots are btrfs subvolume snapshots here, so the pool must be btrfs too
-        snapshots = tools["btrfs"] and fs_of(self._pool_path) == "btrfs"
+        # NREL-5: btrfs subvolume or ZFS dataset snapshots, so the pool must be one of those
+        pool_fs = fs_of(self._pool_path)
+        snapshots = (tools["btrfs"] and pool_fs == "btrfs") or (tools["zfs"] and pool_fs == "zfs")
         missing = [n for n in ("btrfs", "zfs", "mdadm") if not tools[n]]
         return PlatformCapabilities(
             platform=PlatformType.GENERIC_LINUX,
@@ -1228,11 +1267,28 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         if worm_mode in ("compliance", "governance"):
             readonly = True
 
-        cmd = ["btrfs", "subvolume", "snapshot"]
-        if readonly:
-            cmd.append("-r")
-        cmd.extend([src_path, dest_path])
-        code, out, err = self._run_cmd(cmd)
+        dataset = zfs_dataset_at(src_path)
+        if dataset:  # ZFS snapshots are always read-only; WORM ones are also held
+            full = f"{dataset}@{zfs_snapshot_part(snapshot_name)}"
+            code, out, err = self._run_cmd(["zfs", "snapshot", "-o", f"{ZFS_NAME_PROP}={snapshot_name}", full])
+            if code == 0 and worm_mode in ("compliance", "governance"):
+                hold, _, herr = self._run_cmd(["zfs", "hold", ZFS_HOLD_TAG, full])
+                if hold:
+                    logger.warning("[PAL] %s: no hold (%s); the lock is ZettNAS's own only", full, herr)
+            dest_path = os.path.join(src_path, ".zfs", "snapshot", zfs_snapshot_part(snapshot_name))
+            readonly = True
+        elif fs_of(src_path) == "zfs":
+            code, out, err = (
+                1,
+                "",
+                f"{subvol_name} is a folder, not a ZFS dataset of its own; it can't be snapshotted alone.",
+            )
+        else:
+            cmd = ["btrfs", "subvolume", "snapshot"]
+            if readonly:
+                cmd.append("-r")
+            cmd.extend([src_path, dest_path])
+            code, out, err = self._run_cmd(cmd)
 
         now = time.time()
         retention_until = None
@@ -1285,20 +1341,61 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                             "retention_until": None,
                             "is_immutable": False,
                         }
-                        meta_path = os.path.join(snaps_dir, f".{entry}.worm.json")
-                        if os.path.isfile(meta_path):
-                            try:
-                                with open(meta_path, encoding="utf-8") as f:
-                                    meta = json.load(f)
-                                item["worm_mode"] = meta.get("worm_mode")
-                                item["retention_until"] = meta.get("retention_until")
-                                item["is_immutable"] = (meta.get("retention_until") or 0) > time.time()
-                            except Exception:
-                                ignored("backend.hardware.pal_storage.GenericLinuxStorageAdapter.list_snapshots")
+                        self._read_worm(item)
                         snapshots.append(item)
             except Exception as e:
                 logger.debug(f"[PAL] Snapshot list error: {e}")
-        return snapshots
+        return snapshots + self._zfs_snapshots(pool_id)
+
+    def _read_worm(self, item: dict[str, Any]) -> None:
+        """Fills in a snapshot's WORM lock from its metadata file, when it has one."""
+        meta_path = os.path.join(self._pool_path, "@snapshots", f".{item['name']}.worm.json")
+        if not os.path.isfile(meta_path):
+            return
+        try:
+            with open(meta_path, encoding="utf-8") as f:
+                meta = json.load(f)
+            item["worm_mode"] = meta.get("worm_mode")
+            item["retention_until"] = meta.get("retention_until")
+            item["is_immutable"] = (meta.get("retention_until") or 0) > time.time()
+        except Exception:
+            ignored("backend.hardware.pal_storage.GenericLinuxStorageAdapter.list_snapshots")
+
+    def _zfs_snapshots(self, pool_id: str) -> list[dict[str, Any]]:
+        """Snapshots of the ZFS datasets mounted inside this pool, under their own names, with
+        the path ZFS shows them at (.zfs/snapshot in the dataset)."""
+        from backend.hardware.pal.base import storage_tools
+
+        if not storage_tools()["zfs"]:
+            return []
+        code, out, _ = self._run_cmd(
+            ["zfs", "list", "-H", "-p", "-t", "snapshot", "-o", f"name,creation,{ZFS_NAME_PROP}"]
+        )
+        if code:
+            return []
+        mounts, root = zfs_mounts(), os.path.realpath(self._pool_path).rstrip("/")
+        items = []
+        for line in out.splitlines():
+            parts = line.split("\t")
+            if len(parts) < 3 or "@" not in parts[0]:
+                continue
+            dataset, part = parts[0].split("@", 1)
+            mnt = mounts.get(dataset, "")
+            if not (mnt == root or mnt.startswith(root + "/")):
+                continue
+            item = {
+                "name": parts[2] if parts[2] not in ("", "-") else part,
+                "path": os.path.join(mnt, ".zfs", "snapshot", part),
+                "created_at": float(parts[1]) if parts[1].isdigit() else 0.0,
+                "pool_id": pool_id,
+                "worm_mode": None,
+                "retention_until": None,
+                "is_immutable": False,
+                "zfs": parts[0],
+            }
+            self._read_worm(item)
+            items.append(item)
+        return items
 
     def delete_snapshot(
         self,
@@ -1346,7 +1443,13 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             except Exception as e:
                 logger.warning(f"[PAL] Security audit log error: {e}")
 
-        code, out, err = self._run_cmd(["btrfs", "subvolume", "delete", target_path])
+        zsnap = next((s for s in self._zfs_snapshots(pool_id) if s["name"] == snapshot_name), None)
+        if zsnap:
+            self._run_cmd(["zfs", "release", ZFS_HOLD_TAG, zsnap["zfs"]])  # fails when there was no hold
+            code, out, err = self._run_cmd(["zfs", "destroy", zsnap["zfs"]])
+            target_path = zsnap["path"]
+        else:
+            code, out, err = self._run_cmd(["btrfs", "subvolume", "delete", target_path])
         if os.path.isfile(meta_path) and code in (0, 127):
             try:
                 os.remove(meta_path)

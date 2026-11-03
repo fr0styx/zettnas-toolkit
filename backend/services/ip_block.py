@@ -16,6 +16,7 @@ import threading
 import time
 from typing import Any
 
+from backend import config
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json
 
@@ -36,7 +37,7 @@ def _trusted(ip: str) -> bool:
         return True  # not an address we can block ("unknown", test clients)
     if addr.is_loopback:
         return True
-    for entry in filter(None, (x.strip() for x in os.environ.get("ZETTNAS_TRUSTED_IPS", "").split(","))):
+    for entry in config.SETTINGS.trusted_ips:
         try:
             if addr in ipaddress.ip_network(entry, strict=False):
                 return True
@@ -93,9 +94,11 @@ def block(ip: str, reason: str, seconds: int | None = FAIL_BLOCK_S) -> bool:
         _save(blocks)
     logger.warning("[IPBlock] Blocked %s: %s", ip, reason)
     try:
-        from backend.state import add_event
+        from backend.state import add_event, event_text
 
-        add_event("security", f"Blocked {ip}: {reason}", "warning")
+        add_event(
+            "warning", "Address blocked", f"Blocked {ip}: {reason}", event_text("ip_blocked", ip=ip, reason=reason)
+        )
     except Exception:
         logger.debug("ip_block.block: event log unavailable", exc_info=True)
     _sync_samba()

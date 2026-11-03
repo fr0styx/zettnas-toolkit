@@ -155,6 +155,12 @@ class Settings:
     )
     max_wallpaper_mb: int = _s("MAX_WALLPAPER_MB", 10, "Largest wallpaper upload, in MB.", lo=1, hi=1024, group="Web")
     max_upload_gb: int = _s("MAX_UPLOAD_GB", 64, "Largest file upload, in GB.", lo=1, hi=100000, group="Web")
+    trusted_ips: tuple[str, ...] = _s(
+        "ZETTNAS_TRUSTED_IPS",
+        (),
+        "Addresses or networks (CIDR) never blocked after failed sign-ins, comma-separated.",
+        group="Web",
+    )
     # File services
     auto_ingest_enabled: bool = _s(
         "AUTO_INGEST_ENABLED",
@@ -183,6 +189,12 @@ class Settings:
         "full",
         "full ships VMs and the LCD renderer; core leaves them out.",
         choices=("full", "core"),
+        group="Updates",
+    )
+    health_signal_url: str = _s(
+        "HEALTH_SIGNAL_URL",
+        "",
+        "Where the opt-in anonymous health report goes; empty uses the project's receiver.",
         group="Updates",
     )
     # Logs
@@ -247,6 +259,13 @@ class Settings:
     lcd_sleep_sec: int = _s(
         "LCD_SLEEP_SEC", 300, "Seconds without activity before the LCD dims.", lo=0, hi=86400, group="Front panel"
     )
+    lcd_capture: str = _s(
+        "ZETTNAS_LCD_CAPTURE",
+        "screencast",
+        "How the front LCD gets its frames: pushed when the page changes, or a screenshot every frame.",
+        choices=("screencast", "poll"),
+        group="Front panel",
+    )
     # Disks and health
     smart_poll_hdd: int = _s(
         "SMART_POLL_HDD", 45, "Seconds between SMART reads of spinning disks.", lo=5, hi=86400, group="Disks"
@@ -281,6 +300,13 @@ class Settings:
         "Seconds without fresh stats before health reports degraded.",
         lo=5,
         hi=3600,
+        group="Disks",
+    )
+    standby_unknown: str = _s(
+        "ZETTNAS_STANDBY_UNKNOWN",
+        "defer",
+        "When it can't tell which disk holds a folder: defer the work (it may be asleep) or check anyway.",
+        choices=("defer", "allow"),
         group="Disks",
     )
     # Fans
@@ -346,6 +372,32 @@ class Settings:
         lo=15,
         hi=90,
         group="Fans",
+    )
+    # AI and media
+    ai_num_ctx: int = _s(
+        "ZETTNAS_AI_NUM_CTX",
+        0,
+        "Chat context window in tokens; 0 uses the built-in size, values under 2048 are ignored.",
+        lo=0,
+        hi=1048576,
+        group="AI and media",
+    )
+    video_hwenc: str = _s(
+        "ZETTNAS_VIDEO_HWENC",
+        "auto",
+        "Convert videos with the iGPU when it can (auto) or always in software (off).",
+        choices=("auto", "off"),
+        group="AI and media",
+    )
+    # Platforms
+    truenas_verify_tls: bool = _s(
+        "TRUENAS_VERIFY_TLS", True, "Check the TrueNAS certificate; off accepts a self-signed one.", group="Platforms"
+    )
+    unraid_api_verify_tls: bool = _s(
+        "UNRAID_API_VERIFY_TLS", True, "Check the Unraid API certificate; off accepts any.", group="Platforms"
+    )
+    unraid_emhttp_dir: str = _s(
+        "UNRAID_EMHTTP_DIR", "", "Unraid's emhttp state folder, when it isn't in a usual place.", group="Platforms"
     )
 
 

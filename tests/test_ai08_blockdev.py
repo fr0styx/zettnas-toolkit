@@ -1,8 +1,10 @@
 """AI-08: the standby guard finds the real disks under a path on any storage stack."""
 
+import dataclasses
 import os
 from types import SimpleNamespace
 
+from backend import config as _config
 from backend.hardware import blockdev
 
 
@@ -108,5 +110,5 @@ def test_guard_fails_closed_and_checks_every_disk(monkeypatch):
     asleep.clear()
     assert rag_engine.is_backing_disk_in_standby("sdc,sdd") is False
     assert rag_engine.is_backing_disk_in_standby(rag_engine.UNKNOWN_BACKING_DEV) is True
-    monkeypatch.setenv("ZETTNAS_STANDBY_UNKNOWN", "allow")
+    monkeypatch.setattr(_config, "SETTINGS", dataclasses.replace(_config.SETTINGS, standby_unknown="allow"))
     assert rag_engine.is_backing_disk_in_standby(rag_engine.UNKNOWN_BACKING_DEV) is False

@@ -1,10 +1,12 @@
 """AI-09 / AI-10: Ollama gets a context window that fits, and token numbers are the runtime's."""
 
+import dataclasses
 import io
 import json
 
 import pytest
 
+from backend import config as _config
 from backend.services import ai_chat_agent
 
 
@@ -42,10 +44,10 @@ def _setup(monkeypatch, handler):
 
 def test_context_window_is_fixed_and_prompts_fit_it(monkeypatch):
     """AI-7: one num_ctx (no model reloads, no oversized KV cache); the prompt is fitted to it."""
-    monkeypatch.delenv("ZETTNAS_AI_NUM_CTX", raising=False)
+    monkeypatch.setattr(_config, "SETTINGS", dataclasses.replace(_config.SETTINGS, ai_num_ctx=0))
     assert ai_chat_agent._context_window_for([{"content": "hi"}]) == 8192
     assert ai_chat_agent._context_window_for([{"content": "x" * 30000}]) == 8192
-    monkeypatch.setenv("ZETTNAS_AI_NUM_CTX", "16384")
+    monkeypatch.setattr(_config, "SETTINGS", dataclasses.replace(_config.SETTINGS, ai_num_ctx=16384))
     assert ai_chat_agent._context_window_for() == 16384
 
     msgs = [{"role": "system", "content": "rules"}]

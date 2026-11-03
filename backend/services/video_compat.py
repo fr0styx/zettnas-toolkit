@@ -28,6 +28,12 @@ _encoder_choice: dict[str, str] = {}
 _RENDER_NODE = "/dev/dri/renderD128"
 
 
+def _hwenc_allowed() -> bool:
+    from backend import config
+
+    return config.SETTINGS.video_hwenc != "off"
+
+
 def pick_encoder() -> str:
     """h264_qsv (Intel Quick Sync) when the GPU is passed through and works, else libx264.
 
@@ -37,7 +43,7 @@ def pick_encoder() -> str:
     if "codec" in _encoder_choice:
         return _encoder_choice["codec"]
     codec = "libx264"
-    if os.environ.get("ZETTNAS_VIDEO_HWENC", "auto").lower() != "off" and os.path.exists(_RENDER_NODE):
+    if _hwenc_allowed() and os.path.exists(_RENDER_NODE):
         try:
             import av
 

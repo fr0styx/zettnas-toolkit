@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
-from backend.state import Z_STATE, add_event
+from backend.state import Z_STATE, add_event, event_text
 
 router = APIRouter(prefix="/snmp", tags=["SNMP Monitoring"])
 
@@ -99,7 +99,12 @@ def update_snmp_config(req: SnmpConfigRequest, principal: AuthenticatedPrincipal
         updates["community"] = "public"
     cfg.update(updates)
     atomic_write_json(SNMP_CONFIG_FILE, cfg)
-    add_event("info", "SNMP Config", f"SNMP configuration updated ({req.version}, port {req.port}).")
+    add_event(
+        "info",
+        "SNMP Config",
+        f"SNMP configuration updated ({req.version}, port {req.port}).",
+        event_text("snmp_saved", version=req.version, port=req.port),
+    )
     return {"status": "ok"}
 
 

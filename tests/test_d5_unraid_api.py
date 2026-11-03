@@ -1,10 +1,12 @@
 """D5: Unraid API companion mode against a mocked Unraid 7 GraphQL API."""
 
+import dataclasses
 import json
 
 import httpx
 import pytest
 
+from backend import config as _config
 from backend.services import unraid_api
 
 
@@ -111,12 +113,12 @@ def test_redirect_to_https_says_which_address_to_use(monkeypatch):
 def test_tls_trusts_unraid_myunraid_chain(monkeypatch):
     import ssl
 
-    monkeypatch.delenv("UNRAID_API_VERIFY_TLS", raising=False)
+    monkeypatch.setattr(_config, "SETTINGS", dataclasses.replace(_config.SETTINGS, unraid_api_verify_tls=True))
     ctx = unraid_api._tls_verify()
     assert isinstance(ctx, ssl.SSLContext)
     subjects = [dict(x[0] for x in c["subject"]).get("commonName") for c in ctx.get_ca_certs()]
     assert "Root YR" in subjects and "ISRG Root X1" in subjects
-    monkeypatch.setenv("UNRAID_API_VERIFY_TLS", "0")
+    monkeypatch.setattr(_config, "SETTINGS", dataclasses.replace(_config.SETTINGS, unraid_api_verify_tls=False))
     assert unraid_api._tls_verify() is False
 
 

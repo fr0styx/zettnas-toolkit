@@ -1,10 +1,12 @@
 """D5: TrueNAS companion mode reads pools/shares and snapshots through the API."""
 
+import dataclasses
 import json
 
 import httpx
 import pytest
 
+from backend import config as _config
 from backend.services import truenas_api
 
 
@@ -111,7 +113,7 @@ def test_the_websocket_is_opened_with_tls_and_optional_self_signed(monkeypatch):
 
     seen = {}
     monkeypatch.setattr(wsc, "connect", lambda url, ssl=None, **kw: seen.update(url=url, ssl=ssl) or "conn")
-    monkeypatch.setenv("TRUENAS_VERIFY_TLS", "0")
+    monkeypatch.setattr(_config, "SETTINGS", dataclasses.replace(_config.SETTINGS, truenas_verify_tls=False))
     assert truenas_api._open_ws("wss://nas/api/current") == "conn"
     assert seen["ssl"] is not None and seen["ssl"].check_hostname is False
     assert truenas_api._open_ws("ws://nas/api/current") == "conn" and seen["ssl"] is None

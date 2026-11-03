@@ -38,6 +38,7 @@ used keeps its default, and the log says which variable and why.
 | `MAX_BODY_MB` | `16` | Largest request body accepted, in MB (uploads excepted). (1–4096) |
 | `MAX_WALLPAPER_MB` | `10` | Largest wallpaper upload, in MB. (1–1024) |
 | `MAX_UPLOAD_GB` | `64` | Largest file upload, in GB. (1–100000) |
+| `ZETTNAS_TRUSTED_IPS` | `(none)` | Addresses or networks (CIDR) never blocked after failed sign-ins, comma-separated. |
 
 ## File services
 
@@ -54,6 +55,7 @@ used keeps its default, and the log says which variable and why.
 | `UPDATE_CHANNEL` | `stable` | Release channel to follow. (one of `stable`, `beta`, `edge`) |
 | `UPDATE_SIGNATURES` | `enforce` | In-app updates check the image's signature from this project's CI first: enforce (refuse an unsigned or wrongly signed image), warn (log it and install anyway) or off. (one of `enforce`, `warn`, `off`) |
 | `ZETTNAS_IMAGE_VARIANT` | `full` | full ships VMs and the LCD renderer; core leaves them out. (one of `full`, `core`) |
+| `HEALTH_SIGNAL_URL` | `(empty)` | Where the opt-in anonymous health report goes; empty uses the project's receiver. |
 
 ## Logs
 
@@ -88,6 +90,7 @@ used keeps its default, and the log says which variable and why.
 | `LCD_FORMAT` | `jpeg` | Image format of LCD frames. (one of `jpeg`, `png`) |
 | `LCD_RENDERER` | `auto` | What draws the front LCD: chromium (the web dashboard), pil (drawn directly, no browser) or auto (chromium when installed, otherwise pil). (one of `auto`, `chromium`, `pil`) |
 | `LCD_SLEEP_SEC` | `300` | Seconds without activity before the LCD dims. (0–86400) |
+| `ZETTNAS_LCD_CAPTURE` | `screencast` | How the front LCD gets its frames: pushed when the page changes, or a screenshot every frame. (one of `screencast`, `poll`) |
 
 ## Disks
 
@@ -102,6 +105,7 @@ used keeps its default, and the log says which variable and why.
 | `NVME_WARN_TEMP` | `70` | NVMe temperature that raises a warning, °C. (20–110) |
 | `NVME_CRITICAL_TEMP` | `75` | NVMe temperature that forces full fan speed, °C. (20–110) |
 | `COLLECTOR_WATCHDOG_SECS` | `20` | Seconds without fresh stats before health reports degraded. (5–3600) |
+| `ZETTNAS_STANDBY_UNKNOWN` | `defer` | When it can't tell which disk holds a folder: defer the work (it may be asleep) or check anyway. (one of `defer`, `allow`) |
 
 ## Fans
 
@@ -118,3 +122,18 @@ used keeps its default, and the log says which variable and why.
 | `FAN_ZERO_RPM_NVME_CEILING` | `50` | Highest NVMe temperature at which fans may stop, °C. (20–100; also read as `ZERO_RPM_NVME`) |
 | `FAN_ZERO_RPM_STOP_TEMP` | `34` | Disk bay temperature at or below which fans may stop, °C. (15–80; also read as `ZERO_RPM_TEMP`) |
 | `FAN_ZERO_RPM_START_TEMP` | `38` | Disk bay temperature that restarts stopped fans, °C. (15–90) |
+
+## AI and media
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `ZETTNAS_AI_NUM_CTX` | `0` | Chat context window in tokens; 0 uses the built-in size, values under 2048 are ignored. (0–1.04858e+06) |
+| `ZETTNAS_VIDEO_HWENC` | `auto` | Convert videos with the iGPU when it can (auto) or always in software (off). (one of `auto`, `off`) |
+
+## Platforms
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `TRUENAS_VERIFY_TLS` | `on` | Check the TrueNAS certificate; off accepts a self-signed one. |
+| `UNRAID_API_VERIFY_TLS` | `on` | Check the Unraid API certificate; off accepts any. |
+| `UNRAID_EMHTTP_DIR` | `(empty)` | Unraid's emhttp state folder, when it isn't in a usual place. |

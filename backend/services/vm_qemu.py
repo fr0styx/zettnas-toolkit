@@ -31,7 +31,7 @@ from backend.ignored_errors import ignored
 from backend.services import vm_guest, vm_host, vm_store
 from backend.services.vm_engine import QmpEngine
 from backend.settings import test_mode
-from backend.state import Z_STATE, add_event
+from backend.state import Z_STATE, add_event, event_text
 
 
 def _is_qemu_process_alive(vm_id: str) -> bool:
@@ -74,9 +74,14 @@ def _is_qemu_process_alive(vm_id: str) -> bool:
 
 
 _QMP_EVENT_LOG = {
-    "SHUTDOWN": ("info", "VM Shut Down", "VM '{name}' shut down ({reason})."),
-    "RESET": ("info", "VM Reset", "VM '{name}' was reset."),
-    "GUEST_PANICKED": ("warning", "VM Guest Crashed", "The guest OS in VM '{name}' crashed (kernel panic or BSOD)."),
+    "SHUTDOWN": ("info", "VM Shut Down", "VM '{name}' shut down ({reason}).", "vm_guest_shutdown"),
+    "RESET": ("info", "VM Reset", "VM '{name}' was reset.", "vm_reset"),
+    "GUEST_PANICKED": (
+        "warning",
+        "VM Guest Crashed",
+        "The guest OS in VM '{name}' crashed (kernel panic or BSOD).",
+        "vm_guest_crashed",
+    ),
 }
 
 
@@ -88,8 +93,9 @@ def _on_qmp_event(vm_id: str, event: str, data: dict[str, Any]) -> None:
     if event == "SHUTDOWN" and not data.get("guest", False):
         return  # host-initiated stops are already logged by the action that caused them
     name = next((v.get("name") for v in _load_vms() if v.get("id") == vm_id), None) or vm_id
-    level, title, message = spec
-    add_event(level, title, message.format(name=name, reason=str(data.get("reason") or "guest")))
+    level, title, message, key = spec
+    reason = str(data.get("reason") or "guest")
+    add_event(level, title, message.format(name=name, reason=reason), event_text(key, name=name, reason=reason))
 
 
 def _qmp_socket_path(vm_id: str) -> str:

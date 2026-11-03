@@ -268,7 +268,7 @@ export function updateManagementTelemetry(stats) {
       if (Array.isArray(stats.cpu?.load_avg)) {
         loadEl.textContent = stats.cpu.load_avg.map(v => Number(v).toFixed(2)).join(', ');
       } else {
-        loadEl.textContent = stats.cpu?.load_avg || 'Normal';
+        loadEl.textContent = stats.cpu?.load_avg || t('mgmt.load_normal', 'Normal');
       }
     }
     if (engineEl) engineEl.textContent = stats.storage?.engine || 'Btrfs / OpenZFS';

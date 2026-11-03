@@ -740,9 +740,14 @@ def retry_outbox(now: float | None = None) -> dict[str, list[str]]:
             out["dropped"].append(item["title"])
             logger.error("[Notify] Gave up sending '%s' after %s tries", item["title"], attempts + 1)
             try:
-                from backend.state import add_event
+                from backend.state import add_event, event_text
 
-                add_event("error", "An alert could not be sent", f"{item['title']}: every channel failed for hours.")
+                add_event(
+                    "error",
+                    "An alert could not be sent",
+                    f"{item['title']}: every channel failed for hours.",
+                    event_text("alert_unsent", title=item["title"]),
+                )
             except Exception:
                 logger.debug("notifications: could not record the dropped alert", exc_info=True)
             continue

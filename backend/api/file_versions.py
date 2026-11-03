@@ -11,7 +11,7 @@ from backend.auth import AuthenticatedPrincipal, get_current_principal, require_
 from backend.fsutil import resolve_within
 from backend.services import file_versions
 from backend.services.path_access import ALLOWED_BROWSE_ROOTS, check_user_path_access
-from backend.state import add_event
+from backend.state import add_event, event_text
 
 router = APIRouter(tags=["Files"])
 READ = Depends(require_scope("shares:read", "shares:user_write", "storage:read", "storage:write", "storage:admin"))
@@ -66,5 +66,10 @@ def restore_version(req: RestoreVersionIn, principal: AuthenticatedPrincipal = D
         dest = file_versions.restore_version(target, req.version, overwrite=req.overwrite)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from None
-    add_event("info", "File Explorer", f"Restored an earlier version of {os.path.basename(target)}")
+    add_event(
+        "info",
+        "File Explorer",
+        f"Restored an earlier version of {os.path.basename(target)}",
+        event_text("version_restored", file=os.path.basename(target)),
+    )
     return {"status": "ok", "path": dest, "overwrote": req.overwrite}

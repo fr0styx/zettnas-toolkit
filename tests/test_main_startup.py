@@ -46,7 +46,7 @@ def quiet(monkeypatch):
     monkeypatch.setattr("backend.services.rag_engine.get_rag_engine", lambda: rec["started"].append("rag"))
     monkeypatch.setattr(main.get_webdav_engine(), "start_if_enabled", lambda: rec["started"].append("webdav"))
     monkeypatch.setattr(main.atexit, "register", lambda fn: rec["atexit"].append(fn))
-    monkeypatch.setattr(main, "add_event", lambda level, title, msg, **k: rec["events"].append(title))
+    monkeypatch.setattr(main, "add_event", lambda level, title, msg, *a, **k: rec["events"].append(title))
 
     class Thread:
         def __init__(self, target=None, daemon=None, name=None):

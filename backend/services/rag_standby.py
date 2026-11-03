@@ -11,6 +11,7 @@ import subprocess
 import time
 from typing import Any
 
+from backend import config
 from backend.config import logger
 from backend.hardware import power_state
 from backend.ignored_errors import ignored
@@ -170,7 +171,7 @@ def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False, unkn
     if dev_name == UNKNOWN_BACKING_DEV:
         # Couldn't tell which disk holds it: assume it may be asleep unless told otherwise (AI-08)
         if unknown is None:
-            allow = os.environ.get("ZETTNAS_STANDBY_UNKNOWN", "defer").strip().lower() == "allow"
+            allow = config.SETTINGS.standby_unknown == "allow"
             unknown = power_state.CHECK if allow else power_state.DEFER
         return unknown == power_state.DEFER
     if "," in dev_name:

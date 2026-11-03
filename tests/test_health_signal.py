@@ -1,16 +1,18 @@
 """The opt-in anonymous health report: off by default, weekly, nothing personal."""
 
+import dataclasses
 import json
 
 import pytest
 
+from backend import config as _config
 from backend.services import health_signal as hs
 
 
 @pytest.fixture(autouse=True)
 def _fresh(monkeypatch):
     monkeypatch.setattr(hs, "_next_check", 0.0)
-    monkeypatch.delenv("HEALTH_SIGNAL_URL", raising=False)
+    monkeypatch.setattr(_config, "SETTINGS", dataclasses.replace(_config.SETTINGS, health_signal_url=""))
 
 
 def test_it_is_off_and_unavailable_by_default():
@@ -58,7 +60,11 @@ def test_turning_it_on_makes_an_id_and_off_forgets_it():
 
 
 def test_sends_weekly_only_when_enabled_and_retries_later(monkeypatch):
-    monkeypatch.setenv("HEALTH_SIGNAL_URL", "https://receiver.example/v1/report")
+    monkeypatch.setattr(
+        _config,
+        "SETTINGS",
+        dataclasses.replace(_config.SETTINGS, health_signal_url="https://receiver.example/v1/report"),
+    )
     T = 1_790_000_000.0  # a real clock: the first report is due at once
     sent = []
     monkeypatch.setattr(hs, "send", lambda state: sent.append(state["install_id"]) or True)
@@ -81,7 +87,11 @@ def test_sends_weekly_only_when_enabled_and_retries_later(monkeypatch):
 
 
 def test_send_posts_the_report(monkeypatch):
-    monkeypatch.setenv("HEALTH_SIGNAL_URL", "https://receiver.example/v1/report")
+    monkeypatch.setattr(
+        _config,
+        "SETTINGS",
+        dataclasses.replace(_config.SETTINGS, health_signal_url="https://receiver.example/v1/report"),
+    )
     seen = {}
 
     class Resp:
@@ -106,7 +116,11 @@ def test_send_posts_the_report(monkeypatch):
 def test_the_api(client, auth_headers, monkeypatch):
     r = client.put("/api/system/health-signal", headers=auth_headers, json={"enabled": True})
     assert r.status_code == 409  # no receiver configured in this build
-    monkeypatch.setenv("HEALTH_SIGNAL_URL", "https://receiver.example/v1/report")
+    monkeypatch.setattr(
+        _config,
+        "SETTINGS",
+        dataclasses.replace(_config.SETTINGS, health_signal_url="https://receiver.example/v1/report"),
+    )
     r = client.put("/api/system/health-signal", headers=auth_headers, json={"enabled": True})
     assert r.status_code == 200 and r.json()["enabled"] is True and r.json()["available"] is True
     got = client.get("/api/system/health-signal", headers=auth_headers).json()

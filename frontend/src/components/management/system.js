@@ -503,7 +503,7 @@ export function openDiagnosticsPreviewModal(data) {
             <span style="font-size: 14px;">${icon}</span>
             <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: ${badgeColor}; letter-spacing: 0.5px;">${escapeHtml(title)}</span>
           </div>
-          <span style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: monospace;">ZettOS Kernel ${escapeHtml(data.platform || '')}</span>
+          <span style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: monospace;">${escapeHtml(t('sys.kernel', 'ZettOS kernel {platform}', { platform: data.platform || '' }))}</span>
         </div>
         <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;">${escapeHtml(desc)}</div>
         ${alertItemsHtml}
@@ -536,12 +536,12 @@ export function openDiagnosticsPreviewModal(data) {
       <div style="background:var(--zn-glaze-4); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
         <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dgx.storage', 'Storage')}</div>
         <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); margin-top:2px;">${t('dgx.pools', '{count, plural, one {# Pool} other {# Pools}}', { count: storage.pools_count || 0 })}</div>
-        <div style="font-size:var(--zn-fs-xs); color:${(storage.degraded_disks?.length || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${storage.disks_count || 0} Drives (${storage.standby_count || 0} standby)</div>
+        <div style="font-size:var(--zn-fs-xs); color:${(storage.degraded_disks?.length || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${escapeHtml(t('sys.drives_standby', '{count, plural, one {# drive} other {# drives}} ({standby} asleep)', { count: storage.disks_count || 0, standby: storage.standby_count || 0 }))}</div>
       </div>
       <div style="background:var(--zn-glaze-4); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
         <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dgx.docker', 'Docker Fleet')}</div>
         <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); margin-top:2px;">${docker.running || 0} / ${docker.total || 0} Running</div>
-        <div style="font-size:var(--zn-fs-xs); color:${(docker.restarting || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${docker.restarting || 0} Restarting, ${docker.dead || 0} Dead</div>
+        <div style="font-size:var(--zn-fs-xs); color:${(docker.restarting || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${escapeHtml(t('sys.restarting_dead', '{restarting} restarting, {dead} failed', { restarting: docker.restarting || 0, dead: docker.dead || 0 }))}</div>
       </div>
       <div style="background:var(--zn-glaze-4); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
         <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dgx.vms', 'Virtual Machines')}</div>

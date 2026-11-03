@@ -407,11 +407,7 @@ export function initSettings() {
       screenBriVal.style.color = isOff ? 'var(--muted)' : '';
     }
     if (screenPowerBtn) {
-      const lblOn = t('settings.screen_turn_on');
-      const lblOff = t('settings.screen_turn_off');
-      screenPowerBtn.textContent = isOff
-        ? (lblOn !== 'settings.screen_turn_on' ? lblOn : 'Turn On')
-        : (lblOff !== 'settings.screen_turn_off' ? lblOff : 'Turn Off');
+      screenPowerBtn.textContent = isOff ? t('settings.screen_turn_on', 'Turn On') : t('settings.screen_turn_off', 'Turn Off');
       screenPowerBtn.style.borderColor = isOff ? 'rgba(37, 194, 160, 0.5)' : '';
       screenPowerBtn.style.color = isOff ? 'var(--ok2, #25c2a0)' : '';
     }
@@ -421,11 +417,11 @@ export function initSettings() {
     const badge = $('lcd-renderer-badge');
     if (badge && !['missing', 'disabled'].includes(badge.dataset.lcdState)) {
       if (isOff) {
-        badge.textContent = 'LCD: SCREEN OFF';
+        badge.textContent = t('stg.lcd_badge_off', 'LCD: SCREEN OFF');
         badge.className = 'lcd-status-badge lcd-status-disabled';
         badge.title = t('ui.physical_lcd_display_is_turned', 'Physical LCD display is turned off (0 FPS).');
       } else {
-        badge.textContent = 'LCD: 10 FPS ACTIVE';
+        badge.textContent = t('stg.lcd_badge_on', 'LCD: ACTIVE');
         badge.className = 'lcd-status-badge lcd-status-active';
         badge.title = t('ui.lcd_direct_output_is_actively', 'LCD direct output is actively streaming.');
       }
@@ -561,7 +557,7 @@ export function initSettings() {
       }
       const statusText = $('btn-copy-status-text');
       if (statusText) {
-        statusText.textContent = data.enabled ? 'ENABLED' : 'DISABLED';
+        statusText.textContent = data.enabled ? t('stg.copy_on', 'ENABLED') : t('stg.copy_off', 'DISABLED');
         statusText.style.color = data.enabled ? '#2ecc71' : 'inherit';
       }
     } catch (e) {
@@ -597,7 +593,7 @@ export function initSettings() {
       }
       const statusText = $('btn-copy-status-text');
       if (statusText) {
-        statusText.textContent = isEnabled ? 'ENABLED' : 'DISABLED';
+        statusText.textContent = isEnabled ? t('stg.copy_on', 'ENABLED') : t('stg.copy_off', 'DISABLED');
         statusText.style.color = isEnabled ? '#2ecc71' : 'inherit';
       }
       saveButtonConfig();
@@ -709,7 +705,7 @@ export function initSettings() {
       const adv = await api.get('/api/security/advisor');
       const scoreBadge = $('sec-advisor-score-badge');
       if (scoreBadge) {
-        scoreBadge.textContent = `Score: ${adv.score}/100`;
+        scoreBadge.textContent = t('stg.score', 'Score: {score}/100', { score: adv.score });
         if (adv.score >= 90) {
           scoreBadge.style.color = 'var(--ok2, #25c2a0)';
           scoreBadge.style.borderColor = 'rgba(37,194,160,0.4)';
@@ -1777,7 +1773,7 @@ function askBackupPassphrase(title, msg, allowEmpty) {
         return resolve(null);
       }
       resolve(v);
-    }, () => resolve(null), { inputType: 'password', placeholder: allowEmpty ? 'Leave empty for no encryption' : 'Backup passphrase' });
+    }, () => resolve(null), { inputType: 'password', placeholder: allowEmpty ? t('stg.no_encryption_hint', 'Leave empty for no encryption') : t('backup.f_passphrase', 'Backup passphrase') });
   });
 }
 

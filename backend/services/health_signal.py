@@ -36,7 +36,9 @@ _next_check = 0.0  # monotonic; the poller asks every 10 s, the file is read at 
 
 
 def endpoint() -> str:
-    return os.environ.get("HEALTH_SIGNAL_URL", "").strip() or DEFAULT_ENDPOINT
+    from backend import config
+
+    return config.SETTINGS.health_signal_url.strip() or DEFAULT_ENDPOINT
 
 
 def _state_path() -> str:

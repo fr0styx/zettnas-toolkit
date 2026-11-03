@@ -675,7 +675,7 @@ export async function loadContainersData(isBackground = false) {
       showToast(t('toast.failed_to_load_containers', 'Failed to load containers: {error}', { error: err.message }), 'error');
       const tbody = document.getElementById('cw-docker-containers-tbody');
       if (tbody && _cwContainersList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crit, #ef4444); padding:24px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crit, #ef4444); padding:24px;">${escapeHtml(t('toast.failed_to_load_containers', 'Failed to load containers: {error}', { error: err.message }))}</td></tr>`;
       }
     } else {
       console.warn('Silent cw background refresh error:', err);
@@ -692,7 +692,7 @@ export async function loadCwCatalogData() {
     renderCwCatalogGrid();
   } catch (err) {
     if (grid) {
-      grid.innerHTML = `<div style="text-align: center; color: var(--err, var(--lt-t-ef4444ff, #ef4444)); padding: 24px; grid-column: 1 / -1;">Failed to load catalog: ${escapeHtml(err.message)}</div>`;
+      grid.innerHTML = `<div style="text-align: center; color: var(--err, var(--lt-t-ef4444ff, #ef4444)); padding: 24px; grid-column: 1 / -1;">${escapeHtml(t('toast.failed_to_load_catalog', 'Failed to load catalog: {error}', { error: err.message }))}</div>`;
     }
   }
 }

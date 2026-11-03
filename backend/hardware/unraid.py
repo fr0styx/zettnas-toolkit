@@ -8,6 +8,7 @@ import os
 import time
 from typing import Any
 
+from backend import config
 from backend.config import logger
 
 _CACHED_UNRAID_STATUS: dict[str, Any] = {}
@@ -16,7 +17,7 @@ _CACHE_TTL = 1.5
 
 
 def _find_emhttp_dir() -> str | None:
-    custom = os.getenv("UNRAID_EMHTTP_DIR", "").strip()
+    custom = config.SETTINGS.unraid_emhttp_dir.strip()
     if custom:
         return custom if (os.path.isdir(custom) and os.path.exists(os.path.join(custom, "var.ini"))) else None
     candidates = [

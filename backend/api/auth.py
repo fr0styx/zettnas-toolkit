@@ -793,9 +793,14 @@ def disable_mfa(data: MfaDisableRequest, request: Request):
         actor_ip=_client_ip(request),
     )
     try:  # visible to the admins in the event log
-        from backend.state import add_event
+        from backend.state import add_event, event_text
 
-        add_event("warning", "Two-factor sign-in turned off", f"{user['username']} turned off two-factor sign-in.")
+        add_event(
+            "warning",
+            "Two-factor sign-in turned off",
+            f"{user['username']} turned off two-factor sign-in.",
+            event_text("two_factor_off", user=user["username"]),
+        )
     except Exception:
         logger.debug("backend.api.auth.disable_mfa: event not recorded", exc_info=True)
     return {"status": "ok", "message": "Two-factor authentication disabled successfully."}

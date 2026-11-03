@@ -15,7 +15,7 @@ from backend.ignored_errors import ignored
 from backend.services.catalog_templates import CURATED_APP_CATALOG
 from backend.services.container_mutator import _docker_request, check_port_available, check_port_available_detailed
 from backend.services.image_ref import FOLLOW_TAG_LABEL
-from backend.state import add_event
+from backend.state import add_event, event_text
 
 CATALOG_SOURCES_FILE = os.path.join(DATA_DIR, "catalog_sources.json")
 CATALOG_CACHE_DIR = os.path.join(DATA_DIR, "catalog_cache")
@@ -1383,6 +1383,12 @@ def _port_bindings(app: dict[str, Any], port: int) -> tuple[dict[str, Any], dict
     return exposed_ports, port_bindings
 
 
+def _log_deployed(name: str, port: object) -> None:
+    add_event(
+        "info", "AppCatalog", f"Deployed {name} stack on port {port}", event_text("app_deployed", app=name, port=port)
+    )
+
+
 def stream_deploy_catalog_app(
     app_id: str,
     host_port: int | None = None,
@@ -1805,7 +1811,7 @@ def stream_deploy_catalog_app(
     is_running = inspect_resp.get("State", {}).get("Running", False) if st == 200 else False
 
     try:
-        add_event("info", "AppCatalog", f"Deployed {app['name']} stack on port {port}")
+        _log_deployed(app["name"], port)
     except Exception:
         ignored("backend.services.app_catalog.stream_deploy_catalog_app")
 

@@ -119,12 +119,13 @@ class CanaryWatchdog:
         if orig:
             _execute_revert(orig)
             try:
-                from backend.state import add_event
+                from backend.state import add_event, event_text
 
                 add_event(
                     "error",
                     "Network Canary Expired",
                     "Canary rollback watchdog expired after 60s without confirmation! Host network automatically restored to prevent lockout.",
+                    event_text("net_canary"),
                 )
             except Exception:
                 ignored("backend.hardware.network.CanaryWatchdog._on_timeout")

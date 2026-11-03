@@ -69,7 +69,7 @@ from backend.services.fan_control import run_fan_control as _run_fan_control
 from backend.services.notifications import NOTIFICATIONS_FILE, send_notification
 from backend.services.rag_reindex_status import get_reindex_status as get_ai_reindex_status
 from backend.services.stats_delta import StatsDeltaEncoder
-from backend.state import Z_STATE, add_event, events_snapshot
+from backend.state import Z_STATE, add_event, event_text, events_snapshot
 
 logger = logging.getLogger("ZettNAS")
 
@@ -645,7 +645,7 @@ def evaluate_smart_velocity_alerts() -> list[dict[str, Any]]:
     from backend.db import query_smart_velocity
     from backend.hardware.disks import _discover_disks
     from backend.services.notifications import send_notification
-    from backend.state import add_event
+    from backend.state import add_event, event_text
 
     now = time.time()
     triggered_alerts: list[dict[str, Any]] = []
@@ -686,7 +686,18 @@ def evaluate_smart_velocity_alerts() -> list[dict[str, Any]]:
                         f"Risk level: {risk.upper()}. "
                         f"{v.get('recommendation', 'Plan replacement.')}"
                     )
-                    add_event("critical", "Drive Degradation", msg)
+                    add_event(
+                        "critical",
+                        "Drive Degradation",
+                        msg,
+                        event_text(
+                            "drive_degrading",
+                            dev=dev,
+                            sectors=realloc_7d,
+                            risk=risk.upper(),
+                            advice=v.get("recommendation", "Plan replacement."),
+                        ),
+                    )
                     send_notification(
                         {
                             "type": "smart",

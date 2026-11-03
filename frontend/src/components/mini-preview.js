@@ -124,7 +124,7 @@ export function applyDashboardLayout() {
   });
 
   if ($('clock-format-btn')) {
-    $('clock-format-btn').textContent = state.clockFormat === '12' ? '12 Hours' : '24 Hours';
+    $('clock-format-btn').textContent = state.clockFormat === '12' ? t('settings.clock_12h', '12 Hours') : t('settings.clock_24h', '24 Hours');
   }
 
   evaluateActivePreset();

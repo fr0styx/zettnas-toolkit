@@ -321,10 +321,10 @@ def _context_window_for(messages: list[dict[str, Any]] | None = None, tools: lis
     """One fixed num_ctx (AI-7). Ollama reloads the model whenever num_ctx changes, and a window
     sized to each prompt grew to 16384 and a 1.8 GiB KV cache on an iGPU; the prompt is fitted to
     the window instead (see _fit_to_window). ZETTNAS_AI_NUM_CTX overrides it."""
-    override = os.environ.get("ZETTNAS_AI_NUM_CTX", "").strip()
-    if override.isdigit() and int(override) >= 2048:
-        return int(override)
-    return DEFAULT_NUM_CTX
+    from backend import config
+
+    override = config.SETTINGS.ai_num_ctx
+    return override if override >= 2048 else DEFAULT_NUM_CTX
 
 
 _CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]")

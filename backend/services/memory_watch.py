@@ -9,6 +9,7 @@ the code lines that allocated the most.
 import collections
 import gc
 import os
+import sqlite3 as _std_sqlite3
 import time
 import tracemalloc
 
@@ -61,7 +62,7 @@ def sample(now: float | None = None, read=current) -> dict | None:
             if now - _STATE["pruned"] >= 3600:
                 conn.execute("DELETE FROM memory_samples WHERE ts < ?", (int(now - KEEP_SECS),))
                 _STATE["pruned"] = now
-    except (OSError, sqlite3.Error):
+    except (OSError, sqlite3.Error, _std_sqlite3.Error):  # history.db opens with the standard module
         logger.debug("memory_watch: sample not saved", exc_info=True)
         return None
     return row

@@ -68,7 +68,7 @@ from backend.services.broadcaster import broadcaster
 from backend.services.copy_engine import _do_copy
 from backend.services.notifications import DEFAULT_NOTIFICATION_CONFIG, NOTIFICATIONS_FILE
 from backend.settings import test_mode
-from backend.state import Z_STATE, add_event
+from backend.state import Z_STATE, add_event, event_text
 
 router = APIRouter(tags=["System & Storage"])
 
@@ -392,7 +392,9 @@ def start_copy(req: StartCopyRequest | None = None):
     Z_STATE.copy_status = "copying"
     Z_STATE.ui_wake.set()
     src_label = str(cfg.get("source", "media slot")).upper()
-    add_event("info", "Copy Started", f"Starting ingest from {src_label}...")
+    add_event(
+        "info", "Copy Started", f"Starting ingest from {src_label}...", event_text("copy_started", source=src_label)
+    )
     threading.Thread(target=in_this_request(lambda c: asyncio.run(_do_copy(c))), args=(cfg,), daemon=True).start()
     return {"status": "started"}
 
@@ -441,7 +443,12 @@ def usb_import(req: UsbDiskRequest):
     Z_STATE.copy_active = True
     Z_STATE.copy_status = "copying"
     Z_STATE.ui_wake.set()
-    add_event("info", "Copy Started", f"Importing from USB disk {os.path.basename(req.path)}...")
+    add_event(
+        "info",
+        "Copy Started",
+        f"Importing from USB disk {os.path.basename(req.path)}...",
+        event_text("usb_import", disk=os.path.basename(req.path)),
+    )
     threading.Thread(target=in_this_request(lambda c: asyncio.run(_do_copy(c))), args=(cfg,), daemon=True).start()
     return {"status": "started"}
 
@@ -812,7 +819,12 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
             expires_in_days=req.expires_in_days,
             folders=folders,
         )
-        add_event("success", "Security", f"Generated new scoped API token: {req.name}")
+        add_event(
+            "success",
+            "Security",
+            f"Generated new scoped API token: {req.name}",
+            event_text("api_access_added", name=req.name),
+        )
         try:
             from backend.users_db import log_security_event
 
@@ -858,7 +870,7 @@ def delete_token(token_id: str, principal: AuthenticatedPrincipal = Depends(get_
     if not revoked and (not user_id or (principal and (principal.role_id == "superadmin" or principal.has_scope("*")))):
         revoked = revoke_token(token_id)
     if revoked:
-        add_event("info", "Security", "Revoked an API token")
+        add_event("info", "Security", "Revoked an API token", event_text("api_access_removed"))
         return {"status": "ok"}
     raise HTTPException(status_code=404, detail="Token not found or unauthorized to revoke.")
 
@@ -926,7 +938,7 @@ def trigger_power_action(action: str) -> bool:
 )
 async def system_reboot():
     """Trigger system reboot (requires system:power scope)."""
-    add_event("warning", "System", "System reboot sequence initiated by authorized user")
+    add_event("warning", "System", "System reboot sequence initiated by authorized user", event_text("reboot"))
     success = await asyncio.to_thread(trigger_power_action, "reboot")
     return {"status": "ok", "action_dispatched": success, "message": "System reboot sequence initiated"}
 
@@ -937,7 +949,7 @@ async def system_reboot():
 )
 async def system_shutdown():
     """Trigger system poweroff (requires system:power scope)."""
-    add_event("warning", "System", "System shutdown sequence initiated by authorized user")
+    add_event("warning", "System", "System shutdown sequence initiated by authorized user", event_text("shutdown"))
     success = await asyncio.to_thread(trigger_power_action, "shutdown")
     return {"status": "ok", "action_dispatched": success, "message": "System shutdown sequence initiated"}
 
@@ -1267,7 +1279,12 @@ async def _check_update_signature(target_img: str, expected_digest: str | None, 
         logger.warning(
             "[System Update] Installing %s although its signature failed: %s", one_line(digest), one_line(result.reason)
         )
-        add_event("warning", "Update signature not verified", result.reason)
+        add_event(
+            "warning",
+            "Update signature not verified",
+            result.reason,
+            event_text("update_sig_unverified", reason=result.reason),
+        )
         return {"checked": True, **result.as_dict()}
     logger.error("[System Update] Refusing %s: %s", one_line(digest), one_line(result.reason))
     raise HTTPException(
@@ -1739,7 +1756,12 @@ async def post_revert_system_update(
     spawned = await asyncio.to_thread(spawn_self_updater, match["image"], target_container, 2.5, match["id"])
     if not spawned:
         raise HTTPException(status_code=500, detail="Could not start the revert.")
-    add_event("warning", "Updates", f"Reverting to {match['version'] or 'the previous version'}")
+    add_event(
+        "warning",
+        "Updates",
+        f"Reverting to {match['version'] or 'the previous version'}",
+        event_text("update_revert" if match["version"] else "update_revert_prev", version=match["version"] or ""),
+    )
     return {
         "status": "restarting",
         "version": match["version"],
@@ -1791,7 +1813,7 @@ async def system_security_fix(fix_id: str, principal: AuthenticatedPrincipal = D
         raise HTTPException(status_code=400, detail=str(e)) from e
     who = getattr(principal, "username", None) or "admin"
     try:
-        from backend.state import add_event
+        from backend.state import add_event, event_text
 
         add_event("info", "Security Advisor fix applied", f"{who}: {message}", details={"fix": fix_id})
     except Exception as e:

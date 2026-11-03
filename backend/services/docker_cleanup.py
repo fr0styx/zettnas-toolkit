@@ -347,7 +347,18 @@ def prune_docker_system(
         f"Images: {len(images_deleted)}, Volumes: {len(volumes_deleted)})."
     )
     logger.info("[Docker Prune] %s", summary_msg)
-    add_event("info", "App cleanup", summary_msg)
+    add_event(
+        "info",
+        "App cleanup",
+        summary_msg,
+        event_text(
+            "prune_done",
+            freed=space_human,
+            containers=len(containers_deleted),
+            images=len(images_deleted),
+            volumes=len(volumes_deleted),
+        ),
+    )
 
     return {
         "success": True,
@@ -578,7 +589,18 @@ def _run_prune_job(job: dict[str, Any], opts: dict[str, Any]) -> None:
         f"{' so far' if stopped else ''} (Containers: {c['containers']}, Images: {c['images']}, Volumes: {c['volumes']})."
     )
     logger.info("[Docker Prune] %s", summary)
-    add_event("info", "App cleanup", summary)
+    add_event(
+        "info",
+        "App cleanup",
+        summary,
+        event_text(
+            "prune_stopped" if stopped else "prune_done",
+            freed=_format_bytes(job["freed_bytes"]),
+            containers=c["containers"],
+            images=c["images"],
+            volumes=c["volumes"],
+        ),
+    )
     _update(
         job,
         state="cancelled" if stopped else ("done" if not job["errors"] else "done_with_errors"),

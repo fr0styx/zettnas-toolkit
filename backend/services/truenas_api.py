@@ -20,6 +20,7 @@ from typing import Any
 
 import httpx
 
+from backend import config
 from backend.config import logger
 
 
@@ -39,7 +40,7 @@ def _client(transport: httpx.BaseTransport | None = None) -> httpx.Client:
         base_url=f"{base}/api/v2.0",
         headers={"Authorization": f"Bearer {os.environ.get('TRUENAS_API_KEY', '')}"},
         timeout=15,
-        verify=os.environ.get("TRUENAS_VERIFY_TLS", "1") != "0",
+        verify=config.SETTINGS.truenas_verify_tls,
         transport=transport,
     )
 
@@ -69,7 +70,7 @@ def _open_ws(url: str):
     ctx = None
     if url.startswith("wss://"):
         ctx = ssl.create_default_context()
-        if os.environ.get("TRUENAS_VERIFY_TLS", "1") == "0":
+        if not config.SETTINGS.truenas_verify_tls:
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
     return ws_connect(url, ssl=ctx, open_timeout=15, close_timeout=5)

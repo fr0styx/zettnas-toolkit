@@ -1,10 +1,13 @@
 """Video details for the explorer and videos converted while playing for browsers that can't play them."""
 
+import dataclasses
 import io
 from unittest.mock import patch
 
 import pytest
 from PIL import Image
+
+from backend import config as _config
 
 av = pytest.importorskip("av")
 
@@ -110,7 +113,7 @@ def test_encoder_is_software_without_a_gpu_or_when_switched_off(monkeypatch):
     assert video_compat.pick_encoder() == "libx264"
     video_compat._encoder_choice.clear()
     monkeypatch.setattr(video_compat.os.path, "exists", lambda p: True)
-    monkeypatch.setenv("ZETTNAS_VIDEO_HWENC", "off")
+    monkeypatch.setattr(_config, "SETTINGS", dataclasses.replace(_config.SETTINGS, video_hwenc="off"))
     assert video_compat.pick_encoder() == "libx264"
     video_compat._encoder_choice.clear()
 
@@ -118,7 +121,7 @@ def test_encoder_is_software_without_a_gpu_or_when_switched_off(monkeypatch):
 def test_encoder_falls_back_when_quick_sync_fails_to_open(monkeypatch):
     video_compat._encoder_choice.clear()
     monkeypatch.setattr(video_compat.os.path, "exists", lambda p: True)
-    monkeypatch.delenv("ZETTNAS_VIDEO_HWENC", raising=False)
+    monkeypatch.setattr(_config, "SETTINGS", dataclasses.replace(_config.SETTINGS, video_hwenc="auto"))
 
     def broken(*a, **k):
         raise av.error.ValueError(22, "no QSV runtime")

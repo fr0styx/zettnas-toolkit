@@ -52,7 +52,7 @@ from backend.services.notifications import close_notification_client
 from backend.services.stats_collector import smart_poller_daemon, stats_collector_daemon
 from backend.services.webdav_engine import get_webdav_engine
 from backend.settings import test_mode
-from backend.state import Z_STATE, _load_events, add_event
+from backend.state import Z_STATE, _load_events, add_event, event_text
 
 
 def _start_docker_proxy(supervise) -> None:
@@ -105,6 +105,19 @@ def _start_network_services() -> None:
     from backend.services.nut_server import start_if_enabled as start_nut_server
 
     start_nut_server()
+
+
+def _warn_default_password() -> None:
+    logger.warning("=" * 60)
+    logger.warning("[SECURITY WARNING] Default password ('admin') is active!")
+    logger.warning("[SECURITY WARNING] Change password in Toolkit Settings.")
+    logger.warning("=" * 60)
+    add_event(
+        "warning",
+        "Default Password In Use",
+        "The system is using the default password 'admin'. Please change it in Settings.",
+        event_text("default_login"),
+    )
 
 
 def startup_system():
@@ -223,7 +236,7 @@ def startup_system():
 
     db_crypto.prepare_in_background(_rag_db_path)
     if _data_key_problem:
-        add_event("error", "AI data locked", _data_key_problem)
+        add_event("error", "AI data locked", _data_key_problem, event_text("ai_data_locked", problem=_data_key_problem))
     try:
         from backend.secret_box import migrate_plaintext_mfa_secrets
 
@@ -265,15 +278,7 @@ def startup_system():
                 logger.debug(f"[DEV] Could not link {target_node}: {e}")
 
     if is_using_default_password():
-        logger.warning("=" * 60)
-        logger.warning("[SECURITY WARNING] Default password ('admin') is active!")
-        logger.warning("[SECURITY WARNING] Change password in Toolkit Settings.")
-        logger.warning("=" * 60)
-        add_event(
-            "warning",
-            "Default Password In Use",
-            "The system is using the default password 'admin'. Please change it in Settings.",
-        )
+        _warn_default_password()
 
     led_cfg = read_json(LED_STATE_FILE, None)
     if isinstance(led_cfg, dict):
@@ -436,6 +441,7 @@ def fan_watchdog_daemon():
                 "error",
                 "Fan Watchdog Triggered",
                 f"Stats collector stalled for {int(stale)}s; fans returned to firmware control.",
+                event_text("fan_watchdog", secs=int(stale)),
             )
 
 

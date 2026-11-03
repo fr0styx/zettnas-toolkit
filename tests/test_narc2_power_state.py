@@ -1,9 +1,11 @@
 """NARC-2: one "is this disk asleep" probe for the whole app, with one rule and one cache."""
 
+import dataclasses
 import subprocess
 
 import pytest
 
+from backend import config as _config
 from backend.hardware import disks, power_state, smart_engine
 from backend.services import rag_standby
 
@@ -60,11 +62,11 @@ def test_unknown_answers_and_the_callers_policy(runs):
 
 
 def test_an_unplaced_path_follows_the_callers_policy(monkeypatch):
-    monkeypatch.delenv("ZETTNAS_STANDBY_UNKNOWN", raising=False)
+    monkeypatch.setattr(_config, "SETTINGS", dataclasses.replace(_config.SETTINGS, standby_unknown="defer"))
     unknown = rag_standby.UNKNOWN_BACKING_DEV
     assert rag_standby.is_backing_disk_in_standby(unknown) is True
     assert rag_standby.is_backing_disk_in_standby(unknown, unknown=power_state.CHECK) is False
-    monkeypatch.setenv("ZETTNAS_STANDBY_UNKNOWN", "allow")
+    monkeypatch.setattr(_config, "SETTINGS", dataclasses.replace(_config.SETTINGS, standby_unknown="allow"))
     assert rag_standby.is_backing_disk_in_standby(unknown) is False
 
 

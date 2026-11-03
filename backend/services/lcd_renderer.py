@@ -396,7 +396,7 @@ def lcd_context_options(width: int, height: int) -> dict:
 # screenshot every frame interval with a back-off to 1 FPS while unchanged.
 # ---------------------------------------------------------------------------
 
-LCD_CAPTURE = os.environ.get("ZETTNAS_LCD_CAPTURE", "screencast").strip().lower()
+LCD_CAPTURE = config.SETTINGS.lcd_capture
 _NO_FRAME_FALLBACK_S = 5.0
 
 

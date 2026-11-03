@@ -60,6 +60,7 @@ from backend.services.rag_text import (  # noqa: F401
 )
 from backend.state import (  # noqa: F401
     add_event,
+    event_text,
 )
 
 
@@ -284,6 +285,7 @@ class RagIndexingMixin:
                     "info",
                     f"ZettAI Auto-Learning Started ({dev_label})",
                     f"Disk spin-up detected on {dev_label}. Syncing {len(paths)} watched folder(s)...",
+                    event_text("ai_sync_started", disk=dev_label, count=len(paths)),
                 )
             except Exception:
                 ignored("backend.services.rag_engine.RagSearchEngine.start_background_sync")
@@ -437,6 +439,13 @@ class RagIndexingMixin:
                         "info",
                         f"ZettAI Auto-Learning Completed ({dev_label})",
                         f"Indexed {total_indexed} files ({total_skipped} unchanged, {total_deferred} deferred) on {dev_label}.",
+                        event_text(
+                            "ai_sync_done",
+                            disk=dev_label,
+                            indexed=total_indexed,
+                            unchanged=total_skipped,
+                            deferred=total_deferred,
+                        ),
                     )
                 except Exception:
                     ignored("backend.services.rag_engine.RagSearchEngine.index_paths")
