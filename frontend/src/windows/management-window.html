@@ -4758,34 +4758,34 @@
 <!-- HTTPS Transport Encryption Guidance Modal -->
 <div id="modal-https-guide-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-https-guide-title" style="display: none; z-index: 9500;">
   <div class="smart-modal-window" style="max-width: 620px; width: 92%; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.2);">
-    <div class="smart-modal-header" id="modal-https-guide-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-https-guide-title" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 16px;">🔒</span>
+    <div class="smart-modal-header hg-x" id="modal-https-guide-header">
+      <span class="smart-modal-title hg-row" id="modal-https-guide-title">
+        <span class="hg-fs16">🔒</span>
         <span data-i18n="sec.https_modal_title">HTTPS Transport Encryption & SSL Setup</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="modal-https-guide-close" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding: 18px 20px;">
-      <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.5;" data-i18n="sec.https_modal_desc">
+    <div class="smart-modal-body hg-col">
+      <div class="hg-xs-muted" data-i18n="sec.https_modal_desc">
         Secure your NAS web sessions with end-to-end TLS encryption and reverse proxy protection.
       </div>
 
       <!-- Current Session Status Banner -->
-      <div id="https-guide-status-banner" style="padding: 12px 14px; border-radius: 8px; display: flex; align-items: center; gap: 10px; font-size: var(--zn-fs-xs); font-weight: 600;">
+      <div class="hg-row-xs-semi-box" id="https-guide-status-banner">
         <!-- Filled dynamically -->
       </div>
 
       <!-- Solution Cards -->
-      <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div class="hg-col-2">
         <!-- Option 1: Docker Reverse Proxy (Caddy / Nginx) -->
-        <div style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
-          <div style="flex: 1; min-width: 200px;">
-            <div style="font-weight: 700; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); display: flex; align-items: center; gap: 6px;">
+        <div class="hg-row-box">
+          <div class="hg-grow">
+            <div class="hg-row-xs-bold-strong">
               <span aria-hidden="true">📦</span> <span data-i18n="sec.https_option_caddy_title">1-Click Reverse Proxy (Caddy / Nginx)</span>
             </div>
-            <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; line-height: 1.4;" data-i18n="sec.https_option_caddy_desc">
+            <div class="hg-xs-muted-2" data-i18n="sec.https_option_caddy_desc">
               Deploy automated SSL reverse proxies with Let's Encrypt certificates directly via the Apps & Containers Catalog.
             </div>
           </div>
@@ -4795,26 +4795,26 @@
         </div>
 
         <!-- Option 2: Tailscale Serve / HTTPS -->
-        <div style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
-          <div style="font-weight: 700; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); display: flex; align-items: center; gap: 6px;">
+        <div class="hg-col-box">
+          <div class="hg-row-xs-bold-strong">
             <span aria-hidden="true">🌐</span> <span data-i18n="sec.https_option_tailscale_title">Tailscale Serve / MagicDNS</span>
           </div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4;" data-i18n="sec.https_option_tailscale_desc">
+          <div class="hg-xs-muted-3" data-i18n="sec.https_option_tailscale_desc">
             Get instant zero-config HTTPS with automated Let's Encrypt certificates across your secure mesh network:
           </div>
-          <div style="display: flex; align-items: center; gap: 8px; background: var(--zn-shade-35); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 6px 10px;">
-            <code style="font-family: monospace; font-size: var(--zn-fs-xs); color: var(--zn-text-accent); flex: 1; user-select: all;">tailscale serve --https=443 127.0.0.1:8082</code>
+          <div class="hg-row-box-2">
+            <code class="hg-xs-accent-grow">tailscale serve --https=443 127.0.0.1:8082</code>
             <button type="button" id="btn-copy-tailscale-serve" class="btn-pill-toggle is-small"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
           </div>
         </div>
 
         <!-- Option 3: Network Cockpit & Ports -->
-        <div style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
-          <div style="flex: 1; min-width: 200px;">
-            <div style="font-weight: 700; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); display: flex; align-items: center; gap: 6px;">
+        <div class="hg-row-box">
+          <div class="hg-grow">
+            <div class="hg-row-xs-bold-strong">
               <span aria-hidden="true">🔌</span> <span data-i18n="sec.https_option_ports_title">Network Cockpit & Host Ports</span>
             </div>
-            <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; line-height: 1.4;" data-i18n="sec.https_option_ports_desc">
+            <div class="hg-xs-muted-2" data-i18n="sec.https_option_ports_desc">
               Inspect listening TCP ports (80, 443, 8082) and configure host reverse proxy port forwards.
             </div>
           </div>
@@ -4825,8 +4825,8 @@
       </div>
 
       <!-- Action Buttons -->
-      <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid var(--zn-line-8);">
-        <button id="btn-modal-https-guide-close" type="button" class="btn-pill-toggle" style="background: var(--zn-glaze-6); border-color: var(--zn-line-15); color: var(--zn-text-soft);" data-i18n="mw.close">
+      <div class="hg-row-box-3">
+        <button id="btn-modal-https-guide-close" type="button" class="btn-pill-toggle hg-soft-box" data-i18n="mw.close">
           Close
         </button>
       </div>
@@ -4837,8 +4837,8 @@
 <!-- Network Port Configuration Modal -->
 <div id="network-port-config-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-port-cfg-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 500px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.15); border: 1px solid var(--zn-line-14);">
-    <div class="smart-modal-header" style="cursor: default;">
-      <span class="smart-modal-title" id="net-port-cfg-title" style="display: flex; align-items: center; gap: 8px;">
+    <div class="smart-modal-header pcfg-x">
+      <span class="smart-modal-title pcfg-row" id="net-port-cfg-title">
         <span id="net-port-cfg-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok2, #3bf58b);"></span>
         <span data-i18n="net.port_cfg_title">Port Configuration</span>: <strong id="net-port-cfg-iface" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); font-family: var(--font-mono, monospace);">ETH0</strong>
       </span>
@@ -4846,32 +4846,32 @@
         <button class="win-btn close-btn" id="net-port-cfg-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+    <div class="smart-modal-body pcfg-col">
       <!-- Port Alias -->
       <div>
-        <label for="net-port-alias-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.alias_label">Port Friendly Alias</label>
-        <input type="text" id="net-port-alias-input" class="tz-text-input" placeholder="e.g. 10G Workstation Direct, Uplink to Switch" data-i18n-placeholder="ui.e_g_10g_workstation_direct" maxlength="64" style="width: 100%; box-sizing: border-box;" autocomplete="off" />
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;" data-i18n="net.alias_hint">Custom name shown on switch faceplate and Unraid network config.</div>
+        <label class="pcfg-xs-bold-muted" for="net-port-alias-input" data-i18n="net.alias_label">Port Friendly Alias</label>
+        <input type="text" id="net-port-alias-input" class="tz-text-input pcfg-size" placeholder="e.g. 10G Workstation Direct, Uplink to Switch" data-i18n-placeholder="ui.e_g_10g_workstation_direct" maxlength="64" autocomplete="off" />
+        <div class="pcfg-xs-muted" data-i18n="net.alias_hint">Custom name shown on switch faceplate and Unraid network config.</div>
       </div>
 
       <!-- MTU Configuration -->
       <div>
-        <label for="net-port-mtu-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.mtu_label">MTU (Maximum Transmission Unit)</label>
-        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
+        <label class="pcfg-xs-bold-muted" for="net-port-mtu-input" data-i18n="net.mtu_label">MTU (Maximum Transmission Unit)</label>
+        <div class="pcfg-row-2">
           <button type="button" class="btn-pill-toggle net-mtu-preset" data-mtu="1500" id="net-mtu-preset-1500" data-sample>1500 (Standard)</button>
           <button type="button" class="btn-pill-toggle net-mtu-preset" data-mtu="9000" id="net-mtu-preset-9000" data-sample>9000 (Jumbo Frames)</button>
-          <input type="number" id="net-port-mtu-input" min="68" max="9216" value="1500" class="tz-text-input" style="width: 100px; text-align: center; font-family: var(--font-mono, monospace);" />
+          <input type="number" id="net-port-mtu-input" min="68" max="9216" value="1500" class="tz-text-input pcfg-size-2" />
         </div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="net.mtu_hint">Use 9000 Jumbo Frames for high-throughput 10GbE point-to-point connections.</div>
+        <div class="pcfg-xs-muted-2" data-i18n="net.mtu_hint">Use 9000 Jumbo Frames for high-throughput 10GbE point-to-point connections.</div>
       </div>
 
       <!-- Wake-on-LAN -->
-      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px 12px;">
+      <div class="pcfg-row-box">
         <div>
-          <div style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-bright);" data-i18n="net.wol_label">Wake-on-LAN (Magic Packet)</div>
-          <div id="net-port-wol-desc" style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="net.wol_hint">Permit network magic packet wakeups from sleep/standby.</div>
+          <div class="pcfg-xs-semi" data-i18n="net.wol_label">Wake-on-LAN (Magic Packet)</div>
+          <div class="pcfg-xs-muted-2" id="net-port-wol-desc" data-i18n="net.wol_hint">Permit network magic packet wakeups from sleep/standby.</div>
         </div>
-        <label class="switch" style="margin: 0;">
+        <label class="switch pcfg-x-2">
           <input type="checkbox" id="net-port-wol-toggle" />
           <span class="slider round"></span>
         </label>
@@ -4879,7 +4879,7 @@
 
       <!-- WoL UEFI/BIOS notice -->
       <div id="net-port-wol-bios-notice" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 6px; padding: 8px 12px; font-size: var(--zn-fs-xs); line-height: 1.4; color: var(--lt-t-fde68aff, #fde68a); display: flex; gap: 8px; align-items: flex-start;">
-        <span style="font-size: 14px; flex-shrink: 0;">💡</span>
+        <span class="pcfg-fs14">💡</span>
         <div>
           <strong data-i18n="net.wol_bios_title">Hardware & BIOS Requirement:</strong>
           <span data-i18n="net.wol_bios_desc">Ensure "PCIe PME / Wake on LAN" is enabled in motherboard UEFI BIOS, and "ErP/EuP" power saving is DISABLED so the network controller remains powered (+5VSB) in standby.</span>
@@ -4888,32 +4888,32 @@
 
       <!-- Link Negotiation Speed -->
       <div>
-        <label for="net-port-speed-select" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.speed_label">Link Negotiation / Speed</label>
-        <select id="net-port-speed-select" class="tz-select-input" style="width: 100%; box-sizing: border-box;">
+        <label class="pcfg-xs-bold-muted" for="net-port-speed-select" data-i18n="net.speed_label">Link Negotiation / Speed</label>
+        <select id="net-port-speed-select" class="tz-select-input pcfg-size">
           <option value="auto" data-i18n="net.speed_auto">Auto-Negotiate (Recommended)</option>
           <option value="10000" data-sample>10,000 Mbps Full-Duplex (10GbE)</option>
           <option value="2500" data-sample>2,500 Mbps Full-Duplex (2.5GbE)</option>
           <option value="1000" data-sample>1,000 Mbps Full-Duplex (Gigabit)</option>
           <option value="100" data-sample>100 Mbps Full-Duplex</option>
         </select>
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;" data-i18n="net.speed_hint">Auto-negotiate adapts dynamically to connected switch capabilities.</div>
+        <div class="pcfg-xs-muted" data-i18n="net.speed_hint">Auto-negotiate adapts dynamically to connected switch capabilities.</div>
       </div>
 
       <!-- Interface Hardware Summary Readout -->
-      <div style="background: var(--zn-shade-30); border: 1px solid var(--zn-line-6); border-radius: 6px; padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: var(--zn-fs-xs);">
-        <div style="display: flex; align-items: center; justify-content: space-between; grid-column: span 2;">
-          <div><span style="color: var(--muted);">MAC:</span> <span id="net-port-ro-mac" style="font-family: var(--font-mono, monospace); color: var(--zn-text-soft);">--</span></div>
+      <div class="pcfg-grid-xs-box">
+        <div class="pcfg-row-3">
+          <div><span class="pcfg-muted">MAC:</span> <span class="pcfg-soft" id="net-port-ro-mac">--</span></div>
           <button type="button" id="btn-copy-port-mac" class="btn-pill-toggle is-small" title="Copy MAC address for Wake-on-LAN Magic Packet dispatch" data-i18n-title="ui.copy_mac_address_for_wake">
             <span aria-hidden="true">📋</span> <span data-i18n="net.copy_mac">Copy MAC</span>
           </button>
         </div>
-        <div><span style="color: var(--muted);" data-i18n="mw.driver">Driver:</span> <span id="net-port-ro-driver" style="color: var(--zn-text-soft);">--</span></div>
-        <div><span style="color: var(--muted);" data-i18n="mw.pci_slot">PCI Slot:</span> <span id="net-port-ro-pci" style="font-family: var(--font-mono, monospace); color: var(--zn-text-soft);">--</span></div>
-        <div><span style="color: var(--muted);" data-i18n="mw.link">Link:</span> <span id="net-port-ro-link" style="color: var(--zn-text-soft);">--</span></div>
+        <div><span class="pcfg-muted" data-i18n="mw.driver">Driver:</span> <span class="pcfg-soft-2" id="net-port-ro-driver">--</span></div>
+        <div><span class="pcfg-muted" data-i18n="mw.pci_slot">PCI Slot:</span> <span class="pcfg-soft" id="net-port-ro-pci">--</span></div>
+        <div><span class="pcfg-muted" data-i18n="mw.link">Link:</span> <span class="pcfg-soft-2" id="net-port-ro-link">--</span></div>
       </div>
 
       <!-- Action buttons -->
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+      <div class="pcfg-row-box-2">
         <button id="net-port-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
         <button id="net-port-cfg-save-btn" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.save_port_cfg">Save & Apply</span>
@@ -4926,8 +4926,8 @@
 <!-- Docker Network Create Modal -->
 <div id="network-docker-create-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-docker-create-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 460px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(56, 189, 248, 0.15); border: 1px solid var(--zn-line-14);">
-    <div class="smart-modal-header" style="cursor: default;">
-      <span class="smart-modal-title" id="net-docker-create-title" style="display: flex; align-items: center; gap: 8px;">
+    <div class="smart-modal-header ndc-x">
+      <span class="smart-modal-title ndc-row" id="net-docker-create-title">
         <svg class="ic" style="width: 15px; height: 15px; color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); fill: currentColor;"><use href="#i-chip"/></svg>
         <span data-i18n="net.create_docker_title">Create Docker Network</span>
       </span>
@@ -4935,31 +4935,31 @@
         <button class="win-btn close-btn" id="net-docker-create-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+    <div class="smart-modal-body ndc-col">
       <div>
-        <label for="net-docker-name-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.docker_name_label">Network Name</label>
-        <input type="text" id="net-docker-name-input" class="tz-text-input" placeholder="e.g. homelab_isolated, iot_net" data-i18n-placeholder="ph.docker_network_name" maxlength="64" style="width: 100%; box-sizing: border-box;" autocomplete="off" />
+        <label class="ndc-xs-bold-muted" for="net-docker-name-input" data-i18n="net.docker_name_label">Network Name</label>
+        <input type="text" id="net-docker-name-input" class="tz-text-input ndc-size" placeholder="e.g. homelab_isolated, iot_net" data-i18n-placeholder="ph.docker_network_name" maxlength="64" autocomplete="off" />
       </div>
       <div>
-        <label for="net-docker-driver-select" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.docker_driver_label">Driver</label>
-        <select id="net-docker-driver-select" class="tz-select-input" style="width: 100%; box-sizing: border-box;">
+        <label class="ndc-xs-bold-muted" for="net-docker-driver-select" data-i18n="net.docker_driver_label">Driver</label>
+        <select id="net-docker-driver-select" class="tz-select-input ndc-size">
           <option value="bridge" data-i18n="mw.bridge_isolated_host_bridge">bridge (Isolated host bridge)</option>
           <option value="macvlan" data-i18n="mw.macvlan_direct_lan_ip_assignment">macvlan (Direct LAN IP assignment)</option>
           <option value="ipvlan" data-i18n="mw.ipvlan_direct_l2_l3_lan_assignment">ipvlan (Direct L2/L3 LAN assignment)</option>
         </select>
       </div>
       <div>
-        <label for="net-docker-subnet-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.docker_subnet_label">Subnet CIDR (Optional)</label>
-        <input type="text" id="net-docker-subnet-input" class="tz-text-input" placeholder="e.g. 172.28.0.0/16" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
+        <label class="ndc-xs-bold-muted" for="net-docker-subnet-input" data-i18n="net.docker_subnet_label">Subnet CIDR (Optional)</label>
+        <input type="text" id="net-docker-subnet-input" class="tz-text-input ndc-size-2" placeholder="e.g. 172.28.0.0/16" maxlength="32" autocomplete="off" />
       </div>
       <div>
-        <label for="net-docker-gateway-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.docker_gateway_label">Gateway IP (Optional)</label>
-        <input type="text" id="net-docker-gateway-input" class="tz-text-input" placeholder="e.g. 172.28.0.1" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
+        <label class="ndc-xs-bold-muted" for="net-docker-gateway-input" data-i18n="net.docker_gateway_label">Gateway IP (Optional)</label>
+        <input type="text" id="net-docker-gateway-input" class="tz-text-input ndc-size-2" placeholder="e.g. 172.28.0.1" maxlength="32" autocomplete="off" />
       </div>
-      <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.45;" data-i18n="net.docker_create_hint">
+      <div class="ndc-xs-muted" data-i18n="net.docker_create_hint">
         Creates a network that apps can use to talk to each other.
       </div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+      <div class="ndc-row-box">
         <button id="net-docker-create-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
         <button id="net-docker-create-submit-btn" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.create_btn">+ Create Network</span>
@@ -4972,8 +4972,8 @@
 <!-- Host IP, Subnet, Gateway & DNS Configuration Modal -->
 <div id="network-host-config-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-host-cfg-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 520px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(56, 189, 248, 0.18); border: 1px solid var(--zn-line-14);">
-    <div class="smart-modal-header" style="cursor: default;">
-      <span class="smart-modal-title" id="net-host-cfg-title" style="display: flex; align-items: center; gap: 8px;">
+    <div class="smart-modal-header hcfg-x">
+      <span class="smart-modal-title hcfg-row" id="net-host-cfg-title">
         <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); fill: currentColor;"><use href="#i-net"/></svg>
         <span data-i18n="net.host_cfg_title">Host IP & DNS Configuration</span>
       </span>
@@ -4981,84 +4981,84 @@
         <button class="win-btn close-btn" id="net-host-cfg-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+    <div class="smart-modal-body hcfg-col">
       <!-- Protocol Mode Segmented Switch -->
       <div>
-        <label style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.host_proto_label">IPv4 Assignment Protocol</label>
-        <div style="display: flex; gap: 8px;">
-          <button type="button" class="btn-pill-toggle net-proto-btn active" data-proto="static" id="net-proto-btn-static" style="flex: 1;" data-i18n="net.proto_static">Static IP Configuration</button>
-          <button type="button" class="btn-pill-toggle net-proto-btn" data-proto="dhcp" id="net-proto-btn-dhcp" style="flex: 1;" data-i18n="net.proto_dhcp">DHCP (Auto-Assign)</button>
+        <label class="hcfg-xs-bold-muted" data-i18n="net.host_proto_label">IPv4 Assignment Protocol</label>
+        <div class="hcfg-row-2">
+          <button type="button" class="btn-pill-toggle net-proto-btn active hcfg-grow" data-proto="static" id="net-proto-btn-static" data-i18n="net.proto_static">Static IP Configuration</button>
+          <button type="button" class="btn-pill-toggle net-proto-btn hcfg-grow" data-proto="dhcp" id="net-proto-btn-dhcp" data-i18n="net.proto_dhcp">DHCP (Auto-Assign)</button>
         </div>
       </div>
 
       <!-- Interface Selector -->
       <div>
-        <label for="net-host-iface-select" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.host_iface_label">Target Interface</label>
-        <select id="net-host-iface-select" class="tz-select-input" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);">
+        <label class="hcfg-xs-bold-muted" for="net-host-iface-select" data-i18n="net.host_iface_label">Target Interface</label>
+        <select id="net-host-iface-select" class="tz-select-input hcfg-size">
           <!-- Populated dynamically: br0, bond0, eth0... -->
         </select>
       </div>
 
       <!-- Static IP Fields Section -->
-      <div id="net-host-static-fields" style="display: flex; flex-direction: column; gap: 12px;">
+      <div class="hcfg-col-2" id="net-host-static-fields">
         <!-- IPv4 Address -->
         <div>
-          <label for="net-host-ip-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.ip_label">IPv4 Address</label>
-          <input type="text" id="net-host-ip-input" class="tz-text-input" placeholder="e.g. 192.168.1.50" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="net.ip_hint">Static host IP address.</div>
+          <label class="hcfg-xs-bold-muted" for="net-host-ip-input" data-i18n="net.ip_label">IPv4 Address</label>
+          <input type="text" id="net-host-ip-input" class="tz-text-input hcfg-size" placeholder="e.g. 192.168.1.50" maxlength="32" autocomplete="off" />
+          <div class="hcfg-xs-muted" data-i18n="net.ip_hint">Static host IP address.</div>
         </div>
 
         <!-- Subnet Mask + Presets -->
         <div>
-          <label for="net-host-netmask-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.netmask_label">Subnet Mask</label>
-          <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap;">
+          <label class="hcfg-xs-bold-muted" for="net-host-netmask-input" data-i18n="net.netmask_label">Subnet Mask</label>
+          <div class="hcfg-row-3">
             <button type="button" class="btn-pill-toggle net-cidr-preset" data-netmask="255.255.255.0">/24 (255.255.255.0)</button>
             <button type="button" class="btn-pill-toggle net-cidr-preset" data-netmask="255.255.0.0">/16 (255.255.0.0)</button>
             <button type="button" class="btn-pill-toggle net-cidr-preset" data-netmask="255.0.0.0">/8 (255.0.0.0)</button>
           </div>
-          <input type="text" id="net-host-netmask-input" class="tz-text-input" value="255.255.255.0" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
+          <input type="text" id="net-host-netmask-input" class="tz-text-input hcfg-size" value="255.255.255.0" maxlength="32" autocomplete="off" />
         </div>
 
         <!-- Default Gateway -->
         <div>
-          <label for="net-host-gateway-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.gw_label">Default Gateway</label>
-          <input type="text" id="net-host-gateway-input" class="tz-text-input" placeholder="e.g. 192.168.1.1" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="net.gw_hint">Upstream router/gateway IP address.</div>
+          <label class="hcfg-xs-bold-muted" for="net-host-gateway-input" data-i18n="net.gw_label">Default Gateway</label>
+          <input type="text" id="net-host-gateway-input" class="tz-text-input hcfg-size" placeholder="e.g. 192.168.1.1" maxlength="32" autocomplete="off" />
+          <div class="hcfg-xs-muted" data-i18n="net.gw_hint">Upstream router/gateway IP address.</div>
         </div>
       </div>
 
       <!-- DNS Configuration -->
-      <div style="border-top: 1px solid var(--zn-line-8); padding-top: 12px; display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-          <label style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px;" data-i18n="net.dns1_label">DNS Nameservers</label>
-          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+      <div class="hcfg-col-box">
+        <div class="hcfg-row-4">
+          <label class="hcfg-xs-bold-muted-2" data-i18n="net.dns1_label">DNS Nameservers</label>
+          <div class="hcfg-row-5">
             <button type="button" class="btn-pill-toggle net-dns-preset is-small" data-dns1="1.1.1.1" data-dns2="1.0.0.1" translate="no">Cloudflare</button>
             <button type="button" class="btn-pill-toggle net-dns-preset is-small" data-dns1="8.8.8.8" data-dns2="8.8.4.4" translate="no">Google</button>
             <button type="button" class="btn-pill-toggle net-dns-preset is-small" data-dns1="9.9.9.9" data-dns2="149.112.112.112" translate="no">Quad9</button>
           </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div class="hcfg-grid">
           <div>
-            <label for="net-host-dns1-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;" data-i18n="net.dns1_label">Primary DNS</label>
-            <input type="text" id="net-host-dns1-input" class="tz-text-input" placeholder="e.g. 1.1.1.1" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
+            <label class="hcfg-xs-muted-2" for="net-host-dns1-input" data-i18n="net.dns1_label">Primary DNS</label>
+            <input type="text" id="net-host-dns1-input" class="tz-text-input hcfg-size" placeholder="e.g. 1.1.1.1" maxlength="32" autocomplete="off" />
           </div>
           <div>
-            <label for="net-host-dns2-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;" data-i18n="net.dns2_label">Secondary DNS</label>
-            <input type="text" id="net-host-dns2-input" class="tz-text-input" placeholder="e.g. 8.8.8.8" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
+            <label class="hcfg-xs-muted-2" for="net-host-dns2-input" data-i18n="net.dns2_label">Secondary DNS</label>
+            <input type="text" id="net-host-dns2-input" class="tz-text-input hcfg-size" placeholder="e.g. 8.8.8.8" maxlength="32" autocomplete="off" />
           </div>
         </div>
       </div>
 
       <!-- Safety Notice Callout -->
       <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start;">
-        <span style="font-size: 16px; line-height: 1;">🛡️</span>
+        <span class="hcfg-fs16">🛡️</span>
         <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-fcd34dff, #fcd34d); line-height: 1.45;">
           <strong data-sample>60-Second Canary Watchdog Armed:</strong> <span data-i18n="mw.when_applying_changes_a_60s_countdown">When applying changes, a 60s countdown timer will begin. If you lose connection or do not confirm, the server will automatically revert to protect against lockout.</span>
         </div>
       </div>
 
       <!-- Modal Footer -->
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+      <div class="hcfg-row-box">
         <button id="net-host-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
         <button id="net-host-cfg-apply-btn" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.apply_canary_btn">Test & Apply (60s Canary)</span>
@@ -5072,12 +5072,12 @@
 <div id="network-canary-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-canary-title" style="display: none; z-index: 9600;">
   <div class="smart-modal-window" style="max-width: 480px; width: 92%; box-shadow: 0 30px 80px rgba(0,0,0,0.95), 0 0 40px rgba(245, 158, 11, 0.3); border: 1px solid rgba(245, 158, 11, 0.5); background: var(--lt-b-0f172af5, rgba(15, 23, 42, 0.96));">
     <div class="smart-modal-header" style="cursor: default; border-bottom: 1px solid rgba(245, 158, 11, 0.3);">
-      <span class="smart-modal-title" id="net-canary-title" style="display: flex; align-items: center; gap: 8px; color: var(--zn-text-warn);">
+      <span class="smart-modal-title can-row-warn" id="net-canary-title">
         <span class="canary-pulsing-dot"></span>
         <span data-i18n="net.canary_title">Network Canary Watchdog Active</span>
       </span>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 24px 20px;">
+    <div class="smart-modal-body can-col">
       <!-- Circular Countdown Timer -->
       <div class="canary-countdown-wrap">
         <div class="canary-timer-circle" id="net-canary-timer-circle">
@@ -5086,13 +5086,13 @@
         </div>
       </div>
 
-      <div style="font-size: 13px; color: var(--zn-text); line-height: 1.5;" data-i18n="net.canary_desc">
+      <div class="can-fs13" data-i18n="net.canary_desc">
         New IP settings applied. A 60-second safety countdown is active to prevent accidental lockout. Please confirm that you can connect before the timer expires.
       </div>
 
       <!-- Target Address Box -->
-      <div id="net-canary-dest-card" style="width: 100%; box-sizing: border-box; background: var(--zn-shade-40); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 12px; font-size: var(--zn-fs-xs);">
-        <div style="color: var(--muted); font-size: var(--zn-fs-xs); margin-bottom: 4px;" data-i18n="net.canary_redirect_hint">If host IP changed, open the new address in a new tab to confirm:</div>
+      <div class="can-xs-box" id="net-canary-dest-card">
+        <div class="can-xs-muted" data-i18n="net.canary_redirect_hint">If host IP changed, open the new address in a new tab to confirm:</div>
         <div style="display: flex; justify-content: center; align-items: center; gap: 8px; font-family: var(--font-mono, monospace); font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); font-size: 13px;">
           <span id="net-canary-target-url">http://--:8082</span>
           <a id="net-canary-open-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size: var(--zn-fs-xs); padding: 2px 8px; color: var(--lt-ink-brand, var(--accent-cyan)); border-color: rgba(56,189,248,0.4);"><span data-i18n="overview.open">Open</span> <span aria-hidden="true">↗</span></a>
@@ -5100,14 +5100,14 @@
       </div>
 
       <!-- Reverting message (hidden by default) -->
-      <div id="net-canary-reverting-msg" style="display: none; color: var(--zn-text-crit); font-weight: 600; font-size: var(--zn-fs-xs);" data-i18n="net.canary_reverting">
+      <div class="can-xs-semi" id="net-canary-reverting-msg" style="display: none;" data-i18n="net.canary_reverting">
         Timer expired or reverted. Restoring previous network settings...
       </div>
 
       <!-- Action Buttons -->
-      <div style="display: flex; gap: 12px; width: 100%; justify-content: center; margin-top: 6px;">
+      <div class="can-row">
         <button id="net-canary-revert-btn" type="button" class="btn-pill-toggle is-danger" style="flex: 1; background: rgba(248, 113, 113, 0.1);" data-i18n="net.canary_revert_btn">Revert Changes Now</button>
-        <button id="net-canary-confirm-btn" type="button" class="btn-pill-toggle active is-primary" style="flex: 1.2;" data-i18n="net.canary_confirm_btn">Confirm & Keep Settings</button>
+        <button id="net-canary-confirm-btn" type="button" class="btn-pill-toggle active is-primary can-grow" data-i18n="net.canary_confirm_btn">Confirm & Keep Settings</button>
       </div>
     </div>
   </div>
@@ -5116,58 +5116,58 @@
 <!-- Bonding Mode & Link Aggregation Configuration Modal -->
 <div id="network-bond-config-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-bond-cfg-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 520px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(56, 189, 248, 0.18); border: 1px solid var(--zn-line-14);">
-    <div class="smart-modal-header" style="cursor: default;">
-      <span class="smart-modal-title" id="net-bond-cfg-title" style="display: flex; align-items: center; gap: 8px;">
+    <div class="smart-modal-header bond-x">
+      <span class="smart-modal-title bond-row" id="net-bond-cfg-title">
         <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); fill: currentColor;"><use href="#i-net"/></svg>
         <span data-i18n="net.bond_cfg_title">Bonding & Link Aggregation</span>
-        <span class="switch-speed-pill speed-10g" id="net-bond-target-badge" style="margin-left: 6px;">bond0</span>
+        <span class="switch-speed-pill speed-10g bond-x-2" id="net-bond-target-badge">bond0</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="net-bond-cfg-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+    <div class="smart-modal-body bond-col">
       <!-- Bonding Mode Selection -->
       <div>
-        <label for="net-bond-mode-select" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.bond_mode_label">Bonding Mode (Aggregation Policy)</label>
-        <select id="net-bond-mode-select" class="tz-select-input" style="width: 100%; box-sizing: border-box;">
+        <label class="bond-xs-bold-muted" for="net-bond-mode-select" data-i18n="net.bond_mode_label">Bonding Mode (Aggregation Policy)</label>
+        <select id="net-bond-mode-select" class="tz-select-input bond-size">
           <option value="1" data-i18n="mw.mode_1_active_backup_failover_redundancy">Mode 1: Active-Backup (Failover / Redundancy - Recommended for Unmanaged Switches)</option>
           <option value="4" data-i18n="mw.mode_4_ieee_802_3ad_lacp">Mode 4: IEEE 802.3ad LACP (Dynamic Link Aggregation - Requires LACP Switch)</option>
           <option value="6" data-i18n="mw.mode_6_balance_alb_adaptive_load">Mode 6: Balance-ALB (Adaptive Load Balancing - No Switch Config)</option>
           <option value="0" data-i18n="mw.mode_0_balance_rr_round_robin">Mode 0: Balance-RR (Round-Robin Packet Distribution)</option>
           <option value="2" data-i18n="mw.mode_2_balance_xor_transmit_hash">Mode 2: Balance-XOR (Transmit Hash Policy)</option>
         </select>
-        <div id="net-bond-mode-desc" style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 5px; line-height: 1.45;" data-sample>
+        <div class="bond-xs-muted" id="net-bond-mode-desc" data-sample>
           Only one slave in the bond is active. A different slave becomes active if and only if the active slave fails.
         </div>
       </div>
 
       <!-- Enslaved Member Interfaces -->
       <div>
-        <label style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.bond_slaves_label">Enslaved Physical Interfaces</label>
-        <div id="net-bond-slaves-container" class="network-member-checkbox-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px;">
+        <label class="bond-xs-bold-muted" data-i18n="net.bond_slaves_label">Enslaved Physical Interfaces</label>
+        <div id="net-bond-slaves-container" class="network-member-checkbox-list bond-col-box">
           <!-- Dynamically populated with physical NIC checkboxes: eth0, eth1, etc. -->
         </div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;" data-i18n="net.bond_slaves_hint">Select the physical Ethernet jacks participating in this bonding group.</div>
+        <div class="bond-xs-muted-2" data-i18n="net.bond_slaves_hint">Select the physical Ethernet jacks participating in this bonding group.</div>
       </div>
 
       <!-- MII Monitoring Interval -->
       <div>
-        <label for="net-bond-miimon-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.bond_miimon_label">MII Link Monitoring Interval (ms)</label>
-        <input type="number" id="net-bond-miimon-input" class="tz-text-input" min="10" max="1000" step="10" value="100" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" />
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="net.bond_miimon_hint">Frequency in milliseconds to inspect carrier link health (default: 100ms).</div>
+        <label class="bond-xs-bold-muted" for="net-bond-miimon-input" data-i18n="net.bond_miimon_label">MII Link Monitoring Interval (ms)</label>
+        <input type="number" id="net-bond-miimon-input" class="tz-text-input bond-size-2" min="10" max="1000" step="10" value="100" />
+        <div class="bond-xs-muted-3" data-i18n="net.bond_miimon_hint">Frequency in milliseconds to inspect carrier link health (default: 100ms).</div>
       </div>
 
       <!-- Warning Callout -->
       <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start;">
-        <span style="font-size: 16px; line-height: 1;">⚠️</span>
+        <span class="bond-fs16">⚠️</span>
         <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-fcd34dff, #fcd34d); line-height: 1.45;" data-i18n="net.bond_reboot_notice">
           <strong>Kernel Driver Note:</strong> Bonding configuration is persisted to system boot configuration. Rebinding physical drivers on active management interfaces takes full effect upon network reload or system reboot.
         </div>
       </div>
 
       <!-- Footer Buttons -->
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+      <div class="bond-row-box">
         <button id="net-bond-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
         <button id="net-bond-cfg-save-btn" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.save_bond_btn">Save Bonding Config</span>
@@ -5180,47 +5180,47 @@
 <!-- Virtual Bridge Configuration Modal -->
 <div id="network-bridge-config-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-bridge-cfg-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 500px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(56, 189, 248, 0.18); border: 1px solid var(--zn-line-14);">
-    <div class="smart-modal-header" style="cursor: default;">
-      <span class="smart-modal-title" id="net-bridge-cfg-title" style="display: flex; align-items: center; gap: 8px;">
+    <div class="smart-modal-header brg-x">
+      <span class="smart-modal-title brg-row" id="net-bridge-cfg-title">
         <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); fill: currentColor;"><use href="#i-net"/></svg>
         <span data-i18n="net.bridge_cfg_title">Virtual Bridge Tuning</span>
-        <span class="switch-speed-pill speed-10g" id="net-bridge-target-badge" style="margin-left: 6px;">br0</span>
+        <span class="switch-speed-pill speed-10g brg-x-2" id="net-bridge-target-badge">br0</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="net-bridge-cfg-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+    <div class="smart-modal-body brg-col">
       <!-- Spanning Tree Protocol (STP) Switch -->
       <div>
-        <label style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.bridge_stp_label">Spanning Tree Protocol (STP)</label>
-        <div style="display: flex; gap: 8px;">
-          <button type="button" class="btn-pill-toggle net-stp-toggle-btn active" data-stp="true" id="net-stp-btn-enable" style="flex: 1;" data-i18n="net.stp_enabled">Enabled (Loop Protection)</button>
-          <button type="button" class="btn-pill-toggle net-stp-toggle-btn" data-stp="false" id="net-stp-btn-disable" style="flex: 1;" data-i18n="net.stp_disabled">Disabled (Faster Link)</button>
+        <label class="brg-xs-bold-muted" data-i18n="net.bridge_stp_label">Spanning Tree Protocol (STP)</label>
+        <div class="brg-row-2">
+          <button type="button" class="btn-pill-toggle net-stp-toggle-btn active brg-grow" data-stp="true" id="net-stp-btn-enable" data-i18n="net.stp_enabled">Enabled (Loop Protection)</button>
+          <button type="button" class="btn-pill-toggle net-stp-toggle-btn brg-grow" data-stp="false" id="net-stp-btn-disable" data-i18n="net.stp_disabled">Disabled (Faster Link)</button>
         </div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 5px; line-height: 1.45;" data-i18n="net.stp_hint">
+        <div class="brg-xs-muted" data-i18n="net.stp_hint">
           Prevents Ethernet bridge loops and broadcast storms when bridging multiple interfaces connected to switches.
         </div>
       </div>
 
       <!-- Forward Delay -->
       <div>
-        <label for="net-bridge-fd-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.bridge_fd_label">Forward Delay (Seconds)</label>
-        <input type="number" id="net-bridge-fd-input" class="tz-text-input" min="0" max="30" step="1" value="0" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" />
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="net.bridge_fd_hint">Time spent in listening and learning states before forwarding (0s recommended when STP is disabled, 15s standard for STP).</div>
+        <label class="brg-xs-bold-muted" for="net-bridge-fd-input" data-i18n="net.bridge_fd_label">Forward Delay (Seconds)</label>
+        <input type="number" id="net-bridge-fd-input" class="tz-text-input brg-size" min="0" max="30" step="1" value="0" />
+        <div class="brg-xs-muted-2" data-i18n="net.bridge_fd_hint">Time spent in listening and learning states before forwarding (0s recommended when STP is disabled, 15s standard for STP).</div>
       </div>
 
       <!-- Bridge Member Interfaces -->
       <div>
-        <label style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.bridge_members_label">Bridge Member Interfaces</label>
-        <div id="net-bridge-members-container" class="network-member-checkbox-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px;">
+        <label class="brg-xs-bold-muted" data-i18n="net.bridge_members_label">Bridge Member Interfaces</label>
+        <div id="net-bridge-members-container" class="network-member-checkbox-list brg-col-box">
           <!-- Dynamically populated with bond0, eth0, etc. -->
         </div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;" data-i18n="net.bridge_members_hint">Select interfaces bound directly to this bridge.</div>
+        <div class="brg-xs-muted-3" data-i18n="net.bridge_members_hint">Select interfaces bound directly to this bridge.</div>
       </div>
 
       <!-- Footer Buttons -->
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+      <div class="brg-row-box">
         <button id="net-bridge-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
         <button id="net-bridge-cfg-save-btn" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.save_bridge_btn">Save Bridge Config</span>
@@ -5233,8 +5233,8 @@
 <!-- 802.1Q VLAN Sub-Interface Creation Modal -->
 <div id="network-vlan-create-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-vlan-create-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 480px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(56, 189, 248, 0.18); border: 1px solid var(--zn-line-14);">
-    <div class="smart-modal-header" style="cursor: default;">
-      <span class="smart-modal-title" id="net-vlan-create-title" style="display: flex; align-items: center; gap: 8px;">
+    <div class="smart-modal-header vlan-x">
+      <span class="smart-modal-title vlan-row" id="net-vlan-create-title">
         <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); fill: currentColor;"><use href="#i-net"/></svg>
         <span data-i18n="net.create_vlan_title">Create 802.1Q VLAN Sub-Interface</span>
       </span>
@@ -5242,31 +5242,31 @@
         <button class="win-btn close-btn" id="net-vlan-create-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+    <div class="smart-modal-body vlan-col">
       <!-- Parent Interface Selector -->
       <div>
-        <label for="net-vlan-parent-select" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.vlan_parent_label">Parent Trunk Interface</label>
-        <select id="net-vlan-parent-select" class="tz-select-input" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);">
+        <label class="vlan-xs-bold-muted" for="net-vlan-parent-select" data-i18n="net.vlan_parent_label">Parent Trunk Interface</label>
+        <select id="net-vlan-parent-select" class="tz-select-input vlan-size">
           <!-- Populated dynamically with physical NICs, bonds, and bridges -->
         </select>
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="net.vlan_parent_hint">The physical interface, bond, or bridge carrying 802.1Q tagged frames.</div>
+        <div class="vlan-xs-muted" data-i18n="net.vlan_parent_hint">The physical interface, bond, or bridge carrying 802.1Q tagged frames.</div>
       </div>
 
       <!-- VLAN Tag ID -->
       <div>
-        <label for="net-vlan-id-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.vlan_id_label">802.1Q VLAN Tag ID (1 - 4094)</label>
-        <input type="number" id="net-vlan-id-input" class="tz-text-input" min="1" max="4094" placeholder="e.g. 10" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" />
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="net.vlan_id_hint">Sub-interface will be named &lt;parent&gt;.&lt;vlan_id&gt; (e.g. eth0.10 or br0.20).</div>
+        <label class="vlan-xs-bold-muted" for="net-vlan-id-input" data-i18n="net.vlan_id_label">802.1Q VLAN Tag ID (1 - 4094)</label>
+        <input type="number" id="net-vlan-id-input" class="tz-text-input vlan-size" min="1" max="4094" placeholder="e.g. 10" />
+        <div class="vlan-xs-muted" data-i18n="net.vlan_id_hint">Sub-interface will be named &lt;parent&gt;.&lt;vlan_id&gt; (e.g. eth0.10 or br0.20).</div>
       </div>
 
       <!-- Friendly Role / Alias -->
       <div>
-        <label for="net-vlan-alias-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.vlan_alias_label">Friendly Alias / Role (Optional)</label>
-        <input type="text" id="net-vlan-alias-input" class="tz-text-input" placeholder="e.g. IoT Network, Guest Wi-Fi, Storage DMZ" data-i18n-placeholder="ui.e_g_iot_network_guest" maxlength="48" style="width: 100%; box-sizing: border-box;" autocomplete="off" />
+        <label class="vlan-xs-bold-muted" for="net-vlan-alias-input" data-i18n="net.vlan_alias_label">Friendly Alias / Role (Optional)</label>
+        <input type="text" id="net-vlan-alias-input" class="tz-text-input vlan-size-2" placeholder="e.g. IoT Network, Guest Wi-Fi, Storage DMZ" data-i18n-placeholder="ui.e_g_iot_network_guest" maxlength="48" autocomplete="off" />
       </div>
 
       <!-- Footer Buttons -->
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+      <div class="vlan-row-box">
         <button id="net-vlan-create-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
         <button id="net-vlan-create-submit-btn" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.create_vlan_btn">+ Create VLAN Sub-Interface</span>
@@ -5308,8 +5308,8 @@
 <!-- WebDAV Server Configuration Modal -->
 <div id="modal-webdav-config" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-webdav-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 480px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-webdav-title" style="display: flex; align-items: center; gap: 8px;">
+    <div class="smart-modal-header wdv-x">
+      <span class="smart-modal-title wdv-row" id="modal-webdav-title">
         <svg class="ic" style="width: 15px; height: 15px; fill: currentColor; color: var(--lt-ink-brand, var(--brand, #0ea5e9));"><use href="#i-globe"/></svg>
         <span data-i18n="mw.configure_webdav_file_server">Configure WebDAV File Server</span>
       </span>
@@ -5317,37 +5317,37 @@
         <button class="win-btn close-btn" id="modal-webdav-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <form id="webdav-config-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <form id="webdav-config-form" class="smart-modal-body wdv-col">
+      <div class="wdv-grid">
         <div>
-          <label for="webdav-cfg-port" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mw.line_rate_port">LINE-RATE PORT</label>
-          <input type="number" id="webdav-cfg-port" min="1024" max="65535" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" required />
+          <label class="wdv-xs-bold-muted" for="webdav-cfg-port" data-i18n="mw.line_rate_port">LINE-RATE PORT</label>
+          <input type="number" id="webdav-cfg-port" min="1024" max="65535" class="tz-select-input wdv-xs-strong-box" required />
         </div>
         <div>
-          <label for="webdav-cfg-root" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mw.root_storage_path">ROOT STORAGE PATH</label>
-          <input type="text" id="webdav-cfg-root" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" required />
-        </div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid var(--zn-line-6); padding-top: 12px;">
-        <div>
-          <label for="webdav-cfg-user" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mw.username">USERNAME</label>
-          <input type="text" id="webdav-cfg-user" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
-        </div>
-        <div>
-          <label for="webdav-cfg-pass" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mw.new_pw">NEW PASSWORD</label>
-          <input type="password" id="webdav-cfg-pass" class="tz-select-input" placeholder="(Leave blank to keep)" data-i18n-placeholder="ui.leave_blank_to_keep" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
+          <label class="wdv-xs-bold-muted" for="webdav-cfg-root" data-i18n="mw.root_storage_path">ROOT STORAGE PATH</label>
+          <input type="text" id="webdav-cfg-root" class="tz-select-input wdv-xs-strong-box" required />
         </div>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--zn-line-6); padding-top: 12px;">
-        <label for="webdav-cfg-readonly-toggle" style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); cursor:pointer;">
-          <input type="checkbox" id="webdav-cfg-readonly-toggle" style="width:16px; height:16px; accent-color:var(--ok2);" />
+      <div class="wdv-grid-box">
+        <div>
+          <label class="wdv-xs-bold-muted" for="webdav-cfg-user" data-i18n="mw.username">USERNAME</label>
+          <input type="text" id="webdav-cfg-user" class="tz-select-input wdv-xs-strong-box" />
+        </div>
+        <div>
+          <label class="wdv-xs-bold-muted" for="webdav-cfg-pass" data-i18n="mw.new_pw">NEW PASSWORD</label>
+          <input type="password" id="webdav-cfg-pass" class="tz-select-input wdv-xs-strong-box" placeholder="(Leave blank to keep)" data-i18n-placeholder="ui.leave_blank_to_keep" />
+        </div>
+      </div>
+
+      <div class="wdv-col-box">
+        <label class="wdv-row-xs-strong" for="webdav-cfg-readonly-toggle">
+          <input class="wdv-size" type="checkbox" id="webdav-cfg-readonly-toggle" />
           <span data-i18n="mw.mount_read_only_disallow_file_uploads">Mount Read-Only (Disallow file uploads & modifications)</span>
         </label>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+      <div class="wdv-row-box">
         <button type="button" id="modal-webdav-cancel-btn" class="btn-pill-toggle is-small" data-i18n="mw.cancel">Cancel</button>
         <button type="submit" class="btn-pill-toggle is-primary is-small" data-i18n="mw.save_and_restart_server">Save & Restart Server</button>
       </div>
@@ -5358,8 +5358,8 @@
 <!-- Create Storage Pool Modal (Generic Linux Active Provisioner) -->
 <div id="modal-create-storage-pool" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-create-pool-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 540px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-create-pool-title" style="display: flex; align-items: center; gap: 8px;">
+    <div class="smart-modal-header cpool-x">
+      <span class="smart-modal-title cpool-row" id="modal-create-pool-title">
         <svg class="ic" style="width: 15px; height: 15px; fill: currentColor; color: var(--lt-ink-brand, var(--brand, #0ea5e9));"><use href="#i-storage"/></svg>
         <span data-i18n="mw.provision_storage_pool_and_raid">Provision Storage Pool & RAID</span>
       </span>
@@ -5367,15 +5367,15 @@
         <button class="win-btn close-btn" id="modal-create-pool-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <form id="create-pool-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; max-height: 80vh; overflow-y: auto;">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <form id="create-pool-form" class="smart-modal-body cpool-col">
+      <div class="cpool-grid">
         <div>
-          <label for="create-pool-name" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mw.pool_name">POOL NAME</label>
-          <input type="text" id="create-pool-name" class="tz-select-input" placeholder="e.g. vault, archive, data" data-i18n-placeholder="ph.pool_name" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
+          <label class="cpool-xs-bold-muted" for="create-pool-name" data-i18n="mw.pool_name">POOL NAME</label>
+          <input type="text" id="create-pool-name" class="tz-select-input cpool-xs-strong-box" placeholder="e.g. vault, archive, data" data-i18n-placeholder="ph.pool_name" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
         </div>
         <div>
-          <label for="create-pool-fs" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mw.filesystem">FILESYSTEM</label>
-          <select id="create-pool-fs" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
+          <label class="cpool-xs-bold-muted" for="create-pool-fs" data-i18n="mw.filesystem">FILESYSTEM</label>
+          <select id="create-pool-fs" class="tz-select-input cpool-xs-strong-box">
             <option value="btrfs" selected data-i18n="mw.btrfs_bitrot_protection_snapshots">Btrfs (Bitrot Protection + Snapshots)</option>
             <option value="zfs" data-i18n="mw.openzfs_enterprise_raidz_and_arc_cache">OpenZFS (Enterprise RAIDZ & ARC Cache)</option>
             <option value="ext4" data-i18n="mw.ext4_standard_linux_volume">ext4 (Standard Linux Volume)</option>
@@ -5384,10 +5384,10 @@
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid var(--zn-line-6); padding-top: 12px;">
+      <div class="cpool-grid-box">
         <div>
-          <label for="create-pool-profile" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mw.raid_profile">RAID PROFILE</label>
-          <select id="create-pool-profile" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
+          <label class="cpool-xs-bold-muted" for="create-pool-profile" data-i18n="mw.raid_profile">RAID PROFILE</label>
+          <select id="create-pool-profile" class="tz-select-input cpool-xs-strong-box">
             <option value="raid1" selected data-i18n="mw.raid_1_mirroring_2_drives">RAID 1 (Mirroring - 2+ Drives)</option>
             <option value="raid10" data-i18n="mw.raid_10_striped_mirrors_4_drives">RAID 10 (Striped Mirrors - 4+ Drives)</option>
             <option value="raid0" data-i18n="mw.raid_0_striping_fast_no_redundancy">RAID 0 (Striping - Fast, No Redundancy)</option>
@@ -5395,8 +5395,8 @@
           </select>
         </div>
         <div>
-          <label for="create-pool-compression" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mw.transparent_compression">TRANSPARENT COMPRESSION</label>
-          <select id="create-pool-compression" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
+          <label class="cpool-xs-bold-muted" for="create-pool-compression" data-i18n="mw.transparent_compression">TRANSPARENT COMPRESSION</label>
+          <select id="create-pool-compression" class="tz-select-input cpool-xs-strong-box">
             <option value="zstd:1" selected data-i18n="mw.zstandard_zstd_1_recommended">Zstandard (zstd:1 - Recommended)</option>
             <option value="lzo" data-i18n="mw.lzo_fastest_cpu">LZO (Fastest CPU)</option>
             <option value="off" data-i18n="mw.disabled">Disabled</option>
@@ -5404,21 +5404,21 @@
         </div>
       </div>
 
-      <div style="border-top: 1px solid var(--zn-line-6); padding-top: 12px;">
-        <label style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mw.select_member_disks">SELECT MEMBER DISKS</label>
-        <div id="create-pool-disks-container" style="display:flex; flex-direction:column; gap:6px; max-height:160px; overflow-y:auto; background:var(--zn-shade-25); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
+      <div class="cpool-box">
+        <label class="cpool-xs-bold-muted-2" data-i18n="mw.select_member_disks">SELECT MEMBER DISKS</label>
+        <div class="cpool-col-box" id="create-pool-disks-container">
           <!-- Injected via JS -->
         </div>
       </div>
 
-      <div style="border-top: 1px solid var(--zn-line-6); padding-top: 12px;">
-        <label for="create-pool-mountpoint" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mw.mountpoint">MOUNTPOINT</label>
-        <input type="text" id="create-pool-mountpoint" class="tz-select-input" placeholder="/mnt/storage/vault" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
+      <div class="cpool-box">
+        <label class="cpool-xs-bold-muted" for="create-pool-mountpoint" data-i18n="mw.mountpoint">MOUNTPOINT</label>
+        <input type="text" id="create-pool-mountpoint" class="tz-select-input cpool-xs-strong-box" placeholder="/mnt/storage/vault" />
       </div>
 
       <div id="create-pool-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: var(--zn-text-crit); font-size: var(--zn-fs-xs);"></div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+      <div class="cpool-row-box">
         <button type="button" id="modal-create-pool-cancel-btn" class="btn-pill-toggle is-small" data-i18n="common.cancel">Cancel</button>
         <button type="submit" id="create-pool-submit-btn" class="btn-pill-toggle is-primary is-small"><span aria-hidden="true">🚀</span> <span data-i18n="ui.provision_storage_pool">Provision Storage Pool</span></button>
       </div>
@@ -5429,29 +5429,29 @@
 <!-- Rename Storage Pool Modal -->
 <div id="modal-rename-storage-pool" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-rename-pool-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 480px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-rename-pool-title" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 15px;">✏️</span>
+    <div class="smart-modal-header rpool-x">
+      <span class="smart-modal-title rpool-row" id="modal-rename-pool-title">
+        <span class="rpool-fs15">✏️</span>
         <span data-i18n="storage.rename_pool_title">Rename Storage Pool</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="modal-rename-pool-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <form id="rename-pool-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+    <form id="rename-pool-form" class="smart-modal-body rpool-col">
       <div>
-        <label for="rename-pool-current-name" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="storage.current_pool_name">CURRENT POOL NAME</label>
-        <input type="text" id="rename-pool-current-name" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-8); background:var(--zn-shade-40); padding:8px 10px; color:var(--muted); border-radius:6px; font-size:var(--zn-fs-xs);" disabled />
+        <label class="rpool-xs-bold-muted" for="rename-pool-current-name" data-i18n="storage.current_pool_name">CURRENT POOL NAME</label>
+        <input type="text" id="rename-pool-current-name" class="tz-select-input rpool-xs-muted-box" disabled />
       </div>
 
       <div>
-        <label for="rename-pool-new-name" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="storage.new_pool_name">NEW POOL NAME</label>
-        <input type="text" id="rename-pool-new-name" class="tz-select-input" placeholder="e.g. storage2, vault_fast" data-i18n-placeholder="ph.new_pool_name" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
+        <label class="rpool-xs-bold-muted" for="rename-pool-new-name" data-i18n="storage.new_pool_name">NEW POOL NAME</label>
+        <input type="text" id="rename-pool-new-name" class="tz-select-input rpool-xs-strong-box" placeholder="e.g. storage2, vault_fast" data-i18n-placeholder="ph.new_pool_name" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
       </div>
 
       <!-- Docker Bindings Compatibility Safety Alert -->
       <div style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.25); border-radius: 6px; padding: 10px 12px; font-size: var(--zn-fs-xs); line-height: 1.4; color: var(--lt-t-bae6fdff, #bae6fd); display: flex; gap: 8px;">
-        <span style="font-size: 14px; flex-shrink: 0;">🛡️</span>
+        <span class="rpool-fs14">🛡️</span>
         <div>
           <strong data-i18n="storage.rename_compat_title">Zero-Downtime Bind Mount Safety:</strong>
           <span data-i18n="storage.rename_compat_desc">An atomic backwards-compatibility symlink is preserved at the previous mountpoint so running Docker container volume bindings continue to resolve seamlessly.</span>
@@ -5460,7 +5460,7 @@
 
       <div id="rename-pool-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: var(--zn-text-crit); font-size: var(--zn-fs-xs);"></div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+      <div class="rpool-row-box">
         <button type="button" id="modal-rename-pool-cancel-btn" class="btn-pill-toggle is-small" data-i18n="common.cancel">Cancel</button>
         <button type="submit" id="rename-pool-submit-btn" class="btn-pill-toggle is-primary is-small">✏️ <span data-i18n="storage.apply_rename">Apply Rename</span></button>
       </div>
@@ -5471,24 +5471,24 @@
 <!-- Create Network Share Modal -->
 <div id="modal-create-network-share" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-create-share-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 500px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-create-share-title" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 15px;">📁</span>
+    <div class="smart-modal-header nshare-x">
+      <span class="smart-modal-title nshare-row" id="modal-create-share-title">
+        <span class="nshare-fs15">📁</span>
         <span data-i18n="mw.provision_network_share">Provision Network Share</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="modal-create-share-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <form id="create-share-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <form id="create-share-form" class="smart-modal-body nshare-col">
+      <div class="nshare-grid">
         <div>
-          <label for="create-share-name" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mw.share_name">SHARE NAME</label>
-          <input type="text" id="create-share-name" class="tz-select-input" placeholder="e.g. vault, media, photos" data-i18n-placeholder="ph.dataset_name" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
+          <label class="nshare-xs-bold-muted" for="create-share-name" data-i18n="mw.share_name">SHARE NAME</label>
+          <input type="text" id="create-share-name" class="tz-select-input nshare-xs-strong-box" placeholder="e.g. vault, media, photos" data-i18n-placeholder="ph.dataset_name" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
         </div>
         <div>
-          <label for="create-share-security" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mw.security_access">SECURITY ACCESS</label>
-          <select id="create-share-security" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
+          <label class="nshare-xs-bold-muted" for="create-share-security" data-i18n="mw.security_access">SECURITY ACCESS</label>
+          <select id="create-share-security" class="tz-select-input nshare-xs-strong-box">
             <option value="private" selected data-i18n="mw.private_people_sign_in">Private (people sign in)</option>
             <option value="public" data-i18n="mw.anyone_on_my_network_no_pw">Anyone on my network, no password (not recommended)</option>
           </select>
@@ -5496,96 +5496,96 @@
       </div>
 
       <div>
-        <label for="create-share-path" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mw.path_on_disk">PATH ON DISK</label>
-        <input type="text" id="create-share-path" class="tz-select-input" placeholder="/mnt/storage/vault" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
+        <label class="nshare-xs-bold-muted" for="create-share-path" data-i18n="mw.path_on_disk">PATH ON DISK</label>
+        <input type="text" id="create-share-path" class="tz-select-input nshare-xs-strong-box" placeholder="/mnt/storage/vault" />
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="nshare-grid">
         <div>
-          <label for="create-share-comment" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mw.description_comment">DESCRIPTION / COMMENT</label>
-          <input type="text" id="create-share-comment" class="tz-select-input" placeholder="ZettNAS Managed Share" data-i18n-placeholder="ui.zettnas_managed_share" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
+          <label class="nshare-xs-bold-muted" for="create-share-comment" data-i18n="mw.description_comment">DESCRIPTION / COMMENT</label>
+          <input type="text" id="create-share-comment" class="tz-select-input nshare-xs-strong-box" placeholder="ZettNAS Managed Share" data-i18n-placeholder="ui.zettnas_managed_share" />
         </div>
         <div>
-          <label for="create-share-quota-gb" style="display:flex; justify-content:space-between; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">
+          <label class="nshare-row-xs-bold-muted" for="create-share-quota-gb">
             <span data-i18n="mw.storage_quota">STORAGE QUOTA</span>
-            <span style="font-weight:400; opacity:0.6;" data-sample>0 = Unlimited</span>
+            <span class="nshare-x-2" data-sample>0 = Unlimited</span>
           </label>
-          <input type="number" id="create-share-quota-gb" class="tz-select-input" min="0" max="1000000" placeholder="0 (GB)" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
+          <input type="number" id="create-share-quota-gb" class="tz-select-input nshare-xs-strong-box" min="0" max="1000000" placeholder="0 (GB)" />
         </div>
       </div>
 
       <!-- User Access Matrix -->
-      <div id="create-share-users-section" style="display: flex; flex-direction: column; gap: 6px; background: var(--zn-shade-20); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px 12px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="nshare-col-box" id="create-share-users-section">
+        <div class="nshare-row-2">
           <span style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); text-transform:uppercase; letter-spacing:0.5px;" data-i18n="mw.user_access_permissions">USER ACCESS PERMISSIONS</span>
-          <span id="create-share-users-count" style="font-size:var(--zn-fs-xs); color:var(--muted);" data-sample>0 Users</span>
+          <span class="nshare-xs-muted" id="create-share-users-count" data-sample>0 Users</span>
         </div>
-        <div id="create-share-users-matrix" style="max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-top: 4px;">
+        <div class="nshare-col-2" id="create-share-users-matrix">
           <!-- Dynamically populated user permission rows -->
         </div>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--zn-line-6); padding-top: 12px;">
-        <label for="create-share-export-smb" style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); cursor:pointer;">
-          <input type="checkbox" id="create-share-export-smb" checked style="width:16px; height:16px; accent-color:var(--ok2);" />
+      <div class="nshare-col-box-2">
+        <label class="nshare-row-xs-strong" for="create-share-export-smb">
+          <input class="nshare-size" type="checkbox" id="create-share-export-smb" checked />
           <span data-i18n="storage.export_smb_label">Export via Samba (SMB / Windows / macOS)</span>
         </label>
-        <label for="create-share-export-nfs" style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); cursor:pointer;">
-          <input type="checkbox" id="create-share-export-nfs" style="width:16px; height:16px; accent-color:var(--ok2);" />
+        <label class="nshare-row-xs-strong" for="create-share-export-nfs">
+          <input class="nshare-size" type="checkbox" id="create-share-export-nfs" />
           <span data-i18n="storage.export_nfs_label">Export via NFS (Linux / Kubernetes / VMware)</span>
         </label>
-        <label for="create-share-timemachine" style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); cursor:pointer;">
-          <input type="checkbox" id="create-share-timemachine" style="width:16px; height:16px; accent-color:var(--ok2);" />
+        <label class="nshare-row-xs-strong" for="create-share-timemachine">
+          <input class="nshare-size" type="checkbox" id="create-share-timemachine" />
           <span data-i18n="storage.timemachine_label">Enable Apple Time Machine Backup (vfs_fruit target)</span>
         </label>
-        <label for="create-share-readonly" style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); cursor:pointer;">
-          <input type="checkbox" id="create-share-readonly" style="width:16px; height:16px; accent-color:var(--ok2);" />
+        <label class="nshare-row-xs-strong" for="create-share-readonly">
+          <input class="nshare-size" type="checkbox" id="create-share-readonly" />
           <span data-i18n="storage.readonly_label">Read-Only Share</span>
         </label>
       </div>
 
       <!-- Collapsible NFS Options Section -->
-      <div id="create-share-nfs-opts" style="display: none; background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 12px; flex-direction: column; gap: 10px;">
+      <div class="nshare-box" id="create-share-nfs-opts" style="display: none;">
         <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="storage.nfs_config_title">NFS Kernel Server & Root Squash Settings</div>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="nshare-grid-2">
           <div>
-            <label for="create-share-nfs-squash" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px;" data-i18n="storage.nfs_squash_label">Root Squash Policy</label>
-            <select id="create-share-nfs-squash" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:6px 8px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
+            <label class="nshare-xs-bold-muted-2" for="create-share-nfs-squash" data-i18n="storage.nfs_squash_label">Root Squash Policy</label>
+            <select id="create-share-nfs-squash" class="tz-select-input nshare-xs-strong-box-2">
               <option value="no_root_squash" data-i18n="storage.nfs_no_root_squash">no_root_squash (Kubernetes / Databases / Root)</option>
               <option value="root_squash" selected data-i18n="storage.nfs_root_squash">root_squash (Squash root to anonymous UID)</option>
               <option value="all_squash" data-i18n="storage.nfs_all_squash">all_squash (Map all users to anonymous UID)</option>
             </select>
           </div>
           <div>
-            <label for="create-share-nfs-sync" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px;" data-i18n="storage.nfs_sync_label">Sync Mode</label>
-            <select id="create-share-nfs-sync" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:6px 8px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
+            <label class="nshare-xs-bold-muted-2" for="create-share-nfs-sync" data-i18n="storage.nfs_sync_label">Sync Mode</label>
+            <select id="create-share-nfs-sync" class="tz-select-input nshare-xs-strong-box-2">
               <option value="sync" selected data-i18n="storage.nfs_sync">sync (ACID Database Persistence)</option>
               <option value="async" data-i18n="storage.nfs_async">async (Maximum Throughput)</option>
             </select>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="nshare-grid-2">
           <div>
-            <label for="create-share-nfs-anonuid" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px;" data-i18n="storage.nfs_anonuid_label">Anon UID (Pod User)</label>
-            <input type="number" id="create-share-nfs-anonuid" value="1000" min="0" max="65535" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:6px 8px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
+            <label class="nshare-xs-bold-muted-2" for="create-share-nfs-anonuid" data-i18n="storage.nfs_anonuid_label">Anon UID (Pod User)</label>
+            <input type="number" id="create-share-nfs-anonuid" value="1000" min="0" max="65535" class="tz-select-input nshare-xs-strong-box-2" />
           </div>
           <div>
-            <label for="create-share-nfs-anongid" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px;" data-i18n="storage.nfs_anongid_label">Anon GID (Pod Group)</label>
-            <input type="number" id="create-share-nfs-anongid" value="1000" min="0" max="65535" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:6px 8px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
+            <label class="nshare-xs-bold-muted-2" for="create-share-nfs-anongid" data-i18n="storage.nfs_anongid_label">Anon GID (Pod Group)</label>
+            <input type="number" id="create-share-nfs-anongid" value="1000" min="0" max="65535" class="tz-select-input nshare-xs-strong-box-2" />
           </div>
         </div>
 
         <div>
-          <label for="create-share-nfs-clients" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px;" data-i18n="storage.nfs_clients_label">Allowed Clients (CIDR / Host)</label>
-          <input type="text" id="create-share-nfs-clients" value="" placeholder="Empty: this home network. Or 192.168.1.0/24" data-i18n-placeholder="ph.nfs_clients" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:6px 8px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
+          <label class="nshare-xs-bold-muted-2" for="create-share-nfs-clients" data-i18n="storage.nfs_clients_label">Allowed Clients (CIDR / Host)</label>
+          <input type="text" id="create-share-nfs-clients" value="" placeholder="Empty: this home network. Or 192.168.1.0/24" data-i18n-placeholder="ph.nfs_clients" class="tz-select-input nshare-xs-strong-box-2" />
         </div>
       </div>
 
       <div id="create-share-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: var(--zn-text-crit); font-size: var(--zn-fs-xs);"></div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+      <div class="nshare-row-box">
         <button type="button" id="modal-create-share-cancel-btn" class="btn-pill-toggle is-small" data-i18n="mw.cancel">Cancel</button>
         <button type="submit" id="create-share-submit-btn" class="btn-pill-toggle is-primary is-small"><span aria-hidden="true">📁</span> <span data-i18n="ui.provision_share">Provision Share</span></button>
       </div>
@@ -5596,29 +5596,29 @@
 <!-- Btrfs Snapshots Manager Modal -->
 <div id="modal-btrfs-snapshots" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-snapshots-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 600px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-snapshots-title" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 15px;">📸</span>
+    <div class="smart-modal-header bsnap-x">
+      <span class="smart-modal-title bsnap-row" id="modal-snapshots-title">
+        <span class="bsnap-fs15">📸</span>
         <span data-i18n="mw.btrfs_subvolume_snapshots">Btrfs Subvolume Snapshots</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="modal-snapshots-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+    <div class="smart-modal-body bsnap-col">
       <!-- Take Snapshot Row -->
-      <div style="background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 14px;">
-        <label for="snap-name-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;" data-i18n="mw.create_instant_snapshot">CREATE INSTANT SNAPSHOT</label>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <input type="text" id="snap-name-input" class="tz-select-input" placeholder="snapshot-name (e.g. backup-daily)" data-i18n-placeholder="ph.snapshot_name" style="flex: 1; min-width: 200px; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 7px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+      <div class="bsnap-box">
+        <label class="bsnap-xs-bold-muted" for="snap-name-input" data-i18n="mw.create_instant_snapshot">CREATE INSTANT SNAPSHOT</label>
+        <div class="bsnap-row-2">
+          <input type="text" id="snap-name-input" class="tz-select-input bsnap-xs-strong-box-grow" placeholder="snapshot-name (e.g. backup-daily)" data-i18n-placeholder="ph.snapshot_name" />
           <button type="button" id="btn-take-snapshot-submit" class="btn-pill-toggle is-primary is-small"><span aria-hidden="true">📸</span> <span data-i18n="snap.take_btn">Take Snapshot</span></button>
         </div>
       </div>
 
       <!-- Snapshots List -->
       <div>
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;" data-i18n="mw.active_snapshots">ACTIVE SNAPSHOTS</div>
-        <div id="snapshots-list-mount" style="max-height: 240px; overflow-y: auto; background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 8px;">
+        <div class="bsnap-xs-bold-muted-2" data-i18n="mw.active_snapshots">ACTIVE SNAPSHOTS</div>
+        <div class="bsnap-box-2" id="snapshots-list-mount">
           <!-- Populated via JS -->
         </div>
       </div>
@@ -5629,75 +5629,75 @@
 <!-- Create Hyper-Backup Task Modal -->
 <div id="modal-create-backup-job" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-backup-job-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 520px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-backup-job-title" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 15px;">🛡️</span>
+    <div class="smart-modal-header bjob-x">
+      <span class="smart-modal-title bjob-row" id="modal-backup-job-title">
+        <span class="bjob-fs15">🛡️</span>
         <span data-i18n="mw.add_backup_job">Add backup job</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="modal-backup-job-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <form id="create-backup-job-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+    <form id="create-backup-job-form" class="smart-modal-body bjob-col">
       <h4 class="backup-step" data-i18n="backup.step_what">1. What</h4>
       <div>
-        <label for="backup-job-name" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_name">Name</label>
-        <input type="text" id="backup-job-name" class="tz-select-input" placeholder="e.g. Daily Documents & Photos Sync" data-i18n-placeholder="ui.e_g_daily_documents_photos" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+        <label class="bjob-xs-bold-muted" for="backup-job-name" data-i18n="backup.f_name">Name</label>
+        <input type="text" id="backup-job-name" class="tz-select-input bjob-xs-strong-box" placeholder="e.g. Daily Documents & Photos Sync" data-i18n-placeholder="ui.e_g_daily_documents_photos" required />
       </div>
 
       <div>
-        <label for="backup-job-kind" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_kind">What to back up</label>
-        <select id="backup-job-kind" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
+        <label class="bjob-xs-bold-muted" for="backup-job-kind" data-i18n="backup.f_kind">What to back up</label>
+        <select id="backup-job-kind" class="tz-select-input bjob-xs-strong-box">
           <option value="data" selected data-i18n="backup.kind_folder">A folder in the pool</option>
           <option value="config" data-i18n="backup.kind_config">ZettNAS settings (people, shares, apps; encrypted)</option>
         </select>
       </div>
 
-      <div id="backup-config-fields" hidden style="display: flex; flex-direction: column; gap: 6px;">
-        <label for="backup-job-passphrase" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_passphrase">Backup passphrase</label>
-        <input type="password" id="backup-job-passphrase" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" data-i18n-placeholder="ui.at_least_8_characters" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="backup.passphrase_help">Needed to restore. Keep it somewhere other than this server, with your AI data key if you set one.</div>
+      <div class="bjob-col-2" id="backup-config-fields" hidden>
+        <label class="bjob-xs-bold-muted" for="backup-job-passphrase" data-i18n="backup.f_passphrase">Backup passphrase</label>
+        <input type="password" id="backup-job-passphrase" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" data-i18n-placeholder="ui.at_least_8_characters" class="tz-select-input bjob-xs-strong-box">
+        <div class="bjob-xs-muted" data-i18n="backup.passphrase_help">Needed to restore. Keep it somewhere other than this server, with your AI data key if you set one.</div>
       </div>
 
       <div>
         <div id="backup-subvolume-wrap">
-          <label for="backup-job-subvolume" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_folder">Folder or share</label>
-          <input type="text" id="backup-job-subvolume" class="tz-select-input" placeholder="e.g. shares, documents" data-i18n-placeholder="ph.share_folder" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <label class="bjob-xs-bold-muted" for="backup-job-subvolume" data-i18n="backup.f_folder">Folder or share</label>
+          <input type="text" id="backup-job-subvolume" class="tz-select-input bjob-xs-strong-box" placeholder="e.g. shares, documents" data-i18n-placeholder="ph.share_folder" required />
         </div>
       </div>
 
       <h4 class="backup-step" data-i18n="backup.step_where">2. Where to</h4>
       <div>
-        <label for="backup-job-dest-type" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_dest">Where the copies go</label>
-        <select id="backup-job-dest-type" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
+        <label class="bjob-xs-bold-muted" for="backup-job-dest-type" data-i18n="backup.f_dest">Where the copies go</label>
+        <select id="backup-job-dest-type" class="tz-select-input bjob-xs-strong-box">
           <option value="remote" selected data-i18n="backup.dest_remote">Snapshots here, plus a copy in a cloud</option>
           <option value="local_snapshot" data-i18n="backup.dest_local">Snapshots on this server only</option>
           <option value="local_folder" hidden data-i18n="backup.dest_folder">A folder in the pool</option>
         </select>
       </div>
       <div id="backup-local-fields" hidden>
-        <label for="backup-job-local-path" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_local_path">Folder in the pool</label>
-        <input type="text" id="backup-job-local-path" placeholder="e.g. /mnt/user/backups/zettnas" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
+        <label class="bjob-xs-bold-muted" for="backup-job-local-path" data-i18n="backup.f_local_path">Folder in the pool</label>
+        <input type="text" id="backup-job-local-path" placeholder="e.g. /mnt/user/backups/zettnas" class="tz-select-input bjob-xs-strong-box">
       </div>
 
-      <div id="backup-remote-fields" style="display: flex; flex-direction: column; gap: 12px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="bjob-col-3" id="backup-remote-fields">
+        <div class="bjob-grid">
           <div>
-            <label for="backup-job-remote-name" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_remote">Cloud (rclone remote)</label>
-            <input type="text" id="backup-job-remote-name" class="tz-select-input" placeholder="e.g. b2-backup, gdrive" data-i18n-placeholder="ph.cloud_remote" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+            <label class="bjob-xs-bold-muted" for="backup-job-remote-name" data-i18n="backup.f_remote">Cloud (rclone remote)</label>
+            <input type="text" id="backup-job-remote-name" class="tz-select-input bjob-xs-strong-box" placeholder="e.g. b2-backup, gdrive" data-i18n-placeholder="ph.cloud_remote" />
           </div>
           <div>
-            <label for="backup-job-remote-path" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_remote_path">Folder in the cloud</label>
-            <input type="text" id="backup-job-remote-path" class="tz-select-input" placeholder="e.g. backup-bucket/nas" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+            <label class="bjob-xs-bold-muted" for="backup-job-remote-path" data-i18n="backup.f_remote_path">Folder in the cloud</label>
+            <input type="text" id="backup-job-remote-path" class="tz-select-input bjob-xs-strong-box" placeholder="e.g. backup-bucket/nas" />
           </div>
         </div>
       </div>
 
       <h4 class="backup-step" data-i18n="backup.step_when">3. When</h4>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="bjob-grid">
         <div>
-          <label for="backup-job-schedule" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_schedule">How often</label>
-          <select id="backup-job-schedule" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
+          <label class="bjob-xs-bold-muted" for="backup-job-schedule" data-i18n="backup.f_schedule">How often</label>
+          <select id="backup-job-schedule" class="tz-select-input bjob-xs-strong-box">
             <option value="daily" selected data-i18n="backup.sched_daily">Every day</option>
             <option value="hourly" data-i18n="backup.sched_hourly">Every hour</option>
             <option value="weekly" data-i18n="backup.sched_weekly">Every week</option>
@@ -5705,17 +5705,17 @@
           </select>
         </div>
         <div>
-          <label for="backup-job-retention" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_retention">How many to keep</label>
-          <input type="number" id="backup-job-retention" min="1" max="100" value="7" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <label class="bjob-xs-bold-muted" for="backup-job-retention" data-i18n="backup.f_retention">How many to keep</label>
+          <input type="number" id="backup-job-retention" min="1" max="100" value="7" class="tz-select-input bjob-xs-strong-box" />
         </div>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-        <input type="checkbox" id="backup-job-enabled" checked style="width: 16px; height: 16px; cursor: pointer;" />
-        <label for="backup-job-enabled" style="font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer;" data-i18n="backup.f_enabled">Run on its schedule</label>
+      <div class="bjob-row-2">
+        <input class="bjob-size" type="checkbox" id="backup-job-enabled" checked />
+        <label class="bjob-xs-strong" for="backup-job-enabled" data-i18n="backup.f_enabled">Run on its schedule</label>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+      <div class="bjob-row-3">
         <button type="button" id="modal-backup-job-cancel-btn" class="btn-pill-toggle is-small" data-i18n="common.cancel">Cancel</button>
         <button type="submit" class="btn-pill-toggle is-primary is-small" data-i18n="backup.save_job">Save backup job</button>
       </div>
@@ -5726,73 +5726,73 @@
 <!-- Create Replication Pipeline Modal -->
 <div id="modal-create-replication-pipeline" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-repl-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 520px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-repl-title" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 15px;">🔄</span>
+    <div class="smart-modal-header repl-x">
+      <span class="smart-modal-title repl-row" id="modal-repl-title">
+        <span class="repl-fs15">🔄</span>
         <span data-i18n="mw.new_snapshot_replication_pipeline">New Snapshot Replication Pipeline</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="modal-repl-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <form id="create-replication-pipeline-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+    <form id="create-replication-pipeline-form" class="smart-modal-body repl-col">
       <div>
-        <label for="repl-job-name" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="mw.pipeline_name">Pipeline Name</label>
-        <input type="text" id="repl-job-name" class="tz-select-input" placeholder="e.g. Offsite Pool Replication" data-i18n-placeholder="ui.e_g_offsite_pool_replication" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+        <label class="repl-xs-bold-muted" for="repl-job-name" data-i18n="mw.pipeline_name">Pipeline Name</label>
+        <input type="text" id="repl-job-name" class="tz-select-input repl-xs-strong-box" placeholder="e.g. Offsite Pool Replication" data-i18n-placeholder="ui.e_g_offsite_pool_replication" required />
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="repl-grid">
         <div>
-          <label for="repl-source-pool" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="mw.source_pool">Source Pool</label>
-          <input type="text" id="repl-source-pool" class="tz-select-input" placeholder="e.g. data or pool1" data-i18n-placeholder="ph.source_pool" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <label class="repl-xs-bold-muted" for="repl-source-pool" data-i18n="mw.source_pool">Source Pool</label>
+          <input type="text" id="repl-source-pool" class="tz-select-input repl-xs-strong-box" placeholder="e.g. data or pool1" data-i18n-placeholder="ph.source_pool" required />
         </div>
         <div>
-          <label for="repl-source-dataset" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="mw.source_dataset_subvol">Source Dataset / Subvol</label>
-          <input type="text" id="repl-source-dataset" class="tz-select-input" placeholder="e.g. @ or shares" data-i18n-placeholder="ph.subvolume" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <label class="repl-xs-bold-muted" for="repl-source-dataset" data-i18n="mw.source_dataset_subvol">Source Dataset / Subvol</label>
+          <input type="text" id="repl-source-dataset" class="tz-select-input repl-xs-strong-box" placeholder="e.g. @ or shares" data-i18n-placeholder="ph.subvolume" required />
         </div>
       </div>
 
       <div>
-        <label for="repl-target-type" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="mw.target_transport_mode">Target Transport Mode</label>
-        <select id="repl-target-type" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
+        <label class="repl-xs-bold-muted" for="repl-target-type" data-i18n="mw.target_transport_mode">Target Transport Mode</label>
+        <select id="repl-target-type" class="tz-select-input repl-xs-strong-box">
           <option value="local" data-i18n="mw.local_secondary_pool">Local Secondary Pool</option>
           <option value="remote_ssh" data-i18n="mw.remote_host_over_ssh">Remote Host over SSH</option>
           <option value="remote_wireguard" data-i18n="mw.remote_endpoint_via_wireguard_mesh_vpn">Remote Endpoint via WireGuard Mesh VPN</option>
         </select>
       </div>
 
-      <div id="repl-remote-fields" style="display: none; flex-direction: column; gap: 12px;">
-        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px;">
+      <div class="repl-x-2" id="repl-remote-fields" style="display: none;">
+        <div class="repl-grid-2">
           <div>
-            <label for="repl-target-host" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="mw.remote_host_ip">Remote Host / IP</label>
-            <input type="text" id="repl-target-host" class="tz-select-input" placeholder="e.g. 10.100.0.1 or remote.nas" data-i18n-placeholder="ph.remote_host" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+            <label class="repl-xs-bold-muted" for="repl-target-host" data-i18n="mw.remote_host_ip">Remote Host / IP</label>
+            <input type="text" id="repl-target-host" class="tz-select-input repl-xs-strong-box" placeholder="e.g. 10.100.0.1 or remote.nas" data-i18n-placeholder="ph.remote_host" />
           </div>
           <div>
-            <label for="repl-target-port" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="mw.port">Port</label>
-            <input type="number" id="repl-target-port" value="22" min="1" max="65535" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+            <label class="repl-xs-bold-muted" for="repl-target-port" data-i18n="mw.port">Port</label>
+            <input type="number" id="repl-target-port" value="22" min="1" max="65535" class="tz-select-input repl-xs-strong-box" />
           </div>
           <div>
-            <label for="repl-target-user" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="mw.ssh_user">SSH User</label>
-            <input type="text" id="repl-target-user" value="root" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+            <label class="repl-xs-bold-muted" for="repl-target-user" data-i18n="mw.ssh_user">SSH User</label>
+            <input type="text" id="repl-target-user" value="root" class="tz-select-input repl-xs-strong-box" />
           </div>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="repl-grid">
         <div>
-          <label for="repl-target-pool" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="mw.target_pool">Target Pool</label>
-          <input type="text" id="repl-target-pool" class="tz-select-input" placeholder="e.g. backup or zfs-backup" data-i18n-placeholder="ph.target_dataset" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <label class="repl-xs-bold-muted" for="repl-target-pool" data-i18n="mw.target_pool">Target Pool</label>
+          <input type="text" id="repl-target-pool" class="tz-select-input repl-xs-strong-box" placeholder="e.g. backup or zfs-backup" data-i18n-placeholder="ph.target_dataset" required />
         </div>
         <div>
-          <label for="repl-target-dataset" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="mw.target_dataset">Target Dataset</label>
-          <input type="text" id="repl-target-dataset" class="tz-select-input" placeholder="e.g. replicated-nas" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <label class="repl-xs-bold-muted" for="repl-target-dataset" data-i18n="mw.target_dataset">Target Dataset</label>
+          <input type="text" id="repl-target-dataset" class="tz-select-input repl-xs-strong-box" placeholder="e.g. replicated-nas" required />
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="repl-grid">
         <div>
-          <label for="repl-schedule" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="mw.schedule">Schedule</label>
-          <select id="repl-schedule" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
+          <label class="repl-xs-bold-muted" for="repl-schedule" data-i18n="mw.schedule">Schedule</label>
+          <select id="repl-schedule" class="tz-select-input repl-xs-strong-box">
             <option value="daily" selected data-i18n="mw.daily">Daily</option>
             <option value="hourly" data-i18n="mw.hourly">Hourly</option>
             <option value="weekly" data-i18n="mw.weekly">Weekly</option>
@@ -5800,12 +5800,12 @@
           </select>
         </div>
         <div>
-          <label for="repl-retention" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="mw.snapshot_retention">Snapshot Retention</label>
-          <input type="number" id="repl-retention" min="1" max="365" value="14" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <label class="repl-xs-bold-muted" for="repl-retention" data-i18n="mw.snapshot_retention">Snapshot Retention</label>
+          <input type="number" id="repl-retention" min="1" max="365" value="14" class="tz-select-input repl-xs-strong-box" />
         </div>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+      <div class="repl-row-2">
         <button type="button" id="modal-repl-cancel-btn" class="btn-pill-toggle is-small" data-i18n="common.cancel">Cancel</button>
         <button type="submit" id="btn-submit-repl-pipeline" class="btn-pill-toggle is-primary is-small" data-i18n="ui.save_pipeline">Save Pipeline</button>
       </div>
@@ -5816,29 +5816,29 @@
 <!-- Take Instant Snapshot Modal -->
 <div id="modal-create-snapshot" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-take-snap-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 480px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-take-snap-title" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 15px;">📸</span>
+    <div class="smart-modal-header csnap-x">
+      <span class="smart-modal-title csnap-row" id="modal-take-snap-title">
+        <span class="csnap-fs15">📸</span>
         <span data-i18n="mw.take_storage_snapshot">Take Storage Snapshot</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="modal-create-snapshot-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <form id="create-snapshot-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+    <form id="create-snapshot-form" class="smart-modal-body csnap-col">
       <div>
-        <label for="snapshot-subvol-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="mw.target_subvolume_share">Target Subvolume / Share</label>
-        <input type="text" id="snapshot-subvol-input" class="tz-select-input" placeholder="e.g. shares, data, media" data-i18n-placeholder="ph.datasets" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+        <label class="csnap-xs-bold-muted" for="snapshot-subvol-input" data-i18n="mw.target_subvolume_share">Target Subvolume / Share</label>
+        <input type="text" id="snapshot-subvol-input" class="tz-select-input csnap-xs-strong-box" placeholder="e.g. shares, data, media" data-i18n-placeholder="ph.datasets" required />
       </div>
       <div>
-        <label for="snapshot-custom-name-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="mw.custom_snapshot_tag_optional">Custom Snapshot Tag (Optional)</label>
-        <input type="text" id="snapshot-custom-name-input" class="tz-select-input" placeholder="Leave empty for auto timestamp" data-i18n-placeholder="ui.leave_empty_for_auto_timestamp" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+        <label class="csnap-xs-bold-muted" for="snapshot-custom-name-input" data-i18n="mw.custom_snapshot_tag_optional">Custom Snapshot Tag (Optional)</label>
+        <input type="text" id="snapshot-custom-name-input" class="tz-select-input csnap-xs-strong-box" placeholder="Leave empty for auto timestamp" data-i18n-placeholder="ui.leave_empty_for_auto_timestamp" />
       </div>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <input type="checkbox" id="snapshot-readonly-input" checked style="width: 16px; height: 16px; cursor: pointer;" />
-        <label for="snapshot-readonly-input" style="font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer;" data-i18n="mw.read_only_protection_prevents_modification">Read-only protection (prevents modification)</label>
+      <div class="csnap-row">
+        <input class="csnap-size" type="checkbox" id="snapshot-readonly-input" checked />
+        <label class="csnap-xs-strong" for="snapshot-readonly-input" data-i18n="mw.read_only_protection_prevents_modification">Read-only protection (prevents modification)</label>
       </div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+      <div class="csnap-row-2">
         <button type="button" id="modal-create-snapshot-cancel-btn" class="btn-pill-toggle is-small" data-i18n="mw.cancel">Cancel</button>
         <button type="submit" class="btn-pill-toggle is-primary is-small" data-i18n="mw.create_snapshot">Create Snapshot</button>
       </div>
@@ -5849,57 +5849,57 @@
 <!-- SFTP Users Management Modal -->
 <div id="modal-sftp-users" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-sftp-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 620px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-sftp-title" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 15px;">🔒</span>
+    <div class="smart-modal-header sftp-x">
+      <span class="smart-modal-title sftp-row" id="modal-sftp-title">
+        <span class="sftp-fs15">🔒</span>
         <span data-i18n="sftp.title">SFTP file access</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="modal-sftp-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px 14px;">
+    <div class="smart-modal-body sftp-col">
+      <div class="sftp-row-box">
         <div>
-          <div style="font-size: var(--zn-fs-xs); font-weight: 700;" id="sftp-status-text" data-sample>Status: Checking...</div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="mw.port_2222_isolated_chroot_jail">Port: 2222 · Isolated Chroot Jail</div>
+          <div class="sftp-xs-bold" id="sftp-status-text" data-sample>Status: Checking...</div>
+          <div class="sftp-xs-muted" data-i18n="mw.port_2222_isolated_chroot_jail">Port: 2222 · Isolated Chroot Jail</div>
         </div>
         <button type="button" class="btn-pill-toggle" id="btn-sftp-toggle-service" data-sample>Start SFTP</button>
       </div>
 
-      <div style="background: var(--zn-shade-25); border: 1px dashed var(--zn-line-15); border-radius: 6px; padding: 8px 12px; font-size: var(--zn-fs-xs); display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-family: monospace; color: var(--zn-text-accent);" id="sftp-quick-connect-hint" data-sample>sftp -P 2222 username@&lt;host&gt;</span>
+      <div class="sftp-row-xs-box">
+        <span class="sftp-accent" id="sftp-quick-connect-hint" data-sample>sftp -P 2222 username@&lt;host&gt;</span>
         <button type="button" class="btn-pill-toggle is-small" id="btn-copy-sftp-cmd"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
       </div>
 
       <div>
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="sftp.manage_users">SFTP Users</div>
-        <div id="sftp-users-list" style="max-height: 180px; overflow-y: auto; border: 1px solid var(--zn-line-8); border-radius: 6px;"></div>
+        <div class="sftp-xs-bold-muted" data-i18n="sftp.manage_users">SFTP Users</div>
+        <div class="sftp-box" id="sftp-users-list"></div>
       </div>
 
       <!-- Add User Form -->
-      <form id="sftp-add-user-form" style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--zn-line-8); padding-top: 12px;">
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase;" data-i18n="sftp.add_user">+ Add SFTP User</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <form class="sftp-col-box" id="sftp-add-user-form">
+        <div class="sftp-xs-bold-muted-2" data-i18n="sftp.add_user">+ Add SFTP User</div>
+        <div class="sftp-grid">
           <div>
-            <label for="sftp-new-username" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;" data-i18n="mw.username_2">Username</label>
-            <input type="text" id="sftp-new-username" required class="tz-select-input" placeholder="e.g. backup_client" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 6px 8px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+            <label class="sftp-xs-muted-2" for="sftp-new-username" data-i18n="mw.username_2">Username</label>
+            <input type="text" id="sftp-new-username" required class="tz-select-input sftp-xs-strong-box" placeholder="e.g. backup_client" />
           </div>
           <div>
-            <label for="sftp-new-password" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;" data-i18n="mw.pw">Password</label>
-            <input type="password" id="sftp-new-password" required class="tz-select-input" placeholder="••••••••" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 6px 8px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+            <label class="sftp-xs-muted-2" for="sftp-new-password" data-i18n="mw.pw">Password</label>
+            <input type="password" id="sftp-new-password" required class="tz-select-input sftp-xs-strong-box" placeholder="••••••••" />
           </div>
         </div>
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-          <label style="font-size: var(--zn-fs-xs); color: var(--zn-text-strong); display: flex; align-items: center; gap: 6px; cursor: pointer;">
-            <input type="checkbox" id="sftp-new-readonly" style="width: 14px; height: 14px;" />
+        <div class="sftp-row-2">
+          <label class="sftp-row-xs-strong">
+            <input class="sftp-size" type="checkbox" id="sftp-new-readonly" />
             <span data-i18n="mw.read_only_access_download_only">Read-only access (download only)</span>
           </label>
           <button type="submit" class="btn-pill-toggle is-primary" data-i18n="mw.create_user">+ Create User</button>
         </div>
       </form>
 
-      <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
+      <div class="sftp-row-3">
         <button type="button" id="modal-sftp-close-bottom-btn" class="btn-pill-toggle is-small" data-i18n="common.close">Close</button>
       </div>
     </div>
@@ -5909,19 +5909,19 @@
 <!-- WireGuard Mobile QR Code Modal -->
 <div id="modal-wg-qr" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-wg-qr-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 380px; width: 90%; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(59, 245, 139, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-wg-qr-title" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 15px;">📱</span>
+    <div class="smart-modal-header wgqr-x">
+      <span class="smart-modal-title wgqr-row" id="modal-wg-qr-title">
+        <span class="wgqr-fs15">📱</span>
         <span data-i18n="mw.wireguard_mobile_qr_profile">WireGuard Mobile QR Profile</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="modal-wg-qr-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 14px;">
-      <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4;" data-i18n="mw.scan_with_the_official_wireguard_app">Scan with the official WireGuard app on iOS or Android to import tunnel instantly:</div>
+    <div class="smart-modal-body wgqr-col">
+      <div class="wgqr-xs-muted" data-i18n="mw.scan_with_the_official_wireguard_app">Scan with the official WireGuard app on iOS or Android to import tunnel instantly:</div>
       <div id="modal-wg-qr-wrap" style="background: #ffffff; padding: 12px; border-radius: 10px; line-height: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></div>
-      <div style="display: flex; gap: 10px; margin-top: 6px; width: 100%; justify-content: center;">
+      <div class="wgqr-row-2">
         <button type="button" class="btn-pill-toggle" id="modal-wg-qr-copy-btn"><span aria-hidden="true">📋</span> <span data-i18n="wg.copy_config">Copy Config</span></button>
         <button type="button" class="btn-pill-toggle is-primary" id="modal-wg-qr-dl-btn"><span aria-hidden="true">📥</span> <span data-i18n="mw.export_conf">Export .conf</span></button>
       </div>

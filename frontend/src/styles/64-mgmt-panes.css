@@ -402,3 +402,264 @@
 #mgmt-pane-ai-rag .rag-grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
 #mgmt-pane-ai-rag .rag-fs32 { font-size: 32px; margin-bottom: 10px; opacity: 0.85; }
 #mgmt-pane-ai-rag .rag-fs14-semi { font-size: 14px; font-weight: 600; color: var(--zn-text); margin-bottom: 6px; }
+
+/* The modal-https-guide-overlay dialog: classes instead of inline styles (NUX-15), same look */
+#modal-https-guide-overlay .hg-x { cursor: move; }
+#modal-https-guide-overlay .hg-row { display: flex; align-items: center; gap: 8px; }
+#modal-https-guide-overlay .hg-fs16 { font-size: 16px; }
+#modal-https-guide-overlay .hg-col { display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding: 18px 20px; }
+#modal-https-guide-overlay .hg-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.5; }
+#modal-https-guide-overlay .hg-row-xs-semi-box { padding: 12px 14px; border-radius: 8px; display: flex; align-items: center; gap: 10px; font-size: var(--zn-fs-xs); font-weight: 600; }
+#modal-https-guide-overlay .hg-col-2 { display: flex; flex-direction: column; gap: 10px; }
+#modal-https-guide-overlay .hg-row-box { background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+#modal-https-guide-overlay .hg-grow { flex: 1; min-width: 200px; }
+#modal-https-guide-overlay .hg-row-xs-bold-strong { font-weight: 700; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); display: flex; align-items: center; gap: 6px; }
+#modal-https-guide-overlay .hg-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; line-height: 1.4; }
+#modal-https-guide-overlay .hg-col-box { background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+#modal-https-guide-overlay .hg-xs-muted-3 { font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4; }
+#modal-https-guide-overlay .hg-row-box-2 { display: flex; align-items: center; gap: 8px; background: var(--zn-shade-35); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 6px 10px; }
+#modal-https-guide-overlay .hg-xs-accent-grow { font-family: monospace; font-size: var(--zn-fs-xs); color: var(--zn-text-accent); flex: 1; user-select: all; }
+#modal-https-guide-overlay .hg-row-box-3 { display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid var(--zn-line-8); }
+#modal-https-guide-overlay .hg-soft-box { background: var(--zn-glaze-6); border-color: var(--zn-line-15); color: var(--zn-text-soft); }
+
+/* The network-port-config-overlay dialog: classes instead of inline styles (NUX-15), same look */
+#network-port-config-overlay .pcfg-x { cursor: default; }
+#network-port-config-overlay .pcfg-row { display: flex; align-items: center; gap: 8px; }
+#network-port-config-overlay .pcfg-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#network-port-config-overlay .pcfg-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+#network-port-config-overlay .pcfg-size { width: 100%; box-sizing: border-box; }
+#network-port-config-overlay .pcfg-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; }
+#network-port-config-overlay .pcfg-row-2 { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+#network-port-config-overlay .pcfg-size-2 { width: 100px; text-align: center; font-family: var(--font-mono, monospace); }
+#network-port-config-overlay .pcfg-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); }
+#network-port-config-overlay .pcfg-row-box { display: flex; justify-content: space-between; align-items: center; background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px 12px; }
+#network-port-config-overlay .pcfg-xs-semi { font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-bright); }
+#network-port-config-overlay .pcfg-x-2 { margin: 0; }
+#network-port-config-overlay .pcfg-fs14 { font-size: 14px; flex-shrink: 0; }
+#network-port-config-overlay .pcfg-grid-xs-box { background: var(--zn-shade-30); border: 1px solid var(--zn-line-6); border-radius: 6px; padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: var(--zn-fs-xs); }
+#network-port-config-overlay .pcfg-row-3 { display: flex; align-items: center; justify-content: space-between; grid-column: span 2; }
+#network-port-config-overlay .pcfg-muted { color: var(--muted); }
+#network-port-config-overlay .pcfg-soft { font-family: var(--font-mono, monospace); color: var(--zn-text-soft); }
+#network-port-config-overlay .pcfg-soft-2 { color: var(--zn-text-soft); }
+#network-port-config-overlay .pcfg-row-box-2 { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
+
+/* The network-docker-create-overlay dialog: classes instead of inline styles (NUX-15), same look */
+#network-docker-create-overlay .ndc-x { cursor: default; }
+#network-docker-create-overlay .ndc-row { display: flex; align-items: center; gap: 8px; }
+#network-docker-create-overlay .ndc-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#network-docker-create-overlay .ndc-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+#network-docker-create-overlay .ndc-size { width: 100%; box-sizing: border-box; }
+#network-docker-create-overlay .ndc-size-2 { width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace); }
+#network-docker-create-overlay .ndc-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.45; }
+#network-docker-create-overlay .ndc-row-box { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
+
+/* The network-host-config-overlay dialog: classes instead of inline styles (NUX-15), same look */
+#network-host-config-overlay .hcfg-x { cursor: default; }
+#network-host-config-overlay .hcfg-row { display: flex; align-items: center; gap: 8px; }
+#network-host-config-overlay .hcfg-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#network-host-config-overlay .hcfg-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+#network-host-config-overlay .hcfg-row-2 { display: flex; gap: 8px; }
+#network-host-config-overlay .hcfg-grow { flex: 1; }
+#network-host-config-overlay .hcfg-size { width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace); }
+#network-host-config-overlay .hcfg-col-2 { display: flex; flex-direction: column; gap: 12px; }
+#network-host-config-overlay .hcfg-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px; }
+#network-host-config-overlay .hcfg-row-3 { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
+#network-host-config-overlay .hcfg-col-box { border-top: 1px solid var(--zn-line-8); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+#network-host-config-overlay .hcfg-row-4 { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+#network-host-config-overlay .hcfg-xs-bold-muted-2 { font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+#network-host-config-overlay .hcfg-row-5 { display: flex; gap: 4px; flex-wrap: wrap; }
+#network-host-config-overlay .hcfg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#network-host-config-overlay .hcfg-xs-muted-2 { display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px; }
+#network-host-config-overlay .hcfg-fs16 { font-size: 16px; line-height: 1; }
+#network-host-config-overlay .hcfg-row-box { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
+
+/* The network-canary-overlay dialog: classes instead of inline styles (NUX-15), same look */
+#network-canary-overlay .can-row-warn { display: flex; align-items: center; gap: 8px; color: var(--zn-text-warn); }
+#network-canary-overlay .can-col { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 24px 20px; }
+#network-canary-overlay .can-fs13 { font-size: 13px; color: var(--zn-text); line-height: 1.5; }
+#network-canary-overlay .can-xs-box { width: 100%; box-sizing: border-box; background: var(--zn-shade-40); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 12px; font-size: var(--zn-fs-xs); }
+#network-canary-overlay .can-xs-muted { color: var(--muted); font-size: var(--zn-fs-xs); margin-bottom: 4px; }
+#network-canary-overlay .can-xs-semi { color: var(--zn-text-crit); font-weight: 600; font-size: var(--zn-fs-xs); }
+#network-canary-overlay .can-row { display: flex; gap: 12px; width: 100%; justify-content: center; margin-top: 6px; }
+#network-canary-overlay .can-grow { flex: 1.2; }
+
+/* The network-bond-config-overlay dialog: classes instead of inline styles (NUX-15), same look */
+#network-bond-config-overlay .bond-x { cursor: default; }
+#network-bond-config-overlay .bond-row { display: flex; align-items: center; gap: 8px; }
+#network-bond-config-overlay .bond-x-2 { margin-left: 6px; }
+#network-bond-config-overlay .bond-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#network-bond-config-overlay .bond-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+#network-bond-config-overlay .bond-size { width: 100%; box-sizing: border-box; }
+#network-bond-config-overlay .bond-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 5px; line-height: 1.45; }
+#network-bond-config-overlay .bond-col-box { display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px; }
+#network-bond-config-overlay .bond-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; }
+#network-bond-config-overlay .bond-size-2 { width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace); }
+#network-bond-config-overlay .bond-xs-muted-3 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px; }
+#network-bond-config-overlay .bond-fs16 { font-size: 16px; line-height: 1; }
+#network-bond-config-overlay .bond-row-box { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
+
+/* The network-bridge-config-overlay dialog: classes instead of inline styles (NUX-15), same look */
+#network-bridge-config-overlay .brg-x { cursor: default; }
+#network-bridge-config-overlay .brg-row { display: flex; align-items: center; gap: 8px; }
+#network-bridge-config-overlay .brg-x-2 { margin-left: 6px; }
+#network-bridge-config-overlay .brg-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#network-bridge-config-overlay .brg-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+#network-bridge-config-overlay .brg-row-2 { display: flex; gap: 8px; }
+#network-bridge-config-overlay .brg-grow { flex: 1; }
+#network-bridge-config-overlay .brg-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 5px; line-height: 1.45; }
+#network-bridge-config-overlay .brg-size { width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace); }
+#network-bridge-config-overlay .brg-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px; }
+#network-bridge-config-overlay .brg-col-box { display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px; }
+#network-bridge-config-overlay .brg-xs-muted-3 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; }
+#network-bridge-config-overlay .brg-row-box { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
+
+/* The network-vlan-create-overlay dialog: classes instead of inline styles (NUX-15), same look */
+#network-vlan-create-overlay .vlan-x { cursor: default; }
+#network-vlan-create-overlay .vlan-row { display: flex; align-items: center; gap: 8px; }
+#network-vlan-create-overlay .vlan-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#network-vlan-create-overlay .vlan-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+#network-vlan-create-overlay .vlan-size { width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace); }
+#network-vlan-create-overlay .vlan-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px; }
+#network-vlan-create-overlay .vlan-size-2 { width: 100%; box-sizing: border-box; }
+#network-vlan-create-overlay .vlan-row-box { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
+
+/* The modal-webdav-config dialog: classes instead of inline styles (NUX-15), same look */
+#modal-webdav-config .wdv-x { cursor: move; }
+#modal-webdav-config .wdv-row { display: flex; align-items: center; gap: 8px; }
+#modal-webdav-config .wdv-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#modal-webdav-config .wdv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#modal-webdav-config .wdv-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
+#modal-webdav-config .wdv-xs-strong-box { width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); }
+#modal-webdav-config .wdv-grid-box { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid var(--zn-line-6); padding-top: 12px; }
+#modal-webdav-config .wdv-col-box { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--zn-line-6); padding-top: 12px; }
+#modal-webdav-config .wdv-row-xs-strong { display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer; }
+#modal-webdav-config .wdv-size { width: 16px; height: 16px; accent-color: var(--ok2); }
+#modal-webdav-config .wdv-row-box { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
+
+/* The modal-create-storage-pool dialog: classes instead of inline styles (NUX-15), same look */
+#modal-create-storage-pool .cpool-x { cursor: move; }
+#modal-create-storage-pool .cpool-row { display: flex; align-items: center; gap: 8px; }
+#modal-create-storage-pool .cpool-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; max-height: 80vh; overflow-y: auto; }
+#modal-create-storage-pool .cpool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#modal-create-storage-pool .cpool-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
+#modal-create-storage-pool .cpool-xs-strong-box { width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); }
+#modal-create-storage-pool .cpool-grid-box { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid var(--zn-line-6); padding-top: 12px; }
+#modal-create-storage-pool .cpool-box { border-top: 1px solid var(--zn-line-6); padding-top: 12px; }
+#modal-create-storage-pool .cpool-xs-bold-muted-2 { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+#modal-create-storage-pool .cpool-col-box { display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto; background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px; }
+#modal-create-storage-pool .cpool-row-box { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
+
+/* The modal-rename-storage-pool dialog: classes instead of inline styles (NUX-15), same look */
+#modal-rename-storage-pool .rpool-x { cursor: move; }
+#modal-rename-storage-pool .rpool-row { display: flex; align-items: center; gap: 8px; }
+#modal-rename-storage-pool .rpool-fs15 { font-size: 15px; }
+#modal-rename-storage-pool .rpool-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#modal-rename-storage-pool .rpool-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
+#modal-rename-storage-pool .rpool-xs-muted-box { width: 100%; border: 1px solid var(--zn-line-8); background: var(--zn-shade-40); padding: 8px 10px; color: var(--muted); border-radius: 6px; font-size: var(--zn-fs-xs); }
+#modal-rename-storage-pool .rpool-xs-strong-box { width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); }
+#modal-rename-storage-pool .rpool-fs14 { font-size: 14px; flex-shrink: 0; }
+#modal-rename-storage-pool .rpool-row-box { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
+
+/* The modal-create-network-share dialog: classes instead of inline styles (NUX-15), same look */
+#modal-create-network-share .nshare-x { cursor: move; }
+#modal-create-network-share .nshare-row { display: flex; align-items: center; gap: 8px; }
+#modal-create-network-share .nshare-fs15 { font-size: 15px; }
+#modal-create-network-share .nshare-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#modal-create-network-share .nshare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#modal-create-network-share .nshare-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
+#modal-create-network-share .nshare-xs-strong-box { width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); }
+#modal-create-network-share .nshare-row-xs-bold-muted { display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
+#modal-create-network-share .nshare-x-2 { font-weight: 400; opacity: 0.6; }
+#modal-create-network-share .nshare-col-box { display: flex; flex-direction: column; gap: 6px; background: var(--zn-shade-20); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px 12px; }
+#modal-create-network-share .nshare-row-2 { display: flex; justify-content: space-between; align-items: center; }
+#modal-create-network-share .nshare-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); }
+#modal-create-network-share .nshare-col-2 { max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-top: 4px; }
+#modal-create-network-share .nshare-col-box-2 { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--zn-line-6); padding-top: 12px; }
+#modal-create-network-share .nshare-row-xs-strong { display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer; }
+#modal-create-network-share .nshare-size { width: 16px; height: 16px; accent-color: var(--ok2); }
+#modal-create-network-share .nshare-box { background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 12px; flex-direction: column; gap: 10px; }
+#modal-create-network-share .nshare-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#modal-create-network-share .nshare-xs-bold-muted-2 { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+#modal-create-network-share .nshare-xs-strong-box-2 { width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 6px 8px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); }
+#modal-create-network-share .nshare-row-box { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
+
+/* The modal-btrfs-snapshots dialog: classes instead of inline styles (NUX-15), same look */
+#modal-btrfs-snapshots .bsnap-x { cursor: move; }
+#modal-btrfs-snapshots .bsnap-row { display: flex; align-items: center; gap: 8px; }
+#modal-btrfs-snapshots .bsnap-fs15 { font-size: 15px; }
+#modal-btrfs-snapshots .bsnap-col { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+#modal-btrfs-snapshots .bsnap-box { background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 14px; }
+#modal-btrfs-snapshots .bsnap-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+#modal-btrfs-snapshots .bsnap-row-2 { display: flex; gap: 8px; flex-wrap: wrap; }
+#modal-btrfs-snapshots .bsnap-xs-strong-box-grow { flex: 1; min-width: 200px; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 7px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); }
+#modal-btrfs-snapshots .bsnap-xs-bold-muted-2 { font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+#modal-btrfs-snapshots .bsnap-box-2 { max-height: 240px; overflow-y: auto; background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 8px; }
+
+/* The modal-create-backup-job dialog: classes instead of inline styles (NUX-15), same look */
+#modal-create-backup-job .bjob-x { cursor: move; }
+#modal-create-backup-job .bjob-row { display: flex; align-items: center; gap: 8px; }
+#modal-create-backup-job .bjob-fs15 { font-size: 15px; }
+#modal-create-backup-job .bjob-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#modal-create-backup-job .bjob-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+#modal-create-backup-job .bjob-xs-strong-box { width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); }
+#modal-create-backup-job .bjob-col-2 { display: flex; flex-direction: column; gap: 6px; }
+#modal-create-backup-job .bjob-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); }
+#modal-create-backup-job .bjob-col-3 { display: flex; flex-direction: column; gap: 12px; }
+#modal-create-backup-job .bjob-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#modal-create-backup-job .bjob-row-2 { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+#modal-create-backup-job .bjob-size { width: 16px; height: 16px; cursor: pointer; }
+#modal-create-backup-job .bjob-xs-strong { font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer; }
+#modal-create-backup-job .bjob-row-3 { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+
+/* The modal-create-replication-pipeline dialog: classes instead of inline styles (NUX-15), same look */
+#modal-create-replication-pipeline .repl-x { cursor: move; }
+#modal-create-replication-pipeline .repl-row { display: flex; align-items: center; gap: 8px; }
+#modal-create-replication-pipeline .repl-fs15 { font-size: 15px; }
+#modal-create-replication-pipeline .repl-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#modal-create-replication-pipeline .repl-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+#modal-create-replication-pipeline .repl-xs-strong-box { width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); }
+#modal-create-replication-pipeline .repl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#modal-create-replication-pipeline .repl-x-2 { flex-direction: column; gap: 12px; }
+#modal-create-replication-pipeline .repl-grid-2 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
+#modal-create-replication-pipeline .repl-row-2 { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+
+/* The modal-create-snapshot dialog: classes instead of inline styles (NUX-15), same look */
+#modal-create-snapshot .csnap-x { cursor: move; }
+#modal-create-snapshot .csnap-row { display: flex; align-items: center; gap: 8px; }
+#modal-create-snapshot .csnap-fs15 { font-size: 15px; }
+#modal-create-snapshot .csnap-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#modal-create-snapshot .csnap-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+#modal-create-snapshot .csnap-xs-strong-box { width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); }
+#modal-create-snapshot .csnap-size { width: 16px; height: 16px; cursor: pointer; }
+#modal-create-snapshot .csnap-xs-strong { font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer; }
+#modal-create-snapshot .csnap-row-2 { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+
+/* The modal-sftp-users dialog: classes instead of inline styles (NUX-15), same look */
+#modal-sftp-users .sftp-x { cursor: move; }
+#modal-sftp-users .sftp-row { display: flex; align-items: center; gap: 8px; }
+#modal-sftp-users .sftp-fs15 { font-size: 15px; }
+#modal-sftp-users .sftp-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#modal-sftp-users .sftp-row-box { display: flex; justify-content: space-between; align-items: center; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px 14px; }
+#modal-sftp-users .sftp-xs-bold { font-size: var(--zn-fs-xs); font-weight: 700; }
+#modal-sftp-users .sftp-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); }
+#modal-sftp-users .sftp-row-xs-box { background: var(--zn-shade-25); border: 1px dashed var(--zn-line-15); border-radius: 6px; padding: 8px 12px; font-size: var(--zn-fs-xs); display: flex; justify-content: space-between; align-items: center; }
+#modal-sftp-users .sftp-accent { font-family: monospace; color: var(--zn-text-accent); }
+#modal-sftp-users .sftp-xs-bold-muted { font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+#modal-sftp-users .sftp-box { max-height: 180px; overflow-y: auto; border: 1px solid var(--zn-line-8); border-radius: 6px; }
+#modal-sftp-users .sftp-col-box { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--zn-line-8); padding-top: 12px; }
+#modal-sftp-users .sftp-xs-bold-muted-2 { font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; }
+#modal-sftp-users .sftp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#modal-sftp-users .sftp-xs-muted-2 { display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px; }
+#modal-sftp-users .sftp-xs-strong-box { width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 6px 8px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); }
+#modal-sftp-users .sftp-row-2 { display: flex; align-items: center; justify-content: space-between; }
+#modal-sftp-users .sftp-row-xs-strong { font-size: var(--zn-fs-xs); color: var(--zn-text-strong); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+#modal-sftp-users .sftp-size { width: 14px; height: 14px; }
+#modal-sftp-users .sftp-row-3 { display: flex; justify-content: flex-end; margin-top: 6px; }
+
+/* The modal-wg-qr dialog: classes instead of inline styles (NUX-15), same look */
+#modal-wg-qr .wgqr-x { cursor: move; }
+#modal-wg-qr .wgqr-row { display: flex; align-items: center; gap: 8px; }
+#modal-wg-qr .wgqr-fs15 { font-size: 15px; }
+#modal-wg-qr .wgqr-col { padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+#modal-wg-qr .wgqr-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4; }
+#modal-wg-qr .wgqr-row-2 { display: flex; gap: 10px; margin-top: 6px; width: 100%; justify-content: center; }

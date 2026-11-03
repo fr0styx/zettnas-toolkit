@@ -33,8 +33,9 @@
 - **Nineteen more panes are built from stylesheet classes** (NUX-15): Backups,
   Notifications, About, Desktop widgets, Tailscale & WireGuard, Calendar, Language, Theme,
   Glass, Screensaver, Security, AI index, Power, Dock, Network services, Unraid, Wallpaper,
-  AI chat and AI knowledge; 808 inline styles became classes, pixel-for-pixel the same in
-  both themes.
+  AI chat and AI knowledge, plus Mission Control's 18 dialogs (pools, shares, snapshots,
+  backup jobs, network settings and more); 1,159 inline styles became classes,
+  pixel-for-pixel the same in both themes.
 
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
