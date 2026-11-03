@@ -1063,16 +1063,16 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
               <span>⌨️ ${t('vm.soft_kbd', 'Keyboard')}</span>
             </button>
             <button class="btn-console-act" id="btn-vnc-cad" title="${t('ui.send_ctrl_alt_del', 'Send Ctrl+Alt+Del')}">
-              <span>Ctrl+Alt+Del</span>
+              <span translate="no">Ctrl+Alt+Del</span>
             </button>
             <div class="dropdown-sendkey-wrap" style="position: relative;">
               <button class="btn-console-act" id="btn-vnc-keys" title="${t('ui.send_special_key', 'Send Special Key')}">
                 <span>${t('vcon.send_key', 'Send key')} ${ico('▾')}</span>
               </button>
               <div id="menu-vnc-keys" class="vnc-keys-menu" style="display: none;">
-                <button class="vnc-key-item" data-key="Tab">Tab</button>
-                <button class="vnc-key-item" data-key="Escape">Escape</button>
-                <button class="vnc-key-item" data-key="Ctrl+C">Ctrl + C</button>
+                <button class="vnc-key-item" data-key="Tab" translate="no">Tab</button>
+                <button class="vnc-key-item" data-key="Escape" translate="no">Escape</button>
+                <button class="vnc-key-item" data-key="Ctrl+C" translate="no">Ctrl + C</button>
                 <button class="vnc-key-item" data-key="Super">${t('vcon.super', 'Super / Windows key')}</button>
                 <button class="vnc-key-item" data-key="F12">${t('vcon.f12', 'F12 (boot menu)')}</button>
               </div>

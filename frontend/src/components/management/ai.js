@@ -344,7 +344,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
                 ? `<button type="button" class="btn-pill-toggle btn-ai-pull-hf-card" data-hf-repo="${escapeHtml(hfRepo)}" style="font-size:var(--zn-fs-xs); font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(250,204,21,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.5)' : 'rgba(250,204,21,0.48)'}; color:${hasWarn ? '#fbbf24' : '#fde047'}; cursor:pointer;">${hasWarn ? '⚠️ Pull Anyway (Unfit)' : '⬇️ Pull from HF'}</button>`
                 : `<button type="button" class="btn-pill-toggle btn-ai-activate-model" data-model-id="${escapeHtml(m.id)}" style="font-size:var(--zn-fs-xs); font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.16)' : 'rgba(14,165,233,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(14,165,233,0.45)'}; color:${hasWarn ? '#fbbf24' : '#38bdf8'}; cursor:pointer;">${hasWarn ? '⚠️ Activate Anyway' : '⚡ Activate'}</button>`
             }
-            <button type="button" class="btn-pill-toggle btn-ai-remove-model is-danger is-small" data-model-id="${escapeHtml(m.id)}" data-model-name="${escapeHtml(m.name)}" title="${t('ui.remove_model_from_catalog_and', 'Remove model from catalog and disk')}" aria-label="Remove model ${escapeHtml(m.name)}">🗑️</button>
+            <button type="button" class="btn-pill-toggle btn-ai-remove-model is-danger is-small" data-model-id="${escapeHtml(m.id)}" data-model-name="${escapeHtml(m.name)}" title="${t('ui.remove_model_from_catalog_and', 'Remove model from catalog and disk')}" aria-label="${escapeHtml(t('aic.remove_model', 'Remove model {name}', { name: m.name }))}">🗑️</button>
           </div>
         </div>
       </div>
@@ -2050,7 +2050,7 @@ export async function fetchAndRenderAiStatus() {
         <div>• <strong>${t('ait.deferred', 'Deferred Standby Queue:')}</strong> ${t('ait.deferred_detail', '{count, plural, one {# path} other {# paths}} waiting for drive wake', { count: defCount })}${defDetail}</div>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
           <span>• <strong>${t('ait.footprint', 'NVMe Index Footprint:')}</strong> ${sizeKb} KB (<code>${escapeHtml(stats.db_path || '/app/data/rag_index.db')}</code>)</span>
-          ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle is-danger is-small" title="${t('ui.flush_existing_rag_index_vector', 'Delete what AI search has learned and start again')}"><span aria-hidden="true">🗑️</span> <span>Flush &amp; Start Fresh</span></button>` : ''}
+          ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle is-danger is-small" title="${t('ui.flush_existing_rag_index_vector', 'Delete what AI search has learned and start again')}"><span aria-hidden="true">🗑️</span> <span>${escapeHtml(t('aic.flush', 'Flush & Start Fresh'))}</span></button>` : ''}
         </div>
       `;
       const flushLink = dbSummary.querySelector('#btn-ai-flush-index-link');
@@ -2508,11 +2508,11 @@ function extractCategoryCount(groupObj) {
 
 function renderAiCategorySummaryCards(groups = {}) {
   const entries = [
-    { key: 'photos', mapGroup: 'images', icon: '📷', label: 'Images', count: extractCategoryCount(groups.images ?? groups.photos) },
-    { key: 'videos', mapGroup: 'videos', icon: '🎬', label: 'Videos', count: extractCategoryCount(groups.videos) },
-    { key: 'audio', mapGroup: 'audio', icon: '🎵', label: 'Audio', count: extractCategoryCount(groups.audio) },
-    { key: 'documents', mapGroup: 'documents', icon: '📄', label: 'Documents', count: extractCategoryCount(groups.documents) },
-    { key: 'folders', mapGroup: 'folders', icon: '📁', label: 'Folders', count: extractCategoryCount(groups.folders) },
+    { key: 'photos', mapGroup: 'images', icon: '📷', label: t('aic.images', 'Images'), count: extractCategoryCount(groups.images ?? groups.photos) },
+    { key: 'videos', mapGroup: 'videos', icon: '🎬', label: t('aic.videos', 'Videos'), count: extractCategoryCount(groups.videos) },
+    { key: 'audio', mapGroup: 'audio', icon: '🎵', label: t('aic.audio', 'Audio'), count: extractCategoryCount(groups.audio) },
+    { key: 'documents', mapGroup: 'documents', icon: '📄', label: t('aic.documents', 'Documents'), count: extractCategoryCount(groups.documents) },
+    { key: 'folders', mapGroup: 'folders', icon: '📁', label: t('aic.folders', 'Folders'), count: extractCategoryCount(groups.folders) },
   ];
 
   // Update live category counts directly inside the unified #ai-search-filetype-bar chips

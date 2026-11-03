@@ -119,7 +119,7 @@ export function openVmConnectModal(vmId, vmObj = null) {
               <span style="font-size: 14px;">🌐</span>
               <div>
                 <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vmc.vnc_title', 'VNC app (RFB)')}</div>
-                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">TigerVNC, RealVNC, macOS Screen Sharing</div>
+                <div translate="no" style="font-size: var(--zn-fs-xs); color: var(--muted);">TigerVNC, RealVNC, macOS Screen Sharing</div>
               </div>
             </div>
             <button class="btn-console-act btn-connect-copy-vnc" style="padding: 4px 10px; font-size: var(--zn-fs-xs);">
@@ -138,7 +138,7 @@ export function openVmConnectModal(vmId, vmObj = null) {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 14px;">🔒</span>
               <div>
-                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">Secure Shell (SSH)</div>
+                <div translate="no" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">Secure Shell (SSH)</div>
                 <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('vmc.ssh_desc', 'A terminal command for OpenSSH or PuTTY')}</div>
               </div>
             </div>
@@ -158,7 +158,7 @@ export function openVmConnectModal(vmId, vmObj = null) {
               <span style="font-size: 14px;">🪟</span>
               <div>
                 <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vm.rdp', 'Remote Desktop (RDP)')}</div>
-                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Microsoft Remote Desktop, Remmina, FreeRDP</div>
+                <div translate="no" style="font-size: var(--zn-fs-xs); color: var(--muted);">Microsoft Remote Desktop, Remmina, FreeRDP</div>
               </div>
             </div>
             <div style="display: flex; gap: 6px;">
@@ -189,7 +189,7 @@ export function openVmConnectModal(vmId, vmObj = null) {
             <div style="display: flex; flex-direction: column; gap: 6px;">
               ${hostShares.map((s) => `
                 <div style="display: flex; justify-content: space-between; align-items: center; background: var(--zn-shade-30); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--zn-fs-xs);">
-                  <span style="color: var(--zn-text-soft);">sudo mount -t virtiofs ${escapeHtml(s.mount_tag)} /mnt/${escapeHtml(s.mount_tag)}</span>
+                  <span translate="no" style="color: var(--zn-text-soft);">sudo mount -t virtiofs ${escapeHtml(s.mount_tag)} /mnt/${escapeHtml(s.mount_tag)}</span>
                   <button class="btn-console-act btn-copy-mount-cmd" data-cmd="sudo mkdir -p /mnt/${escapeHtml(s.mount_tag)} && sudo mount -t virtiofs ${escapeHtml(s.mount_tag)} /mnt/${escapeHtml(s.mount_tag)}" style="padding: 2px 8px; font-size: var(--zn-fs-xs);">${t('catalog.copy', 'Copy')}</button>
                 </div>
               `).join('')}

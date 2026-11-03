@@ -584,7 +584,7 @@ function buildVmCardHtml(vm, vms) {
                 <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); padding-bottom: 4px; border-bottom: 1px solid var(--zn-line-6); margin-bottom: 4px;">${escapeHtml(t('vmm.connect_to', 'Connect to {name}', { name: vm.name }))}</div>
                 <div class="join-popover-item btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}">
                   <span>🖥️ ${t('vm.open_gui', 'Open KVM GUI Desktop (Display :0)')}</span>
-                  <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-accent);">noVNC</span>
+                  <span translate="no" style="font-size: var(--zn-fs-xs); color: var(--zn-text-accent);">noVNC</span>
                 </div>
                 <div class="join-popover-item btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui">
                   <span>↗ ${t('vm.open_separate', 'Open in Separate Window')}</span>
@@ -592,7 +592,7 @@ function buildVmCardHtml(vm, vms) {
                 </div>
                 <div class="join-popover-item btn-join-console" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}">
                   <span>📟 ${t('vm.open_serial', 'Open Serial Terminal (TTY)')}</span>
-                  <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-ok);">TTY / CLI</span>
+                  <span translate="no" style="font-size: var(--zn-fs-xs); color: var(--zn-text-ok);">TTY / CLI</span>
                 </div>
                 <div class="join-popover-item btn-join-web" data-ip="${escapeHtml(vm.ip_address)}">
                   <span>🌐 ${t('vm.open_web', 'Open Web UI (HTTP)')}</span>

@@ -523,29 +523,29 @@ export function openDiagnosticsPreviewModal(data) {
 
     grid.innerHTML = `
       <div style="background:var(--zn-glaze-4); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Host & OS</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dgx.host', 'Host & OS')}</div>
         <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); margin-top:2px;">${escapeHtml(data.chassis || 'Appliance')}</div>
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;">Uptime: ${data.uptime_hours || 0}h</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;">${t('dgx.uptime', 'Uptime: {h}h', { h: data.uptime_hours || 0 })}</div>
       </div>
       <div style="background:var(--zn-glaze-4); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Memory</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dgx.memory', 'Memory')}</div>
         <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); margin-top:2px;">${memPct}% Used</div>
         <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;">${memUsedGb} / ${memTotalGb} GB RAM</div>
       </div>
       <div style="background:var(--zn-glaze-4); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Storage</div>
-        <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); margin-top:2px;">${storage.pools_count || 0} Pools</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dgx.storage', 'Storage')}</div>
+        <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); margin-top:2px;">${t('dgx.pools', '{count, plural, one {# Pool} other {# Pools}}', { count: storage.pools_count || 0 })}</div>
         <div style="font-size:var(--zn-fs-xs); color:${(storage.degraded_disks?.length || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${storage.disks_count || 0} Drives (${storage.standby_count || 0} standby)</div>
       </div>
       <div style="background:var(--zn-glaze-4); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Docker Fleet</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dgx.docker', 'Docker Fleet')}</div>
         <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); margin-top:2px;">${docker.running || 0} / ${docker.total || 0} Running</div>
         <div style="font-size:var(--zn-fs-xs); color:${(docker.restarting || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${docker.restarting || 0} Restarting, ${docker.dead || 0} Dead</div>
       </div>
       <div style="background:var(--zn-glaze-4); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Virtual Machines</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dgx.vms', 'Virtual Machines')}</div>
         <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); margin-top:2px;">${vms.active_vm_count || 0} / ${vms.total_vm_count || 0} Active</div>
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;">Headroom: Safe</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;">${t('dgx.headroom', 'Headroom: Safe')}</div>
       </div>
     `;
   }
