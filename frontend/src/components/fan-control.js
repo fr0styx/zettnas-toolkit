@@ -662,9 +662,9 @@ export function initFanControl() {
       await loadFanPresets();
       if (presetSelect) presetSelect.value = cleanName;
       updatePresetButtons();
-      ZettEventBus.emit('toast', { message: `Preset "${cleanName}" saved`, type: 'success' });
+      ZettEventBus.emit('toast', { message: t('fan.preset_saved', 'Preset "{name}" saved', { name: cleanName }), type: 'success' });
     } catch (e) {
-      ZettEventBus.emit('toast', { message: `Failed to save preset: ${e.message || e}`, type: 'error' });
+      ZettEventBus.emit('toast', { message: t('fan.preset_save_failed', 'Failed to save preset: {error}', { error: e.message || e }), type: 'error' });
     }
   }
 
@@ -692,9 +692,9 @@ export function initFanControl() {
       closeDeletePresetModal();
       await loadFanPresets();
       updatePresetButtons();
-      ZettEventBus.emit('toast', { message: `Preset "${name}" deleted`, type: 'info' });
+      ZettEventBus.emit('toast', { message: t('fan.preset_deleted', 'Preset "{name}" deleted', { name }), type: 'info' });
     } catch (e) {
-      ZettEventBus.emit('toast', { message: `Failed to delete preset: ${e.message || e}`, type: 'error' });
+      ZettEventBus.emit('toast', { message: t('fan.preset_delete_failed', 'Failed to delete preset: {error}', { error: e.message || e }), type: 'error' });
     }
   }
 
@@ -749,9 +749,9 @@ export function initFanControl() {
           }
           updateFanUiState(res.fan_config.profile || 'auto', res.fan_config.manual_pct);
         }
-        ZettEventBus.emit('toast', { message: `Preset "${name}" applied`, type: 'success' });
+        ZettEventBus.emit('toast', { message: t('fan.preset_applied', 'Preset "{name}" applied', { name }), type: 'success' });
       } catch (e) {
-        ZettEventBus.emit('toast', { message: `Failed to apply preset: ${e.message || e}`, type: 'error' });
+        ZettEventBus.emit('toast', { message: t('fan.preset_apply_failed', 'Failed to apply preset: {error}', { error: e.message || e }), type: 'error' });
       }
     });
   }
