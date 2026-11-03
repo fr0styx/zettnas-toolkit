@@ -370,3 +370,40 @@ def test_german_shows_no_english(width, height):
     assert not found, f"English left on German screens at {width} px:\n" + json.dumps(
         found, indent=1, ensure_ascii=False
     )
+
+
+# NPERF-5: what a fresh browser downloads, as the bytes on the wire (compressed, headers too). A
+# fresh install measured 382 kB for the sign-in page and 337 kB in the 10 s after signing in
+# (3 Nov 2026, after the icon sprite was answered with 304 and the chassis photos were resized).
+SIGN_IN_PAGE_KB = 450
+FIRST_10S_KB = 420
+
+
+def test_the_first_seconds_stay_within_their_byte_budget():
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as p:
+        browser = _browser(p)
+        page = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+        done = []
+        page.on("requestfinished", lambda r: done.append((time.time(), r)))
+        page.goto(BASE + "/", wait_until="load", timeout=30000)
+        page.wait_for_timeout(1500)
+        sign_in = list(done)
+        start = time.time()
+        _sign_in_with_keyboard(page)
+        page.wait_for_timeout(max(0, 10000 - int((time.time() - start) * 1000)))
+
+        def size(r):
+            s = r.sizes()
+            return s["responseBodySize"] + s["responseHeadersSize"]
+
+        after = [r for t, r in done[len(sign_in) :] if t - start <= 10]
+        first_kb = sum(size(r) for _, r in sign_in) / 1000
+        after_kb = sum(size(r) for r in after) / 1000
+        biggest = sorted(((size(r), r.url.replace(BASE, "")) for r in after), reverse=True)[:5]
+        browser.close()
+    assert first_kb <= SIGN_IN_PAGE_KB, f"the sign-in page downloads {first_kb:.0f} kB (budget {SIGN_IN_PAGE_KB})"
+    assert after_kb <= FIRST_10S_KB, (
+        f"{after_kb:.0f} kB in the 10 s after signing in (budget {FIRST_10S_KB}): {biggest}"
+    )

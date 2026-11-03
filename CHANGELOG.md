@@ -517,6 +517,12 @@
 
 #### Performance
 
+- **The first seconds download a third less** (NPERF-5): an unchanged compressed file is now
+  answered with "not modified"; before, the icon sprite was sent whole up to eight times a load.
+  The chassis photos were 1,005 pixels wide for an icon shown at 75; they are 320 now (the D6U
+  photo 169 kB -> 10 kB). The sign-in page went from 561 to 382 kB, and an E2E check keeps it
+  and the 10 s after signing in within a byte budget.
+
 - **Ruff's async checks are on** (NPERF-3): a blocking open, sleep or subprocess call in an async
   route now fails the lint. The three there were moved off the event loop: the ISO upload's file
   open and format check, and starting rclone's sign-in helper.

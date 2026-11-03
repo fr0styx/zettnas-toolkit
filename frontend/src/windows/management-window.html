@@ -75,7 +75,7 @@
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ups" data-route="power" title="Power" data-i18n-title="mgmt.sidebar_ups">
             <svg class="mgmt-sidebar-svg"><use href="#i-bolt"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_ups">Power</span>
-            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ups-badge" style="display:none;">Power</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ups-badge" style="display:none;" data-sample>Power</span>
           </button>
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-hardware" data-route="hardware" title="Hardware" data-i18n-title="mgmt.sidebar_hardware">
             <svg class="mgmt-sidebar-svg"><use href="#i-sliders"/></svg>
@@ -323,7 +323,7 @@
                 <span style="font-size: var(--zn-fs-xs); font-weight: 700; letter-spacing: 0.5px; color: var(--zn-text-strong);" data-i18n="mgmt.preview_title">Desktop preview</span>
               </div>
               <div style="display:flex; align-items:center; gap: 6px;">
-                <span id="dt-theme-badge" class="desktop-twin-badge" style="font-size: var(--zn-fs-xs); font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--lt-b-00f0ff26, rgba(0,240,255,0.15)); color: var(--lt-ink-brand, var(--brand, #00f0ff)); border: 1px solid var(--lt-r-00f0ff4c, rgba(0,240,255,0.3));">CYBER TEAL</span>
+                <span id="dt-theme-badge" class="desktop-twin-badge" style="font-size: var(--zn-fs-xs); font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--lt-b-00f0ff26, rgba(0,240,255,0.15)); color: var(--lt-ink-brand, var(--brand, #00f0ff)); border: 1px solid var(--lt-r-00f0ff4c, rgba(0,240,255,0.3));" data-sample>CYBER TEAL</span>
                 <span style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono, monospace);" data-sample>16:9 PREVIEW</span>
               </div>
             </div>
@@ -464,7 +464,7 @@
               <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-sliders"/></svg> <span data-i18n="mgmt.theme_title">Desktop Theme & Accent</span></div>
               <div class="mgmt-card-intro-desc" data-i18n="mgmt.theme_desc">Personalize the color palette, windows, and accent styling of your ZettNAS desktop environment.</div>
               <div style="margin-top: 6px;">
-                <span id="desktop-theme-active-badge" class="desktop-theme-active-badge">CYBER TEAL</span>
+                <span id="desktop-theme-active-badge" class="desktop-theme-active-badge" data-sample>CYBER TEAL</span>
               </div>
             </div>
             <div class="mgmt-detail-body">
@@ -1317,11 +1317,11 @@
                       <input type="url" id="cal-feed-url-input" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 5px 8px; color: var(--zn-text-strong); border-radius: 5px; font-size: var(--zn-fs-xs);" aria-label="https://calendar.google.com/calendar/ical/.../basic.ics" />
                       <div style="display: flex; justify-content: space-between; align-items: center;">
                         <select id="cal-feed-color-select" style="background: var(--zn-shade-40); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 5px; font-size: var(--zn-fs-xs); padding: 3px 6px;">
-                          <option value="#38bdf8">🔵 Sky Blue</option>
-                          <option value="#10b981">🟢 Emerald</option>
-                          <option value="#f59e0b">🟡 Amber</option>
-                          <option value="#ec4899">🟣 Rose</option>
-                          <option value="#8b5cf6">🟣 Violet</option>
+                          <option value="#38bdf8" data-i18n="ui.sky_blue">Sky Blue</option>
+                          <option value="#10b981" data-i18n="ui.emerald">Emerald</option>
+                          <option value="#f59e0b" data-i18n="ui.amber">Amber</option>
+                          <option value="#ec4899" data-i18n="ui.rose">Rose</option>
+                          <option value="#8b5cf6" data-i18n="ui.violet">Violet</option>
                         </select>
                         <div style="display: flex; gap: 6px;">
                           <button type="button" id="btn-cancel-add-feed" class="btn-pill-toggle is-small" style="margin: 0;" data-i18n="mw.cancel">Cancel</button>
@@ -1365,10 +1365,10 @@
                       <input type="text" id="cal-new-note-title" placeholder="Add a note, reminder, or task for this day..." data-i18n-placeholder="ui.add_a_note_reminder_or" style="flex: 1; border: 1px solid var(--zn-line-14); background: var(--zn-shade-30); padding: 7px 12px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); outline: none;" aria-label="Add a note, reminder, or task for this day..." data-i18n-aria-label="ui.add_a_note_reminder_or" />
                       <input type="time" id="cal-new-note-time" value="12:00" style="border: 1px solid var(--zn-line-14); background: var(--zn-shade-30); padding: 6px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace);" />
                       <select id="cal-new-note-type" style="border: 1px solid var(--zn-line-14); background: var(--zn-shade-35); padding: 6px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
-                        <option value="note">📝 Note</option>
-                        <option value="reminder">⏰ Reminder</option>
-                        <option value="task">📋 Task</option>
-                        <option value="event">📅 Event</option>
+                        <option value="note" data-i18n="wid.note_type_note">Note</option>
+                        <option value="reminder" data-i18n="wid.note_type_reminder">Reminder</option>
+                        <option value="task" data-i18n="wid.note_type_task">Task</option>
+                        <option value="event" data-i18n="wid.note_type_event">Event</option>
                       </select>
                       <button type="button" id="btn-cal-save-note" class="btn-pill-toggle is-primary is-small" style="white-space: nowrap;">+ Add</button>
                     </div>
@@ -1419,7 +1419,7 @@
                     <div id="modal-tz-preview-date" style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 500;">--</div>
                   </div>
                   <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-                    <div id="modal-tz-active-pill" class="suite-badge" style="background: var(--lt-b-00f0ff26, rgba(0,240,255,0.15)); color: var(--lt-ink-brand, var(--brand, #00f0ff)); border-color: var(--lt-r-00f0ff59, rgba(0,240,255,0.35)); font-size: var(--zn-fs-xs); font-weight: 700; padding: 3px 10px; border-radius: 6px;">Local Time (Auto)</div>
+                    <div id="modal-tz-active-pill" class="suite-badge" style="background: var(--lt-b-00f0ff26, rgba(0,240,255,0.15)); color: var(--lt-ink-brand, var(--brand, #00f0ff)); border-color: var(--lt-r-00f0ff59, rgba(0,240,255,0.35)); font-size: var(--zn-fs-xs); font-weight: 700; padding: 3px 10px; border-radius: 6px;" data-sample>Local Time (Auto)</div>
                     <!-- 12H / 24H Toggle -->
                     <div class="tz-format-toggle-group" role="radiogroup" aria-label="Clock format" data-i18n-aria-label="tz.format" style="display: flex; background: var(--zn-glaze-6); border: 1px solid var(--zn-line-10); border-radius: 6px; padding: 2px;">
                       <button type="button" id="btn-tz-fmt-12" class="tz-fmt-btn" role="radio" aria-checked="false" style="padding: 4px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border: none; background: transparent; color: var(--zn-text-muted); border-radius: 4px; cursor: pointer;" data-i18n="tz.h12">12 h</button>
@@ -3952,7 +3952,7 @@
                   <div id="update-status-icon" style="font-size:20px;">⏳</div>
                   <div style="flex:1;">
                     <div id="update-status-title" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong);" data-sample>Update check pending</div>
-                    <div id="update-status-desc" style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">Click "Check for Updates" to verify against the official GitHub releases.</div>
+                    <div id="update-status-desc" style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;" data-sample>Click "Check for Updates" to verify against the official GitHub releases.</div>
                   </div>
                   <div id="update-last-checked" style="font-size:var(--zn-fs-xs); color:var(--muted); white-space:nowrap;"></div>
                 </div>
@@ -3985,7 +3985,7 @@
                   <div id="update-progress-overlay" style="display:none; margin-top:12px; padding:14px 16px; background:var(--lt-b-0f1622f2, rgba(15,22,34,0.95)); border:1px solid rgba(14,165,233,0.4); border-radius:8px; text-align:center;">
                     <div style="font-size:22px; animation:spin 1.5s linear infinite; display:inline-block;">🔄</div>
                     <div id="update-progress-title" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); margin-top:6px;" data-i18n="updates.installing">Downloading & Applying Update...</div>
-                    <div id="update-progress-desc" style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">Downloading the new version and restarting ZettNAS.</div>
+                    <div id="update-progress-desc" style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;" data-sample>Downloading the new version and restarting ZettNAS.</div>
                     <div style="width:100%; height:4px; background:var(--zn-glaze-10); border-radius:2px; margin-top:10px; overflow:hidden;">
                       <div id="update-progress-bar" style="width:60%; height:100%; background:linear-gradient(90deg, #25c2a0, #0ea5e9); animation:pulse 1.2s infinite ease-in-out;"></div>
                     </div>
@@ -4132,7 +4132,7 @@
                         <span>▶</span>
                       </button>
                       <div class="ai-active-title-wrapper" style="display:flex; align-items:center; gap:6px; min-width:0;">
-                        <span id="ai-chat-active-title" class="ai-chat-active-title" title="Click pencil to rename" data-i18n-title="ui.click_pencil_to_rename">New Conversation</span>
+                        <span id="ai-chat-active-title" class="ai-chat-active-title" title="Click pencil to rename" data-i18n-title="ui.click_pencil_to_rename" data-sample>New Conversation</span>
                         <button type="button" id="btn-ai-chat-rename" class="btn-ai-icon-action" title="Rename conversation" data-i18n-title="ui.rename_conversation">✏️</button>
                       </div>
                       <span id="ai-chat-active-model-badge" style="padding:3px 10px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(16,185,129,0.16); color:var(--zn-text-ok); border:1px solid rgba(16,185,129,0.4); white-space:nowrap;" data-sample>
@@ -4577,7 +4577,7 @@
                 <div id="ai-sync-progress-banner" style="padding:9px 12px; border-radius:8px; background:var(--lt-b-0f172aa6, rgba(15,23,42,0.65)); border:1px solid rgba(56,189,248,0.22); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:var(--zn-fs-xs);">
                   <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                     <span id="ai-index-sync-state-pill" style="padding:2px 8px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(148,163,184,0.18); color:var(--zn-text);">IDLE</span>
-                    <span id="ai-index-current-path" style="color:var(--zn-text-soft); font-family:monospace; font-size:var(--zn-fs-xs);">Ready — Waiting for sync command (Sleeping drives protected)</span>
+                    <span id="ai-index-current-path" style="color:var(--zn-text-soft); font-family:monospace; font-size:var(--zn-fs-xs);" data-sample>Ready — Waiting for sync command (Sleeping drives protected)</span>
                   </div>
                   <div id="ai-index-progress-counters" style="color:var(--muted,#94a3b8); font-size:var(--zn-fs-xs);">
                     Indexed: <strong id="ai-prog-indexed" style="color:var(--zn-text-ok);">0</strong> • Unchanged: <strong id="ai-prog-unchanged" style="color:var(--zn-text-soft);">0</strong> • Deferred (Standby): <strong id="ai-prog-deferred" style="color:var(--zn-text-warn);">0</strong>

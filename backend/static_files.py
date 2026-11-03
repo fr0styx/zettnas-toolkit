@@ -3,7 +3,7 @@
 The build writes name.br and name.gz next to each text asset. When the browser accepts
 Brotli or gzip, that copy is sent with Content-Encoding. Files under /assets/ have content
 hashes in their names, so they are cached for a year as immutable; everything else is
-revalidated.
+revalidated: an unchanged file, compressed or not, is answered with 304.
 """
 
 import os
@@ -65,5 +65,11 @@ class CompressedStaticFiles(StaticFiles):
         compressed.headers["Vary"] = "Accept-Encoding"
         compressed.headers["Cache-Control"] = response.headers["Cache-Control"]
         if "etag" in response.headers:
-            compressed.headers["ETag"] = response.headers["etag"].rstrip('"') + f'-{enc}"'
+            etag = response.headers["etag"].rstrip('"') + f'-{enc}"'
+            compressed.headers["ETag"] = etag
+            # Starlette compared If-None-Match with the plain file's tag, so a compressed copy was
+            # sent whole on every revalidation (the icon sprite eight times a load): answer 304
+            if etag in [t.strip() for t in headers.get("if-none-match", "").split(",")]:
+                keep = ("etag", "cache-control", "vary", "content-encoding", "last-modified")
+                return Response(status_code=304, headers={k: v for k, v in compressed.headers.items() if k in keep})
         return compressed
