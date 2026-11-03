@@ -19,7 +19,7 @@
   <div id="tab-layout" class="drawer-tab-content active">
     <div class="tab-sub-header">
       <span class="sub-title" data-i18n="settings.section_arrangement">Layout Section Arrangement</span>
-      <button id="layout-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Section Order" data-i18n-title="ui.lock_or_unlock_section_order">🔒 Locked</button>
+      <button id="layout-cards-lock-btn" data-sample class="btn-lock-toggle" title="Lock or Unlock Section Order" data-i18n-title="ui.lock_or_unlock_section_order">🔒 Locked</button>
     </div>
 
     <div id="layout-sections-container" class="drawer-cards-flow locked">
@@ -36,7 +36,7 @@
       <div class="draggable-card drawer-card" data-layout-card-id="sec-lcd-style" id="sec-lcd-style">
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg><span data-i18n="settings.lcd_layout_style_title">Screen Dashboard Style</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
-          <span id="lcd-style-active-badge" class="preset-state-badge" style="color:var(--lt-ink-brand, var(--brand, #00f0ff)); border-color:var(--brand, #00f0ff);">CLASSIC CARDS</span>
+          <span id="lcd-style-active-badge" data-sample class="preset-state-badge" style="color:var(--lt-ink-brand, var(--brand, #00f0ff)); border-color:var(--brand, #00f0ff);">CLASSIC CARDS</span>
         </div>
         <div class="card-instruction" data-i18n="settings.lcd_layout_style_desc">Show several cards with live readings, or one large, high-contrast view with the IP address.</div>
         <div class="lcd-style-picker-row" role="radiogroup" aria-label="Screen Dashboard Style" data-i18n-aria-label="settings.lcd_layout_style_title">
@@ -48,7 +48,7 @@
       <div class="draggable-card drawer-card" data-layout-card-id="sec-lcd-theme" id="sec-lcd-theme">
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-screen"/></svg><span data-i18n="settings.lcd_theme_title">LCD Screen Theme</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
-          <span id="lcd-theme-active-badge" class="preset-state-badge" style="color:var(--lt-ink-brand, var(--brand, #00f0ff)); border-color:var(--brand, #00f0ff);">CYBER TEAL</span>
+          <span id="lcd-theme-active-badge" data-sample class="preset-state-badge" style="color:var(--lt-ink-brand, var(--brand, #00f0ff)); border-color:var(--brand, #00f0ff);">CYBER TEAL</span>
         </div>
         <div class="card-instruction" data-i18n="settings.lcd_theme_desc">Select a color scheme specifically for the physical 640x172 LCD screen and console dashboard.</div>
         <div class="lcd-theme-picker-row">
@@ -272,7 +272,7 @@
   <div id="tab-led" class="drawer-tab-content">
     <div class="tab-sub-header">
       <span class="sub-title" data-i18n="dr.card_arrangement">Card arrangement</span>
-      <button id="drawer-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Card Order" data-i18n-title="ui.lock_or_unlock_card_order">🔒 Locked</button>
+      <button id="drawer-lock-btn" data-sample class="btn-lock-toggle" title="Lock or Unlock Card Order" data-i18n-title="ui.lock_or_unlock_card_order">🔒 Locked</button>
     </div>
 
     <div id="drawer-cards-container" class="drawer-cards-flow locked">
@@ -397,7 +397,7 @@
   <div id="tab-fans" class="drawer-tab-content">
     <div class="tab-sub-header">
       <span class="sub-title" data-i18n="dr.fan_control_cards">Fan Control Cards</span>
-      <button id="fan-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Card Order" data-i18n-title="ui.lock_or_unlock_card_order">🔒 Locked</button>
+      <button id="fan-cards-lock-btn" data-sample class="btn-lock-toggle" title="Lock or Unlock Card Order" data-i18n-title="ui.lock_or_unlock_card_order">🔒 Locked</button>
     </div>
 
     <div id="fan-cards-container" class="drawer-cards-flow locked">
@@ -453,7 +453,7 @@
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-curve">
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.fan_curve_title">Dynamic Fan Curve • Thermal Map</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
-          <span class="suite-badge" id="hysteresis-badge" style="background:rgba(51,209,122,0.15); color:var(--ok); border-color:rgba(51,209,122,0.35);">HOLD: READY</span>
+          <span class="suite-badge" id="hysteresis-badge" data-sample style="background:rgba(51,209,122,0.15); color:var(--ok); border-color:rgba(51,209,122,0.35);">HOLD: READY</span>
         </div>
         <div class="card-instruction" id="curve-filter-instruction" data-sample>Displaying all thermal zones. Click a zone tachometer above or below to isolate.</div>
         
@@ -520,7 +520,7 @@
             <div class="legend-item" id="leg-item-z1"><span class="legend-dot" style="background:#6b8e23;"></span> <span data-i18n="dr.zone_1">Zone 1</span></div>
             <div class="legend-item" id="leg-item-z2"><span class="legend-dot" style="background:#38a2ff;"></span> <span data-i18n="dr.zone_2">Zone 2</span></div>
             <div class="legend-item" id="leg-item-cpu"><span class="legend-dot" style="background:#ffaa00;"></span> CPU</div>
-            <button class="btn-reset-curve-view" id="btn-reset-curve" style="display:none;">↺ Show All Zones</button>
+            <button class="btn-reset-curve-view" id="btn-reset-curve" style="display:none;"><span aria-hidden="true">↺</span> <span data-i18n="fan.show_all_zones">Show All Zones</span></button>
             <div style="display:flex; align-items:center; gap:8px;">
               <span id="fan-curve-range-val" class="suite-badge" title="Dynamic Fan Ramp Range" data-i18n-title="ui.dynamic_fan_ramp_range" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);" data-sample>Ramp: 37°C – 50°C</span>
               <div id="curve-readout-text" style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--ok2);" data-sample>Active Mapping</div>
@@ -648,7 +648,7 @@
             </div>
             <div style="display:flex; flex-direction:column; align-items:flex-end;">
               <span id="acoustic-sweep-status" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--text-dim, var(--zn-text-muted));" data-sample>Idle</span>
-              <span id="acoustic-current-step" style="font-size:var(--zn-fs-xs); font-family:monospace; color:var(--accent, var(--zn-text-accent));">Step --/--</span>
+              <span id="acoustic-current-step" data-sample style="font-size:var(--zn-fs-xs); font-family:monospace; color:var(--accent, var(--zn-text-accent));">Step --/--</span>
             </div>
           </div>
 
@@ -675,7 +675,7 @@
               <g id="acoustic-chart-points"></g>
             </svg>
             <div id="acoustic-results-summary" style="font-size:var(--zn-fs-xs); color:var(--text-dim, var(--zn-text-muted)); margin-top:4px; text-align:center;">
-              Run test to plot RPM linearity and identify acoustic rattle zones.
+              <span data-i18n="fan.acoustic_hint">Run test to plot RPM linearity and identify acoustic rattle zones.</span>
             </div>
           </div>
         </div>
@@ -686,7 +686,7 @@
   <div id="tab-buttons" class="drawer-tab-content">
     <div class="tab-sub-header">
       <span class="sub-title" data-i18n="settings.chassis_hw_bindings">Chassis Hardware Bindings</span>
-      <button id="btn-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Section Order" data-i18n-title="ui.lock_or_unlock_section_order">🔒 Locked</button>
+      <button id="btn-cards-lock-btn" data-sample class="btn-lock-toggle" title="Lock or Unlock Section Order" data-i18n-title="ui.lock_or_unlock_section_order">🔒 Locked</button>
     </div>
     
     <div id="btn-sections-container" class="drawer-cards-flow locked">
@@ -710,8 +710,8 @@
               <div style="display:flex; gap:6px; align-items:center;">
                 <span id="media-slot-info-badge" class="suite-badge" style="font-size:var(--zn-fs-xs);" data-sample>SLOTS EMPTY</span>
                 <button id="btn-media-rescan" type="button" class="btn-pill-toggle is-small" style="margin: 0;" title="Rescan and re-detect inserted cards" data-i18n-title="ui.rescan_and_re_detect_inserted" data-i18n="ui.scan">🔄 Scan</button>
-                <button id="btn-media-copy-now" type="button" class="btn-pill-toggle is-small" style="margin: 0; color: var(--ok2, #25c2a0); border-color: rgba(37,194,160,0.4);" title="Copy the inserted card now" data-i18n-title="ui.start_media_ingest_now_from">▶ Copy Now</button>
-                <button id="btn-media-eject" type="button" class="btn-pill-toggle is-danger is-small" style="margin: 0;" title="Safely unmount and eject card" data-i18n-title="ui.safely_unmount_and_eject_card">⏏ Eject</button>
+                <button id="btn-media-copy-now" type="button" class="btn-pill-toggle is-small" style="margin: 0; color: var(--ok2, #25c2a0); border-color: rgba(37,194,160,0.4);" title="Copy the inserted card now" data-i18n-title="ui.start_media_ingest_now_from"><span aria-hidden="true">▶</span> <span data-i18n="media.copy_now">Copy Now</span></button>
+                <button id="btn-media-eject" type="button" class="btn-pill-toggle is-danger is-small" style="margin: 0;" title="Safely unmount and eject card" data-i18n-title="ui.safely_unmount_and_eject_card"><span aria-hidden="true">⏏</span> <span data-i18n="media.eject_btn">Eject</span></button>
               </div>
             </div>
             <select id="btn-copy-src" class="tz-text-input" style="width: 100%; box-sizing: border-box; appearance: auto;">
