@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { afterAll, vi } from 'vitest';
 
 // 1. Global ResizeObserver mock for jsdom test isolation
 if (typeof globalThis.ResizeObserver === 'undefined') {
@@ -39,3 +39,11 @@ if (typeof HTMLCanvasElement !== 'undefined') {
 // English strings load lazily in the app (first-load budget); tests read them right away
 const { loadLanguage } = await import("../i18n.js");
 await loadLanguage("en");
+
+// A timer or promise a test file left behind can still log after its last test. Vitest sends
+// each console line to the main process, and a line sent while the worker is closing fails the
+// whole run ("Closing rpc while onUserConsoleLog was pending") although every test passed.
+// Once a file's tests are done, its late console output is dropped instead.
+afterAll(() => {
+  for (const level of ['log', 'info', 'warn', 'error', 'debug']) console[level] = () => {};
+});
