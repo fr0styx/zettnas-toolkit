@@ -1,9 +1,10 @@
 -r requirements.txt
--c requirements.lock
 # exact versions (NARC-10): the same as the local gate's test image, so a new release of a tool
 # can't fail CI with no code change; raise them on purpose, in both places, then lock them with
-# hashes (NARC-10): pip-compile --allow-unsafe --generate-hashes --no-emit-index-url --strip-extras \
-#   --output-file=requirements-dev.lock requirements-dev.txt
+# hashes, kept to the image's own versions (NARC-10; a test checks both):
+#   pip-compile --allow-unsafe --generate-hashes --no-emit-index-url --strip-extras \
+#     --constraint requirements.lock --output-file=requirements-dev.lock requirements-dev.txt
+# (the constraint is a flag, not a line here: GitHub's dependency graph can't follow a -c line)
 pytest==9.2.0
 pytest-asyncio==1.4.1
 pytest-cov==7.1.0
