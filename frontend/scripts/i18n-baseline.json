@@ -1,6 +1,6 @@
 {
   "raw_toasts": 0,
-  "hardcoded_ui": 174,
+  "hardcoded_ui": 161,
   "missing_plurals": 0,
   "to_fixed": 38,
   "emoji_strings": 18,
@@ -30,6 +30,6 @@
     "frontend/src/folder-browser.js": 1,
     "frontend/src/main.js": 6,
     "frontend/src/windows/drawer.html": 16,
-    "frontend/src/windows/management-window.html": 61
+    "frontend/src/windows/management-window.html": 48
   }
 }

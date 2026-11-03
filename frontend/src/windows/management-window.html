@@ -1755,7 +1755,7 @@
                   <div class="network-card" id="tailscale-controls-card">
                     <div class="network-card-header">
                       <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-key"/></svg> <span data-i18n="mw.tailscale_connection_and_au">Tailscale Connection &amp; Auth</span></div>
-                      <button class="btn-pill-toggle is-danger is-small" id="btn-tailscale-down" style="display: none;">🔌 Disconnect</button>
+                      <button class="btn-pill-toggle is-danger is-small" id="btn-tailscale-down" style="display: none;"><span aria-hidden="true">🔌</span> <span data-i18n="remote.disconnect">Disconnect</span></button>
                     </div>
                     <div style="padding:12px; font-size:var(--zn-fs-xs);" id="ts-controls-body">
                       <!-- 1-Click Deploy Banner (shown when daemon is not installed) -->
@@ -1809,7 +1809,7 @@
                           </div>
                         </div>
                         <div style="display:flex; justify-content:flex-end; margin-top:2px;">
-                          <button class="btn-pill-toggle" id="btn-tailscale-up" style="background: rgba(56,189,248,0.15); color: var(--zn-text-accent); border-color: rgba(56,189,248,0.4);">🚀 Connect Tailscale</button>
+                          <button class="btn-pill-toggle" id="btn-tailscale-up" style="background: rgba(56,189,248,0.15); color: var(--zn-text-accent); border-color: rgba(56,189,248,0.4);"><span aria-hidden="true">🚀</span> <span data-i18n="ui.connect_tailscale">Connect Tailscale</span></button>
                         </div>
                       </div>
 
@@ -1982,7 +1982,7 @@
                       </div>
                       <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="color:var(--muted);" data-i18n="mw.subnet_nat_router">Subnet NAT Router:</span>
-                        <button class="btn-pill-toggle is-small" id="btn-toggle-wg-subnet-nat">Toggle NAT Routing</button>
+                        <button class="btn-pill-toggle is-small" id="btn-toggle-wg-subnet-nat" data-i18n="net.wg_nat_toggle">Toggle NAT Routing</button>
                       </div>
                     </div>
                   </div>
@@ -2167,7 +2167,7 @@
                   <button class="btn-pill-toggle" id="btn-mgmt-docker-launch-window" title="Open Dedicated Window" data-i18n-title="ui.open_dedicated_window">🪟 <span data-i18n="mgmt.open_dedicated_window">Open Window</span></button>
                   <button class="btn-pill-toggle" id="btn-view-docker-containers" style="display: none;" data-i18n="ui.back_to_containers">← Back to Containers</button>
                   <button class="btn-pill-toggle" id="btn-view-docker-catalog"><span aria-hidden="true">📦</span> <span data-i18n="sp.catalog">App Catalog</span> <span id="catalog-total-badge" class="docker-count-badge" style="margin-left:4px;">…</span></button>
-                  <button class="btn-pill-toggle" id="btn-docker-prune" title="Clean up unused images, volumes, and stopped containers" data-i18n-title="ui.clean_up_unused_images_volumes">🧹 Prune / Cleanup</button>
+                  <button class="btn-pill-toggle" id="btn-docker-prune" title="Clean up unused images, volumes, and stopped containers" data-i18n-title="ui.clean_up_unused_images_volumes"><span aria-hidden="true">🧹</span> <span data-i18n="dk.prune">Prune / Cleanup</span></button>
                   <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n-title="ui.refresh_containers"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 </div>
               </div>
@@ -2264,8 +2264,8 @@
                     </div>
                     <div class="catalog-search-wrap" style="display:flex; align-items:center; gap:8px;">
                       <input type="text" id="catalog-search-input" placeholder="Search apps..." data-i18n-placeholder="ui.search_apps" class="tz-text-input" style="font-size:var(--zn-fs-xs); padding:3px 8px; width:180px; height:24px; border-radius:4px;" aria-label="Search apps..." data-i18n-aria-label="ui.search_apps">
-                      <button class="btn-pill-toggle" id="btn-manage-app-sources" title="Manage App Template Sources (Portainer/Custom)" data-i18n-title="ui.manage_app_template_sources_portainer">🌐 Sources <span id="catalog-sources-count-badge" class="docker-count-badge" style="margin-left:3px; background:var(--accent); color:#000;">1</span></button>
-                      <button class="btn-pill-toggle" id="btn-sideload-app-package" title="Sideload App Package from URL or Compose YAML" data-i18n-title="ui.sideload_app_package_from_url">📥 Sideload</button>
+                      <button class="btn-pill-toggle" id="btn-manage-app-sources" title="Manage App Template Sources (Portainer/Custom)" data-i18n-title="ui.manage_app_template_sources_portainer"><span aria-hidden="true">🌐</span> <span data-i18n="dk.sources">Sources</span> <span id="catalog-sources-count-badge" class="docker-count-badge" style="margin-left:3px; background:var(--accent); color:#000;">1</span></button>
+                      <button class="btn-pill-toggle" id="btn-sideload-app-package" title="Sideload App Package from URL or Compose YAML" data-i18n-title="ui.sideload_app_package_from_url"><span aria-hidden="true">📥</span> <span data-i18n="dk.sideload">Sideload</span></button>
                     </div>
                   </div>
                   <div id="docker-catalog-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px; overflow-y:auto; padding:2px;">
@@ -3049,7 +3049,7 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
                   <span class="mgmt-app-pill" id="mgmt-shares-platform-badge" style="background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); color:var(--lt-t-3bf58bff, #3bf58b);"></span>
-                  <button class="btn-pill-toggle is-primary" id="btn-create-network-share" style="display: none;" title="Create Network Share" data-i18n-title="ui.create_network_share">+ Create Share</button>
+                  <button class="btn-pill-toggle is-primary" id="btn-create-network-share" style="display: none;" title="Create Network Share" data-i18n-title="ui.create_network_share"><span aria-hidden="true">+</span> <span data-i18n="shares.create">Create Share</span></button>
                   <button class="btn-pill-toggle" id="btn-refresh-shares" title="Refresh Network Shares" data-i18n-title="ui.refresh_network_shares"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 </div>
               </div>
@@ -3961,7 +3961,7 @@
                 <div id="update-details-box" style="display:none; margin-top:14px; border-top:1px solid var(--zn-line-8); padding-top:12px;">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <strong id="update-release-title" style="color:var(--warn, #f5a623); font-size:var(--zn-fs-xs);" data-sample>New Release Available</strong>
-                    <a id="update-release-link" href="https://github.com/fr0styx/zettnas-toolkit/releases" target="_blank" rel="noopener noreferrer" style="color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-size:var(--zn-fs-xs); text-decoration:none;">View on GitHub ↗</a>
+                    <a id="update-release-link" href="https://github.com/fr0styx/zettnas-toolkit/releases" target="_blank" rel="noopener noreferrer" style="color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-size:var(--zn-fs-xs); text-decoration:none;"><span data-i18n="upd.view_github">View on GitHub</span> <span aria-hidden="true">↗</span></a>
                   </div>
                   <div id="update-release-notes" style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); max-height:160px; overflow-y:auto; background:var(--zn-shade-30); border:1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04)); border-radius:6px; padding:10px; font-family:var(--font-mono, monospace); line-height:1.45; white-space:pre-wrap;"></div>
 
@@ -4431,7 +4431,7 @@
                       ⬇️ <span data-i18n="ai.hf_pull_btn">Pull from Hugging Face</span>
                     </button>
                     <button id="btn-ai-hf-reset" type="button" class="btn-pill-toggle" style="display: none; background: rgba(148,163,184,0.14); border: 1px solid rgba(148,163,184,0.3); color: var(--zn-text-soft);">
-                      ✕ Reset
+                      <span aria-hidden="true">✕</span> <span data-i18n="ai.clear_filters">Reset</span>
                     </button>
                   </div>
                   <div id="ai-hf-search-status" style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted); display:none;"></div>
@@ -5087,7 +5087,7 @@
         <div style="color: var(--muted); font-size: var(--zn-fs-xs); margin-bottom: 4px;" data-i18n="net.canary_redirect_hint">If host IP changed, open the new address in a new tab to confirm:</div>
         <div style="display: flex; justify-content: center; align-items: center; gap: 8px; font-family: var(--font-mono, monospace); font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); font-size: 13px;">
           <span id="net-canary-target-url">http://--:8082</span>
-          <a id="net-canary-open-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size: var(--zn-fs-xs); padding: 2px 8px; color: var(--lt-ink-brand, var(--accent-cyan)); border-color: rgba(56,189,248,0.4);">Open ↗</a>
+          <a id="net-canary-open-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size: var(--zn-fs-xs); padding: 2px 8px; color: var(--lt-ink-brand, var(--accent-cyan)); border-color: rgba(56,189,248,0.4);"><span data-i18n="overview.open">Open</span> <span aria-hidden="true">↗</span></a>
         </div>
       </div>
 
@@ -5603,7 +5603,7 @@
         <label for="snap-name-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;" data-i18n="mw.create_instant_snapshot">CREATE INSTANT SNAPSHOT</label>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <input type="text" id="snap-name-input" class="tz-select-input" placeholder="snapshot-name (e.g. backup-daily)" data-i18n-placeholder="ph.snapshot_name" style="flex: 1; min-width: 200px; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 7px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
-          <button type="button" id="btn-take-snapshot-submit" class="btn-pill-toggle is-primary is-small">📸 Take Snapshot</button>
+          <button type="button" id="btn-take-snapshot-submit" class="btn-pill-toggle is-primary is-small"><span aria-hidden="true">📸</span> <span data-i18n="snap.take_btn">Take Snapshot</span></button>
         </div>
       </div>
 
@@ -5856,7 +5856,7 @@
           <div style="font-size: var(--zn-fs-xs); font-weight: 700;" id="sftp-status-text" data-sample>Status: Checking...</div>
           <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="mw.port_2222_isolated_chroot_jail">Port: 2222 · Isolated Chroot Jail</div>
         </div>
-        <button type="button" class="btn-pill-toggle" id="btn-sftp-toggle-service">Start SFTP</button>
+        <button type="button" class="btn-pill-toggle" id="btn-sftp-toggle-service" data-sample>Start SFTP</button>
       </div>
 
       <div style="background: var(--zn-shade-25); border: 1px dashed var(--zn-line-15); border-radius: 6px; padding: 8px 12px; font-size: var(--zn-fs-xs); display: flex; justify-content: space-between; align-items: center;">
@@ -5914,7 +5914,7 @@
       <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4;" data-i18n="mw.scan_with_the_official_wireguard_app">Scan with the official WireGuard app on iOS or Android to import tunnel instantly:</div>
       <div id="modal-wg-qr-wrap" style="background: #ffffff; padding: 12px; border-radius: 10px; line-height: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></div>
       <div style="display: flex; gap: 10px; margin-top: 6px; width: 100%; justify-content: center;">
-        <button type="button" class="btn-pill-toggle" id="modal-wg-qr-copy-btn">📋 Copy Config</button>
+        <button type="button" class="btn-pill-toggle" id="modal-wg-qr-copy-btn"><span aria-hidden="true">📋</span> <span data-i18n="wg.copy_config">Copy Config</span></button>
         <button type="button" class="btn-pill-toggle is-primary" id="modal-wg-qr-dl-btn"><span aria-hidden="true">📥</span> <span data-i18n="mw.export_conf">Export .conf</span></button>
       </div>
     </div>
