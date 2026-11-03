@@ -21,6 +21,7 @@ from typing import Any
 import httpx
 
 from backend import config
+from backend import settings as _settings
 from backend.config import logger
 
 
@@ -29,11 +30,11 @@ class TrueNASError(Exception):
 
 
 def configured() -> bool:
-    return bool(os.environ.get("TRUENAS_URL") and os.environ.get("TRUENAS_API_KEY"))
+    return bool(_settings.current("truenas_url") and os.environ.get("TRUENAS_API_KEY"))
 
 
 def _client(transport: httpx.BaseTransport | None = None) -> httpx.Client:
-    base = os.environ.get("TRUENAS_URL", "").rstrip("/")
+    base = _settings.current("truenas_url").rstrip("/")
     if not base.startswith(("http://", "https://")):
         raise TrueNASError("TRUENAS_URL must start with http:// or https://")
     return httpx.Client(
@@ -78,7 +79,7 @@ def _open_ws(url: str):
 
 def _rpc(method: str, params: list | None = None) -> Any:
     """One JSON-RPC 2.0 call over TrueNAS's WebSocket API, signed in with the API key."""
-    base = os.environ.get("TRUENAS_URL", "").rstrip("/")
+    base = _settings.current("truenas_url").rstrip("/")
     if not base.startswith(("http://", "https://")):
         raise TrueNASError("TRUENAS_URL must start with http:// or https://")
     url = "wss://" + base[len("https://") :] if base.startswith("https://") else "ws://" + base[len("http://") :]

@@ -571,7 +571,7 @@
           <span id="topbar-user-avatar-initial">A</span>
           <span class="topbar-user-status-dot"></span>
         </div>
-        <span id="topbar-user-display-name" class="topbar-user-name">Administrator</span>
+        <span id="topbar-user-display-name" class="topbar-user-name" data-sample>Administrator</span>
         <span class="topbar-user-caret">▾</span>
       </div>
     </div>
@@ -856,8 +856,8 @@
             <div id="w-ups-bar" style="height: 100%; width: 100%; background: var(--ok2, #25c2a0); transition: width 0.3s ease;"></div>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px; font-size: var(--zn-fs-xs);">
-            <span style="color: var(--muted);">Load: <strong style="color: var(--zn-text-soft); font-family: var(--font-mono, monospace);" id="w-ups-load">-- W</strong></span>
-            <span style="color: var(--muted);">Runtime: <strong style="color: var(--zn-text-soft); font-family: var(--font-mono, monospace);" id="w-ups-runtime">-- min</strong></span>
+            <span style="color: var(--muted);"><span data-i18n="wid.ups_load_label">Load:</span> <strong style="color: var(--zn-text-soft); font-family: var(--font-mono, monospace);" id="w-ups-load">-- W</strong></span>
+            <span style="color: var(--muted);"><span data-i18n="wid.ups_runtime_label">Runtime:</span> <strong style="color: var(--zn-text-soft); font-family: var(--font-mono, monospace);" id="w-ups-runtime">-- min</strong></span>
           </div>
         </div>
       </div>
@@ -2001,7 +2001,7 @@
         <div class="remote-form-section" style="padding-top: 4px;">
           <label for="new-remote-auto-mount" style="display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); color: var(--zn-text); cursor: pointer;">
             <input type="checkbox" id="new-remote-auto-mount" checked style="width: 16px; height: 16px; accent-color: var(--ok2, #22c55e);" />
-            <span><span data-i18n="ix.mount_immediately_to">Mount immediately to</span> <code style="color: var(--zn-text-accent);">/mnt/remotes</code> via FUSE</span>
+            <span><span data-i18n="ix.mount_immediately_to">Mount immediately to</span> <code style="color: var(--zn-text-accent);">/mnt/remotes</code> <span data-i18n="ix.via_fuse">via FUSE</span></span>
           </label>
         </div>
       </div>

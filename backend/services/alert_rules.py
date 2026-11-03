@@ -4,6 +4,7 @@ import time
 
 from backend.config import SETTINGS, logger
 from backend.ignored_errors import ignored
+from backend.services.notifications import alert_text
 from backend.state import Z_STATE, add_event
 
 _active_alerts = {}
@@ -58,9 +59,14 @@ def check_app_memory(now: float | None = None, measure=app_memory_mb) -> None:
             "machines are not counted). If it keeps growing, restart the container and report it.",
             "warning",
             now,
+            alert_text("app_memory", mb=f"{mb:.0f}", warn=warn),
         )
     elif mb < warn * MEMORY_CLEAR_SHARE:
-        _resolve_alert("app_memory", f"ZettNAS memory is back to normal ({mb:.0f} MB).")
+        _resolve_alert(
+            "app_memory",
+            f"ZettNAS memory is back to normal ({mb:.0f} MB).",
+            alert_text("app_memory_ok", mb=f"{mb:.0f}"),
+        )
 
 
 def get_failsafe_status() -> dict:
@@ -97,7 +103,12 @@ def evaluate_system_alerts(unraid_data, ups_data):
         state = unraid_data.get("state", "").upper()
         if state == "ERROR":
             _trigger_alert(
-                "unraid_error", "Unraid Array Error", "The Unraid array has encountered an error state.", "error", now
+                "unraid_error",
+                "Unraid Array Error",
+                "The Unraid array has encountered an error state.",
+                "error",
+                now,
+                alert_text("unraid_error"),
             )
         else:
             _resolve_alert("unraid_error")
@@ -137,6 +148,7 @@ def evaluate_system_alerts(unraid_data, ups_data):
                 f"The system is running on battery power. Estimated runtime: {runtime if runtime is not None else '?'} min",
                 "warning",
                 now,
+                alert_text("ups_onbatt", runtime=runtime if runtime is not None else "?"),
             )
 
             # The low-battery failsafe itself is ups_watchdog's (one UPS engine, REL-10)
@@ -153,14 +165,19 @@ def evaluate_system_alerts(unraid_data, ups_data):
                     "when the UPS settings say so.",
                     "critical",
                     now,
+                    alert_text("ups_critical", charge=charge or "?", runtime=runtime or "?"),
                 )
 
         elif is_online:
-            _resolve_alert("ups_onbatt", "UPS power restored.")
-            _resolve_alert("ups_critical", "Mains power restored; UPS battery recovering.")
+            _resolve_alert("ups_onbatt", "UPS power restored.", alert_text("ups_power_back"))
+            _resolve_alert(
+                "ups_critical", "Mains power restored; UPS battery recovering.", alert_text("ups_recovering")
+            )
 
 
-def _trigger_alert(alert_id, title, message, level, now):
+def _trigger_alert(alert_id, title, message, level, now, text=None):
+    """Logs and sends an alert at most every 15 minutes (5 when critical); `text` carries its
+    translation keys, so the log and the push read in each reader's language (NUX-3)."""
     from backend.services.notifications import send_notification
 
     last_triggered = _active_alerts.get(alert_id, 0)
@@ -168,15 +185,25 @@ def _trigger_alert(alert_id, title, message, level, now):
     debounce_interval = 300 if level == "critical" else 900
     if now - last_triggered > debounce_interval:
         _active_alerts[alert_id] = now
-        add_event(level, title, message)
-        send_notification({"type": "system", "title": title, "message": message, "level": level})
+        add_event(level, title, message, text)
+        send_notification(
+            {"type": "system", "title": title, "message": message, "level": level, **({"text": text} if text else {})}
+        )
 
 
-def _resolve_alert(alert_id, resolve_msg=None):
+def _resolve_alert(alert_id, resolve_msg=None, text=None):
     from backend.services.notifications import send_notification
 
     if alert_id in _active_alerts:
         del _active_alerts[alert_id]
         if resolve_msg:
-            add_event("info", "Alert Resolved", resolve_msg)
-            send_notification({"type": "system", "title": "Alert Resolved", "message": resolve_msg, "level": "info"})
+            add_event("info", "Alert Resolved", resolve_msg, text)
+            send_notification(
+                {
+                    "type": "system",
+                    "title": "Alert Resolved",
+                    "message": resolve_msg,
+                    "level": "info",
+                    **({"text": text} if text else {}),
+                }
+            )

@@ -99,7 +99,7 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then BASE=HEAD~1; fi
-          diff-cover coverage.xml --compare-branch="$BASE" --fail-under=80 --markdown-report diff-cover.md || status=$?
+          diff-cover coverage.xml --compare-branch="$BASE" --fail-under=80 --format markdown:diff-cover.md || status=$?
           cat diff-cover.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
           if [ "${status:-0}" != 0 ]; then
             echo "::error title=Changed lines are not tested::Fewer than 80% of the backend lines this change touches are covered by tests. See the step summary."
@@ -142,7 +142,7 @@ jobs:
           pipx run --spec diff-cover==10.6.0 diff-cover coverage/lcov.info --compare-branch="$BASE" --fail-under=60 \
             --include 'frontend/src/*.js' 'frontend/src/components/*.js' 'frontend/src/components/**/*.js' \
             --exclude 'frontend/src/__tests__/*' 'frontend/src/locales/*' \
-            --markdown-report diff-cover-js.md || status=$?
+            --format markdown:diff-cover-js.md || status=$?
           cat diff-cover-js.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
           if [ "${status:-0}" != 0 ]; then
             echo "::error title=Changed frontend lines are not tested::Fewer than 60% of the frontend lines this change touches are covered by tests. See the step summary."

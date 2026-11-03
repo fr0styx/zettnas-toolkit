@@ -1297,9 +1297,9 @@
                   <!-- Legend / Indicators -->
                   <div style="display: flex; align-items: center; gap: 12px; font-size: var(--zn-fs-xs); color: var(--muted); flex-wrap: wrap;">
                     <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #38bdf8;"></span> <span data-i18n="mw.note_reminder">Note / Reminder</span></div>
-                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span> Task</div>
+                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span> <span data-i18n="wid.note_type_task">Task</span></div>
                     <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #eab308;"></span> <span data-i18n="mw.synced_feed">Synced Feed</span></div>
-                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #ec4899;"></span> Holiday</div>
+                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #ec4899;"></span> <span data-i18n="wid.legend_holiday">Holiday</span></div>
                   </div>
 
                   <div style="height: 1px; background: var(--zn-glaze-8);"></div>
@@ -1850,7 +1850,7 @@
                             Route all mobile/laptop internet traffic encrypted through this NAS when traveling.
                           </div>
                           <div id="ts-exit-node-approval-hint" style="display:none; font-size:var(--zn-fs-xs); padding:6px 10px; border-radius:6px; border:1px solid rgba(245,158,11,0.25); background:rgba(245,158,11,0.08); color:var(--zn-text-warn); line-height:1.4; margin-top:4px;">
-                            <span aria-hidden="true">⚠️</span> Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:700;"><span data-i18n="mw.tailscale_admin_console">Tailscale Admin Console</span> <span aria-hidden="true">↗</span></a> (Machines → Edit route settings → Use as exit node).
+                            <span aria-hidden="true">⚠️</span> <span data-i18n="mw.exit_node_approve">Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your</span> <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:700;"><span data-i18n="mw.tailscale_admin_console">Tailscale Admin Console</span> <span aria-hidden="true">↗</span></a> <span data-i18n="mw.exit_node_steps">(Machines → Edit route settings → Use as exit node).</span>
                           </div>
                         </div>
 
@@ -3992,7 +3992,7 @@
                   </div>
 
                   <div style="margin-top:10px; padding:8px 12px; background:rgba(14,165,233,0.1); border:1px solid rgba(14,165,233,0.25); border-radius:6px; font-size:var(--zn-fs-xs); color:var(--lt-t-93c5fdff, #93c5fd);">
-                    💡 <strong data-i18n="mw.alternative_host_update">Alternative Host Update:</strong> In Unraid's Docker tab, click container &rarr; <em data-i18n="mw.force_update">Force Update</em>, or run:
+                    💡 <strong data-i18n="mw.alternative_host_update">Alternative Host Update:</strong> <span data-i18n="mw.unraid_force_update_a">In Unraid's Docker tab, click the container →</span> <em data-i18n="mw.force_update">Force Update</em><span data-i18n="mw.or_run">, or run:</span>
                     <code style="display:block; margin-top:4px; background:var(--zn-shade-40); padding:4px 8px; border-radius:4px; font-family:monospace; color:var(--zn-text-accent);">docker compose pull && docker compose up -d</code>
                   </div>
                 </div>
@@ -4320,9 +4320,9 @@
                   <span data-i18n="ai.how_llm_leveraged_title">What this model is used for:</span>
                 </div>
                 <ul style="margin:4px 0 0 18px; padding:0; color:var(--zn-text-soft); font-size:var(--zn-fs-xs); line-height:1.6;">
-                  <li><strong data-i18n="mw.each_answer_says_how_it_was">Each answer says how it was made:</strong> in <em data-i18n="mw.ai_search">AI search</em> and <em data-i18n="mw.ask_zetty">Ask Zetty</em>, every reply shows the model, whether the NPU or the GPU ran it, how fast it was, and which tools it used.</li>
-                  <li><strong><span aria-hidden="true">🛠️</span> <span data-i18n="mw.it_can_check_this_server_for">It can check this server for you:</span></strong> ask how busy the processor and memory are, which drives are asleep (it never wakes them), change the fan profile (<code>quiet</code>, <code>balanced</code>, <code>performance</code>), list or restart apps, or find files.</li>
-                  <li><strong><span aria-hidden="true">🌐</span> <span data-i18n="mw.it_can_look_things_up_on">It can look things up on the web:</span></strong> ask a general question or paste a link, and it searches Wikipedia and DuckDuckGo and links its sources.</li>
+                  <li><strong data-i18n="mw.each_answer_says_how_it_was">Each answer says how it was made:</strong> <span data-i18n="mw.each_answer_detail">In AI search and Ask Zetty, every reply shows the model, whether the NPU or the GPU ran it, how fast it was, and which tools it used.</span></li>
+                  <li><strong><span aria-hidden="true">🛠️</span> <span data-i18n="mw.it_can_check_this_server_for">It can check this server for you:</span></strong> <span data-i18n="mw.server_check_detail">Ask how busy the processor and memory are, which drives are asleep (it never wakes them), change the fan profile (quiet, balanced, performance), list or restart apps, or find files.</span></li>
+                  <li><strong><span aria-hidden="true">🌐</span> <span data-i18n="mw.it_can_look_things_up_on">It can look things up on the web:</span></strong> <span data-i18n="mw.web_lookup_detail">Ask a general question or paste a link, and it searches Wikipedia and DuckDuckGo and links its sources.</span></li>
                 </ul>
               </div>
 
@@ -5129,7 +5129,7 @@
           <option value="0" data-i18n="mw.mode_0_balance_rr_round_robin">Mode 0: Balance-RR (Round-Robin Packet Distribution)</option>
           <option value="2" data-i18n="mw.mode_2_balance_xor_transmit_hash">Mode 2: Balance-XOR (Transmit Hash Policy)</option>
         </select>
-        <div id="net-bond-mode-desc" style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 5px; line-height: 1.45;">
+        <div id="net-bond-mode-desc" style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 5px; line-height: 1.45;" data-sample>
           Only one slave in the bond is active. A different slave becomes active if and only if the active slave fails.
         </div>
       </div>

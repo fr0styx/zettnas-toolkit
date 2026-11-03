@@ -65,6 +65,8 @@ used keeps its default, and the log says which variable and why.
 |---|---|---|
 | `LOG_FORMAT` | `text` | Log lines as plain text, or as one JSON object per line (with a request id) for log collectors. (one of `text`, `json`) |
 | `ZETTNAS_AUDIT_RETENTION_DAYS` | `365` | Days the security audit log keeps an event; 0 keeps everything. (0–36500) |
+| `STRUCTURED_LOGS` | `off` | Older name for LOG_FORMAT=json. |
+| `ZETTNAS_LOG_FILE` | `on` | Keep a rotating log file in the data folder for the support bundle. |
 
 ## Host
 
@@ -87,6 +89,10 @@ used keeps its default, and the log says which variable and why.
 | `NUT_NAME` | `ups` | UPS name on the NUT server. |
 | `UPS_FAILSAFE_BATTERY_MIN` | `20.0` | Battery percent that counts as low when the UPS settings can't be read. (0–100) |
 | `UPS_FAILSAFE_RUNTIME_MIN` | `5.0` | Minutes of runtime that count as low when the UPS settings can't be read. (0–1440) |
+| `UPS_HOST` | `(empty)` | Older setups: the apcupsd or NUT server, when the Power pane has none. |
+| `UPS_PORT` | `(empty)` | Older setups: that server's port (3551 apcupsd, 3493 NUT). |
+| `UPS_TYPE` | `(empty)` | Older setups: nut for a NUT server, else apcupsd. |
+| `NUT_UPS_NAME` | `(empty)` | Older setups: the UPS name on the NUT server. |
 
 ## Front panel
 
@@ -98,6 +104,9 @@ used keeps its default, and the log says which variable and why.
 | `LCD_RENDERER` | `auto` | What draws the front LCD: chromium (the web dashboard), pil (drawn directly, no browser) or auto (chromium when installed, otherwise pil). (one of `auto`, `chromium`, `pil`) |
 | `LCD_SLEEP_SEC` | `300` | Seconds without activity before the LCD dims. (0–86400) |
 | `ZETTNAS_LCD_CAPTURE` | `screencast` | How the front LCD gets its frames: pushed when the page changes, or a screenshot every frame. (one of `screencast`, `poll`) |
+| `FRAMEBUFFER` | `(empty)` | The front LCD's framebuffer device, when it isn't /dev/fb0. |
+| `LED_PORT` | `(empty)` | The light bar's serial port, when it isn't found by itself. |
+| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | `(empty)` | The Chromium that draws the front LCD; empty uses the image's. |
 
 ## Disks
 
@@ -129,6 +138,7 @@ used keeps its default, and the log says which variable and why.
 | `FAN_ZERO_RPM_NVME_CEILING` | `50` | Highest NVMe temperature at which fans may stop, °C. (20–100; also read as `ZERO_RPM_NVME`) |
 | `FAN_ZERO_RPM_STOP_TEMP` | `34` | Disk bay temperature at or below which fans may stop, °C. (15–80; also read as `ZERO_RPM_TEMP`) |
 | `FAN_ZERO_RPM_START_TEMP` | `38` | Disk bay temperature that restarts stopped fans, °C. (15–90) |
+| `FORCE_ZETTLAB_MMIO` | `(empty)` | 1 forces the Zettlab fan registers on, 0 off; empty detects the board. |
 
 ## AI and media
 
@@ -149,3 +159,6 @@ used keeps its default, and the log says which variable and why.
 | `ZETTNAS_PLATFORM` | `(empty)` | Which host this is (unraid, truenas, zettos, ...); empty detects it. |
 | `ZETTNAS_OBSERVER_ADAPTER` | `(empty)` | The host to read in observer mode; empty or auto detects it. |
 | `ZETTNAS_PAL_MODE` | `(empty)` | observer, readonly or telemetry: only read the host, never change it. |
+| `TRUENAS_URL` | `(empty)` | The TrueNAS address for its API (https://...). |
+| `UNRAID_API_URL` | `(empty)` | The Unraid API address (https://...). |
+| `UNRAID_API_CA` | `(empty)` | Another CA file to trust for the Unraid API. |

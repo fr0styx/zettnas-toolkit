@@ -16,6 +16,7 @@ from contextvars import ContextVar
 from datetime import UTC, datetime, timezone
 from typing import Any, Optional
 
+from backend import settings as _settings
 from backend.settings import test_mode
 
 # Context variable holding the correlation ID for the active request
@@ -196,7 +197,7 @@ def log_file_path() -> str:
 def _add_file_handler(root_logger: logging.Logger, formatter: logging.Formatter) -> str | None:
     """A rotating log file in the data folder (REL-28): what happened before a restart survives it,
     and the support bundle can carry it. 2 MB, three older files; ZETTNAS_LOG_FILE=0 turns it off."""
-    if os.environ.get("ZETTNAS_LOG_FILE", "1") == "0" or test_mode():
+    if not _settings.current("log_file") or test_mode():
         return None
     from logging.handlers import RotatingFileHandler
 
@@ -238,7 +239,7 @@ def setup_structured_logging():
     _add_file_handler(root_logger, json_formatter)
 
     # 2. Check if stdout JSON logging is active
-    if os.environ.get("LOG_FORMAT", "").lower() == "json" or os.environ.get("STRUCTURED_LOGS", "") == "1":
+    if _settings.current("log_format") == "json" or _settings.current("structured_logs"):
         for handler in root_logger.handlers:
             if isinstance(handler, logging.StreamHandler) and not isinstance(handler, RingBufferHandler):
                 handler.setFormatter(json_formatter)

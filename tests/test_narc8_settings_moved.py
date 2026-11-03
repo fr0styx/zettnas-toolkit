@@ -19,7 +19,7 @@ def test_thumb_cache_limit_comes_from_settings_with_a_floor(monkeypatch):
 def alerts(monkeypatch):
     sent = []
     monkeypatch.setattr("backend.services.notifications.send_notification", lambda n: sent.append(n))
-    monkeypatch.setattr(alert_rules, "add_event", lambda level, title, msg: None)
+    monkeypatch.setattr(alert_rules, "add_event", lambda level, title, msg, *a: None)
     monkeypatch.setattr(alert_rules, "check_app_memory", lambda now: None)
     monkeypatch.setattr("backend.services.ups_watchdog.is_simulation_active", lambda: False)
 

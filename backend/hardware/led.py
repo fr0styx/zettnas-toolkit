@@ -6,13 +6,14 @@ import subprocess
 import threading
 import time
 
+from backend import settings as _settings
 from backend.ignored_errors import ignored
 from backend.proc import run_bounded
 from backend.state import Z_STATE
 
 logger = logging.getLogger("ZettNAS")
 
-LED_PORT = os.environ.get("LED_PORT", "")
+LED_PORT = _settings.current("led_port")
 
 CRC_TABLE = [
     0x00,
@@ -333,7 +334,7 @@ def _get_serial_connection(port: str):
 
 
 def find_led_port():
-    env_port = os.environ.get("LED_PORT", "").strip()
+    env_port = _settings.current("led_port")
     if env_port and os.path.exists(env_port):
         return env_port
     by_ids = glob.glob("/dev/serial/by-id/*ZettOS_RGB*") + glob.glob("/host/dev/serial/by-id/*ZettOS_RGB*")

@@ -3,6 +3,7 @@ import json
 import os
 import time
 
+from backend import settings as _settings
 from backend.config import HOST_DEV, HOST_SYS, SCREEN_STATE_FILE, logger
 from backend.fsutil import SETTINGS_RECHECK_SECS, atomic_write_json
 from backend.ignored_errors import ignored
@@ -16,8 +17,8 @@ def find_fb_device(writable_only: bool = True) -> str | None:
     Returns device path or None.
     """
     candidates = []
-    if "FRAMEBUFFER" in os.environ:
-        candidates.append(os.environ["FRAMEBUFFER"])
+    if _settings.current("framebuffer"):
+        candidates.append(_settings.current("framebuffer"))
     candidates.extend(
         [
             "/dev/fb0",

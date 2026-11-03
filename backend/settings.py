@@ -217,6 +217,10 @@ class Settings:
         hi=36500,
         group="Logs",
     )
+    structured_logs: bool = _s("STRUCTURED_LOGS", False, "Older name for LOG_FORMAT=json.", group="Logs")
+    log_file: bool = _s(
+        "ZETTNAS_LOG_FILE", True, "Keep a rotating log file in the data folder for the support bundle.", group="Logs"
+    )
     gil_switch_secs: float = _s(
         "ZETTNAS_GIL_SWITCH_SECS",
         0.02,
@@ -259,6 +263,12 @@ class Settings:
         hi=1440,
         group="Power",
     )
+    ups_host: str = _s(
+        "UPS_HOST", "", "Older setups: the apcupsd or NUT server, when the Power pane has none.", group="Power"
+    )
+    ups_port: str = _s("UPS_PORT", "", "Older setups: that server's port (3551 apcupsd, 3493 NUT).", group="Power")
+    ups_type: str = _s("UPS_TYPE", "", "Older setups: nut for a NUT server, else apcupsd.", group="Power")
+    nut_ups_name: str = _s("NUT_UPS_NAME", "", "Older setups: the UPS name on the NUT server.", group="Power")
     # Front panel
     enable_fb: bool = _s("ENABLE_FB", True, "Drive the front LCD.", group="Front panel")
     lcd_fps: int = _s("LCD_FPS", 5, "Frames per second sent to the front LCD.", lo=1, hi=30, group="Front panel")
@@ -281,6 +291,18 @@ class Settings:
         "screencast",
         "How the front LCD gets its frames: pushed when the page changes, or a screenshot every frame.",
         choices=("screencast", "poll"),
+        group="Front panel",
+    )
+    framebuffer: str = _s(
+        "FRAMEBUFFER", "", "The front LCD's framebuffer device, when it isn't /dev/fb0.", group="Front panel"
+    )
+    led_port: str = _s(
+        "LED_PORT", "", "The light bar's serial port, when it isn't found by itself.", group="Front panel"
+    )
+    chromium_path: str = _s(
+        "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH",
+        "",
+        "The Chromium that draws the front LCD; empty uses the image's.",
         group="Front panel",
     )
     # Disks and health
@@ -390,6 +412,9 @@ class Settings:
         hi=90,
         group="Fans",
     )
+    force_zettlab_mmio: str = _s(
+        "FORCE_ZETTLAB_MMIO", "", "1 forces the Zettlab fan registers on, 0 off; empty detects the board.", group="Fans"
+    )
     # AI and media
     ai_num_ctx: int = _s(
         "ZETTNAS_AI_NUM_CTX",
@@ -438,6 +463,9 @@ class Settings:
         "observer, readonly or telemetry: only read the host, never change it.",
         group="Platforms",
     )
+    truenas_url: str = _s("TRUENAS_URL", "", "The TrueNAS address for its API (https://...).", group="Platforms")
+    unraid_api_url: str = _s("UNRAID_API_URL", "", "The Unraid API address (https://...).", group="Platforms")
+    unraid_api_ca: str = _s("UNRAID_API_CA", "", "Another CA file to trust for the Unraid API.", group="Platforms")
 
 
 def _convert(raw: str, typ: Any, meta: Mapping[str, Any]) -> Any:

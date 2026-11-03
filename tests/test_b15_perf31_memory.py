@@ -25,7 +25,7 @@ def test_the_apps_memory_leaves_out_virtual_machines(tmp_path):
 def alerts(monkeypatch):
     sent = []
     monkeypatch.setattr("backend.services.notifications.send_notification", lambda n: sent.append(n))
-    monkeypatch.setattr(alert_rules, "add_event", lambda level, title, msg: None)
+    monkeypatch.setattr(alert_rules, "add_event", lambda level, title, msg, *a: None)
     monkeypatch.setattr("backend.config.APP_MEMORY_WARN_MB", 1000)
     alert_rules.reset_failsafe_state()
     yield sent

@@ -112,6 +112,15 @@
 
 #### Usability
 
+- **System alerts in your language** (NUX-3): the UPS on-battery and critical-battery alerts, the
+  Unraid array error, the memory warning and their all-clear messages are written in the
+  household's language for pushes and e-mails and in the reader's for the activity log, as is the
+  fan controller's setup warning.
+
+- **Thirteen more settings documented** (NARC-8): the older UPS variables, the TrueNAS and Unraid
+  addresses, the LCD framebuffer, light bar port and Chromium, the fan register override and the
+  two log switches are in docs/CONFIGURATION.md; they are still read while ZettNAS runs, as before.
+
 - **The header badges and AI index counts in your language** (NUX-20): the LCD and live-data
   badges, the security grade, the UPS badge, the console's goodbye, calendar colours and note
   types, and the AI index counts (108 -> 84 strings left).

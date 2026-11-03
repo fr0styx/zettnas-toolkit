@@ -1,12 +1,12 @@
 {
   "raw_toasts": 0,
   "raw_dialogs": 0,
-  "hardcoded_ui": 84,
+  "hardcoded_ui": 65,
   "missing_plurals": 0,
   "to_fixed": 38,
   "emoji_strings": 18,
   "per_file": {
-    "frontend/index.html": 6,
+    "frontend/index.html": 2,
     "frontend/src/components/dashboard.js": 33,
     "frontend/src/components/dock/user-flyout.js": 1,
     "frontend/src/components/encrypted-folders.js": 1,
@@ -20,7 +20,6 @@
     "frontend/src/components/spotlight.js": 3,
     "frontend/src/components/stack-modal.js": 2,
     "frontend/src/components/vm/console.js": 6,
-    "frontend/src/windows/drawer.html": 4,
-    "frontend/src/windows/management-window.html": 17
+    "frontend/src/windows/management-window.html": 6
   }
 }

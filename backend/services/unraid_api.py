@@ -23,6 +23,7 @@ import certifi
 import httpx
 
 from backend import config
+from backend import settings as _settings
 from backend.config import logger
 
 STATUS_QUERY = """
@@ -52,7 +53,7 @@ class UnraidApiError(Exception):
 
 
 def configured() -> bool:
-    return bool(os.environ.get("UNRAID_API_URL") and os.environ.get("UNRAID_API_KEY"))
+    return bool(_settings.current("unraid_api_url") and os.environ.get("UNRAID_API_KEY"))
 
 
 _EXTRA_CA = Path(__file__).resolve().parent.parent / "certs" / "isrg-root-yr-by-x1.pem"
@@ -64,14 +65,14 @@ def _tls_verify() -> ssl.SSLContext | bool:
     if not config.SETTINGS.unraid_api_verify_tls:
         return False
     ctx = ssl.create_default_context(cafile=certifi.where())
-    for extra in (str(_EXTRA_CA), os.environ.get("UNRAID_API_CA", "")):
+    for extra in (str(_EXTRA_CA), _settings.current("unraid_api_ca")):
         if extra and os.path.isfile(extra):
             ctx.load_verify_locations(cafile=extra)
     return ctx
 
 
 def _post(query: str, variables: dict[str, Any] | None = None, transport=None) -> dict[str, Any]:
-    base = os.environ.get("UNRAID_API_URL", "").rstrip("/")
+    base = _settings.current("unraid_api_url").rstrip("/")
     if not base.startswith(("http://", "https://")):
         raise UnraidApiError("UNRAID_API_URL must start with http:// or https://")
     with httpx.Client(timeout=10, transport=transport, verify=_tls_verify()) as c:

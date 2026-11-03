@@ -7,6 +7,7 @@ import threading
 import time
 from typing import Any, Optional
 
+from backend import settings as _settings
 from backend.config import (
     FAN_DISK_HOLD_SECS,
     FAN_FAILSAFE_PWM,
@@ -34,7 +35,7 @@ def is_zettlab_appliance() -> bool:
 
     Asked several times a tick (fans, LEDs, layout); the answer is kept for five minutes (PERF-5).
     """
-    force = os.environ.get("FORCE_ZETTLAB_MMIO", "").strip()
+    force = _settings.current("force_zettlab_mmio")
     if force == "1":
         return True
     if force == "0":
@@ -122,7 +123,7 @@ def is_zettlab_mmio_supported() -> bool:
     Explicitly excluded on D4, ARM64, and generic hardware to prevent
     bus aborts, Machine Check Exceptions (MCEs), and system freezes.
     """
-    force = os.environ.get("FORCE_ZETTLAB_MMIO", "").strip()
+    force = _settings.current("force_zettlab_mmio")
     if force == "1":
         return True
     if force == "0":
@@ -260,13 +261,14 @@ class ZettlabMmioFanController:
                             pe,
                         )
                         try:
-                            from backend.state import add_event
+                            from backend.state import add_event, event_text
 
                             add_event(
                                 "warning",
                                 "MMIO Fan Control Permission Denied",
                                 "Docker container lacks cgroup permission to access /dev/mem. "
                                 "Please add --device-cgroup-rule='c 1:1 rwm' to your container's Extra Parameters in Unraid.",
+                                event_text("fan_mmio_denied", rule="--device-cgroup-rule='c 1:1 rwm'"),
                             )
                         except Exception:
                             ignored("backend.hardware.fans.ZettlabMmioFanController._ensure_mapped")
@@ -406,7 +408,7 @@ def get_detailed_fan_telemetry() -> dict[str, Any]:
     if (
         mmio_ctrl
         and is_zettlab_mmio_supported()
-        and (driver_mode == "mmio" or os.environ.get("FORCE_ZETTLAB_MMIO") == "1")
+        and (driver_mode == "mmio" or _settings.current("force_zettlab_mmio") == "1")
     ):
         try:
             mmio_regs = mmio_ctrl.read_raw_registers()

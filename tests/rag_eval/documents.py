@@ -529,7 +529,7 @@ _KNOWN: dict[tuple[str, ...], list[int]] = {}
 
 
 def _thumb(img) -> list[int]:
-    return list(img.convert("L").resize(_THUMB).getdata())
+    return list(img.convert("L").resize(_THUMB).get_flattened_data())
 
 
 def _known_thumb(lines: list[str]) -> list[int]:

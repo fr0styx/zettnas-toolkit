@@ -14,6 +14,7 @@ import subprocess
 import time
 from typing import Any, Optional
 
+from backend import settings as _settings
 from backend.ignored_errors import ignored
 
 try:
@@ -247,12 +248,12 @@ def load_ups_config() -> dict[str, Any]:
 
     # Tier 6: Legacy environment variables fallback
     if not recovered_from_backup:
-        env_host = os.getenv("UPS_HOST")
-        env_port = os.getenv("UPS_PORT")
+        env_host = _settings.current("ups_host") or None
+        env_port = _settings.current("ups_port") or None
         env_nut_host = os.getenv("NUT_HOST")
         env_nut_port = os.getenv("NUT_PORT")
-        env_ups_type = os.getenv("UPS_TYPE")
-        env_ups_name = os.getenv("NUT_UPS_NAME")
+        env_ups_type = _settings.current("ups_type") or None
+        env_ups_name = _settings.current("nut_ups_name") or None
 
         if env_ups_type and env_ups_type.lower() == "nut":
             cfg["mode"] = "nut_client"

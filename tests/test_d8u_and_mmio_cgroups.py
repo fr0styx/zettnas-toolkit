@@ -125,7 +125,7 @@ def test_mmio_fan_controller_permission_error(monkeypatch):
 
     events_recorded = []
     monkeypatch.setattr(
-        "backend.state.add_event", lambda level, title, msg: events_recorded.append((level, title, msg))
+        "backend.state.add_event", lambda level, title, msg, *a: events_recorded.append((level, title, msg))
     )
 
     assert ctrl._ensure_mapped() is False

@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from PIL import Image, ImageChops
 
 from backend import config
+from backend import settings as _settings
 from backend.config import ENABLE_FB, HOST_SYS, LCD_FORMAT, LCD_FPS, PORT, logger
 from backend.hardware.screen import (
     find_fb_device,
@@ -202,7 +203,7 @@ def render_lcd_loop():
         logger.info("[LCD] No auxiliary front-panel LCD detected or ENABLE_FB=0. Running web-only.")
         return
 
-    chromium = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH", "/usr/lib/chromium/chromium-headless-shell")
+    chromium = _settings.current("chromium_path") or "/usr/lib/chromium/chromium-headless-shell"
     renderer = choose_renderer(config.LCD_RENDERER, os.path.exists(chromium))
     if renderer is None:
         logger.info("[LCD] LCD_RENDERER=chromium but this image has no Chromium. Use LCD_RENDERER=pil or auto.")
@@ -275,7 +276,7 @@ def render_lcd_loop():
                 browser = p.chromium.launch(
                     headless=True,
                     args=chromium_args,
-                    executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH"),
+                    executable_path=_settings.current("chromium_path") or None,
                 )
                 context = browser.new_context(**lcd_context_options(fb_width, fb_height))
                 context.set_extra_http_headers({"Authorization": f"Bearer {config.LCD_INTERNAL_TOKEN}"})
