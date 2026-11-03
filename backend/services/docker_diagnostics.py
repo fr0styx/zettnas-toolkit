@@ -80,69 +80,8 @@ def _docker_api_get_logs(container_id: str, tail: int = 50) -> str:
                 ignored("backend.services.docker_diagnostics._docker_api_get_logs")
 
 
-def collect_docker_diagnostics() -> dict[str, Any]:
-    """
-    Collects complete Docker daemon and container fleet diagnostics.
-    """
-    t0 = time.time()
-    result: dict[str, Any] = {
-        "daemon_connected": False,
-        "daemon_info": {},
-        "system_df": {},
-        "containers_summary": {
-            "total": 0,
-            "running": 0,
-            "stopped": 0,
-            "restarting": 0,
-            "dead": 0,
-            "oom_killed": 0,
-        },
-        "port_conflicts": [],
-        "troubled_container_logs": {},
-    }
-
-    raw_info = _docker_api_get("/info")
-    if raw_info is None:
-        result["error"] = "Docker socket /var/run/docker.sock unavailable or unresponsive"
-        return result
-
-    result["daemon_connected"] = True
-
-    # 1. Daemon Info
-    result["daemon_info"] = {
-        "server_version": raw_info.get("ServerVersion"),
-        "operating_system": raw_info.get("OperatingSystem"),
-        "kernel_version": raw_info.get("KernelVersion"),
-        "architecture": raw_info.get("Architecture"),
-        "ncpu": raw_info.get("NCPU"),
-        "mem_total": raw_info.get("MemTotal"),
-        "storage_driver": raw_info.get("Driver"),
-        "docker_root_dir": raw_info.get("DockerRootDir"),
-        "cgroup_driver": raw_info.get("CgroupDriver"),
-        "cgroup_version": raw_info.get("CgroupVersion"),
-        "live_restore": raw_info.get("LiveRestoreEnabled"),
-        "warnings": raw_info.get("Warnings"),
-    }
-
-    # 2. System Disk Usage (docker system df)
-    raw_df = _docker_api_get("/system/df")
-    if isinstance(raw_df, dict):
-        images = raw_df.get("Images") or []
-        containers = raw_df.get("Containers") or []
-        volumes = raw_df.get("Volumes") or []
-        build_cache = raw_df.get("BuildCache") or []
-
-        result["system_df"] = {
-            "images_count": len(images),
-            "images_size_bytes": sum(img.get("Size", 0) for img in images),
-            "containers_count": len(containers),
-            "containers_size_bytes": sum(c.get("SizeRw", 0) for c in containers if isinstance(c, dict)),
-            "volumes_count": len(volumes),
-            "volumes_size_bytes": sum(v.get("UsageData", {}).get("Size", 0) for v in volumes if isinstance(v, dict)),
-            "build_cache_size_bytes": sum(b.get("Size", 0) for b in build_cache if isinstance(b, dict)),
-        }
-
-    # 3. Containers Inspection & Port Conflict Detection
+def _diag_containers(result: Any) -> Any:
+    """collect_docker_diagnostics: every container inspected, with port conflicts."""
     host_port_map: dict[str, list[str]] = {}
     troubled_containers: list[dict[str, Any]] = []
     troubled_names: list[str] = []
@@ -236,21 +175,11 @@ def collect_docker_diagnostics() -> dict[str, Any]:
 
     result["containers_summary"]["troubled_names"] = troubled_names
     result["troubled_containers"] = troubled_containers
+    return troubled_containers
 
-    # 4. Fetch logs for troubled containers (last 50 lines)
-    for tc in troubled_containers[:10]:
-        c_id = tc["id"]
-        c_name = tc["name"]
-        raw_logs = _docker_api_get_logs(c_id, tail=50)
-        if raw_logs:
-            result["troubled_container_logs"][f"{c_name}_{c_id}"] = {
-                "status": tc["status"],
-                "exit_code": tc.get("exit_code"),
-                "oom_killed": tc["oom_killed"],
-                "tail_logs": sanitize_string(raw_logs),
-            }
 
-    # 5. Stacks Summary (Synthesized & File-backed Compose Stacks)
+def _diag_stacks(result: Any) -> Any:
+    """collect_docker_diagnostics: compose stacks, synthesized and file-backed."""
     stacks_summary: list[dict[str, Any]] = []
     try:
         from backend.services.docker_stacks import list_all_stacks
@@ -271,6 +200,86 @@ def collect_docker_diagnostics() -> dict[str, Any]:
     except Exception as e:
         logger.debug(f"[Docker Diagnostics] Error listing stacks: {e}")
     result["stacks_summary"] = stacks_summary
+
+
+def collect_docker_diagnostics() -> dict[str, Any]:
+    """
+    Collects complete Docker daemon and container fleet diagnostics.
+    """
+    t0 = time.time()
+    result: dict[str, Any] = {
+        "daemon_connected": False,
+        "daemon_info": {},
+        "system_df": {},
+        "containers_summary": {
+            "total": 0,
+            "running": 0,
+            "stopped": 0,
+            "restarting": 0,
+            "dead": 0,
+            "oom_killed": 0,
+        },
+        "port_conflicts": [],
+        "troubled_container_logs": {},
+    }
+
+    raw_info = _docker_api_get("/info")
+    if raw_info is None:
+        result["error"] = "Docker socket /var/run/docker.sock unavailable or unresponsive"
+        return result
+
+    result["daemon_connected"] = True
+
+    # 1. Daemon Info
+    result["daemon_info"] = {
+        "server_version": raw_info.get("ServerVersion"),
+        "operating_system": raw_info.get("OperatingSystem"),
+        "kernel_version": raw_info.get("KernelVersion"),
+        "architecture": raw_info.get("Architecture"),
+        "ncpu": raw_info.get("NCPU"),
+        "mem_total": raw_info.get("MemTotal"),
+        "storage_driver": raw_info.get("Driver"),
+        "docker_root_dir": raw_info.get("DockerRootDir"),
+        "cgroup_driver": raw_info.get("CgroupDriver"),
+        "cgroup_version": raw_info.get("CgroupVersion"),
+        "live_restore": raw_info.get("LiveRestoreEnabled"),
+        "warnings": raw_info.get("Warnings"),
+    }
+
+    # 2. System Disk Usage (docker system df)
+    raw_df = _docker_api_get("/system/df")
+    if isinstance(raw_df, dict):
+        images = raw_df.get("Images") or []
+        containers = raw_df.get("Containers") or []
+        volumes = raw_df.get("Volumes") or []
+        build_cache = raw_df.get("BuildCache") or []
+
+        result["system_df"] = {
+            "images_count": len(images),
+            "images_size_bytes": sum(img.get("Size", 0) for img in images),
+            "containers_count": len(containers),
+            "containers_size_bytes": sum(c.get("SizeRw", 0) for c in containers if isinstance(c, dict)),
+            "volumes_count": len(volumes),
+            "volumes_size_bytes": sum(v.get("UsageData", {}).get("Size", 0) for v in volumes if isinstance(v, dict)),
+            "build_cache_size_bytes": sum(b.get("Size", 0) for b in build_cache if isinstance(b, dict)),
+        }
+
+    troubled_containers = _diag_containers(result)
+
+    # 4. Fetch logs for troubled containers (last 50 lines)
+    for tc in troubled_containers[:10]:
+        c_id = tc["id"]
+        c_name = tc["name"]
+        raw_logs = _docker_api_get_logs(c_id, tail=50)
+        if raw_logs:
+            result["troubled_container_logs"][f"{c_name}_{c_id}"] = {
+                "status": tc["status"],
+                "exit_code": tc.get("exit_code"),
+                "oom_killed": tc["oom_killed"],
+                "tail_logs": sanitize_string(raw_logs),
+            }
+
+    _diag_stacks(result)
 
     # 6. App Backups Summary
     backups_summary: dict[str, Any] = {

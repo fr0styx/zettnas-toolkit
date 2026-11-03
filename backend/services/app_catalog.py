@@ -767,6 +767,115 @@ def github_repo(url: str) -> str | None:
     return repo if _GITHUB_REPO.match(repo) and ".." not in repo else None
 
 
+def _companion_services(
+    app: Any,
+    environment_list: Any,
+    image_name: Any,
+    ports_mapped: Any,
+    service_name: Any,
+    stack_services: Any,
+    volumes_list: Any,
+) -> Any:
+    """generate_compose_for_app: the companion services a multi-container app brings."""
+    extra_services = dict(app.get("stack_services", {}))
+    if stack_services:
+        extra_services.update(stack_services)
+
+    main_service_def: dict[str, Any] = {
+        "container_name": service_name,
+        "image": image_name,
+        "restart": "unless-stopped",
+        "ports": ports_mapped,
+        "environment": environment_list,
+        "volumes": volumes_list,
+    }
+    if extra_services:
+        main_service_def["depends_on"] = list(extra_services.keys())
+
+    compose_dict = {
+        "version": "3.8",
+        "services": {service_name: main_service_def},
+    }
+
+    yaml_lines = [
+        f"# ZettNAS 1-Click Homelab Stack: {app['name']}",
+        "version: '3.8'",
+        "services:",
+        f"  {service_name}:",
+        f"    container_name: {service_name}",
+        f"    image: {image_name}",
+        "    restart: unless-stopped",
+        "    ports:",
+    ]
+    for p_item in ports_mapped:
+        yaml_lines.append(f'      - "{p_item}"')
+    if environment_list:
+        yaml_lines.append("    environment:")
+        for env_item in environment_list:
+            yaml_lines.append(f"      - {env_item}")
+    if volumes_list:
+        yaml_lines.append("    volumes:")
+        for vol_item in volumes_list:
+            yaml_lines.append(f"      - {vol_item}")
+    if extra_services:
+        yaml_lines.append("    depends_on:")
+        for dep in extra_services.keys():
+            yaml_lines.append(f"      - {dep}")
+    return compose_dict, extra_services, yaml_lines
+
+
+def _compose_with_companions(
+    compose_dict: Any, extra_services: Any, storage_root: Any, storage_slug: Any, yaml_lines: Any
+) -> Any:
+    """generate_compose_for_app: the compose file with the companion services added."""
+    for s_name, s_def in extra_services.items():
+        clean_s_name = re.sub(r"[^a-zA-Z0-9_.-]+", "_", s_name)
+        s_image = s_def.get("image", f"{clean_s_name}:latest")
+        s_env = s_def.get("env", {})
+        s_env_list = [f"{k}={v}" for k, v in s_env.items()] if isinstance(s_env, dict) else (s_env or [])
+        s_vols = s_def.get("volumes", {})
+        s_vol_list = []
+        if isinstance(s_vols, dict):
+            for vk, vt in s_vols.items():
+                s_vol_list.append(f"{storage_root.rstrip('/')}/{storage_slug}/{clean_s_name}_{vk}:{vt}")
+        elif isinstance(s_vols, list):
+            s_vol_list = s_vols
+        s_ports = s_def.get("ports", [])
+
+        compose_dict["services"][clean_s_name] = {
+            "container_name": clean_s_name,
+            "image": s_image,
+            "restart": "unless-stopped",
+        }
+        if s_ports:
+            compose_dict["services"][clean_s_name]["ports"] = s_ports
+        if s_env_list:
+            compose_dict["services"][clean_s_name]["environment"] = s_env_list
+        if s_vol_list:
+            compose_dict["services"][clean_s_name]["volumes"] = s_vol_list
+
+        yaml_lines.extend(
+            [
+                f"  {clean_s_name}:",
+                f"    container_name: {clean_s_name}",
+                f"    image: {s_image}",
+                "    restart: unless-stopped",
+            ]
+        )
+        if s_ports:
+            yaml_lines.append("    ports:")
+            for p in s_ports:
+                yaml_lines.append(f'      - "{p}"')
+        if s_env_list:
+            yaml_lines.append("    environment:")
+            for e in s_env_list:
+                yaml_lines.append(f"      - {e}")
+        if s_vol_list:
+            yaml_lines.append("    volumes:")
+            for v in s_vol_list:
+                yaml_lines.append(f"      - {v}")
+
+
 def generate_compose_for_app(
     app_id: str,
     host_port: int | None = None,
@@ -856,99 +965,11 @@ def generate_compose_for_app(
 
     image_name = app.get("image") or f"{service_name}:latest"
 
-    # Multi-container companion stack services
-    extra_services = dict(app.get("stack_services", {}))
-    if stack_services:
-        extra_services.update(stack_services)
+    compose_dict, extra_services, yaml_lines = _companion_services(
+        app, environment_list, image_name, ports_mapped, service_name, stack_services, volumes_list
+    )
 
-    main_service_def: dict[str, Any] = {
-        "container_name": service_name,
-        "image": image_name,
-        "restart": "unless-stopped",
-        "ports": ports_mapped,
-        "environment": environment_list,
-        "volumes": volumes_list,
-    }
-    if extra_services:
-        main_service_def["depends_on"] = list(extra_services.keys())
-
-    compose_dict = {
-        "version": "3.8",
-        "services": {service_name: main_service_def},
-    }
-
-    yaml_lines = [
-        f"# ZettNAS 1-Click Homelab Stack: {app['name']}",
-        "version: '3.8'",
-        "services:",
-        f"  {service_name}:",
-        f"    container_name: {service_name}",
-        f"    image: {image_name}",
-        "    restart: unless-stopped",
-        "    ports:",
-    ]
-    for p_item in ports_mapped:
-        yaml_lines.append(f'      - "{p_item}"')
-    if environment_list:
-        yaml_lines.append("    environment:")
-        for env_item in environment_list:
-            yaml_lines.append(f"      - {env_item}")
-    if volumes_list:
-        yaml_lines.append("    volumes:")
-        for vol_item in volumes_list:
-            yaml_lines.append(f"      - {vol_item}")
-    if extra_services:
-        yaml_lines.append("    depends_on:")
-        for dep in extra_services.keys():
-            yaml_lines.append(f"      - {dep}")
-
-    # Append companion stack services
-    for s_name, s_def in extra_services.items():
-        clean_s_name = re.sub(r"[^a-zA-Z0-9_.-]+", "_", s_name)
-        s_image = s_def.get("image", f"{clean_s_name}:latest")
-        s_env = s_def.get("env", {})
-        s_env_list = [f"{k}={v}" for k, v in s_env.items()] if isinstance(s_env, dict) else (s_env or [])
-        s_vols = s_def.get("volumes", {})
-        s_vol_list = []
-        if isinstance(s_vols, dict):
-            for vk, vt in s_vols.items():
-                s_vol_list.append(f"{storage_root.rstrip('/')}/{storage_slug}/{clean_s_name}_{vk}:{vt}")
-        elif isinstance(s_vols, list):
-            s_vol_list = s_vols
-        s_ports = s_def.get("ports", [])
-
-        compose_dict["services"][clean_s_name] = {
-            "container_name": clean_s_name,
-            "image": s_image,
-            "restart": "unless-stopped",
-        }
-        if s_ports:
-            compose_dict["services"][clean_s_name]["ports"] = s_ports
-        if s_env_list:
-            compose_dict["services"][clean_s_name]["environment"] = s_env_list
-        if s_vol_list:
-            compose_dict["services"][clean_s_name]["volumes"] = s_vol_list
-
-        yaml_lines.extend(
-            [
-                f"  {clean_s_name}:",
-                f"    container_name: {clean_s_name}",
-                f"    image: {s_image}",
-                "    restart: unless-stopped",
-            ]
-        )
-        if s_ports:
-            yaml_lines.append("    ports:")
-            for p in s_ports:
-                yaml_lines.append(f'      - "{p}"')
-        if s_env_list:
-            yaml_lines.append("    environment:")
-            for e in s_env_list:
-                yaml_lines.append(f"      - {e}")
-        if s_vol_list:
-            yaml_lines.append("    volumes:")
-            for v in s_vol_list:
-                yaml_lines.append(f"      - {v}")
+    _compose_with_companions(compose_dict, extra_services, storage_root, storage_slug, yaml_lines)
 
     return {
         "app_id": app_id,

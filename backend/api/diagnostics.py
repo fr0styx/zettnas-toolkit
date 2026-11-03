@@ -36,10 +36,8 @@ router = APIRouter(tags=["System Diagnostics"])
 _DIAGNOSTICS_LOCK = asyncio.Lock()
 
 
-def _build_bundle_sync(payload_dict: dict[str, Any] | None = None) -> bytes:
-    t0 = time.time()
-
-    # 1. System summary
+def _bundle_system_summary() -> Any:
+    """_build_bundle_sync: uptime, memory and versions."""
     uptime_sec = 0.0
     try:
         if os.path.exists("/proc/uptime"):
@@ -80,8 +78,11 @@ def _build_bundle_sync(payload_dict: dict[str, Any] | None = None) -> bytes:
         "memory": ram_stats,
         "uptime_seconds": uptime_sec,
     }
+    return ram_stats, system_summary, uptime_sec
 
-    # 2. Hardware telemetry
+
+def _bundle_hardware() -> Any:
+    """_build_bundle_sync: fans, LEDs, UPS and the screen."""
     fan_cfg = read_json(FAN_STATE_FILE, {})
     led_cfg = read_json(LED_STATE_FILE, {})
     ups_status = read_ups_status()
@@ -113,83 +114,19 @@ def _build_bundle_sync(payload_dict: dict[str, Any] | None = None) -> bytes:
         "fans_released": Z_STATE.fans_released,
         "critical_temp_active": Z_STATE.critical_temp_active,
     }
+    return detailed_ups, hardware_telemetry
 
-    # 3. Storage and SMART (decoupled from UI card layout, strictly spindown safe)
-    storage_and_smart = {}
-    try:
-        from backend.hardware.storage_diagnostics import collect_storage_diagnostics
 
-        storage_and_smart = collect_storage_diagnostics()
-    except Exception as e:
-        logger.warning(f"[Diagnostics] Error collecting storage diagnostics: {e}")
-        storage_and_smart = {"error": str(e), "live_disk_telemetry": [], "pal_storage": {}}
-
-    # 4. Kernel, CPU & Bus Telemetry
-    kernel_telemetry = {}
-    try:
-        from backend.hardware.kernel_telemetry import collect_kernel_telemetry
-
-        kernel_telemetry = collect_kernel_telemetry()
-    except Exception as e:
-        logger.warning(f"[Diagnostics] Error collecting kernel telemetry: {e}")
-        kernel_telemetry = {"error": str(e)}
-
-    # 5. Network topology
-    net_topology = {}
-    try:
-        from backend.hardware.network import get_network_topology
-
-        net_topology = get_network_topology()
-    except Exception as e:
-        logger.warning(f"[Diagnostics] Error collecting network topology: {e}")
-        net_topology = {"error": str(e)}
-
-    # 6. Docker Diagnostics & Container Manifests
-    docker_diagnostics = {}
-    sanitized_containers = []
-    try:
-        from backend.services.docker_diagnostics import collect_docker_diagnostics
-
-        docker_diagnostics = collect_docker_diagnostics()
-        containers = read_docker_containers()
-        sanitized_containers = sanitize_dict(containers)
-    except Exception as e:
-        logger.warning(f"[Diagnostics] Error collecting docker diagnostics: {e}")
-        docker_diagnostics = {"error": str(e), "containers_summary": {"total": 0, "running": 0, "troubled_names": []}}
-
-    # 7. Virtual Machine Hypervisor Telemetry
-    vm_hypervisor = {}
-    try:
-        from backend.api.vms import collect_vm_diagnostics
-
-        vm_hypervisor = collect_vm_diagnostics()
-    except Exception as e:
-        logger.warning(f"[Diagnostics] Error collecting VM diagnostics: {e}")
-        vm_hypervisor = {"error": str(e), "hypervisor_telemetry": {"active_vm_count": 0, "total_vm_count": 0}}
-
-    # 8. Notifications (sanitized)
-    notif_cfg = read_json(NOTIFICATIONS_FILE, DEFAULT_NOTIFICATION_CONFIG)
-    try:
-        from backend.services.notifications import mask_notification_config
-
-        notif_cfg = mask_notification_config(notif_cfg)
-    except Exception as e:
-        logger.debug(f"[Diagnostics] Error masking notification config: {e}")
-    sanitized_notifs = sanitize_dict(notif_cfg)
-
-    # 9. System events (last 100)
-    events = events_snapshot()
-    if not events:
-        try:
-            events = read_json(EVENTS_FILE, [])
-        except Exception:
-            events = []
-
-    # 10. Recent logs
-    log_lines = get_recent_logs(max_lines=1000)
-    recent_logs_text = "\n".join(log_lines)
-
-    # 11. Executive Health Assessment
+def _bundle_executive_summary(
+    detailed_ups: Any,
+    docker_diagnostics: Any,
+    kernel_telemetry: Any,
+    ram_stats: Any,
+    storage_and_smart: Any,
+    uptime_sec: Any,
+    vm_hypervisor: Any,
+) -> Any:
+    """_build_bundle_sync: what needs attention, in one place."""
     degraded_disks = [
         str(d.get("name") or d.get("device") or "unnamed drive")
         for d in storage_and_smart.get("live_disk_telemetry", [])
@@ -277,6 +214,94 @@ def _build_bundle_sync(payload_dict: dict[str, Any] | None = None) -> bytes:
             "vms_total": vm_hypervisor.get("hypervisor_telemetry", {}).get("total_vm_count", 0),
         },
     }
+    return executive_summary
+
+
+def _build_bundle_sync(payload_dict: dict[str, Any] | None = None) -> bytes:
+    t0 = time.time()
+
+    ram_stats, system_summary, uptime_sec = _bundle_system_summary()
+
+    detailed_ups, hardware_telemetry = _bundle_hardware()
+
+    # 3. Storage and SMART (decoupled from UI card layout, strictly spindown safe)
+    storage_and_smart = {}
+    try:
+        from backend.hardware.storage_diagnostics import collect_storage_diagnostics
+
+        storage_and_smart = collect_storage_diagnostics()
+    except Exception as e:
+        logger.warning(f"[Diagnostics] Error collecting storage diagnostics: {e}")
+        storage_and_smart = {"error": str(e), "live_disk_telemetry": [], "pal_storage": {}}
+
+    # 4. Kernel, CPU & Bus Telemetry
+    kernel_telemetry = {}
+    try:
+        from backend.hardware.kernel_telemetry import collect_kernel_telemetry
+
+        kernel_telemetry = collect_kernel_telemetry()
+    except Exception as e:
+        logger.warning(f"[Diagnostics] Error collecting kernel telemetry: {e}")
+        kernel_telemetry = {"error": str(e)}
+
+    # 5. Network topology
+    net_topology = {}
+    try:
+        from backend.hardware.network import get_network_topology
+
+        net_topology = get_network_topology()
+    except Exception as e:
+        logger.warning(f"[Diagnostics] Error collecting network topology: {e}")
+        net_topology = {"error": str(e)}
+
+    # 6. Docker Diagnostics & Container Manifests
+    docker_diagnostics = {}
+    sanitized_containers = []
+    try:
+        from backend.services.docker_diagnostics import collect_docker_diagnostics
+
+        docker_diagnostics = collect_docker_diagnostics()
+        containers = read_docker_containers()
+        sanitized_containers = sanitize_dict(containers)
+    except Exception as e:
+        logger.warning(f"[Diagnostics] Error collecting docker diagnostics: {e}")
+        docker_diagnostics = {"error": str(e), "containers_summary": {"total": 0, "running": 0, "troubled_names": []}}
+
+    # 7. Virtual Machine Hypervisor Telemetry
+    vm_hypervisor = {}
+    try:
+        from backend.api.vms import collect_vm_diagnostics
+
+        vm_hypervisor = collect_vm_diagnostics()
+    except Exception as e:
+        logger.warning(f"[Diagnostics] Error collecting VM diagnostics: {e}")
+        vm_hypervisor = {"error": str(e), "hypervisor_telemetry": {"active_vm_count": 0, "total_vm_count": 0}}
+
+    # 8. Notifications (sanitized)
+    notif_cfg = read_json(NOTIFICATIONS_FILE, DEFAULT_NOTIFICATION_CONFIG)
+    try:
+        from backend.services.notifications import mask_notification_config
+
+        notif_cfg = mask_notification_config(notif_cfg)
+    except Exception as e:
+        logger.debug(f"[Diagnostics] Error masking notification config: {e}")
+    sanitized_notifs = sanitize_dict(notif_cfg)
+
+    # 9. System events (last 100)
+    events = events_snapshot()
+    if not events:
+        try:
+            events = read_json(EVENTS_FILE, [])
+        except Exception:
+            events = []
+
+    # 10. Recent logs
+    log_lines = get_recent_logs(max_lines=1000)
+    recent_logs_text = "\n".join(log_lines)
+
+    executive_summary = _bundle_executive_summary(
+        detailed_ups, docker_diagnostics, kernel_telemetry, ram_stats, storage_and_smart, uptime_sec, vm_hypervisor
+    )
 
     # Client-side telemetry if provided
     client_env = None

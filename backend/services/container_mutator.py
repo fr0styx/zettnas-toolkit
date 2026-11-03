@@ -249,6 +249,82 @@ def recreate_elevation(
     return added
 
 
+def _recreate_ports(config: Any, host_config: Any, port_bindings: Any) -> Any:
+    """recreate_container: port bindings and exposed ports."""
+    cloned_port_bindings: dict[str, Any] = dict(host_config.get("PortBindings") or {})
+    cloned_exposed_ports: dict[str, Any] = dict(config.get("ExposedPorts") or {})
+
+    if port_bindings is not None:
+        cloned_port_bindings = {}
+        cloned_exposed_ports = {}
+        current_ports = host_config.get("PortBindings", {})
+
+        for pb in port_bindings:
+            cp = pb.get("container_port")
+            hp = pb.get("host_port")
+            proto = pb.get("proto", "tcp").lower()
+            host_ip = pb.get("host_ip", "")
+
+            if not cp:
+                continue
+
+            port_key = f"{cp}/{proto}"
+            cloned_exposed_ports[port_key] = {}
+
+            if hp is not None and int(hp) > 0:
+                hp_int = int(hp)
+                if not check_port_available(hp_int, proto=proto):
+                    already_bound_by_self = any(
+                        any(int(b.get("HostPort", 0)) == hp_int for b in binds_list)
+                        for binds_list in current_ports.values()
+                    )
+                    if not already_bound_by_self:
+                        raise ValueError(
+                            f"Port collision: Host port {hp_int}/{proto} is already in use by another service."
+                        )
+                cloned_port_bindings[port_key] = [{"HostIp": host_ip, "HostPort": str(hp_int)}]
+    return cloned_exposed_ports, cloned_port_bindings
+
+
+def _recreate_payload(cloned_exposed_ports: Any, config: Any, env: Any, new_host_config: Any, target_image: Any) -> Any:
+    """recreate_container: the create payload from the current inspect."""
+    orig_env_list = config.get("Env", []) or []
+    orig_env_map = {}
+    for item in orig_env_list:
+        if "=" in item:
+            k, v = item.split("=", 1)
+            orig_env_map[k] = v
+
+    if env is not None:
+        target_env = []
+        for e in env:
+            if not e or not e.strip():
+                continue
+            item = e.strip()
+            if "=" in item:
+                k, v = item.split("=", 1)
+                if v == "••••••••" and k in orig_env_map:
+                    target_env.append(f"{k}={orig_env_map[k]}")
+                    continue
+            target_env.append(item)
+    else:
+        target_env = orig_env_list
+    create_body: dict[str, Any] = {
+        "Image": target_image,
+        "Env": target_env,
+        "Cmd": config.get("Cmd"),
+        "Entrypoint": config.get("Entrypoint"),
+        "WorkingDir": config.get("WorkingDir"),
+        "User": config.get("User"),
+        "Labels": config.get("Labels", {}),
+        "ExposedPorts": cloned_exposed_ports,
+        "StopSignal": config.get("StopSignal"),
+        "StopTimeout": config.get("StopTimeout"),
+        "HostConfig": new_host_config,
+    }
+    return create_body
+
+
 def recreate_container(
     cid: str,
     name: str | None = None,
@@ -297,39 +373,7 @@ def recreate_container(
         logger.info(f"[Container Recreate] Pulling image '{target_image}' before recreate...")
         pull_container_image(target_image, timeout=120.0)
 
-    # Step 3: Handle Port Bindings and Exposed Ports
-    cloned_port_bindings: dict[str, Any] = dict(host_config.get("PortBindings") or {})
-    cloned_exposed_ports: dict[str, Any] = dict(config.get("ExposedPorts") or {})
-
-    if port_bindings is not None:
-        cloned_port_bindings = {}
-        cloned_exposed_ports = {}
-        current_ports = host_config.get("PortBindings", {})
-
-        for pb in port_bindings:
-            cp = pb.get("container_port")
-            hp = pb.get("host_port")
-            proto = pb.get("proto", "tcp").lower()
-            host_ip = pb.get("host_ip", "")
-
-            if not cp:
-                continue
-
-            port_key = f"{cp}/{proto}"
-            cloned_exposed_ports[port_key] = {}
-
-            if hp is not None and int(hp) > 0:
-                hp_int = int(hp)
-                if not check_port_available(hp_int, proto=proto):
-                    already_bound_by_self = any(
-                        any(int(b.get("HostPort", 0)) == hp_int for b in binds_list)
-                        for binds_list in current_ports.values()
-                    )
-                    if not already_bound_by_self:
-                        raise ValueError(
-                            f"Port collision: Host port {hp_int}/{proto} is already in use by another service."
-                        )
-                cloned_port_bindings[port_key] = [{"HostIp": host_ip, "HostPort": str(hp_int)}]
+    cloned_exposed_ports, cloned_port_bindings = _recreate_ports(config, host_config, port_bindings)
 
     # Step 4: Prepare new HostConfig
     new_host_config = dict(host_config)
@@ -347,41 +391,7 @@ def recreate_container(
         if pol in valid_policies:
             new_host_config["RestartPolicy"] = {"Name": pol}
 
-    # Step 5: Prepare create payload based on current inspect
-    orig_env_list = config.get("Env", []) or []
-    orig_env_map = {}
-    for item in orig_env_list:
-        if "=" in item:
-            k, v = item.split("=", 1)
-            orig_env_map[k] = v
-
-    if env is not None:
-        target_env = []
-        for e in env:
-            if not e or not e.strip():
-                continue
-            item = e.strip()
-            if "=" in item:
-                k, v = item.split("=", 1)
-                if v == "••••••••" and k in orig_env_map:
-                    target_env.append(f"{k}={orig_env_map[k]}")
-                    continue
-            target_env.append(item)
-    else:
-        target_env = orig_env_list
-    create_body: dict[str, Any] = {
-        "Image": target_image,
-        "Env": target_env,
-        "Cmd": config.get("Cmd"),
-        "Entrypoint": config.get("Entrypoint"),
-        "WorkingDir": config.get("WorkingDir"),
-        "User": config.get("User"),
-        "Labels": config.get("Labels", {}),
-        "ExposedPorts": cloned_exposed_ports,
-        "StopSignal": config.get("StopSignal"),
-        "StopTimeout": config.get("StopTimeout"),
-        "HostConfig": new_host_config,
-    }
+    create_body = _recreate_payload(cloned_exposed_ports, config, env, new_host_config, target_image)
 
     # NetworkingConfig (EndpointsConfig for custom networks if not host/none)
     net_mode = new_host_config.get("NetworkMode", "")

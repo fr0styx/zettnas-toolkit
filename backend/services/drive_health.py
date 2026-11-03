@@ -259,20 +259,8 @@ def temp_limits(r: dict[str, Any], nvme: bool) -> tuple[int, int]:
     return (NVME_HOT_C, NVME_CRITICAL_C) if nvme else (HDD_HOT_C, HDD_CRITICAL_C)
 
 
-def findings_for(
-    r: dict[str, Any],
-    grew: dict[str, int] | None = None,
-    tests: list[dict[str, Any]] | None = None,
-    now: float | None = None,
-) -> list[dict[str, Any]]:
-    """Every rule that applies to these readings, most severe first."""
-    grew = grew or {}
-    now = now or time.time()
-    out: list[dict[str, Any]] = []
-    nvme = r.get("protocol") == "nvme"
-    days = TREND_DAYS
-
-    # the drive's own verdict and its own tests
+def _rules_own_verdict(out: list[dict[str, Any]], r: dict[str, Any]) -> None:
+    """findings_for's rules: the drive's own verdict and its own tests."""
     if r.get("smart_passed") is False:
         out.append(
             _f(
@@ -316,7 +304,9 @@ def findings_for(
             )
         )
 
-    # sectors it could not read or had to replace
+
+def _rules_sectors(out: list[dict[str, Any]], r: dict[str, Any], grew: dict[str, int], days: int) -> None:
+    """findings_for's rules: sectors it could not read or had to replace, and other mechanical signs."""
     pending, offline, reported = _count(r, 197), _count(r, 198), _count(r, 187)
     if pending or offline or reported:
         n = max(pending, offline, reported)
@@ -453,7 +443,9 @@ def findings_for(
                 )
             )
 
-    # not the drive's fault: the cable
+
+def _rules_cable(out: list[dict[str, Any]], r: dict[str, Any], grew: dict[str, int], days: int) -> None:
+    """findings_for's rules: not the drive's fault: the cable."""
     crc = _count(r, 199)
     if crc:
         rising = grew.get("crc_errors", 0)
@@ -487,7 +479,9 @@ def findings_for(
                 )
             )
 
-    # NVMe and SSD wear
+
+def _rules_wear(out: list[dict[str, Any]], r: dict[str, Any], grew: dict[str, int], days: int) -> None:
+    """findings_for's rules: NVMe and SSD wear."""
     nv = r.get("nvme") or {}
     if nv:
         cw = int(nv.get("critical_warning") or 0)
@@ -596,7 +590,9 @@ def findings_for(
             )
             break
 
-    # heat: the room or the fans, not the drive
+
+def _rules_heat(out: list[dict[str, Any]], r: dict[str, Any], nvme: bool) -> None:
+    """findings_for's rules: heat: the room or the fans, not the drive."""
     temp = r.get("temp_c")
     if isinstance(temp, (int, float)):
         hot, critical = temp_limits(r, nvme)
@@ -627,7 +623,11 @@ def findings_for(
                 )
             )
 
-    # age and testing
+
+def _rules_age(
+    out: list[dict[str, Any]], r: dict[str, Any], tests: list[dict[str, Any]] | None, now: float, nvme: bool
+) -> None:
+    """findings_for's rules: age and testing."""
     hours = r.get("power_on_hours")
     if isinstance(hours, int) and hours >= OLD_HDD_HOURS and not nvme and r.get("rotation_rpm") != 0:
         out.append(
@@ -655,6 +655,27 @@ def findings_for(
                 last_test_ts=(last_test or {}).get("ts"),
             )
         )
+
+
+def findings_for(
+    r: dict[str, Any],
+    grew: dict[str, int] | None = None,
+    tests: list[dict[str, Any]] | None = None,
+    now: float | None = None,
+) -> list[dict[str, Any]]:
+    """Every rule that applies to these readings, most severe first."""
+    grew = grew or {}
+    now = now or time.time()
+    out: list[dict[str, Any]] = []
+    nvme = r.get("protocol") == "nvme"
+    days = TREND_DAYS
+
+    _rules_own_verdict(out, r)
+    _rules_sectors(out, r, grew, days)
+    _rules_cable(out, r, grew, days)
+    _rules_wear(out, r, grew, days)
+    _rules_heat(out, r, nvme)
+    _rules_age(out, r, tests, now, nvme)
 
     out.sort(key=lambda f: -ORDER[f["severity"]])
     return out

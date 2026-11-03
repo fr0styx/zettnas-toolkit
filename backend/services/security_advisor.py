@@ -15,22 +15,8 @@ from backend.config import is_using_default_password, logger
 from backend.users_db import users_db_session
 
 
-def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
-    """
-    Evaluates the current security posture of the ZettNAS Toolkit instance.
-    Returns:
-        score: int (0-100)
-        grade: str ('A', 'B', 'C', 'D', 'F')
-        status: str ('secure', 'good', 'warning', 'critical')
-        checks: list[dict] with pass/fail status and weights
-        issues: list[dict] of actionable security findings
-        evaluated_at: float (unix timestamp)
-    """
-    now = time.time()
-    checks: list[dict[str, Any]] = []
-    issues: list[dict[str, Any]] = []
-
-    # 1. Default Password Check (Weight: 35)
+def _check_default_password(checks: list[dict[str, Any]], issues: list[dict[str, Any]]) -> None:
+    """evaluate_security_posture: the default administrator password (weight 35)."""
     def_pwd_active = is_using_default_password()
     checks.append(
         {
@@ -55,7 +41,9 @@ def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
             }
         )
 
-    # 2. Administrator 2FA / TOTP Check (Weight: 15)
+
+def _check_admin_2fa(checks: list[dict[str, Any]], issues: list[dict[str, Any]]) -> None:
+    """evaluate_security_posture: two-factor sign-in for administrators (weight 15)."""
     admin_mfa_active = False
     try:
         with users_db_session() as conn:
@@ -90,7 +78,9 @@ def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
             }
         )
 
-    # 3. HTTPS / TLS Reverse Proxy Transport Encryption (Weight: 15)
+
+def _check_https(checks: list[dict[str, Any]], issues: list[dict[str, Any]], request: Request | None) -> None:
+    """evaluate_security_posture: encrypted transport through HTTPS or a TLS proxy (weight 15)."""
     is_https = False
     if getattr(config, "ENABLE_PROXY_SSO", False):
         is_https = True
@@ -124,7 +114,9 @@ def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
             }
         )
 
-    # 4. SMB Anonymous / Guest Access Check (Weight: 20)
+
+def _check_guest_shares(checks: list[dict[str, Any]], issues: list[dict[str, Any]]) -> None:
+    """evaluate_security_posture: guest access to SMB shares (weight 20)."""
     has_guest_shares = False
     guest_share_names: list[str] = []
     try:
@@ -164,7 +156,9 @@ def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
             }
         )
 
-    # 5. Stale API Tokens Check (Weight: 15)
+
+def _check_stale_tokens(checks: list[dict[str, Any]], issues: list[dict[str, Any]], now: float) -> None:
+    """evaluate_security_posture: API tokens unused for 90 days (weight 15)."""
     stale_token_count = 0
     stale_threshold = now - (90 * 86400)
     try:
@@ -205,7 +199,9 @@ def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
             }
         )
 
-    # AI runtimes reachable from the LAN (AI-18, weight 10)
+
+def _check_ai_runtimes(checks: list[dict[str, Any]], issues: list[dict[str, Any]]) -> None:
+    """evaluate_security_posture: AI runtimes reachable from the LAN (AI-18, weight 10)."""
     exposed = exposed_ai_runtimes()
     checks.append(
         {
@@ -234,7 +230,9 @@ def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
             }
         )
 
-    # Settings looser than the B11 defaults (kept on upgraded installs), each with a one-click fix
+
+def _check_safe_defaults(checks: list[dict[str, Any]], issues: list[dict[str, Any]]) -> None:
+    """evaluate_security_posture: settings looser than the B11 defaults, each with a one-click fix."""
     from backend.services.safe_defaults_advisor import findings
 
     for f in findings():
@@ -260,6 +258,30 @@ def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
                 **({"fix": f["fix"]} if f.get("fix") else {}),
             }
         )
+
+
+def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
+    """
+    Evaluates the current security posture of the ZettNAS Toolkit instance.
+    Returns:
+        score: int (0-100)
+        grade: str ('A', 'B', 'C', 'D', 'F')
+        status: str ('secure', 'good', 'warning', 'critical')
+        checks: list[dict] with pass/fail status and weights
+        issues: list[dict] of actionable security findings
+        evaluated_at: float (unix timestamp)
+    """
+    now = time.time()
+    checks: list[dict[str, Any]] = []
+    issues: list[dict[str, Any]] = []
+
+    _check_default_password(checks, issues)
+    _check_admin_2fa(checks, issues)
+    _check_https(checks, issues, request)
+    _check_guest_shares(checks, issues)
+    _check_stale_tokens(checks, issues, now)
+    _check_ai_runtimes(checks, issues)
+    _check_safe_defaults(checks, issues)
 
     # Total Score Calculation
     total_penalty = sum(c["penalty"] for c in checks)
