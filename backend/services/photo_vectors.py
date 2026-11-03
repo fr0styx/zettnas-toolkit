@@ -22,14 +22,9 @@ from collections.abc import Callable
 from typing import Any
 
 from backend.config import logger
+from backend.services import rag_schema
 
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS photo_semantic (
-    file_id INTEGER PRIMARY KEY REFERENCES indexed_files(file_id) ON DELETE CASCADE,
-    model TEXT NOT NULL,
-    vec BLOB NOT NULL
-);
-"""
+SCHEMA = rag_schema.PHOTO_SEMANTIC
 BATCH = 16
 TIMEOUT = 60.0
 TOP_K = 200

@@ -14,16 +14,11 @@ from __future__ import annotations
 import sqlite3
 import time
 
+from backend.services import rag_schema
 from backend.services.rag_text import _has_cjk, text_tokens
 
 TABLE = "rag_chunks_cjk"
-SCHEMA = (
-    f"CREATE VIRTUAL TABLE IF NOT EXISTS {TABLE} USING fts5(grams, content='', contentless_delete=1, tokenize='unicode61')",
-    f"CREATE TRIGGER IF NOT EXISTS trg_chunks_cjk_ad AFTER DELETE ON document_chunks BEGIN "
-    f"DELETE FROM {TABLE} WHERE rowid = old.chunk_id; END",
-    f"CREATE TRIGGER IF NOT EXISTS trg_chunks_cjk_au AFTER UPDATE OF chunk_text ON document_chunks BEGIN "
-    f"DELETE FROM {TABLE} WHERE rowid = old.chunk_id; END",
-)
+SCHEMA = rag_schema.CJK
 MAX_QUERY_GRAMS = 24
 
 
@@ -68,7 +63,7 @@ def sync_file(conn: sqlite3.Connection, file_id: int) -> int:
 
 def backfill(conn: sqlite3.Connection) -> int:
     """Once per index: rows for the chunks indexed before this table existed (no disk access)."""
-    conn.execute("CREATE TABLE IF NOT EXISTS rag_meta (key TEXT PRIMARY KEY, value TEXT)")
+    conn.execute(rag_schema.META)
     if conn.execute("SELECT 1 FROM rag_meta WHERE key = 'cjk_fts_v1'").fetchone():
         return 0
     if not ensure_schema(conn):

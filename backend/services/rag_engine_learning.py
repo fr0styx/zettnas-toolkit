@@ -25,6 +25,7 @@ from backend.logging_config import (  # noqa: F401
     sanitize_string,
 )
 from backend.services import (  # noqa: F401
+    rag_schema,
     rag_standby,
 )
 from backend.services.ai_activity import upgrade_window_open
@@ -172,11 +173,7 @@ class RagLearningMixin:
         with self._write_lock:
             conn = self._get_conn(readonly=False)
             try:
-                conn.execute(
-                    """CREATE TABLE IF NOT EXISTS reembed_staging (
-                        chunk_id INTEGER PRIMARY KEY, embedding BLOB NOT NULL, model TEXT NOT NULL, dim INTEGER NOT NULL
-                    )"""
-                )
+                conn.execute(rag_schema.REEMBED_STAGING)
                 # staged vectors for another target are useless now
                 conn.execute("DELETE FROM reembed_staging WHERE model != ? OR dim != ?", (target_model, target_dim))
                 conn.commit()
@@ -1122,7 +1119,7 @@ class RagLearningMixin:
             with self._write_lock:
                 conn = self._get_conn(readonly=False)
                 try:
-                    conn.execute("CREATE TABLE IF NOT EXISTS rag_meta (key TEXT PRIMARY KEY, value TEXT)")
+                    conn.execute(rag_schema.META)
                     row = conn.execute("SELECT value FROM rag_meta WHERE key = 'photo_places'").fetchone()
                     if row and row[0] == sig:
                         self._places_named_for = sig

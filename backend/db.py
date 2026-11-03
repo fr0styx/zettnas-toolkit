@@ -46,6 +46,22 @@ def db_read_session():
 
 _LAST_PRUNE_TS: int = 0
 
+# the AI request log (services/ai_access.py): who asked what kind of question, never the text
+AI_REQUESTS_SCHEMA = (
+    """CREATE TABLE IF NOT EXISTS ai_requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts INTEGER NOT NULL,
+        username TEXT NOT NULL,
+        role TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        model TEXT NOT NULL DEFAULT '',
+        web INTEGER NOT NULL DEFAULT 0,
+        outcome TEXT NOT NULL,
+        ms INTEGER NOT NULL DEFAULT 0
+    )""",
+    "CREATE INDEX IF NOT EXISTS idx_ai_requests_ts ON ai_requests(ts DESC)",
+)
+
 # One connection kept open for the history writers (metrics, SMART): no connect and PRAGMAs
 # per write, and the WAL file is not created and deleted around every row (PERF-3).
 _HISTORY: dict[str, Any] = {"conn": None, "path": None, "ino": None}

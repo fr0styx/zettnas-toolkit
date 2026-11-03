@@ -28,7 +28,7 @@ import urllib.request
 from collections.abc import Callable
 from typing import Any
 
-from backend.services import gpu_queue
+from backend.services import gpu_queue, rag_schema
 
 logger = logging.getLogger("ZettNAS")
 
@@ -79,27 +79,7 @@ MAX_PDF_PAGES = 8
 MAX_PAGE_BYTES = 12 * 1024 * 1024
 RENDER_LONG_SIDE = 1600  # pixels on a rendered page's long side, what the OCR call sends anyway
 
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS photo_vision (
-    content_key TEXT PRIMARY KEY,
-    model TEXT NOT NULL DEFAULT '',
-    caption TEXT NOT NULL DEFAULT '',
-    ocr_text TEXT NOT NULL DEFAULT '',
-    status TEXT NOT NULL DEFAULT 'done',
-    error TEXT NOT NULL DEFAULT '',
-    attempts INTEGER NOT NULL DEFAULT 0,
-    updated_at REAL NOT NULL DEFAULT 0
-);
-CREATE TABLE IF NOT EXISTS pdf_ocr (
-    path TEXT NOT NULL,
-    mtime_ns INTEGER NOT NULL,
-    pages INTEGER NOT NULL DEFAULT 0,
-    text TEXT NOT NULL DEFAULT '',
-    status TEXT NOT NULL DEFAULT 'done',
-    updated_at REAL NOT NULL DEFAULT 0,
-    PRIMARY KEY (path, mtime_ns)
-);
-"""
+SCHEMA = rag_schema.VISION
 
 
 def _http_json(url: str, body: dict | None = None, timeout: float = 10.0) -> Any:

@@ -20,17 +20,13 @@ from collections import Counter
 from collections.abc import Iterable
 from typing import Any
 
+from backend.services import rag_schema
+
 MAX_TAGS = 3
 MIN_SCORE = 2  # a word in the name or title counts 2, one in the text 1
 TEXT_CHARS = 20000
 
-SCHEMA = (
-    "CREATE TABLE IF NOT EXISTS doc_tags (file_id INTEGER NOT NULL, tag TEXT NOT NULL, PRIMARY KEY (file_id, tag))",
-    "CREATE INDEX IF NOT EXISTS idx_doc_tags_tag ON doc_tags(tag, file_id)",
-    # every file that was tagged, even with no tag, so the backfill reads each file once
-    "CREATE TABLE IF NOT EXISTS doc_tags_done (file_id INTEGER PRIMARY KEY)",
-)
-
+SCHEMA = rag_schema.TAGS
 # tag -> words that mark it (lower case; Latin ones match whole words, Chinese ones anywhere)
 RULES: dict[str, tuple[str, ...]] = {
     "bill": (

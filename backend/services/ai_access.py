@@ -94,20 +94,10 @@ def require_ai_search(principal: AuthenticatedPrincipal = Depends(get_current_pr
 
 # --- the request log (history.db) -------------------------------------------------------------
 def _ensure_table(conn: sqlite3.Connection) -> None:
-    conn.execute(
-        """CREATE TABLE IF NOT EXISTS ai_requests (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ts INTEGER NOT NULL,
-            username TEXT NOT NULL,
-            role TEXT NOT NULL,
-            kind TEXT NOT NULL,
-            model TEXT NOT NULL DEFAULT '',
-            web INTEGER NOT NULL DEFAULT 0,
-            outcome TEXT NOT NULL,
-            ms INTEGER NOT NULL DEFAULT 0
-        )"""
-    )
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_ai_requests_ts ON ai_requests(ts DESC)")
+    from backend.db import AI_REQUESTS_SCHEMA
+
+    for sql in AI_REQUESTS_SCHEMA:
+        conn.execute(sql)
 
 
 _PRUNED = {"at": 0}
