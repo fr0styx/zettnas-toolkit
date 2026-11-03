@@ -60,6 +60,11 @@ def prometheus_metrics():
     add_gauge("zettnas_memory_used_bytes", "Used RAM", used_b)
     add_gauge("zettnas_memory_free_bytes", "Free RAM", free_b)
     add_gauge("zettnas_memory_usage_percent", "RAM Usage", pct)
+    from backend.services import memory_watch
+
+    own = memory_watch.current()
+    add_gauge("zettnas_backend_resident_bytes", "Resident memory of the ZettNAS backend process", own["rss_kb"] * 1024)
+    add_gauge("zettnas_backend_uptime_seconds", "Seconds since the backend process started", own["uptime_s"])
 
     # Network
     net = stats.get("net", {})
@@ -161,3 +166,86 @@ def request_metrics_summary(top: int = 25):
     from backend.request_metrics import REQUEST_METRICS
 
     return {"routes": REQUEST_METRICS.summary(top=max(1, min(200, top)))}
+
+
+class MemorySample(BaseModel):
+    ts: int
+    pid: int
+    uptime_s: int
+    rss_kb: int
+    anon_kb: int
+    file_kb: int
+    threads: int
+
+
+class MemoryRun(BaseModel):
+    pid: int
+    from_ts: int
+    to_ts: int
+    uptime_s: int
+    rss_kb_first: int
+    rss_kb_last: int
+    kb_per_hour: int | None = None
+
+
+class MemoryOut(BaseModel):
+    now: MemorySample
+    samples: list[MemorySample]
+    runs: list[MemoryRun]
+
+
+class ObjectCount(BaseModel):
+    type: str
+    count: int
+
+
+class Allocation(BaseModel):
+    where: str
+    kb: int
+    blocks: int
+
+
+class MemoryBreakdownOut(BaseModel):
+    now: MemorySample
+    objects: list[ObjectCount]
+    tracing: bool
+    allocations: list[Allocation]
+
+
+class TracingIn(BaseModel):
+    on: bool
+
+
+class TracingOut(BaseModel):
+    tracing: bool
+
+
+@router.get("/metrics/memory", response_model=MemoryOut, dependencies=[Depends(require_scope("system:view"))])
+def memory_history(hours: int = 168):
+    """The backend's resident memory every 10 minutes, and its growth per run between restarts."""
+    from backend.services import memory_watch
+
+    rows = memory_watch.history(hours)
+    return {"now": memory_watch.current(), "samples": rows, "runs": memory_watch.growth(rows)}
+
+
+@router.get(
+    "/metrics/memory/breakdown",
+    response_model=MemoryBreakdownOut,
+    dependencies=[Depends(require_scope("system:config"))],
+)
+def memory_breakdown(top: int = 25):
+    """What the backend holds now: Python objects by type and, while tracing, the lines that allocated most."""
+    from backend.services import memory_watch
+
+    return memory_watch.breakdown(max(1, min(100, top)))
+
+
+@router.post(
+    "/metrics/memory/tracing", response_model=TracingOut, dependencies=[Depends(require_scope("system:config"))]
+)
+def memory_tracing(body: TracingIn):
+    """Turns allocation tracing on or off (it costs memory and time while on)."""
+    from backend.services import memory_watch
+
+    return {"tracing": memory_watch.set_tracing(body.on)}

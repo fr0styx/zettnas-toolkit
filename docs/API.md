@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-648 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+651 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -352,6 +352,9 @@ request and response schemas.
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/metrics` | `system:view` | Prometheus exposition format for ZettNAS telemetry |
+| `GET` | `/api/v1/metrics/memory` | `system:view` | The backend's resident memory every 10 minutes, and its growth per run between restarts |
+| `GET` | `/api/v1/metrics/memory/breakdown` | `system:config` | What the backend holds now: Python objects by type and, while tracing, the lines that allocated most |
+| `POST` | `/api/v1/metrics/memory/tracing` | `system:config` | Turns allocation tracing on or off (it costs memory and time while on) |
 | `GET` | `/api/v1/metrics/network-topology` | `system:view` | Network topology metrics and switch status |
 | `GET` | `/api/v1/metrics/requests` | `system:view` | The busiest API routes: requests, errors and latency (ARCH-10) |
 

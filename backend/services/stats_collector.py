@@ -60,6 +60,7 @@ from backend.hardware.storage import (
 )
 from backend.hardware.unraid import read_unraid_status
 from backend.hardware.ups import read_ups_status
+from backend.services import memory_watch
 from backend.services.alert_rules import evaluate_system_alerts
 from backend.services.broadcaster import broadcaster
 from backend.services.copy_engine import check_media_slot_transitions, read_media_slots
@@ -433,6 +434,7 @@ def _publish(data, disks, fans, net, now):
         broadcaster.broadcast(data, full_data=data)
 
     now_ts = int(time.time())
+    memory_watch.sample(now_ts)
     if not hasattr(stats_collector_daemon, "last_log"):
         stats_collector_daemon.last_log = 0
     if now_ts - stats_collector_daemon.last_log >= 300:

@@ -114,6 +114,18 @@ def init_db():
                 )
             """)
             conn.execute("DROP INDEX IF EXISTS idx_metrics_ts")
+            # the backend's own memory every 10 minutes (services/memory_watch.py)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS memory_samples (
+                    ts INTEGER PRIMARY KEY,
+                    pid INTEGER,
+                    uptime_s INTEGER,
+                    rss_kb INTEGER,
+                    anon_kb INTEGER,
+                    file_kb INTEGER,
+                    threads INTEGER
+                )
+            """)
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS copy_history (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,

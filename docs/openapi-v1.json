@@ -407,6 +407,29 @@
     "title": "AiChatRequest",
     "type": "object"
    },
+   "Allocation": {
+    "properties": {
+     "blocks": {
+      "title": "Blocks",
+      "type": "integer"
+     },
+     "kb": {
+      "title": "Kb",
+      "type": "integer"
+     },
+     "where": {
+      "title": "Where",
+      "type": "string"
+     }
+    },
+    "required": [
+     "where",
+     "kb",
+     "blocks"
+    ],
+    "title": "Allocation",
+    "type": "object"
+   },
    "AppBackupRequest": {
     "properties": {
      "custom_name": {
@@ -27093,6 +27116,159 @@
     "title": "MediaScanRequest",
     "type": "object"
    },
+   "MemoryBreakdownOut": {
+    "properties": {
+     "allocations": {
+      "items": {
+       "$ref": "#/components/schemas/Allocation"
+      },
+      "title": "Allocations",
+      "type": "array"
+     },
+     "now": {
+      "$ref": "#/components/schemas/MemorySample"
+     },
+     "objects": {
+      "items": {
+       "$ref": "#/components/schemas/ObjectCount"
+      },
+      "title": "Objects",
+      "type": "array"
+     },
+     "tracing": {
+      "title": "Tracing",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "now",
+     "objects",
+     "tracing",
+     "allocations"
+    ],
+    "title": "MemoryBreakdownOut",
+    "type": "object"
+   },
+   "MemoryOut": {
+    "properties": {
+     "now": {
+      "$ref": "#/components/schemas/MemorySample"
+     },
+     "runs": {
+      "items": {
+       "$ref": "#/components/schemas/MemoryRun"
+      },
+      "title": "Runs",
+      "type": "array"
+     },
+     "samples": {
+      "items": {
+       "$ref": "#/components/schemas/MemorySample"
+      },
+      "title": "Samples",
+      "type": "array"
+     }
+    },
+    "required": [
+     "now",
+     "samples",
+     "runs"
+    ],
+    "title": "MemoryOut",
+    "type": "object"
+   },
+   "MemoryRun": {
+    "properties": {
+     "from_ts": {
+      "title": "From Ts",
+      "type": "integer"
+     },
+     "kb_per_hour": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kb Per Hour"
+     },
+     "pid": {
+      "title": "Pid",
+      "type": "integer"
+     },
+     "rss_kb_first": {
+      "title": "Rss Kb First",
+      "type": "integer"
+     },
+     "rss_kb_last": {
+      "title": "Rss Kb Last",
+      "type": "integer"
+     },
+     "to_ts": {
+      "title": "To Ts",
+      "type": "integer"
+     },
+     "uptime_s": {
+      "title": "Uptime S",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "pid",
+     "from_ts",
+     "to_ts",
+     "uptime_s",
+     "rss_kb_first",
+     "rss_kb_last"
+    ],
+    "title": "MemoryRun",
+    "type": "object"
+   },
+   "MemorySample": {
+    "properties": {
+     "anon_kb": {
+      "title": "Anon Kb",
+      "type": "integer"
+     },
+     "file_kb": {
+      "title": "File Kb",
+      "type": "integer"
+     },
+     "pid": {
+      "title": "Pid",
+      "type": "integer"
+     },
+     "rss_kb": {
+      "title": "Rss Kb",
+      "type": "integer"
+     },
+     "threads": {
+      "title": "Threads",
+      "type": "integer"
+     },
+     "ts": {
+      "title": "Ts",
+      "type": "integer"
+     },
+     "uptime_s": {
+      "title": "Uptime S",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "ts",
+     "pid",
+     "uptime_s",
+     "rss_kb",
+     "anon_kb",
+     "file_kb",
+     "threads"
+    ],
+    "title": "MemorySample",
+    "type": "object"
+   },
    "MetricsNetworkTopologyResponse": {
     "additionalProperties": true,
     "description": "GET /metrics/network-topology",
@@ -28674,6 +28850,24 @@
      "provider_type"
     ],
     "title": "OAuthStartRequest",
+    "type": "object"
+   },
+   "ObjectCount": {
+    "properties": {
+     "count": {
+      "title": "Count",
+      "type": "integer"
+     },
+     "type": {
+      "title": "Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "type",
+     "count"
+    ],
+    "title": "ObjectCount",
     "type": "object"
    },
    "OidcSettings": {
@@ -38064,6 +38258,32 @@
      "name"
     ],
     "title": "TokenCreateRequest",
+    "type": "object"
+   },
+   "TracingIn": {
+    "properties": {
+     "on": {
+      "title": "On",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "on"
+    ],
+    "title": "TracingIn",
+    "type": "object"
+   },
+   "TracingOut": {
+    "properties": {
+     "tracing": {
+      "title": "Tracing",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "tracing"
+    ],
+    "title": "TracingOut",
     "type": "object"
    },
    "TrashRestoreRequest": {
@@ -56827,6 +57047,142 @@
     ],
     "x-required-scopes": [
      "system:view"
+    ]
+   }
+  },
+  "/api/v1/metrics/memory": {
+   "get": {
+    "description": "The backend's resident memory every 10 minutes, and its growth per run between restarts.",
+    "operationId": "memory_history_api_v1_metrics_memory_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "hours",
+      "required": false,
+      "schema": {
+       "default": 168,
+       "title": "Hours",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MemoryOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Memory History",
+    "tags": [
+     "Metrics"
+    ],
+    "x-required-scopes": [
+     "system:view"
+    ]
+   }
+  },
+  "/api/v1/metrics/memory/breakdown": {
+   "get": {
+    "description": "What the backend holds now: Python objects by type and, while tracing, the lines that allocated most.",
+    "operationId": "memory_breakdown_api_v1_metrics_memory_breakdown_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "top",
+      "required": false,
+      "schema": {
+       "default": 25,
+       "title": "Top",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MemoryBreakdownOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Memory Breakdown",
+    "tags": [
+     "Metrics"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/metrics/memory/tracing": {
+   "post": {
+    "description": "Turns allocation tracing on or off (it costs memory and time while on).",
+    "operationId": "memory_tracing_api_v1_metrics_memory_tracing_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TracingIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TracingOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Memory Tracing",
+    "tags": [
+     "Metrics"
+    ],
+    "x-required-scopes": [
+     "system:config"
     ]
    }
   },
