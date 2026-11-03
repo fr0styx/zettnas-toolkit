@@ -5,6 +5,7 @@ import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { formatDateTime } from '../format.js';
+import { setIconLabel } from '../ui/primitives.js';
 
 let _poll = null;
 
@@ -33,7 +34,9 @@ export async function renderModelBench() {
   const running = st.job && st.job.state === 'running';
   const head = document.createElement('div');
   head.className = 'zn-row zn-row--between';
-  head.append(cell('span', t('bench.title', '⏱️ Benchmark installed models'), 'zn-title'));
+  const title = cell('span', '', 'zn-title');
+  setIconLabel(title, '⏱️', t('bench.title', 'Benchmark installed models'));
+  head.append(title);
   const run = cell('button', running ? t('bench.running', 'Running {done} of {total}…', { done: st.job.done || 0, total: st.job.total || '?' }) : t('bench.run', 'Run benchmark'), 'btn-pill-toggle');
   run.type = 'button';
   run.disabled = running;

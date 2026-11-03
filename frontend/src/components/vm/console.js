@@ -1428,7 +1428,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
             {
               inputType: 'textarea',
               icon: '📋',
-              okText: t('vm.paste_btn_action', '📋 Paste into VM'),
+              okText: t('vm.paste_btn_action', 'Paste into VM'),
               placeholder: t('vm.paste_placeholder', 'Type or paste commands, keys, or text here... (Ctrl+Enter to send)'),
             }
           );

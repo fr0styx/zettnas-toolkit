@@ -1730,9 +1730,9 @@ export function handlePendingIngest(pendingIngest) {
     },
     {
       isMedia: true,
-      okText: t('media.btn_start_ingest', '📥 Start copying'),
+      okText: t('media.btn_start_ingest', 'Start copying'),
       cancelText: t('media.btn_dismiss', 'Dismiss'),
-      ejectText: t('media.btn_eject', '⏏ Eject'),
+      ejectText: t('media.btn_eject', 'Eject'),
       onEject: async () => {
         _ejectedSlots.add(pendingIngest.slot);
         _activeIngestPromptTs = null;

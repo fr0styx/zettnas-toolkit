@@ -5,6 +5,7 @@ import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { formatDateTime } from '../format.js';
+import { setIconLabel } from '../ui/primitives.js';
 
 function el(tag, attrs = {}, ...children) {
   const n = document.createElement(tag);
@@ -46,7 +47,9 @@ export async function renderGuardPanel() {
     host.replaceChildren(el('div', { class: 'zn-muted', text: t('guard.load_failed', 'Could not load the ransomware guard: {error}', { error: err.message }) }));
     return;
   }
-  const parts = [el('div', { class: 'zn-title', text: t('guard.title', '🛡️ Ransomware guard') })];
+  const title = el('div', { class: 'zn-title' });
+  setIconLabel(title, '🛡️', t('guard.title', 'Ransomware guard'));
+  const parts = [title];
   if (st.frozen) {
     parts.push(
       el('div', { class: 'zn-alert zn-alert--danger', role: 'alert' },

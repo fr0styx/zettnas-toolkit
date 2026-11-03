@@ -1992,7 +1992,7 @@ export async function fetchAndRenderRemoteStorage(container) {
           },
           null,
           {
-            okText: t('remotes.delete_btn', '🗑️ Delete Remote'),
+            okText: t('remotes.delete_btn', 'Delete Remote'),
             cancelText: t('common.cancel', 'Cancel'),
             icon: '🗑️'
           }
