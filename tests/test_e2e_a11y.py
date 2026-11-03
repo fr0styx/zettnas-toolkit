@@ -25,6 +25,13 @@ AXE = os.path.join(ROOT, "node_modules", "axe-core", "axe.min.js")
 REPORT_ONLY = os.environ.get("ZETTNAS_A11Y_REPORT") == "1"
 UPDATE = os.environ.get("ZETTNAS_A11Y_UPDATE") == "1"
 BASELINE = os.path.join(ROOT, "tests", "a11y_baseline.json")
+# Transitions and animations off while axe measures: a theme switch fades colours over 150 ms, and
+# a slow runner measured them halfway (3 Nov 2026: the light sidebar at 3.4:1 mid-fade, 7.5:1 after)
+STILL = (
+    "addEventListener('DOMContentLoaded', () => { const s = document.createElement('style'); "
+    "s.textContent = '*, *::before, *::after { transition: none !important; animation: none !important }'; "
+    "document.documentElement.appendChild(s); })"
+)
 MEDIA_DIR = os.environ.get("ZETTNAS_E2E_MEDIA_DIR", "")
 TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
 # UX-8: moderate issues count too (ZETTNAS_A11Y_IMPACTS narrows it for a quick look)
@@ -190,6 +197,7 @@ def test_main_views_have_no_serious_accessibility_issues():
             _skip_or_fail(f"Playwright chromium not available: {e}")
         # axe is injected as a script, so the page's CSP must not block it in this test only
         context = browser.new_context(viewport={"width": 1440, "height": 900}, bypass_csp=True)
+        context.add_init_script(STILL)
         page = context.new_page()
         results["login"] = _login(page)
         for name, opener, selector in VIEWS:
@@ -251,6 +259,7 @@ def test_main_views_have_no_serious_accessibility_issues():
         phone = browser.new_context(
             viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, bypass_csp=True
         )
+        phone.add_init_script(STILL)
         page = phone.new_page()
         results["phone-login"] = _login(page)
         _explorer_and_viewer(page, results, "phone-", folder)
