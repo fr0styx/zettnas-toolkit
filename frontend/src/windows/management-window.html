@@ -923,25 +923,25 @@
             </div>
 
             <div class="mgmt-detail-body">
-              <div style="display:flex; flex-direction:column; gap: 16px;">
+              <div class="wdg-col">
                 
                 <!-- Card 1: Global Overlay Control -->
-                <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
+                <div class="drawer-card wdg-box">
+                  <div class="wdg-row">
                     <div>
-                      <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong);" data-i18n="mw.desktop_widget_overlay">Desktop Widget Overlay</div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;" data-i18n="mw.display_floating_live_telemetry_status_cards">Display floating live telemetry status cards on the desktop workspace.</div>
+                      <div class="wdg-fs135-bold-strong" data-i18n="mw.desktop_widget_overlay">Desktop Widget Overlay</div>
+                      <div class="wdg-xs-muted" data-i18n="mw.display_floating_live_telemetry_status_cards">Display floating live telemetry status cards on the desktop workspace.</div>
                     </div>
-                    <label class="switch-toggle" style="position:relative; display:inline-block; width:44px; height:24px; cursor:pointer;">
-                      <input type="checkbox" id="widget-toggle-master" checked style="opacity:0; width:0; height:0;">
+                    <label class="switch-toggle wdg-size">
+                      <input class="wdg-size-2" type="checkbox" id="widget-toggle-master" checked>
                       <span class="slider-round" style="position:absolute; inset:0; background:var(--zn-glaze-15); border-radius:24px; transition:0.3s;"></span>
                     </label>
                   </div>
 
-                  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border-top: 1px solid var(--zn-line-6); padding-top: 14px;">
+                  <div class="wdg-grid-box">
                     <div>
-                      <label for="widget-pos-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mw.desktop_position">DESKTOP POSITION</label>
-                      <select id="widget-pos-select" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
+                      <label class="wdg-xs-bold-muted" for="widget-pos-select" data-i18n="mw.desktop_position">DESKTOP POSITION</label>
+                      <select id="widget-pos-select" class="tz-select-input wdg-xs-strong-box">
                         <option value="pos-top-right" data-i18n="mw.top_right_default">Top Right (Default)</option>
                         <option value="pos-top-left" data-i18n="mw.top_left">Top Left</option>
                         <option value="pos-bottom-right" data-i18n="mw.bottom_right">Bottom Right</option>
@@ -950,8 +950,8 @@
                     </div>
 
                     <div>
-                      <label for="widget-opacity-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mw.glass_transparency">GLASS TRANSPARENCY</label>
-                      <select id="widget-opacity-select" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
+                      <label class="wdg-xs-bold-muted" for="widget-opacity-select" data-i18n="mw.glass_transparency">GLASS TRANSPARENCY</label>
+                      <select id="widget-opacity-select" class="tz-select-input wdg-xs-strong-box">
                         <option value="glass-subtle" data-i18n="mw.subtle_glass_40">Subtle Glass (40%)</option>
                         <option value="glass-standard" selected data-i18n="mw.standard_glass_65">Standard Glass (65%)</option>
                         <option value="glass-solid" data-i18n="mw.solid_dark_88">Solid Dark (88%)</option>
@@ -959,8 +959,8 @@
                     </div>
 
                     <div>
-                      <label for="widget-scale-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mw.scale_size">SCALE / SIZE</label>
-                      <select id="widget-scale-select" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
+                      <label class="wdg-xs-bold-muted" for="widget-scale-select" data-i18n="mw.scale_size">SCALE / SIZE</label>
+                      <select id="widget-scale-select" class="tz-select-input wdg-xs-strong-box">
                         <option value="scale-compact" data-i18n="mw.compact_88">Compact (88%)</option>
                         <option value="scale-normal" selected data-i18n="mw.normal_100">Normal (100%)</option>
                         <option value="scale-large" data-i18n="mw.large_110">Large (110%)</option>
@@ -970,11 +970,11 @@
                 </div>
 
                 <!-- Card 2: What Widgets to Show -->
-                <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                  <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong); margin-bottom: 4px;" data-i18n="mw.available_widgets">Available Widgets</div>
-                  <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 14px;" data-i18n="mw.toggle_individual_widgets_on_and_off">Toggle individual widgets on and off to customize your desktop layout. Drag options up or down to reorder them on your desktop.</div>
+                <div class="drawer-card wdg-box">
+                  <div class="wdg-fs135-bold-strong-2" data-i18n="mw.available_widgets">Available Widgets</div>
+                  <div class="wdg-xs-muted-2" data-i18n="mw.toggle_individual_widgets_on_and_off">Toggle individual widgets on and off to customize your desktop layout. Drag options up or down to reorder them on your desktop.</div>
 
-                  <div id="widget-sortable-list" style="display: flex; flex-direction: column; gap: 10px;">
+                  <div class="wdg-col-2" id="widget-sortable-list">
                     <!-- Widget: AI Accelerators -->
                     <div class="widget-sortable-item" data-widget-id="ai_accelerator" draggable="true">
                       <div class="widget-sortable-left">
@@ -985,13 +985,13 @@
                             <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
                           </svg>
                         </div>
-                        <span style="font-size: 18px; margin: 0 4px;">⚡</span>
+                        <span class="wdg-fs18">⚡</span>
                         <div>
-                          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="widget.ai_accelerator">AI Accelerators (NPU & GPU)</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="widget.ai_accelerator_desc">Real-time Intel AI Boost NPU & Arc GPU utilization dials and clock speeds.</div>
+                          <div class="wdg-xs-bold-strong" data-i18n="widget.ai_accelerator">AI Accelerators (NPU & GPU)</div>
+                          <div class="wdg-xs-muted-3" data-i18n="widget.ai_accelerator_desc">Real-time Intel AI Boost NPU & Arc GPU utilization dials and clock speeds.</div>
                         </div>
                       </div>
-                      <input type="checkbox" id="w-cfg-ai-accelerator" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                      <input class="wdg-size-3" type="checkbox" id="w-cfg-ai-accelerator" checked>
                     </div>
 
                     <!-- Widget 1: System Status -->
@@ -1004,13 +1004,13 @@
                             <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
                           </svg>
                         </div>
-                        <span style="font-size: 18px; margin: 0 4px;">🧠</span>
+                        <span class="wdg-fs18">🧠</span>
                         <div>
-                          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="mw.system_status_cpu_and_ram">System Status (CPU & RAM)</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="mw.real_time_cpu_processor_load_and">Real-time CPU processor load and RAM memory utilization meters.</div>
+                          <div class="wdg-xs-bold-strong" data-i18n="mw.system_status_cpu_and_ram">System Status (CPU & RAM)</div>
+                          <div class="wdg-xs-muted-3" data-i18n="mw.real_time_cpu_processor_load_and">Real-time CPU processor load and RAM memory utilization meters.</div>
                         </div>
                       </div>
-                      <input type="checkbox" id="w-cfg-system" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                      <input class="wdg-size-3" type="checkbox" id="w-cfg-system" checked>
                     </div>
 
                     <!-- Widget 2: Network IO -->
@@ -1023,13 +1023,13 @@
                             <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
                           </svg>
                         </div>
-                        <span style="font-size: 18px; margin: 0 4px;">🌐</span>
+                        <span class="wdg-fs18">🌐</span>
                         <div>
-                          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="mw.network_io_bandwidth">Network IO (Bandwidth)</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="mw.live_network_download_rx_and_upload">Live network download (Rx) and upload (Tx) bandwidth throughput.</div>
+                          <div class="wdg-xs-bold-strong" data-i18n="mw.network_io_bandwidth">Network IO (Bandwidth)</div>
+                          <div class="wdg-xs-muted-3" data-i18n="mw.live_network_download_rx_and_upload">Live network download (Rx) and upload (Tx) bandwidth throughput.</div>
                         </div>
                       </div>
-                      <input type="checkbox" id="w-cfg-network" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                      <input class="wdg-size-3" type="checkbox" id="w-cfg-network" checked>
                     </div>
 
                     <!-- Widget 3: Storage Pool -->
@@ -1042,13 +1042,13 @@
                             <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
                           </svg>
                         </div>
-                        <span style="font-size: 18px; margin: 0 4px;">💾</span>
+                        <span class="wdg-fs18">💾</span>
                         <div>
-                          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="mw.storage_capacity_and_pool_health">Storage Capacity & Pool Health</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="mw.main_data_pool_allocated_storage_free">Main data pool allocated storage, free capacity, and health status.</div>
+                          <div class="wdg-xs-bold-strong" data-i18n="mw.storage_capacity_and_pool_health">Storage Capacity & Pool Health</div>
+                          <div class="wdg-xs-muted-3" data-i18n="mw.main_data_pool_allocated_storage_free">Main data pool allocated storage, free capacity, and health status.</div>
                         </div>
                       </div>
-                      <input type="checkbox" id="w-cfg-storage" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                      <input class="wdg-size-3" type="checkbox" id="w-cfg-storage" checked>
                     </div>
 
                     <!-- Widget 4: Host Info & Uptime -->
@@ -1061,13 +1061,13 @@
                             <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
                           </svg>
                         </div>
-                        <span style="font-size: 18px; margin: 0 4px;">⏱️</span>
+                        <span class="wdg-fs18">⏱️</span>
                         <div>
-                          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="mw.host_name_and_system_uptime">Host Name & System Uptime</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="mw.server_hostname_identity_and_cumulative_uninterr">Server hostname identity and cumulative uninterrupted system uptime.</div>
+                          <div class="wdg-xs-bold-strong" data-i18n="mw.host_name_and_system_uptime">Host Name & System Uptime</div>
+                          <div class="wdg-xs-muted-3" data-i18n="mw.server_hostname_identity_and_cumulative_uninterr">Server hostname identity and cumulative uninterrupted system uptime.</div>
                         </div>
                       </div>
-                      <input type="checkbox" id="w-cfg-uptime" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                      <input class="wdg-size-3" type="checkbox" id="w-cfg-uptime">
                     </div>
 
                     <!-- Widget 5: Time Clock -->
@@ -1080,13 +1080,13 @@
                             <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
                           </svg>
                         </div>
-                        <span style="font-size: 18px; margin: 0 4px;">⏰</span>
+                        <span class="wdg-fs18">⏰</span>
                         <div>
-                          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="widget.clock">Time Clock</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="widget.clock_desc">Real-time digital clock with seconds, 12h/24h format, and timezone.</div>
+                          <div class="wdg-xs-bold-strong" data-i18n="widget.clock">Time Clock</div>
+                          <div class="wdg-xs-muted-3" data-i18n="widget.clock_desc">Real-time digital clock with seconds, 12h/24h format, and timezone.</div>
                         </div>
                       </div>
-                      <input type="checkbox" id="w-cfg-clock" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                      <input class="wdg-size-3" type="checkbox" id="w-cfg-clock" checked>
                     </div>
 
                     <!-- Widget 6: Calendar -->
@@ -1099,13 +1099,13 @@
                             <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
                           </svg>
                         </div>
-                        <span style="font-size: 18px; margin: 0 4px;">📅</span>
+                        <span class="wdg-fs18">📅</span>
                         <div>
-                          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="widget.calendar">Calendar</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="widget.calendar_desc">Interactive monthly calendar with today's date and month navigation.</div>
+                          <div class="wdg-xs-bold-strong" data-i18n="widget.calendar">Calendar</div>
+                          <div class="wdg-xs-muted-3" data-i18n="widget.calendar_desc">Interactive monthly calendar with today's date and month navigation.</div>
                         </div>
                       </div>
-                      <input type="checkbox" id="w-cfg-calendar" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                      <input class="wdg-size-3" type="checkbox" id="w-cfg-calendar">
                     </div>
 
                     <!-- Widget 7: Weather -->
@@ -1118,13 +1118,13 @@
                             <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
                           </svg>
                         </div>
-                        <span style="font-size: 18px; margin: 0 4px;">⛅</span>
+                        <span class="wdg-fs18">⛅</span>
                         <div>
-                          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="widget.weather">Local Weather</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="widget.weather_desc">Current temperature, weather condition, high/low, and humidity.</div>
+                          <div class="wdg-xs-bold-strong" data-i18n="widget.weather">Local Weather</div>
+                          <div class="wdg-xs-muted-3" data-i18n="widget.weather_desc">Current temperature, weather condition, high/low, and humidity.</div>
                         </div>
                       </div>
-                      <input type="checkbox" id="w-cfg-weather" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                      <input class="wdg-size-3" type="checkbox" id="w-cfg-weather" checked>
                     </div>
 
                     <!-- Widget 8: Drive Thermals Heatmap -->
@@ -1137,13 +1137,13 @@
                             <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
                           </svg>
                         </div>
-                        <span style="font-size: 18px; margin: 0 4px;">🌡️</span>
+                        <span class="wdg-fs18">🌡️</span>
                         <div>
-                          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="widget.drive_temp">Drive Thermals</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="widget.drive_temp_desc">Real-time per-bay thermal heatmap and spindown status.</div>
+                          <div class="wdg-xs-bold-strong" data-i18n="widget.drive_temp">Drive Thermals</div>
+                          <div class="wdg-xs-muted-3" data-i18n="widget.drive_temp_desc">Real-time per-bay thermal heatmap and spindown status.</div>
                         </div>
                       </div>
-                      <input type="checkbox" id="w-cfg-drive-temp" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                      <input class="wdg-size-3" type="checkbox" id="w-cfg-drive-temp" checked>
                     </div>
 
                     <!-- Widget 9: Network Throughput Dial -->
@@ -1156,13 +1156,13 @@
                             <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
                           </svg>
                         </div>
-                        <span style="font-size: 18px; margin: 0 4px;">🎛️</span>
+                        <span class="wdg-fs18">🎛️</span>
                         <div>
-                          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="widget.net_dial">Network Dial</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="widget.net_dial_desc">Real-time network throughput dial and bandwidth utilization.</div>
+                          <div class="wdg-xs-bold-strong" data-i18n="widget.net_dial">Network Dial</div>
+                          <div class="wdg-xs-muted-3" data-i18n="widget.net_dial_desc">Real-time network throughput dial and bandwidth utilization.</div>
                         </div>
                       </div>
-                      <input type="checkbox" id="w-cfg-net-dial" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                      <input class="wdg-size-3" type="checkbox" id="w-cfg-net-dial" checked>
                     </div>
 
                     <!-- Widget 10: UPS Power Gauge -->
@@ -1175,32 +1175,32 @@
                             <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
                           </svg>
                         </div>
-                        <span style="font-size: 18px; margin: 0 4px;">🔋</span>
+                        <span class="wdg-fs18">🔋</span>
                         <div>
-                          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="widget.ups_gauge">UPS Power</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="widget.ups_gauge_desc">Battery integrity, load wattage, and runtime monitor.</div>
+                          <div class="wdg-xs-bold-strong" data-i18n="widget.ups_gauge">UPS Power</div>
+                          <div class="wdg-xs-muted-3" data-i18n="widget.ups_gauge_desc">Battery integrity, load wattage, and runtime monitor.</div>
                         </div>
                       </div>
-                      <input type="checkbox" id="w-cfg-ups-gauge" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                      <input class="wdg-size-3" type="checkbox" id="w-cfg-ups-gauge" checked>
                     </div>
                   </div>
                 </div>
 
                 <!-- Card 3: Weather Configuration -->
-                <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8); margin-top: 14px;">
-                  <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong); margin-bottom: 4px;" data-i18n="widget.weather_cfg_title">Weather Settings</div>
-                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 10px;">
-                    <div style="position: relative;">
-                      <label for="widget-weather-city-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="widget.weather_city_label">City</label>
-                      <div style="position: relative;">
-                        <input type="text" id="widget-weather-city-input" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 28px 8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" placeholder="Auto-detect (Local IP / Timezone)" data-i18n-placeholder="widget.weather_city_placeholder" autocomplete="off">
-                        <span id="widget-weather-city-spinner" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); display: none; font-size: var(--zn-fs-xs); opacity: 0.8;" title="Searching cities..." data-i18n-title="ui.searching_cities">⏳</span>
+                <div class="drawer-card wdg-box-2">
+                  <div class="wdg-fs135-bold-strong-2" data-i18n="widget.weather_cfg_title">Weather Settings</div>
+                  <div class="wdg-grid">
+                    <div class="wdg-x">
+                      <label class="wdg-xs-bold-muted" for="widget-weather-city-input" data-i18n="widget.weather_city_label">City</label>
+                      <div class="wdg-x">
+                        <input type="text" id="widget-weather-city-input" class="tz-select-input wdg-xs-strong-box-2" placeholder="Auto-detect (Local IP / Timezone)" data-i18n-placeholder="widget.weather_city_placeholder" autocomplete="off">
+                        <span class="wdg-xs" id="widget-weather-city-spinner" style="display: none;" title="Searching cities..." data-i18n-title="ui.searching_cities">⏳</span>
                       </div>
                       <div id="widget-weather-city-dropdown" class="weather-city-dropdown" style="display: none;"></div>
                     </div>
                     <div>
-                      <label for="widget-weather-unit-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="widget.weather_unit_label">Temperature unit</label>
-                      <select id="widget-weather-unit-select" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
+                      <label class="wdg-xs-bold-muted" for="widget-weather-unit-select" data-i18n="widget.weather_unit_label">Temperature unit</label>
+                      <select id="widget-weather-unit-select" class="tz-select-input wdg-xs-strong-box">
                         <option value="c" data-i18n="mw.celsius_c">Celsius (°C)</option>
                         <option value="f" data-i18n="mw.fahrenheit_f">Fahrenheit (°F)</option>
                       </select>
@@ -1209,12 +1209,12 @@
                 </div>
 
                 <!-- Card 4: Calendar & Holiday Settings -->
-                <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8); margin-top: 14px;">
-                  <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong); margin-bottom: 4px;" data-i18n="widget.cal_cfg_title">Calendar & Holiday Settings</div>
-                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 10px;">
+                <div class="drawer-card wdg-box-2">
+                  <div class="wdg-fs135-bold-strong-2" data-i18n="widget.cal_cfg_title">Calendar & Holiday Settings</div>
+                  <div class="wdg-grid">
                     <div>
-                      <label for="widget-calendar-country-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="widget.cal_country_label">Public holidays for</label>
-                      <select id="widget-calendar-country-select" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
+                      <label class="wdg-xs-bold-muted" for="widget-calendar-country-select" data-i18n="widget.cal_country_label">Public holidays for</label>
+                      <select id="widget-calendar-country-select" class="tz-select-input wdg-xs-strong-box">
                         <option value="auto" data-i18n="widget.cal_country_auto">Auto-detect (from Location / Locale)</option>
                         <option value="US" data-i18n="mw.united_states_us">United States (US)</option>
                         <option value="GB" data-i18n="mw.united_kingdom_gb">United Kingdom (GB)</option>
@@ -1238,9 +1238,9 @@
                         <option value="IN" data-i18n="mw.india_in">India (IN)</option>
                       </select>
                     </div>
-                    <div style="display: flex; flex-direction: column; justify-content: flex-end;">
-                      <label style="display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer; padding-bottom: 8px;">
-                        <input type="checkbox" id="w-cfg-holiday-toggle" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--ok2);">
+                    <div class="wdg-col-3">
+                      <label class="wdg-row-xs-strong">
+                        <input class="wdg-size-3" type="checkbox" id="w-cfg-holiday-toggle" checked>
                         <span data-i18n="widget.cal_holidays_toggle">Highlight official country holidays on calendar</span>
                       </label>
                     </div>
@@ -1248,7 +1248,7 @@
                 </div>
 
                 <!-- Card 4: Reset Actions -->
-                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
+                <div class="wdg-row-2">
                   <button id="widget-reset-defaults-btn" class="btn-pill-toggle"><span aria-hidden="true">↺</span> <span data-i18n="mw.reset_to_defaults">Reset to Defaults</span></button>
                 </div>
 
@@ -1686,7 +1686,7 @@
             <!-- Sub-tab 2: WireGuard & Tailscale Mesh VPN -->
             <div id="mgmt-pane-network-wireguard" class="mgmt-tab-pane" style="display: none;">
               <div id="remote-access-mount"></div>
-              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div class="mgmt-card-intro wgd-row">
                 <div>
                   <div class="mgmt-card-intro-title">
                     <svg class="ic"><use href="#i-shield"/></svg>
@@ -1696,8 +1696,8 @@
                     Zero-Trust peer mesh networking, Tailscale mesh overlay, and WireGuard site-to-site kernel subnet NAT routing.
                   </div>
                 </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                  <div class="btn-group" id="mesh-service-filter" style="display:flex; gap:4px; margin-right:4px;">
+                <div class="wgd-row-2">
+                  <div class="btn-group wgd-row-3" id="mesh-service-filter">
                     <button class="btn-pill-toggle active" data-mesh-filter="all" data-i18n="mw.all">All</button>
                     <button class="btn-pill-toggle" data-mesh-filter="tailscale">Tailscale</button>
                     <button class="btn-pill-toggle" data-mesh-filter="wireguard" translate="no">WireGuard</button>
@@ -1714,36 +1714,36 @@
                   <span class="network-section-badge" id="tailscale-status-badge" data-sample>Checking...</span>
                 </div>
 
-                <div class="network-grid-two-col" id="network-tailscale-container" style="margin-bottom: 24px;">
+                <div class="network-grid-two-col wgd-x" id="network-tailscale-container">
                   <!-- Tailscale Telemetry Card -->
                   <div class="network-card" id="tailscale-telemetry-card">
                     <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-shield"/></svg> <span data-i18n="mw.tailscale_node_telemetry">Tailscale Node Telemetry</span></div>
+                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-shield"/></svg> <span data-i18n="mw.tailscale_node_telemetry">Tailscale Node Telemetry</span></div>
                       <span class="mgmt-app-pill" id="ts-connection-pill" style="background:rgba(100,116,139,0.15); color:var(--muted);" data-sample>Offline</span>
                     </div>
-                    <div style="padding:12px; font-size:var(--zn-fs-xs); display:flex; flex-direction:column; gap:8px;">
-                      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--zn-line-5); padding-bottom:6px;">
-                        <span style="color:var(--muted);" data-i18n="mw.tailscale_ip_ipv4">Tailscale IP (IPv4):</span>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                          <code id="ts-ipv4-display" style="font-size:var(--zn-fs-xs); color:var(--zn-text-accent); font-weight:600;">--</code>
+                    <div class="wgd-col-xs">
+                      <div class="wgd-row-box">
+                        <span class="wgd-muted" data-i18n="mw.tailscale_ip_ipv4">Tailscale IP (IPv4):</span>
+                        <div class="wgd-row-4">
+                          <code class="wgd-xs-semi-accent" id="ts-ipv4-display">--</code>
                           <button class="btn-pill-toggle is-small" id="btn-copy-ts-ip" style="display: none;" title="Copy Tailscale IP" data-i18n-title="ui.copy_tailscale_ip"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
                         </div>
                       </div>
-                      <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--zn-line-5); padding-bottom:6px;">
-                        <span style="color:var(--muted);" data-i18n="mw.tailnet_domain">Tailnet Domain:</span>
+                      <div class="wgd-row-box-2">
+                        <span class="wgd-muted" data-i18n="mw.tailnet_domain">Tailnet Domain:</span>
                         <code id="ts-tailnet-display" style="font-size:var(--zn-fs-xs); color:var(--lt-t-a5f3fcff, #a5f3fc);">--</code>
                       </div>
-                      <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--zn-line-5); padding-bottom:6px;">
-                        <span style="color:var(--muted);" data-i18n="mw.node_hostname">Node Hostname:</span>
-                        <span id="ts-hostname-display" style="font-weight:600; color:var(--zn-text-strong);">--</span>
+                      <div class="wgd-row-box-2">
+                        <span class="wgd-muted" data-i18n="mw.node_hostname">Node Hostname:</span>
+                        <span class="wgd-semi-strong" id="ts-hostname-display">--</span>
                       </div>
-                      <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--zn-line-5); padding-bottom:6px;">
-                        <span style="color:var(--muted);" data-i18n="mw.connected_mesh_peers">Connected Mesh Peers:</span>
+                      <div class="wgd-row-box-2">
+                        <span class="wgd-muted" data-i18n="mw.connected_mesh_peers">Connected Mesh Peers:</span>
                         <span id="ts-peers-display" style="font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8));">0 peers</span>
                       </div>
-                      <div style="display:flex; justify-content:space-between; align-items:center;" id="ts-key-expiry-row">
-                        <span style="color:var(--muted);" data-i18n="net.tailscale_key_expiry">Node Key Expiry:</span>
-                        <div style="display:flex; align-items:center; gap:8px;">
+                      <div class="wgd-row-5" id="ts-key-expiry-row">
+                        <span class="wgd-muted" data-i18n="net.tailscale_key_expiry">Node Key Expiry:</span>
+                        <div class="wgd-row-6">
                           <span id="ts-key-expiry-display" style="font-weight:600; color:var(--ok2, #3bf58b); font-size:var(--zn-fs-xs);">--</span>
                           <button class="btn-pill-toggle is-small" id="btn-ts-reauth" style="display: none;" title="Re-authenticate node key" data-i18n-title="ui.re_authenticate_node_key"><span aria-hidden="true">⚡</span> <span data-i18n="net.tailscale_reauth_btn">Re-auth</span></button>
                         </div>
@@ -1754,116 +1754,116 @@
                   <!-- Tailscale Connection & Auth Card -->
                   <div class="network-card" id="tailscale-controls-card">
                     <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-key"/></svg> <span data-i18n="mw.tailscale_connection_and_au">Tailscale Connection &amp; Auth</span></div>
+                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-key"/></svg> <span data-i18n="mw.tailscale_connection_and_au">Tailscale Connection &amp; Auth</span></div>
                       <button class="btn-pill-toggle is-danger is-small" id="btn-tailscale-down" style="display: none;"><span aria-hidden="true">🔌</span> <span data-i18n="remote.disconnect">Disconnect</span></button>
                     </div>
-                    <div style="padding:12px; font-size:var(--zn-fs-xs);" id="ts-controls-body">
+                    <div class="wgd-xs" id="ts-controls-body">
                       <!-- 1-Click Deploy Banner (shown when daemon is not installed) -->
                       <div id="ts-deploy-banner" style="display:none; background:linear-gradient(135deg, rgba(56,189,248,0.12), rgba(99,102,241,0.08)); border:1px solid rgba(56,189,248,0.25); border-radius:8px; padding:12px; margin-bottom:12px;">
-                        <div style="font-weight:700; color:var(--zn-text-accent); font-size:var(--zn-fs-xs); display:flex; align-items:center; gap:6px;">
+                        <div class="wgd-row-xs-bold-accent">
                           <span data-i18n="net.tailscale_1click_title">⚡ 1-Click Tailscale Container Deployment</span>
                         </div>
-                        <div style="font-size:var(--zn-fs-xs); color:var(--text-sub); margin-top:3px; line-height:1.4;" data-i18n="net.tailscale_1click_desc">
+                        <div class="wgd-xs-2" data-i18n="net.tailscale_1click_desc">
                           Installs Tailscale as an app, so you can reach this server from anywhere. Settings and sign-in are kept.
                         </div>
                       </div>
 
                       <!-- Interactive Browser Authorization Prompt (shown when login URL captured) -->
                       <div id="ts-auth-prompt" style="display:none; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.35); border-radius:8px; padding:12px; margin-bottom:12px;">
-                        <div style="font-weight:700; color:var(--zn-text-warn); font-size:var(--zn-fs-xs); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                        <div class="wgd-row-xs-bold-warn">
                           <span aria-hidden="true">👉</span> <span data-i18n="net.tailscale_signin_needed_title">Browser Authentication Required</span>
                         </div>
                         <div style="font-size:var(--zn-fs-xs); color:var(--lt-t-fef3c7ff, #fef3c7); line-height:1.4; margin-bottom:8px;" data-i18n="net.tailscale_auth_required_desc">
                           To link this NAS node to your Tailnet, log in via your browser (supports Google, GitHub, Apple, Microsoft SSO):
                         </div>
-                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <div class="wgd-row-7">
                           <a id="ts-auth-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:#f59e0b; color:#000; font-weight:700; font-size:var(--zn-fs-xs); padding:5px 12px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
                             <span aria-hidden="true">🔗</span> <span data-i18n="net.tailscale_open_login">Open Tailscale Login</span>
                           </a>
                           <button class="btn-pill-toggle" id="btn-copy-ts-auth-url">
                             <span aria-hidden="true">📋</span> <span data-i18n="net.tailscale_copy_link">Copy Link</span>
                           </button>
-                          <span style="font-size:var(--zn-fs-xs); color:var(--muted); margin-left:auto;"><span aria-hidden="true">⏳</span> <span data-i18n="net.tailscale_waiting_auth">Waiting for authorization...</span></span>
+                          <span class="wgd-xs-muted"><span aria-hidden="true">⏳</span> <span data-i18n="net.tailscale_waiting_auth">Waiting for authorization...</span></span>
                         </div>
                       </div>
 
                       <!-- Disconnected State Form -->
-                      <div id="ts-connect-form" style="display:flex; flex-direction:column; gap:10px;">
-                        <div id="ts-form-intro" style="color:var(--muted); font-size:var(--zn-fs-xs);" data-sample>
+                      <div class="wgd-col" id="ts-connect-form">
+                        <div class="wgd-xs-muted-2" id="ts-form-intro" data-sample>
                           Join your Zero-Trust Tailnet with a pre-authenticated auth key:
                         </div>
                         <div>
-                          <label for="ts-auth-key-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase;" data-i18n="mw.auth_k_optional">Auth Key (Optional)</label>
-                          <input type="password" id="ts-auth-key-input" class="tz-select-input" placeholder="tskey-auth-k123456789..." style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:6px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs); font-family:monospace;" />
+                          <label class="wgd-xs-bold-muted" for="ts-auth-key-input" data-i18n="mw.auth_k_optional">Auth Key (Optional)</label>
+                          <input type="password" id="ts-auth-key-input" class="tz-select-input wgd-xs-strong-box" placeholder="tskey-auth-k123456789..." />
                         </div>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <div class="wgd-grid">
                           <div>
-                            <label for="ts-hostname-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase;" data-i18n="mw.custom_hostname">Custom Hostname</label>
-                            <input type="text" id="ts-hostname-input" class="tz-select-input" placeholder="e.g. zettnas" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:6px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
+                            <label class="wgd-xs-bold-muted" for="ts-hostname-input" data-i18n="mw.custom_hostname">Custom Hostname</label>
+                            <input type="text" id="ts-hostname-input" class="tz-select-input wgd-xs-strong-box-2" placeholder="e.g. zettnas" />
                           </div>
-                          <div style="display:flex; align-items:flex-end; padding-bottom:6px;">
-                            <label style="display:flex; align-items:center; gap:6px; font-size:var(--zn-fs-xs); color:var(--text-sub); cursor:pointer;">
+                          <div class="wgd-row-8">
+                            <label class="wgd-row-xs">
                               <input type="checkbox" id="ts-accept-routes-input" checked style="accent-color:var(--accent-cyan, #38bdf8);" />
                               <span data-i18n="mw.accept_routes">Accept Routes</span>
                             </label>
                           </div>
                         </div>
-                        <div style="display:flex; justify-content:flex-end; margin-top:2px;">
+                        <div class="wgd-row-9">
                           <button class="btn-pill-toggle" id="btn-tailscale-up" style="background: rgba(56,189,248,0.15); color: var(--zn-text-accent); border-color: rgba(56,189,248,0.4);"><span aria-hidden="true">🚀</span> <span data-i18n="ui.connect_tailscale">Connect Tailscale</span></button>
                         </div>
                       </div>
 
                       <!-- Connected State View -->
-                      <div id="ts-connected-view" style="display:none; flex-direction:column; gap:10px;">
+                      <div class="wgd-x-2" id="ts-connected-view" style="display: none;">
                         <div style="display:flex; align-items:center; gap:8px; color:var(--ok2, #3bf58b); font-weight:700; font-size:13px;">
                           <span data-i18n="mw.node_active_on_tailnet">✓ Node Active on Tailnet</span>
                         </div>
-                        <div style="color:var(--text-sub); font-size:var(--zn-fs-xs); line-height:1.4;" data-i18n="mw.this_appliance_is_securely_connected_to">
+                        <div class="wgd-xs-3" data-i18n="mw.this_appliance_is_securely_connected_to">
                           This appliance is securely connected to your Tailscale mesh network. Traffic routed to this machine is end-to-end encrypted with WireGuard primitives.
                         </div>
 
                         <!-- Subnet Router Gateway (Capability 1) -->
-                        <div style="border-top:1px solid var(--zn-line-8); padding-top:8px; display:flex; flex-direction:column; gap:6px;">
-                          <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <label style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); cursor:pointer;">
+                        <div class="wgd-col-box">
+                          <div class="wgd-row-5">
+                            <label class="wgd-row-xs-bold-strong">
                               <input type="checkbox" id="ts-subnet-router-toggle" style="accent-color:var(--accent-cyan, #38bdf8);" />
                               <span data-i18n="net.tailscale_subnet_router">Subnet Router Gateway (--advertise-routes)</span>
                             </label>
                             <button class="btn-pill-toggle is-small" id="btn-ts-save-routes" data-i18n="net.tailscale_save_routes">Save Subnets</button>
                           </div>
-                          <div style="font-size:var(--zn-fs-xs); color:var(--text-sub); line-height:1.3;" data-i18n="net.tailscale_subnet_desc">
+                          <div class="wgd-xs-4" data-i18n="net.tailscale_subnet_desc">
                             Advertise local LAN subnets to access devices remotely without per-device clients.
                           </div>
-                          <input type="text" id="ts-subnet-routes-input" class="tz-select-input" placeholder="e.g. 192.168.1.0/24" style="border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:4px 8px; color:var(--zn-text-strong); border-radius:5px; font-size:var(--zn-fs-xs); font-family:monospace;" aria-label="e.g. 192.168.1.0/24" />
+                          <input type="text" id="ts-subnet-routes-input" class="tz-select-input wgd-xs-strong-box-3" placeholder="e.g. 192.168.1.0/24" aria-label="e.g. 192.168.1.0/24" />
                         </div>
 
                         <!-- Exit Node Gateway (Capability 2) -->
-                        <div style="border-top:1px solid var(--zn-line-8); padding-top:8px; display:flex; flex-direction:column; gap:4px;">
-                          <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <label style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); cursor:pointer;">
+                        <div class="wgd-col-box-2">
+                          <div class="wgd-row-5">
+                            <label class="wgd-row-xs-bold-strong">
                               <input type="checkbox" id="ts-exit-node-toggle" style="accent-color:var(--accent-cyan, #38bdf8);" />
                               <span data-i18n="net.tailscale_exit_node">Exit Node Gateway (--advertise-exit-node)</span>
                             </label>
-                            <span class="mgmt-app-pill" id="ts-exit-node-pill" style="font-size:var(--zn-fs-xs); padding:2px 7px;" data-sample>Inactive</span>
+                            <span class="mgmt-app-pill wgd-xs-5" id="ts-exit-node-pill" data-sample>Inactive</span>
                           </div>
-                          <div style="font-size:var(--zn-fs-xs); color:var(--text-sub); line-height:1.3;" data-i18n="net.tailscale_exit_desc">
+                          <div class="wgd-xs-4" data-i18n="net.tailscale_exit_desc">
                             Route all mobile/laptop internet traffic encrypted through this NAS when traveling.
                           </div>
                           <div id="ts-exit-node-approval-hint" style="display:none; font-size:var(--zn-fs-xs); padding:6px 10px; border-radius:6px; border:1px solid rgba(245,158,11,0.25); background:rgba(245,158,11,0.08); color:var(--zn-text-warn); line-height:1.4; margin-top:4px;">
-                            <span aria-hidden="true">⚠️</span> <span data-i18n="mw.exit_node_approve">Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your</span> <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:700;"><span data-i18n="mw.tailscale_admin_console">Tailscale Admin Console</span> <span aria-hidden="true">↗</span></a> <span data-i18n="mw.exit_node_steps">(Machines → Edit route settings → Use as exit node).</span>
+                            <span aria-hidden="true">⚠️</span> <span data-i18n="mw.exit_node_approve">Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your</span> <a class="wgd-bold-accent" href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer"><span data-i18n="mw.tailscale_admin_console">Tailscale Admin Console</span> <span aria-hidden="true">↗</span></a> <span data-i18n="mw.exit_node_steps">(Machines → Edit route settings → Use as exit node).</span>
                           </div>
                         </div>
 
                         <!-- Tailscale SSH (Capability 3) -->
-                        <div style="border-top:1px solid var(--zn-line-8); padding-top:8px; display:flex; flex-direction:column; gap:4px;">
-                          <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <label style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); cursor:pointer;">
+                        <div class="wgd-col-box-2">
+                          <div class="wgd-row-5">
+                            <label class="wgd-row-xs-bold-strong">
                               <input type="checkbox" id="ts-ssh-toggle" style="accent-color:var(--accent-cyan, #38bdf8);" />
                               <span data-i18n="net.tailscale_ssh">Tailscale SSH (--ssh)</span>
                             </label>
-                            <span class="mgmt-app-pill" id="ts-ssh-pill" style="font-size:var(--zn-fs-xs); padding:2px 7px;" data-sample>Disabled</span>
+                            <span class="mgmt-app-pill wgd-xs-5" id="ts-ssh-pill" data-sample>Disabled</span>
                           </div>
-                          <div style="font-size:var(--zn-fs-xs); color:var(--text-sub); line-height:1.3;" data-i18n="net.tailscale_ssh_desc">
+                          <div class="wgd-xs-4" data-i18n="net.tailscale_ssh_desc">
                             Authenticate SSH connections via Tailnet identity without passwords or SSH keys.
                           </div>
                         </div>
@@ -1873,38 +1873,38 @@
                 </div>
 
                 <!-- Extended Capabilities Row 2: Serve/Funnel & Taildrop (Capabilities 4 & 5) -->
-                <div class="network-grid-two-col" id="network-tailscale-extended" style="margin-bottom: 24px; display: none;">
+                <div class="network-grid-two-col wgd-x" id="network-tailscale-extended" style="display: none;">
                   <!-- Tailscale Serve & Funnel Card -->
                   <div class="network-card" id="tailscale-serve-card">
                     <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-shield"/></svg> <span data-i18n="net.tailscale_serve">Tailscale Serve & Funnel (Instant TLS)</span></div>
-                      <span class="mgmt-app-pill" id="ts-serve-pill" style="font-size:var(--zn-fs-xs); padding:2px 8px;" data-sample>Disabled</span>
+                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-shield"/></svg> <span data-i18n="net.tailscale_serve">Tailscale Serve & Funnel (Instant TLS)</span></div>
+                      <span class="mgmt-app-pill wgd-xs-6" id="ts-serve-pill" data-sample>Disabled</span>
                     </div>
-                    <div style="padding:12px; font-size:var(--zn-fs-xs); display:flex; flex-direction:column; gap:8px;">
-                      <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <label style="display:flex; align-items:center; gap:6px; font-weight:700; color:var(--zn-text-strong); cursor:pointer;">
+                    <div class="wgd-col-xs">
+                      <div class="wgd-row-5">
+                        <label class="wgd-row-bold-strong">
                           <input type="checkbox" id="ts-serve-toggle" style="accent-color:var(--accent-cyan, #38bdf8);" />
                           <span data-i18n="net.tailscale_enable_serve">Enable HTTPS on Tailnet (tailscale serve)</span>
                         </label>
                       </div>
-                      <div style="font-size:var(--zn-fs-xs); color:var(--text-sub); line-height:1.4;" data-i18n="net.tailscale_serve_desc">
+                      <div class="wgd-xs-7" data-i18n="net.tailscale_serve_desc">
                         Generates automatic Let's Encrypt TLS certificates for your Tailnet domain and proxies directly to the ZettNAS desktop port 8082 without browser warnings.
                       </div>
                       <div id="ts-serve-url-box" style="display:none; padding:8px 10px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2); border-radius:6px; font-size:var(--zn-fs-xs); justify-content:space-between; align-items:center;">
-                        <span style="color:var(--muted); font-size:var(--zn-fs-xs);" data-i18n="mw.direct_https_url">Direct HTTPS URL:</span>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                          <a id="ts-serve-url-link" href="#" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); font-weight:600; text-decoration:underline;">https://--</a>
+                        <span class="wgd-xs-muted-2" data-i18n="mw.direct_https_url">Direct HTTPS URL:</span>
+                        <div class="wgd-row-6">
+                          <a class="wgd-semi-accent" id="ts-serve-url-link" href="#" target="_blank" rel="noopener noreferrer">https://--</a>
                           <button class="btn-pill-toggle is-small" id="btn-copy-ts-serve-url"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
                         </div>
                       </div>
-                      <div style="border-top:1px solid var(--zn-line-6); padding-top:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <label style="display:flex; align-items:center; gap:6px; font-weight:600; font-size:var(--zn-fs-xs); color:var(--zn-text-crit); cursor:pointer;">
+                      <div class="wgd-row-box-3">
+                        <label class="wgd-row-xs-semi">
                           <input type="checkbox" id="ts-funnel-toggle" style="accent-color:#ef4444;" />
                           <span data-i18n="net.tailscale_funnel">Enable Public Internet Funnel</span>
                         </label>
-                        <span class="mgmt-app-pill" id="ts-funnel-pill" style="font-size:var(--zn-fs-xs); padding:2px 7px; color:var(--muted);" data-sample>Off</span>
+                        <span class="mgmt-app-pill wgd-xs-muted-3" id="ts-funnel-pill" data-sample>Off</span>
                       </div>
-                      <div style="font-size:var(--zn-fs-xs); color:var(--muted); line-height:1.3;" data-i18n="net.tailscale_funnel_desc">
+                      <div class="wgd-xs-muted-4" data-i18n="net.tailscale_funnel_desc">
                         Exposes the desktop securely to the public internet via Tailscale relay edge without port forwarding or dynamic DNS.
                       </div>
                     </div>
@@ -1913,47 +1913,47 @@
                   <!-- Taildrop Inbox Card -->
                   <div class="network-card" id="tailscale-taildrop-card">
                     <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-download"/></svg> <span data-i18n="net.tailscale_taildrop">Taildrop Inbox (Zero-Trust AirDrop)</span></div>
-                      <div style="display:flex; align-items:center; gap:6px;">
-                        <span class="mgmt-app-pill" id="ts-taildrop-badge" style="font-size:var(--zn-fs-xs); padding:2px 8px;">0 files</span>
+                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-download"/></svg> <span data-i18n="net.tailscale_taildrop">Taildrop Inbox (Zero-Trust AirDrop)</span></div>
+                      <div class="wgd-row-4">
+                        <span class="mgmt-app-pill wgd-xs-6" id="ts-taildrop-badge">0 files</span>
                         <button class="btn-pill-toggle is-small" id="btn-ts-taildrop-fetch" title="Fetch pending files from Taildrop queue" data-i18n-title="ui.fetch_pending_files_from_taildrop"><span aria-hidden="true">📥</span> <span data-i18n="net.tailscale_taildrop_fetch">Fetch</span></button>
                         <button class="btn-pill-toggle is-small" id="btn-ts-taildrop-open" title="Open Taildrop folder in Files app" data-i18n-title="ui.open_taildrop_folder_in_files"><span aria-hidden="true">📂</span> <span data-i18n="net.tailscale_taildrop_open">Files</span></button>
                       </div>
                     </div>
-                    <div style="padding:12px; font-size:var(--zn-fs-xs); display:flex; flex-direction:column; gap:8px;">
-                      <div style="font-size:var(--zn-fs-xs); color:var(--text-sub); line-height:1.3;" data-i18n="net.tailscale_taildrop_desc">
+                    <div class="wgd-col-xs">
+                      <div class="wgd-xs-4" data-i18n="net.tailscale_taildrop_desc">
                         Encrypted peer-to-peer file transfer from iPhones, Macs, Androids, and PCs directly to your NAS. Received files are saved in <code>/mnt/user/appdata/tailscale/taildrop</code>.
                       </div>
-                      <div id="ts-taildrop-list" style="max-height:120px; overflow-y:auto; border:1px solid var(--zn-line-6); border-radius:6px; background:var(--zn-shade-25); padding:6px;">
-                        <div style="color:var(--muted); font-size:var(--zn-fs-xs); text-align:center; padding:12px 0;" data-i18n="net.tailscale_taildrop_empty">No files in Taildrop inbox yet.</div>
+                      <div class="wgd-box" id="ts-taildrop-list">
+                        <div class="wgd-xs-muted-5" data-i18n="net.tailscale_taildrop_empty">No files in Taildrop inbox yet.</div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <!-- Extended Capabilities Row 3: Interactive Mesh Peer Directory (Capability 6) -->
-                <div class="network-card" id="tailscale-peers-card" style="margin-bottom: 24px; display: none;">
-                  <div class="network-card-header" style="flex-wrap:wrap; gap:8px;">
-                    <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-server"/></svg> <span data-i18n="net.tailscale_peers_title">Devices on your tailnet</span></div>
-                    <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
-                      <input type="text" id="ts-peer-search" placeholder="Search peers by name, IP, or OS..." data-i18n-placeholder="ui.search_peers_by_name_ip" class="tz-select-input" style="font-size:var(--zn-fs-xs); padding:3px 8px; width:220px; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); color:var(--zn-text-strong); border-radius:5px;" aria-label="Search peers by name, IP, or OS..." data-i18n-aria-label="ui.search_peers_by_name_ip" />
+                <div class="network-card wgd-x" id="tailscale-peers-card" style="display: none;">
+                  <div class="network-card-header wgd-x-3">
+                    <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-server"/></svg> <span data-i18n="net.tailscale_peers_title">Devices on your tailnet</span></div>
+                    <div class="wgd-row-10">
+                      <input type="text" id="ts-peer-search" placeholder="Search peers by name, IP, or OS..." data-i18n-placeholder="ui.search_peers_by_name_ip" class="tz-select-input wgd-xs-strong-box-4" aria-label="Search peers by name, IP, or OS..." data-i18n-aria-label="ui.search_peers_by_name_ip" />
                       <span class="mgmt-app-pill" id="ts-peer-count-pill" style="font-size:var(--zn-fs-xs); padding:3px 10px; background:rgba(56,189,248,0.12); color:var(--zn-text-accent);">0 peers</span>
                     </div>
                   </div>
-                  <div style="padding:0; overflow-x:auto;">
-                    <table class="tz-data-table" style="width:100%; border-collapse:collapse; font-size:var(--zn-fs-xs);" id="ts-peers-table">
+                  <div class="wgd-x-4">
+                    <table class="tz-data-table wgd-xs-box" id="ts-peers-table">
                       <thead>
-                        <tr style="border-bottom:1px solid var(--zn-line-8); text-align:left; color:var(--muted); font-size:var(--zn-fs-xs); text-transform:uppercase;">
-                          <th style="padding:8px 12px;" data-i18n="mw.peer_device">Peer / Device</th>
-                          <th style="padding:8px 12px;" data-i18n="mw.os_platform">OS Platform</th>
-                          <th style="padding:8px 12px;" data-i18n="mw.tailscale_ip">Tailscale IP</th>
-                          <th style="padding:8px 12px;" data-i18n="mw.connection_route">Connection Route</th>
-                          <th style="padding:8px 12px;" data-i18n="mw.status">Status</th>
-                          <th style="padding:8px 12px; text-align:right;" data-i18n="mw.latency_ping">Latency Ping</th>
+                        <tr class="wgd-xs-muted-box">
+                          <th class="wgd-x-5" data-i18n="mw.peer_device">Peer / Device</th>
+                          <th class="wgd-x-5" data-i18n="mw.os_platform">OS Platform</th>
+                          <th class="wgd-x-5" data-i18n="mw.tailscale_ip">Tailscale IP</th>
+                          <th class="wgd-x-5" data-i18n="mw.connection_route">Connection Route</th>
+                          <th class="wgd-x-5" data-i18n="mw.status">Status</th>
+                          <th class="wgd-x-6" data-i18n="mw.latency_ping">Latency Ping</th>
                         </tr>
                       </thead>
                       <tbody id="ts-peers-table-body">
-                        <tr><td colspan="6" style="text-align:center; padding:16px; color:var(--muted);" data-i18n="mw.no_peers_detected">No peers detected.</td></tr>
+                        <tr><td class="wgd-muted-2" colspan="6" data-i18n="mw.no_peers_detected">No peers detected.</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -1968,20 +1968,20 @@
                 <div class="network-grid-two-col" id="network-wireguard-container">
                   <div class="network-card">
                     <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-shield"/></svg> <span data-i18n="mw.wireguard_tunnel_status_wg0">WireGuard Tunnel Status (wg0)</span></div>
+                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-shield"/></svg> <span data-i18n="mw.wireguard_tunnel_status_wg0">WireGuard Tunnel Status (wg0)</span></div>
                       <span class="mgmt-app-pill" id="wg-forwarding-pill" style="background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); color:var(--lt-t-3bf58bff, #3bf58b);" data-sample>Curve25519 Ready</span>
                     </div>
-                    <div style="padding:12px; font-size:var(--zn-fs-xs); display:flex; flex-direction:column; gap:8px;">
-                      <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--zn-line-5); padding-bottom:6px;">
-                        <span style="color:var(--muted);" data-i18n="mw.public_k">Public Key:</span>
-                        <code id="wg-pubkey-display" style="font-size:var(--zn-fs-xs); color:var(--zn-text-accent);">--</code>
+                    <div class="wgd-col-xs">
+                      <div class="wgd-row-box-2">
+                        <span class="wgd-muted" data-i18n="mw.public_k">Public Key:</span>
+                        <code class="wgd-xs-accent" id="wg-pubkey-display">--</code>
                       </div>
-                      <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--zn-line-5); padding-bottom:6px;">
-                        <span style="color:var(--muted);" data-i18n="mw.subnet_forwarding">Subnet Forwarding:</span>
-                        <span id="wg-ip-forward-status" style="font-weight:700; color:var(--ok2);" data-sample>sysctl net.ipv4.ip_forward=1</span>
+                      <div class="wgd-row-box-2">
+                        <span class="wgd-muted" data-i18n="mw.subnet_forwarding">Subnet Forwarding:</span>
+                        <span class="wgd-bold-ok" id="wg-ip-forward-status" data-sample>sysctl net.ipv4.ip_forward=1</span>
                       </div>
-                      <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--muted);" data-i18n="mw.subnet_nat_router">Subnet NAT Router:</span>
+                      <div class="wgd-row-5">
+                        <span class="wgd-muted" data-i18n="mw.subnet_nat_router">Subnet NAT Router:</span>
                         <button class="btn-pill-toggle is-small" id="btn-toggle-wg-subnet-nat" data-i18n="net.wg_nat_toggle">Toggle NAT Routing</button>
                       </div>
                     </div>
@@ -1989,19 +1989,19 @@
 
                   <div class="network-card" id="wg-client-conf-card">
                     <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-key"/></svg> <span data-i18n="mw.client_configuration_conf">Client Configuration (.conf)</span></div>
-                      <div style="display:flex; gap:6px; align-items:center;">
+                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-key"/></svg> <span data-i18n="mw.client_configuration_conf">Client Configuration (.conf)</span></div>
+                      <div class="wgd-row-11">
                         <button class="btn-pill-toggle is-small" id="btn-copy-wg-conf" style="display: none;" title="Copy WireGuard configuration to clipboard" data-i18n-title="ui.copy_wireguard_configuration_to_clipboard"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
                         <button class="btn-pill-toggle is-small" id="btn-download-wg-conf" style="display: none;" title="Download WireGuard .conf profile" data-i18n-title="ui.download_wireguard_conf_profile"><span aria-hidden="true">📥</span> <span data-i18n="mw.export_conf">Export .conf</span></button>
                       </div>
                     </div>
-                    <div style="padding:12px; font-size:var(--zn-fs-xs); display:flex; flex-direction:column; gap:10px;">
-                      <div style="color:var(--muted); font-size:var(--zn-fs-xs);" data-i18n="mw.instant_peer_profile_with_curve25519_cryptograph">Instant peer profile with Curve25519 cryptographic keys. Scan QR with your phone or export configuration:</div>
-                      <div id="wg-conf-body-grid" style="display:grid; grid-template-columns: 1fr auto; gap:12px; align-items:stretch;">
+                    <div class="wgd-col-xs-2">
+                      <div class="wgd-xs-muted-2" data-i18n="mw.instant_peer_profile_with_curve25519_cryptograph">Instant peer profile with Curve25519 cryptographic keys. Scan QR with your phone or export configuration:</div>
+                      <div class="wgd-grid-2" id="wg-conf-body-grid">
                         <pre id="wg-conf-preview" style="background:var(--zn-shade-30); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px; font-size:var(--zn-fs-xs); max-height:160px; overflow:auto; color:var(--lt-t-a5f3fcff, #a5f3fc); font-family:monospace; margin:0; word-break:break-all; white-space:pre-wrap;">[Click 'Generate Client .conf' above]</pre>
-                        <div id="wg-qr-box" style="display:none; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); border-radius:8px; padding:8px 12px; min-width:130px;">
+                        <div class="wgd-box-2" id="wg-qr-box" style="display: none;">
                           <div id="wg-qr-canvas-wrap" style="background:#fff; padding:6px; border-radius:6px; line-height:0; display:inline-block; cursor:pointer;" title="Click to view full size" data-i18n-title="ui.click_to_view_full_size"></div>
-                          <span style="font-size:var(--zn-fs-xs); color:var(--muted); text-align:center; font-weight:700; letter-spacing:0.3px;" data-i18n="mw.scan_with_wireguard">Scan with WireGuard</span>
+                          <span class="wgd-xs-bold-muted-2" data-i18n="mw.scan_with_wireguard">Scan with WireGuard</span>
                         </div>
                       </div>
                     </div>
@@ -3890,84 +3890,84 @@
 
           <div class="mgmt-detail-body">
             <!-- System Information Banner Card -->
-            <div class="drawer-card" style="margin-bottom: 16px; padding: 18px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-              <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px;">
-                <div style="display:flex; align-items:center; gap:12px;">
+            <div class="drawer-card ab-box">
+              <div class="ab-row">
+                <div class="ab-row-2">
                   <div style="width:44px; height:44px; border-radius:8px; background:linear-gradient(135deg, rgba(37,194,160,0.2), rgba(14,165,233,0.2)); border:1px solid rgba(37,194,160,0.4); display:flex; align-items:center; justify-content:center; font-size:22px;">
                     ⚡
                   </div>
                   <div>
-                    <div style="font-size:16px; font-weight:800; color:var(--zn-text-strong); letter-spacing:0.5px;">ZettNAS</div>
-                    <div style="font-size:var(--zn-fs-xs); color:var(--muted);" data-i18n="mw.all_in_one_nas_hardware_and">All-in-One NAS Hardware & Container Orchestration Suite</div>
+                    <div class="ab-fs16-bold-strong">ZettNAS</div>
+                    <div class="ab-xs-muted" data-i18n="mw.all_in_one_nas_hardware_and">All-in-One NAS Hardware & Container Orchestration Suite</div>
                   </div>
                 </div>
-                <div style="display:flex; align-items:center; gap:8px;">
+                <div class="ab-row-3">
                   <span id="about-version-badge" class="badge-pill" style="background:rgba(37,194,160,0.15); border:1px solid rgba(37,194,160,0.4); color:var(--ok2); font-weight:700; font-size:var(--zn-fs-xs); padding:4px 10px; border-radius:20px;" data-sample>
                     v1.9.1 • Stable
                   </span>
                 </div>
               </div>
 
-              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; border-top:1px solid var(--zn-line-6); padding-top:14px;">
+              <div class="ab-grid-box">
                 <div>
-                  <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px; margin-bottom:2px;" data-i18n="mw.drive_bays">Drive bays</div>
-                  <div id="about-chassis-model" style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--zn-text-strong);" data-sample>Detecting...</div>
+                  <div class="ab-xs-bold-muted" data-i18n="mw.drive_bays">Drive bays</div>
+                  <div class="ab-xs-semi-strong" id="about-chassis-model" data-sample>Detecting...</div>
                 </div>
                 <div>
-                  <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px; margin-bottom:2px;" data-i18n="mw.host_and_platform">HOST & PLATFORM</div>
-                  <div id="about-host-platform" style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--zn-text-soft);" data-sample>Detecting...</div>
+                  <div class="ab-xs-bold-muted" data-i18n="mw.host_and_platform">HOST & PLATFORM</div>
+                  <div class="ab-xs-semi-soft" id="about-host-platform" data-sample>Detecting...</div>
                 </div>
                 <div>
-                  <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px; margin-bottom:2px;" data-i18n="mw.runtime_environment">RUNTIME ENVIRONMENT</div>
-                  <div id="about-runtime-env" style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--zn-text-soft);" data-sample>Docker Container (Python 3.12)</div>
+                  <div class="ab-xs-bold-muted" data-i18n="mw.runtime_environment">RUNTIME ENVIRONMENT</div>
+                  <div class="ab-xs-semi-soft" id="about-runtime-env" data-sample>Docker Container (Python 3.12)</div>
                 </div>
                 <div>
-                  <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px; margin-bottom:2px;">UPTIME</div>
+                  <div class="ab-xs-bold-muted">UPTIME</div>
                   <div id="about-system-uptime" style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9));">--</div>
                 </div>
               </div>
             </div>
 
             <!-- Software Updates Card -->
-            <div class="drawer-card" style="padding: 18px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-              <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:14px;">
+            <div class="drawer-card ab-box-2">
+              <div class="ab-row-4">
                 <div>
-                  <span class="card-head-title" style="font-weight:700; font-size:14px; color:var(--zn-text-strong); display:block; margin-bottom:2px;" data-i18n="updates.title">Software Updates</span>
-                  <span style="font-size:var(--zn-fs-xs); color:var(--muted);" data-i18n="updates.subtitle">Check for the latest stable releases, security patches, or opt in to bleeding-edge commit features.</span>
+                  <span class="card-head-title ab-fs14-bold-strong" data-i18n="updates.title">Software Updates</span>
+                  <span class="ab-xs-muted" data-i18n="updates.subtitle">Check for the latest stable releases, security patches, or opt in to bleeding-edge commit features.</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                <div class="ab-row-5">
                   <!-- Release Channel Chooser -->
-                  <div id="update-channel-chooser" style="display:inline-flex; align-items:center; background:var(--zn-shade-35); padding:2px; border-radius:6px; border:1px solid var(--zn-line-10); font-size:var(--zn-fs-xs); flex-shrink:0; white-space:nowrap;">
+                  <div class="ab-row-xs-box" id="update-channel-chooser">
                     <button id="btn-channel-stable" type="button" class="btn-channel-toggle active" style="padding:5px 12px; border-radius:4px; border:none; background:rgba(37,194,160,0.25); color:var(--lt-t-25c2a0ff, #25c2a0); font-weight:600; cursor:pointer; white-space:nowrap;" title="Official SemVer releases (Recommended for production)" data-i18n-title="ui.official_semver_releases_recommended_for">
                       <span aria-hidden="true">🌟</span> <span data-i18n="updates.channel_stable">Stable</span>
                     </button>
-                    <button id="btn-channel-beta" type="button" class="btn-channel-toggle" style="padding:5px 12px; border-radius:4px; border:none; background:transparent; color:var(--muted); font-weight:600; cursor:pointer; white-space:nowrap;" title="New releases during their 7-day test period, before they reach Stable" data-i18n-title="ui.new_releases_during_their_7">
+                    <button id="btn-channel-beta" type="button" class="btn-channel-toggle ab-semi-muted-box" title="New releases during their 7-day test period, before they reach Stable" data-i18n-title="ui.new_releases_during_their_7">
                       <span aria-hidden="true">🧪</span> <span data-i18n="updates.channel_beta">Beta</span>
                     </button>
-                    <button id="btn-channel-edge" type="button" class="btn-channel-toggle" style="padding:5px 12px; border-radius:4px; border:none; background:transparent; color:var(--muted); font-weight:600; cursor:pointer; white-space:nowrap;" title="Rolling release channel tracking the latest commits on main" data-i18n-title="ui.rolling_release_channel_tracking_the">
+                    <button id="btn-channel-edge" type="button" class="btn-channel-toggle ab-semi-muted-box" title="Rolling release channel tracking the latest commits on main" data-i18n-title="ui.rolling_release_channel_tracking_the">
                       <span aria-hidden="true">⚡</span> <span data-i18n="updates.channel_edge">Edge (Latest Commits)</span>
                     </button>
                   </div>
-                  <button id="btn-check-updates" class="btn-pill-toggle" style="min-width: 152px; text-align: center; box-sizing: border-box;">
+                  <button id="btn-check-updates" class="btn-pill-toggle ab-size">
                     <span id="btn-check-updates-icon">🔄</span> <span id="btn-check-updates-text" data-i18n="updates.check_btn">Check for Updates</span>
                   </button>
                 </div>
               </div>
 
               <div id="update-last-result" class="update-last-result" role="status" hidden style="margin-bottom:10px; padding:10px 12px; border-radius:8px; font-size:var(--zn-fs-xs); background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.4); color:var(--lt-t-fecacaff, #fecaca);"></div>
-              <div id="update-status-box" style="padding:14px; background:var(--zn-shade-25); border:1px solid var(--zn-line-6); border-radius:8px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <div id="update-status-icon" style="font-size:20px;">⏳</div>
-                  <div style="flex:1;">
-                    <div id="update-status-title" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong);" data-sample>Update check pending</div>
-                    <div id="update-status-desc" style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;" data-sample>Click "Check for Updates" to verify against the official GitHub releases.</div>
+              <div class="ab-box-3" id="update-status-box">
+                <div class="ab-row-6">
+                  <div class="ab-fs20" id="update-status-icon">⏳</div>
+                  <div class="ab-grow">
+                    <div class="ab-xs-bold-strong" id="update-status-title" data-sample>Update check pending</div>
+                    <div class="ab-xs-muted-2" id="update-status-desc" data-sample>Click "Check for Updates" to verify against the official GitHub releases.</div>
                   </div>
-                  <div id="update-last-checked" style="font-size:var(--zn-fs-xs); color:var(--muted); white-space:nowrap;"></div>
+                  <div class="ab-xs-muted-3" id="update-last-checked"></div>
                 </div>
 
                 <!-- Available Update Details Box -->
-                <div id="update-details-box" style="display:none; margin-top:14px; border-top:1px solid var(--zn-line-8); padding-top:12px;">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div class="ab-box-4" id="update-details-box" style="display: none;">
+                  <div class="ab-row-7">
                     <strong id="update-release-title" style="color:var(--warn, #f5a623); font-size:var(--zn-fs-xs);" data-sample>New Release Available</strong>
                     <a id="update-release-link" href="https://github.com/fr0styx/zettnas-toolkit/releases" target="_blank" rel="noopener noreferrer" style="color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-size:var(--zn-fs-xs); text-decoration:none;"><span data-i18n="upd.view_github">View on GitHub</span> <span aria-hidden="true">↗</span></a>
                   </div>
@@ -3976,14 +3976,14 @@
                   <!-- In-App Upgrade Action Bar -->
                   <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:12px; padding:12px 14px; background:linear-gradient(135deg, rgba(37,194,160,0.12), rgba(14,165,233,0.12)); border:1px solid rgba(37,194,160,0.35); border-radius:6px;">
                     <div>
-                      <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong);" data-i18n="updates.in_app_title">Direct In-App Upgrade</div>
-                      <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;" data-i18n="updates.in_app_desc">Download the latest latest version and restart ZettNAS automatically.</div>
+                      <div class="ab-xs-bold-strong" data-i18n="updates.in_app_title">Direct In-App Upgrade</div>
+                      <div class="ab-xs-muted-4" data-i18n="updates.in_app_desc">Download the latest latest version and restart ZettNAS automatically.</div>
                     </div>
                     <button id="btn-apply-system-update" type="button" class="btn-pill-toggle is-primary" style="box-shadow: 0 4px 14px rgba(37,194,160,0.35);">
                       <span id="btn-apply-update-icon">⚡</span>
                       <span id="btn-apply-update-text" data-i18n="updates.btn_install_now">Install Update Now</span>
                     </button>
-                    <button id="btn-revert-system-update" type="button" class="btn-pill-toggle" style="display: none; background: var(--zn-glaze-6); color: var(--zn-text-strong); border: 1px solid var(--zn-line-18);">
+                    <button id="btn-revert-system-update" type="button" class="btn-pill-toggle ab-strong-box" style="display: none;">
                       <span aria-hidden="true">↩</span>
                       <span id="btn-revert-update-text" data-sample>Revert to previous version</span>
                     </button>
@@ -3992,39 +3992,39 @@
                   <!-- In-App Update Progress Banner -->
                   <div id="update-progress-overlay" style="display:none; margin-top:12px; padding:14px 16px; background:var(--lt-b-0f1622f2, rgba(15,22,34,0.95)); border:1px solid rgba(14,165,233,0.4); border-radius:8px; text-align:center;">
                     <div style="font-size:22px; animation:spin 1.5s linear infinite; display:inline-block;">🔄</div>
-                    <div id="update-progress-title" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); margin-top:6px;" data-i18n="updates.installing">Downloading & Applying Update...</div>
-                    <div id="update-progress-desc" style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;" data-sample>Downloading the new version and restarting ZettNAS.</div>
-                    <div style="width:100%; height:4px; background:var(--zn-glaze-10); border-radius:2px; margin-top:10px; overflow:hidden;">
+                    <div class="ab-xs-bold-strong-2" id="update-progress-title" data-i18n="updates.installing">Downloading & Applying Update...</div>
+                    <div class="ab-xs-muted-2" id="update-progress-desc" data-sample>Downloading the new version and restarting ZettNAS.</div>
+                    <div class="ab-box-5">
                       <div id="update-progress-bar" style="width:60%; height:100%; background:linear-gradient(90deg, #25c2a0, #0ea5e9); animation:pulse 1.2s infinite ease-in-out;"></div>
                     </div>
                   </div>
 
                   <div style="margin-top:10px; padding:8px 12px; background:rgba(14,165,233,0.1); border:1px solid rgba(14,165,233,0.25); border-radius:6px; font-size:var(--zn-fs-xs); color:var(--lt-t-93c5fdff, #93c5fd);">
                     💡 <strong data-i18n="mw.alternative_host_update">Alternative Host Update:</strong> <span data-i18n="mw.unraid_force_update_a">In Unraid's Docker tab, click the container →</span> <em data-i18n="mw.force_update">Force Update</em><span data-i18n="mw.or_run">, or run:</span>
-                    <code style="display:block; margin-top:4px; background:var(--zn-shade-40); padding:4px 8px; border-radius:4px; font-family:monospace; color:var(--zn-text-accent);">docker compose pull && docker compose up -d</code>
+                    <code class="ab-accent-box">docker compose pull && docker compose up -d</code>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Observability & Diagnostics Bundle Card -->
-            <div class="drawer-card" style="margin-top: 16px; padding: 18px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-              <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
+            <div class="drawer-card ab-box-6">
+              <div class="ab-row-8">
                 <div>
-                  <div style="font-weight:700; font-size:14px; color:var(--zn-text-strong); display:flex; align-items:center; gap:8px;">
+                  <div class="ab-row-fs14-bold-strong">
                     <svg class="ic" style="width:16px; height:16px; color:var(--ok2, #25c2a0);"><use href="#i-chip"/></svg>
                     <span data-i18n="diagnostics.title">Observability & Diagnostics Bundle</span>
                   </div>
-                  <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;" data-i18n="diagnostics.subtitle">
+                  <div class="ab-xs-muted-2" data-i18n="diagnostics.subtitle">
                     Generate and download a sanitized, redacted diagnostic archive (&lt; 3s) for troubleshooting and system support.
                   </div>
                 </div>
-                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                  <button id="btn-preview-diagnostics" type="button" class="btn-pill-toggle" style="background: var(--zn-glaze-6); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong);" title="See what the report contains before you download it" data-i18n-title="ui.preview_collected_system_telemetry_before">
+                <div class="ab-row-9">
+                  <button id="btn-preview-diagnostics" type="button" class="btn-pill-toggle ab-strong-box-2" title="See what the report contains before you download it" data-i18n-title="ui.preview_collected_system_telemetry_before">
                     <span aria-hidden="true">👁️</span>
                     <span data-i18n="diagnostics.preview_btn">Preview Summary</span>
                   </button>
-                  <button id="btn-copy-support-md" type="button" class="btn-pill-toggle" style="background: var(--zn-glaze-6); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong);" title="Copy sanitized system support markdown to clipboard for GitHub, Reddit, or Discord" data-i18n-title="ui.copy_sanitized_system_support_markdown">
+                  <button id="btn-copy-support-md" type="button" class="btn-pill-toggle ab-strong-box-2" title="Copy sanitized system support markdown to clipboard for GitHub, Reddit, or Discord" data-i18n-title="ui.copy_sanitized_system_support_markdown">
                     <span aria-hidden="true">📋</span>
                     <span data-i18n="diagnostics.copy_md_btn">Copy Support Markdown</span>
                   </button>
@@ -4035,20 +4035,20 @@
                 </div>
               </div>
 
-              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; padding:12px; background:var(--zn-shade-25); border:1px solid var(--zn-line-5); border-radius:6px; font-size:var(--zn-fs-xs);">
-                <div style="color:var(--zn-text-soft);">
+              <div class="ab-grid-xs-box">
+                <div class="ab-soft">
                   <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong data-i18n="mw.system_and_kernel">System & Kernel:</strong> <span data-i18n="mw.cpu_governers_dmesg_ups">CPU, Governers, dmesg, UPS</span>
                 </div>
-                <div style="color:var(--zn-text-soft);">
+                <div class="ab-soft">
                   <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong data-i18n="mw.disks_and_smart">Disks & SMART:</strong> <span data-i18n="mw.health_thermals_standby_safe">Health, Thermals, Standby Safe</span>
                 </div>
-                <div style="color:var(--zn-text-soft);">
+                <div class="ab-soft">
                   <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong data-i18n="mw.docker_and_vms">Docker & VMs:</strong> <span data-i18n="mw.stacks_conflicts_qemu_kvm">Stacks, Conflicts, QEMU KVM</span>
                 </div>
-                <div style="color:var(--zn-text-soft);">
+                <div class="ab-soft">
                   <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong data-i18n="mw.client_observability">Client Observability:</strong> <span data-i18n="mw.browser_gpu_logs">Browser, GPU, Logs</span>
                 </div>
-                <div style="color:var(--zn-text-soft);">
+                <div class="ab-soft">
                   <span style="color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-weight:600;">🔒</span> <strong data-i18n="mw.privacy_scrubbed">Privacy Scrubbed:</strong> <span data-i18n="mw.pws_a_p_i_tkns_and_ks_redacted">Passwords, API tokens &amp; keys redacted</span>
                 </div>
               </div>

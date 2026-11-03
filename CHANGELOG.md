@@ -30,8 +30,9 @@
   window's bottom edge, like the vertical one on the right, instead of floating above the last
   rows.
 
-- **The Backups and Notifications panes are built from the shared styles** (NUX-15): 106
-  inline styles became classes, pixel-for-pixel the same in both themes.
+- **Five more panes are built from stylesheet classes** (NUX-15): Backups, Notifications,
+  About, Desktop widgets and Tailscale & WireGuard; 347 inline styles became classes,
+  pixel-for-pixel the same in both themes.
 
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages

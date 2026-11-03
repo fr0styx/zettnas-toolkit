@@ -44,13 +44,6 @@
 .invite-card { margin-top: var(--zn-space-4); padding: var(--zn-space-3); border-radius: var(--zn-radius); border: 1px solid var(--zn-line-strong); }
 .invite-title { margin: 0 0 var(--zn-space-1); font-size: var(--zn-fs); }
 .invite-meta { color: var(--muted); font-size: var(--zn-fs-xs); }
-/* Kids' rules in the Users pane (NUX-18) */
-.kids-table { width: 100%; margin-top: var(--zn-space-2); }
-.kids-actions { text-align: right; white-space: nowrap; }
-.kids-sub { margin: var(--zn-space-3) 0 var(--zn-space-1); font-size: var(--zn-fs-sm); }
-.kids-ai-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--zn-space-3); padding: var(--zn-space-1) 0; }
-.kids-ai-role { min-width: 6em; font-weight: 600; }
-.kids-more { margin: var(--zn-space-3) 0 0; }
 .invite-list { list-style: none; margin: var(--zn-space-2) 0; padding: 0; display: flex; flex-direction: column; gap: var(--zn-space-1); }
 .invite-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--zn-space-2); font-size: var(--zn-fs-sm); }
 .invite-row.is-used { opacity: 0.6; }
@@ -118,18 +111,3 @@
 /* NUX-12: devices AdGuard has seen, to pick from */
 .ff-picker { margin: 4px 0 8px; }
 .ff-picker-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; max-height: 220px; overflow-y: auto; }
-
-/* The Backups pane: classes instead of inline styles (NUX-15), same look */
-.bk-section { margin-bottom: 24px; padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8); }
-.bk-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap; }
-.bk-title { font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
-.bk-title-block { font-weight: 700; font-size: var(--zn-fs); margin-bottom: 8px; display: block; }
-.bk-desc { font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4; }
-.bk-desc--spaced { margin-bottom: 16px; }
-.bk-empty { font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px; }
-.bk-actions { display: flex; gap: 8px; }
-.bk-actions--center { align-items: center; }
-.bk-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.bk-upload { flex: 1; min-width: 200px; position: relative; }
-.bk-file-overlay { opacity: 0; position: absolute; inset: 0; cursor: pointer; z-index: 2; }
-.bk-no-pointer { pointer-events: none; }

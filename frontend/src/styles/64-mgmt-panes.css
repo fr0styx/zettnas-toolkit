@@ -1,0 +1,45 @@
+/* Mission Control panes moved off inline styles (NUX-15, NUX-18, SEC-28). Loaded with the
+   window's code (management-lazy.css), not on first paint. */
+
+/* Kids' rules in the Users pane (NUX-18) */
+.kids-table { width: 100%; margin-top: var(--zn-space-2); }
+.kids-actions { text-align: right; white-space: nowrap; }
+.kids-sub { margin: var(--zn-space-3) 0 var(--zn-space-1); font-size: var(--zn-fs-sm); }
+.kids-ai-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--zn-space-3); padding: var(--zn-space-1) 0; }
+.kids-ai-role { min-width: 6em; font-weight: 600; }
+.kids-more { margin: var(--zn-space-3) 0 0; }
+
+/* The Backups pane: classes instead of inline styles (NUX-15), same look */
+.bk-section { margin-bottom: 24px; padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8); }
+.bk-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap; }
+.bk-title { font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.bk-title-block { font-weight: 700; font-size: var(--zn-fs); margin-bottom: 8px; display: block; }
+.bk-desc { font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4; }
+.bk-desc--spaced { margin-bottom: 16px; }
+.bk-empty { font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px; }
+.bk-actions { display: flex; gap: 8px; }
+.bk-actions--center { align-items: center; }
+.bk-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.bk-upload { flex: 1; min-width: 200px; position: relative; }
+.bk-file-overlay { opacity: 0; position: absolute; inset: 0; cursor: pointer; z-index: 2; }
+.bk-no-pointer { pointer-events: none; }
+
+/* The People pane's lists: classes instead of inline styles (NUX-15), same look */
+.users-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+.users-bar-title { font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.6px; }
+.users-bar-desc { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px; }
+.users-bar-actions { display: flex; gap: 8px; }
+.btn-save-preset.users-bar-btn, .suite-toolkit-btn.users-bar-btn { padding: 6px 14px; font-size: var(--zn-fs-sm); }
+.suite-toolkit-btn.users-bar-btn.is-xs { font-size: var(--zn-fs-xs); }
+.users-table-wrap { background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 8px; overflow-x: auto; }
+.zn-datatable.users-table { min-width: 760px; }
+.zn-datatable.users-table--narrow { min-width: 600px; }
+.users-table > thead > tr.users-thead { background: var(--zn-glaze-3); border-bottom: 1px solid var(--zn-line-8); letter-spacing: 0.5px; }
+.users-table > thead > tr > th { padding: 10px 12px; }
+
+/* Shared folders password for two-step accounts (SEC-28) */
+.smb-pw-why { font-size: var(--zn-fs-xs); color: var(--muted); margin: 10px 0 0; }
+.smb-pw-box { margin-top: 12px; padding: 12px; border-radius: 8px; border: 1px solid var(--zn-line-8); background: var(--zn-shade-20); }
+.smb-pw-note { font-size: var(--zn-fs-sm); color: var(--zn-text-soft); margin: 0 0 8px; }
+.smb-pw-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.smb-pw-value { font-family: var(--zn-font-mono, ui-monospace, monospace); font-size: var(--zn-fs); user-select: all; color: var(--zn-text-strong); }
