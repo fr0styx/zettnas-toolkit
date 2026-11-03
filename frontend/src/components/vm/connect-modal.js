@@ -9,6 +9,37 @@ import { makeDraggable } from '../dock.js';
 import { vmState } from './state.js';
 import { copyToClipboard, openVmConsole } from './console.js';
 
+const STATE_KEYS = { running: 'vmm.st_running', paused: 'vmm.st_paused', stopped: 'vmm.st_stopped', shutoff: 'vmm.st_stopped' };
+const STATE_WORDS = { running: 'Running', paused: 'Paused', stopped: 'Stopped', shutoff: 'Stopped' };
+
+/** A VM's state in words ("running" -> "Running"); an unknown state is shown as it came. */
+export function vmStateLabel(state) {
+  const s = String(state || '').toLowerCase();
+  if (!s) return t('vmm.st_unknown', 'Unknown');
+  return STATE_KEYS[s] ? t(STATE_KEYS[s], STATE_WORDS[s]) : s;
+}
+
+/** The four KVM checks: label, result in words, icon and colour (ok, warn or crit). */
+export function kvmChecks(k) {
+  const restricted = !!(k.cgroup_restricted || k.substate === 'container_restricted');
+  const virt = !!(k.hardware_virt || k.intel_vtx || k.amd_v);
+  const mod = !!k.module_loaded;
+  const node = !!k.device_present;
+  let access = { tone: 'crit', icon: '✕', text: t('vmc.denied', 'Denied') };
+  if (k.device_writable) access = { tone: 'ok', icon: '✓', text: t('vmc.allowed', 'Allowed') };
+  else if (restricted) access = { tone: 'warn', icon: '⚠️', text: t('vmc.cgroup', 'Blocked by the container (EPERM)') };
+  const pass = (text) => ({ tone: 'ok', icon: '✓', text });
+  return [
+    { label: t('vmc.t1', '1. The processor supports virtualization (VT-x / AMD-V)'), ...(virt ? pass(t('vmc.supported', 'Supported')) : { tone: 'crit', icon: '✕', text: t('vmc.bios_off', 'Turned off in the BIOS') }) },
+    { label: t('vmc.t2', '2. The kernel module is loaded (kvm_intel / kvm_amd)'), ...(mod ? pass(t('vmc.loaded', 'Loaded')) : { tone: 'warn', icon: '⚠️', text: t('vmc.mod_missing', 'Module missing') }) },
+    { label: t('vmc.t3', '3. The device /dev/kvm exists'), ...(node ? pass(t('vmc.present', 'Present')) : { tone: 'crit', icon: '✕', text: t('vmc.node_missing', 'Missing') }) },
+    { label: t('vmc.t4', '4. The container may use /dev/kvm'), ...access },
+  ];
+}
+
+// An icon next to translated words: screen readers skip it (UX-35)
+const ico = (e) => `<span aria-hidden="true">${e}</span>`;
+
 /**
  * Opens Multi-Protocol VM Connection Modal (#modal-vm-connect)
  * Displays interactive quick-connect details for Web GUI, Serial TTY, Native VNC, SSH, RDP, and VirtIO-FS
@@ -27,7 +58,7 @@ export function openVmConnectModal(vmId, vmObj = null) {
   let targetVm = vmObj || vmState.list.find((v) => v.id === vmId);
 
   const renderConnectModal = (targetVm) => {
-    const name = targetVm.name || 'Virtual Machine';
+    const name = targetVm.name || t('vmm.appliance', 'Virtual machine');
     const ip = targetVm.ip_address || '';
     const vncPort = targetVm.vnc_port || 5900;
     const hostIp = (typeof window !== 'undefined' && window.location) ? window.location.hostname : '127.0.0.1';
@@ -41,7 +72,7 @@ export function openVmConnectModal(vmId, vmObj = null) {
       <div class="smart-modal-header" style="cursor: move;">
         <div class="smart-modal-title" style="display: flex; align-items: center; gap: 8px;">
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          <span>Multi-Protocol Connect: ${escapeHtml(name)}</span>
+          <span>${escapeHtml(t('vmm.connect_to', 'Connect to {name}', { name }))}</span>
         </div>
         <button id="vm-connect-modal-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 4px;" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}">✕</button>
       </div>
@@ -51,12 +82,12 @@ export function openVmConnectModal(vmId, vmObj = null) {
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 8px;">
           <div style="display: flex; align-items: center; gap: 10px;">
             <span class="qemu-process-badge ${targetVm.state === 'running' ? 'active' : targetVm.state === 'paused' ? 'paused' : 'stopped'}">
-              ● ${targetVm.state ? targetVm.state.toUpperCase() : 'UNKNOWN'}
+              ${ico('●')} ${escapeHtml(vmStateLabel(targetVm.state))}
             </span>
             <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${escapeHtml(name)}</span>
           </div>
           <span style="font-size: var(--zn-fs-xs); font-family: monospace; color: ${ip ? '#38bdf8' : 'var(--muted)'};">
-            ${ip ? `IP: ${ip}` : 'No IP detected yet (DHCP pending)'}
+            ${ip ? `IP: ${escapeHtml(ip)}` : t('vmc.no_ip', 'No network address yet (waiting for DHCP)')}
           </span>
         </div>
 
@@ -66,16 +97,16 @@ export function openVmConnectModal(vmId, vmObj = null) {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 14px;">🖥️</span>
               <div>
-                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">In-Browser Web Console</div>
-                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Direct glassmorphic KVM GUI (VirtIO-GPU) or VT100 Serial TTY</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vmc.web_title', 'Console in the browser')}</div>
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('vmc.web_desc', 'The VM’s desktop (VirtIO-GPU) or its serial text terminal')}</div>
               </div>
             </div>
             <div style="display: flex; gap: 6px;">
               <button class="btn-console-act btn-connect-gui" style="padding: 4px 10px; font-size: var(--zn-fs-xs); background: #0ea5e9; color: #fff; border-color: #38bdf8;">
-                Launch KVM GUI
+                ${t('vmc.launch_gui', 'Open the desktop')}
               </button>
               <button class="btn-console-act btn-connect-tty" style="padding: 4px 10px; font-size: var(--zn-fs-xs); background: rgba(52,211,153,0.15); color: var(--zn-text-ok); border-color: rgba(52,211,153,0.4);">
-                Serial TTY
+                ${t('vmc.tty', 'Serial terminal')}
               </button>
             </div>
           </div>
@@ -87,17 +118,17 @@ export function openVmConnectModal(vmId, vmObj = null) {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 14px;">🌐</span>
               <div>
-                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">Native VNC Client (RFB)</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vmc.vnc_title', 'VNC app (RFB)')}</div>
                 <div style="font-size: var(--zn-fs-xs); color: var(--muted);">TigerVNC, RealVNC, macOS Screen Sharing</div>
               </div>
             </div>
             <button class="btn-console-act btn-connect-copy-vnc" style="padding: 4px 10px; font-size: var(--zn-fs-xs);">
-              📋 Copy VNC URI
+              ${ico('📋')} ${t('vmc.copy_vnc', 'Copy VNC address')}
             </button>
           </div>
           <div style="display: flex; align-items: center; justify-content: space-between; background: var(--zn-shade-35); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--zn-text-accent);">
             <span>${vncUri}</span>
-            <span style="color: var(--muted); font-size: var(--zn-fs-xs);">Port ${vncPort}</span>
+            <span style="color: var(--muted); font-size: var(--zn-fs-xs);">${t('vmm.port', 'Port {port}', { port: vncPort })}</span>
           </div>
         </div>
 
@@ -108,15 +139,15 @@ export function openVmConnectModal(vmId, vmObj = null) {
               <span style="font-size: 14px;">🔒</span>
               <div>
                 <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">Secure Shell (SSH)</div>
-                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Terminal command for OpenSSH / PuTTY</div>
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('vmc.ssh_desc', 'A terminal command for OpenSSH or PuTTY')}</div>
               </div>
             </div>
             <button class="btn-console-act btn-connect-copy-ssh" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: var(--zn-fs-xs); ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
-              📋 Copy SSH Command
+              ${ico('📋')} ${t('vm.copy_ssh', 'Copy SSH Command')}
             </button>
           </div>
           <div style="display: flex; align-items: center; justify-content: space-between; background: var(--zn-shade-35); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--zn-fs-xs); color: ${ip ? '#34d399' : 'var(--muted)'};">
-            <span>${ip ? sshCmd : 'Awaiting guest IP address assignment'}</span>
+            <span>${ip ? escapeHtml(sshCmd) : t('vm.why_no_ip', 'Waiting for the VM to get a network address')}</span>
           </div>
         </div>
 
@@ -126,22 +157,22 @@ export function openVmConnectModal(vmId, vmObj = null) {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 14px;">🪟</span>
               <div>
-                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">Remote Desktop (RDP)</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vm.rdp', 'Remote Desktop (RDP)')}</div>
                 <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Microsoft Remote Desktop, Remmina, FreeRDP</div>
               </div>
             </div>
             <div style="display: flex; gap: 6px;">
               <button class="btn-console-act btn-connect-copy-rdp" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: var(--zn-fs-xs); ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
-                📋 Copy RDP URI
+                ${ico('📋')} ${t('vmc.copy_rdp', 'Copy RDP address')}
               </button>
               <button class="btn-console-act btn-connect-dl-rdp" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: var(--zn-fs-xs); ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
-                ⬇ .rdp File
+                ${ico('⬇')} ${t('vmc.dl_rdp', '.rdp file')}
               </button>
             </div>
           </div>
           <div style="display: flex; align-items: center; justify-content: space-between; background: var(--zn-shade-35); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--zn-fs-xs); color: ${ip ? '#eab308' : 'var(--muted)'};">
-            <span>${ip ? rdpUri : 'Awaiting guest IP address assignment'}</span>
-            <span style="color: var(--muted); font-size: var(--zn-fs-xs);">Port 3389</span>
+            <span>${ip ? escapeHtml(rdpUri) : t('vm.why_no_ip', 'Waiting for the VM to get a network address')}</span>
+            <span style="color: var(--muted); font-size: var(--zn-fs-xs);">${t('vmm.port', 'Port {port}', { port: 3389 })}</span>
           </div>
         </div>
 
@@ -151,15 +182,15 @@ export function openVmConnectModal(vmId, vmObj = null) {
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
               <span style="font-size: 14px;">📂</span>
               <div>
-                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">VirtIO-FS / 9p Mount Instructions</div>
-                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Run inside guest to access host shares</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vmc.mount_title', 'Mount the shared folders (VirtIO-FS / 9p)')}</div>
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('vmc.mount_desc', 'Run this inside the VM to reach the folders shared with it')}</div>
               </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px;">
               ${hostShares.map((s) => `
                 <div style="display: flex; justify-content: space-between; align-items: center; background: var(--zn-shade-30); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--zn-fs-xs);">
                   <span style="color: var(--zn-text-soft);">sudo mount -t virtiofs ${escapeHtml(s.mount_tag)} /mnt/${escapeHtml(s.mount_tag)}</span>
-                  <button class="btn-console-act btn-copy-mount-cmd" data-cmd="sudo mkdir -p /mnt/${escapeHtml(s.mount_tag)} && sudo mount -t virtiofs ${escapeHtml(s.mount_tag)} /mnt/${escapeHtml(s.mount_tag)}" style="padding: 2px 8px; font-size: var(--zn-fs-xs);">Copy</button>
+                  <button class="btn-console-act btn-copy-mount-cmd" data-cmd="sudo mkdir -p /mnt/${escapeHtml(s.mount_tag)} && sudo mount -t virtiofs ${escapeHtml(s.mount_tag)} /mnt/${escapeHtml(s.mount_tag)}" style="padding: 2px 8px; font-size: var(--zn-fs-xs);">${t('catalog.copy', 'Copy')}</button>
                 </div>
               `).join('')}
             </div>
@@ -169,7 +200,7 @@ export function openVmConnectModal(vmId, vmObj = null) {
 
       <div class="smart-modal-footer" style="padding: 12px 22px; display: flex; justify-content: flex-end; border-top: 1px solid var(--zn-line-8); background: var(--zn-shade-20);">
         <button id="vm-connect-close" class="btn-console-act" style="background: var(--zn-glaze-8); color: var(--zn-text-soft); padding: 6px 16px;">
-          Close
+          ${t('diagnostics.close_btn', 'Close')}
         </button>
       </div>
     </div>
@@ -279,57 +310,37 @@ export function openKvmDiagnosticsModal(kvm = null) {
 
   const k = kvm || vmState.telemetry?.kvm || {};
   const isCgroupRestricted = k.cgroup_restricted || (k.substate === 'container_restricted');
-  const hasVirt = !!(k.hardware_virt || k.intel_vtx || k.amd_v);
-  const isModuleLoaded = !!k.module_loaded;
-  const hasNode = !!k.device_present;
 
   modal.innerHTML = `
     <div class="smart-modal-window kvm-diag-window" style="max-width: 580px; width: 92%; max-height: 85vh; display: flex; flex-direction: column;">
       <div class="smart-modal-header" style="cursor: move;">
         <div class="smart-modal-title" style="display: flex; align-items: center; gap: 8px;">
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          <span>KVM Acceleration & Host Diagnostics</span>
+          <span>${t('vmc.kvm_title', 'Virtualization checks (KVM)')}</span>
         </div>
-        <button id="kvm-diag-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px;">✕</button>
+        <button id="kvm-diag-close" class="modal-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px;">✕</button>
       </div>
 
       <div class="smart-modal-body" style="flex: 1; overflow-y: auto; padding: 18px 22px; display: flex; flex-direction: column; gap: 14px;">
         <!-- Status Banner -->
         <div style="padding: 12px 14px; border-radius: 8px; background: ${k.state === 'active' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)'}; border: 1px solid ${k.state === 'active' ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'};">
           <div style="font-weight: 700; color: ${k.state === 'active' ? '#34d399' : '#fbbf24'}; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-            <span>${k.state === 'active' ? '✓' : '⚠️'}</span>
-            <span>${escapeHtml(k.badge || 'KVM Status')}</span>
+            <span aria-hidden="true">${k.state === 'active' ? '✓' : '⚠️'}</span>
+            <span>${escapeHtml(k.badge || t('vmc.kvm_status', 'KVM status'))}</span>
           </div>
           <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-top: 4px; line-height: 1.4;">
-            ${escapeHtml(k.remediation || (k.state === 'active' ? 'Kernel-based Virtual Machine (KVM) hardware acceleration is fully active.' : 'Virtualization is partially restricted.'))}
+            ${escapeHtml(k.remediation || (k.state === 'active' ? t('vmc.kvm_ok', 'Hardware acceleration (KVM) is fully on.') : t('vmc.kvm_partial', 'Virtualization is partly restricted.')))}
           </div>
         </div>
 
         <!-- 4-Tier Diagnostics Grid -->
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Multi-Tier Diagnostics</div>
-          
+          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">${t('vmc.checks', 'Checks')}</div>
+          ${kvmChecks(k).map((c) => `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 6px; font-size: var(--zn-fs-xs);">
-            <span>Tier 1: Host CPU Virtualization (VT-x / AMD-V)</span>
-            <span style="font-weight: 700; color: ${hasVirt ? '#34d399' : '#f87171'};">${hasVirt ? '✓ Supported' : '✕ Disabled in BIOS'}</span>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 6px; font-size: var(--zn-fs-xs);">
-            <span>Tier 2: Host Kernel Module (kvm_intel / kvm_amd)</span>
-            <span style="font-weight: 700; color: ${isModuleLoaded ? '#34d399' : '#fbbf24'};">${isModuleLoaded ? '✓ Loaded' : '⚠️ Module Missing'}</span>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 6px; font-size: var(--zn-fs-xs);">
-            <span>Tier 3: Device Character Node (/dev/kvm)</span>
-            <span style="font-weight: 700; color: ${hasNode ? '#34d399' : '#f87171'};">${hasNode ? '✓ Present on Host' : '✕ Node Missing'}</span>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 6px; font-size: var(--zn-fs-xs);">
-            <span>Tier 4: Container Device Cgroup Access</span>
-            <span style="font-weight: 700; color: ${k.device_writable ? '#34d399' : isCgroupRestricted ? '#fbbf24' : '#f87171'};">
-              ${k.device_writable ? '✓ Accessible' : isCgroupRestricted ? '⚠️ Cgroup Restricted (EPERM)' : '✕ Denied'}
-            </span>
-          </div>
+            <span>${c.label}</span>
+            <span style="font-weight: 700; color: var(--zn-text-${c.tone});">${ico(c.icon)} ${c.text}</span>
+          </div>`).join('')}
         </div>
 
         ${
@@ -337,18 +348,18 @@ export function openKvmDiagnosticsModal(kvm = null) {
             ? `
           <!-- Container Remediation Fix Snippet -->
           <div style="background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 12px;">
-            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); margin-bottom: 6px;">How to Fix (Docker / Unraid Container Configuration)</div>
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); margin-bottom: 6px;">${t('vmc.fix_title', 'How to fix it (Docker or Unraid container settings)')}</div>
             <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 8px;">
-              Add the physical device mapping so the Linux kernel permits container access:
+              ${t('vmc.fix_desc', 'Pass the device through so the kernel lets the container use it:')}
             </div>
             
             <div style="position: relative; margin-bottom: 8px;">
               <pre style="margin: 0; padding: 8px 12px; background: var(--lt-b-0c121cff, #0c121c); border: 1px solid var(--zn-line-10); border-radius: 4px; font-size: var(--zn-fs-xs); color: var(--zn-text-accent); font-family: monospace;">--device /dev/kvm</pre>
-              <button id="btn-copy-kvm-param" class="btn-pill-toggle" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: var(--zn-fs-xs); padding: 2px 8px;">Copy</button>
+              <button id="btn-copy-kvm-param" class="btn-pill-toggle" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: var(--zn-fs-xs); padding: 2px 8px;">${t('catalog.copy', 'Copy')}</button>
             </div>
 
             <div style="font-size: var(--zn-fs-xs); color: var(--muted);">
-              <strong>Unraid:</strong> Edit container template → Click 'Advanced View' → Add <code>--device /dev/kvm</code> in <strong>Extra Parameters</strong>.
+              <strong>Unraid:</strong> ${t('vmc.fix_unraid', 'Edit the container template, turn on Advanced View, and add the flag above under Extra Parameters.')}
             </div>
           </div>
         `
@@ -357,7 +368,7 @@ export function openKvmDiagnosticsModal(kvm = null) {
       </div>
 
       <div class="smart-modal-footer" style="display: flex; justify-content: flex-end; padding: 12px 20px; border-top: 1px solid var(--zn-line-8); background: var(--zn-shade-20);">
-        <button id="kvm-diag-ok" class="btn-pill-toggle">Close</button>
+        <button id="kvm-diag-ok" class="btn-pill-toggle">${t('diagnostics.close_btn', 'Close')}</button>
       </div>
     </div>
   `;

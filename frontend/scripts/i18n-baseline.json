@@ -1,6 +1,6 @@
 {
   "raw_toasts": 0,
-  "hardcoded_ui": 1454,
+  "hardcoded_ui": 1382,
   "missing_plurals": 0,
   "to_fixed": 70,
   "emoji_strings": 137,
@@ -32,8 +32,8 @@
     "frontend/src/components/setup-wizard.js": 1,
     "frontend/src/components/spotlight.js": 3,
     "frontend/src/components/stack-modal.js": 50,
-    "frontend/src/components/vm-manager.js": 44,
-    "frontend/src/components/vm/connect-modal.js": 34,
+    "frontend/src/components/vm-manager.js": 2,
+    "frontend/src/components/vm/connect-modal.js": 4,
     "frontend/src/components/vm/console.js": 43,
     "frontend/src/components/vm/iso-manager.js": 20,
     "frontend/src/components/vm/snapshots.js": 26,

@@ -184,7 +184,7 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
       expect(kvmBadge.textContent).toContain('KVM Accelerated');
 
       const headroomText = document.getElementById('vm-headroom-text');
-      expect(headroomText.textContent).toContain('20.8 GB Safe Headroom');
+      expect(headroomText.textContent).toContain('20.8 GB free for VMs (8 GB in use)');
 
       const cards = document.querySelectorAll('.glassmorphic-card');
       expect(cards.length).toBeGreaterThan(0);
@@ -979,7 +979,7 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
       const modal = document.getElementById('modal-vm-connect');
       expect(modal).not.toBeNull();
       expect(modal.classList.contains('open')).toBe(true);
-      expect(modal.textContent).toContain('Multi-Protocol Connect: enterprise-server');
+      expect(modal.textContent).toContain('Connect to enterprise-server');
       expect(modal.textContent).toContain('192.168.1.150');
       expect(modal.textContent).toContain('vnc://');
       expect(modal.textContent).toContain('5902');

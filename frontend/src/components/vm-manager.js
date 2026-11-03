@@ -14,20 +14,23 @@ import { showToast, showConfirmToast, showBottomSheet } from '../toast.js';
 import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { vmState } from './vm/state.js';
-import { openKvmDiagnosticsModal, openVmConnectModal } from './vm/connect-modal.js';
+import { openKvmDiagnosticsModal, openVmConnectModal, vmStateLabel } from './vm/connect-modal.js';
 import { copyToClipboard, openVmConsole, openVmConsoleSeparateWindow } from './vm/console.js';
 import { openVmCreateModal } from './vm/create-modal.js';
 import { openQemuErrorModal, openVmEditModal } from './vm/edit-modal.js';
 import { openIsoManagerModal } from './vm/iso-manager.js';
 import { openVmSnapshotsModal } from './vm/snapshots.js';
 import '../styles/vm-lazy.css'; // the VM windows' own sheet loads with this code (PERF-9)
-export { openKvmDiagnosticsModal, openVmConnectModal } from './vm/connect-modal.js';
+export { kvmChecks, openKvmDiagnosticsModal, openVmConnectModal, vmStateLabel } from './vm/connect-modal.js';
 export { applyTerminalStream, formatAnsiToHtml, parseAnsiToHtml } from './vm/console-ansi.js';
 export { _activeRfb, _activeSerialWs, _consoleReconnectAttempts, _handleRfbKeyFallback, _reconnectTimer, _scheduleConsoleReconnect, _sendCtrlCToRfb, _sendKeyToRfb, _serialBuffers, cancelConsoleReconnect, clearConsoleReconnectTimer, copyToClipboard, focusActiveConsole, getActiveConsoleTarget, hideConsoleBanner, openVmConsole, openVmConsoleSeparateWindow, pasteTextToGuestConsole, serialKeyToData, setConsoleFocus, showConsoleBanner } from './vm/console.js';
 export { openVmCreateModal } from './vm/create-modal.js';
 export { openQemuErrorModal, openVmEditModal } from './vm/edit-modal.js';
 export { OFFICIAL_ISO_CATALOG, openIsoManagerModal } from './vm/iso-manager.js';
 export { openVmSnapshotsModal } from './vm/snapshots.js';
+
+// An icon next to translated words: screen readers skip it (UX-35)
+const ico = (e) => `<span aria-hidden="true">${e}</span>`;
 
 export function initVmManager() {
   if (window._vmManagerInitialized) return;
@@ -83,7 +86,7 @@ export function initVmManager() {
         <div id="vm-telemetry-header" class="vm-telemetry-header" style="display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--zn-shade-25); border-bottom: 1px solid var(--zn-line-6);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
             <div id="vm-kvm-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: var(--zn-fs-xs); font-weight: 600; background: rgba(16,185,129,0.15); color: var(--zn-text-ok); border: 1px solid rgba(16,185,129,0.3);">
-              <span aria-hidden="true">⚡</span> <span>Loading KVM Status...</span>
+              <span aria-hidden="true">⚡</span> <span>${t('vmm.loading_kvm', 'Checking virtualization support…')}</span>
             </div>
             <div class="vm-action-btns-wrap" style="display: flex; gap: 8px;">
               <button id="btn-vm-refresh" class="btn-pill-toggle" title="${t('vm.refresh', 'Refresh')}">
@@ -92,7 +95,7 @@ export function initVmManager() {
               </button>
               <button id="btn-vm-isos" class="btn-pill-toggle" title="${t('ui.iso_library_official_catalog', 'ISO Library & Official Catalog')}">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/></svg>
-                <span>ISO Library</span>
+                <span>${t('vmm.iso_library', 'ISO library')}</span>
               </button>
               <button id="btn-vm-create" class="btn-save-preset" style="background: var(--accent-cyan, #0ea5e9); border-color: rgba(14, 165, 233, 0.4); color: var(--zn-text-strong); font-weight: 700;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -105,7 +108,7 @@ export function initVmManager() {
             <!-- Memory Budget Card -->
             <div style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-5); border-radius: 8px; padding: 10px 14px;">
               <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); margin-bottom: 6px;">
-                <span style="color: var(--muted); font-weight: 600;" data-i18n="vm.host_reserve">${t('vm.host_reserve', 'Host Memory Reserve')} (10% Dynamic)</span>
+                <span style="color: var(--muted); font-weight: 600;" data-i18n="vm.host_reserve">${t('vm.host_reserve', 'Host Memory Reserve')} ${t('vmm.reserve_pct', '(10% of memory)')}</span>
                 <span id="vm-headroom-text" style="color: var(--zn-text-accent); font-weight: 700;">--</span>
               </div>
               <div style="height: 10px; border-radius: 5px; background: var(--zn-glaze-8); overflow: hidden; display: flex;" id="vm-memory-segments">
@@ -114,22 +117,22 @@ export function initVmManager() {
                 <div id="vm-seg-headroom" style="width: 0%; background: #10b981; transition: width 0.3s;" title="${t('ui.available_safe_headroom', 'Available Safe Headroom')}"></div>
               </div>
               <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 6px;">
-                <span>Total Host: <strong id="vm-total-ram" style="color:var(--zn-text-strong);">--</strong></span>
-                <span>Safe Ceiling: <strong id="vm-safe-ceiling" style="color:var(--zn-text-ok);">--</strong></span>
+                <span>${t('vmm.total_host', 'Total memory:')} <strong id="vm-total-ram" style="color:var(--zn-text-strong);">--</strong></span>
+                <span>${t('vmm.safe_ceiling', 'Safe limit for VMs:')} <strong id="vm-safe-ceiling" style="color:var(--zn-text-ok);">--</strong></span>
               </div>
             </div>
 
             <!-- CPU Thread Overcommit Card -->
             <div style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-5); border-radius: 8px; padding: 10px 14px;">
               <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); margin-bottom: 6px;">
-                <span style="color: var(--muted); font-weight: 600;">vCPU Thread Allocation</span>
-                <span id="vm-cpu-ratio-badge" style="font-size: var(--zn-fs-xs); padding: 1px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--zn-text-ok);">1:1 Physical</span>
+                <span style="color: var(--muted); font-weight: 600;">${t('vmm.vcpu_alloc', 'vCPU threads in use')}</span>
+                <span id="vm-cpu-ratio-badge" style="font-size: var(--zn-fs-xs); padding: 1px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--zn-text-ok);">${t('vmm.ratio_default', '1:1 physical')}</span>
               </div>
               <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px;">
                 <span style="font-size: 18px; font-weight: 700; color: var(--zn-text-strong);" id="vm-cpu-allocated">0</span>
-                <span style="font-size: var(--zn-fs-xs); color: var(--muted);">/ <span id="vm-cpu-threads">8</span> Host Threads</span>
+                <span style="font-size: var(--zn-fs-xs); color: var(--muted);">/ <span id="vm-cpu-threads">8</span> ${t('vmm.host_threads', 'host threads')}</span>
               </div>
-              <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 6px;" id="vm-cpu-note">Optimal execution. Dedicated physical thread capacity per vCPU.</div>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 6px;" id="vm-cpu-note">${t('ui.optimal_execution_dedicated_physical_thread', 'Optimal execution. Dedicated physical thread capacity per vCPU.')}</div>
             </div>
           </div>
         </div>
@@ -307,7 +310,7 @@ function renderTelemetry(tel) {
 
     const headroomTxt = document.getElementById('vm-headroom-text');
     if (headroomTxt) {
-      headroomTxt.textContent = `${mem.safe_headroom_gb} GB Safe Headroom (${mem.allocated_vm_ram_gb} GB in use)`;
+      headroomTxt.textContent = t('vmm.headroom', '{free} GB free for VMs ({used} GB in use)', { free: mem.safe_headroom_gb, used: mem.allocated_vm_ram_gb });
     }
 
     const totalRam = document.getElementById('vm-total-ram');
@@ -443,7 +446,7 @@ function buildVmCardHtml(vm, vms) {
         ? 'rgba(245,158,11,0.15)'
         : 'rgba(255,255,255,0.06)';
 
-      const stateBadge = `<span style="padding: 2px 7px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; background: ${statusBg}; color: ${statusColor}; text-transform: uppercase;">${vm.state}</span>`;
+      const stateBadge = `<span style="padding: 2px 7px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; background: ${statusBg}; color: ${statusColor}; text-transform: uppercase;">${escapeHtml(vmStateLabel(vm.state))}</span>`;
 
       const vncPort = vm.vnc_port || (5901 + (vms.findIndex((v) => v.id === vm.id) % 10));
       const vncDisplay = Math.max(1, vncPort - 5900);
@@ -472,21 +475,21 @@ function buildVmCardHtml(vm, vms) {
               ${osIcon}
               <div>
                 <div style="font-weight: 700; color: var(--zn-text-strong); font-size: 13px;">${escapeHtml(vm.name)}</div>
-                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(vm.description || 'Virtual Appliance')}</div>
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(vm.description || t('vmm.appliance', 'Virtual machine'))}</div>
               </div>
             </div>
             <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap; justify-content: flex-end;">
               ${
                 bootOrder === 'disk'
-                  ? `<span class="vm-boot-order-pill disk" title="${t('ui.boot_order_virtual_disk_first', 'Boot order: Virtual disk first')}">💽 Disk</span>`
-                  : `<span class="vm-boot-order-pill iso" title="${t('ui.boot_order_iso_installer_first', 'Boot order: ISO installer first')}">💿 ISO First</span>`
+                  ? `<span class="vm-boot-order-pill disk" title="${t('ui.boot_order_virtual_disk_first', 'Boot order: Virtual disk first')}">${ico('💽')} ${t('vmm.boot_disk', 'Disk')}</span>`
+                  : `<span class="vm-boot-order-pill iso" title="${t('ui.boot_order_iso_installer_first', 'Boot order: ISO installer first')}">${ico('💿')} ${t('vmm.boot_iso', 'ISO first')}</span>`
               }
               ${
                 isRunning
-                  ? `<span class="qemu-process-badge active" title="${t('ui.qemu_kvm_hypervisor_process_active', 'Virtual machine service running')}">● QEMU ${qemuPid ? `(${qemuPid})` : 'Active'}</span>`
+                  ? `<span class="qemu-process-badge active" title="${t('ui.qemu_kvm_hypervisor_process_active', 'Virtual machine service running')}">${ico('●')} QEMU ${qemuPid ? `(${qemuPid})` : t('vmm.active', 'active')}</span>`
                   : isPaused
-                  ? `<span class="qemu-process-badge paused" title="${t('ui.qemu_process_paused', 'QEMU process paused')}">⏸ QEMU Paused</span>`
-                  : `<span class="qemu-process-badge stopped" title="${t('ui.qemu_process_inactive', 'QEMU process inactive')}">○ QEMU Stopped</span>`
+                  ? `<span class="qemu-process-badge paused" title="${t('ui.qemu_process_paused', 'QEMU process paused')}">${ico('⏸')} ${t('vmm.qemu_paused', 'QEMU paused')}</span>`
+                  : `<span class="qemu-process-badge stopped" title="${t('ui.qemu_process_inactive', 'QEMU process inactive')}">${ico('○')} ${t('vmm.qemu_stopped', 'QEMU stopped')}</span>`
               }
               ${stateBadge}
             </div>
@@ -506,14 +509,14 @@ function buildVmCardHtml(vm, vms) {
             <div class="vm-telemetry-row">
               <div class="vm-telemetry-item">
                 <div class="vm-telemetry-header">
-                  <span>vCPU Load</span>
+                  <span>${t('vmm.cpu_load', 'vCPU load')}</span>
                   <span class="telemetry-val">${cpuUsagePct}%</span>
                 </div>
                 <div class="vm-telemetry-progress"><div class="fill-cpu" style="width: ${Math.min(100, Math.round(parseFloat(cpuUsagePct) * 4))}%;"></div></div>
               </div>
               <div class="vm-telemetry-item">
                 <div class="vm-telemetry-header">
-                  <span>RAM Used</span>
+                  <span>${t('vmm.ram_used', 'Memory used')}</span>
                   <span class="telemetry-val">${ramUsedGb} / ${vm.ram_gb} GB</span>
                 </div>
                 <div class="vm-telemetry-progress"><div class="fill-ram" style="width: ${Math.min(100, Math.round(ramUsagePct))}%;"></div></div>
@@ -528,7 +531,7 @@ function buildVmCardHtml(vm, vms) {
             <div style="display: flex; align-items: center; gap: 6px; font-family: monospace; font-size: var(--zn-fs-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
               <span style="color: var(--lt-t-f59e0bff, #f59e0b); display: inline-flex; align-items: center; gap: 3px;">
                 <span>VNC :${vncDisplay}</span>
-                <button class="btn-copy-vnc" data-uri="${escapeHtml(vncUri)}" style="background: none; border: none; cursor: pointer; color: var(--muted); padding: 1px 3px; display: inline-flex; align-items: center;" title="Copy VNC URI (${vncUri})">
+                <button class="btn-copy-vnc" data-uri="${escapeHtml(vncUri)}" style="background: none; border: none; cursor: pointer; color: var(--muted); padding: 1px 3px; display: inline-flex; align-items: center;" title="${escapeHtml(t('vmm.copy_vnc', 'Copy the VNC address ({uri})', { uri: vncUri }))}">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 </button>
               </span>
@@ -541,7 +544,7 @@ function buildVmCardHtml(vm, vms) {
               </span>
             </div>
             <button class="btn-vm-join-toggle" data-id="${vm.id}" style="background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.3); border-radius: 4px; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; cursor: pointer; flex-shrink: 0;" title="${t('ui.join_vm_connection_options', 'Join VM connection options')}">
-              Join ▾
+              ${t('vmm.join', 'Connect')} ${ico('▾')}
             </button>
           </div>
 
@@ -551,11 +554,11 @@ function buildVmCardHtml(vm, vms) {
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--zn-fs-xs); padding: 6px 10px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); border-radius: 4px; margin-bottom: 10px;">
               <span style="color: var(--zn-text-warn); font-weight: 600; display: flex; align-items: center; gap: 6px;">
                 <span aria-hidden="true">💿</span>
-                <span>ISO Attached (${escapeHtml(vm.iso_path.split('/').pop())})</span>
+                <span>${escapeHtml(t('vmm.iso_attached', 'ISO inserted ({name})', { name: vm.iso_path.split('/').pop() }))}</span>
               </span>
               <div style="display: flex; gap: 4px;">
                 <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: var(--zn-text-warn); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; cursor: pointer;">
-                  Open Console 🖥️
+                  ${t('vmm.open_console', 'Open console')} ${ico('🖥️')}
                 </button>
                 <button class="btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: var(--zn-text-warn); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; cursor: pointer;" title="${t('vm.open_separate', 'Open in Separate Window')}">
                   ↗
@@ -578,14 +581,14 @@ function buildVmCardHtml(vm, vms) {
 
               <!-- Quick Connect Popover -->
               <div id="vm-join-popover-${vm.id}" class="vm-join-popover" style="display: none;">
-                <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); padding-bottom: 4px; border-bottom: 1px solid var(--zn-line-6); margin-bottom: 4px;">CONNECT TO ${escapeHtml(vm.name).toUpperCase()}</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); padding-bottom: 4px; border-bottom: 1px solid var(--zn-line-6); margin-bottom: 4px;">${escapeHtml(t('vmm.connect_to', 'Connect to {name}', { name: vm.name }))}</div>
                 <div class="join-popover-item btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}">
                   <span>🖥️ ${t('vm.open_gui', 'Open KVM GUI Desktop (Display :0)')}</span>
                   <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-accent);">noVNC</span>
                 </div>
                 <div class="join-popover-item btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui">
                   <span>↗ ${t('vm.open_separate', 'Open in Separate Window')}</span>
-                  <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-accent);">Pop Out</span>
+                  <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-accent);">${t('vmm.pop_out', 'Pop out')}</span>
                 </div>
                 <div class="join-popover-item btn-join-console" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}">
                   <span>📟 ${t('vm.open_serial', 'Open Serial Terminal (TTY)')}</span>
@@ -597,7 +600,7 @@ function buildVmCardHtml(vm, vms) {
                 </div>
                 <div class="join-popover-item btn-join-vnc" data-id="${vm.id}">
                   <span>🔗 ${t('vm.native_vnc', 'Native VNC Client (vnc://)')}</span>
-                  <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-f59e0bff, #f59e0b);">Port ${vncPort}</span>
+                  <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-f59e0bff, #f59e0b);">${t('vmm.port', 'Port {port}', { port: vncPort })}</span>
                 </div>
                 <div class="join-popover-item btn-join-rdp" data-ip="${escapeHtml(vm.ip_address)}">
                   <span>🪟 ${t('vm.rdp', 'Remote Desktop (RDP)')}</span>
@@ -612,7 +615,7 @@ function buildVmCardHtml(vm, vms) {
                   <span style="font-size: var(--zn-fs-xs); font-family: monospace; color: var(--zn-text-accent);">${escapeHtml(vm.ip_address)}</span>
                 </div>
                 <div class="join-popover-item btn-join-details" data-id="${vm.id}" style="border-top: 1px solid var(--zn-line-8); margin-top: 2px; color: var(--zn-text-accent);">
-                  <span>⚡ Multi-Protocol Drawer...</span>
+                  <span>${ico('⚡')} ${t('vmm.drawer', 'All ways to connect…')}</span>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                 </div>
               </div>
@@ -623,11 +626,11 @@ function buildVmCardHtml(vm, vms) {
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--zn-fs-xs); padding: 6px 10px; background: rgba(14,165,233,0.08); border: 1px solid rgba(14,165,233,0.2); border-radius: 4px; margin-bottom: 10px;">
               <span style="color: var(--zn-text-accent); display: flex; align-items: center; gap: 6px;">
                 <span aria-hidden="true">🖥️</span>
-                <span>Console Display Active</span>
+                <span>${t('vmm.console_active', 'Display is on')}</span>
               </span>
               <div style="display: flex; gap: 4px;">
                 <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(14,165,233,0.2); border: 1px solid rgba(14,165,233,0.4); border-radius: 4px; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; cursor: pointer;">
-                  Open Console 🖥️
+                  ${t('vmm.open_console', 'Open console')} ${ico('🖥️')}
                 </button>
                 <button class="btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui" style="background: rgba(14,165,233,0.2); border: 1px solid rgba(14,165,233,0.4); border-radius: 4px; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; cursor: pointer;" title="${t('vm.open_separate', 'Open in Separate Window')}">
                   ↗
@@ -649,7 +652,7 @@ function buildVmCardHtml(vm, vms) {
             </button>
             <button class="btn-vm-action btn-vm-edit" data-id="${vm.id}" title="${t('ui.edit_vm_configuration', 'Edit VM Configuration')}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-              <span>Edit</span>
+              <span>${t('vmm.edit', 'Edit')}</span>
             </button>
             <button class="btn-vm-action btn-vm-snapshots" data-id="${vm.id}" title="${t('vm.snapshots', 'Snapshots & Rollback')}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -671,15 +674,15 @@ function buildVmCardHtml(vm, vms) {
             </button>
             <button class="btn-vm-action btn-vm-restart" data-id="${vm.id}" data-act="restart" style="flex: 1;" title="${t('ui.restart_vm', 'Restart VM')}">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-              <span>Restart</span>
+              <span>${t('vmm.restart', 'Restart')}</span>
             </button>
             <button class="btn-vm-action btn-vm-acpi" data-id="${vm.id}" data-act="stop" style="flex: 1;" title="${t('ui.acpi_shutdown_graceful_power_off', 'ACPI Shutdown (Graceful Power Off)')}">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
-              <span>Shutdown</span>
+              <span>${t('vmm.shutdown', 'Shut down')}</span>
             </button>
             <button class="btn-vm-action btn-vm-stop btn-vm-force-off" data-id="${vm.id}" data-act="force_off" style="flex: 1;" title="${t('ui.force_stop_hard_power_cut', 'Force Stop (Hard Power Cut)')}">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
-              <span>Force Stop</span>
+              <span>${t('vmm.force_stop', 'Force stop')}</span>
             </button>
             <button class="btn-vm-gui" data-id="${vm.id}" title="${t('vm.gui', 'KVM GUI')}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -691,7 +694,7 @@ function buildVmCardHtml(vm, vms) {
             </button>
             <button class="btn-vm-action btn-vm-edit" data-id="${vm.id}" title="${t('ui.edit_vm_configuration', 'Edit VM Configuration')}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-              <span>Edit</span>
+              <span>${t('vmm.edit', 'Edit')}</span>
             </button>
             <button class="btn-vm-action btn-vm-snapshots" data-id="${vm.id}" title="${t('vm.snapshots', 'Snapshots & Rollback')}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -709,15 +712,15 @@ function buildVmCardHtml(vm, vms) {
             </button>
             <button class="btn-vm-action btn-vm-acpi" data-id="${vm.id}" data-act="stop" style="flex: 1;" title="${t('ui.acpi_shutdown', 'ACPI Shutdown')}">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
-              <span>Shutdown</span>
+              <span>${t('vmm.shutdown', 'Shut down')}</span>
             </button>
             <button class="btn-vm-action btn-vm-stop btn-vm-force-off" data-id="${vm.id}" data-act="force_off" style="flex: 1;" title="${t('ui.force_stop', 'Force Stop')}">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
-              <span>Force Stop</span>
+              <span>${t('vmm.force_stop', 'Force stop')}</span>
             </button>
             <button class="btn-vm-action btn-vm-edit" data-id="${vm.id}" title="${t('ui.edit_vm_configuration', 'Edit VM Configuration')}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-              <span>Edit</span>
+              <span>${t('vmm.edit', 'Edit')}</span>
             </button>
             <button class="btn-vm-action btn-vm-snapshots" data-id="${vm.id}" title="${t('vm.snapshots', 'Snapshots & Rollback')}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -740,11 +743,11 @@ function bindVmGridHandlers(grid) {
       e.stopPropagation();
       const vmId = btn.dataset.id;
       const targetVm = vmState.list.find((v) => v.id === vmId);
-      const name = targetVm ? targetVm.name : 'Virtual Machine';
+      const name = targetVm ? targetVm.name : t('vmm.appliance', 'Virtual machine');
       const stateStr = (targetVm?.state || 'stopped').toLowerCase();
       const isRunning = stateStr === 'running';
       const isPaused = stateStr === 'paused';
-      const card = btn.closest('.vm-card');
+      const card = btn.closest('[data-vm-id]'); // the menu's items click the card's own buttons
       const items = [];
 
       if (isRunning) {
@@ -753,31 +756,31 @@ function bindVmGridHandlers(grid) {
           { icon: '⌨️', label: t('vm.console', 'Console (Serial TTY)'), onClick: () => openVmConsole(vmId, name, 'cli') },
           { icon: '📸', label: t('vm.snapshots', 'Snapshots & Rollback'), onClick: () => openVmSnapshotsModal(vmId) },
           { icon: '⏸️', label: t('vm.pause', 'Pause VM'), onClick: () => card?.querySelector('.btn-vm-pause')?.click() },
-          { icon: '🔄', label: 'Restart VM', onClick: () => card?.querySelector('.btn-vm-restart')?.click() },
-          { icon: '⏻', label: 'ACPI Shutdown', onClick: () => card?.querySelector('.btn-vm-acpi')?.click() },
-          { icon: '⏹️', label: 'Force Stop (Hard Power Cut)', destructive: true, onClick: () => card?.querySelector('.btn-vm-force-off')?.click() },
-          { icon: '✏️', label: 'Edit VM Configuration', onClick: () => openVmEditModal(vmId) }
+          { icon: '🔄', label: t('vmm.restart_vm', 'Restart VM'), onClick: () => card?.querySelector('.btn-vm-restart')?.click() },
+          { icon: '⏻', label: t('vmm.acpi', 'Shut down (ACPI)'), onClick: () => card?.querySelector('.btn-vm-acpi')?.click() },
+          { icon: '⏹️', label: t('vmm.force_off', 'Force stop (cuts the power)'), destructive: true, onClick: () => card?.querySelector('.btn-vm-force-off')?.click() },
+          { icon: '✏️', label: t('vmd.edit_settings', 'Edit VM settings'), onClick: () => openVmEditModal(vmId) }
         );
       } else if (isPaused) {
         items.push(
           { icon: '▶️', label: t('vm.resume', 'Resume VM'), onClick: () => card?.querySelector('.btn-vm-resume')?.click() },
           { icon: '📸', label: t('vm.snapshots', 'Snapshots & Rollback'), onClick: () => openVmSnapshotsModal(vmId) },
-          { icon: '⏻', label: 'ACPI Shutdown', onClick: () => card?.querySelector('.btn-vm-acpi')?.click() },
-          { icon: '⏹️', label: 'Force Stop (Hard Power Cut)', destructive: true, onClick: () => card?.querySelector('.btn-vm-force-off')?.click() },
-          { icon: '✏️', label: 'Edit VM Configuration', onClick: () => openVmEditModal(vmId) }
+          { icon: '⏻', label: t('vmm.acpi', 'Shut down (ACPI)'), onClick: () => card?.querySelector('.btn-vm-acpi')?.click() },
+          { icon: '⏹️', label: t('vmm.force_off', 'Force stop (cuts the power)'), destructive: true, onClick: () => card?.querySelector('.btn-vm-force-off')?.click() },
+          { icon: '✏️', label: t('vmd.edit_settings', 'Edit VM settings'), onClick: () => openVmEditModal(vmId) }
         );
       } else {
         items.push(
-          { icon: '▶️', label: 'Start VM', onClick: () => card?.querySelector('.btn-vm-start')?.click() },
+          { icon: '▶️', label: t('vmm.start_vm', 'Start VM'), onClick: () => card?.querySelector('.btn-vm-start')?.click() },
           { icon: '📸', label: t('vm.snapshots', 'Snapshots & Rollback'), onClick: () => openVmSnapshotsModal(vmId) },
-          { icon: '✏️', label: 'Edit VM Configuration', onClick: () => openVmEditModal(vmId) },
+          { icon: '✏️', label: t('vmd.edit_settings', 'Edit VM settings'), onClick: () => openVmEditModal(vmId) },
           { icon: '🗑️', label: t('vm.delete', 'Delete VM'), destructive: true, onClick: () => card?.querySelector('.btn-vm-delete')?.click() }
         );
       }
 
       showBottomSheet({
         title: name,
-        subtitle: `${stateStr.toUpperCase()} • ${targetVm?.vcpus || 2} vCPU • ${targetVm?.memory_mb || 2048} MB`,
+        subtitle: `${vmStateLabel(stateStr)} • ${targetVm?.vcpus || 2} vCPU • ${targetVm?.memory_mb || 2048} MB`,
         items,
       });
     };
