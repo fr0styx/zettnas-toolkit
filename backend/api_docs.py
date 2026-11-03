@@ -82,6 +82,7 @@ OWN_RATE_LIMITS = {
     "POST /auth/mfa/challenge": "Failed second steps lock the address and the account for a while.",
     "POST /auth/mfa/enable": "Wrong passwords lock MFA changes for this account for a while.",
     "POST /auth/mfa/disable": "Wrong passwords lock MFA changes for this account for a while.",
+    "POST /auth/me/smb-password": "Wrong passwords lock this for the account for a while.",
     "POST /security": "Wrong current passwords lock password changes from this address for a while.",
     "POST /users/{user_id}/password": "Wrong current passwords lock this account's password changes for a while.",
     "GET /invite/{token}": "20 attempts an hour per address.",

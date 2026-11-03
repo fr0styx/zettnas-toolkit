@@ -81,6 +81,15 @@ def masked_config() -> dict[str, Any]:
     return cfg
 
 
+HTTP_ISSUER = "Use the provider's https:// address: over http:// the sign-in codes and tokens travel in the clear."
+
+
+def insecure_issuer(issuer: str) -> bool:
+    """An http:// provider that isn't on this machine (B11, SEC-29; refused since 1.12 per D11)."""
+    p = urllib.parse.urlparse(str(issuer or ""))
+    return p.scheme == "http" and (p.hostname or "") not in ("localhost", "127.0.0.1", "::1")
+
+
 @json_locked(lambda *a, **k: CONFIG_FILE)
 def save_config(changes: dict[str, Any]) -> dict[str, Any]:
     cfg = load_config()
@@ -97,6 +106,8 @@ def save_config(changes: dict[str, Any]) -> dict[str, Any]:
             raise OidcError("The issuer must be an http(s) URL")
         if p.hostname in ("169.254.169.254", "metadata.google.internal"):
             raise OidcError("That address is not allowed")
+        if insecure_issuer(issuer):
+            raise OidcError(HTTP_ISSUER)
     cfg["issuer"] = issuer
     cfg["admin_groups"] = [str(g) for g in cfg.get("admin_groups") or []]
     cfg["role_map"] = {str(k): str(v) for k, v in (cfg.get("role_map") or {}).items()}
@@ -132,6 +143,8 @@ def start_login(request_base: str, client: httpx.Client | None = None) -> str:
     cfg = load_config()
     if not public_config()["enabled"]:
         raise OidcError("Single sign-on is not set up")
+    if insecure_issuer(cfg["issuer"]):  # saved before 1.12 (D11)
+        raise OidcError(HTTP_ISSUER)
     with client or httpx.Client() as c:
         meta = discover(cfg["issuer"], c)
     state, nonce, verifier = secrets.token_urlsafe(24), secrets.token_urlsafe(24), secrets.token_urlsafe(48)

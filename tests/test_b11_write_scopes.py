@@ -12,6 +12,7 @@ OWN_OR_SIGN_IN = {
     "/api/v1/auth/mfa/setup": "their own two-factor",
     "/api/v1/auth/mfa/enable": "their own two-factor",
     "/api/v1/auth/mfa/disable": "their own two-factor (password and code)",
+    "/api/v1/auth/me/smb-password": "their own shared folders password (current password)",
     "/api/v1/auth/sessions": "their own sessions",
     "/api/v1/auth/sessions/{session_id_hash}": "their own sessions",
     "/api/v1/auth/ticket": "a ticket for their own session",

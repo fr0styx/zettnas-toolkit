@@ -3498,7 +3498,10 @@
                   <button type="button" id="btn-disable-2fa" class="suite-toolkit-btn danger" style="padding: 8px 16px; font-size: var(--zn-fs-sm); display: none;" data-i18n="users.2fa_turn_off">
                     Turn off two-step sign-in
                   </button>
+                  <button type="button" id="btn-smb-password" class="btn-pill-toggle" hidden data-i18n="smb.make">Shared folders password</button>
                 </div>
+                <p id="smb-password-why" class="smb-pw-why" hidden data-i18n="smb.why">With two-step sign-in on, your account password no longer opens the shared folders over the network. Make a separate password for them here.</p>
+                <div id="smb-password-box" class="smb-pw-box" hidden></div>
                 <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                   <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="users.2fa_more">Change your username, password or API keys?</div>
                   <button type="button" class="btn-pill-toggle" id="btn-jump-to-security" style="color: var(--zn-text-strong);" data-i18n="users.2fa_more_btn">Account and password →</button>

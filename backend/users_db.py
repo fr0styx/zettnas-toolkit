@@ -627,13 +627,58 @@ def update_user_password(
     if res.rowcount > 0:
         try:
             user = get_user_by_id(user_id, db_path=db_path)
-            if user:
+            # a two-factor account's password never opens SMB: it has its own SMB password (SEC-28)
+            if user and not user.get("mfa_enabled"):
                 from backend.services.samba_engine import get_samba_engine
 
                 get_samba_engine().sync_samba_user(username=user["username"], password=new_password)
         except Exception:
             ignored("backend.users_db.update_user_password")
     return res.rowcount > 0
+
+
+def _smb_password() -> str:
+    """Four groups of five letters and digits, easy to type into a computer once."""
+    alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
+    return "-".join("".join(secrets.choice(alphabet) for _ in range(5)) for _ in range(4))
+
+
+def set_smb_password(user_id: str, db_path: str | None = None) -> str | None:
+    """A new SMB-only password for this person, returned once (SEC-28: two-factor accounts reach
+    the shares with it instead of their account password). None when Samba could not take it."""
+    user = get_user_by_id(user_id, db_path=db_path)
+    if not user:
+        return None
+    from backend.services.samba_engine import get_samba_engine
+
+    password = _smb_password()
+    return password if get_samba_engine().sync_samba_user(username=user["username"], password=password) else None
+
+
+def seal_smb_for_two_factor(user_id: str, db_path: str | None = None) -> None:
+    """After two-factor is turned on, the account password stops opening SMB (SEC-28)."""
+    user = get_user_by_id(user_id, db_path=db_path)
+    if not user:
+        return
+    try:
+        from backend.services.samba_engine import get_samba_engine
+
+        get_samba_engine().sync_samba_user(username=user["username"], password=secrets.token_urlsafe(32))
+    except (OSError, RuntimeError, ValueError):
+        ignored("backend.users_db.seal_smb_for_two_factor")
+
+
+def seal_smb_for_existing_two_factor(marker: str, db_path: str | None = None) -> int:
+    """Once, on the first start of 1.12: accounts that already had two-factor (D11)."""
+    if os.path.exists(marker):
+        return 0
+    with users_db_session(db_path) as conn:
+        ids = [r[0] for r in conn.execute("SELECT id FROM users WHERE mfa_enabled = 1").fetchall()]
+    for uid in ids:
+        seal_smb_for_two_factor(uid, db_path=db_path)
+    with open(marker, "w", encoding="utf-8") as f:
+        f.write(f"{len(ids)}\n")
+    return len(ids)
 
 
 def _evict_user_caches(user_id: str) -> None:
@@ -711,6 +756,9 @@ def update_user_profile(
         changed = res.rowcount > 0
     if role_id is not None or status is not None:
         _evict_user_caches(user_id)
+        from backend.services.samba_engine import refresh_access
+
+        refresh_access()  # their SMB access follows the new role or status (SEC-28)
     return changed
 
 

@@ -726,6 +726,9 @@ async def enable_mfa(data: MfaEnableRequest, request: Request):
     ok = enable_user_mfa(user["id"], data.secret, hashed_codes)
     if not ok:
         return error_response(500, "Failed to enable two-factor authentication.")
+    from backend.users_db import seal_smb_for_two_factor
+
+    seal_smb_for_two_factor(user["id"])  # SMB needs its own password from now on (SEC-28)
 
     log_security_event(
         "auth.mfa.enabled",
@@ -739,6 +742,48 @@ async def enable_mfa(data: MfaEnableRequest, request: Request):
         "message": "Two-factor authentication enabled successfully.",
         "recovery_codes": rec_codes,
     }
+
+
+class SmbPasswordRequest(BaseModel):
+    current_password: str = ""
+
+
+@router.post("/auth/me/smb-password")
+async def new_smb_password(data: SmbPasswordRequest, request: Request):
+    """A password for the network shares only, shown once (B11, SEC-28): with two-factor sign-in
+    on, the account password no longer opens SMB, which can't ask for a code."""
+    user = _get_authenticated_user(request)
+    if not user:
+        return error_response(401, "Not authenticated.")
+    if not _is_person_session(user):
+        return error_response(
+            403, "Make a network share password while signed in to ZettNAS.", error="session_required"
+        )
+    lock_key = f"smbpw:{user['id']}"
+    wait = _lockout_remaining(lock_key)
+    if wait > 0:
+        return _rate_limited(wait)
+    if not await _verify_current_password(user, data.current_password):
+        _register_failure(lock_key, is_ip=False)
+        return error_response(403, "Enter your current password.", error="invalid_credentials")
+    _clear_failures(lock_key)
+    if not (get_user_mfa(user["id"]) or {}).get("mfa_enabled"):
+        return error_response(400, "Your account password already opens the network shares.", error="not_needed")
+    from backend.users_db import set_smb_password
+
+    password = await run_in_threadpool(set_smb_password, user["id"])
+    if not password:
+        return error_response(
+            503, "The network share service didn't take the password. Try again later.", error="smb_unavailable"
+        )
+    log_security_event(
+        "auth.smb_password",
+        "success",
+        actor_id=user["id"],
+        actor_username=user["username"],
+        actor_ip=_client_ip(request),
+    )
+    return {"username": user["username"], "password": password}
 
 
 @router.post("/auth/mfa/disable")

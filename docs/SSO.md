@@ -46,15 +46,19 @@ The login screen then shows **Sign in with <label>**.
 
 ## Security notes
 
-- Use HTTPS for the provider. The ID token is checked for issuer, audience, expiry and
-  nonce, and the code exchange uses PKCE.
+- The provider must be an `https://` address (since 1.12; one on this machine, such as
+  `http://127.0.0.1`, is the exception). The ID token is checked for issuer, audience,
+  expiry and nonce, and the code exchange uses PKCE.
+- A sign-in finishes only in the browser that started it (a cookie carries its state), so
+  a sign-in link sent to someone else can't sign them in to your account.
 - The client secret is stored in `data/oidc.json` (readable by root only) and never sent
   back to the browser.
 
 ## LDAP and Active Directory
 
 Under **Security → LDAP / Active Directory**, enter the server (`ldaps://dc.home.lan`, or
-`ldap://` with **StartTLS**), the base DN, and a read-only service account that can look
+`ldap://` with **StartTLS**; since 1.12 plain `ldap://` without StartTLS is refused, so no
+password crosses the network in the clear), the base DN, and a read-only service account that can look
 users up. People then sign in on the normal login screen with their directory name and
 password.
 

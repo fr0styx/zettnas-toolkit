@@ -92,6 +92,9 @@ function bindUsersPane() {
   const btnDisable2fa = document.getElementById('btn-disable-2fa');
   if (btnDisable2fa) btnDisable2fa.onclick = disable2FA;
 
+  const btnSmbPassword = document.getElementById('btn-smb-password');
+  if (btnSmbPassword) btnSmbPassword.onclick = () => import('./smb-password.js').then((m) => m.askForSmbPassword());
+
   const btnJumpToSecurity = document.getElementById('btn-jump-to-security');
   if (btnJumpToSecurity && !btnJumpToSecurity.dataset.bound) {
     btnJumpToSecurity.dataset.bound = 'true';
@@ -654,6 +657,11 @@ export async function load2FAStatus() {
 
     if (btnEnable) btnEnable.style.display = isEnabled ? 'none' : 'inline-flex';
     if (btnDisable) btnDisable.style.display = isEnabled ? 'inline-flex' : 'none';
+    // SEC-28: with two-step sign-in the shared folders need their own password
+    for (const id of ['btn-smb-password', 'smb-password-why']) {
+      const node = document.getElementById(id);
+      if (node) node.hidden = !isEnabled;
+    }
 
   } catch (err) {
     console.warn('[USERS] Failed to fetch 2FA status:', err);

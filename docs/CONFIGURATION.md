@@ -31,7 +31,7 @@ used keeps its default, and the log says which variable and why.
 | `ZETTNAS_PUSH_CONTACT` | `https://github.com/fr0styx/zettnas-toolkit` | Contact address sent to browser push services with each notification. |
 | `PORT` | `8082` | Port of the web interface. (1–65535) |
 | `TRUSTED_PROXIES` | `127.0.0.1, ::1` | Reverse proxies whose X-Forwarded-For is believed (comma-separated). |
-| `ENABLE_PROXY_SSO` | `off` | Accept a signed-in user from a trusted proxy's header. |
+| `ENABLE_PROXY_SSO` | `off` | Accept a signed-in user from a trusted proxy's header. Since 1.12 the header reaches only accounts the proxy created; other accounts, admins included, sign in with their own password. |
 | `CSRF_TRUSTED_ORIGINS` | `(none)` | Extra origins allowed to send requests that change things (comma-separated). |
 | `ENABLE_API_DOCS` | `off` | Serve the interactive API documentation at /api/docs. |
 | `LOGIN_USER_CHOOSER` | `off` | Show a list of users on the sign-in page. |

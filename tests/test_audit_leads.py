@@ -21,7 +21,7 @@ def proxy_sso(monkeypatch):
 
 
 def test_proxy_sso_writes_need_this_servers_origin(client, proxy_sso):
-    sso = {"Remote-User": "admin"}
+    sso = {"Remote-User": "proxy_writer"}  # an account the proxy made (since 1.12 it reaches no other)
     assert client.get("/api/auth/me", headers=sso).status_code == 200
     r = client.post("/api/auth/ticket", headers={**sso, "Origin": "http://cross-site.test"})
     assert r.status_code == 403 and r.json().get("error") == "csrf_blocked"

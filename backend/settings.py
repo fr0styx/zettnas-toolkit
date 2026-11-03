@@ -138,7 +138,11 @@ class Settings:
         group="Web",
     )
     enable_proxy_sso: bool = _s(
-        "ENABLE_PROXY_SSO", False, "Accept a signed-in user from a trusted proxy's header.", group="Web"
+        "ENABLE_PROXY_SSO",
+        False,
+        "Accept a signed-in user from a trusted proxy's header. Since 1.12 the header reaches only accounts "
+        "the proxy created; other accounts, admins included, sign in with their own password.",
+        group="Web",
     )
     csrf_trusted_origins: tuple[str, ...] = _s(
         "CSRF_TRUSTED_ORIGINS",

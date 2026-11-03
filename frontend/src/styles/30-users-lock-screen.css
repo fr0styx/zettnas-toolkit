@@ -212,3 +212,10 @@ body.desktop-locked #os-dock-container {
 .zn-datatable.users-table--narrow { min-width: 600px; }
 .users-table > thead > tr.users-thead { background: var(--zn-glaze-3); border-bottom: 1px solid var(--zn-line-8); letter-spacing: 0.5px; }
 .users-table > thead > tr > th { padding: 10px 12px; }
+
+/* Shared folders password for two-step accounts (SEC-28) */
+.smb-pw-why { font-size: var(--zn-fs-xs); color: var(--muted); margin: 10px 0 0; }
+.smb-pw-box { margin-top: 12px; padding: 12px; border-radius: 8px; border: 1px solid var(--zn-line-8); background: var(--zn-shade-20); }
+.smb-pw-note { font-size: var(--zn-fs-sm); color: var(--zn-text-soft); margin: 0 0 8px; }
+.smb-pw-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.smb-pw-value { font-family: var(--zn-font-mono, ui-monospace, monospace); font-size: var(--zn-fs); user-select: all; color: var(--zn-text-strong); }

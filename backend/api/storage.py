@@ -402,9 +402,13 @@ def put_share_access(req: ShareAccessUpdate) -> dict[str, Any]:
     if body["role_defaults"] is None:
         body["role_defaults"] = current["role_defaults"]
     try:
-        return save_config(body)
+        saved = save_config(body)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+    from backend.services.samba_engine import refresh_access
+
+    refresh_access()  # SMB follows share access (SEC-28)
+    return saved
 
 
 @router.post("/shares", dependencies=[Depends(require_scope("shares:manage"))])

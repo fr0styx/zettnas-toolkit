@@ -36162,6 +36162,17 @@
     "title": "SmartScheduleUpdateRequest",
     "type": "object"
    },
+   "SmbPasswordRequest": {
+    "properties": {
+     "current_password": {
+      "default": "",
+      "title": "Current Password",
+      "type": "string"
+     }
+    },
+    "title": "SmbPasswordRequest",
+    "type": "object"
+   },
    "SnapshotCreateModel": {
     "properties": {
      "pool_id": {
@@ -45212,6 +45223,51 @@
     "tags": [
      "Authentication & Security"
     ]
+   }
+  },
+  "/api/v1/auth/me/smb-password": {
+   "post": {
+    "description": "A password for the network shares only, shown once (B11, SEC-28): with two-factor sign-in\non, the account password no longer opens SMB, which can't ask for a code.",
+    "operationId": "new_smb_password_api_v1_auth_me_smb_password_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SmbPasswordRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
+     }
+    },
+    "summary": "New Smb Password",
+    "tags": [
+     "Authentication & Security"
+    ],
+    "x-rate-limit": {
+     "description": "Wrong passwords lock this for the account for a while."
+    }
    }
   },
   "/api/v1/auth/mfa/challenge": {

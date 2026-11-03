@@ -192,8 +192,8 @@ def _fix_ai_search_family() -> str:
     return "AI search is off for kids and guests."
 
 
-# --- sign-in (B11, SEC-29): warned for one release (D11), refused from the next ------------------
-NEXT = "From the next release ZettNAS refuses this."
+# --- sign-in (B11, SEC-29): warned in 1.11, refused since 1.12 (D11) ------------------------------
+NEXT = "Since 1.12 ZettNAS refuses this, so this sign-in doesn't work until it is changed."
 
 
 def _oidc_finding() -> dict[str, Any] | None:
@@ -264,65 +264,9 @@ def _proxy_sso_finding() -> dict[str, Any] | None:
         "penalty": 10,
         "severity": "medium",
         "details": f"{n} account(s) not made by the proxy, admins included, can be reached with the proxy's user header. "
-        f"{NEXT} The proxy will reach only the accounts it created.",
+        "Since 1.12 the proxy reaches only the accounts it created; these sign in with their own password.",
         "remediation": "Let the proxy create its own accounts, and keep admins on a password and two-factor sign-in.",
     }
-
-
-# --- SMB and the access model (B11, SEC-28): warned for one release (D11) ------------------------
-def _restricted(entry: dict[str, Any], cfg: dict[str, Any]) -> bool:
-    """Whether share access keeps someone out of (or read-only on) this share."""
-    if cfg["default_level"] != "write" or any(v != "write" for v in cfg["role_defaults"].values()):
-        return True
-    if entry.get("default") in ("none", "read"):
-        return True
-    return any(v in ("none", "read") for v in (entry.get("users") or {}).values())
-
-
-def _smb_findings() -> list[dict[str, Any]]:
-    from backend.services.samba_engine import get_samba_engine
-    from backend.services.share_access import load_config
-    from backend.users_db import users_db_session
-
-    shares = list(get_samba_engine().list_shares())
-    if not shares:
-        return []
-    cfg = load_config()
-    out = []
-    open_shares = [
-        s.name
-        for s in shares
-        if not (s.valid_users or s.read_list) and _restricted(cfg["shares"].get(s.name) or {}, cfg)
-    ]
-    if open_shares:
-        out.append(
-            {
-                "id": "smb_ignores_share_access",
-                "name": "Network shares ignore who may open them",
-                "penalty": 10,
-                "severity": "medium",
-                "category": "Storage & Shares",
-                "details": f"{', '.join(sorted(open_shares))}: the file manager follows share access, but over SMB "
-                f"every account can open them. {NEXT} SMB will follow share access.",
-                "remediation": "Until then, set Valid users on these shares in Storage, Network shares.",
-            }
-        )
-    with users_db_session() as conn:
-        n = conn.execute("SELECT count(*) FROM users WHERE mfa_enabled = 1 AND status = 'active'").fetchone()[0]
-    if n:
-        out.append(
-            {
-                "id": "smb_skips_two_factor",
-                "name": "SMB sign-in skips two-factor",
-                "penalty": 5,
-                "severity": "medium",
-                "category": "Storage & Shares",
-                "details": f"{n} account(s) with two-factor sign-in reach the network shares with their password alone. "
-                "From the next release those accounts get a separate SMB password.",
-                "remediation": "Until then, use a strong, unique password for accounts with two-factor sign-in.",
-            }
-        )
-    return out
 
 
 def _sign_in_findings() -> list[dict[str, Any]]:
@@ -398,7 +342,7 @@ def findings() -> list[dict[str, Any]]:
             continue
         if item:
             out.append(item)
-    for more in (_sign_in_findings, _smb_findings):
+    for more in (_sign_in_findings,):
         try:
             out += more()
         except Exception as e:

@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-651 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+652 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -93,6 +93,7 @@ request and response schemas.
 | `POST` | `/api/v1/auth/logout` | signed in | Logout |
 | `GET` | `/api/v1/auth/me` | signed in | Get Current User Profile |
 | `PUT` | `/api/v1/auth/me/preferences` | signed in | The signed-in person's own settings (B11, UX-23); only the keys sent change |
+| `POST` | `/api/v1/auth/me/smb-password` | signed in ⏱ | A password for the network shares only, shown once (B11, SEC-28): with two-factor sign-in on, the account password no longer opens SMB, w… |
 | `POST` | `/api/v1/auth/mfa/challenge` | public ⏱ | Mfa Challenge |
 | `POST` | `/api/v1/auth/mfa/disable` | signed in ⏱ | Disable Mfa |
 | `POST` | `/api/v1/auth/mfa/enable` | signed in ⏱ | Enable Mfa |

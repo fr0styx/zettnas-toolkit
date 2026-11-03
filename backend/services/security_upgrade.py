@@ -222,3 +222,17 @@ def run_1_10_2_once() -> bool:
     except OSError as e:
         logger.error(f"[SecurityUpgrade] Could not write marker {marker}: {e}")
     return True
+
+
+MARKER_1_12 = ".security-upgrade-1.12-smb-two-factor"
+
+
+def run_1_12_once() -> int:
+    """1.12 (D11, SEC-28): accounts that already had two-factor sign-in stop reaching SMB with
+    their account password; each makes a network share password in People. Returns how many."""
+    from backend.users_db import seal_smb_for_existing_two_factor
+
+    n = seal_smb_for_existing_two_factor(os.path.join(config.DATA_DIR, MARKER_1_12))
+    if n:
+        logger.warning("[SecurityUpgrade] 1.12: %s two-factor account(s) need a network share password", n)
+    return n

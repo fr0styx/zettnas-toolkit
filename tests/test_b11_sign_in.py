@@ -1,4 +1,4 @@
-"""B11 (SEC-29, D11): sign-in that is unsafe is warned about for one release, then refused.
+"""B11 (SEC-29, D11): sign-in that is unsafe was warned about in 1.11 and is refused since 1.12.
 Single sign-on is bound to the browser that started it; the Security Advisor names http://
 providers, plaintext directory sign-in and a proxy that can reach any account."""
 
@@ -38,11 +38,39 @@ def test_the_same_browser_signs_in_and_the_cookie_is_cleared(client, sso):
     assert any("zn_sso_state=" in c and "Max-Age=0" in c for c in res.headers.get_list("set-cookie"))
 
 
-def test_without_the_cookie_it_still_works_this_release_but_is_logged(client, sso, caplog):
+def test_without_the_cookie_the_sign_in_is_refused(client, sso):
     client.cookies.clear()
     res = client.get("/api/auth/oidc/callback?code=c&state=abc123", follow_redirects=False)
-    assert res.headers["location"] == "/"
-    assert "without the browser cookie" in caplog.text
+    assert res.status_code == 303 and "sso_error=" in res.headers["location"]
+
+
+def test_an_http_provider_is_refused_when_saved_and_at_sign_in(monkeypatch, tmp_path):
+    monkeypatch.setattr(oidc, "CONFIG_FILE", str(tmp_path / "oidc.json"))
+    with pytest.raises(oidc.OidcError, match="https://"):
+        oidc.save_config({"enabled": True, "issuer": "http://idp.lan", "client_id": "z"})
+    oidc.save_config({"enabled": True, "issuer": "http://127.0.0.1:9000", "client_id": "z"})  # this machine
+    assert oidc.insecure_issuer("http://idp.lan") and not oidc.insecure_issuer("https://idp.lan")
+    # one saved before 1.12 stops at the start, before anything is sent
+    monkeypatch.setattr(
+        oidc, "load_config", lambda: {**oidc.DEFAULTS, "enabled": True, "issuer": "http://idp.lan", "client_id": "z"}
+    )
+    with pytest.raises(oidc.OidcError, match="https://"):
+        oidc.start_login("https://nas.lan")
+
+
+def test_plain_ldap_is_refused_when_saved_at_sign_in_and_in_the_test(monkeypatch, tmp_path):
+    monkeypatch.setattr(ldap_auth, "CONFIG_FILE", str(tmp_path / "ldap.json"))
+    base = {"enabled": True, "server_url": "ldap://dc.lan", "user_filter": "(uid={username})"}
+    with pytest.raises(ldap_auth.LdapError, match="StartTLS"):
+        ldap_auth.save_config(base)
+    ldap_auth.save_config({**base, "start_tls": True})
+    ldap_auth.save_config({**base, "server_url": "ldaps://dc.lan", "start_tls": False})
+    saved_before = {**ldap_auth.DEFAULTS, **base}
+    monkeypatch.setattr(ldap_auth, "load_config", lambda: saved_before)
+    monkeypatch.setattr(ldap_auth, "enabled", lambda: True)
+    monkeypatch.setattr(ldap_auth, "find_user", lambda *a: pytest.fail("no password may go out in the clear"))
+    assert ldap_auth.login("ann", "pw") is None
+    assert ldap_auth.test_connection() == {"ok": False, "message": ldap_auth.PLAINTEXT}
 
 
 def _ids():
@@ -52,7 +80,7 @@ def _ids():
 def test_the_advisor_names_an_http_provider(monkeypatch):
     monkeypatch.setattr(oidc, "load_config", lambda: {"enabled": True, "issuer": "http://idp.lan"})
     found = [f for f in safe_defaults_advisor.findings() if f["id"] == "sso_http_issuer"]
-    assert found and "next release" in found[0]["details"] and "fix" not in found[0]
+    assert found and "Since 1.12" in found[0]["details"] and "fix" not in found[0]
     monkeypatch.setattr(oidc, "load_config", lambda: {"enabled": True, "issuer": "https://idp.lan"})
     assert "sso_http_issuer" not in _ids()
 
@@ -83,12 +111,27 @@ def test_the_posture_shows_a_warning_without_a_fix_button(client, auth_headers, 
     assert check["passed"] is False and "fix" not in check
 
 
-def test_a_proxy_sign_in_to_a_local_account_is_logged_once_a_day(monkeypatch):
+def test_a_proxy_refusal_is_logged_once_a_day(monkeypatch):
     from backend import auth
 
     events = []
     monkeypatch.setattr("backend.users_db.log_security_event", lambda *a, **k: events.append((a, k)))
     auth._PROXY_WARNED.clear()
-    auth._warn_proxy_local_account({"username": "admin", "idp_type": "local"})
-    auth._warn_proxy_local_account({"username": "admin", "idp_type": "local"})
+    auth._refuse_proxy_local_account({"username": "admin", "idp_type": "local"})
+    auth._refuse_proxy_local_account({"username": "admin", "idp_type": "local"})
     assert len(events) == 1 and events[0][0][0] == "auth.proxy_sso_local_account"
+    assert events[0][1]["details"]["refused"] is True
+
+
+def test_the_proxy_reaches_only_the_accounts_it_created(client, monkeypatch):
+    from backend import auth, config
+
+    monkeypatch.setattr(config, "ENABLE_PROXY_SSO", True)
+    monkeypatch.setattr(config, "TRUSTED_PROXIES", ["testclient", "127.0.0.1"])
+    monkeypatch.setattr("backend.users_db.log_security_event", lambda *a, **k: None)
+    auth._PROXY_WARNED.clear()
+    client.cookies.clear()
+    assert client.get("/api/auth/me", headers={"Remote-User": "admin"}).status_code == 401
+    made = client.get("/api/auth/me", headers={"Remote-User": "proxy_pat"})
+    assert made.status_code == 200 and made.json()["idp_type"] == "proxy_sso"
+    assert client.get("/api/auth/me", headers={"Remote-User": "proxy_pat"}).status_code == 200

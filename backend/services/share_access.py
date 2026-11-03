@@ -81,6 +81,18 @@ def save_config(cfg: dict[str, Any]) -> dict[str, Any]:
     return clean
 
 
+def share_level(cfg: dict[str, Any], share: str, username: str, role_id: str) -> str:
+    """The level share access gives this person on this share, Samba's own lists left out
+    (the lists ZettNAS writes into smb.conf come from this: B11, SEC-28)."""
+    entry = cfg["shares"].get(share, {})
+    return (
+        (entry.get("users") or {}).get(username.lower())
+        or entry.get("default")
+        or cfg["role_defaults"].get(str(role_id or ""))
+        or cfg["default_level"]
+    )
+
+
 def invalidate() -> None:
     with _lock:
         _cache["ts"] = 0.0

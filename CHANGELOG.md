@@ -1,5 +1,29 @@
 # ZettNAS Toolkit - Release Changelog
 
+## Unreleased
+
+#### Security
+
+- **Unsafe sign-in setups are refused now** (SEC-29; warned in 1.11, D11). Single sign-on
+  needs an `https://` provider, and a sign-in finishes only in the browser that started it.
+  Directory sign-in needs `ldaps://` or StartTLS, so no password crosses the network in the
+  clear. A sign-in proxy reaches only the accounts it created; other accounts, admins
+  included, sign in with their own password. The Security Advisor names what still needs
+  changing. If sign-in stops working after the update, that is why: sign in with the
+  account's password and change the address in Settings.
+
+- **The shared folders follow share access over the network too** (SEC-28; warned in 1.11,
+  D11). Where ZettNAS runs Samba itself (generic Linux), smb.conf now lists who may open
+  each share and who may only read, from the same settings the file manager follows; a
+  share nobody may open is switched off. Lists set on a share by hand still win. Changing
+  share access, a role or an account's status rewrites them.
+
+- **Two-step accounts get their own shared folders password** (SEC-28). SMB can't ask for
+  a code, so an account with two-step sign-in no longer opens the shared folders with its
+  account password; under People, *Shared folders password* makes a separate one, shown
+  once. Accounts that already had two-step sign-in are switched on the first start of this
+  version.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 

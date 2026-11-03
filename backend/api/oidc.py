@@ -76,12 +76,10 @@ def sso_login(request: Request):
 def sso_callback(request: Request, code: str = "", state: str = "", error: str = "", error_description: str = ""):
     if error:
         return _fail(error_description or error)
-    started_here = request.cookies.get(STATE_COOKIE)
-    if started_here and started_here != state:
+    # The callback must come back to the browser that started the sign-in (B11, SEC-29); a
+    # missing cookie was only logged in 1.11 and is refused since 1.12 (D11)
+    if request.cookies.get(STATE_COOKIE) != state:
         return _fail("This sign-in was started in another browser. Start it again here.")
-    if not started_here:
-        # warned for one release (D11): from the next one a sign-in without the cookie is refused
-        logger.warning("[OIDC] Sign-in callback without the browser cookie it was started with")
     try:
         claims = oidc.finish_login(code, state)
         user = oidc.user_for_claims(claims)

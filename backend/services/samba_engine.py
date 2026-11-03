@@ -10,6 +10,7 @@ import json
 import os
 import re
 import socket
+import sqlite3
 import subprocess
 from typing import Any, Optional
 
@@ -397,6 +398,11 @@ class SambaEngine:
                 conf_lines.append(f"   read list = {share.read_list}")
             if share.write_list:
                 conf_lines.append(f"   write list = {share.write_list}")
+            try:
+                conf_lines.extend(access_lines(share))
+            except (OSError, ValueError, KeyError, TypeError, sqlite3.Error) as e:  # never open by accident
+                logger.error("[SambaEngine] Share access for '%s' unreadable, share switched off: %s", share.name, e)
+                conf_lines.append("   available = no")
 
             vfs = ["catia", "fruit", "streams_xattr"]
             if share.previous_versions:
@@ -684,6 +690,48 @@ class SambaEngine:
 
 
 _SAMBA_ENGINE_INSTANCE: SambaEngine | None = None
+
+
+SMB_NAME = re.compile(r"^[a-zA-Z0-9_\-\.]{1,32}$")
+
+
+def access_lines(share: "SambaShareConfig") -> list[str]:
+    """smb.conf lines that make SMB follow share access (B11, SEC-28; warned in 1.11, written since
+    1.12 per D11). Lists set on the share itself win, as they do in share access; a guest share
+    stays open; a share nobody may open is switched off."""
+    if share.guest_ok or share.valid_users or share.read_list or share.write_list:
+        return []
+    from backend.services.share_access import load_config, share_level
+    from backend.users_db import list_users
+
+    cfg = load_config()
+    levels = {
+        u["username"]: share_level(cfg, share.name, u["username"], u.get("role_id") or "")
+        for u in list_users()
+        if u.get("status") == "active" and SMB_NAME.match(str(u.get("username") or ""))
+    }
+    if levels and all(v == "write" for v in levels.values()):
+        return []  # everyone may write: Samba's default
+    allowed = sorted(u for u, v in levels.items() if v in ("read", "write"))
+    if not allowed:
+        return ["   available = no"]
+    lines = [f"   valid users = {' '.join(allowed)}"]
+    readers = sorted(u for u, v in levels.items() if v == "read")
+    if readers and not share.read_only:
+        lines.append(f"   read list = {' '.join(readers)}")
+    return lines
+
+
+def refresh_access() -> None:
+    """Rewrites smb.conf and reloads Samba after share access or the people change (SEC-28).
+    Nothing to do where ZettNAS manages no shares (Unraid, TrueNAS)."""
+    try:
+        engine = get_samba_engine()
+        if engine.list_shares():
+            engine.generate_and_save_conf()
+            engine.reload_service()
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError, sqlite3.Error):
+        ignored("backend.services.samba_engine.refresh_access")
 
 
 def get_samba_engine() -> SambaEngine:

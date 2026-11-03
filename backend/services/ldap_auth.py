@@ -70,6 +70,14 @@ def masked_config() -> dict[str, Any]:
     return cfg
 
 
+PLAINTEXT = "Use an ldaps:// address or turn on StartTLS: over plain ldap:// passwords travel in the clear."
+
+
+def plaintext(cfg: dict[str, Any]) -> bool:
+    """ldap:// without StartTLS (B11, SEC-29; refused since 1.12 per D11)."""
+    return str(cfg.get("server_url") or "").strip().lower().startswith("ldap://") and not cfg.get("start_tls")
+
+
 @json_locked(lambda *a, **k: CONFIG_FILE)
 def save_config(changes: dict[str, Any]) -> dict[str, Any]:
     cfg = load_config()
@@ -79,6 +87,8 @@ def save_config(changes: dict[str, Any]) -> dict[str, Any]:
     url = str(cfg.get("server_url") or "").strip()
     if url and not url.lower().startswith(("ldap://", "ldaps://")):
         raise LdapError("The server must be an ldap:// or ldaps:// address")
+    if url and cfg.get("enabled") and plaintext({**cfg, "server_url": url}):
+        raise LdapError(PLAINTEXT)
     if "{username}" not in str(cfg.get("user_filter") or ""):
         raise LdapError("The user filter must contain {username}")
     cfg["server_url"] = url
@@ -199,6 +209,9 @@ def login(username: str, password: str) -> dict[str, Any] | None:
     if not enabled() or not username or not password:
         return None
     cfg = load_config()
+    if plaintext(cfg):  # saved before 1.12 (D11): no password goes out in the clear
+        logger.warning("[LDAP] Directory sign-in refused: plain ldap:// without StartTLS")
+        return None
     try:
         info = find_user(username, cfg)
         if not info or not check_password(info["dn"], password, cfg):
@@ -238,6 +251,8 @@ def login(username: str, password: str) -> dict[str, Any] | None:
 
 def test_connection() -> dict[str, Any]:
     cfg = load_config()
+    if plaintext(cfg):
+        return {"ok": False, "message": PLAINTEXT}
     try:
         conn = _connection(_server(cfg), cfg.get("bind_dn") or None, cfg.get("bind_password") or None, cfg)
         ok = bool(conn.bind())

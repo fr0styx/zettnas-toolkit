@@ -495,15 +495,16 @@ def _is_file_write(path: str, method: str) -> bool:
 _PROXY_WARNED: dict[str, float] = {}
 
 
-def _warn_proxy_local_account(user: dict[str, Any]) -> None:
-    """Proxy SSO signed in to an account it did not create (B11, SEC-29). Warned for one
-    release (D11), once a day per account; from the next release this is refused."""
+def _refuse_proxy_local_account(user: dict[str, Any]) -> None:
+    """Proxy SSO named an account it did not create (B11, SEC-29): warned in 1.11, refused since
+    1.12 (D11), so a header can't reach an admin who signs in with a password and two-factor.
+    Logged once a day per account."""
     name = str(user.get("username") or "")
     now = time.time()
     if now - _PROXY_WARNED.get(name, 0.0) < 86400:
         return
     _PROXY_WARNED[name] = now
-    logger.warning("[Auth] Proxy SSO signed in to %s account '%s'", user.get("idp_type") or "local", name)
+    logger.warning("[Auth] Proxy SSO refused for %s account '%s'", user.get("idp_type") or "local", name)
     try:
         from backend.users_db import log_security_event
 
@@ -511,10 +512,10 @@ def _warn_proxy_local_account(user: dict[str, Any]) -> None:
             "auth.proxy_sso_local_account",
             "warning",
             actor_username=name,
-            details={"idp_type": user.get("idp_type") or "local"},
+            details={"idp_type": user.get("idp_type") or "local", "refused": True},
         )
     except Exception:
-        logger.debug("[Auth] could not log the proxy SSO warning", exc_info=True)
+        logger.debug("[Auth] could not log the proxy SSO refusal", exc_info=True)
 
 
 async def auth_middleware(request: Request, call_next):
@@ -583,8 +584,9 @@ async def auth_middleware(request: Request, call_next):
                         logger.warning(f"Failed to auto-provision proxy user '{proxy_user}': {e}")
                         user = await asyncio.to_thread(get_user_by_username, proxy_user)
 
-                if user and user.get("status") == "active" and user.get("idp_type") != "proxy_sso":
-                    _warn_proxy_local_account(user)
+                if user and user.get("idp_type") != "proxy_sso":
+                    _refuse_proxy_local_account(user)
+                    user = None  # the request goes on unauthenticated: a session or token still works
                 if user and user.get("status") == "active":
                     # The proxy adds the identity header to every request it lets through, so a
                     # write must come from this server's own pages (same rule as cookie sessions).
