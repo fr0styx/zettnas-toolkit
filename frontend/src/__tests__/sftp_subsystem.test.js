@@ -31,11 +31,11 @@ describe('Feature 4: SFTP file access Card & User Management', () => {
     expect(html).toContain('SFTP file access');
     expect(html).toContain('RUNNING (Port 2222)');
     expect(html).toContain('Stop SFTP');
-    expect(html).toContain('Manage Users (2)');
-    expect(html).toMatch(/Line-Rate Port: <strong style="color:(?:var\(--zn-text-strong\)|#fff);">2222<\/strong>/);
+    expect(html).toContain('Manage users (2)');
+    expect(html).toMatch(/Port: <strong style="color:(?:var\(--zn-text-strong\)|#fff);">2222<\/strong>/);
     expect(html).toContain('internal-sftp');
-    expect(html).toContain('Chroot Jail (/home/%u)');
-    expect(html).toContain('Prohibited (No PTY)');
+    expect(html).toContain('Chroot jail (/home/%u)');
+    expect(html).toContain('Not allowed (no PTY)');
     expect(html).toContain('sftp://alice@');
     expect(html).toContain('sftp -P 2222 alice@');
     expect(html).toContain('sshfs -p 2222 alice@');
@@ -79,7 +79,7 @@ describe('Feature 4: SFTP file access Card & User Management', () => {
     expect(sftpCard).not.toBeNull();
     expect(sftpCard.textContent).toContain('SFTP file access');
     expect(sftpCard.textContent).toContain('RUNNING (Port 2222)');
-    expect(sftpCard.textContent).toContain('Manage Users (1)');
+    expect(sftpCard.textContent).toContain('Manage users (1)');
     expect(sftpCard.textContent).toContain('sftp://backups@');
   });
 
@@ -130,7 +130,7 @@ describe('Feature 4: SFTP file access Card & User Management', () => {
     expect(sftpCard.textContent).toContain('SFTP file access');
     expect(sftpCard.textContent).toContain('STOPPED');
     expect(sftpCard.textContent).toContain('Start SFTP');
-    expect(sftpCard.textContent).toContain('Manage Users (0)');
+    expect(sftpCard.textContent).toContain('Manage users (0)');
   });
 
   it('opens and populates SFTP Users modal with direct array payload', async () => {

@@ -9,6 +9,9 @@ import { makeDraggable, bringToFront, DockManager } from './dock.js';
 
 import { formatBytes as formatSize, formatDateTime } from '../format.js';
 import { emptyStateHtml } from './empty-state.js';
+
+// An icon next to translated words: screen readers skip it and the words stay plain (UX-35)
+const ico = (e) => `<span aria-hidden="true">${e}</span>`;
 /**
  * ZettNAS Physical Chassis Twin & Storage Topology Visualizer
  * - Parametric SVG chassis twin (Compact Dual, Desktop Tower, Enterprise Rackmount)
@@ -83,7 +86,7 @@ export function getThermalLevel(tempC, isStandby = false) {
       cls: 'standby',
       color: 'var(--muted, #64748b)',
       glow: 'rgba(100, 116, 139, 0.3)',
-      text: isStandby ? 'STANDBY' : 'UNKNOWN',
+      text: isStandby ? t('chassis.standby', 'STANDBY') : t('chassis.unknown', 'UNKNOWN'),
       toString() { return this.cls; }
     };
   }
@@ -174,7 +177,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
 
     if (!isPopulated) {
       baysHtml += `
-        <div class="chassis-bay-slot empty" data-bay="${slotNum}" role="region" aria-label="Bay ${slotNum} Empty">
+        <div class="chassis-bay-slot empty" data-bay="${slotNum}" role="region" aria-label="${t('chassis.bay_empty_aria', 'Bay {n}, empty', { n: slotNum })}">
           <div class="bay-header">
             <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
               <span class="bay-num">BAY ${slotNum}</span>
@@ -186,12 +189,12 @@ export function renderChassisTwin(container, disks = [], options = {}) {
             <div class="bay-led-lens off"></div>
             <div class="bay-drive-info">
               <span class="bay-drive-model" style="opacity: 0.5;">VACANT</span>
-              <span class="bay-drive-dev" style="opacity: 0.4;">Slot ${slotNum} Available</span>
-              <span class="bay-sub-badge" style="opacity: 0.35;">STANDBY READY</span>
+              <span class="bay-drive-dev" style="opacity: 0.4;">${t('chassis.slot_available', 'Slot {n} available', { n: slotNum })}</span>
+              <span class="bay-sub-badge" style="opacity: 0.35;">${t('chassis.standby_ready', 'STANDBY READY')}</span>
             </div>
           </div>
           <div class="bay-footer">
-            <span class="bay-meta" style="font-size:var(--zn-fs-xs); color:var(--muted); letter-spacing:0.04em;">NO DISK</span>
+            <span class="bay-meta" style="font-size:var(--zn-fs-xs); color:var(--muted); letter-spacing:0.04em;">${t('chassis.no_disk', 'NO DISK')}</span>
             <span class="bay-health-tag" style="opacity:0.3;">EMPTY</span>
           </div>
         </div>
@@ -207,7 +210,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
       const driverStr = d.controller_driver ? ` • ${d.controller_driver}` : '';
 
       baysHtml += `
-        <div class="chassis-bay-slot populated ${thermal.cls}" data-bay="${slotNum}" data-dev="${devName}" role="button" tabindex="0" aria-label="Bay ${slotNum}: ${escapeHtml(modelStr)}, ${thermal.text}">
+        <div class="chassis-bay-slot populated ${thermal.cls}" data-bay="${slotNum}" data-dev="${devName}" role="button" tabindex="0" aria-label="${escapeHtml(t('chassis.bay_aria', 'Bay {n}: {model}, {state}', { n: slotNum, model: modelStr, state: thermal.text }))}">
           <div class="bay-header">
             <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
               <span class="bay-num">BAY ${slotNum}</span>
@@ -224,11 +227,11 @@ export function renderChassisTwin(container, disks = [], options = {}) {
             </div>
           </div>
           <div class="bay-footer">
-            <button class="bay-locate-btn" data-dev="${devName}" title="${t('ui.locate_drive_blink_bay_led', 'Locate Drive (Blink Bay LED)')}" aria-label="Locate drive in Bay ${slotNum}">
+            <button class="bay-locate-btn" data-dev="${devName}" title="${t('ui.locate_drive_blink_bay_led', 'Locate Drive (Blink Bay LED)')}" aria-label="${t('chassis.locate_bay_aria', 'Locate the drive in bay {n}', { n: slotNum })}">
               <svg class="locate-icon" viewBox="0 0 24 24" width="12" height="12"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/></svg>
               <span>LOCATE</span>
             </button>
-            <span class="bay-health-tag ${thermal.cls}">${isStandby ? 'STANDBY' : (d.health ? String(d.health).toUpperCase() : 'OK')}</span>
+            <span class="bay-health-tag ${thermal.cls}">${isStandby ? t('chassis.standby', 'STANDBY') : (d.health ? String(d.health).toUpperCase() : 'OK')}</span>
           </div>
         </div>
       `;
@@ -253,12 +256,12 @@ export function renderChassisTwin(container, disks = [], options = {}) {
       m2Html += `
         <div class="m2-slot-card ${thermal.cls}" data-dev="${devName}" role="button" tabindex="0">
           <div class="m2-header">
-            <span class="m2-name">M.2 SLOT ${idx + 1} • /dev/${devName}</span>
+            <span class="m2-name">${t('chassis.m2_slot', 'M.2 SLOT {n}', { n: idx + 1 })} • /dev/${devName}</span>
             <span class="m2-temp" style="color:${thermal.color};">${thermal.text}</span>
           </div>
           <div class="m2-body">
             <span class="m2-model">${escapeHtml(nv.model || 'PCIe NVMe SSD')}</span>
-            <span class="m2-wear">Endurance Used: <strong>${wear}</strong></span>
+            <span class="m2-wear">${t('chassis.endurance_used', 'Endurance used:')} <strong>${wear}</strong></span>
           </div>
           <button class="m2-locate-btn bay-locate-btn" data-dev="${devName}">
             <svg viewBox="0 0 24 24" width="11" height="11"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/></svg>
@@ -279,7 +282,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
           <div class="chassis-top-actions">
             <button class="chassis-config-btn" id="chassis-open-slots-btn" title="${t('ui.configure_chassis_bays_profile', 'Configure Chassis Bays & Profile')}" aria-label="${t('ui.configure_chassis_bays_profile', 'Configure Chassis Bays & Profile')}">
               <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" fill="currentColor"/><path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clip-rule="evenodd" fill="currentColor"/></svg>
-              <span>SLOTS / MAPPING</span>
+              <span>${t('chassis.slots_mapping', 'SLOTS / MAPPING')}</span>
             </button>
           </div>
           <div class="chassis-honeycomb-vents"></div>
@@ -379,40 +382,40 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
       <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
         <div class="smart-modal-title" style="display:flex; align-items:center; gap:8px;">
           <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" fill="currentColor"/></svg>
-          <span>CHASSIS ENCLOSURE & BAY CONFIGURATION</span>
+          <span>${t('chassis.config_title', 'CHASSIS ENCLOSURE & BAY CONFIGURATION')}</span>
         </div>
         <button class="win-btn close-btn" id="chassis-config-close" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
       </div>
       <div class="smart-modal-body" style="padding: 16px; overflow-y: auto; flex: 1; display:flex; flex-direction:column; gap: 14px;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
-            <label for="chassis-profile-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px;">ENCLOSURE PROFILE</label>
+            <label for="chassis-profile-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px;">${t('chassis.profile', 'ENCLOSURE PROFILE')}</label>
             <select id="chassis-profile-select" class="tz-select-input" style="width:100%; padding:8px; border-radius:6px; background:var(--zn-shade-30); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); font-size:var(--zn-fs-xs);">
-              <option value="auto" ${profile === 'auto' ? 'selected' : ''}>Auto Dynamic (Auto-Detect)</option>
-              <option value="compact_dual" ${profile === 'compact_dual' ? 'selected' : ''}>Compact Dual (1–2 Bays)</option>
-              <option value="tower_desktop" ${profile === 'tower_desktop' ? 'selected' : ''}>Desktop Tower (3–6 Bays)</option>
-              <option value="rackmount_backplane" ${profile === 'rackmount_backplane' ? 'selected' : ''}>Enterprise Rackmount (8–24 Bays)</option>
-              <option value="custom" ${profile === 'custom' ? 'selected' : ''}>Custom Enclosure</option>
+              <option value="auto" ${profile === 'auto' ? 'selected' : ''}>${t('chassis.profile_auto', 'Automatic (detect)')}</option>
+              <option value="compact_dual" ${profile === 'compact_dual' ? 'selected' : ''}>${t('chassis.profile_compact', 'Compact (1–2 bays)')}</option>
+              <option value="tower_desktop" ${profile === 'tower_desktop' ? 'selected' : ''}>${t('chassis.profile_tower', 'Desktop tower (3–6 bays)')}</option>
+              <option value="rackmount_backplane" ${profile === 'rackmount_backplane' ? 'selected' : ''}>${t('chassis.profile_rack', 'Rackmount (8–24 bays)')}</option>
+              <option value="custom" ${profile === 'custom' ? 'selected' : ''}>${t('chassis.profile_custom', 'Custom enclosure')}</option>
             </select>
           </div>
           <div>
-            <label for="chassis-total-bays-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px;">TOTAL PHYSICAL BAYS</label>
+            <label for="chassis-total-bays-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px;">${t('chassis.total_bays', 'TOTAL PHYSICAL BAYS')}</label>
             <input type="number" id="chassis-total-bays-input" min="1" max="48" value="${totalBays}" style="width:100%; padding:8px; border-radius:6px; background:var(--zn-shade-30); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); font-size:var(--zn-fs-xs);">
           </div>
         </div>
 
         <div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;">PHYSICAL BAY ALLOCATION & LABELS</label>
-            <button id="chassis-auto-assign-btn" class="btn-pill-toggle">⚡ Auto-Assign Sequentially</button>
+            <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;">${t('chassis.allocation', 'PHYSICAL BAY ALLOCATION & LABELS')}</label>
+            <button id="chassis-auto-assign-btn" class="btn-pill-toggle">${ico('⚡')} ${t('chassis.auto_assign', 'Auto-assign in order')}</button>
           </div>
           <div style="max-height: 320px; overflow-y: auto; border: 1px solid var(--zn-line-8); border-radius: 6px; background: var(--zn-shade-20);">
             <table class="copy-history-table chassis-slots-table" style="width:100%;">
               <thead>
                 <tr>
-                  <th style="width:80px;">Slot</th>
-                  <th>Assigned Physical Drive</th>
-                  <th style="width:180px;">Custom Label</th>
+                  <th style="width:80px;">${t('chassis.col_slot', 'Slot')}</th>
+                  <th>${t('chassis.col_drive', 'Assigned physical drive')}</th>
+                  <th style="width:180px;">${t('chassis.col_label', 'Custom label')}</th>
                 </tr>
               </thead>
               <tbody id="chassis-slots-tbody">
@@ -422,8 +425,8 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
         </div>
       </div>
       <div class="smart-modal-footer" style="padding: 12px 16px; border-top: 1px solid var(--zn-line-8); display:flex; justify-content:flex-end; gap: 8px;">
-        <button id="chassis-config-cancel-btn" class="btn-pill-toggle">Cancel</button>
-        <button id="chassis-config-save-btn" class="btn-save-preset" style="padding: 8px 20px;">Save Bay Mapping</button>
+        <button id="chassis-config-cancel-btn" class="btn-pill-toggle">${t('common.cancel', 'Cancel')}</button>
+        <button id="chassis-config-save-btn" class="btn-save-preset" style="padding: 8px 20px;">${t('chassis.save_mapping', 'Save bay mapping')}</button>
       </div>
     </div>
   `;
@@ -439,7 +442,7 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
       const currentCid = existing?.canonical_id || existing?.disk?.canonical_id || existing?.disk?.dev || '';
       const currentLabel = existing?.custom_label || '';
 
-      let optionsHtml = `<option value="">-- [ Vacant / Empty Tray ] --</option>`;
+      let optionsHtml = `<option value="">${t('chassis.empty_tray', '— Empty tray —')}</option>`;
       availableDrives.forEach((d) => {
         const isSel = d.canonical_id === currentCid || d.dev === currentCid || d.serial === currentCid;
         const text = `${d.dev} • ${d.model || 'Drive'} (${d.size_formatted || ''}) [${d.serial || ''}]`;
@@ -698,7 +701,7 @@ function buildPoolBlockInner(pool, isObserver) {
         </div>
         <div class="topo-disk-actions">
           <button class="btn-locate-topo" data-dev="${escapeHtml(m.device || m.name)}" title="${t('ui.blink_drive_activity_led', 'Blink drive activity LED')}">
-            💡 Locate
+            ${ico('💡')} ${t('chassis.locate', 'Locate')}
           </button>
         </div>
       </div>
@@ -715,7 +718,7 @@ function buildPoolBlockInner(pool, isObserver) {
         </div>
       </div>
       <div class="topo-pool-badges">
-        ${pool.parity_protected ? '<span class="topo-parity-badge" title="' + t('ui.protected_against_disk_failure', 'Protected against disk failure') + '">🛡️ Parity Protected</span>' : ''}
+        ${pool.parity_protected ? '<span class="topo-parity-badge" title="' + t('ui.protected_against_disk_failure', 'Protected against disk failure') + '">' + ico('🛡️') + ' ' + t('chassis.parity_protected', 'Parity protected') + '</span>' : ''}
         <span class="topo-status-pill ${statusClass}">${escapeHtml(statusLabel)}</span>
       </div>
     </div>
@@ -723,7 +726,7 @@ function buildPoolBlockInner(pool, isObserver) {
     <div class="topo-pool-usage">
       <div class="topo-usage-labels">
         <span><strong>${usedStr}</strong> used / <strong>${totalStr}</strong> total (${pct}%)</span>
-        <span class="topo-free-space">${freeStr} Free</span>
+        <span class="topo-free-space">${t('chassis.free', '{size} free', { size: freeStr })}</span>
       </div>
       <div class="topo-usage-track">
         <div class="topo-usage-fill" style="width: ${Math.min(100, Math.max(0, pct))}%; background: ${barColor};"></div>
@@ -731,18 +734,18 @@ function buildPoolBlockInner(pool, isObserver) {
     </div>
 
     <div class="topo-members-section">
-      <div class="topo-members-label">POOL MEMBER DISKS (${(pool.members || []).length})</div>
+      <div class="topo-members-label">${t('chassis.pool_members', 'POOL MEMBER DISKS ({count})', { count: (pool.members || []).length })}</div>
       <div class="topo-members-grid">
-        ${membersHtml || '<span class="empty-note">No assigned member drives</span>'}
+        ${membersHtml || `<span class="empty-note">${t('chassis.no_members', 'No assigned member drives')}</span>`}
       </div>
     </div>
 
     <div class="topo-pool-actions" style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-      <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.trigger_filesystem_scrub_or_parity', 'Trigger filesystem scrub or parity check')}">⚡ Scrub Pool</button>
-      ${!isObserver ? `<button class="btn-pool-rename btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name)}" title="${t('ui.rename_storage_pool', 'Rename storage pool')}">✏️ Rename</button>` : ''}
-      ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3); color: var(--zn-text-accent);" title="${t('ui.manage_subvolume_snapshots', 'Manage Subvolume Snapshots')}">📸 Snapshots</button>` : ''}
-      ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--zn-text-warn);" title="${t('ui.safely_flush_dirty_cache_and', 'Safely flush dirty cache and detach pool')}">⏏️ Safely Eject</button>` : ''}
-      ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle is-danger" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.destroy_storage_pool', 'Destroy storage pool')}">🗑️ Destroy</button>` : ''}
+      <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.trigger_filesystem_scrub_or_parity', 'Trigger filesystem scrub or parity check')}">${ico('⚡')} ${t('chassis.scrub_pool', 'Scrub pool')}</button>
+      ${!isObserver ? `<button class="btn-pool-rename btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name)}" title="${t('ui.rename_storage_pool', 'Rename storage pool')}">${ico('✏️')} ${t('chassis.rename', 'Rename')}</button>` : ''}
+      ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3); color: var(--zn-text-accent);" title="${t('ui.manage_subvolume_snapshots', 'Manage Subvolume Snapshots')}">${ico('📸')} ${t('chassis.snapshots', 'Snapshots')}</button>` : ''}
+      ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--zn-text-warn);" title="${t('ui.safely_flush_dirty_cache_and', 'Safely flush dirty cache and detach pool')}">${ico('⏏️')} ${t('chassis.eject', 'Safely eject')}</button>` : ''}
+      ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle is-danger" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.destroy_storage_pool', 'Destroy storage pool')}">${ico('🗑️')} ${t('chassis.destroy', 'Destroy')}</button>` : ''}
     </div>
   `;
 }
@@ -806,7 +809,7 @@ function bindTopologyTreeEvents(tree, container) {
           }
         },
         null,
-        { okText: 'Destroy Pool', cancelText: 'Cancel' }
+        { okText: 'Destroy Pool', cancelText: t('common.cancel', 'Cancel') }
       );
       return;
     }
@@ -840,7 +843,7 @@ function bindTopologyTreeEvents(tree, container) {
                   }
                 },
                 null,
-                { okText: 'Force Eject', cancelText: 'Cancel' }
+                { okText: 'Force Eject', cancelText: t('common.cancel', 'Cancel') }
               );
             } else {
               showToast(err.message || 'Failed to safely eject pool', 'error');
@@ -851,7 +854,7 @@ function bindTopologyTreeEvents(tree, container) {
           }
         },
         null,
-        { okText: 'Safely Eject', cancelText: 'Cancel' }
+        { okText: 'Safely Eject', cancelText: t('common.cancel', 'Cancel') }
       );
       return;
     }
@@ -886,7 +889,7 @@ export async function fetchAndRenderStorageTopology(container) {
     container.innerHTML = `
       <div style="text-align:center; padding:30px; color:var(--muted);">
         <div class="loader-spinner" style="margin:0 auto 10px;"></div>
-        Scanning storage pools and array topology...
+        ${t('chassis.reading_pools', 'Reading the storage pools…')}
       </div>
     `;
   }
@@ -918,13 +921,13 @@ export async function fetchAndRenderStorageTopology(container) {
           <div style="display:flex; align-items:center; gap:10px;">
             <span style="font-size:20px;">🔌</span>
             <div>
-              <strong style="color:var(--zn-text-accent);">External Storage Pool Detected:</strong>
+              <strong style="color:var(--zn-text-accent);">${t('chassis.external_pool', 'External storage pool found:')}</strong>
               <span style="color:var(--zn-text-strong); margin-left:6px; font-weight:600;">${escapeHtml(p.pool_id)}</span>
               <span style="color:var(--muted); font-size:var(--zn-fs-xs); margin-left:8px;">(${escapeHtml((p.fs_type || 'zfs').toUpperCase())}${p.status ? ` · ${escapeHtml(p.status)}` : ''})</span>
             </div>
           </div>
           <button class="btn-import-external-pool btn-pill-toggle" data-pool-id="${escapeHtml(p.pool_id)}" data-fs-type="${escapeHtml(p.fs_type || 'zfs')}" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); color: var(--lt-t-4ade80ff, #4ade80);" title="${t('ui.import_detached_storage_pool', 'Import detached storage pool')}">
-            📥 Import Pool
+            ${ico('📥')} ${t('chassis.import_pool', 'Import pool')}
           </button>
         </div>
       `).join('');
@@ -993,27 +996,27 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
           <button class="btn-pill-toggle btn-sftp-toggle-action" id="btn-sftp-header-toggle" style="padding:5px 12px; font-size:var(--zn-fs-xs); font-weight:700; ${isRunning ? 'background:rgba(239,68,68,0.15); color:var(--zn-text-crit); border-color:rgba(239,68,68,0.3);' : ''}">
-            ${isRunning ? '⏹ Stop SFTP' : '▶ Start SFTP'}
+            ${isRunning ? `${ico('⏹')} ${t('chassis.sftp_stop', 'Stop SFTP')}` : `${ico('▶')} ${t('chassis.sftp_start', 'Start SFTP')}`}
           </button>
           <button class="btn-pill-toggle btn-sftp-users-action" id="btn-sftp-header-users" style="background: rgba(14,165,233,0.15); color: var(--zn-text-accent); border-color: rgba(14,165,233,0.3);" title="${t('ui.manage_sftp_users_and_permissions', 'Manage SFTP users and permissions')}">
-            👥 Manage Users (${usersCount})
+            ${ico('👥')} ${t('chassis.manage_users', 'Manage users ({count})', { count: usersCount })}
           </button>
         </div>
       </div>
 
       <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:var(--zn-fs-xs); color:var(--muted); align-items:center;">
-        <span>Line-Rate Port: <strong style="color:var(--zn-text-strong);">${port}</strong></span>
-        <span>Subsystem: <code style="color:var(--zn-text-accent);">internal-sftp</code></span>
-        <span>Isolation: <strong style="color:var(--zn-text-strong);">Chroot Jail (/home/%u)</strong></span>
-        <span>Host Shell: <strong style="color:var(--ok2, #22c55e); background:rgba(34,197,94,0.12); padding:1px 6px; border-radius:4px; font-size:var(--zn-fs-xs);">Prohibited (No PTY)</strong></span>
+        <span>${t('chassis.port', 'Port:')} <strong style="color:var(--zn-text-strong);">${port}</strong></span>
+        <span>${t('chassis.subsystem', 'Subsystem:')} <code style="color:var(--zn-text-accent);">internal-sftp</code></span>
+        <span>${t('chassis.isolation', 'Isolation:')} <strong style="color:var(--zn-text-strong);">${t('chassis.chroot_jail', 'Chroot jail (/home/%u)')}</strong></span>
+        <span>${t('chassis.host_shell', 'Host shell:')} <strong style="color:var(--ok2, #22c55e); background:rgba(34,197,94,0.12); padding:1px 6px; border-radius:4px; font-size:var(--zn-fs-xs);">${t('chassis.no_shell', 'Not allowed (no PTY)')}</strong></span>
       </div>
 
       <!-- Quick Connect Grid -->
       <div class="webdav-quickconnect-grid">
         <div class="webdav-qc-item">
           <div class="webdav-qc-label">
-            <span>🍏 macOS Finder / Cyberduck</span>
-            <button class="btn-qc-copy" data-copy="${escapeHtml(finderCmd)}" title="${t('ui.copy_sftp_url', 'Copy SFTP URL')}">📋 Copy</button>
+            <span>${ico('🍏')} ${t('chassis.qc_finder_sftp', 'macOS Finder / Cyberduck')}</span>
+            <button class="btn-qc-copy" data-copy="${escapeHtml(finderCmd)}" title="${t('ui.copy_sftp_url', 'Copy SFTP URL')}">${ico('📋')} ${t('chassis.copy', 'Copy')}</button>
           </div>
           <div class="webdav-qc-code">
             <span>${escapeHtml(finderCmd)}</span>
@@ -1022,8 +1025,8 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
 
         <div class="webdav-qc-item">
           <div class="webdav-qc-label">
-            <span>💻 Terminal / OpenSSH</span>
-            <button class="btn-qc-copy" data-copy="${escapeHtml(terminalCmd)}" title="${t('ui.copy_cli_command', 'Copy CLI Command')}">📋 Copy</button>
+            <span>${ico('💻')} ${t('chassis.qc_terminal', 'Terminal / OpenSSH')}</span>
+            <button class="btn-qc-copy" data-copy="${escapeHtml(terminalCmd)}" title="${t('ui.copy_cli_command', 'Copy CLI Command')}">${ico('📋')} ${t('chassis.copy', 'Copy')}</button>
           </div>
           <div class="webdav-qc-code">
             <span>${escapeHtml(terminalCmd)}</span>
@@ -1032,8 +1035,8 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
 
         <div class="webdav-qc-item">
           <div class="webdav-qc-label">
-            <span>📁 FileZilla / WinSCP Client</span>
-            <button class="btn-qc-copy" data-copy="${escapeHtml(filezillaHint)}" title="${t('ui.copy_connection_info', 'Copy Connection Info')}">📋 Copy</button>
+            <span>${ico('📁')} ${t('chassis.qc_filezilla', 'FileZilla / WinSCP')}</span>
+            <button class="btn-qc-copy" data-copy="${escapeHtml(filezillaHint)}" title="${t('ui.copy_connection_info', 'Copy Connection Info')}">${ico('📋')} ${t('chassis.copy', 'Copy')}</button>
           </div>
           <div class="webdav-qc-code">
             <span>${escapeHtml(filezillaHint)}</span>
@@ -1042,8 +1045,8 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
 
         <div class="webdav-qc-item">
           <div class="webdav-qc-label">
-            <span>📜 SSHFS Mount (Linux/macOS)</span>
-            <button class="btn-qc-copy" data-copy="${escapeHtml(sshfsCmd)}" title="${t('ui.copy_sshfs_mount_command', 'Copy SSHFS Mount Command')}">📋 Copy</button>
+            <span>${ico('📜')} ${t('chassis.qc_sshfs', 'SSHFS mount (Linux/macOS)')}</span>
+            <button class="btn-qc-copy" data-copy="${escapeHtml(sshfsCmd)}" title="${t('ui.copy_sshfs_mount_command', 'Copy SSHFS Mount Command')}">${ico('📋')} ${t('chassis.copy', 'Copy')}</button>
           </div>
           <div class="webdav-qc-code">
             <span>${escapeHtml(sshfsCmd)}</span>
@@ -1124,7 +1127,7 @@ export async function fetchAndRenderNetworkShares(container) {
   container.innerHTML = `
     <div style="text-align:center; padding:30px; color:var(--muted);">
       <div class="loader-spinner" style="margin:0 auto 10px;"></div>
-      Auditing network shares and protocols...
+      ${t('chassis.reading_shares', 'Reading network shares…')}
     </div>
   `;
 
@@ -1227,7 +1230,7 @@ export async function fetchAndRenderNetworkShares(container) {
     console.error('[ZettNAS] Failed to fetch network shares:', err);
     container.innerHTML = `
       <div style="text-align:center; padding:30px; color:var(--alert, var(--lt-t-ef4444ff, #ef4444));">
-        Failed to audit network shares: ${escapeHtml(err.message || 'Unknown error')}
+        ${escapeHtml(t('chassis.shares_failed', 'Could not read network shares: {error}', { error: err.message || t('toast.unknown_error', 'Unknown error') }))}
       </div>
     `;
   }
@@ -1289,14 +1292,14 @@ function buildShareCardInner(s, canManageShares) {
     <div class="share-protocols-row">
       ${shareProtocolTags(s, _shareServices)}
       ${s.cache_mode && s.cache_mode !== 'none' ? `
-        <span class="share-cache-tag" title="Cache Tiering: ${s.cache_mode}">Cache: ${escapeHtml(s.cache_mode)}${s.cache_pool ? ` (${escapeHtml(s.cache_pool)})` : ''}</span>
+        <span class="share-cache-tag" title="${escapeHtml(t('chassis.cache_title', 'Cache tiering: {mode}', { mode: s.cache_mode }))}">${escapeHtml(t('chassis.cache', 'Cache: {mode}', { mode: s.cache_mode }))}${s.cache_pool ? ` (${escapeHtml(s.cache_pool)})` : ''}</span>
       ` : ''}
     </div>
 
     <div class="share-usage-wrap">
       <div class="share-usage-labels">
         <span class="share-usage-text">${usedStr} / ${totalStr}</span>
-        <span class="share-free-text">${pct}% used · ${freeStr} free</span>
+        <span class="share-free-text">${t('chassis.used_free', '{pct}% used · {free} free', { pct, free: freeStr })}</span>
       </div>
       <div class="share-progress-track">
         <div class="share-progress-fill" style="width: ${Math.min(100, Math.max(0, pct))}%; background: ${barColor};"></div>
@@ -1305,14 +1308,14 @@ function buildShareCardInner(s, canManageShares) {
 
     <div class="share-card-actions" style="display:flex; justify-content:space-between; align-items:center;">
       <button class="btn-share-reveal" data-path="${escapeHtml(s.mountpoint || '')}" title="${t('ui.open_share_in_file_explorer', 'Open share in File Explorer')}">
-        📂 Open in File Explorer
+        ${ico('📂')} ${t('ui.open_in_file_explorer', 'Open in File Explorer')}
       </button>
       ${canManageShares ? `
         <button class="btn-share-compress btn-pill-toggle is-small" data-share-name="${escapeHtml(s.name)}" title="${t('compress.button_title', 'Compression for this share')}">
           ${t('compress.button', 'Compression')}
         </button>
         <button class="btn-share-delete btn-pill-toggle is-danger is-small" data-share-name="${escapeHtml(s.name)}" title="${t('ui.delete_network_share', 'Delete network share')}">
-          🗑️ Delete
+          ${ico('🗑️')} ${t('chassis.delete', 'Delete')}
         </button>
       ` : ''}
     </div>
@@ -1329,7 +1332,7 @@ function updateShareCard(card, s, canManageShares) {
   const usageText = card.querySelector('.share-usage-text');
   if (usageText) usageText.textContent = `${usedStr} / ${totalStr}`;
   const freeText = card.querySelector('.share-free-text');
-  if (freeText) freeText.textContent = `${pct}% used · ${freeStr} free`;
+  if (freeText) freeText.textContent = t('chassis.used_free', '{pct}% used · {free} free', { pct, free: freeStr });
   const fill = card.querySelector('.share-progress-fill');
   if (fill) {
     fill.style.width = `${Math.min(100, Math.max(0, pct))}%`;
@@ -1421,12 +1424,12 @@ export async function openSftpUsersModal(onSuccess) {
       const isRunning = Boolean(status?.running);
       if (statusText) {
         statusText.innerHTML = isRunning
-          ? `<span style="color:var(--ok2, #22c55e);">● Running</span> on port ${status?.port || 2222}`
-          : `<span style="color:var(--muted);">○ Stopped</span> (Port ${status?.port || 2222})`;
+          ? `<span style="color:var(--ok2, #22c55e);">● ${t('chassis.running', 'Running')}</span> ${t('chassis.on_port', 'on port {port}', { port: status?.port || 2222 })}`
+          : `<span style="color:var(--muted);">○ ${t('chassis.stopped', 'Stopped')}</span> ${t('chassis.port_paren', '(port {port})', { port: status?.port || 2222 })}`;
       }
 
       if (toggleBtn) {
-        toggleBtn.textContent = isRunning ? 'Stop SFTP' : 'Start SFTP';
+        toggleBtn.textContent = isRunning ? t('chassis.sftp_stop', 'Stop SFTP') : t('chassis.sftp_start', 'Start SFTP');
         toggleBtn.style.background = isRunning ? 'rgba(239,68,68,0.15)' : 'rgba(34,197,94,0.15)';
         toggleBtn.style.color = isRunning ? '#f87171' : '#4ade80';
         toggleBtn.style.borderColor = isRunning ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)';
@@ -1462,7 +1465,7 @@ export async function openSftpUsersModal(onSuccess) {
 
       if (usersList) {
         if (users.length === 0) {
-          usersList.innerHTML = `<div style="text-align:center; padding:16px; color:var(--muted); font-size:var(--zn-fs-xs);">No SFTP users configured yet. Create one below.</div>`;
+          usersList.innerHTML = `<div style="text-align:center; padding:16px; color:var(--muted); font-size:var(--zn-fs-xs);">${t('chassis.sftp_no_users', 'No SFTP users yet. Create one below.')}</div>`;
         } else {
           usersList.innerHTML = users.map((u) => `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid var(--zn-line-5); font-size:var(--zn-fs-xs);">
@@ -1472,11 +1475,11 @@ export async function openSftpUsersModal(onSuccess) {
                   ${u.read_only ? 'Read-Only' : 'Read/Write'}
                 </span>
                 <div style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:monospace; margin-top:2px;">
-                  Chroot: ${escapeHtml(u.home_dir || '/home/' + u.username)}
+                  ${escapeHtml(t('chassis.chroot', 'Chroot: {path}', { path: u.home_dir || '/home/' + u.username }))}
                 </div>
               </div>
               <button class="btn-pill-toggle btn-delete-sftp-user is-danger is-small" data-user="${escapeHtml(u.username)}">
-                Delete
+                ${t('chassis.delete', 'Delete')}
               </button>
             </div>
           `).join('');
@@ -1500,7 +1503,7 @@ export async function openSftpUsersModal(onSuccess) {
                   }
                 },
                 null,
-                { okText: 'Delete User', cancelText: 'Cancel' }
+                { okText: 'Delete User', cancelText: t('common.cancel', 'Cancel') }
               );
             };
           });
@@ -1580,23 +1583,23 @@ export function renderStorageTopologyTree(container, disks = [], unraidData = {}
       <div class="topo-root-node">
         <div class="topo-root-header">
           <svg viewBox="0 0 24 24" width="16" height="16"><use href="#i-storage"/></svg>
-          <span class="topo-root-title">STORAGE POOL & TOPOLOGY</span>
+          <span class="topo-root-title">${t('chassis.topology', 'STORAGE POOLS & LAYOUT')}</span>
           <span class="topo-root-badge">${escapeHtml(arrayStatus)}</span>
         </div>
         <div class="topo-branches">
           ${parityDisks.length > 0 ? `
             <div class="topo-branch-group">
-              <div class="topo-branch-label">PARITY PROTECTION (${parityDisks.length})</div>
+              <div class="topo-branch-label">${t('chassis.parity_count', 'PARITY PROTECTION ({count})', { count: parityDisks.length })}</div>
               <div class="topo-disk-grid">${parityHtml}</div>
             </div>
           ` : ''}
           <div class="topo-branch-group">
-            <div class="topo-branch-label">DATA ARRAY POOL (${dataDisks.length} DRIVES)</div>
-            <div class="topo-disk-grid">${dataHtml || '<span class="empty-note">No active data drives</span>'}</div>
+            <div class="topo-branch-label">${t('chassis.data_array', 'DATA ARRAY ({count, plural, one {# DRIVE} other {# DRIVES}})', { count: dataDisks.length })}</div>
+            <div class="topo-disk-grid">${dataHtml || `<span class="empty-note">${t('chassis.no_data_drives', 'No active data drives')}</span>`}</div>
           </div>
           ${cacheDisks.length > 0 ? `
             <div class="topo-branch-group">
-              <div class="topo-branch-label">NVME / SSD CACHE POOL (${cacheDisks.length})</div>
+              <div class="topo-branch-label">${t('chassis.cache_pool_count', 'NVME / SSD CACHE POOL ({count})', { count: cacheDisks.length })}</div>
               <div class="topo-disk-grid">${cacheHtml}</div>
             </div>
           ` : ''}
@@ -1626,7 +1629,7 @@ export async function fetchAndRenderRemoteStorage(container) {
   container.innerHTML = `
     <div style="text-align:center; padding:30px; color:var(--muted);">
       <div class="loader-spinner" style="margin:0 auto 10px;"></div>
-      Scanning cloud remotes and WebDAV engine...
+      ${t('chassis.reading_remotes', 'Reading cloud drives and WebDAV…')}
     </div>
   `;
 
@@ -1655,12 +1658,12 @@ export async function fetchAndRenderRemoteStorage(container) {
       remotesHtml = `
         <div style="text-align:center; padding:36px 20px; background:var(--zn-shade-25); border:1px dashed var(--zn-line-12); border-radius:10px;">
           <div style="font-size:32px; margin-bottom:8px;">☁️</div>
-          <div style="font-size:14px; font-weight:700; color:var(--zn-text-strong); margin-bottom:4px;">No Cloud Remotes Connected</div>
+          <div style="font-size:14px; font-weight:700; color:var(--zn-text-strong); margin-bottom:4px;">${t('chassis.no_remotes', 'No cloud drives connected')}</div>
           <div style="font-size:var(--zn-fs-xs); color:var(--muted); max-width:440px; margin:0 auto 16px auto; line-height:1.45;">
-            Connect your cloud storage buckets (Amazon S3, Backblaze B2, Google Drive, OneDrive, SFTP) to mount them directly into the ZettNAS File Explorer (/mnt/remotes).
+            ${t('chassis.no_remotes_desc', 'Connect your cloud storage (Amazon S3, Backblaze B2, Google Drive, OneDrive, SFTP) to open it in the File Explorer under /mnt/remotes.')}
           </div>
           <button class="btn-pill-toggle btn-trigger-new-remote is-primary">
-            ☁️ + Connect First Cloud Remote
+            ${ico('☁️')} ${t('chassis.connect_first', 'Connect a cloud drive')}
           </button>
         </div>
       `;
@@ -1692,18 +1695,18 @@ export async function fetchAndRenderRemoteStorage(container) {
               <div>
                 ${isMounted ? `
                   <button class="btn-remote-reveal btn-pill-toggle" data-path="${escapeHtml(r.mount_path)}" title="${t('ui.open_in_file_explorer', 'Open in File Explorer')}" style="background: rgba(14,165,233,0.15); color: var(--zn-text-accent); border-color: rgba(14,165,233,0.3);">
-                    📂 Open in File Explorer
+                    ${ico('📂')} ${t('ui.open_in_file_explorer', 'Open in File Explorer')}
                   </button>
                 ` : `
                   <button class="btn-remote-mount btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="${t('ui.mount_to_mnt_remotes', 'Mount to /mnt/remotes')}" style="background: var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); color: var(--lt-t-3bf58bff, #3bf58b); border-color: var(--lt-r-3bf58b40, rgba(59,245,139,0.25));">
-                    ▶ Mount
+                    ${ico('▶')} ${t('chassis.mount', 'Mount')}
                   </button>
                 `}
               </div>
               <div style="display:flex; gap:6px;">
                 ${isMounted ? `
                   <button class="btn-remote-unmount btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="${t('ui.unmount_from_system', 'Unmount from system')}">
-                    ⏹ Unmount
+                    ${ico('⏹')} ${t('chassis.unmount', 'Unmount')}
                   </button>
                 ` : ''}
                 <button class="btn-remote-delete btn-pill-toggle is-danger" data-name="${escapeHtml(r.name)}" title="${t('ui.delete_remote', 'Delete remote')}">
@@ -1729,7 +1732,7 @@ export async function fetchAndRenderRemoteStorage(container) {
           <div class="webdav-card-header">
             <div class="webdav-header-title">
               <svg class="ic" style="width:18px; height:18px; fill:currentColor; color:var(--lt-ink-brand, var(--brand, #0ea5e9));"><use href="#i-globe"/></svg>
-              <span>Universal WebDAV File Server</span>
+              <span>${t('chassis.webdav_title', 'WebDAV file server')}</span>
               <span class="webdav-status-pill ${webdavPillClass}">${webdavPillText}</span>
             </div>
             <div style="display:flex; gap:8px; align-items:center;">
@@ -1737,27 +1740,27 @@ export async function fetchAndRenderRemoteStorage(container) {
                 ${isRunning ? '⏹ Stop Server' : '▶ Start Server'}
               </button>
               <button class="btn-pill-toggle" id="btn-webdav-restart" title="${t('ui.restart_webdav_server', 'Restart WebDAV Server')}">
-                ↺ Restart
+                ${ico('↺')} ${t('chassis.restart', 'Restart')}
               </button>
               <button class="btn-pill-toggle" id="btn-webdav-config-open" title="${t('ui.configure_webdav_settings', 'Configure WebDAV settings')}">
-                ⚙️ Settings
+                ${ico('⚙️')} ${t('chassis.settings', 'Settings')}
               </button>
             </div>
           </div>
 
           <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:var(--zn-fs-xs); color:var(--muted); align-items:center;">
-            <span>Line-Rate Port: <strong style="color:var(--zn-text-strong);">${webdavStatus.port}</strong></span>
-            <span>Root Path: <code style="color:var(--zn-text-accent);">${escapeHtml(webdavStatus.root_path)}</code></span>
-            <span>Mode: <strong style="color:var(--zn-text-strong);">${webdavStatus.read_only ? 'Read-Only' : 'Read/Write'}</strong></span>
-            <span>Auth: <strong style="color:var(--zn-text-strong);">${escapeHtml(t('webdav.auth_accounts', 'ZettNAS accounts'))}</strong></span>
+            <span>${t('chassis.port', 'Port:')} <strong style="color:var(--zn-text-strong);">${webdavStatus.port}</strong></span>
+            <span>${t('chassis.root_path', 'Root folder:')} <code style="color:var(--zn-text-accent);">${escapeHtml(webdavStatus.root_path)}</code></span>
+            <span>${t('chassis.mode', 'Mode:')} <strong style="color:var(--zn-text-strong);">${webdavStatus.read_only ? 'Read-Only' : 'Read/Write'}</strong></span>
+            <span>${t('chassis.auth', 'Sign-in:')} <strong style="color:var(--zn-text-strong);">${escapeHtml(t('webdav.auth_accounts', 'ZettNAS accounts'))}</strong></span>
           </div>
 
           <!-- Quick Connect Grid -->
           <div class="webdav-quickconnect-grid">
             <div class="webdav-qc-item">
               <div class="webdav-qc-label">
-                <span>🍏 macOS Finder (⌘K)</span>
-                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.macos || '')}" title="${t('ui.copy_command', 'Copy command')}">📋 Copy</button>
+                <span>${ico('🍏')} ${t('chassis.qc_finder', 'macOS Finder (⌘K)')}</span>
+                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.macos || '')}" title="${t('ui.copy_command', 'Copy command')}">${ico('📋')} ${t('chassis.copy', 'Copy')}</button>
               </div>
               <div class="webdav-qc-code">
                 <span>${escapeHtml(qc.macos || '')}</span>
@@ -1766,8 +1769,8 @@ export async function fetchAndRenderRemoteStorage(container) {
 
             <div class="webdav-qc-item">
               <div class="webdav-qc-label">
-                <span>🪟 Windows Map Network Drive</span>
-                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.windows || '')}" title="${t('ui.copy_command', 'Copy command')}">📋 Copy</button>
+                <span>${ico('🪟')} ${t('chassis.qc_windows', 'Windows: map network drive')}</span>
+                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.windows || '')}" title="${t('ui.copy_command', 'Copy command')}">${ico('📋')} ${t('chassis.copy', 'Copy')}</button>
               </div>
               <div class="webdav-qc-code">
                 <span>${escapeHtml(qc.windows || '')}</span>
@@ -1776,8 +1779,8 @@ export async function fetchAndRenderRemoteStorage(container) {
 
             <div class="webdav-qc-item">
               <div class="webdav-qc-label">
-                <span>📱 iOS & Android Files</span>
-                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.ios || '')}" title="${t('ui.copy_url', 'Copy URL')}">📋 Copy</button>
+                <span>${ico('📱')} ${t('chassis.qc_mobile', 'Files app (iOS & Android)')}</span>
+                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.ios || '')}" title="${t('ui.copy_url', 'Copy URL')}">${ico('📋')} ${t('chassis.copy', 'Copy')}</button>
               </div>
               <div class="webdav-qc-code">
                 <span>${escapeHtml(qc.ios || '')}</span>
@@ -1786,8 +1789,8 @@ export async function fetchAndRenderRemoteStorage(container) {
 
             <div class="webdav-qc-item">
               <div class="webdav-qc-label">
-                <span>🌐 Toolkit HTTP Reverse Proxy</span>
-                <button class="btn-qc-copy" data-copy="${escapeHtml(proxyUrl)}" title="${t('ui.copy_proxy_url', 'Copy Proxy URL')}">📋 Copy</button>
+                <span>${ico('🌐')} ${t('chassis.qc_proxy', 'Through ZettNAS (reverse proxy)')}</span>
+                <button class="btn-qc-copy" data-copy="${escapeHtml(proxyUrl)}" title="${t('ui.copy_proxy_url', 'Copy Proxy URL')}">${ico('📋')} ${t('chassis.copy', 'Copy')}</button>
               </div>
               <div class="webdav-qc-code">
                 <span>${escapeHtml(proxyUrl)}</span>
@@ -1803,10 +1806,10 @@ export async function fetchAndRenderRemoteStorage(container) {
         <div style="display:flex; flex-direction:column; gap:12px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:13px; font-weight:800; color:var(--zn-text-strong); letter-spacing:0.5px; text-transform:uppercase;">
-              Connected Cloud Drives & Buckets (${remotes ? remotes.length : 0})
+              ${t('chassis.remotes_count', 'Connected cloud drives ({count})', { count: remotes ? remotes.length : 0 })}
             </div>
             <button class="btn-pill-toggle btn-trigger-new-remote" style="background: rgba(14,165,233,0.15); color: var(--zn-text-accent); border-color: rgba(14,165,233,0.3);" title="${t('ui.connect_new_cloud_remote', 'Connect New Cloud Remote')}">
-              ☁️ + Add Remote
+              ${ico('☁️')} ${t('chassis.add_remote', 'Add cloud drive')}
             </button>
           </div>
           ${remotesHtml}
@@ -1958,7 +1961,7 @@ export async function fetchAndRenderRemoteStorage(container) {
     console.error('[ZettNAS] Failed to fetch remote storage:', err);
     container.innerHTML = `
       <div style="text-align:center; padding:30px; color:var(--alert, var(--lt-t-ef4444ff, #ef4444));">
-        Failed to load remote storage subsystem: ${escapeHtml(err.message || 'Unknown error')}
+        ${escapeHtml(t('chassis.remotes_failed', 'Could not load cloud drives: {error}', { error: err.message || t('toast.unknown_error', 'Unknown error') }))}
       </div>
     `;
   }
@@ -3379,7 +3382,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
             }
           },
           null,
-          { okText: 'Revert Snapshot', cancelText: 'Cancel' }
+          { okText: 'Revert Snapshot', cancelText: t('common.cancel', 'Cancel') }
         );
         return;
       }
@@ -3400,7 +3403,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
           }
         },
         null,
-        { okText: 'Delete Snapshot', cancelText: 'Cancel' }
+        { okText: 'Delete Snapshot', cancelText: t('common.cancel', 'Cancel') }
       );
     });
   }

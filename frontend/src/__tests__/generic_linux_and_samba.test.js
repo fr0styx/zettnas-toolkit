@@ -58,12 +58,12 @@ describe('Sprint 5: Generic Linux Active Provisioner & Samba Engine (Frontend)',
     expect(container.textContent).toContain("ZettNAS manages the storage pools");
     expect(container.textContent).toContain('Vault Storage Pool');
     expect(container.textContent).toContain('BTRFS · RAID1');
-    expect(container.textContent).toContain('Parity Protected');
+    expect(container.textContent).toContain('Parity protected');
 
     // Action buttons
     const scrubBtn = container.querySelector('.btn-pool-scrub');
     expect(scrubBtn).not.toBeNull();
-    expect(scrubBtn.textContent).toContain('Scrub Pool');
+    expect(scrubBtn.textContent).toContain('Scrub pool');
 
     const snapsBtn = container.querySelector('.btn-pool-snaps');
     expect(snapsBtn).not.toBeNull();

@@ -198,7 +198,7 @@ describe('Phase 2: Parametric Chassis Twin & Locate Strobe', () => {
 
     expect(container.querySelector('.storage-topology-tree')).not.toBeNull();
     expect(container.textContent).toContain('PARITY PROTECTION');
-    expect(container.textContent).toContain('DATA ARRAY POOL');
+    expect(container.textContent).toContain('DATA ARRAY (');
     expect(container.textContent).toContain('NVME / SSD CACHE POOL');
   });
 
@@ -340,7 +340,7 @@ describe('Sprint 3: Storage Pools Topology & Network Shares', () => {
 
     expect(container.textContent).toContain('Main Array');
     expect(container.textContent).toContain('XFS · PARITY-1');
-    expect(container.textContent).toContain('Parity Protected');
+    expect(container.textContent).toContain('Parity protected');
     expect(container.textContent).toContain('/dev/sdb');
     expect(container.textContent).toContain('/dev/sda');
     expect(container.textContent).toContain('Standby');

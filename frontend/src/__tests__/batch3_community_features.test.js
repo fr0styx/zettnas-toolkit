@@ -143,7 +143,7 @@ describe('Batch 3 Community Features Suite', () => {
 
       const ejectBtn = container.querySelector('.btn-pool-export');
       expect(ejectBtn).not.toBeNull();
-      expect(ejectBtn.textContent).toContain('Safely Eject');
+      expect(ejectBtn.textContent).toContain('Safely eject');
 
       ejectBtn.click();
       const okBtn = document.getElementById('confirm-toast-ok');
@@ -193,12 +193,12 @@ describe('Batch 3 Community Features Suite', () => {
 
       const banner = container.querySelector('.external-pools-banner');
       expect(banner).not.toBeNull();
-      expect(banner.textContent).toContain('External Storage Pool Detected:');
+      expect(banner.textContent).toContain('External storage pool found:');
       expect(banner.textContent).toContain('usb_backup_vault');
 
       const importBtn = banner.querySelector('.btn-import-external-pool');
       expect(importBtn).not.toBeNull();
-      expect(importBtn.textContent).toContain('Import Pool');
+      expect(importBtn.textContent).toContain('Import pool');
 
       importBtn.click();
 

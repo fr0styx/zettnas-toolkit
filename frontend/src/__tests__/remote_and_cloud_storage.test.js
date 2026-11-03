@@ -52,13 +52,13 @@ describe('Sprint 4: Remote & Cloud Storage Subsystem (Frontend)', () => {
 
     await fetchAndRenderRemoteStorage(container);
 
-    expect(container.textContent).toContain('Universal WebDAV File Server');
+    expect(container.textContent).toContain('WebDAV file server');
     expect(container.textContent).toContain('RUNNING (PID: 14205)');
     expect(container.textContent).toContain('8084');
     expect(container.textContent).toContain('/mnt/user');
     expect(container.textContent).toContain('macOS Finder');
-    expect(container.textContent).toContain('Windows Map Network Drive');
-    expect(container.textContent).toContain('No Cloud Remotes Connected');
+    expect(container.textContent).toContain('Windows: map network drive');
+    expect(container.textContent).toContain('No cloud drives connected');
   });
 
   it('renders connected cloud remotes with mount badges and file explorer button', async () => {
