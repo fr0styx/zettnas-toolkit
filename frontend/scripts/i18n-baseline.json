@@ -1,6 +1,6 @@
 {
   "raw_toasts": 0,
-  "hardcoded_ui": 378,
+  "hardcoded_ui": 350,
   "missing_plurals": 0,
   "to_fixed": 70,
   "emoji_strings": 137,
@@ -14,7 +14,7 @@
     "frontend/src/components/encrypted-folders.js": 1,
     "frontend/src/components/events.js": 3,
     "frontend/src/components/fan-control.js": 21,
-    "frontend/src/components/file-manager.js": 14,
+    "frontend/src/components/file-manager.js": 11,
     "frontend/src/components/file-preview-modal.js": 2,
     "frontend/src/components/led-control.js": 4,
     "frontend/src/components/management.js": 18,
@@ -23,7 +23,6 @@
     "frontend/src/components/management/security.js": 1,
     "frontend/src/components/management/system.js": 11,
     "frontend/src/components/management/ups.js": 1,
-    "frontend/src/components/metrics-chart.js": 13,
     "frontend/src/components/mini-preview.js": 2,
     "frontend/src/components/network-manager.js": 3,
     "frontend/src/components/settings.js": 13,
@@ -34,10 +33,10 @@
     "frontend/src/components/vm/connect-modal.js": 4,
     "frontend/src/components/vm/console.js": 11,
     "frontend/src/components/vm/iso-manager.js": 1,
-    "frontend/src/components/widgets.js": 12,
+    "frontend/src/components/widgets.js": 1,
     "frontend/src/folder-browser.js": 1,
     "frontend/src/main.js": 6,
-    "frontend/src/modals.js": 14,
+    "frontend/src/modals.js": 13,
     "frontend/src/windows/drawer.html": 21,
     "frontend/src/windows/management-window.html": 107
   }

@@ -130,8 +130,8 @@ function updateSummaryStrip(data) {
   const txRate = latest.net_tx || 0;
   pills.push(`
     <div class="device-metric-pill" title="${t('ui.combined_lan_throughput_all_physical', 'Combined LAN Throughput (all physical interfaces)')}">
-      <span class="dmp-name">Net:</span>
-      <span class="dmp-val">↓ ${formatRate(rxRate)} · ↑ ${formatRate(txRate)} <span style="opacity:0.65; font-size:var(--zn-fs-xs);">(Combined)</span></span>
+      <span class="dmp-name">${t('mch.net', 'Net:')}</span>
+      <span class="dmp-val">↓ ${formatRate(rxRate)} · ↑ ${formatRate(txRate)} <span style="opacity:0.65; font-size:var(--zn-fs-xs);">${t('mch.combined', '(Combined)')}</span></span>
     </div>
   `);
 
@@ -141,7 +141,7 @@ function updateSummaryStrip(data) {
       const ifInfo = liveNetIfaces[ifName];
       if (ifInfo && (ifInfo.is_physical || ifInfo.is_bond)) {
         pills.push(`
-          <div class="device-metric-pill" title="${escapeHtml(ifName)} Throughput">
+          <div class="device-metric-pill" title="${escapeHtml(t('mch.throughput', '{name} Throughput', { name: ifName }))}">
             <span class="dmp-name">${escapeHtml(ifName)}:</span>
             <span class="dmp-val">↓ ${escapeHtml(ifInfo.rx || '0 B/s')} · ↑ ${escapeHtml(ifInfo.tx || '0 B/s')}</span>
           </div>
@@ -157,7 +157,7 @@ function updateSummaryStrip(data) {
     if (rRate > 0 || wRate > 0) {
       pills.push(`
         <div class="device-metric-pill">
-          <span class="dmp-name">Disk I/O:</span>
+          <span class="dmp-name">${t('mch.disk_io', 'Disk I/O:')}</span>
           <span class="dmp-val">R: ${formatRate(rRate)} · W: ${formatRate(wRate)}</span>
         </div>
       `);
@@ -205,13 +205,13 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
       y: {
         grid: { color: 'rgba(255,255,255,0.05)' },
         beginAtZero: true,
-        title: { display: true, text: 'Utilization (%) / Temp (°C)', font: { size: 9 }, color: '#94a3b8' }
+        title: { display: true, text: t('mch.util_temp', 'Utilization (%) / Temp (°C)'), font: { size: 9 }, color: '#94a3b8' }
       }
     };
 
     if (_metricsGroup === 'system') {
       datasets.push({
-        label: 'CPU Temp (°C)',
+        label: t('mch.cpu_temp', 'CPU Temp (°C)'),
         data: data.map((d) => d.cpu_temp),
         borderColor: '#f87171',
         backgroundColor: 'rgba(248, 113, 113, 0.12)',
@@ -222,7 +222,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
         pointHoverRadius: 4
       });
       datasets.push({
-        label: 'CPU Util (%)',
+        label: t('mch.cpu_util', 'CPU Util (%)'),
         data: data.map((d) => d.cpu_util),
         borderColor: '#38bdf8',
         backgroundColor: 'rgba(56, 189, 248, 0.08)',
@@ -233,7 +233,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
         pointHoverRadius: 4
       });
       datasets.push({
-        label: 'Memory (%)',
+        label: t('mch.memory', 'Memory (%)'),
         data: data.map((d) => d.mem_pct),
         borderColor: '#a78bfa',
         backgroundColor: 'rgba(167, 139, 250, 0.08)',
@@ -312,7 +312,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
       const unitStr = useMB ? 'MB/s' : 'KB/s';
 
       datasets.push({
-        label: `Download Rx (${unitStr})`,
+        label: t('mch.rx', 'Download Rx ({unit})', { unit: unitStr }),
         data: data.map((d) => Number(((d.net_rx || 0) / factor).toFixed(2))),
         borderColor: '#38bdf8',
         backgroundColor: 'rgba(56, 189, 248, 0.15)',
@@ -324,7 +324,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
       });
 
       datasets.push({
-        label: `Upload Tx (${unitStr})`,
+        label: t('mch.tx', 'Upload Tx ({unit})', { unit: unitStr }),
         data: data.map((d) => Number(((d.net_tx || 0) / factor).toFixed(2))),
         borderColor: '#a78bfa',
         backgroundColor: 'rgba(167, 139, 250, 0.15)',
@@ -338,7 +338,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
       const maxDisk = Math.max(...data.map((d) => Math.max(d.disk_read || 0, d.disk_write || 0)), 0);
       if (maxDisk > 0) {
         datasets.push({
-          label: `Disk Read (${unitStr})`,
+          label: t('mch.read', 'Disk Read ({unit})', { unit: unitStr }),
           data: data.map((d) => Number(((d.disk_read || 0) / factor).toFixed(2))),
           borderColor: '#25c2a0',
           borderDash: [3, 3],
@@ -349,7 +349,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
           pointHoverRadius: 4
         });
         datasets.push({
-          label: `Disk Write (${unitStr})`,
+          label: t('mch.write', 'Disk Write ({unit})', { unit: unitStr }),
           data: data.map((d) => Number(((d.disk_write || 0) / factor).toFixed(2))),
           borderColor: '#f5a623',
           borderDash: [3, 3],
@@ -366,7 +366,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
     } else {
       // 'all' view: CPU, RAM, Disk Temps (clean single 0-100 scale, no conflicting fan RPM axis)
       datasets.push({
-        label: 'CPU Temp (°C)',
+        label: t('mch.cpu_temp', 'CPU Temp (°C)'),
         data: data.map((d) => d.cpu_temp),
         borderColor: '#f87171',
         backgroundColor: 'rgba(248, 113, 113, 0.1)',

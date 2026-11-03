@@ -540,7 +540,7 @@ export function openEventDetailModal(ev) {
   if (localTimeEl) localTimeEl.textContent = formatDateTime(dt);
   if (epochEl) epochEl.textContent = `${ts} (${dt.toISOString()})`;
 
-  if (headlineEl) headlineEl.textContent = ev.title || "System Notification";
+  if (headlineEl) headlineEl.textContent = ev.title || t('mdx.notification', 'System Notification');
   if (messageEl) messageEl.textContent = ev.message || "--";
 
   if (rawEl) {

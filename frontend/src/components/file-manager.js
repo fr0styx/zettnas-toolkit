@@ -306,7 +306,7 @@ export class FileManagerWindow {
                 </div>
                 <div class="fm-inspector-pane" style="display: none;">
                   <div class="fm-inspector-header" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--zn-line-6);">
-                    <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--fg); text-transform: uppercase; letter-spacing: 0.5px;">Inspector</span>
+                    <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--fg); text-transform: uppercase; letter-spacing: 0.5px;">${t('fmx.inspector', 'Inspector')}</span>
                     <button type="button" class="fm-inspector-close-btn" style="background: none; border: none; font-size: 14px; color: var(--muted); cursor: pointer;">✕</button>
                   </div>
                   <div class="fm-inspector-content" style="flex: 1; overflow-y: auto; padding: 12px;"></div>
@@ -422,7 +422,7 @@ export class FileManagerWindow {
               </div>
               <div class="fm-inspector-pane" style="display: none;">
                 <div class="fm-inspector-header" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--zn-line-6);">
-                  <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--fg); text-transform: uppercase; letter-spacing: 0.5px;">Inspector</span>
+                  <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--fg); text-transform: uppercase; letter-spacing: 0.5px;">${t('fmx.inspector', 'Inspector')}</span>
                   <button type="button" class="fm-inspector-close-btn" style="background: none; border: none; font-size: 14px; color: var(--muted); cursor: pointer;">✕</button>
                 </div>
                 <div class="fm-inspector-content" style="flex: 1; overflow-y: auto; padding: 12px;"></div>
@@ -2327,7 +2327,7 @@ export class FileManagerWindow {
     this.list.innerHTML = '';
 
     this.list.setAttribute('role', 'grid');
-    this.list.setAttribute('aria-label', 'Files');
+    this.list.setAttribute('aria-label', t('fmx.files', 'Files'));
     this.list.setAttribute('aria-multiselectable', 'true');
     for (let i = startIndex; i < endIndex; i++) {
       const file = this.fileList[i];

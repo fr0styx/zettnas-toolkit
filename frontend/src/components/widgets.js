@@ -2088,16 +2088,16 @@ export function initWidgets() {
 
       if (aiBadge) {
         if (nUtil > 0 && gUtil > 0) {
-          aiBadge.textContent = 'DUAL RUN';
+          aiBadge.textContent = t('wai.dual', 'DUAL RUN');
           aiBadge.style.color = 'var(--brand, #00f0ff)';
         } else if (nUtil > 0 || (stats.ai_active && stats.ai_accelerator === 'npu')) {
-          aiBadge.textContent = 'NPU RUN';
+          aiBadge.textContent = t('wai.npu', 'NPU RUN');
           aiBadge.style.color = 'var(--brand, #00f0ff)';
         } else if (gUtil > 0 || (stats.ai_active && (stats.ai_accelerator === 'gpu' || stats.ai_accelerator === 'arc'))) {
-          aiBadge.textContent = 'GPU RUN';
+          aiBadge.textContent = t('wai.gpu', 'GPU RUN');
           aiBadge.style.color = '#c084fc';
         } else if (npu.present && gpu.present) {
-          aiBadge.textContent = 'NPU + GPU';
+          aiBadge.textContent = t('wai.both_ready', 'NPU + GPU');
           aiBadge.style.color = 'var(--ok2, #25c2a0)';
         } else if (npu.present) {
           aiBadge.textContent = 'NPU';
@@ -2106,20 +2106,20 @@ export function initWidgets() {
           aiBadge.textContent = t('bench.gpu', 'GPU');
           aiBadge.style.color = '#c084fc';
         } else {
-          aiBadge.textContent = 'CPU ONLY';
+          aiBadge.textContent = t('wai.cpu_only', 'CPU ONLY');
           aiBadge.style.color = 'var(--muted)';
         }
       }
 
       if (aiEngineStatus) {
         if (nUtil > 0 || (stats.ai_active && stats.ai_accelerator === 'npu')) {
-          aiEngineStatus.innerHTML = '<span class="ai-status-dot active"></span> <strong style="color:var(--lt-ink-brand, var(--brand, #00f0ff));">Intel AI Boost NPU Active</strong>';
+          aiEngineStatus.innerHTML = '<span class="ai-status-dot active"></span> <strong style="color:var(--lt-ink-brand, var(--brand, #00f0ff));">' + escapeHtml(t('wai.npu_active', 'Intel AI Boost NPU Active')) + '</strong>';
         } else if (gUtil > 0 || (stats.ai_active && (stats.ai_accelerator === 'gpu' || stats.ai_accelerator === 'arc'))) {
-          aiEngineStatus.innerHTML = '<span class="ai-status-dot active-gpu"></span> <strong style="color:var(--zn-text-ai);">Intel Arc GPU Active</strong>';
+          aiEngineStatus.innerHTML = '<span class="ai-status-dot active-gpu"></span> <strong style="color:var(--zn-text-ai);">' + escapeHtml(t('wai.gpu_active', 'Intel Arc GPU Active')) + '</strong>';
         } else if (npu.present && gpu.present) {
-          aiEngineStatus.innerHTML = '<span class="ai-status-dot standby"></span> <span>Hybrid Dual Silicon</span> <span style="opacity:0.65;">(NPU + GPU Ready)</span>';
+          aiEngineStatus.innerHTML = '<span class="ai-status-dot standby"></span> <span>' + escapeHtml(t('wai.hybrid', 'Hybrid Dual Silicon')) + '</span> <span style="opacity:0.65;">' + escapeHtml(t('wai.hybrid_ready', '(NPU + GPU Ready)')) + '</span>';
         } else {
-          aiEngineStatus.innerHTML = '<span class="ai-status-dot standby"></span> <span>Neural Engine Ready</span>';
+          aiEngineStatus.innerHTML = '<span class="ai-status-dot standby"></span> <span>' + escapeHtml(t('wai.neural_ready', 'Neural Engine Ready')) + '</span>';
         }
       }
 
@@ -2171,7 +2171,7 @@ export function initWidgets() {
           }
         }
         if (topText) {
-          topText.textContent = `Re-indexing ${pct}%${etaShort}`;
+          topText.textContent = t('wai.reindexing', 'Re-indexing {pct}%{eta}', { pct, eta: etaShort });
         }
         if (topDot) {
           topDot.style.background = '#00f0ff';
