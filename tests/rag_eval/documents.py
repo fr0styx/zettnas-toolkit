@@ -524,17 +524,40 @@ def build(root: str) -> list[str]:
     return LONG + OFFICE + SCANNED
 
 
+_THUMB = (124, 175)
+_KNOWN: dict[tuple[str, ...], list[int]] = {}
+
+
+def _thumb(img) -> list[int]:
+    return list(img.convert("L").resize(_THUMB).getdata())
+
+
+def _known_thumb(lines: list[str]) -> list[int]:
+    key = tuple(lines)
+    if key not in _KNOWN:
+        _KNOWN[key] = _thumb(_page_image(lines))
+    return _KNOWN[key]
+
+
 def page_text_for(jpeg: bytes) -> str:
-    """The stand-in for the vision model on a scanned PDF page: what that page says."""
+    """The stand-in for the vision model on a scanned PDF page: what that page says.
+
+    The vision queue sends each page as PDFium draws it (NAI-11), not the JPEG in the file,
+    so a page is known by its look: the nearest small greyscale copy of a known page.
+    """
+    from PIL import Image
+
+    with Image.open(io.BytesIO(jpeg)) as im:
+        seen = _thumb(im)
+    best, best_d = "", None
     for rel, pages in SCANNED_TEXT.items():
         if not rel.endswith(".pdf"):
             continue
         for lines in pages:
-            buf = io.BytesIO()
-            _page_image(lines).save(buf, "JPEG", quality=82)
-            if buf.getvalue() == jpeg:
-                return "\n".join(lines)
-    return ""
+            d = sum(abs(a - b) for a, b in zip(seen, _known_thumb(lines), strict=True)) / len(seen)
+            if best_d is None or d < best_d:
+                best, best_d = "\n".join(lines), d
+    return best if best_d is not None and best_d < 1.7 else ""  # its own page sits near 1.2, the next near 2.3
 
 
 def photo_text_for(path: str) -> tuple[str, str]:

@@ -8,6 +8,7 @@ import ast
 import html.parser
 import os
 import re
+import threading
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -31,10 +32,17 @@ from backend.services.rag_text import (
 )
 
 PDF_MAX_PAGES = 300
+# PDFium is not thread-safe: indexing and the vision queue's page rendering share this lock (NAI-11).
+PDFIUM_LOCK = threading.Lock()
 
 
 def pdf_text(file_path: str, max_pages: int = PDF_MAX_PAGES) -> str:
     """The text of a PDF, page by page (pages separated by a form feed), via PDFium."""
+    with PDFIUM_LOCK:
+        return _pdf_text(file_path, max_pages)
+
+
+def _pdf_text(file_path: str, max_pages: int) -> str:
     import pypdfium2 as pdfium
 
     pdf = pdfium.PdfDocument(file_path)

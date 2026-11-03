@@ -77,6 +77,7 @@ OCR_PROMPT = (
 )
 MAX_PDF_PAGES = 8
 MAX_PAGE_BYTES = 12 * 1024 * 1024
+RENDER_LONG_SIDE = 1600  # pixels on a rendered page's long side, what the OCR call sends anyway
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS photo_vision (
@@ -187,6 +188,50 @@ def extract_pdf_jpegs(path: str, max_pages: int = MAX_PDF_PAGES) -> list[bytes]:
         if len(out) >= max_pages:
             break
     return out
+
+
+def render_pdf_pages(path: str, max_pages: int = MAX_PDF_PAGES) -> list[bytes]:
+    """Each page of a PDF drawn as a greyscale JPEG (NAI-11).
+
+    Black-and-white scans store their pages as fax (CCITT), JBIG2 or 1-bit images, which
+    have no JPEG to lift out; drawing the page reads every kind, with its crop and rotation.
+    """
+    from backend.services.rag_documents import PDFIUM_LOCK
+
+    try:
+        with PDFIUM_LOCK:
+            return _render_pages(path, max_pages)
+    except (RuntimeError, OSError, ValueError):  # PdfiumError is a RuntimeError
+        logger.debug("vision_queue.render_pdf_pages: could not draw %s", path, exc_info=True)
+        return []
+
+
+def _render_pages(path: str, max_pages: int) -> list[bytes]:
+    import pypdfium2 as pdfium
+
+    pdf = pdfium.PdfDocument(path)
+    out = []
+    try:
+        for i in range(min(len(pdf), max_pages)):
+            page = pdf[i]
+            try:
+                scale = min(4.0, RENDER_LONG_SIDE / max(*page.get_size(), 1.0))
+                # pypdfium2 types scale as int; PDFium takes any float
+                bitmap = page.render(scale=scale, grayscale=True)  # pyright: ignore[reportArgumentType]
+                buf = io.BytesIO()
+                bitmap.to_pil().convert("L").save(buf, format="JPEG", quality=85)
+                bitmap.close()
+                out.append(buf.getvalue())
+            finally:
+                page.close()
+    finally:
+        pdf.close()
+    return out
+
+
+def pdf_page_images(path: str) -> list[bytes]:
+    """The pages to read: drawn by PDFium, or the JPEGs in the file when it can't open it."""
+    return render_pdf_pages(path) or extract_pdf_jpegs(path)
 
 
 def ocr_image_bytes(data: bytes, model: str, host: str, post: Callable = _http_json) -> str:
@@ -410,7 +455,8 @@ class VisionQueue:
         row = conn.execute(
             """SELECT f.file_id, f.canonical_path, f.mtime_ns, f.size_bytes FROM indexed_files f
                WHERE f.file_ext = '.pdf'
-                 AND NOT EXISTS (SELECT 1 FROM pdf_ocr o WHERE o.path = f.canonical_path AND o.mtime_ns = f.mtime_ns)
+                 AND NOT EXISTS (SELECT 1 FROM pdf_ocr o WHERE o.path = f.canonical_path
+                                 AND o.mtime_ns = f.mtime_ns AND o.status <> 'no-images')
                  AND (SELECT COALESCE(SUM(LENGTH(c.chunk_text)), 0) FROM document_chunks c WHERE c.file_id = f.file_id) < 400
                ORDER BY f.file_id DESC LIMIT 1"""
         ).fetchone()
@@ -422,8 +468,8 @@ class VisionQueue:
 
             if is_backing_disk_in_standby(resolve_path_backing_dev(path)):
                 return "standby"
-        pages = extract_pdf_jpegs(path)
-        text, status = "", "no-images"
+        pages = pdf_page_images(path)  # 'no-images' rows, from before pages were drawn, are tried again
+        text, status = "", "no-pages"
         if pages:
             host = self._host()
             model = self.model_picker(cfg, host)
@@ -452,7 +498,7 @@ class VisionQueue:
                 force_wake=False,
             )
             return "done"
-        return "empty" if status == "no-images" else status
+        return "empty" if status == "no-pages" else status
 
     def status(self) -> dict[str, Any]:
         conn = self._conn()
