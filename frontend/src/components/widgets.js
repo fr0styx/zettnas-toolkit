@@ -1097,6 +1097,22 @@ function renderGlanceBarForCurrentView() {
   }
 }
 
+/**
+ * "November 2026" (or "Nov 2026") in the app's language.
+ * @param {number} year
+ * @param {number} month
+ * @param {'long' | 'short' | 'narrow'} [width]
+ */
+export function monthTitle(year, month, width = 'long') {
+  return new Intl.DateTimeFormat(currentLocale(), { month: width, year: 'numeric' }).format(new Date(year, month, 1));
+}
+
+/** Two-letter weekday heads, Sunday first, in the app's language ("Su Mo" / "So Mo" / "周日"). */
+export function weekdayInitials() {
+  const fmt = new Intl.DateTimeFormat(currentLocale(), { weekday: 'short' });
+  return Array.from({ length: 7 }, (_, i) => fmt.format(new Date(2023, 0, 1 + i)).replace('.', '').slice(0, 2));
+}
+
 export function renderCalendar() {
   const calWidget = document.getElementById('widget-calendar');
   if (!calWidget || calWidget.style.display === 'none') return;
@@ -1120,8 +1136,7 @@ export function renderCalendar() {
   }
 
   if (monthBadge) {
-    const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    monthBadge.textContent = `${monthNames[month]} ${year}`;
+    monthBadge.textContent = monthTitle(year, month, 'short').toUpperCase();
   }
 
   const holidaysEnabled = config.calendarHolidays !== false;
@@ -1142,9 +1157,8 @@ export function renderCalendar() {
   const prevMonthTotalDays = new Date(year, month, 0).getDate();
 
   let html = '';
-  const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-  weekdays.forEach((d) => {
-    html += `<div class="cal-weekday">${d}</div>`;
+  weekdayInitials().forEach((d) => {
+    html += `<div class="cal-weekday">${escapeHtml(d)}</div>`;
   });
 
   // Previous month padding
@@ -2804,8 +2818,7 @@ export function renderModalCalendarGrid() {
   const today = new Date();
 
   if (titleEl) {
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    titleEl.textContent = `${monthNames[month]} ${year}`;
+    titleEl.textContent = monthTitle(year, month, 'long');
   }
 
   const country = getActiveCountry();
@@ -2826,9 +2839,8 @@ export function renderModalCalendarGrid() {
   const prevMonthTotalDays = new Date(year, month, 0).getDate();
 
   let html = '';
-  const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-  weekdays.forEach((d) => {
-    html += `<div class="cal-weekday">${d}</div>`;
+  weekdayInitials().forEach((d) => {
+    html += `<div class="cal-weekday">${escapeHtml(d)}</div>`;
   });
 
   // Previous month days
