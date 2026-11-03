@@ -762,7 +762,7 @@ async function loadContainerDetails(cid) {
     if (backupActionBtn) {
       backupActionBtn.addEventListener('click', async () => {
         backupActionBtn.disabled = true;
-        backupActionBtn.textContent = t('ui.backing_up', '⏳ Backing up...');
+        setIconLabel(backupActionBtn, '⏳', t('ui.backing_up', 'Backing up...'));
         showToast(t('toast.creating_backup_for', 'Creating backup for {activeCname}...', { activeCname: _activeCname }), 'info');
         try {
           const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/backup`);
@@ -773,7 +773,7 @@ async function loadContainerDetails(cid) {
           showToast(t('toast.backup_failed', 'Backup failed: {error}', { error: err.message }), 'error');
         } finally {
           backupActionBtn.disabled = false;
-          backupActionBtn.textContent = t('ui.backup_app_now', '💾 Backup App Now');
+          setIconLabel(backupActionBtn, '💾', t('ci.backup_now', 'Back up the app now')); // the label it started with
         }
       });
     }
@@ -1209,7 +1209,7 @@ async function loadContainerCompose(cid) {
 
     if (badgeEl) {
       if (data.source === 'disk') {
-        badgeEl.textContent = t('ui.read_from_disk', '📄 Read from Disk');
+        setIconLabel(badgeEl, '📄', t('ui.read_from_disk', 'Read from Disk'));
         badgeEl.style.color = '#38bdf8';
         badgeEl.style.background = 'rgba(56, 189, 248, 0.15)';
       } else {

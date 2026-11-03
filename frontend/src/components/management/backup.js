@@ -70,7 +70,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
       } else if (job.last_status === 'skipped') {
         statusHtml = `<span class="backup-skipped" title="${escapeHtml(job.last_error || '')}">${escapeHtml(t('backup.skipped', 'Skipped'))}</span>`;
       } else if (job.last_status === 'error') {
-        statusHtml = `<span class="zn-state zn-state--crit" title="${escapeHtml(job.last_error || '')}">${escapeHtml(t('backup.state_failed', '⚠ Failed'))}</span>`;
+        statusHtml = `<span class="zn-state zn-state--crit" title="${escapeHtml(job.last_error || '')}"><span aria-hidden="true">⚠</span> ${escapeHtml(t('backup.state_failed', 'Failed'))}</span>`;
       } else {
         statusHtml = `<span class="zn-state zn-state--idle">${escapeHtml(t('backup.state_idle', 'Not run yet'))}</span>`;
       }

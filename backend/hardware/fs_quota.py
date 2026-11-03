@@ -6,6 +6,9 @@ filesystem can hold it, the limit is set there:
     btrfs   a subvolume's quota group (btrfs qgroup limit)
     ZFS     a dataset's refquota
     XFS     a project quota on the folder (xfs_quota), when the volume is mounted with prjquota
+    ext4    a project quota on the folder (chattr -p/+P and setquota -P), when the volume has the
+            project feature and is mounted with prjquota, and e2fsprogs and quota are installed
+            (the standalone OS image; the container image leaves them out for its size budget)
 
 Anything else (ext4 without project quotas, Unraid's /mnt/user, network mounts) stays advisory:
 ZettNAS checks its own uploads and says so. Each answer says which it is and why.
@@ -35,7 +38,7 @@ def _result(enforced: bool, method: str | None, reason: str = "") -> dict[str, A
 
 
 def project_id(path: str) -> int:
-    """A stable XFS project id for a folder (10000-999999)."""
+    """A stable project id for a folder (10000-999999), for XFS and ext4 project quotas."""
     return 10000 + zlib.crc32(os.path.realpath(path).encode()) % 990000
 
 
@@ -75,6 +78,24 @@ def _xfs(path: str, mountpoint: str, options: str, limit: int, run: Callable) ->
     return _result(True, "xfs-project")
 
 
+def _ext4(path: str, mountpoint: str, options: str, limit: int, run: Callable) -> dict[str, Any]:
+    if "prjquota" not in options.split(","):
+        return _result(False, None, "This ext4 volume is mounted without project quotas (prjquota).")
+    pid = project_id(path)
+    blocks_kib = -(-limit // 1024) if limit else 0  # setquota counts 1 KiB blocks
+    steps = [
+        ["chattr", "-R", "-p", str(pid), "+P", path],  # the folder and what is in it join the project
+        ["setquota", "-P", str(pid), "0", str(blocks_kib), "0", "0", mountpoint],
+    ]
+    for cmd in steps:
+        res = _call(run, cmd)
+        if res.returncode == 127:
+            return _result(False, None, f"{cmd[0]} isn't installed here, so ext4 can't limit the folder on its own.")
+        if res.returncode != 0:
+            return _result(False, None, f"{cmd[0]} refused the limit: {(res.stderr or res.stdout or '').strip()[:200]}")
+    return _result(True, "ext4-project")
+
+
 def apply(
     path: str, limit_bytes: int, run: Callable = run_bounded, mounts: list[dict[str, str]] | None = None
 ) -> dict[str, Any]:
@@ -91,6 +112,8 @@ def apply(
         return _zfs(path, m["device"], own, limit, run)
     if fs == "xfs" and m:
         return _xfs(path, m["mountpoint"], m["options"], limit, run)
+    if fs == "ext4" and m and "prjquota" in m["options"].split(","):
+        return _ext4(path, m["mountpoint"], m["options"], limit, run)
     label = {
         "fuse.shfs": "Unraid's user shares",
         "ext4": "ext4 here",

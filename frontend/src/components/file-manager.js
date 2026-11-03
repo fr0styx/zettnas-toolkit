@@ -1538,7 +1538,7 @@ export class FileManagerWindow {
     const cleanQ = q.replace(/^(\?|ai:\s*)/i, '').trim() || q;
     try {
       if (useAi) {
-        showToast(t('toast.zettai_searching', '✨ ZettAI searching "{cleanQ}"...', { cleanQ: cleanQ }), 'info');
+        showToast(t('toast.zettai_searching', 'ZettAI searching "{cleanQ}"...', { cleanQ: cleanQ }), 'info');
         const aiRes = await api.post('/api/media/search', {
           query: cleanQ,
           path_prefix: this.currentPath && this.currentPath !== '/' ? this.currentPath : null,
@@ -4097,7 +4097,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
 
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
           <button id="fm-share-cancel" class="btn-pill-toggle">${t('common.cancel', 'Cancel')}</button>
-          <button id="fm-share-submit" class="btn-pill-toggle active is-primary">${t('ui.generate_share_link', '✨ Generate Share Link')}</button>
+          <button id="fm-share-submit" class="btn-pill-toggle active is-primary"><span aria-hidden="true">✨</span> ${escapeHtml(t('ui.generate_share_link', 'Generate Share Link'))}</button>
         </div>
       </div>
 
@@ -4192,7 +4192,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
       } catch (err) {
         showToast(t('toast.failed_to_create_share_link', 'Failed to create share link: {error}', { error: err.message }), 'error');
         submitBtn.disabled = false;
-        submitBtn.textContent = t('ui.generate_share_link', '✨ Generate Share Link');
+        setIconLabel(submitBtn, '✨', t('ui.generate_share_link', 'Generate Share Link'));
       }
     };
   }

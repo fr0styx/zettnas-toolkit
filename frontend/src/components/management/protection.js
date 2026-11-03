@@ -52,7 +52,7 @@ export async function renderProtectionJobs(card) {
     card.remove(); // no right to see it
     return;
   }
-  card.innerHTML = html`<h4 class="my-alerts-title">${t('prot.title', 'What protects your data')}</h4>${jobsHtml(data.jobs || [])}`;
+  card.innerHTML = html`<h4 class="my-alerts-title" aria-level="3">${t('prot.title', 'What protects your data')}</h4>${jobsHtml(data.jobs || [])}`;
   card.querySelectorAll('[data-scrub-pool]').forEach((sw) => {
     sw.addEventListener('change', async () => {
       sw.disabled = true;

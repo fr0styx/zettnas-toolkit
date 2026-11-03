@@ -38,7 +38,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install --require-hashes -r requirements.lock
-          pip install -r requirements-dev.txt
+          pip install --require-hashes -r requirements-dev.lock
       - name: Pull the pinned models
         run: |
           python -m tests.rag_eval.pull_models embeddinggemma
@@ -91,7 +91,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install --require-hashes -r requirements.lock
-          pip install -r requirements-dev.txt
+          pip install --require-hashes -r requirements-dev.lock
       - name: Pull the pinned models
         run: |
           python -m tests.rag_eval.pull_models embeddinggemma
@@ -132,7 +132,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install --require-hashes -r requirements.lock
-          pip install -r requirements-dev.txt
+          pip install --require-hashes -r requirements-dev.lock
       - name: Pull the pinned models
         run: |
           python -m tests.rag_eval.pull_models embeddinggemma qwen3:4b-q4_K_M
@@ -141,7 +141,7 @@ jobs:
           TESTING: "1"
         run: |
           python -m tests.rag_eval.run_eval --model embeddinggemma --dim 768 --host http://127.0.0.1:11434 \
-            --answers qwen3:4b-q4_K_M --misses --out eval-answers.json > /dev/null
+            --answers qwen3:4b-q4_K_M --misses --out eval-answers.json --answers-out eval-answer-rows.json > /dev/null
           python -m tests.rag_eval.compare eval-answers.json tests/rag_eval/baseline_nightly_answers.json \
             --first-token-p95-ms 120000
       - name: Summary
@@ -152,5 +152,8 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ai-eval-answers
-          path: eval-answers.json
+          # every answer too, for people to label (AI-28)
+          path: |
+            eval-answers.json
+            eval-answer-rows.json
           retention-days: 30

@@ -623,6 +623,8 @@ def evaluate(
                                     item.get("unanswerable") or all(p in sources for p in item["relevant"])
                                 ),
                                 "answer": text[:400],
+                                "answer_full": text[:4000],
+                                "sources": sources,
                                 "faithful": (out.get("grounding_detail") or {}).get("score"),
                                 "first_token_ms": tel.get("first_token_ms"),
                             }
@@ -697,6 +699,24 @@ def evaluate(
                 if not r["correct"]
             ],
         }
+        # every answer as the person saw it, for people to label (AI-28); main() writes it apart
+        out["answer_rows"] = [
+            {
+                "id": r["id"],
+                "lang": r["lang"],
+                "split": r["split"],
+                "question": r["question"],
+                "expected": r.get("answer_any") or [],
+                "expected_all": r.get("answer_all") or [],
+                "unanswerable": bool(r.get("unanswerable")),
+                "relevant": r.get("relevant") or [],
+                "answer": r["answer_full"],
+                "sources": r["sources"],
+                "auto_correct": bool(r["correct"]),
+                "faithful": r.get("faithful"),
+            }
+            for r in refusals + qa_rows
+        ]
     return out
 
 
@@ -716,6 +736,9 @@ def main():
     ap.add_argument("--show-heldout", action="store_true", help="with --misses: held-out misses too (not for tuning)")
     ap.add_argument("--ocr", default="standin", choices=["standin", "vision"], help="how scanned files are read")
     ap.add_argument("--out", default=None, help="write the JSON result here too")
+    ap.add_argument(
+        "--answers-out", default=None, help="with --answers: write every answer here, for labelling (AI-28)"
+    )
     ap.add_argument(
         "--no-calibration", action="store_true", help="use the built-in similarity cut-off, not one measured"
     )
@@ -738,6 +761,10 @@ def main():
         args.neutral_names,
         args.hard_distractors,
     )
+    rows = out.pop("answer_rows", None)
+    if args.answers_out and rows is not None:
+        with open(args.answers_out, "w", encoding="utf-8") as f:
+            json.dump(rows, f, ensure_ascii=False, indent=1)
     if not args.misses:
         out.pop("misses")
         if "answers" in out:

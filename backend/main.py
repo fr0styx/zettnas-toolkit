@@ -14,6 +14,7 @@ import sys
 import threading
 import time
 from contextlib import asynccontextmanager
+from typing import Any
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Response
@@ -120,6 +121,153 @@ def _warn_default_password() -> None:
     )
 
 
+def _startup_databases(_data_key_problem: Any) -> Any:
+    """startup_system: the databases created or migrated, once the checks before them have run."""
+    # check, the snapshot, the repair and the encryption check above (ARC-17)
+    import backend.config as _config
+    from backend import db_crypto
+    from backend.db_schema import NewerDatabaseError, check_versions, stamp_versions
+    from backend.users_db import init_users_db
+
+    _existing_install = os.path.exists(_config.USERS_DB_PATH)  # before it is created (B11, D1)
+    init_users_db()
+    try:
+        from backend.services import install_defaults
+
+        install_defaults.apply_once(_existing_install)
+        install_defaults.apply_steps()
+    except Exception as e:
+        logger.error(f"[Main] Could not record the install defaults: {e}")
+    if not _data_key_problem:
+        from backend.services.ai_conversations_db import init_conversations_db
+
+        init_conversations_db()
+    init_db()
+    _load_security()
+    purge_legacy_session_files()
+    _load_events()
+    try:
+        from backend.services import security_upgrade
+
+        security_upgrade.run_once()  # v1.9.2: revoke old credentials, disable unsafe WebDAV
+        security_upgrade.run_1_10_2_once()  # v1.10.2: token, role, backup and WebDAV cleanup
+    except Exception as e:
+        logger.error(f"[Main] Security upgrade step failed: {e}")
+    try:
+        from backend.api.auth import retire_admin_password_copy
+
+        retire_admin_password_copy()  # ARC-9: one copy of the admin password, no SHA-256 hashes
+    except Exception as e:
+        logger.error(f"[Main] Could not retire the old admin password copy: {e}")
+    stamp_versions()
+    try:
+        from backend.services.self_updater import report_last_update_result
+
+        report_last_update_result(DATA_DIR)  # event + notification if the last update rolled back (OPS-7)
+    except Exception as e:
+        logger.error(f"[Main] Could not report the last update result: {e}")
+    from backend.services.rag_engine import RAG_DB_PATH as _rag_db_path
+
+    db_crypto.prepare_in_background(_rag_db_path)
+    if _data_key_problem:
+        add_event("error", "AI data locked", _data_key_problem, event_text("ai_data_locked", problem=_data_key_problem))
+    try:
+        from backend.secret_box import migrate_plaintext_mfa_secrets
+
+        migrate_plaintext_mfa_secrets()
+    except Exception as e:
+        logger.error(f"[Main] Could not encrypt stored two-factor secrets: {e}")
+    try:
+        from backend.services.data_permissions import harden_data_permissions
+
+        harden_data_permissions()
+    except Exception as e:
+        logger.warning(f"[Main] Could not tighten data permissions: {e}")
+    read_ip()  # Pre-populate IP cache at startup
+    detect_chassis_model()  # Pre-populate chassis model cache
+
+
+def _startup_device_links() -> Any:
+    """startup_system: host KVM, vhost-net, USB and hidraw nodes linked into the container."""
+    for node, host_node in [
+        ("/dev/kvm", "/host/dev/kvm"),
+        ("/dev/vhost-net", "/host/dev/vhost-net"),
+        ("/dev/mem", "/host/dev/mem"),
+        ("/dev/bus/usb", "/host/dev/bus/usb"),
+        ("/dev/usb", "/host/dev/usb"),
+    ]:
+        if not os.path.exists(node) and os.path.exists(host_node):
+            try:
+                os.symlink(host_node, node)
+                logger.info(f"[DEV] Auto-linked {node} -> {host_node}")
+            except OSError as e:
+                logger.debug(f"[DEV] Could not link {node}: {e}")
+
+    # Auto-link any character hidraw devices (/host/dev/hidraw*) into container /dev
+    for h_node in glob.glob("/host/dev/hidraw*"):
+        target_node = os.path.join("/dev", os.path.basename(h_node))
+        if not os.path.exists(target_node):
+            try:
+                os.symlink(h_node, target_node)
+                logger.info(f"[DEV] Auto-linked {target_node} -> {h_node}")
+            except OSError as e:
+                logger.debug(f"[DEV] Could not link {target_node}: {e}")
+
+    if is_using_default_password():
+        _warn_default_password()
+
+    led_cfg = read_json(LED_STATE_FILE, None)
+    if isinstance(led_cfg, dict):
+        try:
+            apply_led_state(led_cfg)
+        except OSError as e:
+            logger.warning(f"Failed to apply initial LED state: {e}")
+
+
+def _startup_schedulers() -> Any:
+    """startup_system: the schedulers, supervised and beating once a loop."""
+    # once a loop, so one that hangs shows as stalled (REL-18)
+    from backend.services.backup_engine import backup_scheduler_daemon, mark_interrupted_jobs
+    from backend.services.supervisor import supervise
+
+    try:
+        mark_interrupted_jobs()  # cut off by the restart
+    except Exception as e:
+        logger.warning(f"[Main] Could not mark interrupted backups: {e}")
+    try:
+        from backend.services.fs_transfer import transfer_manager
+
+        transfer_manager.load_interrupted()  # copies and moves cut off by the restart (REL-25)
+    except Exception as e:
+        logger.warning(f"[Main] Could not load the saved transfers: {e}")
+    try:
+        from backend.services.recycle_bin import grace_start
+
+        grace_start()  # D9: what is in a bin now keeps 30 days from this first start
+    except Exception as e:
+        logger.warning(f"[Main] Could not start the Recycle Bin grace period: {e}")
+    supervise("BackupScheduler", backup_scheduler_daemon, beat_every=60)
+
+    from backend.services.scheduler import scheduler_daemon
+
+    supervise("TaskScheduler", scheduler_daemon, beat_every=60)  # SMART tests and scrubs on schedule
+
+    from backend.services.protection_jobs import watch_daemon
+
+    supervise("BackupWatch", watch_daemon, beat_every=60)  # backup alerts in their own thread
+
+    def _start_rag() -> None:
+        try:
+            from backend.services.rag_engine import get_rag_engine
+
+            get_rag_engine()
+            logger.info("[ZettAI] Spin-up auto-learner & standby guard daemon initialized.")
+        except Exception as e:
+            logger.warning("Could not auto-start ZettAI spin-up watcher: %s", e)
+
+    return _start_rag
+
+
 def startup_system():
     """System initialization and background services launch."""
     import gc
@@ -190,102 +338,9 @@ def startup_system():
         _data_key_problem = str(e)
         logger.critical(f"[Encryption] {e}")
 
-    # Only now are the databases created or migrated: after the staged restore, the newer-version
-    # check, the snapshot, the repair and the encryption check above (ARC-17)
-    import backend.config as _config
-    from backend.users_db import init_users_db
+    _startup_databases(_data_key_problem)
 
-    _existing_install = os.path.exists(_config.USERS_DB_PATH)  # before it is created (B11, D1)
-    init_users_db()
-    try:
-        from backend.services import install_defaults
-
-        install_defaults.apply_once(_existing_install)
-        install_defaults.apply_steps()
-    except Exception as e:
-        logger.error(f"[Main] Could not record the install defaults: {e}")
-    if not _data_key_problem:
-        from backend.services.ai_conversations_db import init_conversations_db
-
-        init_conversations_db()
-    init_db()
-    _load_security()
-    purge_legacy_session_files()
-    _load_events()
-    try:
-        from backend.services import security_upgrade
-
-        security_upgrade.run_once()  # v1.9.2: revoke old credentials, disable unsafe WebDAV
-        security_upgrade.run_1_10_2_once()  # v1.10.2: token, role, backup and WebDAV cleanup
-    except Exception as e:
-        logger.error(f"[Main] Security upgrade step failed: {e}")
-    try:
-        from backend.api.auth import retire_admin_password_copy
-
-        retire_admin_password_copy()  # ARC-9: one copy of the admin password, no SHA-256 hashes
-    except Exception as e:
-        logger.error(f"[Main] Could not retire the old admin password copy: {e}")
-    stamp_versions()
-    try:
-        from backend.services.self_updater import report_last_update_result
-
-        report_last_update_result(DATA_DIR)  # event + notification if the last update rolled back (OPS-7)
-    except Exception as e:
-        logger.error(f"[Main] Could not report the last update result: {e}")
-    from backend.services.rag_engine import RAG_DB_PATH as _rag_db_path
-
-    db_crypto.prepare_in_background(_rag_db_path)
-    if _data_key_problem:
-        add_event("error", "AI data locked", _data_key_problem, event_text("ai_data_locked", problem=_data_key_problem))
-    try:
-        from backend.secret_box import migrate_plaintext_mfa_secrets
-
-        migrate_plaintext_mfa_secrets()
-    except Exception as e:
-        logger.error(f"[Main] Could not encrypt stored two-factor secrets: {e}")
-    try:
-        from backend.services.data_permissions import harden_data_permissions
-
-        harden_data_permissions()
-    except Exception as e:
-        logger.warning(f"[Main] Could not tighten data permissions: {e}")
-    read_ip()  # Pre-populate IP cache at startup
-    detect_chassis_model()  # Pre-populate chassis model cache
-
-    # Auto-link host KVM, vhost-net, mem, and USB/HID nodes into container /dev if present
-    for node, host_node in [
-        ("/dev/kvm", "/host/dev/kvm"),
-        ("/dev/vhost-net", "/host/dev/vhost-net"),
-        ("/dev/mem", "/host/dev/mem"),
-        ("/dev/bus/usb", "/host/dev/bus/usb"),
-        ("/dev/usb", "/host/dev/usb"),
-    ]:
-        if not os.path.exists(node) and os.path.exists(host_node):
-            try:
-                os.symlink(host_node, node)
-                logger.info(f"[DEV] Auto-linked {node} -> {host_node}")
-            except OSError as e:
-                logger.debug(f"[DEV] Could not link {node}: {e}")
-
-    # Auto-link any character hidraw devices (/host/dev/hidraw*) into container /dev
-    for h_node in glob.glob("/host/dev/hidraw*"):
-        target_node = os.path.join("/dev", os.path.basename(h_node))
-        if not os.path.exists(target_node):
-            try:
-                os.symlink(h_node, target_node)
-                logger.info(f"[DEV] Auto-linked {target_node} -> {h_node}")
-            except OSError as e:
-                logger.debug(f"[DEV] Could not link {target_node}: {e}")
-
-    if is_using_default_password():
-        _warn_default_password()
-
-    led_cfg = read_json(LED_STATE_FILE, None)
-    if isinstance(led_cfg, dict):
-        try:
-            apply_led_state(led_cfg)
-        except OSError as e:
-            logger.warning(f"Failed to apply initial LED state: {e}")
+    _startup_device_links()
 
     # Supervised: a daemon that crashes is logged and restarted with back-off (ARC-02)
     from backend.services.supervisor import supervise
@@ -316,44 +371,7 @@ def startup_system():
 
     _start_network_services()
 
-    # Schedulers run supervised, so a crash is restarted and shows in health (ARC-10); each beats
-    # once a loop, so one that hangs shows as stalled (REL-18)
-    from backend.services.backup_engine import backup_scheduler_daemon, mark_interrupted_jobs
-
-    try:
-        mark_interrupted_jobs()  # cut off by the restart
-    except Exception as e:
-        logger.warning(f"[Main] Could not mark interrupted backups: {e}")
-    try:
-        from backend.services.fs_transfer import transfer_manager
-
-        transfer_manager.load_interrupted()  # copies and moves cut off by the restart (REL-25)
-    except Exception as e:
-        logger.warning(f"[Main] Could not load the saved transfers: {e}")
-    try:
-        from backend.services.recycle_bin import grace_start
-
-        grace_start()  # D9: what is in a bin now keeps 30 days from this first start
-    except Exception as e:
-        logger.warning(f"[Main] Could not start the Recycle Bin grace period: {e}")
-    supervise("BackupScheduler", backup_scheduler_daemon, beat_every=60)
-
-    from backend.services.scheduler import scheduler_daemon
-
-    supervise("TaskScheduler", scheduler_daemon, beat_every=60)  # SMART tests and scrubs on schedule
-
-    from backend.services.protection_jobs import watch_daemon
-
-    supervise("BackupWatch", watch_daemon, beat_every=60)  # backup alerts in their own thread
-
-    def _start_rag() -> None:
-        try:
-            from backend.services.rag_engine import get_rag_engine
-
-            get_rag_engine()
-            logger.info("[ZettAI] Spin-up auto-learner & standby guard daemon initialized.")
-        except Exception as e:
-            logger.warning("Could not auto-start ZettAI spin-up watcher: %s", e)
+    _start_rag = _startup_schedulers()
 
     # the AI index opens beside startup, so the first page doesn't wait for it (PERF-28); a search
     # that comes first opens it itself (get_rag_engine is locked)

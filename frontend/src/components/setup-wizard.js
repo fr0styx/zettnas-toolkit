@@ -366,7 +366,7 @@ export function initSetupWizard() {
         const warnEl = document.getElementById('sec-default-pwd-warning');
         if (warnEl) warnEl.style.display = 'none';
 
-        showToast(t('setup.success_toast', '🚀 Setup completed! Your new administrator password is now active.'), 'success');
+        showToast(t('setup.success_toast', 'Setup completed! Your new administrator password is now active.'), 'success');
         if (typeof window.openGettingStarted === 'function') window.openGettingStarted();
       } catch (err) {
         setErr(err.message || 'Failed to update password. Check current password.');

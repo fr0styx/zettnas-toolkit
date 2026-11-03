@@ -70,10 +70,10 @@ ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/lib/chromium/chromium-headless-shel
 
 WORKDIR /app
 
-COPY requirements.txt requirements.lock requirements-dev.txt ./
+COPY requirements.txt requirements.lock requirements-dev.txt requirements-dev.lock ./
 ARG DEV_BUILD=0
 RUN --mount=type=cache,target=/root/.cache/pip pip install --require-hashes -r requirements.lock \
-    && if [ "$DEV_BUILD" = "1" ]; then pip install -r requirements-dev.txt; fi
+    && if [ "$DEV_BUILD" = "1" ]; then pip install --require-hashes -r requirements-dev.lock; fi
 # ARC-29: in the image people install, the test switches (TESTING, ZETTNAS_TEST_MODE,
 # ZETTNAS_FAST_HASH) do nothing (backend/settings.py: test_mode); the dev build keeps them
 RUN if [ "$DEV_BUILD" != "1" ]; then echo "release image: test switches are off" > /etc/zettnas-release; fi

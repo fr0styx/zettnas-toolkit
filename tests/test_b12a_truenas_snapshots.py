@@ -6,8 +6,8 @@ import json
 import httpx
 import pytest
 
+from backend.hardware.pal import truenas_api
 from backend.hardware.pal.truenas import TrueNASStorageAdapter
-from backend.services import truenas_api
 
 DATASETS = [
     {"id": "tank", "type": "FILESYSTEM", "pool": "tank", "mountpoint": "/mnt/tank"},

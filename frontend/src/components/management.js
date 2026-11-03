@@ -1,4 +1,5 @@
 import { syncWidgetSettingsUI } from './widgets.js';
+import { setIconLabel } from '../ui/primitives.js';
 import { syncDesktopThemeUI, openDrawer, restoreHardwareTabsToManagement } from './settings.js';
 import { ZettEventBus } from '../event-bus.js';
 import { fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
@@ -941,8 +942,8 @@ export function initManagement() {
                 </div>
                 <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--zn-line-5);">
                   ${isRunning
-                    ? `<button class="btn-pill-toggle btn-vm-action-stop is-danger" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1;" title="${t('ui.stop_vm', 'Stop VM')}">${t('ui.stop', '⏹ Stop')}</button>`
-                    : `<button class="btn-pill-toggle btn-vm-action-start" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1; color: var(--ok2);" title="${t('ui.start_vm', 'Start VM')}">${t('ui.start', '▶ Start')}</button>`
+                    ? `<button class="btn-pill-toggle btn-vm-action-stop is-danger" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1;" title="${t('ui.stop_vm', 'Stop VM')}"><span aria-hidden="true">⏹</span> ${escapeHtml(t('ui.stop', 'Stop'))}</button>`
+                    : `<button class="btn-pill-toggle btn-vm-action-start" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1; color: var(--ok2);" title="${t('ui.start_vm', 'Start VM')}"><span aria-hidden="true">▶</span> ${escapeHtml(t('ui.start', 'Start'))}</button>`
                   }
                   <button class="btn-pill-toggle btn-vm-action-console" data-vm-id="${escapeHtml(vm.id)}" data-vm-name="${escapeHtml(vm.name || vm.id)}" style="flex: 1; color: var(--lt-ink-brand, var(--accent-cyan));" title="${t('ui.open_web_console', 'Open Web Console')}"><span aria-hidden="true">📺</span> ${t('mvm.console', 'Console')}</button>
                   <button class="btn-pill-toggle btn-vm-action-edit" data-vm-id="${escapeHtml(vm.id)}" title="${t('ui.edit_vm_config', 'Edit VM Config')}">⚙️</button>
@@ -963,7 +964,7 @@ export function initManagement() {
               } catch (err) {
                 showToast(t('toast.failed_to_start_vm', 'Failed to start VM: {error}', { error: err.message }), 'error');
                 btn.disabled = false;
-                btn.textContent = t('ui.start', '▶ Start');
+                setIconLabel(btn, '▶', t('ui.start', 'Start'));
               }
             });
           });
@@ -980,7 +981,7 @@ export function initManagement() {
               } catch (err) {
                 showToast(t('toast.failed_to_stop_vm', 'Failed to stop VM: {error}', { error: err.message }), 'error');
                 btn.disabled = false;
-                btn.textContent = t('ui.stop', '⏹ Stop');
+                setIconLabel(btn, '⏹', t('ui.stop', 'Stop'));
               }
             });
           });

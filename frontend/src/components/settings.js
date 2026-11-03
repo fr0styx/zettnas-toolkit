@@ -605,7 +605,7 @@ export function initSettings() {
       btnCopySave.textContent = t('ui.saving', 'Saving...');
       await saveButtonConfig(e);
       btnCopySave.textContent = t('ui.saved', 'Saved!');
-      setTimeout(() => { if (btnCopySave) btnCopySave.textContent = t('settings.btn_save_config', '💾 Save Configuration'); }, 2000);
+      setTimeout(() => { setIconLabel(btnCopySave, '💾', t('settings.btn_save_config', 'Save Configuration')); }, 2000);
     });
   }
 
@@ -626,7 +626,7 @@ export function initSettings() {
       } catch (err) {
         showToast(t('toast.scan_failed', 'Scan failed: {error}', { error: err.message || err }), 'error');
       } finally {
-        setTimeout(() => { if (btnMediaRescan) btnMediaRescan.textContent = t('ui.scan', '🔄 Scan'); }, 1000);
+        setTimeout(() => { setIconLabel(btnMediaRescan, '🔄', t('ui.scan', 'Scan')); }, 1000);
       }
     });
   }
@@ -988,7 +988,7 @@ export function initSettings() {
     _cardReorderUpdaters.forEach((fn) => fn());
     const copySaveBtn = $('btn-copy-save');
     if (copySaveBtn) {
-      copySaveBtn.textContent = t('settings.btn_save_config', '💾 Save Configuration');
+      setIconLabel(copySaveBtn, '💾', t('settings.btn_save_config', 'Save Configuration'));
     }
     syncThemeSettingsUI();
   });

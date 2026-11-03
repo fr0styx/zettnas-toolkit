@@ -189,3 +189,29 @@ def test_a_share_quota_goes_to_the_filesystem(tmp_path, monkeypatch):
     adapter._pool_path = str(tmp_path)
     res = adapter.create_share(name="media", path="", quota_gb=3, export_smb=False)
     assert seen == [3 * 1024**3] and res["quota_enforcement"]["method"] == "btrfs-qgroup"
+
+
+def test_ext4_project_quota(tmp_path):
+    t = Tools()
+    res = fq.apply(str(tmp_path), 3 * 1024**3 + 1, t, mounts(tmp_path, "ext4", "rw,relatime,prjquota", "/dev/sdc1"))
+    pid = fq.project_id(str(tmp_path))
+    assert res == {"enforced": True, "method": "ext4-project", "reason": ""}
+    assert t.calls[0] == ["chattr", "-R", "-p", str(pid), "+P", str(tmp_path)]
+    assert t.calls[1] == ["setquota", "-P", str(pid), "0", str(3 * 1024**2 + 1), "0", "0", str(tmp_path)]
+    cleared = Tools()
+    fq.apply(str(tmp_path), 0, cleared, mounts(tmp_path, "ext4", "prjquota"))
+    assert cleared.calls[1][3:5] == ["0", "0"]
+
+
+def test_ext4_without_prjquota_or_tools_says_why(tmp_path):
+    plain = fq.apply(str(tmp_path), 1, Tools(), mounts(tmp_path, "ext4", "rw,relatime"))
+    assert plain["enforced"] is False and "ext4" in plain["reason"] and "uploads" in plain["reason"]
+
+    def missing(cmd, **kw):
+        raise FileNotFoundError(cmd[0])
+
+    gone = fq.apply(str(tmp_path), 1, missing, mounts(tmp_path, "ext4", "prjquota"))
+    assert gone["enforced"] is False and "chattr isn't installed" in gone["reason"]
+    refused = fq.apply(str(tmp_path), 1, Tools(["setquota"]), mounts(tmp_path, "ext4", "prjquota"))
+    assert refused["enforced"] is False and "setquota refused" in refused["reason"]
+    assert "prjquota" in fq._ext4(str(tmp_path), str(tmp_path), "rw", 1, Tools())["reason"]

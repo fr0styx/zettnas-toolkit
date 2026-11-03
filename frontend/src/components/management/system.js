@@ -366,7 +366,7 @@ export async function applySystemUpdate() {
             // Only declare update complete after the old container has dropped offline, or after grace period
             if (h.ok && (hasGoneDown || attempts >= 8)) {
               clearInterval(interval);
-              if (progressTitle) progressTitle.textContent = t('ui.update_complete', '🎉 Update Complete!');
+              setIconLabel(progressTitle, '🎉', t('ui.update_complete', 'Update Complete!'));
               if (progressDesc) progressDesc.textContent = t('ui.reloading_zettnas_workbench', 'Reloading ZettNAS…');
               showToast(t('updates.updated_success', 'ZettNAS updated successfully!'), 'success');
               setTimeout(() => window.location.reload(), 1200);

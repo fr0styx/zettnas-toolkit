@@ -301,7 +301,7 @@ def get_media_slots_telemetry() -> dict[str, Any]:
     try:
         from backend.config import BUTTON_CFG_FILE
         from backend.fsutil import read_json
-        from backend.services.copy_engine import _EJECTED_SLOTS, read_media_slots
+        from backend.hardware.media_slots import EJECTED_SLOTS, read_media_slots
         from backend.state import Z_STATE
 
         slots = read_media_slots()
@@ -322,7 +322,7 @@ def get_media_slots_telemetry() -> dict[str, Any]:
 
         return {
             "slots": slots,
-            "ejected_slots": list(_EJECTED_SLOTS),
+            "ejected_slots": list(EJECTED_SLOTS),
             "scsi_polling_msecs": polling_states,
             "auto_ingest_enabled": btn_cfg.get("auto_ingest", False),
             "pending_ingest": getattr(Z_STATE, "pending_ingest", None),

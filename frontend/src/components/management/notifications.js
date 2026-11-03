@@ -3,6 +3,7 @@
  * Split out of management.js (ARCH-1); management.js re-exports everything here.
  */
 import { SUPPORTED_LANGUAGES } from '../../i18n.js';
+import { setIconLabel } from '../../ui/primitives.js';
 import { api } from '../../api.js';
 import { showToast } from '../../toast.js';
 import { escapeHtml } from '../../utils.js';
@@ -144,7 +145,7 @@ export async function testAllNotificationChannels() {
   const btn = document.getElementById('btn-send-test-alert');
   if (btn) {
     btn.disabled = true;
-    btn.textContent = t('ui.testing_2', '⏳ Testing...');
+    setIconLabel(btn, '⏳', t('ui.testing_2', 'Testing...'));
   }
   try {
     const res = await api.post('/api/notifications/test', {});

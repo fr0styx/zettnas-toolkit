@@ -80,6 +80,26 @@ class TestStartup:
         dict(quiet["threads"])["RagStart"]()  # runs in its own thread (PERF-28): logs, doesn't raise
         assert "rag" not in quiet["started"]
 
+    def test_early_steps_that_fail_are_logged_and_the_start_goes_on(self, quiet, monkeypatch, caplog):
+        def boom(*a, **k):
+            raise RuntimeError("broken")
+
+        monkeypatch.setattr("backend.services.identity.apply_saved_timezone", boom)
+        monkeypatch.setattr("backend.services.backup_engine.apply_staged_restore", boom)
+        monkeypatch.setattr("backend.db_crypto.prepare", boom)
+        monkeypatch.setattr("backend.services.data_health.check_and_repair", boom)
+        main.startup_system()
+        text = caplog.text
+        assert "Could not apply the saved time zone" in text and "Could not apply the staged settings restore" in text
+        assert "Could not check the data folder" in text
+        assert "AI data locked" in quiet["events"]  # the chat history's key problem is shown, not fatal
+        assert "StatsCollector" in quiet["supervised"]
+
+    def test_outside_tests_the_idle_daemons_start_too(self, quiet, monkeypatch):
+        monkeypatch.setattr(main, "test_mode", lambda: False)
+        main.startup_system()
+        assert {"VisionCaptioner", "PhotoVectors", "RansomwareGuard", "DataGuard"} <= set(quiet["supervised"])
+
     def test_no_button_listener_on_other_hardware(self, quiet, monkeypatch):
         monkeypatch.setattr("backend.hardware.fans.is_zettlab_appliance", lambda: False)
         main.startup_system()

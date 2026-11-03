@@ -93,6 +93,18 @@ def zfs_snapshot_part(name: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.:-]", "-", name)[:200] or "snapshot"
 
 
+def _tree_bytes(path: str) -> int:
+    """The bytes of the files under path, links not followed."""
+    total = 0
+    for dirpath, _dirs, files in os.walk(path):
+        for f in files:
+            try:
+                total += os.lstat(os.path.join(dirpath, f)).st_size
+            except OSError:
+                continue
+    return total
+
+
 class GenericLinuxStorageAdapter(StoragePlatformAdapter):
     """
     Generic Linux Storage Platform Adapter.
@@ -159,21 +171,26 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             logger.warning("[PAL] %s could not be removed: %s", old, err)
 
     def can_convert(self, path: str) -> bool:
-        """Whether a share that is a plain folder on a btrfs pool can become a subvolume (NREL-5)."""
+        """Whether a share that is a plain folder can become a btrfs subvolume or, on a ZFS pool, a
+        dataset of its own, so its snapshots work (NREL-5)."""
         from backend.hardware.pal.base import storage_tools
 
-        return (
-            os.path.isdir(path)
-            and not os.path.ismount(path)
-            and fs_of(path) == "btrfs"
-            and not is_subvolume(path)
-            and storage_tools()["btrfs"]
-        )
+        if not os.path.isdir(path) or os.path.ismount(path):
+            return False
+        fs = fs_of(path)
+        if fs == "btrfs":
+            return not is_subvolume(path) and storage_tools()["btrfs"]
+        if fs == "zfs":
+            parent = os.path.dirname(path.rstrip("/")) or "/"
+            return storage_tools()["zfs"] and not zfs_dataset_at(path) and bool(zfs_dataset_at(parent))
+        return False
 
     def convert_to_subvolume(self, path: str) -> str:
         """Makes a folder share a subvolume with the same name and files: a new subvolume gets a
         copy that shares their blocks, then the two swap names. Returns the old folder, for the
-        caller to remove; on failure the share is left as it was."""
+        caller to remove; on failure the share is left as it was. On ZFS it becomes a dataset."""
+        if fs_of(path) == "zfs":
+            return self._convert_to_dataset(path)
         stamp = time.strftime("%Y%m%d-%H%M%S")
         new, old = f"{path}.subvolume-{stamp}", f"{path}.before-subvolume-{stamp}"
         code, _, err = self._run_cmd(["btrfs", "subvolume", "create", new])
@@ -190,6 +207,40 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             os.rename(old, path)
             self._run_cmd(["btrfs", "subvolume", "delete", new])
             raise
+        return old
+
+    def _convert_to_dataset(self, path: str) -> str:
+        """A folder share on a ZFS pool becomes a dataset with the same name and files: a dataset
+        beside it gets a copy (ZFS can't share blocks across datasets, so there must be room), the
+        folder steps aside and the dataset is renamed into its place. Returns the old folder."""
+        parent = os.path.dirname(path.rstrip("/")) or "/"
+        name = os.path.basename(path.rstrip("/"))
+        parent_ds = zfs_dataset_at(parent)
+        if not parent_ds:
+            raise RuntimeError("The folder above this share isn't a ZFS dataset; nothing was changed.")
+        need = _tree_bytes(path)
+        free = shutil.disk_usage(parent).free
+        if need > free:
+            raise RuntimeError(
+                f"Not enough free space: the files take {need / 1e9:.1f} GB and {free / 1e9:.1f} GB is free; nothing was changed."
+            )
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        tmp_ds = f"{parent_ds}/{name}.dataset-{stamp}"
+        tmp_path = os.path.join(parent, f"{name}.dataset-{stamp}")
+        code, _, err = self._run_cmd(["zfs", "create", tmp_ds])
+        if code or not os.path.isdir(tmp_path):
+            raise RuntimeError(f"The dataset could not be made ({err}); nothing was changed.")
+        code, _, err = self._run_cmd(["cp", "-a", os.path.join(path, "."), tmp_path])
+        if code:
+            self._run_cmd(["zfs", "destroy", "-r", tmp_ds])
+            raise RuntimeError(f"The files could not be copied over ({err}); nothing was changed.")
+        old = os.path.join(parent, f"{name}.before-dataset-{stamp}")
+        os.rename(path, old)
+        code, _, err = self._run_cmd(["zfs", "rename", tmp_ds, f"{parent_ds}/{name}"])
+        if code:
+            os.rename(old, path)
+            self._run_cmd(["zfs", "destroy", "-r", tmp_ds])
+            raise RuntimeError(f"The dataset could not take the share's place ({err}); nothing was changed.")
         return old
 
     def _make_share_dir(self, full_path: str) -> str:

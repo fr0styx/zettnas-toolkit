@@ -459,8 +459,8 @@ def share_root(share: str, pal: Any = None, pool_id: str | None = None) -> str:
 
 
 def convertible(pal: Any = None) -> list[str]:
-    """Scheduled shares whose snapshots can't work yet: plain folders on a btrfs pool, which can
-    be made subvolumes (NREL-5)."""
+    """Scheduled shares whose snapshots can't work yet: plain folders on a btrfs or ZFS pool, which
+    can be made subvolumes or datasets (NREL-5)."""
     pal = pal or _pal()
     if not hasattr(pal, "can_convert"):
         return []
@@ -478,7 +478,7 @@ def _convert_job(job_id: str, share: str, root: str, pal: Any) -> None:
     from backend.services.jobs import job_manager
 
     try:
-        job_manager.update(job_id, detail="Moving the files into a subvolume")
+        job_manager.update(job_id, detail="Moving the files into a subvolume or dataset")
         old = pal.convert_to_subvolume(root)
         job_manager.update(job_id, percent=80.0, detail="Removing the old folder")
         shutil.rmtree(old)
@@ -491,12 +491,14 @@ def _convert_job(job_id: str, share: str, root: str, pal: Any) -> None:
 
 
 def convert(share: str, pal: Any = None, owner: str | None = None) -> dict[str, Any]:
-    """Makes a share that is a plain folder a btrfs subvolume, so its snapshots work (NREL-5);
-    the work runs as a job."""
+    """Makes a share that is a plain folder a btrfs subvolume or a ZFS dataset, so its snapshots
+    work (NREL-5); the work runs as a job."""
     pal = pal or _pal()
     root = share_root(share, pal)
     if not (hasattr(pal, "convert_to_subvolume") and pal.can_convert(root)):
-        raise ValueError("This share can't be made a subvolume here: it is one already, or the pool isn't btrfs.")
+        raise ValueError(
+            "This share can't be made snapshot-ready here: it is ready already, or the pool is neither btrfs nor ZFS."
+        )
     _refuse_open_encrypted(share)
     from backend.services.jobs import job_manager
 

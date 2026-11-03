@@ -31,7 +31,7 @@ from backend.settings import test_mode
 
 
 def _api_configured() -> bool:
-    from backend.services import truenas_api
+    from backend.hardware.pal import truenas_api
 
     return truenas_api.configured()
 
@@ -48,7 +48,7 @@ class TrueNASStorageAdapter(ObserverStorageAdapter):
 
     def _dataset_for(self, share: str) -> dict[str, Any] | None:
         """The TrueNAS dataset a share lives in: the one named after it, or mounted where it is."""
-        from backend.services import truenas_api
+        from backend.hardware.pal import truenas_api
 
         sets = truenas_api.datasets()
         for d in sets:
@@ -62,7 +62,7 @@ class TrueNASStorageAdapter(ObserverStorageAdapter):
     def create_snapshot(self, pool_id: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
         """With TRUENAS_URL and TRUENAS_API_KEY set, snapshots go through the TrueNAS API (D5, D2).
         A share's snapshot "<share>@<name>" is the ZFS snapshot <dataset>@<name> of its dataset."""
-        from backend.services import truenas_api
+        from backend.hardware.pal import truenas_api
 
         if not truenas_api.configured():
             return super().create_snapshot(pool_id, *args, **kwargs)
@@ -76,7 +76,7 @@ class TrueNASStorageAdapter(ObserverStorageAdapter):
     def list_snapshots(self, pool_id: str) -> list[dict[str, Any]]:
         """The datasets' snapshots, named "<share>@<snapshot>", with the path ZFS shows them at
         (<mountpoint>/.zfs/snapshot/<name>) for browsing and restoring (FEAT-02)."""
-        from backend.services import truenas_api
+        from backend.hardware.pal import truenas_api
 
         if not truenas_api.configured():
             return super().list_snapshots(pool_id)
@@ -100,7 +100,7 @@ class TrueNASStorageAdapter(ObserverStorageAdapter):
         return out
 
     def delete_snapshot(self, pool_id: str, snapshot_name: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        from backend.services import truenas_api
+        from backend.hardware.pal import truenas_api
 
         if not truenas_api.configured() or "@" not in snapshot_name:
             return super().delete_snapshot(pool_id, snapshot_name, *args, **kwargs)

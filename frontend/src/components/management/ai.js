@@ -462,7 +462,7 @@ export async function selectAiRecommendedModel(modelId) {
         renderAiLlmRecommendations(recs, res.active_model || cleanId);
       }
       if (res.hardware_warning && res.warning_message) {
-        showToast(t('toast.message_2', '⚠️ {warning_message}', { warning_message: res.warning_message }), 'warn');
+        showToast(t('toast.message_2', '{warning_message}', { warning_message: res.warning_message }), 'warn');
       } else {
         showToast(t('ai.model_selected_toast', 'Active ZettAI model switched to {model}', { model: cleanId }), 'success');
       }

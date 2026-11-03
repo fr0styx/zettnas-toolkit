@@ -226,6 +226,7 @@
     "__init__": "(self, pool_path: str | None = None)",
     "_carry_over": "(self, src: str, dest: str) -> None",
     "_check_is_storage_busy_uncached": "(self) -> bool",
+    "_convert_to_dataset": "(self, path: str) -> str",
     "_make_share_dir": "(self, full_path: str) -> str",
     "_must": "(self, cmd: list[str], what: str) -> str",
     "_nested_subvolumes": "(self, path: str) -> bool",

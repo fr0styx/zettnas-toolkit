@@ -1,4 +1,5 @@
 import { ZettEventBus } from './event-bus.js';
+import { setIconLabel } from './ui/primitives.js';
 import { showToast } from './toast.js';
 import { api } from './api.js';
 import { DockManager, bringToFront } from './components/dock.js';
@@ -257,7 +258,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const btnCopySave = $("btn-copy-save");
       if (btnCopySave) {
         btnCopySave.textContent = t('ui.saved', 'Saved!');
-        setTimeout(() => { btnCopySave.textContent = t('settings.btn_save_config', '💾 Save Configuration'); }, 2000);
+        setTimeout(() => { setIconLabel(btnCopySave, '💾', t('settings.btn_save_config', 'Save Configuration')); }, 2000);
       }
     });
   }

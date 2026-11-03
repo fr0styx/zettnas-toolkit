@@ -412,7 +412,7 @@ def _snapshot_pools() -> list[dict[str, Any]]:
         from backend.hardware.pal_storage import get_storage_platform
 
         pal = get_storage_platform()
-        from backend.services import truenas_api
+        from backend.hardware.pal import truenas_api
 
         if pal.get_capabilities().is_observer_mode and not truenas_api.configured():
             return out

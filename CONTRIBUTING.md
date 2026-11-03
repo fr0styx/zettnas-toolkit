@@ -12,7 +12,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 
 # Or natively: Python 3.12 and the Node version in .nvmrc
 python3.12 -m venv .venv && . .venv/bin/activate
-pip install -r requirements-dev.txt
+pip install --require-hashes -r requirements-dev.lock   # the tools CI uses, hash-checked
 npm ci
 ```
 

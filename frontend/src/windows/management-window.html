@@ -2243,7 +2243,7 @@
                       <button class="btn-bulk-action" data-bulk="stop" title="Stop selected containers" data-i18n-title="ui.stop_selected_containers"><span aria-hidden="true">⏹</span> <span data-i18n="mw.stop">Stop</span></button>
                       <button class="btn-bulk-action" data-bulk="restart" title="Restart selected containers" data-i18n-title="ui.restart_selected_containers"><span aria-hidden="true">🔄</span> <span data-i18n="mw.restart">Restart</span></button>
                       <button class="btn-bulk-action" data-bulk="pause" title="Pause selected containers" data-i18n-title="ui.pause_selected_containers"><span aria-hidden="true">⏸</span> <span data-i18n="mw.pause">Pause</span></button>
-                      <button class="btn-bulk-action" data-bulk="unpause" title="Resume selected containers" data-i18n-title="ui.resume_selected_containers" data-i18n="mw.resume">⏵ Resume</button>
+                      <button class="btn-bulk-action" data-bulk="unpause" title="Resume selected containers" data-i18n-title="ui.resume_selected_containers"><span aria-hidden="true">⏵</span> <span data-i18n="mw.resume">Resume</span></button>
                       <button class="btn-bulk-action btn-bulk-delete" data-bulk="delete" title="Delete selected containers" data-i18n-title="ui.delete_selected_containers"><span aria-hidden="true">🗑️</span> <span data-i18n="mw.delete">Delete</span></button>
                       <button class="btn-bulk-action btn-bulk-cancel" data-bulk="cancel" title="Deselect all" data-i18n-title="ui.deselect_all">✕</button>
                     </div>
@@ -3749,7 +3749,7 @@
         </div>
             <div id="mgmt-pane-backups" class="mgmt-tab-pane" style="display: none;">
           <div class="mgmt-card-intro">
-            <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.backups_title">Backups, Snapshots & Disaster Recovery</span></div>
+            <div class="mgmt-card-intro-title" role="heading" aria-level="2"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.backups_title">Backups, Snapshots & Disaster Recovery</span></div>
             <div class="mgmt-card-intro-desc" data-i18n="mgmt.backups_desc">Automated 3-2-1 backup pipelines, point-in-time storage snapshots, application state archives, and system configuration restoration.</div>
           </div>
           <div id="phone-backup-mount"></div>
@@ -3760,7 +3760,7 @@
             <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
                 <div>
-                  <span class="card-head-title" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span class="card-head-title" role="heading" aria-level="3" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span aria-hidden="true">🛡️</span>
                     <span data-i18n="backup.jobs_title">Backup jobs</span>
                   </span>
@@ -3784,7 +3784,7 @@
             <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
                 <div>
-                  <span class="card-head-title" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span class="card-head-title" role="heading" aria-level="3" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span aria-hidden="true">📸</span>
                     <span data-i18n="backup.snaps_title">Snapshots</span>
                   </span>
@@ -4415,7 +4415,7 @@
                         <span data-i18n="ai.sort_models_label">Sort:</span>
                         <select id="ai-models-sort-select" style="font-size:var(--zn-fs-xs); height:22px; padding:0 4px; border-radius:4px; background:var(--lt-b-0f172af2, rgba(15,23,42,0.95)); border:1px solid var(--zn-line-18); color:var(--lt-t-f8fafcff, #f8fafc); cursor:pointer;">
                           <option value="date" selected data-i18n="ai.sort_release_date">Release Date (Newest First)</option>
-                          <option value="recommended" data-i18n="ai.sort_recommended">★ Hardware Recommended</option>
+                          <option value="recommended" data-i18n="ai.sort_recommended">Hardware Recommended</option>
                           <option value="downloads" data-i18n="ai.sort_downloads">Popularity (Downloads)</option>
                           <option value="size_asc" data-i18n="ai.sort_size_asc">Model Size (Small to Large)</option>
                         </select>

@@ -193,7 +193,7 @@ class ChassisEngine:
         has_sd_slot = is_custom_appliance
         if not has_sd_slot:
             try:
-                from backend.services.copy_engine import read_media_slots
+                from backend.hardware.media_slots import read_media_slots
 
                 slots = read_media_slots()
                 if (

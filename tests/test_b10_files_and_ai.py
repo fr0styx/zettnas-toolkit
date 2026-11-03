@@ -58,18 +58,18 @@ def _usb_disk(sysfs, name, vid, pid):
 
 
 def test_other_usb_disks_are_never_probed(tmp_path, monkeypatch):
-    from backend.services import copy_engine
+    from backend.hardware import media_slots
 
     _usb_disk(tmp_path, "sdc", "0781", "5583")  # a USB stick (e.g. a boot flash)
     _usb_disk(tmp_path, "sdd", "05e3", "0764")  # the appliance's card reader
-    copy_engine._READER_CACHE.clear()
-    assert copy_engine.is_card_reader(str(tmp_path / "block" / "sdd")) is True
-    assert copy_engine.is_card_reader(str(tmp_path / "block" / "sdc")) is False
+    media_slots._READER_CACHE.clear()
+    assert media_slots.is_card_reader(str(tmp_path / "block" / "sdd")) is True
+    assert media_slots.is_card_reader(str(tmp_path / "block" / "sdc")) is False
     probed = []
-    monkeypatch.setattr(copy_engine, "HOST_SYS", str(tmp_path))
-    monkeypatch.setattr(copy_engine, "probe_media_slot_capacity", lambda dev, **k: probed.append(dev) or 0)
-    monkeypatch.setattr(copy_engine, "_ensure_slot_polling", lambda *a: None)
-    copy_engine.read_media_slots()
+    monkeypatch.setattr(media_slots, "HOST_SYS", str(tmp_path))
+    monkeypatch.setattr(media_slots, "probe_media_slot_capacity", lambda dev, **k: probed.append(dev) or 0)
+    monkeypatch.setattr(media_slots, "_ensure_slot_polling", lambda *a: None)
+    media_slots.read_media_slots()
     assert probed == ["sdd"]
 
 

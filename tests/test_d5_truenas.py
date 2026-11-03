@@ -7,7 +7,7 @@ import httpx
 import pytest
 
 from backend import config as _config
-from backend.services import truenas_api
+from backend.hardware.pal import truenas_api
 
 
 @pytest.fixture
@@ -80,7 +80,7 @@ def test_truenas_26_without_rest_uses_json_rpc(monkeypatch):
     """TrueNAS 27 removed /api/v2.0: the same data comes over JSON-RPC (/api/current)."""
     import httpx
 
-    from backend.services import truenas_api
+    from backend.hardware.pal import truenas_api
 
     monkeypatch.setenv("TRUENAS_URL", "https://truenas.local")
     monkeypatch.setenv("TRUENAS_API_KEY", "1-abc")
@@ -98,7 +98,7 @@ def test_truenas_26_without_rest_uses_json_rpc(monkeypatch):
 def test_json_rpc_refuses_a_bad_key(monkeypatch):
     import pytest
 
-    from backend.services import truenas_api
+    from backend.hardware.pal import truenas_api
 
     monkeypatch.setenv("TRUENAS_URL", "http://truenas.local")
     monkeypatch.setenv("TRUENAS_API_KEY", "wrong")

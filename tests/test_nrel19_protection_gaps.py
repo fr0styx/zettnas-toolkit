@@ -70,4 +70,6 @@ def test_main_uses_it():
 
     src = inspect.getsource(main.startup_system)
     assert "refuse_without_snapshot(e)" in src
-    assert src.index("refuse_without_snapshot(e)") < src.index("init_users_db()")
+    # the databases are opened after it, in _startup_databases
+    assert src.index("refuse_without_snapshot(e)") < src.index("_startup_databases(")
+    assert "init_users_db()" in inspect.getsource(main._startup_databases)

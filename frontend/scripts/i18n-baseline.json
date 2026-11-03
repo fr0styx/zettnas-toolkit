@@ -4,7 +4,7 @@
   "hardcoded_ui": 65,
   "missing_plurals": 0,
   "to_fixed": 38,
-  "emoji_strings": 18,
+  "emoji_strings": 0,
   "per_file": {
     "frontend/index.html": 2,
     "frontend/src/components/dashboard.js": 33,

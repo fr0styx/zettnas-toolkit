@@ -2,6 +2,7 @@
  * "Notifications on this device" (M1): subscribes this browser to the NAS's alerts.
  */
 import { api } from '../api.js';
+import { setIconLabel } from '../ui/primitives.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 
@@ -45,7 +46,8 @@ export async function renderPushCard() {
   const host = document.getElementById('push-device-card');
   if (!host) return;
   const support = pushSupport();
-  const title = Object.assign(document.createElement('div'), { className: 'zn-title', textContent: t('push.title', '📱 Notifications on this device') });
+  const title = Object.assign(document.createElement('div'), { className: 'zn-title' });
+  setIconLabel(title, '📱', t('push.title', 'Notifications on this device'));
   const desc = Object.assign(document.createElement('div'), { className: 'zn-muted' });
   host.replaceChildren(title, desc);
   if (!support.ok) {

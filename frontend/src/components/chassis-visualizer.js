@@ -915,7 +915,7 @@ function bindTopologyTreeEvents(tree, container) {
       } catch (err) {
         showToast(err.message || `Failed to import pool '${pid}'`, 'error');
         importBtn.disabled = false;
-        importBtn.textContent = t('ui.import_pool', '📥 Import Pool');
+        setIconLabel(importBtn, '📥', t('ui.import_pool', 'Import Pool'));
       }
       return;
     }
@@ -1000,7 +1000,7 @@ export async function fetchAndRenderStorageTopology(container) {
             } catch (err) {
               showToast(err.message || `Failed to import pool '${pid}'`, 'error');
               importBtn.disabled = false;
-              importBtn.textContent = t('ui.import_pool', '📥 Import Pool');
+              setIconLabel(importBtn, '📥', t('ui.import_pool', 'Import Pool'));
             }
           }
         });
@@ -2703,7 +2703,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
               if (cmd) {
                 const ok = await copyTextToClipboard(cmd);
                 if (ok) {
-                  btn.textContent = t('ui.copied', '✅ Copied!');
+                  setIconLabel(btn, '✅', t('ui.copied', 'Copied!'));
                   showToast(t('toast.copied_command', 'Copied command: {cmd}', { cmd: cmd }), 'info');
                   setTimeout(() => {
                     setLabel(btn, '📋', t('chassis.copy_cmd', 'Copy: {cmd}', { cmd }));

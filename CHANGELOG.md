@@ -4,6 +4,11 @@
 
 #### Security
 
+- **The test tools are hash-locked too** (NARC-10): CI, the nightly jobs and the development
+  image install them from requirements-dev.lock with --require-hashes, like the image's own
+  packages, and a test keeps that lock in step with requirements.lock, so installing the tools
+  can't change a package the image ships.
+
 - **Code scanning, 37 open findings checked** (CodeQL on main): none could be reached from outside
   with harm, and the ones that relied on checks the scanner can't see now make them where it can.
   A snapshot's share is one folder name inside the pool (a snapshot named "..@x" could have
@@ -111,6 +116,17 @@
   get at most one update a week. Security fixes can still skip the wait.
 
 #### Usability
+
+- **No emoji left inside translated words** (UX-35): the last 20 strings that carried one (backup
+  and VM buttons, the share-link button, pool import, the LDAP and notification card titles, the
+  update and setup messages and others) show the icon beside the words in an aria-hidden span, so
+  translators see words only and screen readers read only the words; toasts drop it, since they
+  have their own icon. The emoji ratchet is at 0. Also: the container window's backup button no
+  longer changes its wording after a backup.
+
+- **The Backups pane reads in order with a screen reader** (NUX-24): its title, the Backup jobs,
+  Snapshots and "What protects your data" cards are headings now, one level under the other, so
+  jumping by heading works; nothing changes on screen.
 
 - **System alerts in your language** (NUX-3): the UPS on-battery and critical-battery alerts, the
   Unraid array error, the memory warning and their all-clear messages are written in the
@@ -879,6 +895,16 @@
   chat reply before search, indexing and photo reading.
 
 #### Drives
+
+- **ext4 folders can carry a real quota where the tools are there** (FEAT-10): on an ext4 volume
+  with project quotas (mounted with prjquota), a share's or home's limit is set with chattr and
+  setquota, so SMB and NFS can't go past it either. The container image leaves those tools out
+  for its size budget and says so; the standalone OS image is meant to carry them.
+
+- **A folder share on a ZFS pool can be made snapshot-ready** (NREL-5): "Make it snapshot-ready"
+  turns it into a dataset of its own with the same name and files, as it already did for btrfs.
+  ZFS can't share blocks between datasets, so the files are copied and there must be room for
+  them; any failure leaves the share as it was.
 
 - **Shares on a ZFS pool get snapshots** (NREL-5): on plain Linux a new share on a ZFS pool is a
   dataset of its own, so the default hourly and daily snapshots work on it, as they do on btrfs.

@@ -47,6 +47,13 @@ class FakeZfs:
 
     def __call__(self, cmd):
         self.calls.append(cmd)
+        if cmd[0] == "cp":  # cp -a src/. dst
+            import shutil
+
+            if "cp" in self.fail:
+                return 1, "", "no space left"
+            shutil.copytree(cmd[2].rstrip("."), cmd[3], dirs_exist_ok=True)
+            return 0, "", ""
         verb = cmd[1]
         if verb in self.fail:
             return 1, "", f"cannot {verb}: permission denied"
@@ -63,9 +70,23 @@ class FakeZfs:
                 return 1, "", "no such tag on this dataset"
             self.snaps[cmd[-1]][2] = False
         elif verb == "destroy":
+            if cmd[-1] in self.datasets:  # a dataset (-r): its folder goes too
+                import shutil
+
+                shutil.rmtree(self.datasets.pop(cmd[-1]), ignore_errors=True)
+                return 0, "", ""
             if self.snaps[cmd[-1]][2]:
                 return 1, "", "dataset is busy"
             del self.snaps[cmd[-1]]
+        elif verb == "rename":
+            import os
+
+            old, new = cmd[2], cmd[3]
+            target = f"{self.datasets[new.rsplit('/', 1)[0]]}/{new.rsplit('/', 1)[1]}"
+            if os.path.exists(target):
+                return 1, "", "mountpoint busy"
+            os.rename(self.datasets.pop(old), target)
+            self.datasets[new] = target
         elif verb == "list":
             rows = [f"{n}\t{c}\t{lbl}" for n, (c, lbl, _) in self.snaps.items()]
             rows.append("other@x\t1\t-")  # a dataset outside the pool
@@ -172,3 +193,52 @@ def test_without_zfs_tools_nothing_is_asked(tmp_path, monkeypatch):
         "backend.hardware.pal.base.storage_tools", lambda: {"btrfs": True, "zfs": False, "mdadm": False}
     )
     assert a.list_snapshots("p") == [] and calls == []
+
+
+def _folder_share(pool, name="docs"):
+    share = pool / name
+    (share / "sub").mkdir(parents=True)
+    (share / "a.txt").write_text("hello")
+    (share / "sub" / "b.txt").write_text("world")
+    return share
+
+
+def test_a_folder_share_on_zfs_can_become_a_dataset(zfs):
+    a, fake, pool = zfs
+    share = _folder_share(pool)
+    assert a.can_convert(str(share)) is True
+    old = a.convert_to_subvolume(str(share))
+    assert fake.datasets["tank/docs"] == str(share) and (share / "sub" / "b.txt").read_text() == "world"
+    assert old.startswith(str(pool / "docs.before-dataset-")) and (pool / old.rsplit("/", 1)[1] / "a.txt").exists()
+    assert a.can_convert(str(share)) is False  # a dataset now
+    assert not any(k.startswith("tank/docs.dataset-") for k in fake.datasets)
+
+
+def test_a_failed_copy_or_rename_leaves_the_share_as_it_was(zfs):
+    a, fake, pool = zfs
+    share = _folder_share(pool)
+    fake.fail.add("cp")
+    with pytest.raises(RuntimeError, match="copied"):
+        a.convert_to_subvolume(str(share))
+    assert (share / "a.txt").exists() and set(fake.datasets) == {"tank"}
+    fake.fail = {"rename"}
+    with pytest.raises(RuntimeError, match="place"):
+        a.convert_to_subvolume(str(share))
+    assert (share / "a.txt").exists() and set(fake.datasets) == {"tank"}
+    fake.fail = {"create"}
+    with pytest.raises(RuntimeError, match="made"):
+        a.convert_to_subvolume(str(share))
+
+
+def test_no_room_or_no_dataset_above_changes_nothing(zfs, monkeypatch):
+    a, fake, pool = zfs
+    share = _folder_share(pool)
+    monkeypatch.setattr(gl.shutil, "disk_usage", lambda p: type("U", (), {"free": 3})())
+    with pytest.raises(RuntimeError, match="free space"):
+        a.convert_to_subvolume(str(share))
+    nested = pool / "x" / "y"
+    nested.mkdir(parents=True)
+    assert a.can_convert(str(nested)) is False  # its parent is a plain folder
+    with pytest.raises(RuntimeError, match="isn't a ZFS dataset"):
+        a._convert_to_dataset(str(nested))
+    assert not fake.calls

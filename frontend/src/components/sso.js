@@ -158,7 +158,8 @@ export async function renderLdapPanel() {
     return;
   }
   host.replaceChildren();
-  const title = Object.assign(document.createElement('div'), { className: 'zn-title', textContent: t('ldap.title', '🏢 LDAP / Active Directory') });
+  const title = Object.assign(document.createElement('div'), { className: 'zn-title' });
+  setIconLabel(title, '🏢', t('ldap.title', 'LDAP / Active Directory'));
   const desc = Object.assign(document.createElement('div'), {
     className: 'zn-muted',
     textContent: t('ldap.desc', 'People sign in with their directory name and password. Local accounts keep their own password. Use ldaps:// or StartTLS.'),
