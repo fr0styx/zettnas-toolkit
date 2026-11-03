@@ -27,7 +27,7 @@ export async function fetchAndRenderDisksInventory() {
     }
 
     if (disks.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:20px;">No physical disks discovered.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:20px;">${t('dkx.none', 'No physical disks discovered.')}</td></tr>`;
       return;
     }
 
@@ -46,7 +46,7 @@ export async function fetchAndRenderDisksInventory() {
     );
   } catch (err) {
     console.warn('[Management] Failed to fetch disks inventory:', err);
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--crit); padding:20px;">Failed to load disks inventory.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--crit); padding:20px;">${t('dkx.failed', 'Failed to load disks inventory.')}</td></tr>`;
   }
 }
 
@@ -79,7 +79,7 @@ function buildDiskRowInner(d) {
     </td>
     <td style="text-align:right;">
       <div style="display:inline-flex; gap:6px; align-items:center;">
-        <button class="btn-pill-toggle btn-locate-row is-small" data-dev="${devName}" title="${t('ui.locate_drive_blink_bay_led', 'Locate Drive (Blink Bay LED)')}">⚡ Locate</button>
+        <button class="btn-pill-toggle btn-locate-row is-small" data-dev="${devName}" title="${t('ui.locate_drive_blink_bay_led', 'Locate Drive (Blink Bay LED)')}"><span aria-hidden="true">⚡</span> ${t('dkx.locate', 'Locate')}</button>
         <button class="btn-pill-toggle btn-smart-row is-small" data-dev="${devName}" title="${t('ui.view_s_m_a_r', 'View S.M.A.R.T. Diagnostics')}">📊 S.M.A.R.T.</button>
         <button type="button" class="btn-pill-toggle btn-disk-more-sheet is-small" data-dev="${devName}" title="${t('ui.more_actions', 'More Actions')}" style="display: none;">···</button>
       </div>
@@ -154,12 +154,12 @@ function bindDiskTableEvents(tbody) {
         items: [
           {
             icon: '📊',
-            label: 'View S.M.A.R.T. Diagnostics',
+            label: t('ui.view_s_m_a_r', 'View S.M.A.R.T. Diagnostics'),
             onClick: () => row?.querySelector('.btn-smart-row')?.click(),
           },
           {
             icon: '⚡',
-            label: 'Locate Drive (Blink Bay LED)',
+            label: t('ui.locate_drive_blink_bay_led', 'Locate Drive (Blink Bay LED)'),
             onClick: () => row?.querySelector('.btn-locate-row')?.click(),
           },
         ],

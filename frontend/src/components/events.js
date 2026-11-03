@@ -37,7 +37,7 @@ export function renderEventLog(events) {
     : events.filter((e) => e.level === _currentFilter);
 
   if (filtered.length === 0) {
-    list.innerHTML = `<div style="padding: 14px; text-align: center; color: var(--muted); font-size: var(--zn-fs-xs);">No ${_currentFilter} events.</div>`;
+    list.innerHTML = `<div style="padding: 14px; text-align: center; color: var(--muted); font-size: var(--zn-fs-xs);">${escapeHtml(t('evx.none', 'No {level} events.', { level: _currentFilter }))}</div>`;
     return;
   }
 
@@ -69,9 +69,9 @@ export function renderEventLog(events) {
         </div>
         <div style="display: flex; gap: 6px; align-items: center; padding-top: 2px;">
           <button class="event-inspect-btn" type="button" title="${t('ui.view_full_event_details', 'View full event details')}" style="background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.35); color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 7px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
-            <span aria-hidden="true">🔍</span> <span>More Info</span>
+            <span aria-hidden="true">🔍</span> <span>${t('evx.more', 'More Info')}</span>
           </button>
-          <span style="font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer; padding: 2px 4px;">▼ Details</span>
+          <span style="font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer; padding: 2px 4px;"><span aria-hidden="true">▼</span> ${t('evx.details', 'Details')}</span>
         </div>
       </div>
     `;

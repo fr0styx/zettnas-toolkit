@@ -18,7 +18,7 @@ export const SYSTEM_SHORTCUTS = [
   {
     id: 'containers-desktop-icon',
     name: 'Containers',
-    title: 'Apps & Containers',
+    get title() { return t('dsc.containers', 'Apps & Containers'); },
     desc: 'Manage Docker containers, Compose stacks, app catalog, and live container terminal.',
     icon: '#i-chip',
     svg: true,
@@ -30,7 +30,7 @@ export const SYSTEM_SHORTCUTS = [
   {
     id: 'storage-desktop-icon',
     name: 'Storage & Pools',
-    title: 'Storage & Chassis',
+    get title() { return t('dsc.storage', 'Storage & Chassis'); },
     desc: 'Drive bays, storage pools, shares and cloud storage.',
     icon: '#i-storage',
     svg: true,
@@ -42,7 +42,7 @@ export const SYSTEM_SHORTCUTS = [
   {
     id: 'network-desktop-icon',
     name: 'Network & Switch',
-    title: 'Network & Virtual Switch',
+    get title() { return t('dsc.network', 'Network & Virtual Switch'); },
     desc: 'Visual hardware switch faceplate, link negotiation, host bridges, and Docker network topology.',
     icon: '#i-net',
     svg: true,
@@ -54,7 +54,7 @@ export const SYSTEM_SHORTCUTS = [
   {
     id: 'activity-desktop-icon',
     name: 'Activity Monitor',
-    title: 'Activity & Telemetry',
+    get title() { return t('dsc.activity', 'Activity & Telemetry'); },
     desc: 'Real-time CPU, RAM, disk thermals, and system telemetry historical trends.',
     icon: '#i-bolt',
     svg: true,
@@ -66,7 +66,7 @@ export const SYSTEM_SHORTCUTS = [
   {
     id: 'hardware-desktop-icon',
     name: 'Hardware & Fans',
-    title: 'Hardware & Acoustic Profiles',
+    get title() { return t('dsc.hardware', 'Hardware & Acoustic Profiles'); },
     desc: 'Acoustic profiles, custom zero-RPM fan curves, and host subsystems.',
     icon: '#i-fan',
     svg: true,
@@ -77,7 +77,7 @@ export const SYSTEM_SHORTCUTS = [
   {
     id: 'ups-desktop-icon',
     name: 'UPS & Power',
-    title: 'UPS & Power Integrity',
+    get title() { return t('dsc.ups', 'UPS & Power Integrity'); },
     desc: 'Battery health, runtime estimation, load wattage, and NUT daemon telemetry.',
     icon: '#i-sliders',
     svg: true,
@@ -88,7 +88,7 @@ export const SYSTEM_SHORTCUTS = [
   {
     id: 'settings-desktop-icon',
     name: 'System Settings',
-    title: 'System & Security',
+    get title() { return t('dsc.system', 'System & Security'); },
     desc: 'User accounts, RBAC, API tokens, master credentials, configuration backups, and updates.',
     icon: '#i-users',
     svg: true,
@@ -99,7 +99,7 @@ export const SYSTEM_SHORTCUTS = [
   {
     id: 'notifications-desktop-icon',
     name: 'Notifications',
-    title: 'Notifications & Alerts',
+    get title() { return t('dsc.alerts', 'Notifications & Alerts'); },
     desc: 'Configure Discord, Telegram, Email, ntfy alerting channels and event rules.',
     icon: '#i-bell',
     svg: true,

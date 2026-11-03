@@ -4,6 +4,7 @@
  */
 import { api } from '../api.js';
 import { initGlassTimePickers } from './time-picker.js';
+import { t } from '../i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -154,7 +155,7 @@ export function initLedControl() {
     try {
       await api.post('/api/led', payload);
       currentPower = powerState;
-      if (powerBtn) powerBtn.textContent = currentPower === 'on' ? 'Turn Off' : 'Turn On';
+      if (powerBtn) powerBtn.textContent = currentPower === 'on' ? t('ledx.off', 'Turn Off') : t('ledx.on', 'Turn On');
       updateLivePreview();
     } catch (err) {
       console.warn('Failed to update LED', err);
@@ -175,7 +176,7 @@ export function initLedControl() {
       if (speedSlider) speedSlider.value = data.speed !== undefined ? data.speed : 50;
       if (speedValDisplay && speedSlider) speedValDisplay.textContent = formatSpeedText(speedSlider.value);
 
-      if (powerBtn) powerBtn.textContent = currentPower === 'on' ? 'Turn Off' : 'Turn On';
+      if (powerBtn) powerBtn.textContent = currentPower === 'on' ? t('ledx.off', 'Turn Off') : t('ledx.on', 'Turn On');
       if (reactiveToggle) reactiveToggle.checked = data.reactive !== false;
       if (ledNightToggle) ledNightToggle.checked = Boolean(data.night_mode);
       if (ledNightStart && data.night_start) ledNightStart.value = data.night_start;

@@ -4,6 +4,7 @@
  */
 import { api } from '../api.js';
 import { escapeHtml } from '../utils.js';
+import { t } from '../i18n.js';
 
 let _cachedPorts = [];
 let _portsBound = false;
@@ -18,7 +19,7 @@ export async function fetchListeningPorts() {
     console.debug('[NetworkManager] Error fetching listening ports:', err);
     const tbody = document.getElementById('net-listening-ports-tbody');
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--crit); padding: 18px;">Failed to load listening ports: ${escapeHtml(String(err.message || err))}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--crit); padding: 18px;">${escapeHtml(t('nmx.failed', 'Failed to load listening ports: {error}', { error: String(err.message || err) }))}</td></tr>`;
     }
     return [];
   }
@@ -41,7 +42,7 @@ export function renderListeningPortsTable(ports, filter = '') {
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">No listening ports found matching filter.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">${t('nmx.none', 'No listening ports found matching filter.')}</td></tr>`;
     return;
   }
 
@@ -60,7 +61,7 @@ export function renderListeningPortsTable(ports, filter = '') {
            <span style="font-size: var(--zn-fs-xs);">🐳</span>
            <span style="color: var(--lt-t-60a5faff, #60a5fa); font-weight: 600;">${escapeHtml(p.container)}</span>
          </div>`
-      : `<span style="color: var(--muted); font-size: var(--zn-fs-xs);">Host System / Kernel</span>`;
+      : `<span style="color: var(--muted); font-size: var(--zn-fs-xs);">${t('nmx.host', 'Host System / Kernel')}</span>`;
 
     return `
       <tr data-port="${escapeHtml(String(p.port))}" data-proto="${escapeHtml(String(p.protocol))}">
