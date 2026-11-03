@@ -3336,8 +3336,8 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
       if (restoreBtn) {
         const sName = restoreBtn.dataset.snap;
         showConfirmToast(
-          'Revert Snapshot',
-          `Roll back subvolume to snapshot '${sName}'? Pre-existing state will be archived safely.`,
+          t('chassis.snap_revert_title', 'Go back to snapshot'),
+          t('chassis.snap_revert_msg', 'Roll back to snapshot "{name}"? The current state is saved first.', { name: sName }),
           async () => {
             try {
               await api.post(`/api/storage/pools/${pId}/snapshots/restore`, {
@@ -3346,11 +3346,11 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
               showToast(t('toast.snapshot_reverted_successfully', 'Snapshot \'{sName}\' reverted successfully!', { sName: sName }), 'success');
               onReload();
             } catch (err) {
-              showToast(err.message || 'Failed to revert snapshot', 'error');
+              showToast(err.message || t('chassis.snap_revert_failed', 'Could not go back to the snapshot'), 'error');
             }
           },
           null,
-          { okText: 'Revert Snapshot', cancelText: t('common.cancel', 'Cancel') }
+          { okText: t('chassis.snap_revert_title', 'Go back to snapshot'), cancelText: t('common.cancel', 'Cancel') }
         );
         return;
       }
@@ -3359,19 +3359,19 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
       if (!btn) return;
       const sName = btn.dataset.snap;
       showConfirmToast(
-        'Delete Snapshot',
-        `Delete snapshot '${sName}'?`,
+        t('ui.delete_snapshot', 'Delete Snapshot'),
+        t('backup.snap_delete_q', 'Delete snapshot "{name}"?', { name: sName }),
         async () => {
           try {
             await api.delete(`/api/storage/pools/${pId}/snapshots/${sName}`, { confirmed: true });
             showToast(t('toast.snapshot_deleted_2', 'Snapshot \'{sName}\' deleted.', { sName: sName }), 'info');
             onReload();
           } catch (err) {
-            showToast(err.message || 'Failed to delete snapshot', 'error');
+            showToast(err.message || t('chassis.snap_delete_failed', 'Could not delete the snapshot'), 'error');
           }
         },
         null,
-        { okText: 'Delete Snapshot', cancelText: t('common.cancel', 'Cancel') }
+        { okText: t('ui.delete_snapshot', 'Delete Snapshot'), cancelText: t('common.cancel', 'Cancel') }
       );
     });
   }
@@ -3391,7 +3391,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
         snapNameInput.value = '';
         loadSnapshots();
       } catch (err) {
-        showToast(err.message || 'Failed to create snapshot', 'error');
+        showToast(err.message || t('chassis.snap_create_failed', 'Could not take the snapshot'), 'error');
       }
     };
   }
