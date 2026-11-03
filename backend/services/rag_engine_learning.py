@@ -129,6 +129,42 @@ def _one_reembed_at_a_time(fn: Any) -> Any:
     return wrapper
 
 
+RECLAIM_SHARE = 0.25  # free pages worth a one-time full VACUUM: a quarter of the file...
+RECLAIM_MIN_BYTES = 64 * 1024 * 1024  # ...and at least this much
+INCREMENTAL_PAGES = 25_600  # pages an incremental index gives back per night (100 MB at 4 KiB)
+
+
+def reclaim_space(conn: Any, db_path: str, disk_free=None) -> dict:
+    """Gives the space of deleted files back to the disk (PERF-23). An index in incremental
+    auto-vacuum mode frees a batch of pages each night; an older one with much free space is
+    rewritten once in that mode (a full VACUUM), only when the disk has room for the copy."""
+    import shutil
+
+    page = conn.execute("PRAGMA page_size").fetchone()[0]
+    pages = conn.execute("PRAGMA page_count").fetchone()[0]
+    free = conn.execute("PRAGMA freelist_count").fetchone()[0]
+    mode = conn.execute("PRAGMA auto_vacuum").fetchone()[0]
+    out = {"mode": mode, "free_pages": free, "freed_pages": 0, "vacuumed": False}
+    if not free:
+        return out
+    if mode == 2:  # INCREMENTAL
+        conn.execute(f"PRAGMA incremental_vacuum({INCREMENTAL_PAGES})").fetchall()  # one page per step
+        conn.commit()
+    elif free >= pages * RECLAIM_SHARE and free * page >= RECLAIM_MIN_BYTES:
+        room = (disk_free or (lambda p: shutil.disk_usage(p).free))(os.path.dirname(db_path) or ".")
+        if room < pages * page * 1.2:
+            logger.info(
+                "[RAG] Index has %d MB to give back, but too little disk room for the rewrite", free * page >> 20
+            )
+            return out
+        conn.execute("PRAGMA auto_vacuum = INCREMENTAL")
+        conn.execute("VACUUM")
+        out["vacuumed"] = True
+    out["freed_pages"] = free - conn.execute("PRAGMA freelist_count").fetchone()[0]
+    out["mode"] = conn.execute("PRAGMA auto_vacuum").fetchone()[0]
+    return out
+
+
 class RagLearningMixin:
     """Standby-safe learning, the deferred queue, sync control and re-embedding for RagSearchEngine (split out of rag_engine.py, ARCH-1)."""
 
@@ -1166,6 +1202,9 @@ class RagLearningMixin:
                     conn.commit()
                     conn.execute("PRAGMA optimize")
                     conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+                    space = reclaim_space(conn, self.db_path)
+                    if space["freed_pages"]:
+                        logger.info("[RAG] Gave %d free page(s) back to the disk", space["freed_pages"])
                 finally:
                     conn.close()
             logger.info(

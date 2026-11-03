@@ -767,6 +767,10 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                 # statements below use them): see db_schema (ARC-8)
                 from backend.db_schema import ensure_columns
 
+                if not conn.execute("SELECT 1 FROM sqlite_master LIMIT 1").fetchone():
+                    # a new index frees deleted space a little each night (PERF-23)
+                    conn.execute("PRAGMA auto_vacuum = INCREMENTAL")
+                    conn.execute("VACUUM")  # the connection is already in WAL mode: this applies it (no data yet)
                 ensure_columns(conn, "rag_index.db")
 
                 conn.executescript(rag_schema.INDEX)
