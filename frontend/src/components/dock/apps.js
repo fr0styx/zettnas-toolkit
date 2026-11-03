@@ -59,7 +59,7 @@ export const KNOWN_APPS = {
   'container-inspector': {
     id: 'container-inspector',
     icon: '#i-chip',
-    getTitle: () => 'Container Inspector',
+    getTitle: () => t('dock.container_inspector', 'Container Inspector'),
     launch: (data = null) => {
       if (data && data.cid && typeof window.openContainerInspector === 'function') {
         window.openContainerInspector(data.cid, data.cname);
@@ -113,7 +113,7 @@ export const KNOWN_APPS = {
   'app-deploy': {
     id: 'app-deploy',
     icon: '#i-chip',
-    getTitle: () => 'App Deployment',
+    getTitle: () => t('dock.app_deploy', 'App Deployment'),
     launch: () => {
       const overlay = document.getElementById('app-deploy-modal-overlay');
       const win = document.getElementById('app-deploy-modal-window');
@@ -137,7 +137,7 @@ export const KNOWN_APPS = {
   'cloud-remote': {
     id: 'cloud-remote',
     icon: '#i-cloud',
-    getTitle: () => 'Cloud Remotes',
+    getTitle: () => t('dock.cloud_remotes', 'Cloud Remotes'),
     launch: () => {
       if (typeof window.openNewCloudRemoteModal === 'function') {
         window.openNewCloudRemoteModal();
@@ -200,7 +200,7 @@ export function toggleFmWindowSwitcher(anchorEl, fmWindows = []) {
     const item = document.createElement('div');
     const isActive = DockManager.activeId === w.id && !w.minimized;
     item.className = `dock-switcher-item ${isActive ? 'active' : ''}`;
-    const winTitle = w.title || 'File Explorer';
+    const winTitle = w.title || t('dock.file_manager', 'File Explorer');
     const folderName = winTitle.includes('(') ? winTitle.split('(')[1].replace(')', '') : winTitle;
     let pathStr = '';
     if (w.el && typeof w.el.querySelector === 'function') {
@@ -295,7 +295,7 @@ export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning, op
       html += `<div style="height:1px; background:var(--zn-glaze-8); margin:4px 0;"></div>`;
       html += `<div style="font-size:var(--zn-fs-xs); color:var(--muted); padding:3px 10px; font-weight:700; text-transform:uppercase;">${escapeHtml(t('dock.open_windows', 'Open Windows'))}</div>`;
       openWindowsList.forEach((w) => {
-        const wTitle = w.title || 'File Explorer';
+        const wTitle = w.title || t('dock.file_manager', 'File Explorer');
         const isCurrentActive = DockManager.activeId === w.id;
         html += `
           <div class="ctx-item dock-ctx-fm-win" data-win-id="${escapeHtml(w.id)}" style="display:flex; align-items:center; justify-content:space-between;">
