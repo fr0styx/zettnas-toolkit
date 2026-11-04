@@ -59,6 +59,15 @@ def test_the_api_lists_and_deletes_snapshots(truenas):
         truenas_api.delete_snapshot("tank/family", "bad;name")
 
 
+def test_only_a_snapshot_truenas_lists_is_deleted(truenas):
+    before = len(truenas)
+    with pytest.raises(truenas_api.TrueNASError, match="No snapshot"):
+        truenas_api.delete_snapshot("tank/../other", "auto-20261027-1000")
+    with pytest.raises(truenas_api.TrueNASError, match="No snapshot"):
+        truenas_api.delete_snapshot("tank/family", "not-there")
+    assert not [m for m, _p, _b in truenas[before:] if m == "DELETE"]
+
+
 def test_a_share_snapshot_is_taken_on_its_dataset(truenas):
     adapter = TrueNASStorageAdapter.__new__(TrueNASStorageAdapter)
     res = adapter.create_snapshot("tank", "family", "family@auto-20261027-1100", readonly=True)
@@ -97,6 +106,8 @@ def test_the_old_json_rpc_name_is_tried_when_rest_is_gone(monkeypatch):
     calls = []
 
     def fake_rpc(method, params=None):
+        if method == "pool.snapshot.query":
+            return [{"name": "tank/family@auto-1"}]
         calls.append(method)
         if method == "pool.snapshot.delete":
             raise truenas_api.TrueNASError("no such method")

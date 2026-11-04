@@ -4,6 +4,10 @@
 
 #### Security
 
+- **TrueNAS snapshots are deleted only when TrueNAS lists them** (CodeQL 471): deleting a snapshot
+  looks it up first and uses the id TrueNAS gave, so the request never carries a dataset name as
+  typed (one with "../" or a snapshot that isn't there is refused before anything is sent).
+
 - **Stopping SFTP right after it starts also stops its file server** (SEC-34): the SFTP front now
   listens for a stop before it opens its port, so a stop in that first moment no longer ends it
   abruptly and leaves rclone running.

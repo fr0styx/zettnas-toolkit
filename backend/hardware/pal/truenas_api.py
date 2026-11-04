@@ -203,7 +203,15 @@ def list_snapshots(transport=None) -> list[dict[str, Any]]:
 def delete_snapshot(dataset: str, name: str, transport=None) -> dict[str, Any]:
     if not _SNAP_NAME.fullmatch(name or "") or not dataset:
         raise TrueNASError("Invalid snapshot name")
-    sid = f"{dataset}@{name}"
+    wanted = f"{dataset}@{name}"
+    # only a snapshot TrueNAS itself lists is deleted, and its id is the one TrueNAS gave: the request
+    # path never carries what the caller typed (CodeQL py/partial-ssrf, alert 471)
+    sid = next(
+        (f"{s['dataset']}@{s['name']}" for s in list_snapshots(transport) if f"{s['dataset']}@{s['name']}" == wanted),
+        None,
+    )
+    if sid is None:
+        raise TrueNASError(f"No snapshot {wanted} on TrueNAS")
     from urllib.parse import quote
 
     with _client(transport) as c:
