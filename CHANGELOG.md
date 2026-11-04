@@ -118,6 +118,10 @@
   favorites list and the inspector's folder, file and permissions views use 30 classes instead of
   48 inline styles; pixel-for-pixel the same in both themes.
 
+- **The media organizer and sideload dialogs are built from stylesheet classes** (NUX-15): their
+  30 inline styles in the start page move into the sheets that load with the file explorer and the
+  Docker panel, so the first page gets smaller; pixel-for-pixel the same in both themes.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 

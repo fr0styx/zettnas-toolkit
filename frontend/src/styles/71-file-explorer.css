@@ -86,3 +86,20 @@
 :is(#file-manager-window, .file-manager-window, #fm-locations-menu, #fm-breadcrumbs-dropdown, #fm-context-menu, #modal-fm-collision, #modal-fm-share-link, #modal-media-organizer) .fmh-xs-mono { font-family: monospace; font-size: var(--zn-fs-xs); word-break: break-all; margin-top: 6px; color: var(--accent); }
 :is(#file-manager-window, .file-manager-window, #fm-locations-menu, #fm-breadcrumbs-dropdown, #fm-context-menu, #modal-fm-collision, #modal-fm-share-link, #modal-media-organizer) .fmh-xs-2 { font-size: var(--zn-fs-xs); margin-top: 6px; color: var(--fg); }
 :is(#file-manager-window, .file-manager-window, #fm-locations-menu, #fm-breadcrumbs-dropdown, #fm-context-menu, #modal-fm-collision, #modal-fm-share-link, #modal-media-organizer) .fmh-col { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+
+/* Media organizer dialog (index.html): classes instead of inline styles (NUX-15), same look */
+#modal-media-organizer .mor-x { cursor: move; }
+#modal-media-organizer .mor-x-2 { align-items: center; gap: 8px; }
+#modal-media-organizer .mor-fs15 { font-size: 15px; }
+#modal-media-organizer .mor-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+#modal-media-organizer .mor-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); }
+#modal-media-organizer .mor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#modal-media-organizer .mor-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+#modal-media-organizer .mor-xs-strong-box { width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 7px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); }
+#modal-media-organizer .mor-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+#modal-media-organizer .mor-row-2 { display: flex; align-items: center; gap: 8px; }
+#modal-media-organizer .mor-xs-bold-muted-2 { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); }
+#modal-media-organizer .mor-xs-strong-box-2 { border: 1px solid var(--zn-line-12); background: var(--zn-shade-40); padding: 5px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); }
+#modal-media-organizer .mor-box { max-height: 240px; overflow-y: auto; border: 1px solid var(--zn-line-8); border-radius: 6px; background: var(--zn-shade-25); }
+#modal-media-organizer .mor-xs-muted-center { color: var(--muted); text-align: center; padding: 25px; font-size: var(--zn-fs-xs); }
+#modal-media-organizer .mor-row-3 { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }

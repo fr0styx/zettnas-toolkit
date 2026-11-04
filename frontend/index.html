@@ -2023,33 +2023,33 @@
 <!-- Sideload App Package Modal -->
 <div id="modal-sideload-app" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-sideload-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 580px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-sideload-title" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 15px;">📥</span>
+    <div class="smart-modal-header dsl-x">
+      <span class="smart-modal-title dsl-x-2" id="modal-sideload-title" style="display: flex;">
+        <span class="dsl-fs15">📥</span>
         <span data-i18n="catalog.sideload_title">Sideload App Package</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="modal-sideload-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
-      <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="catalog.sideload_desc">
+    <div class="smart-modal-body dsl-col">
+      <div class="dsl-xs-muted" data-i18n="catalog.sideload_desc">
         Import container templates or Compose stacks directly from a GitHub/raw URL or paste raw manifest.
       </div>
 
-      <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--zn-line-8); padding-bottom: 8px;">
+      <div class="dsl-row-box">
         <button type="button" class="btn-pill-toggle active" id="sideload-tab-url">URL</button>
         <button type="button" class="btn-pill-toggle" id="sideload-tab-paste" data-i18n="ix.yaml_json">YAML / JSON</button>
       </div>
 
       <div id="sideload-input-url-wrap">
-        <label for="sideload-url-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="catalog.sideload_url_label">Manifest or Compose URL</label>
-        <input type="url" id="sideload-url-input" class="tz-select-input" placeholder="https://raw.githubusercontent.com/.../docker-compose.yml" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+        <label class="dsl-xs-bold-muted" for="sideload-url-input" data-i18n="catalog.sideload_url_label">Manifest or Compose URL</label>
+        <input type="url" id="sideload-url-input" class="tz-select-input dsl-xs-strong-box" placeholder="https://raw.githubusercontent.com/.../docker-compose.yml" />
       </div>
 
       <div id="sideload-input-paste-wrap" style="display: none;">
-        <label for="sideload-content-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="catalog.sideload_yaml_label">Or Paste YAML / JSON</label>
-        <textarea id="sideload-content-input" rows="7" class="tz-select-input" placeholder="services:&#10;  app:&#10;    image: alpine:latest&#10;    ports:&#10;      - '8080:80'" data-sample style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); font-family: monospace; resize: vertical;"></textarea>
+        <label class="dsl-xs-bold-muted" for="sideload-content-input" data-i18n="catalog.sideload_yaml_label">Or Paste YAML / JSON</label>
+        <textarea id="sideload-content-input" rows="7" class="tz-select-input dsl-xs-strong-mono-box" placeholder="services:&#10;  app:&#10;    image: alpine:latest&#10;    ports:&#10;      - '8080:80'" data-sample></textarea>
       </div>
 
       <button type="button" id="btn-sideload-inspect" class="btn-pill-toggle" style="align-self: flex-start; background: rgba(14,165,233,0.15); color: var(--zn-text-accent); border: 1px solid rgba(14,165,233,0.3);">
@@ -2057,11 +2057,11 @@
       </button>
 
       <!-- Inspection Security & Summary Box -->
-      <div id="sideload-inspect-result" style="display: none; background: var(--zn-shade-30); border: 1px solid var(--zn-line-10); border-radius: 6px; padding: 12px;"></div>
+      <div class="dsl-box" id="sideload-inspect-result" style="display: none;"></div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
+      <div class="dsl-row">
         <button type="button" id="modal-sideload-cancel-btn" class="btn-pill-toggle is-small" data-i18n="ix.cancel">Cancel</button>
-        <button type="button" id="btn-sideload-confirm" disabled class="btn-pill-toggle is-primary is-small" style="opacity: 0.5;" data-i18n="catalog.sideload_install_btn">Sideload & Save App</button>
+        <button type="button" id="btn-sideload-confirm" disabled class="btn-pill-toggle is-primary is-small dsl-x-3" data-i18n="catalog.sideload_install_btn">Sideload & Save App</button>
       </div>
     </div>
   </div>
@@ -2070,35 +2070,35 @@
 <!-- Media Organizer & Renamer Modal -->
 <div id="modal-media-organizer" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-media-org-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 780px; width: 94%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" style="cursor: move;">
-      <span class="smart-modal-title" id="modal-media-org-title" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 15px;">🎬</span>
+    <div class="smart-modal-header mor-x">
+      <span class="smart-modal-title mor-x-2" id="modal-media-org-title" style="display: flex;">
+        <span class="mor-fs15">🎬</span>
         <span data-i18n="media.title">Media Organizer & Renamer</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="modal-media-org-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
-      <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="media.desc">
+    <div class="smart-modal-body mor-col">
+      <div class="mor-xs-muted" data-i18n="media.desc">
         Sorts downloaded films and series into the folder layout Plex and Jellyfin expect.
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="mor-grid">
         <div>
-          <label for="media-org-source-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="media.source_dir">Source Folder (Downloads)</label>
-          <input type="text" id="media-org-source-input" class="tz-select-input" placeholder="/mnt/user/downloads" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 7px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <label class="mor-xs-bold-muted" for="media-org-source-input" data-i18n="media.source_dir">Source Folder (Downloads)</label>
+          <input type="text" id="media-org-source-input" class="tz-select-input mor-xs-strong-box" placeholder="/mnt/user/downloads" />
         </div>
         <div>
-          <label for="media-org-dest-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="media.dest_dir">Destination Folder (Media)</label>
-          <input type="text" id="media-org-dest-input" class="tz-select-input" placeholder="/mnt/user/media" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 7px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <label class="mor-xs-bold-muted" for="media-org-dest-input" data-i18n="media.dest_dir">Destination Folder (Media)</label>
+          <input type="text" id="media-org-dest-input" class="tz-select-input mor-xs-strong-box" placeholder="/mnt/user/media" />
         </div>
       </div>
 
-      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <label for="media-org-mode-select" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted);" data-i18n="ix.operation_mode">Operation Mode:</label>
-          <select id="media-org-mode-select" class="tz-select-input" style="border: 1px solid var(--zn-line-12); background: var(--zn-shade-40); padding: 5px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
+      <div class="mor-row">
+        <div class="mor-row-2">
+          <label class="mor-xs-bold-muted-2" for="media-org-mode-select" data-i18n="ix.operation_mode">Operation Mode:</label>
+          <select id="media-org-mode-select" class="tz-select-input mor-xs-strong-box-2">
             <option value="hardlink" selected data-i18n="media.mode_hardlink">Hardlink (Fastest, 0 MB Disk Used)</option>
             <option value="move" data-i18n="media.mode_move">Move Files</option>
             <option value="copy" data-i18n="media.mode_copy">Copy Files</option>
@@ -2110,11 +2110,11 @@
       </div>
 
       <!-- Preview Diff Table -->
-      <div id="media-org-preview-wrap" style="max-height: 240px; overflow-y: auto; border: 1px solid var(--zn-line-8); border-radius: 6px; background: var(--zn-shade-25);">
-        <div style="color: var(--muted); text-align: center; padding: 25px; font-size: var(--zn-fs-xs);" data-i18n="ix.click_scan_and_preview_diff_to">Click "Scan & Preview Diff" to analyze files.</div>
+      <div class="mor-box" id="media-org-preview-wrap">
+        <div class="mor-xs-muted-center" data-i18n="ix.click_scan_and_preview_diff_to">Click "Scan & Preview Diff" to analyze files.</div>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
+      <div class="mor-row-3">
         <button type="button" id="modal-media-org-cancel-btn" class="btn-pill-toggle is-small" data-i18n="common.cancel">Cancel</button>
         <button type="button" id="btn-media-org-apply" disabled style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; background: #10b981; opacity: 0.5; border: none; color: #fff; border-radius: 6px; cursor: not-allowed;" data-i18n="media.apply_btn">Execute Reorganization</button>
       </div>
