@@ -327,7 +327,27 @@ REFUSAL_MARKERS = (
     "没有相关",
     "找不到",
     "不在",
+    # how the shipped model says it (NAI-18)
+    "not mentioned",
+    "isn't mentioned",
+    "not included",
+    "nicht erwähnt",
+    "nicht enthalten",
+    "nicht angegeben",
+    "pas mentionn",
+    "pas possible de déterminer",
+    "no se menciona",
+    "no se encuentra",
+    "no figura",
+    "未在",
+    "未提及",
+    "没有提及",
 )
+# a refusal later in a sentence counts when the files are named after it: "… is not in the indexed
+# files", not "the warranty is not in effect" (NAI-18)
+SOURCE_WORDS = ("file", "document", "index", "datei", "dokument", "fichier", "archivo", "文件", "文档", "资料")
+# the answer's citation chips ([1], [2, 3], 【1】) are not facts (NAI-18)
+_CITATION = re.compile(r"\s*(?:\[\d+(?:\s*[,\u2013-]\s*\d+)*\]|\u3010\d+\u3011)")
 
 
 _SENTENCE = re.compile(r"(?<=[.!?。！？])\s*|\n+")
@@ -335,18 +355,26 @@ _NUMBER = re.compile(r"\d+(?:[.,:]\d+)*")
 REFUSAL_WITHIN = 40  # a refusal phrase counts near the start of a sentence, not inside a fact (NAI-17)
 
 
-def says_not_found(answer: str) -> bool:
+def _uncited(text: str) -> str:
+    return _CITATION.sub("", text or "")
+
+
+def says_not_found(answer: str, question: str = "") -> bool:
     """An unanswerable question is answered correctly by saying the files don't say (AI-16).
     Strict (NAI-17): the phrase opens a sentence ("I couldn't find…", not "it is not in warranty
-    since…"), and the answer states no number or date beside it, which would be a guess."""
-    text = answer or ""
-    if _NUMBER.search(text):
+    since…"), or comes later with the files named after it ("… is not in the indexed files",
+    NAI-18), and the answer states no number or date of its own beside it, which would be a guess
+    (one repeated from the question, "the trip in 2024", is not)."""
+    text = _uncited(answer)
+    if _numbers(text) - _numbers(question):
         return False
     for sentence in _SENTENCE.split(text):
         low = sentence.strip().lower()
         for m in REFUSAL_MARKERS:
             at = low.find(m)
             if 0 <= at <= REFUSAL_WITHIN:
+                return True
+            if at > REFUSAL_WITHIN and any(w in low[at:] for w in SOURCE_WORDS):
                 return True
     return False
 
@@ -359,6 +387,7 @@ def answer_matches(answer: str, accepted: list[str], required: list[str] | None 
     """One of the accepted facts is in the answer, and every required one (multi-hop). Strict
     (NAI-17): an answer that also gives another number in the place of the accepted one ("185 or
     190 kg") doesn't pass, since a reader can't tell which is right."""
+    answer = _uncited(answer)
     a = _norm(answer)
     if required and not all(_norm(x) in a for x in required):
         return False
@@ -615,7 +644,7 @@ def evaluate(
                                 **item,
                                 "model_answered": float(bool(tel.get("llm_invoked"))),
                                 "correct": float(
-                                    says_not_found(text)
+                                    says_not_found(text, item["question"])
                                     if item.get("unanswerable")
                                     else answer_matches(text, item["answer_any"], item.get("answer_all"))
                                 ),

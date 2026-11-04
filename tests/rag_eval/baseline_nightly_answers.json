@@ -1,13 +1,15 @@
 {
- "note": "recorded from the GitHub nightly of 2026-10-28 (run 40667276297, commit a2544a2); dev/held-out figures dropped when the split became by file (NAI-9), re-recorded with the next nightly",
+ "note": "recorded from the GitHub nightly of 2026-11-04 (run 41818858861, commit 25cd4a4), the first with the shipped answer model: qwen3:4b-q4_K_M (manifest sha256:2bfd38a7daaf, thinking off) over EmbeddingGemma (embeddinggemma:latest, sha256:85462619ee72); its saved answers rescored with the NAI-18 scoring (citation chips are not facts, a refusal naming the files counts); answers are compared only against a baseline of the same model",
  "model": "embeddinggemma",
  "set": "base",
  "distractors": 0,
+ "neutral_names": false,
+ "hard_distractors": 0,
  "overall": {
-  "recall@1": 0.985,
+  "recall@1": 0.995,
   "recall@5": 1.0,
   "all@5": 1.0,
-  "mrr@10": 0.993,
+  "mrr@10": 0.998,
   "queries": 200
  },
  "by_language": {
@@ -19,64 +21,84 @@
    "queries": 40
   },
   "en": {
+   "recall@1": 0.975,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.988,
+   "queries": 40
+  },
+  "es": {
    "recall@1": 1.0,
    "recall@5": 1.0,
    "all@5": 1.0,
    "mrr@10": 1.0,
    "queries": 40
   },
-  "es": {
-   "recall@1": 0.975,
-   "recall@5": 1.0,
-   "all@5": 1.0,
-   "mrr@10": 0.988,
-   "queries": 40
-  },
   "fr": {
-   "recall@1": 0.975,
+   "recall@1": 1.0,
    "recall@5": 1.0,
    "all@5": 1.0,
-   "mrr@10": 0.988,
+   "mrr@10": 1.0,
    "queries": 40
   },
   "zh": {
-   "recall@1": 0.975,
+   "recall@1": 1.0,
    "recall@5": 1.0,
    "all@5": 1.0,
-   "mrr@10": 0.988,
+   "mrr@10": 1.0,
    "queries": 40
   }
  },
  "by_kind": {
   "same-language": {
-   "recall@1": 0.985,
+   "recall@1": 0.995,
    "recall@5": 1.0,
    "all@5": 1.0,
-   "mrr@10": 0.993,
+   "mrr@10": 0.998,
    "queries": 200
   }
  },
+ "by_split": {
+  "dev": {
+   "recall@1": 0.994,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.997,
+   "queries": 160
+  },
+  "heldout": {
+   "recall@1": 1.0,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 1.0,
+   "queries": 40
+  }
+ },
  "answers": {
-  "model": "qwen3:4b",
+  "model": "qwen3:4b-q4_K_M",
   "says_not_found": 0.7,
-  "accuracy": 0.99,
+  "accuracy": 0.948,
   "source_hit": 1.0,
   "model_answered": 1.0,
   "first_token": {
-   "p50_ms": 31392.5,
-   "p95_ms": 46675.2,
+   "p50_ms": 13593.1,
+   "p95_ms": 75815.3,
    "measured": 107,
    "missing": 0
   },
-  "faithfulness": 0.189,
-  "fully_supported": 0.0,
+  "faithfulness": 0.835,
+  "fully_supported": 0.825,
   "faithfulness_scored": 97,
   "by_language": {
    "de": 1.0,
-   "en": 0.96,
+   "en": 0.84,
    "es": 1.0,
-   "fr": 1.0,
+   "fr": 0.944,
    "zh": 1.0
+  },
+  "by_split": {
+   "dev": 0.963,
+   "heldout": 0.875
   }
  }
 }

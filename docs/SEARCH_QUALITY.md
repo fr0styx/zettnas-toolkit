@@ -72,14 +72,14 @@ Long, Office and scanned documents:
 | Scanned | 7 | 0.86 | 1.00 | 1.00 |
 | Two files needed | 5 | 1.00 | 1.00 | 0.80 |
 
-## Answers (nightly, Qwen3-4B as the chat model)
+## Answers (nightly, qwen3:4b-q4_K_M as the chat model)
 
 | | |
 |---|---|
-| Answer contains the right fact | 0.99 |
+| Answer contains the right fact | 0.95 |
 | The file it came from is cited | 1.00 |
 | Says it can't find it, when the files don't have the answer | 0.70 |
-| Answer sentences the strict source check could match | 0.19 |
+| Answer sentences the strict source check could match | 0.83 |
 
 The source check is the one the chat shows under each answer (see [RAG.md](RAG.md#how-answers-are-checked)):
 every number in a sentence must appear in the source it leans on, and the rest must match it.

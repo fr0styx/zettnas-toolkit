@@ -38,6 +38,13 @@
 
 #### Private AI
 
+- **The nightly answer check guards the shipped model again, and scores it fairly** (NAI-10, NAI-18):
+  the citation numbers in an answer ("… three bananas [1]") no longer count as a wrong second fact,
+  and "… is not in the indexed files" counts as the right reply to a question the files can't
+  answer. The baseline now comes from the first nightly with the answer model ZettNAS ships
+  (Qwen3-4B, q4_K_M, thinking off): 95% of answers right and 70% of unanswerable questions
+  declined, so a drop fails the nightly instead of being skipped as "another model".
+
 - **Sources from PDFs name the page** (AI-21): a search or chat source from a PDF shows "p. 4"
   next to its section, and Zetty is told the page too. PDFs get their pages when they are next
   indexed (a changed file, or Re-index Knowledge Base in AI settings); empty pages now count, so the numbers
