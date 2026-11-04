@@ -19,7 +19,10 @@ LAZY = {
     "vm-lazy.css": [os.path.join(COMPONENTS, "vm-manager.js")],
     "files-lazy.css": [os.path.join(COMPONENTS, "file-manager.js"), os.path.join(COMPONENTS, "file-preview-modal.js")],
     "viewer-lazy.css": [os.path.join(COMPONENTS, "file-preview-modal.js")],
-    "containers-lazy.css": [os.path.join(COMPONENTS, "container-modal.js")],
+    "containers-lazy.css": [
+        os.path.join(COMPONENTS, "container-modal.js"),
+        os.path.join(COMPONENTS, "containers-manager.js"),
+    ],
     "docker-lazy.css": [os.path.join(COMPONENTS, "management", "docker.js")],
     "stack-lazy.css": [os.path.join(COMPONENTS, "stack-modal.js")],
     "users-lazy.css": [os.path.join(COMPONENTS, "users.js")],

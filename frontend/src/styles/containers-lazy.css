@@ -2,3 +2,4 @@
    Only sheets whose rules no later global sheet can override in a different order belong
    here; tests/test_lazy_css.py checks that (lazy CSS lands after every global sheet). */
 @import './65-container-inspector.css';
+@import './73-containers-window.css';

@@ -160,6 +160,10 @@
   stylesheet classes** (NUX-15): 70 inline styles become 20 classes; pixel-for-pixel the same in
   both themes.
 
+- **The Containers window is built from stylesheet classes** (NUX-15): its toolbar, table and
+  catalog use 23 classes instead of 28 inline styles, loaded with the window; pixel-for-pixel the
+  same in both themes.
+
 - **The start page is built from stylesheet classes** (NUX-15): the desktop widgets, the login and
   lock screens, the setup wizard and the always-loaded dialogs and menus use 193 classes instead of
   251 inline styles; pixel-for-pixel the same in both themes. The first-load budget goes from 220 to

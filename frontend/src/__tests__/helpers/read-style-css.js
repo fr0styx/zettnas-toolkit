@@ -11,7 +11,7 @@ function inline(file) {
 }
 
 // The windows' own sheets load with their code, after every global sheet (ARC-12, PERF-9)
-const LAZY = ['management-lazy.css', 'vm-lazy.css', 'files-lazy.css', 'viewer-lazy.css'];
+const LAZY = ['management-lazy.css', 'vm-lazy.css', 'files-lazy.css', 'viewer-lazy.css', 'containers-lazy.css'];
 
 export function readStyleCss() {
   return [inline(path.join(SRC, 'style.css')), ...LAZY.map((f) => inline(path.join(SRC, 'styles', f)))].join('\n');
