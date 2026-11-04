@@ -122,6 +122,10 @@
   30 inline styles in the start page move into the sheets that load with the file explorer and the
   Docker panel, so the first page gets smaller; pixel-for-pixel the same in both themes.
 
+- **The people dialogs are built from stylesheet classes** (NUX-15): adding and editing a person,
+  resetting a password and setting up two-factor sign-in use 25 classes instead of 66 inline
+  styles, in a sheet that loads with the people code; pixel-for-pixel the same in both themes.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 

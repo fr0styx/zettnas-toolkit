@@ -1427,33 +1427,33 @@
 
 <!-- Modal: Add User -->
 <div id="modal-add-user" class="smart-modal-backdrop" role="dialog" aria-modal="true">
-  <div class="smart-modal-window" style="width: 440px; max-width: 90vw;">
-    <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
-      <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
+  <div class="smart-modal-window udg-size">
+    <div class="smart-modal-header udg-row">
+      <div class="smart-modal-title udg-row-2">
         <svg class="ic ic-sm"><use href="#i-users"/></svg> <span data-i18n="users.dlg_add_title">Add a person</span>
       </div>
       <button type="button" class="win-btn close-btn modal-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
     </div>
-    <form id="form-add-user" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+    <form id="form-add-user" class="smart-modal-body udg-x" style="display: flex;">
       <div>
-        <label for="add-user-username" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_username_required">Username (required)</label>
-        <input type="text" id="add-user-username" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="e.g. john" pattern="^[a-zA-Z0-9_\.-]{3,32}$" required>
+        <label class="udg-xs-bold-muted" for="add-user-username" data-i18n="users.f_username_required">Username (required)</label>
+        <input type="text" id="add-user-username" class="tz-select-input udg-strong-box" placeholder="e.g. john" pattern="^[a-zA-Z0-9_\.-]{3,32}$" required>
       </div>
       <div>
-        <label for="add-user-display" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_display_name">Display name</label>
-        <input type="text" id="add-user-display" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="e.g. John Doe" data-i18n-placeholder="ui.e_g_john_doe">
+        <label class="udg-xs-bold-muted" for="add-user-display" data-i18n="users.f_display_name">Display name</label>
+        <input type="text" id="add-user-display" class="tz-select-input udg-strong-box" placeholder="e.g. John Doe" data-i18n-placeholder="ui.e_g_john_doe">
       </div>
       <div>
-        <label for="add-user-email" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_email">Email address</label>
-        <input type="email" id="add-user-email" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="john@example.com">
+        <label class="udg-xs-bold-muted" for="add-user-email" data-i18n="users.f_email">Email address</label>
+        <input type="email" id="add-user-email" class="tz-select-input udg-strong-box" placeholder="john@example.com">
       </div>
       <div>
-        <label for="add-user-password" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_password_required">Password (required)</label>
-        <input type="password" id="add-user-password" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Min. 8 characters" data-i18n-placeholder="ui.min_8_characters" minlength="8" required autocomplete="new-password">
+        <label class="udg-xs-bold-warn" for="add-user-password" data-i18n="users.f_password_required">Password (required)</label>
+        <input type="password" id="add-user-password" class="tz-select-input udg-strong-box" placeholder="Min. 8 characters" data-i18n-placeholder="ui.min_8_characters" minlength="8" required autocomplete="new-password">
       </div>
       <div>
-        <label for="add-user-role" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_role">Role</label>
-        <select id="add-user-role" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);">
+        <label class="udg-xs-bold-muted" for="add-user-role" data-i18n="users.f_role">Role</label>
+        <select id="add-user-role" class="tz-select-input udg-strong-box">
           <option value="share_user" selected data-i18n="role.share_user_option">Family member: their own folder and the shared folders you choose</option>
           <option value="app_operator" data-i18n="role.app_operator_option">App manager: installs and runs apps</option>
           <option value="storage_admin" data-i18n="role.storage_admin_option">Storage admin: drives, pools and shares</option>
@@ -1468,12 +1468,12 @@
         <div id="add-user-shares" class="add-user-shares-list"></div>
       </div>
       <div>
-        <label for="add-user-quota" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_quota">Storage limit in GB (0 = no limit)</label>
-        <input type="number" id="add-user-quota" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="0" min="0">
+        <label class="udg-xs-bold-muted" for="add-user-quota" data-i18n="users.f_quota">Storage limit in GB (0 = no limit)</label>
+        <input type="number" id="add-user-quota" class="tz-select-input udg-strong-box" placeholder="0" min="0">
       </div>
-      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+      <div class="udg-row-3">
         <button type="button" class="btn-pill-toggle modal-close-btn" data-i18n="common.cancel">Cancel</button>
-        <button type="submit" class="btn-save-preset" style="padding:8px 18px;" data-i18n="users.create">Add person</button>
+        <button type="submit" class="btn-save-preset udg-x-2" data-i18n="users.create">Add person</button>
       </div>
     </form>
   </div>
@@ -1481,30 +1481,30 @@
 
 <!-- Modal: Edit User -->
 <div id="modal-edit-user" class="smart-modal-backdrop" role="dialog" aria-modal="true">
-  <div class="smart-modal-window" style="width: 440px; max-width: 90vw;">
-    <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
-      <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
+  <div class="smart-modal-window udg-size">
+    <div class="smart-modal-header udg-row">
+      <div class="smart-modal-title udg-row-2">
         <svg class="ic ic-sm"><use href="#i-users"/></svg> <span data-i18n="users.dlg_edit_title">Edit person</span>
       </div>
       <button type="button" class="win-btn close-btn modal-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
     </div>
-    <form id="form-edit-user" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+    <form id="form-edit-user" class="smart-modal-body udg-x" style="display: flex;">
       <input type="hidden" id="edit-user-id">
       <div>
-        <label for="edit-user-username" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_username">Username</label>
-        <input type="text" id="edit-user-username" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-8); background:var(--zn-glaze-5); padding:8px 10px; color:var(--muted); cursor:not-allowed;" disabled>
+        <label class="udg-xs-bold-muted" for="edit-user-username" data-i18n="users.f_username">Username</label>
+        <input type="text" id="edit-user-username" class="tz-select-input udg-muted-box" disabled>
       </div>
       <div>
-        <label for="edit-user-display" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_display_name">Display name</label>
-        <input type="text" id="edit-user-display" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="e.g. John Doe" data-i18n-placeholder="ui.e_g_john_doe">
+        <label class="udg-xs-bold-muted" for="edit-user-display" data-i18n="users.f_display_name">Display name</label>
+        <input type="text" id="edit-user-display" class="tz-select-input udg-strong-box" placeholder="e.g. John Doe" data-i18n-placeholder="ui.e_g_john_doe">
       </div>
       <div>
-        <label for="edit-user-email" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_email">Email address</label>
-        <input type="email" id="edit-user-email" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="john@example.com">
+        <label class="udg-xs-bold-muted" for="edit-user-email" data-i18n="users.f_email">Email address</label>
+        <input type="email" id="edit-user-email" class="tz-select-input udg-strong-box" placeholder="john@example.com">
       </div>
       <div>
-        <label for="edit-user-role" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_role">Role</label>
-        <select id="edit-user-role" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);">
+        <label class="udg-xs-bold-muted" for="edit-user-role" data-i18n="users.f_role">Role</label>
+        <select id="edit-user-role" class="tz-select-input udg-strong-box">
           <option value="share_user" data-i18n="role.share_user_option">Family member: their own folder and the shared folders you choose</option>
           <option value="app_operator" data-i18n="role.app_operator_option">App manager: installs and runs apps</option>
           <option value="storage_admin" data-i18n="role.storage_admin_option">Storage admin: drives, pools and shares</option>
@@ -1514,16 +1514,16 @@
         </select>
       </div>
       <div>
-        <label for="edit-user-quota" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_quota">Storage limit in GB (0 = no limit)</label>
-        <input type="number" id="edit-user-quota" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="0" min="0">
+        <label class="udg-xs-bold-muted" for="edit-user-quota" data-i18n="users.f_quota">Storage limit in GB (0 = no limit)</label>
+        <input type="number" id="edit-user-quota" class="tz-select-input udg-strong-box" placeholder="0" min="0">
       </div>
       <fieldset class="zn-hours-box">
         <legend data-i18n="hours.title">Sign-in hours</legend>
         <div id="edit-user-hours"></div>
       </fieldset>
-      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+      <div class="udg-row-3">
         <button type="button" class="btn-pill-toggle modal-close-btn" data-i18n="common.cancel">Cancel</button>
-        <button type="submit" class="btn-save-preset" style="padding:8px 18px;" data-i18n="users.save_changes">Save changes</button>
+        <button type="submit" class="btn-save-preset udg-x-2" data-i18n="users.save_changes">Save changes</button>
       </div>
     </form>
   </div>
@@ -1531,33 +1531,33 @@
 
 <!-- Modal: Reset Password -->
 <div id="modal-reset-password" class="smart-modal-backdrop" role="dialog" aria-modal="true">
-  <div class="smart-modal-window" style="width: 400px; max-width: 90vw;">
-    <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
-      <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
-        <span style="font-size:15px;">🔑</span> <span><span data-i18n="users.dlg_pwd_title">New password for</span> <strong id="reset-pwd-username">@user</strong></span>
+  <div class="smart-modal-window udg-size-2">
+    <div class="smart-modal-header udg-row">
+      <div class="smart-modal-title udg-row-2">
+        <span class="udg-fs15">🔑</span> <span><span data-i18n="users.dlg_pwd_title">New password for</span> <strong id="reset-pwd-username">@user</strong></span>
       </div>
       <button type="button" class="win-btn close-btn modal-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
     </div>
-    <form id="form-reset-password" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+    <form id="form-reset-password" class="smart-modal-body udg-x" style="display: flex;">
       <div id="reset-pwd-current-wrap" style="display:none;">
-        <label for="reset-pwd-current" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_current_password">Current password</label>
-        <input type="password" id="reset-pwd-current" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Your current password" data-i18n-placeholder="ui.your_current_password" autocomplete="current-password">
+        <label class="udg-xs-bold-warn" for="reset-pwd-current" data-i18n="users.f_current_password">Current password</label>
+        <input type="password" id="reset-pwd-current" class="tz-select-input udg-strong-box" placeholder="Your current password" data-i18n-placeholder="ui.your_current_password" autocomplete="current-password">
       </div>
       <label id="reset-pwd-tokens-wrap" class="reset-pwd-tokens" hidden>
         <input type="checkbox" id="reset-pwd-revoke-tokens">
         <span data-i18n="users.revoke_tokens">Also revoke my API tokens (scripts and apps that use them stop working)</span>
       </label>
       <div>
-        <label for="reset-pwd-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_new_password">New password</label>
-        <input type="password" id="reset-pwd-input" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Min. 8 characters" data-i18n-placeholder="ui.min_8_characters" minlength="8" required autocomplete="new-password">
+        <label class="udg-xs-bold-warn" for="reset-pwd-input" data-i18n="users.f_new_password">New password</label>
+        <input type="password" id="reset-pwd-input" class="tz-select-input udg-strong-box" placeholder="Min. 8 characters" data-i18n-placeholder="ui.min_8_characters" minlength="8" required autocomplete="new-password">
       </div>
       <div>
-        <label for="reset-pwd-confirm" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_confirm_password">New password again</label>
-        <input type="password" id="reset-pwd-confirm" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" required autocomplete="new-password">
+        <label class="udg-xs-bold-warn" for="reset-pwd-confirm" data-i18n="users.f_confirm_password">New password again</label>
+        <input type="password" id="reset-pwd-confirm" class="tz-select-input udg-strong-box" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" required autocomplete="new-password">
       </div>
-      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+      <div class="udg-row-3">
         <button type="button" class="btn-pill-toggle modal-close-btn" data-i18n="common.cancel">Cancel</button>
-        <button type="submit" class="btn-save-preset" style="padding:8px 18px;" data-i18n="users.update_password">Change password</button>
+        <button type="submit" class="btn-save-preset udg-x-2" data-i18n="users.update_password">Change password</button>
       </div>
     </form>
   </div>
@@ -1565,54 +1565,54 @@
 
 <!-- Modal: Setup 2FA -->
 <div id="modal-setup-2fa" class="smart-modal-backdrop" role="dialog" aria-modal="true">
-  <div class="smart-modal-window" style="width: 460px; max-width: 90vw;">
-    <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
-      <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
-        <span style="font-size:15px;">🛡️</span> <span data-i18n="users.dlg_2fa_title">Set up two-step sign-in</span>
+  <div class="smart-modal-window udg-size-3">
+    <div class="smart-modal-header udg-row">
+      <div class="smart-modal-title udg-row-2">
+        <span class="udg-fs15">🛡️</span> <span data-i18n="users.dlg_2fa_title">Set up two-step sign-in</span>
       </div>
       <button type="button" class="win-btn close-btn modal-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
     </div>
-    <div class="smart-modal-body" style="padding: 18px;">
+    <div class="smart-modal-body udg-x-3">
       <!-- Step 1: Scan & Verify -->
       <div id="mfa-step-verify">
-        <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin-bottom:12px; line-height:1.45;" data-i18n="users.2fa_scan">
+        <div class="udg-xs-soft" data-i18n="users.2fa_scan">
           Scan this QR code with an authenticator app, such as Aegis, 1Password, Bitwarden or Google Authenticator:
         </div>
         <div id="mfa-qr-container" style="background:#fff; border-radius:8px; padding:12px; display:flex; justify-content:center; align-items:center; margin:0 auto 14px; width:220px; height:220px; box-shadow:0 4px 14px rgba(0,0,0,0.4);">
           <!-- QR SVG injected here -->
         </div>
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-align:center; margin-bottom:14px;">
-          <span data-i18n="users.2fa_manual">Or type this key into the app:</span> <code id="mfa-secret-key" style="font-weight:700; color:var(--zn-text-accent); background:var(--zn-shade-40); padding:2px 6px; border-radius:4px; letter-spacing:1px; user-select:all;">--</code>
+        <div class="udg-xs-muted-center">
+          <span data-i18n="users.2fa_manual">Or type this key into the app:</span> <code class="udg-bold-accent-box" id="mfa-secret-key">--</code>
         </div>
-        <form id="form-verify-2fa" style="display:flex; flex-direction:column; gap:10px;">
+        <form class="udg-x-4" id="form-verify-2fa" style="display: flex;">
           <div>
-            <label for="mfa-current-password" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_current_password">Current password</label>
+            <label class="udg-xs-bold-muted" for="mfa-current-password" data-i18n="users.f_current_password">Current password</label>
             <input type="password" id="mfa-current-password" class="tz-select-input" style="width:100%; border:1px solid rgba(56,189,248,0.4); background:var(--zn-shade-30); padding:10px; color:var(--zn-text-strong);" required autocomplete="current-password">
           </div>
           <div>
-            <label for="mfa-verify-code" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_2fa_code">6-digit code from the app</label>
+            <label class="udg-xs-bold-muted" for="mfa-verify-code" data-i18n="users.f_2fa_code">6-digit code from the app</label>
             <input type="text" id="mfa-verify-code" class="tz-select-input" style="width:100%; border:1px solid rgba(56,189,248,0.4); background:var(--zn-shade-30); padding:10px; color:var(--zn-text-strong); font-size:18px; font-family:monospace; text-align:center; letter-spacing:4px;" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autocomplete="one-time-code">
           </div>
-          <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
+          <div class="udg-row-4">
             <button type="button" class="btn-pill-toggle modal-close-btn" data-i18n="common.cancel">Cancel</button>
-            <button type="submit" class="btn-save-preset" style="padding:8px 18px;" data-i18n="users.2fa_activate">Check the code and turn on</button>
+            <button type="submit" class="btn-save-preset udg-x-2" data-i18n="users.2fa_activate">Check the code and turn on</button>
           </div>
         </form>
       </div>
 
       <!-- Step 2: Emergency Recovery Codes -->
       <div id="mfa-step-success" style="display: none;">
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; color:var(--ok2);">
-          <span style="font-size:20px;">✅</span>
-          <strong style="font-size:14px;" data-i18n="users.2fa_on_title">Two-step sign-in is on</strong>
+        <div class="udg-row-ok">
+          <span class="udg-fs20">✅</span>
+          <strong class="udg-fs14" data-i18n="users.2fa_on_title">Two-step sign-in is on</strong>
         </div>
-        <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); line-height:1.45; margin-bottom:12px;" data-i18n="users.2fa_codes_help">
+        <div class="udg-xs-soft-2" data-i18n="users.2fa_codes_help">
           Keep these recovery codes in a password manager. Each one signs you in once if you lose the phone with the authenticator app.
         </div>
-        <div id="mfa-recovery-codes-list" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+        <div class="udg-x-5" id="mfa-recovery-codes-list" style="display: grid;">
           <!-- Populated via users.js -->
         </div>
-        <div style="display:flex; justify-content:space-between; gap:10px;">
+        <div class="udg-row-5">
           <button type="button" id="btn-copy-recovery-codes" class="btn-pill-toggle" style="background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.35); color: var(--zn-text-accent);" data-i18n="users.2fa_copy_codes">
             Copy all codes
           </button>

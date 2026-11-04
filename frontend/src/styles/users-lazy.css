@@ -1,0 +1,4 @@
+/* The people dialogs' own stylesheet (NUX-15): it loads with users.js, not on first paint.
+   Only sheets whose rules no later global sheet can override in a different order belong
+   here; tests/test_lazy_css.py checks that (lazy CSS lands after every global sheet). */
+@import './72-user-dialogs.css';

@@ -15,6 +15,7 @@ import {
 import { escapeHtml, trapFocus, copyText } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
+import '../styles/users-lazy.css'; // the people dialogs' own sheet loads with this code (NUX-15)
 import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
 import { initTopbarUserPill } from './dock.js';
 import { grantShares, openShareAccessModal, shareChoicesHtml } from './share-access.js';

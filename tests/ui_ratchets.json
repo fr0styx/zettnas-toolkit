@@ -2,7 +2,7 @@
  "frontend/index.html": {
   "buttons": 7,
   "globals": 0,
-  "styles": 448,
+  "styles": 387,
   "templates": 0
  },
  "frontend/src/a11y.js": {

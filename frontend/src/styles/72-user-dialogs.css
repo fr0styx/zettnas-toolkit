@@ -1,0 +1,29 @@
+/* The people dialogs in index.html (add and edit a person, reset a password, set up two-factor sign-in):
+   these rules replace their inline styles (NUX-15) and load with users.js through users-lazy.css. */
+
+/* People dialogs (index.html): classes instead of inline styles (NUX-15), same look */
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-size { width: 440px; max-width: 90vw; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-row-2 { display: flex; align-items: center; gap: 6px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-x { padding: 16px; flex-direction: column; gap: 12px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.5px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-strong-box { width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-xs-bold-warn { display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--warn); margin-bottom: 4px; letter-spacing: 0.5px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-row-3 { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-x-2 { padding: 8px 18px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-muted-box { width: 100%; border: 1px solid var(--zn-line-8); background: var(--zn-glaze-5); padding: 8px 10px; color: var(--muted); cursor: not-allowed; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-size-2 { width: 400px; max-width: 90vw; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-fs15 { font-size: 15px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-size-3 { width: 460px; max-width: 90vw; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-x-3 { padding: 18px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-xs-soft { font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-bottom: 12px; line-height: 1.45; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-xs-muted-center { font-size: var(--zn-fs-xs); color: var(--muted); text-align: center; margin-bottom: 14px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-bold-accent-box { font-weight: 700; color: var(--zn-text-accent); background: var(--zn-shade-40); padding: 2px 6px; border-radius: 4px; letter-spacing: 1px; user-select: all; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-x-4 { flex-direction: column; gap: 10px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-row-4 { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-row-ok { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--ok2); }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-fs20 { font-size: 20px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-fs14 { font-size: 14px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-xs-soft-2 { font-size: var(--zn-fs-xs); color: var(--zn-text-soft); line-height: 1.45; margin-bottom: 12px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-x-5 { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+:is(#modal-add-user, #modal-edit-user, #modal-reset-password, #modal-setup-2fa) .udg-row-5 { display: flex; justify-content: space-between; gap: 10px; }
