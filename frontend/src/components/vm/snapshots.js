@@ -26,13 +26,13 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
   let activeTab = 'snapshots';
 
   modal.innerHTML = `
-    <div class="smart-modal-window vm-modal-window" style="max-width: 660px; width: 92%; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;">
-      <div class="smart-modal-header" style="cursor: move; user-select: none; display: flex; justify-content: space-between; align-items: center;">
-        <div class="smart-modal-title" style="display: flex; align-items: center; gap: 8px;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent, var(--zn-text-accent));"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <div class="smart-modal-window vm-modal-window vmsn-col">
+      <div class="smart-modal-header vmsn-row">
+        <div class="smart-modal-title vmsn-row-2">
+          <svg class="vmsn-accent" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           <span>${t('vm.snapshots', 'Snapshots & Rollback')}: ${escapeHtml(targetVm.name)}</span>
         </div>
-        <div class="os-window-controls" style="display: flex; gap: 6px; align-items: center;">
+        <div class="os-window-controls vmsn-row-3">
           <button class="win-btn close-btn" id="vm-snap-modal-close" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
         </div>
       </div>
@@ -49,13 +49,13 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         </button>
       </div>
 
-      <div class="smart-modal-body" style="flex: 1; overflow-y: auto; padding: 18px 22px; display: flex; flex-direction: column; gap: 14px;">
+      <div class="smart-modal-body vmsn-col-2">
         <!-- SNAPSHOTS PANE -->
-        <div id="vm-pane-snapshots" style="display: flex; flex-direction: column; gap: 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <div class="vmsn-x" id="vm-pane-snapshots" style="display: flex;">
+          <div class="vmsn-row-4">
             <div>
-              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vsn.snaps_title', 'Snapshots of this VM')}</div>
-              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('vsn.snaps_desc', 'While the VM runs, a snapshot saves its memory and disk; while it is off, the disk only.')}</div>
+              <div class="vmsn-xs-bold-strong">${t('vsn.snaps_title', 'Snapshots of this VM')}</div>
+              <div class="vmsn-xs-muted">${t('vsn.snaps_desc', 'While the VM runs, a snapshot saves its memory and disk; while it is off, the disk only.')}</div>
             </div>
             <button type="button" id="btn-take-snapshot" class="btn-pill-toggle" style="background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.35); color: var(--zn-text-accent);">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -65,28 +65,28 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
 
           <!-- Create Snapshot Form -->
           <div id="vm-snap-create-form" style="display: none; background: var(--zn-shade-30); border: 1px solid rgba(14,165,233,0.3); border-radius: 8px; padding: 12px; flex-direction: column; gap: 10px;">
-            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-accent);">${t('vsn.new_title', 'New snapshot')}</div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <input type="text" id="vm-snap-name-input" placeholder="${t('vm.snapshot_name', 'Snapshot Name')}" style="flex: 1; min-width: 160px; padding: 6px 10px; border-radius: 4px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);" />
-              <input type="text" id="vm-snap-desc-input" placeholder="${t('vm.snapshot_desc', 'Description (optional)')}" style="flex: 2; min-width: 200px; padding: 6px 10px; border-radius: 4px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);" />
+            <div class="vmsn-xs-bold-accent">${t('vsn.new_title', 'New snapshot')}</div>
+            <div class="vmsn-row-5">
+              <input class="vmsn-xs-strong-box-grow" type="text" id="vm-snap-name-input" placeholder="${t('vm.snapshot_name', 'Snapshot Name')}" />
+              <input class="vmsn-xs-strong-box-grow-2" type="text" id="vm-snap-desc-input" placeholder="${t('vm.snapshot_desc', 'Description (optional)')}" />
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+            <div class="vmsn-row-6">
               <button type="button" id="btn-cancel-take-snapshot" class="btn-pill-toggle">${t('common.cancel', 'Cancel')}</button>
               <button type="button" id="btn-submit-take-snapshot" class="btn-pill-toggle is-primary">${t('ui.save_snapshot', 'Save Snapshot')}</button>
             </div>
           </div>
 
-          <div id="vm-snapshots-container" style="background: var(--zn-shade-20); border: 1px solid var(--zn-line-6); border-radius: 8px; overflow: hidden; min-height: 120px;">
-            <div style="color: var(--muted); text-align: center; padding: 28px; font-size: var(--zn-fs-xs);">${t('vsn.loading', 'Loading snapshots…')}</div>
+          <div class="vmsn-box" id="vm-snapshots-container">
+            <div class="vmsn-xs-muted-center">${t('vsn.loading', 'Loading snapshots…')}</div>
           </div>
         </div>
 
         <!-- BACKUPS PANE -->
-        <div id="vm-pane-backups" style="display: none; flex-direction: column; gap: 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <div class="vmsn-x" id="vm-pane-backups" style="display: none;">
+          <div class="vmsn-row-4">
             <div>
-              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vsn.bk_title', 'Full VM backups')}</div>
-              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('vsn.bk_desc', 'Archives (.tar.gz) that hold the VM’s settings and its disks.')}</div>
+              <div class="vmsn-xs-bold-strong">${t('vsn.bk_title', 'Full VM backups')}</div>
+              <div class="vmsn-xs-muted">${t('vsn.bk_desc', 'Archives (.tar.gz) that hold the VM’s settings and its disks.')}</div>
             </div>
             <button type="button" id="btn-create-hyper-backup" class="btn-pill-toggle" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: var(--zn-text-ok);">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -94,8 +94,8 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
             </button>
           </div>
 
-          <div id="vm-backups-container" style="background: var(--zn-shade-20); border: 1px solid var(--zn-line-6); border-radius: 8px; overflow: hidden; min-height: 120px;">
-            <div style="color: var(--muted); text-align: center; padding: 28px; font-size: var(--zn-fs-xs);">${t('vsn.bk_loading', 'Loading backups…')}</div>
+          <div class="vmsn-box" id="vm-backups-container">
+            <div class="vmsn-xs-muted-center">${t('vsn.bk_loading', 'Loading backups…')}</div>
           </div>
         </div>
       </div>
@@ -194,8 +194,8 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       const snaps = data?.snapshots || [];
       if (snaps.length === 0) {
         container.innerHTML = `
-          <div style="color: var(--muted); text-align: center; padding: 32px 20px; font-size: var(--zn-fs-xs); display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.5;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <div class="vmsn-col-xs-muted-center">
+            <svg class="vmsn-x-2" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span>${t('vm.no_snapshots', 'No snapshots yet. Take one before a big update, so you can go back.')}</span>
           </div>
         `;
@@ -203,32 +203,32 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       }
 
       container.innerHTML = `
-        <table style="width: 100%; border-collapse: collapse; font-size: var(--zn-fs-xs); text-align: left;">
+        <table class="vmsn-xs-box">
           <thead>
-            <tr style="border-bottom: 1px solid var(--zn-line-8); background: var(--zn-glaze-2); color: var(--muted);">
-              <th style="padding: 8px 12px;">${t('vsn.h_name', 'Name')}</th>
-              <th style="padding: 8px 12px;">${t('vsn.h_time', 'Taken')}</th>
-              <th style="padding: 8px 12px;">${t('vsn.h_size', 'Size')}</th>
-              <th style="padding: 8px 12px;">${t('vsn.h_mode', 'Type')}</th>
-              <th style="padding: 8px 12px; text-align: right;">${t('vsn.h_actions', 'Actions')}</th>
+            <tr class="vmsn-muted-box">
+              <th class="vmsn-x-3">${t('vsn.h_name', 'Name')}</th>
+              <th class="vmsn-x-3">${t('vsn.h_time', 'Taken')}</th>
+              <th class="vmsn-x-3">${t('vsn.h_size', 'Size')}</th>
+              <th class="vmsn-x-3">${t('vsn.h_mode', 'Type')}</th>
+              <th class="vmsn-x-4">${t('vsn.h_actions', 'Actions')}</th>
             </tr>
           </thead>
           <tbody>
             ${snaps.map((s) => `
               <tr style="border-bottom: 1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04));">
-                <td style="padding: 8px 12px; font-weight: 700; color: var(--zn-text-strong);">
+                <td class="vmsn-bold-strong">
                   <div>${escapeHtml(s.name)}</div>
-                  ${s.description ? `<div style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: normal;">${escapeHtml(s.description)}</div>` : ''}
+                  ${s.description ? `<div class="vmsn-xs-muted-2">${escapeHtml(s.description)}</div>` : ''}
                 </td>
-                <td style="padding: 8px 12px; color: var(--muted); font-family: var(--font-mono, monospace);">${escapeHtml(s.date || s.created_at || '—')}</td>
-                <td style="padding: 8px 12px; color: var(--muted);">${escapeHtml(s.size_formatted || s.vm_size || '—')}</td>
-                <td style="padding: 8px 12px;">
+                <td class="vmsn-muted-mono">${escapeHtml(s.date || s.created_at || '—')}</td>
+                <td class="vmsn-muted">${escapeHtml(s.size_formatted || s.vm_size || '—')}</td>
+                <td class="vmsn-x-3">
                   <span style="font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: var(--zn-text-accent);">
                     ${s.is_live ? t('vsn.live', 'Memory and disk') : t('vsn.disk', 'Disk only')}
                   </span>
                 </td>
-                <td style="padding: 8px 12px; text-align: right;">
-                  <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                <td class="vmsn-x-4">
+                  <div class="vmsn-row-7">
                     <button class="btn-pill-toggle btn-snap-revert" data-name="${escapeHtml(s.name)}" style="color: var(--zn-text-accent); border-color: rgba(14,165,233,0.3);">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
                       <span>${t('vm.revert_snapshot', 'Revert')}</span>
@@ -282,7 +282,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         };
       });
     } catch (err) {
-      container.innerHTML = `<div style="color: var(--crit); text-align: center; padding: 24px; font-size: var(--zn-fs-xs);">${escapeHtml(t('vsn.load_failed', 'Could not load the snapshots: {error}', { error: err.message || err.detail }))}</div>`;
+      container.innerHTML = `<div class="vmsn-xs-crit-center">${escapeHtml(t('vsn.load_failed', 'Could not load the snapshots: {error}', { error: err.message || err.detail }))}</div>`;
     }
   }
 
@@ -295,8 +295,8 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       const backups = data?.backups || [];
       if (backups.length === 0) {
         container.innerHTML = `
-          <div style="color: var(--muted); text-align: center; padding: 32px 20px; font-size: var(--zn-fs-xs); display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <span style="font-size: 24px; opacity: 0.6;">💾</span>
+          <div class="vmsn-col-xs-muted-center">
+            <span class="vmsn-fs24">💾</span>
             <span>${t('vsn.no_backups', 'No backups of this VM yet. “Back up now” saves its settings and disks in one archive.')}</span>
           </div>
         `;
@@ -304,26 +304,26 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       }
 
       container.innerHTML = `
-        <table style="width: 100%; border-collapse: collapse; font-size: var(--zn-fs-xs); text-align: left;">
+        <table class="vmsn-xs-box">
           <thead>
-            <tr style="border-bottom: 1px solid var(--zn-line-8); background: var(--zn-glaze-2); color: var(--muted);">
-              <th style="padding: 8px 12px;">${t('vsn.h_backup', 'Backup / file')}</th>
-              <th style="padding: 8px 12px;">${t('vsn.h_created', 'Created')}</th>
-              <th style="padding: 8px 12px;">${t('vsn.h_size', 'Size')}</th>
-              <th style="padding: 8px 12px; text-align: right;">${t('vsn.h_actions', 'Actions')}</th>
+            <tr class="vmsn-muted-box">
+              <th class="vmsn-x-3">${t('vsn.h_backup', 'Backup / file')}</th>
+              <th class="vmsn-x-3">${t('vsn.h_created', 'Created')}</th>
+              <th class="vmsn-x-3">${t('vsn.h_size', 'Size')}</th>
+              <th class="vmsn-x-4">${t('vsn.h_actions', 'Actions')}</th>
             </tr>
           </thead>
           <tbody>
             ${backups.map((b) => `
               <tr style="border-bottom: 1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04));">
-                <td style="padding: 8px 12px; font-weight: 700; color: var(--zn-text-strong);">
+                <td class="vmsn-bold-strong">
                   <div>${escapeHtml(b.filename || b.id)}</div>
-                  <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono, monospace);">${escapeHtml(b.id)}</div>
+                  <div class="vmsn-xs-muted-mono">${escapeHtml(b.id)}</div>
                 </td>
-                <td style="padding: 8px 12px; color: var(--muted); font-family: var(--font-mono, monospace);">${escapeHtml(b.created_at_iso || '—')}</td>
-                <td style="padding: 8px 12px; color: var(--muted);">${escapeHtml(b.size_formatted || '—')}</td>
-                <td style="padding: 8px 12px; text-align: right;">
-                  <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                <td class="vmsn-muted-mono">${escapeHtml(b.created_at_iso || '—')}</td>
+                <td class="vmsn-muted">${escapeHtml(b.size_formatted || '—')}</td>
+                <td class="vmsn-x-4">
+                  <div class="vmsn-row-7">
                     <button class="btn-pill-toggle btn-bk-restore" data-id="${escapeHtml(b.id)}" style="color: var(--zn-text-ok); border-color: rgba(16,185,129,0.3);">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
                       <span>${t('vsn.restore', 'Restore')}</span>
@@ -377,7 +377,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         };
       });
     } catch (err) {
-      container.innerHTML = `<div style="color: var(--crit); text-align: center; padding: 24px; font-size: var(--zn-fs-xs);">${escapeHtml(t('vsn.bk_failed', 'Could not load the backups: {error}', { error: err.message || err.detail }))}</div>`;
+      container.innerHTML = `<div class="vmsn-xs-crit-center">${escapeHtml(t('vsn.bk_failed', 'Could not load the backups: {error}', { error: err.message || err.detail }))}</div>`;
     }
   }
 

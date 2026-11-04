@@ -350,7 +350,7 @@
  "frontend/src/components/vm/connect-modal.js": {
   "buttons": 0,
   "globals": 0,
-  "styles": 77,
+  "styles": 14,
   "templates": 2
  },
  "frontend/src/components/vm/console-ansi.js": {
@@ -366,21 +366,21 @@
   "templates": 1
  },
  "frontend/src/components/vm/create-modal.js": {
-  "buttons": 1,
+  "buttons": 0,
   "globals": 0,
-  "styles": 100,
+  "styles": 22,
   "templates": 5
  },
  "frontend/src/components/vm/edit-modal.js": {
   "buttons": 0,
   "globals": 0,
-  "styles": 121,
+  "styles": 29,
   "templates": 6
  },
  "frontend/src/components/vm/iso-manager.js": {
   "buttons": 0,
   "globals": 0,
-  "styles": 56,
+  "styles": 17,
   "templates": 2
  },
  "frontend/src/components/vm/shared.js": {
@@ -392,7 +392,7 @@
  "frontend/src/components/vm/snapshots.js": {
   "buttons": 0,
   "globals": 3,
-  "styles": 64,
+  "styles": 11,
   "templates": 7
  },
  "frontend/src/components/wallpapers.js": {

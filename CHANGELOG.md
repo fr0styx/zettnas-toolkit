@@ -84,6 +84,11 @@
   instead of 105 inline styles, in a sheet that loads with the drawer rather than on first paint;
   pixel-for-pixel the same in both themes.
 
+- **The VM dialogs are built from stylesheet classes** (NUX-15): creating and editing a VM, Connect,
+  the KVM check, snapshots and backups, the ISO library and the QEMU error use 209 classes instead
+  of 338 inline styles, in the sheet that loads with the VM windows; pixel-for-pixel the same in
+  both themes.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 

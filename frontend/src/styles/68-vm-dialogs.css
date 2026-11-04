@@ -1,0 +1,221 @@
+/* The VM dialogs (create, edit, connect, snapshots, ISO library, QEMU error): these rules replace
+   their inline styles (NUX-15) and load with the VM windows through vm-lazy.css. */
+
+/* Edit VM and QEMU error: classes instead of inline styles (NUX-15), same look */
+:is(#modal-vm-edit, #modal-qemu-error) .vme-size { max-width: 520px; width: 92%; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-crit { color: var(--zn-text-crit); display: flex; align-items: center; gap: 8px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-col { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-fs13-strong { font-size: 13px; color: var(--zn-text-strong); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-x { margin: 6px 0 0 16px; padding: 0; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-box { padding: 12px 20px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--zn-line-8); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-strong-box { background: var(--zn-glaze-8); border-color: var(--zn-line-20); color: var(--zn-text-strong); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-soft-box { background: var(--zn-glaze-5); color: var(--zn-text-soft); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-col-2 { max-width: 580px; width: 92%; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row { cursor: move; user-select: none; display: flex; justify-content: space-between; align-items: center; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-2 { display: flex; align-items: center; gap: 8px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-3 { display: flex; gap: 6px; align-items: center; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-col-3 { flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; padding: 18px 22px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-strong-box { width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-box-2 { display: flex; justify-content: space-between; align-items: center; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 12px 14px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-xs-bold-strong { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); display: flex; align-items: center; gap: 6px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-accent { color: var(--accent, var(--zn-text-accent)); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-bold { padding: 5px 12px; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; align-items: center; gap: 6px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-box { background: var(--zn-glaze-2); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 12px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-4 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-bold-strong { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-bold-accent { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-accent); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-xs-muted { display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-box-3 { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--zn-line-5); display: flex; justify-content: space-between; align-items: center; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-col-box { display: flex; flex-direction: column; gap: 10px; background: var(--zn-glaze-2); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 12px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-5 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-bold-muted-2 { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-warn { font-size: var(--zn-fs-xs); color: var(--zn-text-warn); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-x-2 { margin-bottom: 8px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-muted-3 { font-size: var(--zn-fs-xs); color: var(--muted); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-bold { display: flex; align-items: center; gap: 6px; font-weight: 700; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-xs-strong { font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-box-2 { background: var(--zn-glaze-2); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 12px; flex-shrink: 0; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-6 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-x-3 { flex-shrink: 0; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-strong-box-2 { width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-strong-box-3 { padding: 5px 8px; border-radius: 4px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-x-4 { flex-direction: column; gap: 6px; margin-top: 6px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-x-5 { flex-direction: column; gap: 4px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-x-6 { flex-direction: column; gap: 6px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-xs-strong-2 { display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-box-4 { padding: 14px 22px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--zn-line-8); background: var(--zn-shade-20); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-soft-box-2 { background: var(--zn-glaze-6); color: var(--zn-text-soft); padding: 6px 14px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-strong-box-grow { flex: 2; padding: 6px 8px; border-radius: 4px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-strong-box-grow-2 { flex: 1.2; padding: 6px 8px; border-radius: 4px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-crit-box { background: none; border: none; color: var(--zn-text-crit); cursor: pointer; padding: 2px 6px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-strong-box-4 { width: 80px; padding: 6px 8px; border-radius: 4px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-muted-4 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-bold-strong { font-weight: 700; color: var(--zn-text-strong); min-width: 54px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-accent-mono { font-family: monospace; color: var(--zn-text-accent); }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-muted-grow { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-muted-box-center { font-size: var(--zn-fs-xs); color: var(--muted); padding: 8px 10px; text-align: center; background: var(--zn-shade-20); border-radius: 4px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-row-7 { display: flex; align-items: center; gap: 8px; overflow: hidden; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-fs14 { font-size: 14px; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-size-2 { min-width: 0; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-bold-strong-2 { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+:is(#modal-vm-edit, #modal-qemu-error) .vme-xs-crit-box { background: none; border: none; color: var(--zn-text-crit); cursor: pointer; padding: 2px 6px; font-size: var(--zn-fs-xs); }
+
+/* Create VM: classes instead of inline styles (NUX-15), same look */
+#modal-vm-create .vmc-col { max-width: 580px; width: 92%; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
+#modal-vm-create .vmc-row { cursor: move; user-select: none; display: flex; justify-content: space-between; align-items: center; }
+#modal-vm-create .vmc-row-2 { display: flex; align-items: center; gap: 8px; }
+#modal-vm-create .vmc-row-3 { display: flex; gap: 6px; align-items: center; }
+#modal-vm-create .vmc-col-2 { flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; padding: 18px 22px; }
+#modal-vm-create .vmc-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+#modal-vm-create .vmc-xs-strong-box { width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box; }
+#modal-vm-create .vmc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#modal-vm-create .vmc-row-xs-strong { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer; }
+#modal-vm-create .vmc-box { background: var(--zn-glaze-2); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 12px; }
+#modal-vm-create .vmc-row-4 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+#modal-vm-create .vmc-xs-bold-strong { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); }
+#modal-vm-create .vmc-xs-bold-accent { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-accent); }
+#modal-vm-create .vmc-row-xs-muted { display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; }
+#modal-vm-create .vmc-row-box { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--zn-line-5); display: flex; justify-content: space-between; align-items: center; }
+#modal-vm-create .vmc-row-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+#modal-vm-create .vmc-row-5 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+#modal-vm-create .vmc-xs-bold-muted-2 { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); }
+#modal-vm-create .vmc-xs-accent-box { background: none; border: none; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); cursor: pointer; padding: 0; }
+#modal-vm-create .vmc-x { margin-bottom: 8px; }
+#modal-vm-create .vmc-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); }
+#modal-vm-create .vmc-row-bold { display: flex; align-items: center; gap: 6px; font-weight: 700; }
+#modal-vm-create .vmc-row-xs-strong-2 { font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+#modal-vm-create .vmc-x-2 { flex-direction: column; gap: 6px; }
+#modal-vm-create .vmc-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#modal-vm-create .vmc-xs-muted-2 { display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px; }
+#modal-vm-create .vmc-row-xs-strong-3 { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer; }
+#modal-vm-create .vmc-box-2 { background: var(--zn-glaze-2); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 12px; flex-shrink: 0; }
+#modal-vm-create .vmc-row-6 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px; }
+#modal-vm-create .vmc-x-3 { flex-shrink: 0; }
+#modal-vm-create .vmc-xs-strong-box-2 { width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); }
+#modal-vm-create .vmc-xs-strong-box-3 { padding: 5px 8px; border-radius: 4px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); }
+#modal-vm-create .vmc-x-4 { flex-direction: column; gap: 6px; margin-top: 6px; }
+#modal-vm-create .vmc-row-box-2 { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--zn-line-8); background: var(--zn-shade-20); }
+#modal-vm-create .vmc-xs-strong-box-grow { flex: 2; padding: 6px 8px; border-radius: 4px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); }
+#modal-vm-create .vmc-xs-strong-box-grow-2 { flex: 1.2; padding: 6px 8px; border-radius: 4px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); }
+#modal-vm-create .vmc-crit-box { background: none; border: none; color: var(--zn-text-crit); cursor: pointer; padding: 2px 6px; }
+#modal-vm-create .vmc-xs-strong-box-4 { width: 80px; padding: 6px 8px; border-radius: 4px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); }
+#modal-vm-create .vmc-xs-muted-box-center { font-size: var(--zn-fs-xs); color: var(--muted); padding: 8px 10px; text-align: center; background: var(--zn-shade-20); border-radius: 4px; }
+#modal-vm-create .vmc-row-7 { display: flex; align-items: center; gap: 8px; overflow: hidden; }
+#modal-vm-create .vmc-fs14 { font-size: 14px; }
+#modal-vm-create .vmc-size { min-width: 0; }
+#modal-vm-create .vmc-xs-bold-strong-2 { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+#modal-vm-create .vmc-xs-crit-box { background: none; border: none; color: var(--zn-text-crit); cursor: pointer; padding: 2px 6px; font-size: var(--zn-fs-xs); }
+
+/* Connect and KVM check: classes instead of inline styles (NUX-15), same look */
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-col { max-width: 640px; width: 92%; max-height: 88vh; display: flex; flex-direction: column; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-x { cursor: move; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-row { display: flex; align-items: center; gap: 8px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-col-2 { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 18px 22px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-row-box { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 8px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-row-2 { display: flex; align-items: center; gap: 10px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-xs-bold-strong { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-box { background: var(--zn-glaze-2); border: 1px solid var(--zn-line-7); border-radius: 8px; padding: 12px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-row-3 { display: flex; justify-content: space-between; align-items: center; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-fs14 { font-size: 14px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-row-4 { display: flex; gap: 6px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-row-5 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-xs { padding: 4px 10px; font-size: var(--zn-fs-xs); }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-row-xs-accent-mono-box { display: flex; align-items: center; justify-content: space-between; background: var(--zn-shade-35); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--zn-text-accent); }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-xs-muted-2 { color: var(--muted); font-size: var(--zn-fs-xs); }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-row-6 { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-col-3 { display: flex; flex-direction: column; gap: 6px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-row-xs-mono-box { display: flex; justify-content: space-between; align-items: center; background: var(--zn-shade-30); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--zn-fs-xs); }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-soft { color: var(--zn-text-soft); }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-xs-2 { padding: 2px 8px; font-size: var(--zn-fs-xs); }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-row-box-2 { padding: 12px 22px; display: flex; justify-content: flex-end; border-top: 1px solid var(--zn-line-8); background: var(--zn-shade-20); }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-soft-box { background: var(--zn-glaze-8); color: var(--zn-text-soft); padding: 6px 16px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-col-4 { max-width: 580px; width: 92%; max-height: 85vh; display: flex; flex-direction: column; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-col-5 { flex: 1; overflow-y: auto; padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-xs-soft { font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-top: 4px; line-height: 1.4; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-col-6 { display: flex; flex-direction: column; gap: 8px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-xs-bold-muted { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-row-xs-box { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 6px; font-size: var(--zn-fs-xs); }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-box-2 { background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 12px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-xs-bold-strong-2 { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); margin-bottom: 6px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-xs-muted-3 { font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 8px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-x-2 { position: relative; margin-bottom: 8px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-xs-3 { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: var(--zn-fs-xs); padding: 2px 8px; }
+:is(#modal-vm-connect, #modal-kvm-diagnose) .vmk-row-box-3 { display: flex; justify-content: flex-end; padding: 12px 20px; border-top: 1px solid var(--zn-line-8); background: var(--zn-shade-20); }
+
+/* VM snapshots and backups: classes instead of inline styles (NUX-15), same look */
+#modal-vm-snapshots .vmsn-col { max-width: 660px; width: 92%; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
+#modal-vm-snapshots .vmsn-row { cursor: move; user-select: none; display: flex; justify-content: space-between; align-items: center; }
+#modal-vm-snapshots .vmsn-row-2 { display: flex; align-items: center; gap: 8px; }
+#modal-vm-snapshots .vmsn-accent { color: var(--accent, var(--zn-text-accent)); }
+#modal-vm-snapshots .vmsn-row-3 { display: flex; gap: 6px; align-items: center; }
+#modal-vm-snapshots .vmsn-col-2 { flex: 1; overflow-y: auto; padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; }
+#modal-vm-snapshots .vmsn-x { flex-direction: column; gap: 14px; }
+#modal-vm-snapshots .vmsn-row-4 { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+#modal-vm-snapshots .vmsn-xs-bold-strong { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); }
+#modal-vm-snapshots .vmsn-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); }
+#modal-vm-snapshots .vmsn-xs-bold-accent { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-accent); }
+#modal-vm-snapshots .vmsn-row-5 { display: flex; gap: 8px; flex-wrap: wrap; }
+#modal-vm-snapshots .vmsn-xs-strong-box-grow { flex: 1; min-width: 160px; padding: 6px 10px; border-radius: 4px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); }
+#modal-vm-snapshots .vmsn-xs-strong-box-grow-2 { flex: 2; min-width: 200px; padding: 6px 10px; border-radius: 4px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); }
+#modal-vm-snapshots .vmsn-row-6 { display: flex; justify-content: flex-end; gap: 8px; }
+#modal-vm-snapshots .vmsn-box { background: var(--zn-shade-20); border: 1px solid var(--zn-line-6); border-radius: 8px; overflow: hidden; min-height: 120px; }
+#modal-vm-snapshots .vmsn-xs-muted-center { color: var(--muted); text-align: center; padding: 28px; font-size: var(--zn-fs-xs); }
+#modal-vm-snapshots .vmsn-col-xs-muted-center { color: var(--muted); text-align: center; padding: 32px 20px; font-size: var(--zn-fs-xs); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#modal-vm-snapshots .vmsn-x-2 { opacity: 0.5; }
+#modal-vm-snapshots .vmsn-xs-box { width: 100%; border-collapse: collapse; font-size: var(--zn-fs-xs); text-align: left; }
+#modal-vm-snapshots .vmsn-muted-box { border-bottom: 1px solid var(--zn-line-8); background: var(--zn-glaze-2); color: var(--muted); }
+#modal-vm-snapshots .vmsn-x-3 { padding: 8px 12px; }
+#modal-vm-snapshots .vmsn-x-4 { padding: 8px 12px; text-align: right; }
+#modal-vm-snapshots .vmsn-bold-strong { padding: 8px 12px; font-weight: 700; color: var(--zn-text-strong); }
+#modal-vm-snapshots .vmsn-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); font-weight: normal; }
+#modal-vm-snapshots .vmsn-muted-mono { padding: 8px 12px; color: var(--muted); font-family: var(--font-mono, monospace); }
+#modal-vm-snapshots .vmsn-muted { padding: 8px 12px; color: var(--muted); }
+#modal-vm-snapshots .vmsn-row-7 { display: flex; gap: 6px; justify-content: flex-end; }
+#modal-vm-snapshots .vmsn-xs-crit-center { color: var(--crit); text-align: center; padding: 24px; font-size: var(--zn-fs-xs); }
+#modal-vm-snapshots .vmsn-fs24 { font-size: 24px; opacity: 0.6; }
+#modal-vm-snapshots .vmsn-xs-muted-mono { font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono, monospace); }
+
+/* ISO library: classes instead of inline styles (NUX-15), same look */
+#modal-iso-manager .vmi-x { cursor: move; }
+#modal-iso-manager .vmi-row { display: flex; align-items: center; gap: 8px; }
+#modal-iso-manager .vmi-row-box { display: flex; gap: 8px; padding: 10px 18px; background: var(--zn-shade-25); border-bottom: 1px solid var(--zn-line-6); flex-shrink: 0; }
+#modal-iso-manager .vmi-grow { flex: 1; }
+#modal-iso-manager .vmi-grow-2 { flex: 1; overflow-y: auto; padding: 18px 22px; }
+#modal-iso-manager .vmi-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 14px; }
+#modal-iso-manager .vmi-accent { color: var(--zn-text-accent); }
+#modal-iso-manager .vmi-x-2 { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+#modal-iso-manager .vmi-fs28 { font-size: 28px; margin-bottom: 8px; }
+#modal-iso-manager .vmi-fs13-bold-strong { font-weight: 700; color: var(--zn-text-strong); font-size: 13px; }
+#modal-iso-manager .vmi-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; }
+#modal-iso-manager .vmi-x-3 { margin-top: 12px; }
+#modal-iso-manager .vmi-box { margin-top: 14px; padding: 12px 14px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 6px; }
+#modal-iso-manager .vmi-row-xs { display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); margin-bottom: 6px; }
+#modal-iso-manager .vmi-semi-strong { color: var(--zn-text-strong); font-weight: 600; }
+#modal-iso-manager .vmi-box-2 { height: 8px; border-radius: 4px; background: var(--zn-glaze-10); overflow: hidden; }
+#modal-iso-manager .vmi-x-4 { margin-top: 20px; }
+#modal-iso-manager .vmi-row-2 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+#modal-iso-manager .vmi-xs-bold-strong { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); }
+#modal-iso-manager .vmi-x-5 { flex-direction: column; gap: 8px; }
+#modal-iso-manager .vmi-xs-muted-3 { font-size: var(--zn-fs-xs); color: var(--muted); padding: 12px 0; }
+#modal-iso-manager .vmi-row-box-2 { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 6px; }
+#modal-iso-manager .vmi-row-3 { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+#modal-iso-manager .vmi-fs18 { font-size: 18px; }
+#modal-iso-manager .vmi-grow-3 { min-width: 0; flex: 1; }
+#modal-iso-manager .vmi-xs-bold-strong-2 { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+#modal-iso-manager .vmi-xs-muted-mono { font-size: var(--zn-fs-xs); color: var(--muted); font-family: monospace; }
+#modal-iso-manager .vmi-row-4 { display: flex; align-items: center; gap: 8px; margin-left: 12px; flex-shrink: 0; }
+#modal-iso-manager .vmi-xs-semi-muted { font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-muted); }
+#modal-iso-manager .vmi-row-5 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+#modal-iso-manager .vmi-fs13-bold-strong-2 { font-weight: 700; color: var(--zn-text-strong); font-size: 13px; margin-top: 4px; }
+#modal-iso-manager .vmi-xs-bold-muted { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); }
+#modal-iso-manager .vmi-xs-muted-4 { font-size: var(--zn-fs-xs); color: var(--muted); margin: 6px 0 12px 0; line-height: 1.4; }
+#modal-iso-manager .vmi-row-xs-2 { display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); margin-bottom: 4px; }
+#modal-iso-manager .vmi-bold-strong { color: var(--zn-text-strong); font-weight: 700; }
+#modal-iso-manager .vmi-box-3 { height: 6px; border-radius: 3px; background: var(--zn-glaze-10); overflow: hidden; }
+#modal-iso-manager .vmi-row-6 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+#modal-iso-manager .vmi-row-7 { display: flex; gap: 6px; }

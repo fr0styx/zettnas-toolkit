@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import {
   initVmManager,
   openVmCreateModal,
@@ -1241,11 +1243,15 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
 
       const toggleBtn = editModal.querySelector('#btn-edit-toggle-custom-usb');
       const customWrap = editModal.querySelector('#vm-edit-custom-usb-wrap');
-      const usbCard = toggleBtn.closest('.vm-config-card') || toggleBtn.closest('div[style*="border-radius: 8px"]');
+      const usbCard = toggleBtn.closest('.vm-config-card');
       expect(usbCard).not.toBeNull();
-      // Ensure overflow: hidden is not present on the card to prevent zero min-height collapse in flexbox
+      // The card must not shrink or clip in the flex column (its layout lives in a scoped class, NUX-15)
+      const sheet = readFileSync(path.resolve(__dirname, '..', 'styles', '68-vm-dialogs.css'), 'utf8');
+      const cls = [...usbCard.classList].find((c) => c.startsWith('vme-'));
+      const rule = sheet.split('\n').find((l) => l.includes(`.${cls} {`)) || '';
       expect(usbCard.style.overflow).not.toBe('hidden');
-      expect(usbCard.style.flexShrink).toBe('0');
+      expect(rule).toContain('flex-shrink: 0');
+      expect(rule).not.toContain('overflow: hidden');
 
       // Initially hidden
       expect(customWrap.style.display).toBe('none');
