@@ -48,6 +48,10 @@
   snapshots) use 81 classes instead of 108 inline styles; pixel-for-pixel the same in both
   themes.
 
+- **Zetty's answers are built from stylesheet classes** (NUX-15): chat replies, their markdown
+  and the knowledge-search answer use 60 classes instead of 70 inline styles; pixel-for-pixel
+  the same in both themes.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 

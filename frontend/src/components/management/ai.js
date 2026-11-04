@@ -2087,20 +2087,20 @@ function renderStructuredCardHtml(card) {
     const steps = (card.steps || card.steps_summary || []).slice(0, 6).map((s) => `<li>${escapeHtml(s)}</li>`).join('');
     return `
       <div class="ai-structured-recipe-card" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.28); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 18px;">🍳</span>
-            <span style="font-weight: 800; font-size: 13.5px; color: var(--zn-text-strong);">${escapeHtml(card.title || 'Structured Recipe Card')}</span>
+        <div class="airg-row">
+          <div class="airg-row-2">
+            <span class="airg-fs18">🍳</span>
+            <span class="airg-fs135-bold-strong">${escapeHtml(card.title || 'Structured Recipe Card')}</span>
           </div>
-          <div style="display: flex; gap: 6px; font-size: var(--zn-fs-xs);">
+          <div class="airg-row-xs">
             ${card.prep_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-6ee7b7ff, #6ee7b7);">${ico('⏱')} ${escapeHtml(t('ait.prep', 'Prep: {v}', { v: card.prep_time }))}</span>` : ''}
             ${card.cook_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-fde68aff, #fde68a);">${ico('🔥')} ${escapeHtml(t('ait.cook', 'Cook: {v}', { v: card.cook_time }))}</span>` : ''}
             ${card.servings ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-bae6fdff, #bae6fd);">${ico('🍽')} ${escapeHtml(t('ait.serves', 'Serves: {v}', { v: card.servings }))}</span>` : ''}
           </div>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; font-size: var(--zn-fs-xs);">
-          ${ings ? `<div><div style="font-weight: 700; color: var(--lt-t-6ee7b7ff, #6ee7b7); margin-bottom: 4px; text-transform: uppercase; font-size: var(--zn-fs-xs);">${t('ait.ingredients', 'Ingredients')}</div><ul style="margin: 0; padding-left: 16px; color: var(--zn-text); line-height: 1.5;">${ings}</ul></div>` : ''}
-          ${steps ? `<div><div style="font-weight: 700; color: var(--lt-t-93c5fdff, #93c5fd); margin-bottom: 4px; text-transform: uppercase; font-size: var(--zn-fs-xs);">${t('ait.instructions', 'Instructions')}</div><ol style="margin: 0; padding-left: 16px; color: var(--zn-text); line-height: 1.5;">${steps}</ol></div>` : ''}
+        <div class="airg-grid-xs">
+          ${ings ? `<div><div style="font-weight: 700; color: var(--lt-t-6ee7b7ff, #6ee7b7); margin-bottom: 4px; text-transform: uppercase; font-size: var(--zn-fs-xs);">${t('ait.ingredients', 'Ingredients')}</div><ul class="airg-x">${ings}</ul></div>` : ''}
+          ${steps ? `<div><div style="font-weight: 700; color: var(--lt-t-93c5fdff, #93c5fd); margin-bottom: 4px; text-transform: uppercase; font-size: var(--zn-fs-xs);">${t('ait.instructions', 'Instructions')}</div><ol class="airg-x">${steps}</ol></div>` : ''}
         </div>
       </div>
     `;
@@ -2134,7 +2134,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
     askBtn.innerHTML = '<span aria-hidden="true">⏳</span> <span>' + escapeHtml(t('ait.thinking', 'Thinking...')) + '</span>';
   }
   const loadingHtml = `
-    <div style="padding: 16px; text-align: center; color: var(--muted); font-size: var(--zn-fs-xs);">
+    <div class="airg-xs-muted-center">
       ✨ ${escapeHtml(t('aiq.searching', 'Searching local vector & FTS5 index (Zero Disk Spindown Wake)...'))}
     </div>
   `;
@@ -2165,12 +2165,12 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
       const cleanExcerpt = String(c.excerpt || '').replace(/\s+/g, ' ').trim();
       return `
         <div class="ai-citation-card" data-path="${escapeHtml(fPath)}" data-name="${escapeHtml(fName)}" data-file-id="${c.file_id}" data-excerpt="${escapeHtml(cleanExcerpt)}" style="background: var(--zn-glaze-3); border: 1px solid var(--lt-r-ffffff17, rgba(255,255,255,0.09)); border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: border-color 0.2s;">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-            <span style="font-weight: 700; font-size: var(--zn-fs-xs); color: var(--zn-text-accent);">[${cIdx}] 📄 ${escapeHtml(fName)}</span>
+          <div class="airg-row-3">
+            <span class="airg-xs-bold-accent">[${cIdx}] 📄 ${escapeHtml(fName)}</span>
             <span style="font-size: var(--zn-fs-xs); padding: 1px 6px; border-radius: 4px; background: rgba(16,185,129,0.12); color: var(--lt-t-6ee7b7ff, #6ee7b7);">💤 ${t('aiq.cached', 'Cached')}</span>
           </div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: monospace; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(secTitle)}</div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-top: 6px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+          <div class="airg-xs-muted-mono">${escapeHtml(secTitle)}</div>
+          <div class="airg-xs-soft">
             ${escapeHtml(cleanExcerpt)}
           </div>
         </div>
@@ -2179,11 +2179,11 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
 
     const citationsHtml = citations.length > 0
       ? `
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">
+        <div class="airg-col">
+          <div class="airg-xs-bold-muted">
             ${t('aiq.citations', 'Grounded Document Citations ({count})', { count: citations.length })}
           </div>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px;">
+          <div class="airg-grid">
             ${citationCardsListHtml}
           </div>
         </div>
@@ -2192,11 +2192,11 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
 
     const photosHtml = (photos.length > 0 && !(options.unifiedMode && hasUnifiedVisualGrid))
       ? `
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">
+        <div class="airg-col">
+          <div class="airg-xs-bold-muted">
             ${t('aiq.visuals', 'Matching Visual Assets ({count})', { count: photos.length })}
           </div>
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 10px;">
+          <div class="airg-grid-2">
             ${photos.map((p) => buildVisualPhotoCardHtml(p)).join('')}
           </div>
         </div>
@@ -2208,9 +2208,9 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
       .map((line) => line.replace(/\s+/g, ' ').trim())
       .filter(Boolean);
     const answerFormatted = escapeHtml(rawAnswerLines.join('\n'))
-      .replace(/\[\^(\d+):\s*([^\]]+)\]/g, '<span style="color:var(--zn-text-accent); font-weight:700;">[$1]</span> <strong>$2</strong> —')
+      .replace(/\[\^(\d+):\s*([^\]]+)\]/g, '<span class="airg-bold-accent">[$1]</span> <strong>$2</strong> —')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\[(\d+)\]/g, '<span style="color:var(--zn-text-accent); font-weight:700;">[$1]</span>')
+      .replace(/\[(\d+)\]/g, '<span class="airg-bold-accent">[$1]</span>')
       .replace(/\n/g, '<br/>');
 
     const hwTierLabel = res.hardware?.tier_code || res.hardware?.tier || res.hardware?.active_tier_name || '—';
@@ -2219,13 +2219,13 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
     const tokPerSec = llmTel.tokens_per_sec || null;
     const combinedHtml = `
       <div class="ai-rag-synthesis-box" style="background: var(--lt-b-0f172aa6, rgba(15,23,42,0.65)); border: 1px solid rgba(56,189,248,0.28); border-radius: 10px; padding: 12px 15px; display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 15px;">🧠</span>
-            <span style="font-weight: 800; font-size: var(--zn-fs-xs); color: var(--zn-text-strong);">${t('aiq.synthesis', 'ZettAI Grounded Synthesis')}</span>
+        <div class="airg-row">
+          <div class="airg-row-2">
+            <span class="airg-fs15">🧠</span>
+            <span class="airg-xs-bold-strong">${t('aiq.synthesis', 'ZettAI Grounded Synthesis')}</span>
             <span class="ai-llm-proof-badge" style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(168,85,247,0.16); border: 1px solid rgba(192,132,252,0.45); color: var(--lt-t-e9d5ffff, #e9d5ff);" title="${escapeHtml(llmTel.runtime_mode || 'No AI model (built-in tools only)')}">🤖 ${escapeHtml(activeLlmId)}</span>
           </div>
-          <div style="display: flex; align-items: center; gap: 7px; font-size: var(--zn-fs-xs); color: var(--muted);">
+          <div class="airg-row-xs-muted">
             <span style="color: var(--lt-t-3bf58bff, #3bf58b); font-weight: 700;">⚡ ${escapeHtml(hwTierLabel)}</span>
             <span>•</span>
             ${tokPerSec ? `<span style="color: var(--lt-t-fde68aff, #fde68a);">🚀 ${tokPerSec} tok/s</span>` : ''}
@@ -2233,10 +2233,10 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
             <span>${res.elapsed_ms || llmTel.elapsed_ms || 0} ms</span>
             <span>•</span>
             <span style="color: var(--lt-t-6ee7b7ff, #6ee7b7);">💤 ${t('aiq.standby_safe', 'Standby Safe')}</span>
-            <button type="button" class="btn-ai-dismiss-synthesis btn-pill-toggle is-small" style="margin-left: 4px;" title="${t('ui.hide_synthesis_card', 'Hide synthesis card')}">✕</button>
+            <button type="button" class="btn-ai-dismiss-synthesis btn-pill-toggle is-small airg-x-2" title="${t('ui.hide_synthesis_card', 'Hide synthesis card')}">✕</button>
           </div>
         </div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.55; max-height: 150px; overflow-y: auto;">
+        <div class="airg-xs">
           ${answerFormatted}
         </div>
         ${cardsHtml}
@@ -2755,16 +2755,16 @@ function _buildAiActionProposalsHtml(toolsCalled) {
   return proposals.map((tc) => `
       <div class="ai-chat-action-proposal" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 10px; border-radius:8px; background:rgba(245,158,11,0.10); border:1px solid rgba(251,191,36,0.38);">
         <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-fde68aff, #fde68a);">⏸️ ${escapeHtml(tc.action_summary || tc.tool)}</span>
-        <button type="button" class="btn ai-chat-confirm-action" data-action-id="${escapeHtml(tc.action_id)}" data-decision="confirm" style="font-size:var(--zn-fs-xs); padding:3px 10px;">${t('aiq.confirm', 'Confirm')}</button>
-        <button type="button" class="btn ai-chat-confirm-action" data-action-id="${escapeHtml(tc.action_id)}" data-decision="cancel" style="font-size:var(--zn-fs-xs); padding:3px 10px; opacity:0.8;">${t('common.cancel', 'Cancel')}</button>
-        <span class="ai-chat-action-status" style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft);"></span>
+        <button type="button" class="btn ai-chat-confirm-action aicm-xs" data-action-id="${escapeHtml(tc.action_id)}" data-decision="confirm">${t('aiq.confirm', 'Confirm')}</button>
+        <button type="button" class="btn ai-chat-confirm-action aicm-xs-2" data-action-id="${escapeHtml(tc.action_id)}" data-decision="cancel">${t('common.cancel', 'Cancel')}</button>
+        <span class="ai-chat-action-status aicm-xs-soft"></span>
       </div>`).join('');
 }
 
 function _buildAiExternalNoteHtml(res) {
   const ext = Array.isArray(res?.external_services) ? res.external_services : [];
   if (!ext.length) return '';
-  return `<div class="ai-chat-external-note" style="font-size:var(--zn-fs-xs); color:var(--zn-text-warn); padding-top:2px;" title="${t('ui.this_answer_used_services_outside', 'This answer used services outside your NAS')}">🌐 ${escapeHtml(t('aiq.data_left', 'Data left this device: {services}', { services: ext.join(', ') }))}</div>`;
+  return `<div class="ai-chat-external-note aicm-xs-warn" title="${t('ui.this_answer_used_services_outside', 'This answer used services outside your NAS')}">🌐 ${escapeHtml(t('aiq.data_left', 'Data left this device: {services}', { services: ext.join(', ') }))}</div>`;
 }
 
 // Remember the Web toggle per browser (a convenience; the server default is off).
@@ -2805,7 +2805,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
 
   const toolsBadgesHtml = toolsCalled.length > 0
     ? `
-      <div class="ai-chat-tools-trace" style="display: flex; flex-wrap: wrap; gap: 5px; padding-top: 2px;">
+      <div class="ai-chat-tools-trace aicm-row">
         ${toolsCalled.map((tc) => {
           const isWeb = tc.tool === 'browse_internet';
           const isRag = tc.tool === 'search_nas_knowledge';
@@ -2826,19 +2826,19 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
   const folderBannerHtml = folderPath
     ? `
       <div class="ai-chat-folder-banner" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 6px 10px; border-radius: 8px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.28); margin-bottom: 2px;">
-        <div style="display: flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs);">
+        <div class="aicm-row-xs">
           <span aria-hidden="true">📁</span>
           <span style="font-weight: 700; color: var(--lt-t-7dd3fcff, #7dd3fc);">${t('aiq.scope', 'Folder Scope:')}</span>
           <code style="color: var(--lt-t-e0f2feff, #e0f2fe); font-size: var(--zn-fs-xs); background: var(--zn-shade-25); padding: 1px 5px; border-radius: 4px;">${escapeHtml(folderPath)}</code>
-          ${folderManifest && folderManifest.total_files ? `<span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted);">${t('aiq.scope_files', '({count, plural, one {# file} other {# files}})', { count: folderManifest.total_files })}</span>` : ''}
+          ${folderManifest && folderManifest.total_files ? `<span class="aicm-xs-muted">${t('aiq.scope_files', '({count, plural, one {# file} other {# files}})', { count: folderManifest.total_files })}</span>` : ''}
         </div>
         ${groundingScore === null ? `
-          <div style="display: flex; align-items: center; gap: 5px;">
+          <div class="aicm-row-2">
             <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-soft); background: rgba(148,163,184,0.14); border: 1px solid rgba(148,163,184,0.35); padding: 1px 7px; border-radius: 999px;" title="${t('ui.this_answer_s_support_in', 'This answer\'s support in the sources wasn\'t measured.')}">${t('aiq.unverified', 'Unverified')}</span>
           </div>
         ` : ''}
         ${groundingScore !== null ? `
-          <div style="display: flex; align-items: center; gap: 5px;">
+          <div class="aicm-row-2">
             <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: ${groundingScore >= 80 ? '#34d399' : (groundingScore >= 50 ? '#fbbf24' : '#f87171')}; background: ${groundingScore >= 80 ? 'rgba(52,211,153,0.14)' : 'rgba(251,191,36,0.14)'}; border: 1px solid ${groundingScore >= 80 ? 'rgba(52,211,153,0.35)' : 'rgba(251,191,36,0.35)'}; padding: 1px 7px; border-radius: 999px;">
               🎯 ${res.grounding_detail
                 ? escapeHtml(t('ai.grounded_sentences', '{n} of {total} sentences backed by the sources', { n: res.grounding_detail.supported, total: res.grounding_detail.total }))
@@ -2853,11 +2853,11 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
 
   const docCitationsHtml = citations.length > 0
     ? `
-      <details class="ai-chat-doc-citations" style="margin-top: 4px; font-size: var(--zn-fs-xs);">
+      <details class="ai-chat-doc-citations aicm-xs-3">
         <summary style="cursor: pointer; color: var(--zn-text-accent); font-weight: 700; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); width: fit-content; user-select: none;">
           <span>📚 ${escapeHtml(t('ai.sources_count', 'Sources ({n})', { n: citations.length }))}</span>
         </summary>
-        <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
+        <div class="aicm-col">
           ${citations.map((c, idx) => {
             const cname = c.name || (c.path ? c.path.split('/').pop() : 'Document');
             const bcrumb = c.breadcrumb ? ` > ${c.breadcrumb}` : '';
@@ -2866,9 +2866,9 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
             const escName = escapeHtml(cname);
             return `
               <div class="ai-citation-card" style="padding: 7px 10px; border-radius: 7px; background: var(--lt-b-0f172ad9, rgba(15,23,42,0.85)); border: 1px solid rgba(56,189,248,0.22); font-size: var(--zn-fs-xs);">
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 3px;">
-                  <button type="button" class="btn-preview-citation" data-action="open-file-preview" data-path="${escPath}" data-name="${escName}" style="background: none; border: none; padding: 0; color: var(--zn-text-accent); font-weight: 700; cursor: pointer; text-decoration: underline; text-align: left; font-size: var(--zn-fs-xs);">
-                    📄 [${idx + 1}] ${escName}<span style="color: var(--zn-text-muted); font-weight: 400; text-decoration: none;">${escapeHtml(bcrumb)}</span> 👁️
+                <div class="aicm-row-3">
+                  <button type="button" class="btn-preview-citation aicm-xs-bold-accent-box" data-action="open-file-preview" data-path="${escPath}" data-name="${escName}">
+                    📄 [${idx + 1}] ${escName}<span class="aicm-muted">${escapeHtml(bcrumb)}</span> 👁️
                   </button>
                   <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-a7f3d0ff, #a7f3d0); background: rgba(16,185,129,0.14); padding: 1px 6px; border-radius: 999px;">${scorePct}% match</span>
                 </div>
@@ -2883,15 +2883,15 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
 
   const photosHtml = photos.length > 0
     ? `
-      <div class="ai-chat-photos-grid" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
+      <div class="ai-chat-photos-grid aicm-row-4">
         ${photos.map((p) => {
           const escP = escapeHtml(p.path || '');
           const escN = escapeHtml(p.name || 'Photo');
           const thumb = p.thumbnail_url || (p.file_id ? `/api/media/thumbnail/${p.file_id}` : '');
           return `
             <div class="ai-chat-photo-card" data-action="open-file-preview" data-path="${escP}" data-name="${escN}" style="cursor: pointer; width: 85px; border-radius: 6px; overflow: hidden; background: var(--zn-shade-40); border: 1px solid var(--zn-line-10); transition: transform 0.15s ease;" title="${escN}">
-              ${thumb ? `<img src="${escapeHtml(thumb)}" alt="${escN}" style="width: 100%; height: 60px; object-fit: cover;" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🖼️</div>`}
-              <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); padding: 2px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escN}</div>
+              ${thumb ? `<img class="aicm-size" src="${escapeHtml(thumb)}" alt="${escN}" />` : `<div class="aicm-row-fs20">🖼️</div>`}
+              <div class="aicm-xs-soft-2">${escN}</div>
             </div>
           `;
         }).join('')}
@@ -2901,11 +2901,11 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
 
   const webSourcesHtml = webSources.length > 0
     ? `
-      <details class="ai-chat-web-sources" style="margin-top: 2px; font-size: var(--zn-fs-xs);">
-        <summary style="cursor: pointer; color: var(--zn-text-muted); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 6px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); width: fit-content; user-select: none;">
+      <details class="ai-chat-web-sources aicm-xs-4">
+        <summary class="aicm-row-semi-muted-box">
           <span>🌐 ${t('aiq.sources', 'Sources ({count})', { count: webSources.length })}</span>
         </summary>
-        <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; padding-left: 2px;">
+        <div class="aicm-row-5">
           ${webSources.slice(0, 5).map((ws) => `<a href="${escapeHtml(ws.url)}" target="_blank" rel="noopener noreferrer" style="padding: 2px 8px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); color: var(--zn-text-accent); text-decoration: none; font-weight: 600; font-size: var(--zn-fs-xs);">${escapeHtml(ws.title || ws.source || 'Source')} ↗</a>`).join('')}
         </div>
       </details>
@@ -2913,13 +2913,13 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
     : '';
 
   return `
-    <div class="ai-chat-llm-proof-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--zn-line-6); padding-bottom: 5px;">
-      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+    <div class="ai-chat-llm-proof-bar aicm-row-box">
+      <div class="aicm-row-6">
         <span class="ai-chat-model-pill" style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--lt-t-e9d5ffff, #e9d5ff); padding: 1px 8px; border-radius: 999px; background: rgba(168,85,247,0.18); border: 1px solid rgba(192,132,252,0.45);">🤖 ${escapeHtml(usedModel)}</span>
         <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-3bf58bff, #3bf58b);">⚡ ${escapeHtml(accelLabel)}</span>
-        <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted);">(${escapeHtml(runtimeMode)})</span>
+        <span class="aicm-xs-muted">(${escapeHtml(runtimeMode)})</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-muted);">
+      <div class="aicm-row-xs-muted">
         ${!folderPath && groundingScore !== null ? `<span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-ok); padding: 0 5px; border-radius: 999px; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3);">🎯 ${t('aiq.grounded', '{pct}% Grounded', { pct: groundingScore })}</span><span>•</span>` : ''}
         ${tokSec ? `<span style="color: var(--lt-t-fde68aff, #fde68a);">🚀 ${tokSec} tok/s</span>` : ''}
         <span>•</span>
@@ -2930,7 +2930,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
     ${_buildAiExternalNoteHtml(res)}
     ${_buildAiActionProposalsHtml(toolsCalled)}
     ${folderBannerHtml}
-    <div class="ai-chat-reply-body" style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.55;">
+    <div class="ai-chat-reply-body aicm-xs-5">
       ${_formatChatMarkdown(replyMd, { citations, webSources })}
     </div>
     ${docCitationsHtml}
@@ -3469,9 +3469,9 @@ export function _formatChatMarkdown(rawText, sources = null) {
     text = text.replace(/<think>[\s\S]*?<\/think>/i, '').trim();
     thoughtHtml = `
       <details class="ai-thought-disclosure" style="margin: 4px 0 10px; border-radius: 8px; background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(168, 85, 247, 0.28); padding: 7px 10px; font-size: var(--zn-fs-xs);">
-        <summary style="cursor: pointer; font-weight: 700; color: var(--zn-text-ai); display: inline-flex; align-items: center; gap: 6px; user-select: none;">
+        <summary class="aimd-row-bold">
           <span>🧠 ${t('aiq.thoughts', 'Thought Process')}</span>
-          <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-weight: 400;">${t('aiq.thoughts_hint', '(click to view chain of thought)')}</span>
+          <span class="aimd-xs-muted">${t('aiq.thoughts_hint', '(click to view chain of thought)')}</span>
         </summary>
         <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(168, 85, 247, 0.2); color: var(--zn-text-soft); font-size: var(--zn-fs-xs); line-height: 1.5; font-style: italic;">
           ${thoughtContent.replace(/\n/g, '<br/>')}
@@ -3516,32 +3516,32 @@ export function _formatChatMarkdown(rawText, sources = null) {
     return `<div class="ai-chat-code-block" style="margin: 8px 0; border-radius: 8px; background: var(--lt-b-020617e0, rgba(2, 6, 23, 0.88)); border: 1px solid rgba(56, 189, 248, 0.3); overflow: hidden;">
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; background: var(--lt-b-0f172af2, rgba(15, 23, 42, 0.95)); border-bottom: 1px solid var(--zn-line-8); font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-family: monospace;">
         <span style="font-weight: 700; color: var(--lt-t-7dd3fcff, #7dd3fc);">${escapeHtml(item.lang)}</span>
-        <div style="display: flex; align-items: center;">
+        <div class="aimd-row">
           ${deployBtnHtml}
-          <button type="button" class="btn-copy-code" data-action="copy-code" style="background: var(--zn-glaze-6); border: 1px solid var(--zn-line-18); border-radius: 4px; color: var(--zn-text-soft); font-size: var(--zn-fs-xs); padding: 2px 7px; cursor: pointer;">${t('catalog.copy', 'Copy')}</button>
+          <button type="button" class="btn-copy-code aimd-xs-soft-box" data-action="copy-code">${t('catalog.copy', 'Copy')}</button>
         </div>
       </div>
-      <pre style="margin: 0; padding: 10px 12px; overflow-x: auto; font-family: 'JetBrains Mono', Consolas, monospace; font-size: var(--zn-fs-xs); line-height: 1.5; color: var(--zn-text);"><code>${escapedCode}</code></pre>
+      <pre class="aimd-xs-mono"><code>${escapedCode}</code></pre>
     </div>`;
   });
 
   const formatted = escaped
     .replace(/^####\s+(.+)$/gm, '<div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-t-7dd3fcff, #7dd3fc); margin:8px 0 3px;">$1</div>')
-    .replace(/^###\s+(.+)$/gm, '<div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-accent); margin:8px 0 4px;">$1</div>')
+    .replace(/^###\s+(.+)$/gm, '<div class="aimd-xs-bold-accent">$1</div>')
     .replace(/^&gt;\s?(.*)$/gm, '<div style="border-left:2px solid rgba(168,85,247,0.55); padding-left:8px; margin:3px 0; color:var(--zn-text-soft); font-size:var(--zn-fs-xs); background:rgba(168,85,247,0.07); border-radius:0 4px 4px 0;">$1</div>')
-    .replace(/^[-*]\s+(.+)$/gm, '<div style="display:flex; align-items:flex-start; gap:6px; margin:3px 0 3px 4px;"><span style="color:var(--zn-text-accent); font-size:var(--zn-fs-xs); line-height:1.5;">•</span><div style="flex:1;">$1</div></div>')
-    .replace(/^(\d+)\.\s+(.+)$/gm, '<div style="display:flex; align-items:flex-start; gap:6px; margin:3px 0 3px 4px;"><span style="color:var(--zn-text-ai); font-weight:700; font-size:var(--zn-fs-xs); line-height:1.5;">$1.</span><div style="flex:1;">$2</div></div>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--zn-text-strong);">$1</strong>')
+    .replace(/^[-*]\s+(.+)$/gm, '<div class="aimd-row-2"><span class="aimd-xs-accent">•</span><div class="aimd-grow">$1</div></div>')
+    .replace(/^(\d+)\.\s+(.+)$/gm, '<div class="aimd-row-2"><span class="aimd-xs-bold">$1.</span><div class="aimd-grow">$2</div></div>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="aimd-strong">$1</strong>')
     .replace(/`([^`]+)`/g, '<code style="background:var(--lt-b-00000061, rgba(0,0,0,0.38)); padding:1px 5px; border-radius:4px; color:var(--lt-t-bae6fdff, #bae6fd); font-family:monospace; font-size:var(--zn-fs-xs);">$1</code>')
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline;">$1 ↗</a>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="aimd-accent" href="$2" target="_blank" rel="noopener noreferrer">$1 ↗</a>')
     .replace(/\[\^(\d+):\s*([^#\]]+)(?:#L?(\d+))?\]/g, (match, idx, path, line) => {
       const escP = escapeHtml(path.trim());
       const escN = escapeHtml(path.trim().split('/').pop() || 'File');
       const lineStr = line ? ` (L${line})` : '';
-      return `<button type="button" class="ai-citation-inline-pill" data-action="open-file-preview" data-path="${escP}" data-name="${escN}" style="display:inline-flex; align-items:center; gap:3px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.38); border-radius:999px; padding:1px 7px; color:var(--lt-t-7dd3fcff, #7dd3fc); font-size:var(--zn-fs-xs); font-weight:700; cursor:pointer; vertical-align:baseline; margin:0 2px;"><span>📄 [${idx}] ${escN}${lineStr}</span><span style="font-size:var(--zn-fs-xs);">👁️</span></button>`;
+      return `<button type="button" class="ai-citation-inline-pill" data-action="open-file-preview" data-path="${escP}" data-name="${escN}" style="display:inline-flex; align-items:center; gap:3px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.38); border-radius:999px; padding:1px 7px; color:var(--lt-t-7dd3fcff, #7dd3fc); font-size:var(--zn-fs-xs); font-weight:700; cursor:pointer; vertical-align:baseline; margin:0 2px;"><span>📄 [${idx}] ${escN}${lineStr}</span><span class="aimd-xs">👁️</span></button>`;
     })
     .replace(/\[(\d+)\](?!\()/g, (m, n) => _citationChip(Number(n), sources))
-    .replace(/\n\n+/g, '<div style="height:6px;"></div>')
+    .replace(/\n\n+/g, '<div class="aimd-size"></div>')
     .replace(/\n/g, '<br/>');
 
   return (thoughtHtml ? thoughtHtml : '') + formatted;
