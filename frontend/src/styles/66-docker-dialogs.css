@@ -1,0 +1,69 @@
+/* The Docker panel's dialogs: install an app, clean up and app sources (NUX-15). Their markup
+   is built in management/docker.js; these rules replace its inline styles and load with that code. */
+
+/* Docker dialogs: classes instead of inline styles (NUX-15), same look */
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-size { width: 620px; max-width: 94vw; max-height: 88vh; flex-direction: column; position: relative; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-x { cursor: move; user-select: none; justify-content: space-between; align-items: center; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row { display: flex; align-items: center; gap: 8px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-fs18 { font-size: 18px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-fs13-bold-strong { font-weight: 700; color: var(--zn-text-strong); font-size: 13px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-2 { display: flex; gap: 6px; align-items: center; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-grow { flex: 1; overflow-y: auto; padding: 16px; flex-direction: column; gap: 12px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-box { padding: 10px 12px; border-radius: 6px; font-size: var(--zn-fs-xs); line-height: 1.4; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-3 { display: flex; align-items: center; justify-content: space-between; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-bold-mono-box { font-size: var(--zn-fs-xs); padding: 2px 7px; border-radius: 4px; background: var(--zn-glaze-8); font-family: var(--font-mono, monospace); font-weight: 700; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-soft { color: var(--zn-text-soft); font-size: var(--zn-fs-xs); line-height: 1.4; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs { width: 100%; box-sizing: border-box; font-size: var(--zn-fs-xs); padding: 6px 8px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-col { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-mono { width: 100%; box-sizing: border-box; font-size: var(--zn-fs-xs); padding: 6px 8px; font-family: var(--font-mono, monospace); }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-4 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-x-2 { margin: 0; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-5 { display: flex; gap: 6px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-grow-2 { flex: 1; overflow-y: auto; padding: 18px 16px; flex-direction: column; gap: 12px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-6 { display: flex; align-items: center; gap: 10px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-fs22 { font-size: 22px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-fs13-bold-strong-2 { font-size: 13px; font-weight: 700; color: var(--zn-text-strong); }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-box { width: 100%; height: 10px; background: var(--zn-glaze-6); border-radius: 5px; overflow: hidden; border: 1px solid var(--zn-line-10); position: relative; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-x-3 { margin-top: 2px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-bold-muted { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-muted { color: var(--muted); }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-soft-2 { font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-top: 2px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-box-2 { padding: 10px 16px; border-top: 1px solid var(--zn-line-8); justify-content: space-between; align-items: center; background: var(--zn-shade-20); }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-grow-3 { flex: 1; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-size-2 { width: 580px; max-width: 94vw; max-height: 88vh; flex-direction: column; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-7 { display: flex; justify-content: space-between; align-items: center; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-col-2 { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-soft-3 { font-size: var(--zn-fs-xs); color: var(--zn-text-soft); line-height: 1.4; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-x-4 { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-box-center { background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); padding: 8px 10px; border-radius: 6px; text-align: center; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-bold-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase; font-weight: 700; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-bold-strong { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); margin-top: 2px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-col-box { background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-xs { display: flex; align-items: flex-start; gap: 8px; font-size: var(--zn-fs-xs); color: var(--zn-text); cursor: pointer; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-x-5 { margin-top: 2px; cursor: pointer; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-box { padding: 10px 16px; border-top: 1px solid var(--zn-line-8); display: flex; justify-content: space-between; align-items: center; background: var(--zn-shade-20); }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-size-3 { width: 680px; max-width: 94vw; max-height: 88vh; flex-direction: column; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-col-3 { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-xs-bold-strong { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); display: flex; align-items: center; gap: 6px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-muted-3 { font-size: var(--zn-fs-xs); color: var(--zn-text-muted); margin-top: 2px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-col-box-2 { background: var(--zn-glaze-2); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-bold-strong-2 { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); text-transform: uppercase; letter-spacing: 0.5px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-grid-2 { display: grid; grid-template-columns: 1fr 2fr auto; gap: 8px; align-items: end; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-bold-muted-3 { display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-2 { width: 100%; box-sizing: border-box; font-size: var(--zn-fs-xs); padding: 5px 8px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-box-2 { font-size: var(--zn-fs-xs); padding: 4px 6px; border-radius: 4px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-bold-muted-4 { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-x-6 { flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-muted-center { text-align: center; color: var(--muted); padding: 16px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-box-2 { padding: 10px 16px; border-top: 1px solid var(--zn-line-8); display: flex; justify-content: flex-end; align-items: center; background: var(--zn-shade-20); }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-box-3 { background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-grow-4 { overflow: hidden; flex: 1; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-strong { font-size: var(--zn-fs-xs); color: var(--zn-text-strong); }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-soft-box { font-size: var(--zn-fs-xs); background: var(--zn-glaze-6); color: var(--zn-text-soft); }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-muted-mono { font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono, monospace); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-8 { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-3 { font-size: var(--zn-fs-xs); padding: 3px 8px; cursor: pointer; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-crit-center { text-align: center; color: var(--crit); padding: 16px; }

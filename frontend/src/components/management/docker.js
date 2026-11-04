@@ -21,6 +21,7 @@ const ico = (e) => `<span aria-hidden="true">${e}</span>`;
 const bold = (v) => `<strong>${escapeHtml(String(v))}</strong>`;
 import { renderShareFolders, shareFolderPicks } from '../share-folder-picker.js';
 import { setIconLabel } from '../../ui/primitives.js';
+import '../../styles/docker-lazy.css'; // its dialogs' own sheet loads with this code (NUX-15)
 
 let _storageRoot = '/mnt/user/appdata'; // until the server says where this host keeps app data
 let _dockerContainersList = [];
@@ -1208,34 +1209,34 @@ export async function openAppDeployModal(appId) {
   if (!modal) {
     const modalHtml = `
       <div id="app-deploy-modal-overlay" class="smart-modal-backdrop" style="display:none;">
-        <div id="app-deploy-modal-window" class="smart-modal-window app-deploy-window" style="width:620px; max-width:94vw; max-height:88vh; display:flex; flex-direction:column; position:relative;">
-          <div class="smart-modal-header" id="adm-header" style="cursor:move; user-select:none; display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span id="adm-icon" style="font-size:18px;">📦</span>
-              <span id="adm-title" style="font-weight:700; color:var(--zn-text-strong); font-size:13px;">${t('catalog.install_app', 'Install an app')}</span>
+        <div id="app-deploy-modal-window" class="smart-modal-window app-deploy-window dkd-size" style="display: flex;">
+          <div class="smart-modal-header dkd-x" id="adm-header" style="display: flex;">
+            <div class="dkd-row">
+              <span class="dkd-fs18" id="adm-icon">📦</span>
+              <span class="dkd-fs13-bold-strong" id="adm-title">${t('catalog.install_app', 'Install an app')}</span>
             </div>
-            <div class="os-window-controls" style="display:flex; gap:6px; align-items:center;">
+            <div class="os-window-controls dkd-row-2">
               <button class="win-btn min-btn" id="adm-min-btn" title="${t('ui.minimize_to_dock', 'Minimize to Dock')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
               <button class="win-btn close-btn" id="adm-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
             </div>
           </div>
 
           <!-- View 1: Configuration View -->
-          <div id="adm-view-config" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px;">
-            <div id="adm-conflict-banner" style="padding:10px 12px; border-radius:6px; font-size:var(--zn-fs-xs); line-height:1.4;"></div>
+          <div class="dkd-grow" id="adm-view-config" style="display: flex;">
+            <div class="dkd-xs-box" id="adm-conflict-banner"></div>
             
             <!-- Pre-existing Container Action Choice Box -->
             <div id="adm-existing-box" style="display:none; padding:11px 13px; border-radius:6px; background:rgba(245, 166, 35, 0.09); border:1px solid rgba(245, 166, 35, 0.35); flex-direction:column; gap:8px;">
-              <div style="display:flex; align-items:center; justify-content:space-between;">
+              <div class="dkd-row-3">
                 <div style="display:flex; align-items:center; gap:6px; color:var(--warn, #f5a623); font-weight:700; font-size:var(--zn-fs-xs);">
                   <span aria-hidden="true">⚠️</span> <span id="adm-existing-title">${t('catalog.existing_title', 'This app is already installed')}</span>
                 </div>
-                <span id="adm-existing-status-badge" style="font-size:var(--zn-fs-xs); padding:2px 7px; border-radius:4px; background:var(--zn-glaze-8); font-family:var(--font-mono, monospace); font-weight:700;">${t('catalog.state_running', 'Running')}</span>
+                <span class="dkd-xs-bold-mono-box" id="adm-existing-status-badge">${t('catalog.state_running', 'Running')}</span>
               </div>
-              <div id="adm-existing-desc" style="color:var(--zn-text-soft); font-size:var(--zn-fs-xs); line-height:1.4;">
+              <div class="dkd-xs-soft" id="adm-existing-desc">
                 ${t('catalog.existing_desc_generic', 'An app with this name or port is already on this server. Choose what to do:')}
               </div>
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
+              <div class="dkd-grid">
                 <button type="button" id="adm-choice-replace-btn" class="btn-pill-toggle is-danger" style="text-align: center; color: var(--lt-t-ff8080ff, #ff8080);">
                   🔄 ${t('catalog.replace', 'Replace the one there')}
                 </button>
@@ -1247,26 +1248,26 @@ export async function openAppDeployModal(appId) {
 
             <div>
               <label for="adm-name-input" class="adm-label">${t('catalog.install_name', 'Name')}</label>
-              <input type="text" id="adm-name-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:6px 8px;">
+              <input type="text" id="adm-name-input" class="tz-text-input dkd-xs">
             </div>
             <div>
               <label for="adm-storage-input" class="adm-label">${t('catalog.install_folder', 'Folder for its data')}</label>
-              <input type="text" id="adm-storage-input" value="/mnt/user/appdata" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:6px 8px;">
+              <input type="text" id="adm-storage-input" value="/mnt/user/appdata" class="tz-text-input dkd-xs">
               <div class="adm-hint">${t('catalog.install_folder_hint', 'Settings and files the app keeps are stored in a folder of its own here.')}</div>
             </div>
             <div id="adm-share-folders" class="adm-share-folders" hidden></div>
             <!-- UX-18: the technical part stays out of the way -->
             <details id="adm-advanced" class="adm-advanced">
               <summary>${t('catalog.install_advanced', 'Advanced: port and Docker Compose')}</summary>
-              <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+              <div class="dkd-col">
                 <div>
                   <label for="adm-port-input" class="adm-label">${t('catalog.install_port', 'Port on this server')}</label>
-                  <input type="number" id="adm-port-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:6px 8px; font-family:var(--font-mono, monospace);">
+                  <input type="number" id="adm-port-input" class="tz-text-input dkd-xs-mono">
                 </div>
                 <div>
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                    <span class="adm-label" style="margin:0;">${t('catalog.install_compose', 'Docker Compose definition')}</span>
-                    <div style="display:flex; gap:6px;">
+                  <div class="dkd-row-4">
+                    <span class="adm-label dkd-x-2">${t('catalog.install_compose', 'Docker Compose definition')}</span>
+                    <div class="dkd-row-5">
                       <button class="btn-pill-toggle" id="adm-copy-btn">${ico('📋')} ${t('ci.copy_yaml', 'Copy YAML')}</button>
                       <button class="btn-pill-toggle" id="adm-download-btn">${ico('⬇️')} ${t('dk.download', 'Download')}</button>
                     </div>
@@ -1278,28 +1279,28 @@ export async function openAppDeployModal(appId) {
           </div>
 
           <!-- View 2: Live Deployment Progress View -->
-          <div id="adm-view-progress" style="display:none; flex:1; overflow-y:auto; padding:18px 16px; flex-direction:column; gap:12px;">
-            <div style="display:flex; align-items:center; justify-content:space-between;">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <span id="adm-progress-spinner" style="font-size:22px; display:inline-block;">⚙️</span>
+          <div class="dkd-grow-2" id="adm-view-progress" style="display: none;">
+            <div class="dkd-row-3">
+              <div class="dkd-row-6">
+                <span class="dkd-fs22" id="adm-progress-spinner" style="display: inline-block;">⚙️</span>
                 <div>
-                  <div id="adm-progress-title" style="font-size:13px; font-weight:700; color:var(--zn-text-strong);">${t('catalog.installing', 'Installing the app...')}</div>
-                  <div id="adm-progress-status-text" style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">${t('catalog.preparing', 'Getting its folders ready...')}</div>
+                  <div class="dkd-fs13-bold-strong-2" id="adm-progress-title">${t('catalog.installing', 'Installing the app...')}</div>
+                  <div class="dkd-xs-muted" id="adm-progress-status-text">${t('catalog.preparing', 'Getting its folders ready...')}</div>
                 </div>
               </div>
               <div id="adm-progress-pct-badge" style="font-size:13px; font-weight:800; font-family:var(--font-mono, monospace); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); background:var(--lt-b-00f0ff14, rgba(0,240,255,0.08)); padding:3px 9px; border-radius:6px; border:1px solid var(--lt-r-00f0ff33, rgba(0,240,255,0.2));">0%</div>
             </div>
 
             <!-- Stylized Progress Bar -->
-            <div style="width:100%; height:10px; background:var(--zn-glaze-6); border-radius:5px; overflow:hidden; border:1px solid var(--zn-line-10); position:relative;">
+            <div class="dkd-box">
               <div id="adm-progress-bar-fill" style="height:100%; width:0%; background:linear-gradient(90deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); transition:width 0.25s ease; box-shadow:0 0 10px rgba(37,194,160,0.5);"></div>
             </div>
 
             <!-- Real-time Activity Log Terminal -->
-            <div style="margin-top:2px;">
-              <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">${t('catalog.install_log', 'What is happening')}</div>
+            <div class="dkd-x-3">
+              <div class="dkd-xs-bold-muted">${t('catalog.install_log', 'What is happening')}</div>
               <div id="adm-deploy-logs" style="background:var(--lt-b-05080fff, #05080f); border:1px solid var(--zn-line-10); border-radius:6px; height:160px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.5; color:var(--zn-text-soft);">
-                <div style="color:var(--muted);">${t('catalog.waiting', 'Starting...')}</div>
+                <div class="dkd-muted">${t('catalog.waiting', 'Starting...')}</div>
               </div>
             </div>
 
@@ -1307,7 +1308,7 @@ export async function openAppDeployModal(appId) {
             <div id="adm-success-box" style="display:none; padding:12px 14px; background:rgba(37,194,160,0.12); border:1px solid var(--ok2, #25c2a0); border-radius:6px; align-items:center; justify-content:space-between; gap:12px;">
               <div>
                 <div style="font-weight:700; color:var(--ok2, #25c2a0); font-size:var(--zn-fs-xs);">🚀 ${t('catalog.live', 'The app is running')}</div>
-                <div id="adm-success-msg" style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin-top:2px;">${t('catalog.live_desc', 'It is installed and started.')}</div>
+                <div class="dkd-xs-soft-2" id="adm-success-msg">${t('catalog.live_desc', 'It is installed and started.')}</div>
               </div>
               <a id="adm-webui-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:var(--ok2, #25c2a0); color:#000; font-weight:700; font-size:var(--zn-fs-xs); padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
                 🌐 ${t('catalog.open_app', 'Open the app')} ↗
@@ -1316,7 +1317,7 @@ export async function openAppDeployModal(appId) {
           </div>
 
           <!-- Footer for Config View -->
-          <div id="adm-footer-config" style="padding:10px 16px; border-top:1px solid var(--zn-line-8); display:flex; justify-content:space-between; align-items:center; background:var(--zn-shade-20);">
+          <div class="dkd-box-2" id="adm-footer-config" style="display: flex;">
             <button class="btn-pill-toggle" id="adm-cancel-btn">${t('common.cancel', 'Cancel')}</button>
             <button class="btn-pill-toggle is-primary" id="adm-deploy-confirm-btn">
               ${t('ui.deploy_launch_container', 'Install')}
@@ -1324,9 +1325,9 @@ export async function openAppDeployModal(appId) {
           </div>
 
           <!-- Footer for Progress View -->
-          <div id="adm-footer-progress" style="display:none; padding:10px 16px; border-top:1px solid var(--zn-line-8); justify-content:space-between; align-items:center; background:var(--zn-shade-20);">
+          <div class="dkd-box-2" id="adm-footer-progress" style="display: none;">
             <button class="btn-pill-toggle" id="adm-back-to-config-btn" style="display: none;">${ico('←')} ${t('dk.reconfigure', 'Change settings')}</button>
-            <div style="flex:1;"></div>
+            <div class="dkd-grow-3"></div>
             <button class="btn-pill-toggle is-primary" id="adm-progress-close-btn" style="display: none;">${ico('✓')} ${t('common.done', 'Done')}</button>
           </div>
         </div>
@@ -2118,32 +2119,32 @@ export async function openDockerPruneModal() {
   if (!modal) {
     const html = `
       <div id="docker-prune-modal-overlay" class="smart-modal-backdrop" style="display:none; z-index:10020;">
-        <div id="docker-prune-modal-window" class="smart-modal-window" style="width:580px; max-width:94vw; max-height:88vh; display:flex; flex-direction:column;">
-          <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-size:18px;">🧹</span>
-              <span style="font-weight:700; color:var(--zn-text-strong); font-size:13px;">${t('dk.prune_title', 'Docker cleanup')}</span>
+        <div id="docker-prune-modal-window" class="smart-modal-window dkd-size-2" style="display: flex;">
+          <div class="smart-modal-header dkd-row-7">
+            <div class="dkd-row">
+              <span class="dkd-fs18">🧹</span>
+              <span class="dkd-fs13-bold-strong">${t('dk.prune_title', 'Docker cleanup')}</span>
             </div>
             <button class="win-btn close-btn" id="dpm-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
-          <div style="padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
-            <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); line-height:1.4;">
+          <div class="dkd-col-2">
+            <div class="dkd-xs-soft-3">
               ${t('dk.prune_desc', 'Free space by removing Docker data nothing uses. Running containers are safe.')}
             </div>
 
             <!-- Live Disk Usage Breakdown -->
-            <div id="dpm-df-summary" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:8px;">
-              <div style="background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dk.images', 'Images')}</div>
-                <div id="dpm-df-images" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); margin-top:2px;">${t('common.loading', 'Loading…')}</div>
+            <div class="dkd-x-4" id="dpm-df-summary" style="display: grid;">
+              <div class="dkd-box-center">
+                <div class="dkd-xs-bold-muted-2">${t('dk.images', 'Images')}</div>
+                <div class="dkd-xs-bold-strong" id="dpm-df-images">${t('common.loading', 'Loading…')}</div>
               </div>
-              <div style="background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dk.containers', 'Containers')}</div>
-                <div id="dpm-df-containers" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); margin-top:2px;">${t('common.loading', 'Loading…')}</div>
+              <div class="dkd-box-center">
+                <div class="dkd-xs-bold-muted-2">${t('dk.containers', 'Containers')}</div>
+                <div class="dkd-xs-bold-strong" id="dpm-df-containers">${t('common.loading', 'Loading…')}</div>
               </div>
-              <div style="background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dk.volumes', 'Volumes')}</div>
-                <div id="dpm-df-volumes" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); margin-top:2px;">${t('common.loading', 'Loading…')}</div>
+              <div class="dkd-box-center">
+                <div class="dkd-xs-bold-muted-2">${t('dk.volumes', 'Volumes')}</div>
+                <div class="dkd-xs-bold-strong" id="dpm-df-volumes">${t('common.loading', 'Loading…')}</div>
               </div>
               <div style="background:var(--lt-b-00f0ff0f, rgba(0,240,255,0.06)); border:1px solid var(--lt-r-00f0ff33, rgba(0,240,255,0.2)); padding:8px 10px; border-radius:6px; text-align:center;">
                 <div style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); text-transform:uppercase; font-weight:700;">${t('dk.reclaimable', 'Can be freed')}</div>
@@ -2152,40 +2153,40 @@ export async function openDockerPruneModal() {
             </div>
 
             <!-- Prune Options -->
-            <div style="background:var(--zn-shade-25); border:1px solid var(--zn-line-8); border-radius:6px; padding:12px; display:flex; flex-direction:column; gap:10px;">
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text); cursor:pointer;">
-                <input type="checkbox" id="dpm-opt-containers" checked style="margin-top:2px; cursor:pointer;">
+            <div class="dpm-opts dkd-col-box">
+              <label class="dkd-row-xs">
+                <input class="dkd-x-5" type="checkbox" id="dpm-opt-containers" checked>
                 <div>
                   <strong>${t('dk.p_containers', 'Remove stopped containers')}</strong>
-                  <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('dk.p_containers_d', 'Deletes every exited, stopped or dead container.')}</div>
+                  <div class="dkd-xs-muted-2">${t('dk.p_containers_d', 'Deletes every exited, stopped or dead container.')}</div>
                 </div>
               </label>
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text); cursor:pointer;">
-                <input type="checkbox" id="dpm-opt-images" checked style="margin-top:2px; cursor:pointer;">
+              <label class="dkd-row-xs">
+                <input class="dkd-x-5" type="checkbox" id="dpm-opt-images" checked>
                 <div>
                   <strong>${t('dk.p_dangling', 'Remove dangling images')}</strong>
-                  <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('dk.p_dangling_d', 'Removes untagged “none” build layers and leftover images.')}</div>
+                  <div class="dkd-xs-muted-2">${t('dk.p_dangling_d', 'Removes untagged “none” build layers and leftover images.')}</div>
                 </div>
               </label>
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text); cursor:pointer;">
-                <input type="checkbox" id="dpm-opt-all-images" style="margin-top:2px; cursor:pointer;">
+              <label class="dkd-row-xs">
+                <input class="dkd-x-5" type="checkbox" id="dpm-opt-all-images">
                 <div>
                   <strong>${t('dk.p_unused', 'Remove all unused images')}</strong>
-                  <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('dk.p_unused_d', 'Removes images no container uses, running or stopped. Images of stopped containers (such as update rollbacks) are kept.')}</div>
+                  <div class="dkd-xs-muted-2">${t('dk.p_unused_d', 'Removes images no container uses, running or stopped. Images of stopped containers (such as update rollbacks) are kept.')}</div>
                 </div>
               </label>
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text); cursor:pointer;">
-                <input type="checkbox" id="dpm-opt-volumes" style="margin-top:2px; cursor:pointer;">
+              <label class="dkd-row-xs">
+                <input class="dkd-x-5" type="checkbox" id="dpm-opt-volumes">
                 <div>
                   <strong>${t('dk.p_volumes', 'Remove unused local volumes')}</strong>
                   <div style="font-size:var(--zn-fs-xs); color:var(--warn, #f5a623);">${t('dk.p_volumes_d', 'Careful: removes anonymous local volumes no container mounts.')}</div>
                 </div>
               </label>
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text); cursor:pointer;">
-                <input type="checkbox" id="dpm-opt-buildcache" checked style="margin-top:2px; cursor:pointer;">
+              <label class="dkd-row-xs">
+                <input class="dkd-x-5" type="checkbox" id="dpm-opt-buildcache" checked>
                 <div>
                   <strong>${t('dk.p_cache', 'Remove build cache & unused networks')}</strong>
-                  <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('dk.p_cache_d', 'Frees Docker’s temporary build cache and bridge networks nothing is connected to.')}</div>
+                  <div class="dkd-xs-muted-2">${t('dk.p_cache_d', 'Frees Docker’s temporary build cache and bridge networks nothing is connected to.')}</div>
                 </div>
               </label>
             </div>
@@ -2201,7 +2202,7 @@ export async function openDockerPruneModal() {
               <div class="zn-muted" id="dpm-freed"></div>
             </div>
           </div>
-          <div style="padding:10px 16px; border-top:1px solid var(--zn-line-8); display:flex; justify-content:space-between; align-items:center; background:var(--zn-shade-20);">
+          <div class="dkd-row-box">
             <button class="btn-pill-toggle" id="dpm-cancel-btn">${t('common.cancel', 'Cancel')}</button>
             <button class="btn-pill-toggle is-primary" id="dpm-confirm-btn">
               ${ico('🧹')} ${t('dk.run_prune', 'Clean up and free space')}
@@ -2311,7 +2312,7 @@ let _prunePollTimer = null;
 function setPruneIdle() {
   const btn = document.getElementById('dpm-confirm-btn');
   const cancel = document.getElementById('dpm-cancel-btn');
-  const opts = document.getElementById('dpm-opt-containers')?.closest('div[style*="flex-direction:column"]');
+  const opts = document.getElementById('dpm-opt-containers')?.closest('.dpm-opts');
   if (btn) {
     btn.disabled = false;
     btn.dataset.mode = 'start';
@@ -2374,7 +2375,7 @@ export function renderPruneJob(job) {
 function followPruneJob(job) {
   const btn = document.getElementById('dpm-confirm-btn');
   const cancel = document.getElementById('dpm-cancel-btn');
-  const opts = document.getElementById('dpm-opt-containers')?.closest('div[style*="flex-direction:column"]');
+  const opts = document.getElementById('dpm-opt-containers')?.closest('.dpm-opts');
   if (opts) opts.inert = true;
   if (cancel) {
     cancel.hidden = false;
@@ -2443,27 +2444,27 @@ export async function openAppSourcesModal() {
   if (!modal) {
     const html = `
       <div id="app-sources-modal-overlay" class="smart-modal-backdrop" style="display:none; z-index:10020;">
-        <div id="app-sources-modal-window" class="smart-modal-window" style="width:680px; max-width:94vw; max-height:88vh; display:flex; flex-direction:column;">
-          <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-size:18px;">🌐</span>
-              <span style="font-weight:700; color:var(--zn-text-strong); font-size:13px;">${t('dk.src_title', 'App template sources')}</span>
+        <div id="app-sources-modal-window" class="smart-modal-window dkd-size-3" style="display: flex;">
+          <div class="smart-modal-header dkd-row-7">
+            <div class="dkd-row">
+              <span class="dkd-fs18">🌐</span>
+              <span class="dkd-fs13-bold-strong">${t('dk.src_title', 'App template sources')}</span>
             </div>
             <button class="win-btn close-btn" id="asm-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
-          <div style="padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:14px;">
-            <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); line-height:1.4;">
+          <div class="dkd-col-3">
+            <div class="dkd-xs-soft-3">
               ${t('dk.src_desc', 'Add apps to the catalog from Portainer v2/v3 or your own JSON template lists.')}
             </div>
 
             <!-- Quick Add Preset Banner -->
             <div id="asm-preset-banner" style="background:linear-gradient(135deg, rgba(14,165,233,0.12), rgba(37,194,160,0.08)); border:1px solid rgba(14,165,233,0.3); border-radius:8px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
               <div>
-                <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); display:flex; align-items:center; gap:6px;">
+                <div class="dkd-row-xs-bold-strong">
                   <span>${ico('⭐')} ${t('dk.lissy', 'Lissy93 Portainer templates')}</span>
                   <span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(37,194,160,0.2); color:var(--accent);">790+ Apps</span>
                 </div>
-                <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted); margin-top:2px;">
+                <div class="dkd-xs-muted-3">
                   ${t('dk.lissy_desc', 'A large community list of self-hosted apps, web tools and stacks.')}
                 </div>
               </div>
@@ -2473,16 +2474,16 @@ export async function openAppSourcesModal() {
             </div>
 
             <!-- Add Custom Source Form -->
-            <div style="background:var(--zn-glaze-2); border:1px solid var(--zn-line-8); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:10px;">
-              <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); text-transform:uppercase; letter-spacing:0.5px;">${t('dk.custom_src', 'Add your own template source')}</div>
-              <div style="display:grid; grid-template-columns:1fr 2fr auto; gap:8px; align-items:end;">
+            <div class="dkd-col-box-2">
+              <div class="dkd-xs-bold-strong-2">${t('dk.custom_src', 'Add your own template source')}</div>
+              <div class="dkd-grid-2">
                 <div>
-                  <label for="asm-input-name" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:3px; text-transform:uppercase;">${t('dk.src_name', 'Source name')}</label>
-                  <input type="text" id="asm-input-name" placeholder="${t('ui.e_g_community_apps', 'e.g. Community Apps')}" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:5px 8px;">
+                  <label class="dkd-xs-bold-muted-3" for="asm-input-name">${t('dk.src_name', 'Source name')}</label>
+                  <input type="text" id="asm-input-name" placeholder="${t('ui.e_g_community_apps', 'e.g. Community Apps')}" class="tz-text-input dkd-xs-2">
                 </div>
                 <div>
-                  <label for="asm-input-url" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:3px; text-transform:uppercase;">${t('dk.src_url', 'Template URL (JSON)')}</label>
-                  <input type="url" id="asm-input-url" placeholder="https://example.com/templates.json" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:5px 8px;">
+                  <label class="dkd-xs-bold-muted-3" for="asm-input-url">${t('dk.src_url', 'Template URL (JSON)')}</label>
+                  <input type="url" id="asm-input-url" placeholder="https://example.com/templates.json" class="tz-text-input dkd-xs-2">
                 </div>
                 <div>
                   <button class="btn-pill-toggle is-primary" id="asm-btn-add-custom">
@@ -2490,20 +2491,20 @@ export async function openAppSourcesModal() {
                   </button>
                 </div>
               </div>
-              <div id="asm-form-status" style="font-size:var(--zn-fs-xs); display:none; padding:4px 6px; border-radius:4px;"></div>
+              <div class="dkd-xs-box-2" id="asm-form-status" style="display: none;"></div>
             </div>
 
             <!-- Active Sources List -->
             <div>
-              <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">
+              <div class="dkd-xs-bold-muted-4">
                 ${t('dk.src_count', 'Configured sources ({count})', { count: '<span id="asm-sources-count">0</span>' })}
               </div>
-              <div id="asm-sources-list" style="display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto;">
-                <div style="text-align:center; color:var(--muted); padding:16px;">${t('dk.loading_sources', 'Loading sources…')}</div>
+              <div class="dkd-x-6" id="asm-sources-list" style="display: flex;">
+                <div class="dkd-muted-center">${t('dk.loading_sources', 'Loading sources…')}</div>
               </div>
             </div>
           </div>
-          <div style="padding:10px 16px; border-top:1px solid var(--zn-line-8); display:flex; justify-content:flex-end; align-items:center; background:var(--zn-shade-20);">
+          <div class="dkd-row-box-2">
             <button class="btn-pill-toggle" id="asm-done-btn">${t('common.done', 'Done')}</button>
           </div>
         </div>
@@ -2630,7 +2631,7 @@ async function refreshSourcesUI() {
     }
 
     if (_catalogSources.length === 0) {
-      listEl.innerHTML = '<div style="text-align:center; color:var(--muted); padding:16px;">' + t('dk.no_sources', 'No template sources yet.') + '</div>';
+      listEl.innerHTML = '<div class="dkd-muted-center">' + t('dk.no_sources', 'No template sources yet.') + '</div>';
       return;
     }
 
@@ -2647,20 +2648,20 @@ async function refreshSourcesUI() {
       const toggleText = isEnabled ? 'Enabled' : 'Disabled';
 
       return `
-        <div class="asm-source-card" data-sourceid="${escapeHtml(src.id)}" style="background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
-          <div style="overflow:hidden; flex:1;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <strong style="font-size:var(--zn-fs-xs); color:var(--zn-text-strong);">${escapeHtml(src.name)}</strong>
-              <span class="ci-badge" style="font-size:var(--zn-fs-xs); background:var(--zn-glaze-6); color:var(--zn-text-soft);">${src.item_count || 0} apps</span>
+        <div class="asm-source-card dkd-row-box-3" data-sourceid="${escapeHtml(src.id)}">
+          <div class="dkd-grow-4">
+            <div class="dkd-row">
+              <strong class="dkd-xs-strong">${escapeHtml(src.name)}</strong>
+              <span class="ci-badge dkd-xs-soft-box">${src.item_count || 0} apps</span>
               ${statusBadge}
             </div>
-            <div style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
+            <div class="dkd-xs-muted-mono">
               ${escapeHtml(src.url)}
             </div>
             ${src.error ? `<div style="font-size:var(--zn-fs-xs); color:var(--lt-t-fca5a5ff, #fca5a5); margin-top:3px;">${escapeHtml(src.error)}</div>` : ''}
           </div>
-          <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-            <button class="${toggleBtnClass} asm-btn-toggle" data-sourceid="${escapeHtml(src.id)}" data-enabled="${isEnabled ? 'true' : 'false'}" style="font-size:var(--zn-fs-xs); padding:3px 8px; cursor:pointer;">
+          <div class="dkd-row-8">
+            <button class="${toggleBtnClass} asm-btn-toggle dkd-xs-3" data-sourceid="${escapeHtml(src.id)}" data-enabled="${isEnabled ? 'true' : 'false'}">
               ${toggleText}
             </button>
             <button class="btn-pill-toggle asm-btn-sync is-small" data-sourceid="${escapeHtml(src.id)}" title="${t('ui.sync_now', 'Sync Now')}">
@@ -2737,7 +2738,7 @@ async function refreshSourcesUI() {
     });
 
   } catch (err) {
-    listEl.innerHTML = `<div style="text-align:center; color:var(--crit); padding:16px;">${escapeHtml(t('dk.sources_failed', 'Could not load the sources: {error}', { error: err.message }))}</div>`;
+    listEl.innerHTML = `<div class="dkd-crit-center">${escapeHtml(t('dk.sources_failed', 'Could not load the sources: {error}', { error: err.message }))}</div>`;
   }
 }
 
