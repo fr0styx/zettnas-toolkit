@@ -83,6 +83,10 @@
   an idle NAS or a sleeping disk. Job titles now reach the page in the reader's language (the API
   had left out their message keys), and restores and snapshot jobs have a name in the list.
 
+- **A file name can't add lines to the log** (CodeQL alert 472): the "Not a media file" note
+  wrote the file's name and the decoder's error as they were, so a name with a line break could
+  start a log entry of its own; both now go through one_line().
+
 #### Performance
 
 - **Converted videos play smoothly** (NVID-1): a video the browser can't play as it is is now

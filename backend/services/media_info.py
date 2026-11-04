@@ -13,6 +13,8 @@ import threading
 from collections import OrderedDict
 from typing import Any
 
+from backend.logging_config import one_line
+
 logger = logging.getLogger("zettnas.media_info")
 
 _CACHE: OrderedDict[tuple, dict[str, Any] | None] = OrderedDict()
@@ -52,7 +54,7 @@ def _probe(path: str) -> dict[str, Any] | None:
     try:
         container = av.open(path)
     except Exception as e:
-        logger.info("Not a media file %s: %s", os.path.basename(path), e)
+        logger.info("Not a media file %s: %s", one_line(os.path.basename(path)), one_line(e))  # CodeQL 472
         return None
     with container:
         info: dict[str, Any] = {
