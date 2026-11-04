@@ -100,3 +100,23 @@ def test_a_pass_with_nothing_to_make_stays_out_of_the_jobs_centre(tmp_path, monk
     bf = thumb_prefetch.Backfill(_Index(str(tmp_path / "i.db"), rows), lambda: True, asleep=lambda d: False)
     assert bf.step() == "more" and bf.step() == "done"
     assert job_manager.list(everyone=True) == {"active": [], "history": []}
+
+
+def test_a_pass_shows_from_its_first_thumbnail_and_says_when_it_pauses(tmp_path, monkeypatch):
+    """Browsing big photos keeps the NAS busy, so a pass rarely finishes a batch of 200; it used to
+    reach the Jobs centre only at the end of one."""
+    rows = [(i, f"/mnt/user/p/{i}.jpg", "image", "ok", "sdb") for i in range(1, 31)]
+    seen = []
+
+    def make(path):
+        seen.append([j["detail"] for j in job_manager.list(everyone=True)["active"] if j["kind"] == "thumbnails"])
+        return True
+
+    monkeypatch.setattr(thumb_prefetch, "make", make)
+    idle = iter([True, False])  # idle when the batch starts, busy at the first check inside it
+    bf = thumb_prefetch.Backfill(_Index(str(tmp_path / "i.db"), rows), lambda: next(idle), asleep=lambda d: False)
+    assert bf.step() == "busy"
+    assert seen[0] == [] and seen[1] == ["1 made, 0 waiting for sleeping disks"]
+    (job,) = [j for j in job_manager.list(everyone=True)["active"] if j["kind"] == "thumbnails"]
+    assert job["detail"] == "20 made, 0 waiting for sleeping disks, paused while the NAS is busy"
+    assert bf.cursor == 20  # the next try picks up where it stopped

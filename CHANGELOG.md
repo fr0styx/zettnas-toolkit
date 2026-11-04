@@ -70,6 +70,11 @@
   the space is actually freed) and the space freed was measured. Both now show as their own steps
   in the progress bar, and the space Docker reports for the sweep shows as soon as it is known.
 
+- **The background thumbnail pass shows in Jobs while it works** (NJOB-1): it used to appear only
+  after finishing a batch of 200 files, which rarely happens while someone browses large photos, so
+  only the opened folder's thumbnails were listed. It now shows from its first thumbnail and says
+  when it is paused because the NAS is busy.
+
 #### Performance
 
 - **Converted videos play smoothly** (NVID-1): a video the browser can't play as it is is now

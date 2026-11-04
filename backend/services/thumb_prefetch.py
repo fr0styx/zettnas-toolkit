@@ -171,6 +171,14 @@ class Backfill:
             percent = min(99.0, 100.0 * self.cursor / self.last_id) if self.last_id else None
             job_manager.update(self.job_id, detail=self._detail(), percent=percent)
 
+    def _paused(self) -> str:
+        """A busy NAS stops the pass for a while; its Jobs row stays and says why (NJOB-1)."""
+        if self.job_id is not None:
+            from backend.services.jobs import job_manager
+
+            job_manager.update(self.job_id, detail=f"{self._detail()}, paused while the NAS is busy")
+        return "busy"
+
     def _finish_pass(self) -> str:
         logger.info(
             "[Thumbnails] Background pass done: %d made, %d left for when their disk is awake",
@@ -189,20 +197,22 @@ class Backfill:
     def step(self) -> str:
         """One batch: 'busy' (try again later), 'more' or 'done' (a whole pass finished)."""
         if not self.idle():
-            return "busy"
+            return self._paused()
         rows = self.rows()
         if not rows:
             return self._finish_pass()
         for i, (file_id, path, dev) in enumerate(rows):
             if i and i % IDLE_CHECK_EVERY == 0 and not self.idle():
-                return "busy"
+                return self._paused()
             self.cursor = int(file_id)
             if _encrypted(path):
                 continue
             if self.asleep(dev or ""):
                 self.deferred += 1
                 continue
-            self.made += make(path)
+            if make(path):
+                self.made += 1
+                self._report()  # in the Jobs centre from the first thumbnail, not after a whole batch
         self._report()
         return "more"
 
