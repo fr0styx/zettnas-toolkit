@@ -114,7 +114,9 @@ def test_a_pass_shows_from_its_first_thumbnail_and_says_when_it_pauses(tmp_path,
 
     monkeypatch.setattr(thumb_prefetch, "make", make)
     idle = iter([True, False])  # idle when the batch starts, busy at the first check inside it
-    bf = thumb_prefetch.Backfill(_Index(str(tmp_path / "i.db"), rows), lambda: next(idle), asleep=lambda d: False)
+    bf = thumb_prefetch.Backfill(
+        _Index(str(tmp_path / "i.db"), rows), lambda: next(idle), asleep=lambda d: False, workers=1
+    )
     assert bf.step() == "busy"
     assert seen[0] == [] and seen[1] == ["1 made, 0 waiting for sleeping disks"]
     (job,) = [j for j in job_manager.list(everyone=True)["active"] if j["kind"] == "thumbnails"]

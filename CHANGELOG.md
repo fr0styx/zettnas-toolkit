@@ -87,6 +87,12 @@
   wrote the file's name and the decoder's error as they were, so a name with a line break could
   start a log entry of its own; both now go through one_line().
 
+- **Background thumbnails make more of the time a disk is awake** (NPERF-10): the pass that fills
+  in missing photo and video thumbnails only reads disks that are already spinning, so on a NAS
+  whose disks sleep it works in short windows. It now shares each batch among three workers, and
+  the queue of opened folders is kept in the data folder, so what was still waiting at a restart is
+  made once its disk is awake instead of being forgotten. Nothing wakes a sleeping disk.
+
 #### Performance
 
 - **Converted videos play smoothly** (NVID-1): a video the browser can't play as it is is now

@@ -100,7 +100,9 @@ def _backfill(tmp_path, monkeypatch, rows, idle=lambda: True):
     made = []
     monkeypatch.setattr(thumb_prefetch, "make", lambda p: made.append(p) or True)
     monkeypatch.setattr(thumb_prefetch, "_encrypted", lambda p: p.startswith("/mnt/encrypted/"))
-    bf = thumb_prefetch.Backfill(_Engine(str(tmp_path / "idx.db"), rows), idle, asleep=lambda dev: dev == "sdc")
+    bf = thumb_prefetch.Backfill(
+        _Engine(str(tmp_path / "idx.db"), rows), idle, asleep=lambda dev: dev == "sdc", workers=1
+    )
     return bf, made
 
 

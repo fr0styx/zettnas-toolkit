@@ -108,6 +108,7 @@ def _thumb_backfill_daemon() -> None:
     from backend.services.rag_engine import get_rag_engine
     from backend.services.vision_queue import system_idle
 
+    thumb_prefetch.restore_queue()  # what opened folders still had waiting before the restart (NPERF-10)
     _time.sleep(180)
     thumb_prefetch.Backfill(get_rag_engine(), system_idle).run_forever()
 

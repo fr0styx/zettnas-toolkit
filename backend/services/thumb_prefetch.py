@@ -5,7 +5,11 @@ Two ways in, each one file at a time on a background thread, into the cache the 
 - queue_folder(): opening a folder queues its photos and videos, the newest folder first.
 - Backfill: while the system is idle it walks the AI index's photos and videos and makes the
   thumbnails that are missing, only for files whose disk is already awake (it never wakes one),
-  so the library fills in over time and a folder nobody has opened yet is ready too.
+  so the library fills in over time and a folder nobody has opened yet is ready too. A few
+  workers share each batch, so a disk's awake time goes further (NPERF-10).
+
+The folder queue is kept in the data folder, so what was still waiting at a restart is made by
+the background pass once its disk is awake (NPERF-10).
 """
 
 import collections
@@ -15,8 +19,11 @@ import sqlite3
 import threading
 import time
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
+from backend.config import DATA_DIR
+from backend.fsutil import atomic_write_json, read_json
 from backend.services import thumbs
 
 logger = logging.getLogger("zettnas.thumb_prefetch")
@@ -33,6 +40,12 @@ _queue: collections.deque[str] = collections.deque()
 _queued: set[str] = set()
 _workers: list[threading.Thread] = []
 WORKERS = 2  # a folder's queue is worked by two threads; each yields to thumbnails on screen
+# the background pass while a disk is awake: a few readers on one hard disk, not one per core
+BACKFILL_WORKERS = 3
+QUEUE_FILE = os.path.join(DATA_DIR, "thumb_queue.json")
+SAVE_EVERY_S = 30.0
+_restored: collections.deque[str] = collections.deque()  # queued before a restart (NPERF-10)
+_saved_at = 0.0
 
 
 def _encrypted(path: str) -> bool:
@@ -70,8 +83,38 @@ def queue_folder(folder: str) -> int:
         while len(_queue) > MAX_QUEUE:
             _queued.discard(_queue.pop())
     if fresh:
+        _save_queue(force=True)
         _ensure_worker()
     return len(fresh)
+
+
+def _save_queue(force: bool = False) -> None:
+    """Keeps what is still waiting in the data folder, at most every SAVE_EVERY_S unless forced."""
+    global _saved_at
+    now = time.time()
+    if not force and now - _saved_at < SAVE_EVERY_S:
+        return
+    _saved_at = now
+    with _lock:
+        items = (list(_queue) + list(_restored))[:MAX_QUEUE]
+    try:
+        atomic_write_json(QUEUE_FILE, items)
+    except OSError:
+        logger.debug("Could not save the thumbnail queue", exc_info=True)
+
+
+def restore_queue() -> int:
+    """After a restart, what the folder queue still had: the background pass makes it first, each
+    file once its disk is awake. Returns how many."""
+    data = read_json(QUEUE_FILE, [])
+    paths = [p for p in data if isinstance(p, str)] if isinstance(data, list) else []
+    with _lock:
+        known = set(_restored)
+        for p in paths[:MAX_QUEUE]:
+            if p not in _queued and p not in known:
+                _restored.append(p)
+                known.add(p)
+        return len(_restored)
 
 
 def waiting() -> int:
@@ -105,6 +148,8 @@ def drain() -> int:
     made = 0
     while (path := _next()) is not None:
         made += make(path)
+        _save_queue()
+    _save_queue(force=True)
     return made
 
 
@@ -126,10 +171,17 @@ def _disk_asleep(dev: str) -> bool:
 class Backfill:
     """Walks the indexed photos and videos in file_id order and fills in missing thumbnails."""
 
-    def __init__(self, engine: Any, idle: Callable[[], bool], asleep: Callable[[str], bool] = _disk_asleep):
+    def __init__(
+        self,
+        engine: Any,
+        idle: Callable[[], bool],
+        asleep: Callable[[str], bool] = _disk_asleep,
+        workers: int = BACKFILL_WORKERS,
+    ):
         self.engine = engine
         self.idle = idle
         self.asleep = asleep
+        self.workers = max(1, workers)
         self.cursor = 0
         self.made = 0
         self.deferred = 0
@@ -198,23 +250,56 @@ class Backfill:
         """One batch: 'busy' (try again later), 'more' or 'done' (a whole pass finished)."""
         if not self.idle():
             return self._paused()
+        self._restored_step()
         rows = self.rows()
         if not rows:
             return self._finish_pass()
-        for i, (file_id, path, dev) in enumerate(rows):
-            if i and i % IDLE_CHECK_EVERY == 0 and not self.idle():
+        for start in range(0, len(rows), IDLE_CHECK_EVERY):
+            if start and not self.idle():
                 return self._paused()
-            self.cursor = int(file_id)
-            if _encrypted(path):
-                continue
-            if self.asleep(dev or ""):
-                self.deferred += 1
-                continue
-            if make(path):
-                self.made += 1
-                self._report()  # in the Jobs centre from the first thumbnail, not after a whole batch
+            chunk = rows[start : start + IDLE_CHECK_EVERY]
+            todo = []
+            for _file_id, path, dev in chunk:
+                if _encrypted(path):
+                    continue
+                if self.asleep(dev or ""):
+                    self.deferred += 1
+                    continue
+                todo.append(path)
+            self._make_all(todo)
+            self.cursor = int(chunk[-1][0])
         self._report()
         return "more"
+
+    def _make_all(self, paths: list[str]) -> None:
+        """Makes the missing thumbnails, on a few workers when there is more than one file; the
+        Jobs centre hears of each as it is made."""
+        if self.workers == 1 or len(paths) < 2:
+            results: Any = (make(p) for p in paths)
+            for made in results:
+                self._count(made)
+            return
+        with ThreadPoolExecutor(self.workers, thread_name_prefix="thumb-backfill") as pool:
+            for made in pool.map(make, paths):
+                self._count(made)
+
+    def _count(self, made: bool) -> None:
+        if made:
+            self.made += 1
+            self._report()  # in the Jobs centre from the first thumbnail, not after a whole batch
+
+    def _restored_step(self) -> None:
+        """Folders queued before a restart go first; files on a sleeping disk wait for a later step."""
+        with _lock:
+            batch = [_restored.popleft() for _ in range(min(BATCH, len(_restored)))]
+        if not batch:
+            return
+        later = [p for p in batch if self.asleep(p)]  # a path: the standby check finds its disk
+        waiting = set(later)
+        self._make_all([p for p in batch if p not in waiting and not _encrypted(p)])
+        with _lock:
+            _restored.extend(later)
+        _save_queue(force=True)
 
     def run_forever(self, sleep: Callable[[float], None] = time.sleep) -> None:
         while True:
