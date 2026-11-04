@@ -53,8 +53,11 @@ export function thumbKind(name) {
 /** Screen-sized preview (photo or video frame) for panels larger than a thumbnail. */
 export const previewUrl = (path, maxDim = 480) => `/api/fs/preview/image?path=${encodeURIComponent(path)}&max_dim=${maxDim}`;
 
-export const thumbUrl = (path) =>
-  /\.(gif|svg|ico)$/i.test(path) ? `/api/fs/download?path=${encodeURIComponent(path)}` : `/api/fs/preview/image?path=${encodeURIComponent(path)}&thumb=1`;
+/** A thumbnail's address; with the file's version (its modification time) the browser keeps it for a year (NPERF-8). */
+export const thumbUrl = (path, version = null) =>
+  /\.(gif|svg|ico)$/i.test(path)
+    ? `/api/fs/download?path=${encodeURIComponent(path)}`
+    : `/api/fs/preview/image?path=${encodeURIComponent(path)}&thumb=1${version ? `&v=${encodeURIComponent(version)}` : ''}`;
 
 /** Longest side to request for the current screen (device pixels, capped). */
 export function screenMaxDim(win = window) {

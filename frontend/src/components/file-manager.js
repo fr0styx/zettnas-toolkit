@@ -19,6 +19,14 @@ import { transferCenter } from './transfer-center.js';
 import { favorites, isFavorite, toggleFavorite, closestPath } from './fm-favorites.js';
 import { thumbKind, thumbUrl } from './viewer-kit.js';
 
+/** Asks the server to make this folder's photo and video thumbnails ahead of the scroll (NPERF-8). */
+export function prefetchThumbs(res) {
+  const entries = res?.dirs || [];
+  const media = entries.some((f) => !f.is_dir && ['image', 'video'].includes(thumbKind(f.name)));
+  if (media) api.post('/api/fs/thumbs/prefetch', { path: res.current }).catch(() => {});
+  return media;
+}
+
 import { formatBytes as formatSize, formatDateTime } from '../format.js';
 import { isCompact } from '../device.js';
 import '../styles/files-lazy.css'; // the explorer's own sheet loads with this code (PERF-9)
@@ -2032,6 +2040,7 @@ export class FileManagerWindow {
         signal: this.abortController.signal,
       });
       this.currentPath = res.current;
+      prefetchThumbs(res);
       if (this.isPrimary) {
         try { localStorage.setItem('zettnas_fm_last_path', this.currentPath); } catch (_) {}
       }
@@ -2276,7 +2285,7 @@ export class FileManagerWindow {
           // A small thumbnail from the server (photos, HEIC, a frame of a video), never the whole file
           const isVideo = thumbKind(file.name) === 'video';
           iconContent = `
-            <img src="${thumbUrl(file.path)}" class="fm-thumb-img" loading="lazy" decoding="async" alt="${escName}" data-img-fallback="hide-show-next:flex" />
+            <img src="${thumbUrl(file.path, file.mtime)}" class="fm-thumb-img" loading="lazy" decoding="async" alt="${escName}" data-img-fallback="hide-show-next:flex" />
             <div class="fm-fallback-img-icon" style="display:none;">${fileSvg}</div>
             ${isVideo ? '<span class="fm-thumb-play" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>' : ''}
           `;
@@ -2370,7 +2379,7 @@ export class FileManagerWindow {
 
       const rowThumb = !file.is_dir && ['image', 'video'].includes(thumbKind(file.name));
       const leading = rowThumb
-        ? `<img class="fm-row-thumb" src="${thumbUrl(file.path)}" alt="" loading="lazy" decoding="async" data-img-fallback="hide-show-next:inline-flex" /><span class="fm-row-thumb-fallback" style="display:none;">${icon}</span>`
+        ? `<img class="fm-row-thumb" src="${thumbUrl(file.path, file.mtime)}" alt="" loading="lazy" decoding="async" data-img-fallback="hide-show-next:inline-flex" /><span class="fm-row-thumb-fallback" style="display:none;">${icon}</span>`
         : icon;
       const subLine = file.name === '..' ? '' : (file.is_dir ? mtimeStr : `${formatBytes(file.size)} · ${mtimeStr}`);
       row.innerHTML = `

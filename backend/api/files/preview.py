@@ -12,6 +12,7 @@ from typing import IO, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
+from pydantic import BaseModel
 from starlette.concurrency import iterate_in_threadpool
 
 from backend.api.files.common import _contained, _user_file_headers
@@ -19,7 +20,7 @@ from backend.auth import AuthenticatedPrincipal, get_current_principal, require_
 from backend.config import logger
 from backend.fsutil import prune_protected, resolve_within
 from backend.logging_config import sanitize_string
-from backend.services import media_info, thumbs, video_compat
+from backend.services import media_info, thumb_prefetch, thumbs, video_compat
 from backend.services.path_access import ALLOWED_BROWSE_ROOTS, check_user_path_access
 
 router = APIRouter()
@@ -182,10 +183,13 @@ async def fs_preview_image(
     request: Request,
     thumb: int | None = None,
     max_dim: int | None = None,
+    v: str | None = None,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Thumbnails and screen-sized previews as WebP: photos (including Apple HEIC/HEIF) and
     video frames, cached on disk (backend/services/thumbs.py). Other files are served as they are.
+    A request that names the file's version (v, its modification time) is kept by the browser for
+    a year: an edited file gets a new address (NPERF-8).
     """
     await asyncio.to_thread(check_user_path_access, path, principal)
     target = _contained(path, must_exist=True)
@@ -208,7 +212,7 @@ async def fs_preview_image(
     etag = f'"{hashlib.md5(f"{target}:{mtime}:{limit}".encode()).hexdigest()}"'
     if etag in (request.headers.get("if-none-match") or ""):
         # the browser already has this picture: no thumbnail read, no bytes sent (PERF-26)
-        return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "private, max-age=86400"})
+        return Response(status_code=304, headers={"ETag": etag, "Cache-Control": _cache_control(v)})
     data = await asyncio.to_thread(thumbs.get, target, limit)
     if data is None:
         if kind == "image" and not is_heif:
@@ -217,8 +221,38 @@ async def fs_preview_image(
     return Response(
         content=data,
         media_type="image/webp",
-        headers={"Cache-Control": "private, max-age=86400, stale-while-revalidate=3600", "ETag": etag},
+        headers={"Cache-Control": _cache_control(v), "ETag": etag},
     )
+
+
+def _cache_control(version: str | None) -> str:
+    if version:
+        return "private, max-age=31536000, immutable"
+    return "private, max-age=86400, stale-while-revalidate=3600"
+
+
+class ThumbPrefetchRequest(BaseModel):
+    path: str
+
+
+@router.post(
+    "/fs/thumbs/prefetch",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))],
+)
+async def fs_thumbs_prefetch(
+    req: ThumbPrefetchRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
+    """Queues a folder's photo and video thumbnails, so they are ready before they scroll into view (NPERF-8)."""
+    await asyncio.to_thread(check_user_path_access, req.path, principal)
+    target = _contained(req.path, must_exist=True)
+    queued = await asyncio.to_thread(_queue_folder, target)
+    if queued is None:
+        raise HTTPException(status_code=400, detail="Not a folder")
+    return {"status": "ok", "queued": queued}
+
+
+def _queue_folder(target: str) -> int | None:
+    return thumb_prefetch.queue_folder(target) if os.path.isdir(target) else None
 
 
 @router.get(

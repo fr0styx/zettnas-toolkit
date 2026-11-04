@@ -47,6 +47,14 @@
 
 #### Performance
 
+- **Photo and video thumbnails are ready before you scroll to them** (NPERF-8): opening a folder
+  makes thumbnails for everything in it, not just what is on screen, and while the NAS is idle a
+  background pass fills in the missing ones for every indexed photo and video, only on disks that
+  are already awake. Thumbnails now stay in the browser for a year (an edited file gets a new one),
+  and the cache is trimmed without re-reading itself every few hundred thumbnails, so a cache of
+  hundreds of thousands stays cheap. A large library can raise ZETTNAS_THUMB_CACHE_MB (about
+  13 kB per thumbnail).
+
 - **The card reader is asked about its cards only when something changes** (PERF-18): ZettNAS
   now listens for the kernel's own notice that a card went in or out, and reads the slots' size
   then (and every half minute, in case a notice was missed), instead of on every two-second

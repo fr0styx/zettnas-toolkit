@@ -38002,6 +38002,19 @@
     "title": "TestChannelRequest",
     "type": "object"
    },
+   "ThumbPrefetchRequest": {
+    "properties": {
+     "path": {
+      "title": "Path",
+      "type": "string"
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "title": "ThumbPrefetchRequest",
+    "type": "object"
+   },
    "ToggleWebdavResponse": {
     "additionalProperties": true,
     "description": "POST /webdav/toggle",
@@ -52411,7 +52424,7 @@
   },
   "/api/v1/fs/preview/image": {
    "get": {
-    "description": "Thumbnails and screen-sized previews as WebP: photos (including Apple HEIC/HEIF) and\nvideo frames, cached on disk (backend/services/thumbs.py). Other files are served as they are.",
+    "description": "Thumbnails and screen-sized previews as WebP: photos (including Apple HEIC/HEIF) and\nvideo frames, cached on disk (backend/services/thumbs.py). Other files are served as they are.\nA request that names the file's version (v, its modification time) is kept by the browser for\na year: an edited file gets a new address (NPERF-8).",
     "operationId": "fs_preview_image_api_v1_fs_preview_image_get",
     "parameters": [
      {
@@ -52453,6 +52466,22 @@
         }
        ],
        "title": "Max Dim"
+      }
+     },
+     {
+      "in": "query",
+      "name": "v",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "V"
       }
      }
     ],
@@ -52988,6 +53017,50 @@
      }
     },
     "summary": "Fs Stream Compat",
+    "tags": [
+     "File System & Shares"
+    ],
+    "x-required-scopes": [
+     "shares:read",
+     "storage:read",
+     "system:view"
+    ]
+   }
+  },
+  "/api/v1/fs/thumbs/prefetch": {
+   "post": {
+    "description": "Queues a folder's photo and video thumbnails, so they are ready before they scroll into view (NPERF-8).",
+    "operationId": "fs_thumbs_prefetch_api_v1_fs_thumbs_prefetch_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ThumbPrefetchRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Fs Thumbs Prefetch",
     "tags": [
      "File System & Shares"
     ],

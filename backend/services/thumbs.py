@@ -28,11 +28,13 @@ THUMB_SIZE = 256
 MAX_SIZE = 3840
 _VERSION = "1"
 _PRUNE_EVERY = 200
+_RECOUNT_EVERY = 5000
 
 _image_slots = threading.BoundedSemaphore(max(2, min(4, (os.cpu_count() or 2) // 2)))
 _video_slots = threading.BoundedSemaphore(2)
 _state_lock = threading.Lock()
 _writes = 0
+_approx_bytes: int | None = None  # the cache's size since the last walk plus what was written
 _heif_ready = False
 
 
@@ -66,6 +68,13 @@ def _paths(key: str) -> tuple[str, str]:
 TOUCH_EVERY_SECS = 86400.0
 
 
+def cached(path: str, limit: int = THUMB_SIZE) -> bool:
+    """True when the thumbnail, or the note that the file can't be decoded, is already cached."""
+    limit = max(32, min(int(limit), MAX_SIZE))
+    hit, fail = _paths(_key(path, os.stat(path), limit))
+    return os.path.exists(hit) or os.path.exists(fail)
+
+
 def get(path: str, limit: int = THUMB_SIZE) -> bytes | None:
     """WebP bytes no larger than `limit` on the longest side, or None if the file can't be decoded."""
     limit = max(32, min(int(limit), MAX_SIZE))
@@ -95,8 +104,6 @@ def get(path: str, limit: int = THUMB_SIZE) -> bytes | None:
 
 
 def render(path: str, limit: int) -> bytes | None:
-    from PIL import Image
-
     k = kind(path)
     try:
         if k == "video":
@@ -105,18 +112,23 @@ def render(path: str, limit: int) -> bytes | None:
         else:
             with _image_slots:
                 img = _open_image(path, limit)
-        if img is None:
-            return None
-        if img.mode not in ("RGB", "RGBA"):
-            img = img.convert("RGBA" if "A" in img.getbands() else "RGB")
-        if max(img.size) > limit:
-            img.thumbnail((limit, limit), Image.Resampling.LANCZOS)
-        buf = io.BytesIO()
-        img.save(buf, format="WEBP", quality=80 if limit <= THUMB_SIZE else 86, method=4)
-        return buf.getvalue()
+        return None if img is None else encode(img, limit)
     except Exception as e:
         logger.info("No preview for %s: %s", os.path.basename(path), e)
         return None
+
+
+def encode(img, limit: int) -> bytes:
+    """A decoded picture as WebP no larger than `limit` on its longest side."""
+    from PIL import Image
+
+    if img.mode not in ("RGB", "RGBA"):
+        img = img.convert("RGBA" if "A" in img.getbands() else "RGB")
+    if max(img.size) > limit:
+        img.thumbnail((limit, limit), Image.Resampling.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, format="WEBP", quality=80 if limit <= THUMB_SIZE else 86, method=4)
+    return buf.getvalue()
 
 
 def _open_image(path: str, limit: int):
@@ -179,9 +191,16 @@ def _store(target: str, data: bytes) -> None:
     except OSError as e:
         logger.warning("Could not cache thumbnail: %s", e)
         return
+    global _approx_bytes
     with _state_lock:
         _writes += 1
-        due = _writes % _PRUNE_EVERY == 0
+        if _approx_bytes is None:
+            due = _writes % _PRUNE_EVERY == 0
+        else:
+            # walk the cache only when it may be full (or now and then to correct the count), not
+            # every few hundred writes: a library-sized cache holds hundreds of thousands (NPERF-8)
+            _approx_bytes += len(data)
+            due = _approx_bytes > cache_limit_bytes() or _writes % _RECOUNT_EVERY == 0
     if due:
         threading.Thread(target=prune, name="thumb-prune", daemon=True).start()
 
@@ -203,7 +222,9 @@ def prune(limit: int | None = None) -> int:
                 continue
             entries.append((st.st_mtime, st.st_size, p))
             total += st.st_size
+    global _approx_bytes
     if total <= limit:
+        _approx_bytes = total
         return 0
     freed = 0
     goal = total - int(limit * 0.8)
@@ -215,5 +236,6 @@ def prune(limit: int | None = None) -> int:
             freed += size
         except OSError:
             logger.debug("Could not remove %s", p, exc_info=True)
+    _approx_bytes = total - freed
     logger.info("Thumbnail cache trimmed by %.1f MB", freed / 1048576)
     return freed

@@ -41,6 +41,7 @@ READ_LIKE = {
     "/api/v1/docker/updates/check": "looks up newer images; changes nothing",
     "/api/v1/fs/checksum": "reads a file",
     "/api/v1/fs/folder-size": "reads a folder (asks before waking a drive)",
+    "/api/v1/fs/thumbs/prefetch": "makes previews of a folder it may read; changes no file",
     "/api/v1/fs/favorites": "their own favourites",
     "/api/v1/network/mesh-vpn/tailscale/ping": "a ping; changes nothing",
     "/api/v1/media/organize/preview": "a preview; changes nothing",

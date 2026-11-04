@@ -561,9 +561,26 @@
     "path",
     "principal",
     "request",
-    "thumb"
+    "thumb",
+    "v"
    ],
    "path": "/fs/preview/image",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_thumbs_prefetch",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/thumbs/prefetch",
    "response_model": null,
    "status": null
   },
@@ -2367,7 +2384,7 @@
    "async": "(path: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
   },
   "fs_preview_image": {
-   "async": "(path: str, request: starlette.requests.Request, thumb: int | None = None, max_dim: int | None = None, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+   "async": "(path: str, request: starlette.requests.Request, thumb: int | None = None, max_dim: int | None = None, v: str | None = None, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
   },
   "fs_remove_favorite": {
    "function": "(path: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"

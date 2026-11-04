@@ -97,6 +97,18 @@ def _photo_vector_daemon() -> None:
     photo_vectors.get_queue(get_rag_engine(), system_idle).run_forever()
 
 
+def _thumb_backfill_daemon() -> None:
+    """Missing photo and video thumbnails made while idle, only on disks that are awake (NPERF-8)."""
+    import time as _time
+
+    from backend.services import thumb_prefetch
+    from backend.services.rag_engine import get_rag_engine
+    from backend.services.vision_queue import system_idle
+
+    _time.sleep(180)
+    thumb_prefetch.Backfill(get_rag_engine(), system_idle).run_forever()
+
+
 def _start_network_services() -> None:
     """WebDAV and the NUT server for the family's PCs (FEAT-11), when they are turned on."""
     try:
@@ -363,6 +375,7 @@ def startup_system():
 
         supervise("VisionCaptioner", vision_daemon)  # AI-14, idle-only
         supervise("PhotoVectors", _photo_vector_daemon)  # B14: photo search by meaning, idle-only
+        supervise("ThumbBackfill", _thumb_backfill_daemon)  # NPERF-8: thumbnails ready ahead of time
         from backend.services.ransomware_guard import guard_daemon
 
         supervise("RansomwareGuard", guard_daemon, beat_every=30)  # M4: guard-file checks
