@@ -38,6 +38,9 @@
 
 #### Private AI
 
+- **Asking about a PDF, a Word file or a photo is tested end to end** (AI-22), and PDFs printed
+  by Chrome are in the PDF tests beside the macOS ones (AI-21).
+
 - **The nightly answer check guards the shipped model again, and scores it fairly** (NAI-10, NAI-18):
   the citation numbers in an answer ("… three bananas [1]") no longer count as a wrong second fact,
   and "… is not in the indexed files" counts as the right reply to a question the files can't
