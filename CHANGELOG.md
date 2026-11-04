@@ -110,6 +110,10 @@
   and error rows, the catalog error and the sideload check use 14 classes instead of 13 inline
   styles; pixel-for-pixel the same in both themes.
 
+- **The file explorer is built from stylesheet classes** (NUX-15): its windows, the collision,
+  share-link and media-organizer dialogs use 52 classes instead of 76 inline styles, in the sheet
+  that loads with the explorer; pixel-for-pixel the same in both themes.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 
