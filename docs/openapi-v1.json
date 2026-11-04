@@ -52974,7 +52974,7 @@
   },
   "/api/v1/fs/stream/compat": {
    "get": {
-    "description": "The video converted to H.264/AAC in fragmented MP4 while it plays, from `start` seconds.",
+    "description": "The video converted in fragmented MP4 while it plays, from `start` seconds: H.264/AAC\n(mode=full), or the video as it is with AAC audio (mode=copy, NVID-1).",
     "operationId": "fs_stream_compat_api_v1_fs_stream_compat_get",
     "parameters": [
      {
@@ -52994,6 +52994,16 @@
        "default": 0.0,
        "title": "Start",
        "type": "number"
+      }
+     },
+     {
+      "in": "query",
+      "name": "mode",
+      "required": false,
+      "schema": {
+       "default": "full",
+       "title": "Mode",
+       "type": "string"
       }
      }
     ],
@@ -53966,6 +53976,61 @@
      "shares:user_write",
      "storage:write",
      "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/fs/video/converted": {
+   "get": {
+    "description": "The video converted once and kept, as a plain MP4 the browser buffers and seeks (NVID-1).\nA clip up to two minutes is converted now; a longer one not yet kept answers 202 and is\nconverted in the background (it shows in the Jobs centre) while the viewer streams it live.",
+    "operationId": "fs_video_converted_api_v1_fs_video_converted_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "path",
+      "required": true,
+      "schema": {
+       "title": "Path",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "mode",
+      "required": false,
+      "schema": {
+       "default": "full",
+       "title": "Mode",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Fs Video Converted",
+    "tags": [
+     "File System & Shares"
+    ],
+    "x-required-scopes": [
+     "shares:read",
+     "storage:read",
+     "system:view"
     ]
    }
   },

@@ -31,7 +31,8 @@ STEP_PAUSE_S = 0.05
 _lock = threading.Lock()
 _queue: collections.deque[str] = collections.deque()
 _queued: set[str] = set()
-_worker: threading.Thread | None = None
+_workers: list[threading.Thread] = []
+WORKERS = 2  # a folder's queue is worked by two threads; each yields to thumbnails on screen
 
 
 def _encrypted(path: str) -> bool:
@@ -73,6 +74,12 @@ def queue_folder(folder: str) -> int:
     return len(fresh)
 
 
+def waiting() -> int:
+    """How many thumbnails the folder queue still has to make (for the Jobs centre)."""
+    with _lock:
+        return len(_queue)
+
+
 def _next() -> str | None:
     with _lock:
         if not _queue:
@@ -87,7 +94,7 @@ def make(path: str) -> bool:
     try:
         if thumbs.cached(path):
             return False
-        return thumbs.get(path) is not None
+        return thumbs.get(path, background=True) is not None
     except OSError:
         logger.debug("No thumbnail for %s", path, exc_info=True)
         return False
@@ -102,12 +109,12 @@ def drain() -> int:
 
 
 def _ensure_worker() -> None:
-    global _worker
     with _lock:
-        if _worker is not None and _worker.is_alive():
-            return
-        _worker = threading.Thread(target=drain, name="thumb-prefetch", daemon=True)
-        _worker.start()
+        _workers[:] = [w for w in _workers if w.is_alive()]
+        while len(_workers) < WORKERS:
+            w = threading.Thread(target=drain, name="thumb-prefetch", daemon=True)
+            _workers.append(w)
+            w.start()
 
 
 def _disk_asleep(dev: str) -> bool:
@@ -126,6 +133,8 @@ class Backfill:
         self.cursor = 0
         self.made = 0
         self.deferred = 0
+        self.job_id: str | None = None  # this pass in the Jobs centre, once it makes something (NJOB-1)
+        self.last_id = 0
 
     def rows(self) -> list[tuple[int, str, str]]:
         conn = self.engine._get_conn()
@@ -139,12 +148,41 @@ class Backfill:
         finally:
             conn.close()
 
+    def _detail(self) -> str:
+        return f"{self.made} made, {self.deferred} waiting for sleeping disks"
+
+    def _report(self) -> None:
+        """Shows the pass in the Jobs centre once it has made a thumbnail; a pass that only checks
+        (everything already there) stays out of it."""
+        from backend.services.jobs import job_manager
+
+        if self.job_id is None and self.made:
+            conn = self.engine._get_conn()
+            try:
+                row = conn.execute(
+                    "SELECT MAX(file_id) FROM indexed_files WHERE modality IN ('image', 'video')"
+                ).fetchone()
+            finally:
+                conn.close()
+            self.last_id = int((row or [0])[0] or 0)
+            job = job_manager.register("thumbnails", "Making photo and video thumbnails", title_id="jobs.t.thumbs")
+            self.job_id = job.id
+        if self.job_id is not None:
+            percent = min(99.0, 100.0 * self.cursor / self.last_id) if self.last_id else None
+            job_manager.update(self.job_id, detail=self._detail(), percent=percent)
+
     def _finish_pass(self) -> str:
         logger.info(
             "[Thumbnails] Background pass done: %d made, %d left for when their disk is awake",
             self.made,
             self.deferred,
         )
+        if self.job_id is not None:
+            from backend.services.jobs import job_manager
+
+            job_manager.update(self.job_id, detail=self._detail())
+            job_manager.finish(self.job_id)
+            self.job_id = None
         self.cursor, self.made, self.deferred = 0, 0, 0
         return "done"
 
@@ -165,6 +203,7 @@ class Backfill:
                 self.deferred += 1
                 continue
             self.made += make(path)
+        self._report()
         return "more"
 
     def run_forever(self, sleep: Callable[[float], None] = time.sleep) -> None:
@@ -175,3 +214,30 @@ class Backfill:
                 logger.warning("[Thumbnails] Background pass paused", exc_info=True)
                 state = "busy"
             sleep(PASS_PAUSE_S if state == "done" else BUSY_PAUSE_S if state == "busy" else STEP_PAUSE_S)
+
+
+def folder_jobs() -> list[Any]:
+    """A folder's waiting thumbnails, for the Jobs centre (NJOB-1)."""
+    from backend.services.jobs import Job
+
+    left = waiting()
+    if not left:
+        return []
+    return [
+        Job(
+            id="thumbs:folder",
+            kind="thumbnails",
+            title="Making thumbnails for an opened folder",
+            title_id="jobs.t.thumbs_folder",
+            detail=f"{left} waiting",
+        )
+    ]
+
+
+def _register_jobs_source() -> None:
+    from backend.services import jobs
+
+    jobs.SOURCES["thumbs"] = (folder_jobs, None)
+
+
+_register_jobs_source()

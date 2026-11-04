@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-653 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+654 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -272,7 +272,7 @@ request and response schemas.
 | `GET` | `/api/v1/fs/shared/{token}` | public ⏱ | Public access endpoint for shared files and folders (no session needed) |
 | `POST` | `/api/v1/fs/shared/{token}` | public ⏱ | Same as the GET route, with the password in a form or JSON body instead of the URL (SEC-21) |
 | `GET` | `/api/v1/fs/stream` | signed in | HTTP 206 Partial Content Range streaming for video and audio playback |
-| `GET` | `/api/v1/fs/stream/compat` | any of `shares:read`, `storage:read`, `system:view` | The video converted to H.264/AAC in fragmented MP4 while it plays, from `start` seconds |
+| `GET` | `/api/v1/fs/stream/compat` | any of `shares:read`, `storage:read`, `system:view` | The video converted in fragmented MP4 while it plays, from `start` seconds: H.264/AAC (mode=full), or the video as it is with AAC audio (… |
 | `POST` | `/api/v1/fs/thumbs/prefetch` | any of `shares:read`, `storage:read`, `system:view` | Queues a folder's photo and video thumbnails, so they are ready before they scroll into view (NPERF-8) |
 | `POST` | `/api/v1/fs/transfer` | any of `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Fs Transfer |
 | `POST` | `/api/v1/fs/transfer/async` | any of `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Fs Transfer Async |
@@ -291,6 +291,7 @@ request and response schemas.
 | `POST` | `/api/v1/fs/upload/chunk` | any of `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Fs Upload Chunk |
 | `POST` | `/api/v1/fs/upload/complete` | any of `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Fs Upload Complete |
 | `POST` | `/api/v1/fs/upload/init` | any of `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Fs Upload Init |
+| `GET` | `/api/v1/fs/video/converted` | any of `shares:read`, `storage:read`, `system:view` | The video converted once and kept, as a plain MP4 the browser buffers and seeks (NVID-1) |
 | `POST` | `/api/v1/mkdir` | any of `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Mkdir |
 | `GET` | `/api/v1/share-links` | any of `files:read`, `storage:read`, `storage:admin` | Lists active public share links created by the current user or all if admin |
 | `POST` | `/api/v1/share-links` | any of `files:write`, `shares:user_write`, `storage:admin` ⏱ | Generates a secure, temporary or password-protected public share link for a file or folder |

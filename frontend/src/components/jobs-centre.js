@@ -23,6 +23,9 @@ const KIND = {
   ai_reindex: ['jobs.kind_ai_reindex', 'AI index'],
   cloud_sync: ['jobs.kind_cloud_sync', 'Cloud sync'],
   backup: ['jobs.kind_backup', 'Backup'],
+  ai_index: ['jobs.kind_ai_index', 'AI search'],
+  thumbnails: ['jobs.kind_thumbnails', 'Thumbnails'],
+  video: ['jobs.kind_video', 'Video'],
 };
 const STATUS = {
   queued: ['jobs.status_queued', 'Waiting'],

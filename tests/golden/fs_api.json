@@ -609,11 +609,29 @@
     "GET"
    ],
    "params": [
+    "mode",
     "path",
     "principal",
     "start"
    ],
    "path": "/fs/stream/compat",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_video_converted",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "mode",
+    "path",
+    "principal"
+   ],
+   "path": "/fs/video/converted",
    "response_model": null,
    "status": null
   },
@@ -2405,7 +2423,7 @@
    "function": "(path: str, request: starlette.requests.Request, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
   },
   "fs_stream_compat": {
-   "function": "(path: str, start: float = 0.0, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+   "function": "(path: str, start: float = 0.0, mode: str = 'full', principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
   },
   "fs_transfer": {
    "async": "(req: FsTransferRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"

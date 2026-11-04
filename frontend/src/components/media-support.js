@@ -18,8 +18,12 @@ const CODEC_NAMES = {
 };
 
 export const mediaInfoUrl = (path) => `/api/fs/media/info?path=${encodeURIComponent(path)}`;
-export const compatStreamUrl = (path, start = 0) =>
-  `/api/fs/stream/compat?path=${encodeURIComponent(path)}&start=${Math.max(0, start).toFixed(2)}`;
+export const compatStreamUrl = (path, start = 0, mode = 'full') =>
+  `/api/fs/stream/compat?path=${encodeURIComponent(path)}&start=${Math.max(0, start).toFixed(2)}&mode=${mode}`;
+/** A converted copy the server keeps, played as a plain file (NVID-1). */
+export const convertedUrl = (path, mode) => `/api/fs/video/converted?path=${encodeURIComponent(path)}&mode=${mode}`;
+/** Clips up to this long are converted before they play (about a second) instead of streamed live. */
+export const SHORT_CLIP_S = 120;
 
 /** True when this browser can play the file as it is; false means use the converted stream. */
 export function canPlayHere(info, name = '', probe = typeof document !== 'undefined' ? document.createElement('video') : null) {
@@ -35,6 +39,25 @@ export function canPlayHere(info, name = '', probe = typeof document !== 'undefi
   if (!types || !types.some((ty) => probe.canPlayType(ty) !== '')) return false;
   if (info.audio && !BROWSER_AUDIO.has(info.audio.codec)) return false;
   return true;
+}
+
+/** 'copy' when this browser plays the video itself and only the audio or the container is the
+ *  problem (the server then keeps the video as it is), else 'full' (NVID-1). */
+export function compatMode(info, probe = typeof document !== 'undefined' ? document.createElement('video') : null) {
+  const v = info && info.video;
+  if (!v || !probe || typeof probe.canPlayType !== 'function') return 'full';
+  if (v.codec === 'h264' && v.bit_depth > 8) return 'full';
+  const types = VIDEO_TYPES[v.codec];
+  return types && types.some((ty) => probe.canPlayType(ty) !== '') ? 'copy' : 'full';
+}
+
+/** How to play a video this browser can't play as it is: a kept or short clip as a plain file,
+ *  else a live stream while the server keeps a copy for next time (NVID-1). */
+export function convertedPlan(info, path, probe) {
+  const mode = compatMode(info, probe);
+  const kept = Boolean(info && info.converted && info.converted[mode]);
+  if (kept || ((info && info.duration) || 0) <= SHORT_CLIP_S) return { src: convertedUrl(path, mode), live: false, mode };
+  return { src: compatStreamUrl(path, 0, mode), live: true, mode, prepare: convertedUrl(path, mode) };
 }
 
 export function codecName(codec) {

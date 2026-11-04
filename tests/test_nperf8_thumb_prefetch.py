@@ -60,10 +60,11 @@ def test_the_queue_keeps_its_newest_entries_when_full(monkeypatch, tmp_path):
 def test_draining_makes_only_the_missing_thumbnails(monkeypatch, tmp_path):
     made = []
     monkeypatch.setattr(thumbs, "cached", lambda p: p.endswith("a.jpg"))
-    monkeypatch.setattr(thumbs, "get", lambda p: made.append(p) or b"webp")
+    monkeypatch.setattr(thumbs, "get", lambda p, **kw: made.append(p) or b"webp")
     _touch(tmp_path, "a.jpg", "b.mov")
     thumb_prefetch.queue_folder(str(tmp_path))
-    thumb_prefetch._worker.join(5)
+    for w in list(thumb_prefetch._workers):
+        w.join(5)
     assert made == [str(tmp_path / "b.mov")]
     assert not thumb_prefetch._queue and not thumb_prefetch._queued
 
@@ -75,7 +76,7 @@ def test_a_file_that_is_gone_or_broken_makes_nothing(monkeypatch):
     monkeypatch.setattr(thumbs, "cached", gone)
     assert thumb_prefetch.make("/nope.jpg") is False
     monkeypatch.setattr(thumbs, "cached", lambda p: False)
-    monkeypatch.setattr(thumbs, "get", lambda p: None)
+    monkeypatch.setattr(thumbs, "get", lambda p, **kw: None)
     assert thumb_prefetch.make("/broken.jpg") is False
 
 
@@ -219,3 +220,27 @@ def test_a_versioned_thumbnail_is_kept_for_a_year_and_folders_can_be_queued(clie
     finally:
         os.remove(path)
         os.rmdir(folder)
+
+
+def test_work_made_ahead_waits_for_thumbnails_on_screen(monkeypatch):
+    import threading
+    import time
+
+    monkeypatch.setattr(thumbs, "SCREEN_WAIT_S", 2.0)
+    order = []
+    started = threading.Event()
+
+    def render(path, limit):
+        if path == "screen":
+            started.set()
+            time.sleep(0.3)
+        order.append(path)
+        return b"x"
+
+    monkeypatch.setattr(thumbs, "render", render)
+    on_screen = threading.Thread(target=lambda: thumbs._render_for("screen", 256, False))
+    on_screen.start()
+    started.wait(2)
+    thumbs._render_for("ahead", 256, True)
+    on_screen.join()
+    assert order == ["screen", "ahead"] and thumbs._on_screen == 0

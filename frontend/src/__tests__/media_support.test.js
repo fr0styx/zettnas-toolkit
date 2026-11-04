@@ -23,6 +23,6 @@ describe('which videos this browser plays as they are', () => {
     expect(rows.Video).toBe('HEVC (H.265) (Main)');
     expect(rows.Audio).toBe('AAC · mono · 48 kHz');
     expect(rows['In this browser']).toBe('Converted while playing');
-    expect(compatStreamUrl('/mnt/user/a b.mov', 12.345)).toBe('/api/fs/stream/compat?path=%2Fmnt%2Fuser%2Fa%20b.mov&start=12.35');
+    expect(compatStreamUrl('/mnt/user/a b.mov', 12.345)).toBe('/api/fs/stream/compat?path=%2Fmnt%2Fuser%2Fa%20b.mov&start=12.35&mode=full');
   });
 });

@@ -107,6 +107,14 @@ class Settings:
         hi=1048576,
         group="Host",
     )
+    video_cache_mb: int = _s(
+        "ZETTNAS_VIDEO_CACHE_MB",
+        4096,
+        "Size of the cache of videos converted for browsers that can't play the original, in MB (at least 64).",
+        lo=0,
+        hi=1048576,
+        group="Host",
+    )
     sync_route_threads: int = _s(
         "SYNC_ROUTE_THREADS",
         40,

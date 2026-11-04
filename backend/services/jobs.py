@@ -310,12 +310,50 @@ def _backups() -> list[Job]:
 
 
 # prefix -> (list jobs, cancel by id or None)
+def _ai_index() -> list[Job]:
+    """The AI index learning new and changed files (NJOB-1), when the engine is up and busy."""
+    from backend.services import rag_engine
+
+    eng = rag_engine._RAG_ENGINE  # never start the engine just to look
+    state = str(getattr(eng, "_sync_state", "idle") or "idle") if eng is not None else "idle"
+    if state not in ("running", "paused", "stopping"):
+        return []
+    prog = dict(getattr(eng, "_sync_progress", {}) or {})
+    status = "paused" if state == "paused" else "running"
+    detail = (
+        f"{prog.get('indexed_files', 0)} indexed, {prog.get('skipped_unchanged', 0)} unchanged, "
+        f"{prog.get('deferred_standby', 0)} waiting for sleeping disks"
+    )
+    return [
+        Job(
+            id="aiindex:sync",
+            kind="ai_index",
+            title="Indexing files for AI search",
+            title_id="jobs.t.ai_index",
+            status=status,
+            detail=detail,
+            started_at=prog.get("started_at"),
+            can_cancel=state in ("running", "paused"),
+        )
+    ]
+
+
+def _cancel_ai_index(_id: str) -> bool:
+    from backend.services import rag_engine
+
+    if rag_engine._RAG_ENGINE is None:
+        return False
+    rag_engine._RAG_ENGINE.stop_sync()
+    return True
+
+
 SOURCES: dict[str, tuple[Callable[[], list[Job]], Callable[[str], bool] | None]] = {
     "transfer": (_transfers, _cancel_transfer),
     "copy": (_media_import, _cancel_media_import),
     "reindex": (_reindex, None),
     "sync": (_cloud_syncs, None),
     "backup": (_backups, None),
-}
+    "aiindex": (_ai_index, _cancel_ai_index),
+}  # thumb_prefetch adds "thumbs" itself (it imports this module, not the other way round)
 
 job_manager = JobManager()

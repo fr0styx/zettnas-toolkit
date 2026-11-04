@@ -61,6 +61,19 @@
 
 #### Performance
 
+- **Converted videos play smoothly** (NVID-1): a video the browser can't play as it is is now
+  converted once and kept, so it plays, seeks and replays like any file (clips up to two minutes
+  are converted on the spot, longer ones in the background while the first viewing streams). When
+  only the audio is the problem (an iPhone clip with PCM sound, an MKV), the video is kept exactly
+  as it is and only the audio is converted. Also fixed: with Intel Quick Sync the live conversion
+  stopped after the first frame, so a converted video showed a frozen picture. The kept copies
+  take at most ZETTNAS_VIDEO_CACHE_MB (default 4096).
+- **The Jobs centre shows the background work** (NJOB-1): the AI index learning new files (which
+  you can stop there), the thumbnail pass with its progress, a folder's thumbnails being made and
+  videos being converted. A thumbnail pass that made thumbnails stays in the history.
+  Thumbnails made ahead of time now wait for the ones on your screen, so a folder you are looking at
+  fills in first, and a folder's queue is worked by two threads instead of one.
+
 - **RAW photos in DNG show their picture** (NPERF-9): iPhone ProRAW and other DNG files get a
   thumbnail and open in the viewer, from the JPEG preview stored inside the file (the RAW data is
   never read); they were plain file icons and opened as a hex dump.

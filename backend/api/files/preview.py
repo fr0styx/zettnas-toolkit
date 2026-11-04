@@ -268,6 +268,9 @@ async def fs_media_info(path: str, principal: AuthenticatedPrincipal = Depends(g
     info = await asyncio.to_thread(media_info.probe, target)
     if info is None:
         raise HTTPException(status_code=415, detail="Not a video or audio file")
+    if info.get("video"):
+        # which converted copies are kept, so the viewer can play one as a plain file (NVID-1)
+        info = {**info, "converted": await asyncio.to_thread(video_compat.ready, target)}
     return info
 
 
@@ -278,15 +281,14 @@ async def fs_media_info(path: str, principal: AuthenticatedPrincipal = Depends(g
 def fs_stream_compat(
     path: str,
     start: float = 0.0,
+    mode: str = "full",
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    """The video converted to H.264/AAC in fragmented MP4 while it plays, from `start` seconds."""
-    check_user_path_access(path, principal)
-    target = _contained(path, must_exist=True)
-    if os.path.isdir(target) or thumbs.kind(target) != "video":
-        raise HTTPException(status_code=415, detail="Not a video file")
+    """The video converted in fragmented MP4 while it plays, from `start` seconds: H.264/AAC
+    (mode=full), or the video as it is with AAC audio (mode=copy, NVID-1)."""
+    target = _video_target(path, principal)
     try:
-        chunks, _stop = video_compat.stream(target, max(0.0, min(start, 7 * 24 * 3600)))
+        chunks, _stop = video_compat.stream(target, max(0.0, min(start, 7 * 24 * 3600)), _mode(mode))
     except video_compat.Busy as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
     return StreamingResponse(
@@ -294,6 +296,45 @@ def fs_stream_compat(
         media_type="video/mp4",
         headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"},
     )
+
+
+def _video_target(path: str, principal: AuthenticatedPrincipal) -> str:
+    check_user_path_access(path, principal)
+    target = _contained(path, must_exist=True)
+    if os.path.isdir(target) or thumbs.kind(target) != "video":
+        raise HTTPException(status_code=415, detail="Not a video file")
+    return target
+
+
+def _mode(mode: str) -> str:
+    if mode not in (video_compat.COPY, video_compat.FULL):
+        raise HTTPException(status_code=400, detail="mode is copy or full")
+    return mode
+
+
+@router.get(
+    "/fs/video/converted",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))],
+)
+def fs_video_converted(
+    path: str, mode: str = "full", principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
+    """The video converted once and kept, as a plain MP4 the browser buffers and seeks (NVID-1).
+    A clip up to two minutes is converted now; a longer one not yet kept answers 202 and is
+    converted in the background (it shows in the Jobs centre) while the viewer streams it live."""
+    target = _video_target(path, principal)
+    mode = _mode(mode)
+    kept = video_compat.cached(target, mode)
+    if kept is None:
+        duration = float(((media_info.probe(target) or {}).get("duration")) or 0)
+        if duration > video_compat.SHORT_S:
+            video_compat.prepare(target, mode, duration)
+            return Response(status_code=202, content=b'{"status":"preparing"}', media_type="application/json")
+        try:
+            kept = video_compat.convert_file(target, mode)
+        except video_compat.Busy as e:
+            raise HTTPException(status_code=503, detail=str(e)) from e
+    return FileResponse(kept, media_type="video/mp4", headers={"Cache-Control": "private, max-age=3600"})
 
 
 @router.get("/fs/stream")

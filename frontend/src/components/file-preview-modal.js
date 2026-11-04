@@ -4,7 +4,7 @@ import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 
 import { formatBytes, formatDateTime } from '../format.js';
-import { canPlayHere, codecName, compatStreamUrl, formatDuration, mediaInfoUrl } from './media-support.js';
+import { canPlayHere, codecName, compatStreamUrl, convertedPlan, formatDuration, mediaInfoUrl } from './media-support.js';
 import {
   ICONS,
   isImageName,
@@ -567,7 +567,11 @@ async function loadCurrentItem() {
             const v = media.video;
             metaEl.textContent = `${t('ql.video', 'Video')}${szStr} • ${v.width}×${v.height} • ${codecName(v.codec)}${media.duration ? ` • ${formatDuration(media.duration)}` : ''}`;
           }
-          renderVideoPlayer(bodyEl, compat ? compatStreamUrl(forPath, 0) : streamUrl, { ...res, media, compat });
+          // a converted clip plays as a plain file when it's kept or short; a long one streams live
+          // the first time while the server keeps a copy for next time (NVID-1)
+          const plan = compat ? convertedPlan(media, forPath) : null;
+          if (plan && plan.prepare) api.get(plan.prepare).catch(() => {});
+          renderVideoPlayer(bodyEl, plan ? plan.src : streamUrl, { ...res, media, compat: Boolean(plan && plan.live), converted: Boolean(plan), mode: plan ? plan.mode : 'full' });
           addGalleryNav(bodyEl);
         } else {
           bodyEl.innerHTML = `
@@ -1262,7 +1266,7 @@ function renderVideoPlayer(container, streamUrl, meta) {
   const videoPath = _currentPath;
   // A converted stream starts at the second it was asked for: keep that offset, take the
   // length from the file's details, and seek by restarting the stream.
-  const clock = { compat: !!(meta && meta.compat), offset: 0, duration: (meta && meta.media && meta.media.duration) || 0 };
+  const clock = { compat: !!(meta && meta.compat), mode: (meta && meta.mode) || 'full', offset: 0, duration: (meta && meta.media && meta.media.duration) || 0 };
   const getTime = () => (videoEl ? videoEl.currentTime || 0 : 0) + (clock.compat ? clock.offset : 0);
   const getDur = () => (clock.compat ? clock.duration : (videoEl && Number.isFinite(videoEl.duration) ? videoEl.duration : clock.duration)) || 0;
   function seekTo(seconds) {
@@ -1274,7 +1278,7 @@ function renderVideoPlayer(container, streamUrl, meta) {
     }
     const wasPlaying = !videoEl.paused;
     clock.offset = target;
-    videoEl.src = compatStreamUrl(videoPath, target);
+    videoEl.src = compatStreamUrl(videoPath, target, clock.mode);
     if (wasPlaying) {
       const p = videoEl.play();
       if (p && typeof p.catch === 'function') p.catch(() => {});
@@ -1285,6 +1289,7 @@ function renderVideoPlayer(container, streamUrl, meta) {
       // The browser said it could play it but couldn't: switch to the converted stream
       const at = getTime();
       clock.compat = true;
+      clock.mode = 'full'; // the browser couldn't play what it was given: convert everything
       clock.duration = clock.duration || (videoEl && Number.isFinite(videoEl.duration) ? videoEl.duration : 0);
       showBadge(t('video.converting', 'Converted for this browser'), 2500);
       seekTo(at);
@@ -1293,7 +1298,7 @@ function renderVideoPlayer(container, streamUrl, meta) {
     showUnplayableVideo(container, meta);
   }
   if (videoEl) {
-    if (clock.compat) videoEl.addEventListener('loadeddata', () => showBadge(t('video.converting', 'Converted for this browser'), 2500), { once: true });
+    if (clock.compat || (meta && meta.converted)) videoEl.addEventListener('loadeddata', () => showBadge(t('video.converting', 'Converted for this browser'), 2500), { once: true });
     videoEl.addEventListener('loadedmetadata', () => {
       const at = getResume(videoPath, getDur());
       if (at) {

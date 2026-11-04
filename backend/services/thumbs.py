@@ -34,7 +34,9 @@ _image_slots = threading.BoundedSemaphore(max(2, min(4, (os.cpu_count() or 2) //
 _video_slots = threading.BoundedSemaphore(2)
 _state_lock = threading.Lock()
 _writes = 0
-_approx_bytes: int | None = None  # the cache's size since the last walk plus what was written
+_approx_bytes: int | None = None
+_on_screen = 0  # thumbnails someone is looking at right now; work made ahead of time waits for them
+SCREEN_WAIT_S = 10.0  # the cache's size since the last walk plus what was written
 _heif_ready = False
 
 
@@ -75,8 +77,30 @@ def cached(path: str, limit: int = THUMB_SIZE) -> bool:
     return os.path.exists(hit) or os.path.exists(fail)
 
 
-def get(path: str, limit: int = THUMB_SIZE) -> bytes | None:
-    """WebP bytes no larger than `limit` on the longest side, or None if the file can't be decoded."""
+def _yield_to_screen() -> None:
+    """Background work waits (a while) for the thumbnails on someone's screen to be made first."""
+    deadline = time.time() + SCREEN_WAIT_S
+    while _on_screen > 0 and time.time() < deadline:
+        time.sleep(0.05)
+
+
+def _render_for(path: str, limit: int, background: bool) -> bytes | None:
+    global _on_screen
+    if background:
+        _yield_to_screen()
+        return render(path, limit)
+    with _state_lock:
+        _on_screen += 1
+    try:
+        return render(path, limit)
+    finally:
+        with _state_lock:
+            _on_screen -= 1
+
+
+def get(path: str, limit: int = THUMB_SIZE, background: bool = False) -> bytes | None:
+    """WebP bytes no larger than `limit` on the longest side, or None if the file can't be decoded.
+    `background` (made ahead of time, NPERF-8) lets the thumbnails on screen go first."""
     limit = max(32, min(int(limit), MAX_SIZE))
     from backend.fsutil import ENCRYPTED_ROOT
 
@@ -98,7 +122,7 @@ def get(path: str, limit: int = THUMB_SIZE) -> bytes | None:
         logger.debug("No cached thumbnail for %s", os.path.basename(path))
     if os.path.exists(fail):
         return None
-    data = render(path, limit)
+    data = _render_for(path, limit, background)
     _store(hit if data else fail, data or b"")
     return data
 
