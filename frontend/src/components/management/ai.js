@@ -67,7 +67,7 @@ export function renderAiSearchHistory() {
   }
   bar.style.display = 'flex';
   chipsContainer.innerHTML = _aiSearchHistory.map((q) => `
-    <button type="button" class="btn-pill-toggle ai-history-chip is-small" data-query="${escapeHtml(q)}" style="background: var(--zn-glaze-4); border: 1px solid var(--zn-line-12); color: var(--zn-text-soft);">
+    <button type="button" class="btn-pill-toggle ai-history-chip is-small aik-soft-box" data-query="${escapeHtml(q)}">
       ${escapeHtml(q)}
     </button>
   `).join('');
@@ -305,9 +305,9 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
 
     return `
       <div class="ai-llm-rec-card ${hasWarn ? 'ai-llm-hw-warning' : 'ai-llm-hw-ok'}" data-model-id="${escapeHtml(m.id)}" data-hf-repo="${escapeHtml(hfRepo)}" data-recommended="${isRec ? '1' : '0'}" data-active="${isAct ? '1' : '0'}" data-fits-hardware="${hasWarn ? '0' : '1'}" data-hardware-warning="${hasWarn ? '1' : '0'}" style="background:${bgCol}; border:1px solid ${borderCol}; border-radius:9px; padding:10px 12px; display:flex; flex-direction:column; gap:6px;">
-        <div style="display:flex; flex-direction:column; gap:4px;">
-          <div style="font-weight:800; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); word-break:break-word; line-height:1.35;" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</div>
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+        <div class="aik-col">
+          <div class="aik-xs-bold-strong" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</div>
+          <div class="aik-row">
             <div style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
               <span>${escapeHtml(m.family || m.category || 'Hugging Face')} • ${escapeHtml(m.params || '')} • ${escapeHtml(m.quantization || '')}</span>
               ${hfRepo ? `<a href="${escapeHtml(hfUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--lt-t-fde047ff, #fde047); text-decoration:none; font-family:monospace; font-size:var(--zn-fs-xs);" title="View on https://huggingface.co">🤗 ${escapeHtml(hfRepo)} ↗</a>` : ''}
@@ -317,7 +317,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
             </span>
           </div>
         </div>
-        <div style="display:flex; flex-wrap:wrap; gap:5px; font-size:var(--zn-fs-xs);">
+        <div class="aik-row-xs">
           ${m.target_device ? `<span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fca5a5' : '#6ee7b7'};">⚡ ${escapeHtml(m.target_device)}</span>` : ''}
           <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fdba74' : '#bae6fd'};">${ico('💾')} ${t('ait.model_gb', '~{gb} GB Model', { gb: m.vram_or_ram_gb ?? m.est_ram_gb ?? 2.0 })}${m.min_ram_gb ? t('ait.host_gb', ' ({gb}GB+ Host)', { gb: m.min_ram_gb }) : ''}</span>
           <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-f8fafcff, #f8fafc);" title="${escapeHtml(t('ait.release_date', 'Hugging Face Release Date: {date}', { date: releaseDateText }))}">📅 ${escapeHtml(releaseDateText)}</span>
@@ -325,17 +325,17 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
         </div>
         ${hasWarn ? `
           <div class="ai-model-hw-warning-banner" style="padding:6px 8px; border-radius:6px; background:${isCritical ? 'rgba(239,68,68,0.16)' : 'rgba(245,158,11,0.15)'}; border:1px solid ${isCritical ? 'rgba(248,113,113,0.45)' : 'rgba(251,191,36,0.45)'}; color:${isCritical ? '#fecaca' : '#fef08a'}; font-size:var(--zn-fs-xs); line-height:1.35; display:flex; align-items:flex-start; gap:6px;">
-            <span style="font-size:var(--zn-fs-xs); line-height:1; flex-shrink:0;">⚠️</span>
+            <span class="aik-xs">⚠️</span>
             <span>${escapeHtml(warningText)}</span>
           </div>
         ` : `
-          <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${escapeHtml(m.why_recommended || m.use_case || '')}">
+          <div class="aik-xs-soft" title="${escapeHtml(m.why_recommended || m.use_case || '')}">
             ${escapeHtml(m.use_case || '')}${m.why_recommended ? ` — ${escapeHtml(m.why_recommended)}` : ''}
           </div>
         `}
-        <div style="margin-top:auto; padding-top:5px; border-top:1px solid var(--zn-line-6); display:flex; justify-content:space-between; align-items:center; gap:6px;">
+        <div class="aik-row-box">
           <span class="ai-model-licence" style="font-size:var(--zn-fs-xs); color:${m.license_kind === 'non_commercial' ? '#fcd34d' : 'var(--zn-text-muted)'};" title="${escapeHtml(m.license_note || m.license || '')}">📜 ${escapeHtml(m.license || t('ai.licence_unknown', 'Licence not listed'))}${m.license_note ? ` • ${escapeHtml(t('ai.licence_non_commercial', 'Not for commercial use'))}` : ''}</span>
-          <div style="display:flex; align-items:center; gap:5px;">
+          <div class="aik-row-2">
             ${isAct
               ? `<span style="font-size:var(--zn-fs-xs); font-weight:800; color:${hasWarn ? '#fbbf24' : '#34d399'}; padding:2px 8px; border-radius:6px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(16,185,129,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(16,185,129,0.4)'};">${hasWarn ? '⚠️ Active (Exceeds HW)' : '✓ Active'}</span>`
               : (m.installed === false && m.ollama_tag)
@@ -603,9 +603,9 @@ export function renderAiLearningResultsData(data = {}) {
       listEl.innerHTML = `<div style="padding:8px 10px; border-radius:6px; background:rgba(34,197,94,0.08); color:var(--lt-t-86efacff, #86efac);">✓ ${t('ait.all_learned', 'All learned files succeeded with 0 errors.')}</div>`;
     } else {
       listEl.innerHTML = failedFiles.map((f) => `
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 8px; border-bottom:1px solid var(--zn-line-6);">
+        <div class="aik-row-box-2">
           <span style="font-family:monospace; color:var(--lt-t-fca5a5ff, #fca5a5);">${escapeHtml(f.file_path || f.file_name || '')}</span>
-          <span style="color:var(--zn-text-muted); font-size:var(--zn-fs-xs);">${escapeHtml(f.error || 'Failed to parse')}</span>
+          <span class="aik-xs-muted">${escapeHtml(f.error || 'Failed to parse')}</span>
         </div>
       `).join('');
     }
@@ -840,12 +840,12 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
       return `
         <div class="ai-watched-folder-chip" data-folder-path="${escapeHtml(fp)}" style="display:inline-flex; align-items:center; gap:7px; padding:4px 9px; border-radius:8px; background:rgba(14,165,233,0.14); border:1px solid rgba(14,165,233,0.38); font-size:var(--zn-fs-xs); color:var(--lt-t-f8fafcff, #f8fafc);">
           <span aria-hidden="true">☑</span>
-          <span style="font-family:monospace; font-weight:700;">${escapeHtml(fp)}</span>
+          <span class="aik-bold-mono">${escapeHtml(fp)}</span>
           <span style="font-size:var(--zn-fs-xs); padding:1px 6px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.18)' : 'rgba(37,194,160,0.18)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
             ${inStandby ? `💤 Standby${dev ? ` (${escapeHtml(dev)})` : ''}` : `🟢 Running${dev ? ` (${escapeHtml(dev)})` : ''}`}
           </span>
-          <button type="button" class="btn-ai-sync-single-folder" data-folder-path="${escapeHtml(fp)}" title="${t('ui.sync_this_folder_now_standby', 'Sync this folder now (Standby Safe)')}" style="background:transparent; border:none; color:var(--zn-text-accent); cursor:pointer; font-size:var(--zn-fs-xs); padding:0 2px;">🔄</button>
-          <button type="button" class="btn-ai-remove-watched-folder" data-folder-path="${escapeHtml(fp)}" title="${t('ui.uncheck_folder_from_rag_watched', 'Stop AI search reading this folder')}" style="background:transparent; border:none; color:var(--zn-text-crit); cursor:pointer; font-size:var(--zn-fs-xs); font-weight:800; padding:0 2px;">✕</button>
+          <button type="button" class="btn-ai-sync-single-folder aik-xs-accent-box" data-folder-path="${escapeHtml(fp)}" title="${t('ui.sync_this_folder_now_standby', 'Sync this folder now (Standby Safe)')}">🔄</button>
+          <button type="button" class="btn-ai-remove-watched-folder aik-xs-bold-crit-box" data-folder-path="${escapeHtml(fp)}" title="${t('ui.uncheck_folder_from_rag_watched', 'Stop AI search reading this folder')}">✕</button>
           <button type="button" class="btn-ai-forget-folder" data-folder-path="${escapeHtml(fp)}" title="${escapeHtml(t('ai.forget_folder_title', 'Forget: delete everything the AI learned from this folder'))}" aria-label="${escapeHtml(t('ai.forget_folder_title', 'Forget: delete everything the AI learned from this folder'))}" style="background:transparent; border:none; color:var(--lt-t-fca5a5ff, #fca5a5); cursor:pointer; font-size:var(--zn-fs-xs); padding:0 2px;">🗑</button>
         </div>
       `;
@@ -885,7 +885,7 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
   const sharesContainer = document.getElementById('ai-discovered-shares-list');
   if (sharesContainer) {
     if (mergedFolders.length === 0) {
-      sharesContainer.innerHTML = `<span style="font-size:var(--zn-fs-xs); color:var(--muted); padding:6px 8px;">${t('ait.no_shares', 'No NAS folders discovered yet. Use Browse or Add Folder below.')}</span>`;
+      sharesContainer.innerHTML = `<span class="aik-xs-muted-2">${t('ait.no_shares', 'No NAS folders discovered yet. Use Browse or Add Folder below.')}</span>`;
     } else {
       sharesContainer.innerHTML = mergedFolders.map((f) => {
         const isWatched = _aiWatchedPaths.includes(f.path);
@@ -893,12 +893,12 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
         const dev = f.backing_dev || '';
         return `
           <div role="option" aria-selected="${isWatched ? 'true' : 'false'}" class="btn-pill-toggle ai-discovered-share-pill ai-watched-dropdown-item ${isWatched ? 'active' : ''}" data-folder-path="${escapeHtml(f.path)}" data-watched="${isWatched ? '1' : '0'}" style="display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:7px 10px; border-radius:8px; background:${isWatched ? 'rgba(37,194,160,0.16)' : 'rgba(255,255,255,0.03)'}; border:1px solid ${isWatched ? 'rgba(37,194,160,0.48)' : 'rgba(255,255,255,0.08)'}; color:${isWatched ? '#fff' : '#cbd5e1'}; cursor:pointer; text-align:left;" title="${inStandby ? `Backing disk (${dev}) is in STANDBY — will only sync when disk is running` : `Backing disk (${dev || 'NVMe/Pool'}) is RUNNING — click to check/uncheck for RAG`}">
-            <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">
+            <div class="aik-row-3">
               <span class="ai-folder-checkbox-icon" style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:4px; background:${isWatched ? '#10b981' : 'rgba(255,255,255,0.08)'}; border:1px solid ${isWatched ? '#34d399' : 'rgba(255,255,255,0.28)'}; color:#042f2e; font-size:var(--zn-fs-xs); font-weight:900; flex-shrink:0;">${isWatched ? '✓' : ''}</span>
               <span aria-hidden="true">📁</span>
-              <span style="font-family:monospace; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(f.path)}</span>
+              <span class="aik-bold-mono-2">${escapeHtml(f.path)}</span>
             </div>
-            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+            <div class="aik-row-4">
               <span style="font-size:var(--zn-fs-xs); padding:1px 7px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.16)' : 'rgba(37,194,160,0.16)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
                 ${inStandby ? `💤 ${escapeHtml(dev || 'Standby')}` : `🟢 ${escapeHtml(dev || 'Running')}`}
               </span>
@@ -2037,7 +2037,7 @@ export async function fetchAndRenderAiStatus() {
       const defItems = res.standby_guard?.deferred_queue || res.sync_progress?.deferred_queue || [];
       const defCount = stats.deferred_queue_count ?? defItems.length ?? 0;
       const defDetail = defItems.length > 0
-        ? ` <span style="color:var(--zn-text-warn);">(${defItems.map((d) => `${escapeHtml(d.path)}${d.backing_dev ? ` [${escapeHtml(d.backing_dev)}]` : ''}`).join(', ')} — ${ico('⚡')} ${t('ait.auto_learns', 'auto-learns on spin-up')})</span>`
+        ? ` <span class="aik-warn">(${defItems.map((d) => `${escapeHtml(d.path)}${d.backing_dev ? ` [${escapeHtml(d.backing_dev)}]` : ''}`).join(', ')} — ${ico('⚡')} ${t('ait.auto_learns', 'auto-learns on spin-up')})</span>`
         : (defCount > 0 ? ` <span style="color:var(--lt-t-6ee7b7ff, #6ee7b7);">(${ico('⚡')} ${t('ait.auto_learns', 'auto-learns on spin-up')})</span>` : '');
       const dimLabel = stats.actual_embedding_dim || stats.embedding_dim || 768;
       const modelRaw = stats.actual_embedding_model || stats.embedding_model || 'EmbeddingGemma 2';
@@ -2048,7 +2048,7 @@ export async function fetchAndRenderAiStatus() {
         <div>• <strong>${t('ait.indexed_files', 'Indexed Files:')}</strong> ${totalFiles} (${t('ait.indexed_detail', '{docs} documents/recipes, {photos} photos', { docs: totalDocs, photos: totalPhotos })}${videoDetail})</div>
         <div>• <strong>${escapeHtml(t('ait.chunks', 'Semantic Chunks & Vectors:'))}</strong> ${totalChunks} (${dimLabel}-d ${escapeHtml(modelDisplayName)} + FTS5 BM25)</div>
         <div>• <strong>${t('ait.deferred', 'Deferred Standby Queue:')}</strong> ${t('ait.deferred_detail', '{count, plural, one {# path} other {# paths}} waiting for drive wake', { count: defCount })}${defDetail}</div>
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+        <div class="aik-row-5">
           <span>• <strong>${t('ait.footprint', 'NVMe Index Footprint:')}</strong> ${sizeKb} KB (<code>${escapeHtml(stats.db_path || '/app/data/rag_index.db')}</code>)</span>
           ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle is-danger is-small" title="${t('ui.flush_existing_rag_index_vector', 'Delete what AI search has learned and start again')}"><span aria-hidden="true">🗑️</span> <span>${escapeHtml(t('aic.flush', 'Flush & Start Fresh'))}</span></button>` : ''}
         </div>
@@ -2312,21 +2312,21 @@ function buildVisualPhotoCardHtml(item) {
 
   return `
     <div class="ai-visual-photo-card" data-path="${escapeHtml(fPath)}" data-name="${escapeHtml(fName)}" data-file-id="${fId}" data-category="${escapeHtml(fCat)}" data-favorite="${isFav ? '1' : '0'}" data-excerpt="${escapeHtml(item.excerpt || '')}" style="background: var(--zn-glaze-3); border: 1px solid var(--lt-r-ffffff17, rgba(255,255,255,0.09)); border-radius: 9px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;">
-      <div style="height: 125px; background: var(--zn-shade-40); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+      <div class="aik-row-box-3">
         ${isPhoto
-          ? `<img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(fName)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" data-img-fallback="hide" />`
-          : `<div style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px; text-align:center;">
-               <span style="font-size:30px;">${catIcon}</span>
-               <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted); max-height:42px; overflow:hidden;">${escapeHtml((item.excerpt || fPath).slice(0, 75))}</span>
+          ? `<img class="aik-size" src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(fName)}" loading="lazy" data-img-fallback="hide" />`
+          : `<div class="aik-col-center">
+               <span class="aik-fs30">${catIcon}</span>
+               <span class="aik-xs-muted-3">${escapeHtml((item.excerpt || fPath).slice(0, 75))}</span>
              </div>`
         }
         <span title="${escapeHtml(matchReason)}" style="position: absolute; top: 6px; left: 6px; max-width: calc(100% - 82px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--lt-b-0f172ad9, rgba(15,23,42,0.85)); color: var(--zn-text-accent);">${catIcon} ${escapeHtml(matchReason)}</span>
         <span style="position: absolute; top: 6px; right: 6px; font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--lt-b-000000b8, rgba(0,0,0,0.72)); color: var(--lt-t-6ee7b7ff, #6ee7b7); white-space: nowrap;">${isFav ? '⭐ ' : ''}💤 ${t('aiq.cached', 'Cached')}</span>
       </div>
-      <div style="padding: 8px 10px; display: flex; flex-direction: column; gap: 4px;">
-        <div style="font-weight: 700; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(fName)}">${escapeHtml(fName)}</div>
+      <div class="aik-col-2">
+        <div class="aik-xs-bold-strong-2" title="${escapeHtml(fName)}">${escapeHtml(fName)}</div>
         <div style="font-size: var(--zn-fs-xs); color: var(--muted,#94a3b8); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(fPath)}</div>
-        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+        <div class="aik-row-6">
           ${colors.map((c) => `<span style="font-size: var(--zn-fs-xs); padding: 1px 5px; border-radius: 4px; background: rgba(56,189,248,0.14); color: var(--zn-text-accent); font-weight: 700; text-transform: capitalize;">🎨 ${escapeHtml(c)}</span>`).join('')}
           ${scenes.map((s) => `<span style="font-size: var(--zn-fs-xs); padding: 1px 5px; border-radius: 4px; background: var(--lt-b-ffffff12, rgba(255,255,255,0.07)); color: var(--zn-text-soft);">#${escapeHtml(s)}</span>`).join('')}
         </div>
@@ -2355,26 +2355,26 @@ export function renderAiPreviewInspector(item) {
   }
 
   pane.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px;">
-      <div style="font-weight:800; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(fName)}">
+    <div class="aik-row-7">
+      <div class="aik-xs-bold-strong-3" title="${escapeHtml(fName)}">
         ${escapeHtml(fName)}
       </div>
       <button type="button" id="btn-ai-inspector-close" class="btn-pill-toggle is-small">✕</button>
     </div>
     ${isPhoto
       ? `<div style="height:170px; border-radius:8px; background:var(--lt-b-00000073, rgba(0,0,0,0.45)); overflow:hidden; margin-bottom:10px; display:flex; align-items:center; justify-content:center;">
-           <img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(fName)}" style="width:100%; height:100%; object-fit:cover;" data-img-fallback="hide" />
+           <img class="aik-size" src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(fName)}" data-img-fallback="hide" />
          </div>`
       : ''
     }
-    <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin-bottom:10px; display:flex; flex-direction:column; gap:4px;">
-      <div><strong style="color:var(--zn-text-muted);">${t('aiq.location', 'Location:')}</strong> <code style="font-size:var(--zn-fs-xs); color:var(--zn-text-accent); word-break:break-all;">${escapeHtml(fPath)}</code></div>
+    <div class="aik-col-xs-soft">
+      <div><strong class="aik-muted">${t('aiq.location', 'Location:')}</strong> <code class="aik-xs-accent">${escapeHtml(fPath)}</code></div>
       ${(item.also_at || []).length ? `<div class="ai-also-at"><strong>${escapeHtml(t('ai.also_at', 'The same file is also at:'))}</strong> ${item.also_at.map((p) => `<code>${escapeHtml(p)}</code>`).join(', ')}</div>` : ''}
-      <div><strong style="color:var(--zn-text-muted);">${t('aiq.match_mode', 'Match Mode:')}</strong> <span style="color:var(--lt-t-6ee7b7ff, #6ee7b7);">${escapeHtml(item.match_reason || t('aiq.semantic', 'Semantic Vector'))}</span></div>
-      ${item.excerpt ? `<div style="margin-top:4px; padding:8px; border-radius:6px; background:var(--zn-shade-30); font-size:var(--zn-fs-xs); color:var(--zn-text); max-height:90px; overflow-y:auto;">${escapeHtml(item.excerpt)}</div>` : ''}
+      <div><strong class="aik-muted">${t('aiq.match_mode', 'Match Mode:')}</strong> <span style="color:var(--lt-t-6ee7b7ff, #6ee7b7);">${escapeHtml(item.match_reason || t('aiq.semantic', 'Semantic Vector'))}</span></div>
+      ${item.excerpt ? `<div class="aik-xs-box">${escapeHtml(item.excerpt)}</div>` : ''}
     </div>
     <!-- 5 Official ZettAI File Actions (#apps/zettai/search) -->
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+    <div class="aik-grid">
       <button type="button" id="btn-ai-inspector-open" class="btn-pill-toggle" style="background: rgba(14,165,233,0.22); border: 1px solid rgba(14,165,233,0.5); color: var(--zn-text-strong);">
         👁️ ${t('aiq.open_file', 'Open File')}
       </button>
@@ -2387,7 +2387,7 @@ export function renderAiPreviewInspector(item) {
       <button type="button" id="btn-ai-inspector-favorite" class="btn-pill-toggle" style="font-size:var(--zn-fs-xs); padding:6px 8px; cursor:pointer; color:${isFav ? '#fbbf24' : '#cbd5e1'};">
         ${isFav ? `⭐ ${t('aiq.favorited', 'Favorited')}` : `☆ ${t('aiq.favorite', 'Favorite')}`}
       </button>
-      <button type="button" id="btn-ai-inspector-share" class="btn-pill-toggle" style="grid-column: 1 / -1;">
+      <button type="button" id="btn-ai-inspector-share" class="btn-pill-toggle aik-x">
         🔗 ${t('aiq.share', 'Share File Path / Link')}
       </button>
     </div>
@@ -2527,7 +2527,7 @@ function renderAiCategorySummaryCards(groups = {}) {
     const ft = chip.dataset.filetype;
     const entry = countByType.get(ft);
     if (entry) {
-      chip.innerHTML = `${entry.icon} ${entry.label} <span style="opacity:0.75; font-size:var(--zn-fs-xs); margin-left:2px;">(${entry.count})</span>`;
+      chip.innerHTML = `${entry.icon} ${entry.label} <span class="aik-xs-2">(${entry.count})</span>`;
     }
   });
 
@@ -2545,8 +2545,8 @@ export function renderAiRagInitialEmptyState() {
   if (grid) {
     grid.innerHTML = `
       <div class="ai-rag-initial-placeholder" style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; color: var(--muted, #94a3b8);">
-        <div style="font-size: 32px; margin-bottom: 10px; opacity: 0.85;">🔍</div>
-        <div style="font-size: 14px; font-weight: 600; color: var(--zn-text); margin-bottom: 6px;" data-i18n="ai.search_placeholder_prompt">${escapeHtml(t('ai.search_placeholder_prompt', 'Search Your NAS Knowledge & Media'))}</div>
+        <div class="aik-fs32">🔍</div>
+        <div class="aik-fs14-semi" data-i18n="ai.search_placeholder_prompt">${escapeHtml(t('ai.search_placeholder_prompt', 'Search Your NAS Knowledge & Media'))}</div>
         <div style="font-size: var(--zn-fs-xs); color: var(--muted, #94a3b8); max-width: 480px; margin: 0 auto; line-height: 1.5;" data-i18n="ai.search_placeholder_sub">${escapeHtml(t('ai.search_placeholder_sub', 'Type a query above to search documents, recipes, photos, or audio, or ask Zetty a question. Results will appear here once you search.'))}</div>
       </div>
     `;
@@ -2582,7 +2582,7 @@ export async function runAiVisualSearch(rawQuery = null) {
 
   if (q) _recordAiSearchHistory(q);
 
-  grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--muted); font-size: var(--zn-fs-xs);">🔍 ${escapeHtml(t('aiq.visual_searching', 'Searching visual & multi-modal index...'))}</div>`;
+  grid.innerHTML = `<div class="aik-xs-muted-center">🔍 ${escapeHtml(t('aiq.visual_searching', 'Searching visual & multi-modal index...'))}</div>`;
 
   const modalityParam = _aiSelectedFileType === 'all' ? 'photo' : _aiSelectedFileType;
 
@@ -2612,10 +2612,10 @@ export async function runAiVisualSearch(rawQuery = null) {
         intentBanner.style.display = 'block';
         intentBanner.innerHTML = `
           <strong>🧠 ${t('aiq.intent', 'Parsed Visual Intent:')}</strong>
-          ${autoColors.length ? `<span style="margin-left:6px; color:var(--zn-text-accent);">🎨 ${t('aiq.color', 'Color:')} <b>${escapeHtml(autoColors.join(', '))}</b></span>` : ''}
+          ${autoColors.length ? `<span class="aik-accent">🎨 ${t('aiq.color', 'Color:')} <b>${escapeHtml(autoColors.join(', '))}</b></span>` : ''}
           ${autoScenes.length ? `<span style="margin-left:8px; color:var(--lt-t-6ee7b7ff, #6ee7b7);">🏷️ ${t('aiq.scene', 'Scene:')} <b>${escapeHtml(autoScenes.join(', '))}</b></span>` : ''}
           <span style="margin-left:8px; color:var(--lt-t-c7d2feff, #c7d2fe);">⚡ ${t('aiq.mode', 'Mode:')} <b>${escapeHtml((_aiSelectedMatchTab || 'semantic').toUpperCase())}</b></span>
-          <span style="margin-left:8px; color:var(--muted);">• 🛡️💤 ${t('aiq.zero_wake', 'Zero Disk Wakeups')}</span>
+          <span class="aik-muted-2">• 🛡️💤 ${t('aiq.zero_wake', 'Zero Disk Wakeups')}</span>
         `;
       } else {
         intentBanner.style.display = 'none';
@@ -2649,7 +2649,7 @@ export async function runAiVisualSearch(rawQuery = null) {
     immichStrip.innerHTML = immichResultsHtml(res?.immich_results);
     if (results.length === 0) {
       grid.innerHTML = `
-        <div style="grid-column: 1 / -1; text-align: center; padding: 28px; color: var(--muted); font-size: var(--zn-fs-xs);">
+        <div class="aik-xs-muted-center-2">
           ${escapeHtml(t('aiq.no_match', 'No matching files found for {q}. Click {sync} above or configure folders in the {config} tab.', { q: '\u0001', sync: '\u0002', config: '\u0003' })).replace('\u0001', () => `<strong>${escapeHtml(q || _aiSelectedColor || _aiSelectedScene || t('aiq.current_filter', 'current filter'))}</strong>`).replace('\u0002', () => `<strong>${escapeHtml(t('aiq.sync_shares', 'Sync Shares'))}</strong>`).replace('\u0003', () => `<em>⚙️ ${escapeHtml(t('aiq.ai_config', 'AI Configuration'))}</em>`)}
         </div>
       `;
@@ -3639,7 +3639,7 @@ export async function sendAiChatMessage(rawMessage = null) {
   if (inputEl) inputEl.value = '';
   if (sendBtn) {
     sendBtn.disabled = true;
-    sendBtn.innerHTML = '<span><span class="ai-typing-dot" style="width:5px;height:5px;margin-right:3px;"></span></span> <span>' + escapeHtml(t('aiq.generating', 'Generating...')) + '</span>';
+    sendBtn.innerHTML = '<span><span class="ai-typing-dot aik-size-2"></span></span> <span>' + escapeHtml(t('aiq.generating', 'Generating...')) + '</span>';
   }
 
   // Web search and weather send the question outside the NAS: only when the user turns it on (AI-06).
@@ -3662,9 +3662,9 @@ export async function sendAiChatMessage(rawMessage = null) {
     if (isThinking) {
       pendingEl.style.cssText = 'align-self: flex-start; max-width: 85%; padding: 10px 14px; border-radius: 10px; background: rgba(30, 20, 50, 0.75); border: 1px solid rgba(192, 132, 252, 0.4); display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(168, 85, 247, 0.15);';
       pendingEl.innerHTML = `
-        <span class="ai-thinking-brain" style="font-size: 15px;">🧠</span>
+        <span class="ai-thinking-brain aik-fs15">🧠</span>
         <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-e9d5ffff, #e9d5ff);">${t('aiq.thinking', 'Thinking')}</span>
-        <span class="ai-thinking-dots" style="color: var(--zn-text-ai); font-weight: 800; letter-spacing: 2px;">
+        <span class="ai-thinking-dots aik-bold">
           <span class="ai-dot-1">.</span><span class="ai-dot-2">.</span><span class="ai-dot-3">.</span>
         </span>
         <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-d8b4feff, #d8b4fe); margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(192, 132, 252, 0.35);">${escapeHtml(activeModel)}</span>
@@ -3672,12 +3672,12 @@ export async function sendAiChatMessage(rawMessage = null) {
     } else {
       pendingEl.style.cssText = 'align-self: flex-start; max-width: 85%; padding: 10px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); display: flex; align-items: center; gap: 9px; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.12);';
       pendingEl.innerHTML = `
-        <div class="ai-typing-indicator" style="display: inline-flex; align-items: center; gap: 4px;">
+        <div class="ai-typing-indicator aik-row-8">
           <span class="ai-typing-dot"></span>
           <span class="ai-typing-dot"></span>
           <span class="ai-typing-dot"></span>
         </div>
-        <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft);">${escapeHtml(t('aiq.processing', 'Processing with {model}...', { model: '\u0001' })).replace('\u0001', () => `<strong style="color: var(--zn-text-accent);">${escapeHtml(activeModel)}</strong>`)}</span>
+        <span class="aik-xs-soft-2">${escapeHtml(t('aiq.processing', 'Processing with {model}...', { model: '\u0001' })).replace('\u0001', () => `<strong class="aik-accent-2">${escapeHtml(activeModel)}</strong>`)}</span>
       `;
     }
     listEl.appendChild(pendingEl);
@@ -3779,16 +3779,16 @@ export async function sendAiChatMessage(rawMessage = null) {
           streamBotMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.78); border: 1px solid rgba(56, 189, 248, 0.28);';
 
           streamBotMsgEl.innerHTML = `
-            <div class="ai-chat-llm-proof-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--zn-line-6); padding-bottom: 5px;">
-              <div style="display: flex; align-items: center; gap: 6px;">
+            <div class="ai-chat-llm-proof-bar aik-row-box-4">
+              <div class="aik-row-9">
                 <span class="ai-chat-model-pill" style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--lt-t-e9d5ffff, #e9d5ff); padding: 1px 8px; border-radius: 999px; background: rgba(168,85,247,0.18); border: 1px solid rgba(192,132,252,0.45);">🤖 ${escapeHtml(activeModel)}</span>
-                <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-accent); display: inline-flex; align-items: center; gap: 4px;">
-                  <span class="ai-typing-dot" style="width: 5px; height: 5px;"></span> ${t('aiq.streaming', 'Streaming')}
+                <span class="aik-row-xs-bold-accent">
+                  <span class="ai-typing-dot aik-size-3"></span> ${t('aiq.streaming', 'Streaming')}
                 </span>
               </div>
             </div>
-            <div class="ai-chat-tools-trace" style="display: flex; flex-wrap: wrap; gap: 5px; padding-top: 2px;"></div>
-            <div class="ai-chat-reply-body" style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.55;"></div>
+            <div class="ai-chat-tools-trace aik-row-10"></div>
+            <div class="ai-chat-reply-body aik-xs-3"></div>
           `;
           listEl.appendChild(streamBotMsgEl);
           toolsTraceEl = streamBotMsgEl.querySelector('.ai-chat-tools-trace');
@@ -3884,9 +3884,9 @@ export async function sendAiChatMessage(rawMessage = null) {
                   thoughtDetailsEl.open = true;
                   thoughtDetailsEl.style.cssText = 'margin: 4px 0 10px; border-radius: 8px; background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(168, 85, 247, 0.28); padding: 7px 10px; font-size: var(--zn-fs-xs);';
                   thoughtDetailsEl.innerHTML = `
-                    <summary style="cursor: pointer; font-weight: 700; color: var(--zn-text-ai); display: inline-flex; align-items: center; gap: 6px; user-select: none;">
+                    <summary class="aik-row-bold">
                       <span>🧠 ${t('aiq.thoughts', 'Thought Process')}</span>
-                      <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-weight: 400;">${t('aiq.thoughts_live', '(reasoning in real time...)')}</span>
+                      <span class="aik-xs-muted-4">${t('aiq.thoughts_live', '(reasoning in real time...)')}</span>
                     </summary>
                     <div class="ai-thought-content" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(168, 85, 247, 0.2); color: var(--zn-text-soft); font-size: var(--zn-fs-xs); line-height: 1.5; font-style: italic;"></div>
                   `;
@@ -4191,7 +4191,7 @@ export async function showServeLink(url, funnel = false) {
     : t('ts.serve_how', 'On your phone, install the Tailscale app and sign in to the same tailnet. Then open this address, on Wi-Fi or mobile data. Add it to your home screen to use ZettNAS like an app.');
   showConfirmToast(
     t('ts.serve_ready', 'ZettNAS is reachable through Tailscale'),
-    `${qr ? `<img src="${qr}" alt="${escapeHtml(t('ts.serve_qr_alt', 'QR code for {url}', { url }))}" width="180" height="180" style="display:block;margin:0 auto 10px;border-radius:8px;background:#fff;">` : ''}<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent);font-weight:700;word-break:break-all;">${escapeHtml(url)}</a><br><br>${escapeHtml(how)}`,
+    `${qr ? `<img src="${qr}" alt="${escapeHtml(t('ts.serve_qr_alt', 'QR code for {url}', { url }))}" width="180" height="180" style="display:block;margin:0 auto 10px;border-radius:8px;background:#fff;">` : ''}<a class="aik-bold-accent" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a><br><br>${escapeHtml(how)}`,
     () => {
       copyText(url).catch(() => {});
     },

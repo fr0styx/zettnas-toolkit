@@ -931,3 +931,63 @@
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-x-7 { cursor: pointer; }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-xs-muted-5 { font-size: var(--zn-fs-xs); color: var(--muted); margin-left: auto; }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-xs-4 { font-size: var(--zn-fs-xs); padding: 1px 5px; }
+
+/* Knowledge search, models, folders and chat (ai.js): classes instead of inline styles (NUX-15), same look */
+#management-modal-overlay .aik-soft-box { background: var(--zn-glaze-4); border: 1px solid var(--zn-line-12); color: var(--zn-text-soft); }
+#management-modal-overlay .aik-col { display: flex; flex-direction: column; gap: 4px; }
+#management-modal-overlay .aik-xs-bold-strong { font-weight: 800; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); word-break: break-word; line-height: 1.35; }
+#management-modal-overlay .aik-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; }
+#management-modal-overlay .aik-row-xs { display: flex; flex-wrap: wrap; gap: 5px; font-size: var(--zn-fs-xs); }
+#management-modal-overlay .aik-xs { font-size: var(--zn-fs-xs); line-height: 1; flex-shrink: 0; }
+#management-modal-overlay .aik-xs-soft { font-size: var(--zn-fs-xs); color: var(--zn-text-soft); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+#management-modal-overlay .aik-row-box { margin-top: auto; padding-top: 5px; border-top: 1px solid var(--zn-line-6); display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+#management-modal-overlay .aik-row-2 { display: flex; align-items: center; gap: 5px; }
+#management-modal-overlay .aik-row-box-2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 8px; border-bottom: 1px solid var(--zn-line-6); }
+#management-modal-overlay .aik-xs-muted { color: var(--zn-text-muted); font-size: var(--zn-fs-xs); }
+#management-modal-overlay .aik-bold-mono { font-family: monospace; font-weight: 700; }
+#management-modal-overlay .aik-xs-accent-box { background: transparent; border: none; color: var(--zn-text-accent); cursor: pointer; font-size: var(--zn-fs-xs); padding: 0 2px; }
+#management-modal-overlay .aik-xs-bold-crit-box { background: transparent; border: none; color: var(--zn-text-crit); cursor: pointer; font-size: var(--zn-fs-xs); font-weight: 800; padding: 0 2px; }
+#management-modal-overlay .aik-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); padding: 6px 8px; }
+#management-modal-overlay .aik-row-3 { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+#management-modal-overlay .aik-bold-mono-2 { font-family: monospace; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#management-modal-overlay .aik-row-4 { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+#management-modal-overlay .aik-warn { color: var(--zn-text-warn); }
+#management-modal-overlay .aik-row-5 { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+#management-modal-overlay .aik-row-box-3 { height: 125px; background: var(--zn-shade-40); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+#management-modal-overlay .aik-size { width: 100%; height: 100%; object-fit: cover; }
+#management-modal-overlay .aik-col-center { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; text-align: center; }
+#management-modal-overlay .aik-fs30 { font-size: 30px; }
+#management-modal-overlay .aik-xs-muted-3 { font-size: var(--zn-fs-xs); color: var(--zn-text-muted); max-height: 42px; overflow: hidden; }
+#management-modal-overlay .aik-col-2 { padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; }
+#management-modal-overlay .aik-xs-bold-strong-2 { font-weight: 700; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#management-modal-overlay .aik-row-6 { display: flex; flex-wrap: wrap; gap: 4px; }
+#management-modal-overlay .aik-row-7 { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+#management-modal-overlay .aik-xs-bold-strong-3 { font-weight: 800; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#management-modal-overlay .aik-col-xs-soft { font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-bottom: 10px; display: flex; flex-direction: column; gap: 4px; }
+#management-modal-overlay .aik-muted { color: var(--zn-text-muted); }
+#management-modal-overlay .aik-xs-accent { font-size: var(--zn-fs-xs); color: var(--zn-text-accent); word-break: break-all; }
+#management-modal-overlay .aik-xs-box { margin-top: 4px; padding: 8px; border-radius: 6px; background: var(--zn-shade-30); font-size: var(--zn-fs-xs); color: var(--zn-text); max-height: 90px; overflow-y: auto; }
+#management-modal-overlay .aik-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+#management-modal-overlay .aik-x { grid-column: 1 / -1; }
+#management-modal-overlay .aik-xs-2 { opacity: 0.75; font-size: var(--zn-fs-xs); margin-left: 2px; }
+#management-modal-overlay .aik-fs32 { font-size: 32px; margin-bottom: 10px; opacity: 0.85; }
+#management-modal-overlay .aik-fs14-semi { font-size: 14px; font-weight: 600; color: var(--zn-text); margin-bottom: 6px; }
+#management-modal-overlay .aik-xs-muted-center { grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--muted); font-size: var(--zn-fs-xs); }
+#management-modal-overlay .aik-accent { margin-left: 6px; color: var(--zn-text-accent); }
+#management-modal-overlay .aik-muted-2 { margin-left: 8px; color: var(--muted); }
+#management-modal-overlay .aik-xs-muted-center-2 { grid-column: 1 / -1; text-align: center; padding: 28px; color: var(--muted); font-size: var(--zn-fs-xs); }
+#management-modal-overlay .aik-size-2 { width: 5px; height: 5px; margin-right: 3px; }
+#management-modal-overlay .aik-fs15 { font-size: 15px; }
+#management-modal-overlay .aik-bold { color: var(--zn-text-ai); font-weight: 800; letter-spacing: 2px; }
+#management-modal-overlay .aik-row-8 { display: inline-flex; align-items: center; gap: 4px; }
+#management-modal-overlay .aik-xs-soft-2 { font-size: var(--zn-fs-xs); color: var(--zn-text-soft); }
+#management-modal-overlay .aik-accent-2 { color: var(--zn-text-accent); }
+#management-modal-overlay .aik-row-box-4 { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--zn-line-6); padding-bottom: 5px; }
+#management-modal-overlay .aik-row-9 { display: flex; align-items: center; gap: 6px; }
+#management-modal-overlay .aik-row-xs-bold-accent { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-accent); display: inline-flex; align-items: center; gap: 4px; }
+#management-modal-overlay .aik-size-3 { width: 5px; height: 5px; }
+#management-modal-overlay .aik-row-10 { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 2px; }
+#management-modal-overlay .aik-xs-3 { font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.55; }
+#management-modal-overlay .aik-row-bold { cursor: pointer; font-weight: 700; color: var(--zn-text-ai); display: inline-flex; align-items: center; gap: 6px; user-select: none; }
+#management-modal-overlay .aik-xs-muted-4 { font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-weight: 400; }
+#management-modal-overlay .aik-bold-accent { color: var(--zn-text-accent); font-weight: 700; word-break: break-all; }
