@@ -90,11 +90,14 @@ def _photo_vector_daemon() -> None:
     import time as _time
 
     from backend.services import photo_vectors
+    from backend.services.jobs import PassReport
     from backend.services.rag_engine import get_rag_engine
     from backend.services.vision_queue import system_idle
 
     _time.sleep(90)
-    photo_vectors.get_queue(get_rag_engine(), system_idle).run_forever()
+    # handed in: the search side imports photo_vectors, and the Jobs centre imports the search side
+    report = PassReport("photo_vectors", "Preparing photos for search by meaning", "jobs.t.photo_vectors")
+    photo_vectors.get_queue(get_rag_engine(), system_idle, report).run_forever()
 
 
 def _thumb_backfill_daemon() -> None:

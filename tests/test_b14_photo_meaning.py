@@ -181,6 +181,6 @@ def test_startup_runs_the_queue_with_the_engine_and_the_idle_check(monkeypatch):
             got["ran"] = True
 
     monkeypatch.setattr("time.sleep", lambda s: None)
-    monkeypatch.setattr(pv, "get_queue", lambda engine, idle: got.update(idle=idle) or Q())
+    monkeypatch.setattr(pv, "get_queue", lambda engine, idle, report: got.update(idle=idle, kind=report.kind) or Q())
     main._photo_vector_daemon()
-    assert got == {"idle": vision_queue.system_idle, "ran": True}
+    assert got == {"idle": vision_queue.system_idle, "kind": "photo_vectors", "ran": True}  # in Jobs (NJOB-2)

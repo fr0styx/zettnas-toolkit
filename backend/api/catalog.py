@@ -316,14 +316,12 @@ async def post_docker_catalog_deploy(app_id: str, req: AppDeployRequest | None =
     share_folders = req.share_folders if req else None
     browser_host = (req.host or "") if req else ""
 
-    def event_stream():
+    def events():
         if app_id == "ai-pack":  # AI-40: its own installer, with the preset this box gets
             from backend.services import ai_pack
 
-            for event in ai_pack.stream_install(None, storage_root):
-                yield json.dumps(event) + "\n"
-            return
-        for event in stream_deploy_catalog_app(
+            return ai_pack.stream_install(None, storage_root)
+        return stream_deploy_catalog_app(
             app_id,
             host_port=host_port,
             storage_root=storage_root,
@@ -331,6 +329,15 @@ async def post_docker_catalog_deploy(app_id: str, req: AppDeployRequest | None =
             replace_existing=replace_existing,
             share_folders=share_folders,
             browser_host=browser_host,
+        )
+
+    def event_stream():
+        from backend.services.app_catalog import get_catalog_app
+        from backend.services.jobs import follow
+
+        name = "AI pack" if app_id == "ai-pack" else (get_catalog_app(app_id) or {}).get("name") or app_id
+        for event in follow(
+            events(), "app_install", f"Installing {name}", title_id="jobs.t.app_install", title_params={"name": name}
         ):
             yield json.dumps(event) + "\n"
 

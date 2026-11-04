@@ -1,5 +1,6 @@
 """One view of long-running work: file transfers, media imports, AI re-embedding, cloud syncs,
-backup tasks and jobs registered directly (ARCH-4, ARCH-5).
+backup tasks and jobs registered directly (ARCH-4, ARCH-5); jobs_more adds Docker clean-up,
+downloads, drive tests and storage checks (NJOB-2).
 
 Every job has the same typed shape (Job). Each engine keeps running its own work; a source
 adapter maps its state into Job, and cancel requests go back to that engine. Jobs seen
@@ -10,7 +11,7 @@ import os
 import threading
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -357,3 +358,72 @@ SOURCES: dict[str, tuple[Callable[[], list[Job]], Callable[[str], bool] | None]]
 }  # thumb_prefetch adds "thumbs" itself (it imports this module, not the other way round)
 
 job_manager = JobManager()
+
+
+# --- reporting helpers for work that runs on its own (NJOB-2) ------------------------------------
+PAUSED_WHY = {
+    "busy": "Waiting until the NAS is idle",
+    "standby": "Waiting for a sleeping disk",
+    "outside-schedule": "Waiting for the AI learning hours",
+    "error": "The last try failed; trying again shortly",
+}
+PROGRESS_EVERY_S = 60.0
+
+
+class PassReport:
+    """A background pass in the Jobs centre: listed from its first piece of work, shown as paused
+    while it waits, and moved to the history when it runs out of work."""
+
+    def __init__(self, kind: str, title: str, title_id: str) -> None:
+        self.kind, self.title, self.title_id = kind, title, title_id
+        self.job_id: str | None = None
+        self._progress: tuple[str, float | None] = ("", None)
+        self._progress_at = 0.0
+
+    def note(
+        self, state: str, progress: Callable[[], tuple[str, float | None]], worked: tuple[str, ...] = ("done",)
+    ) -> None:
+        """One step's outcome: work done (`worked`), a wait (PAUSED_WHY) or nothing left to do.
+        `progress` (detail, percent) is asked at most once a minute."""
+        if state in worked:
+            if self.job_id is None:
+                self.job_id = job_manager.register(self.kind, self.title, title_id=self.title_id).id
+                self._progress_at = 0.0
+            now = time.time()
+            if now - self._progress_at >= PROGRESS_EVERY_S:
+                self._progress, self._progress_at = progress(), now
+            detail, percent = self._progress
+            job_manager.update(self.job_id, status="running", detail=detail, percent=percent)
+        elif state in PAUSED_WHY:
+            if self.job_id is not None:
+                job_manager.update(self.job_id, status="paused", detail=PAUSED_WHY[state])
+        elif self.job_id is not None:
+            job_manager.update(self.job_id, detail=self._progress[0])
+            job_manager.finish(self.job_id)
+            self.job_id = None
+
+
+def follow(
+    events: Iterable[dict[str, Any]],
+    kind: str,
+    title: str,
+    title_id: str = "",
+    title_params: dict[str, Any] | None = None,
+    owner: str | None = None,
+) -> Iterator[dict[str, Any]]:
+    """Passes a progress stream's events on and mirrors them in the Jobs centre: percent and message
+    as they come, done or failed at the end, cancelled when the stream stops early (its window was
+    closed, which stops the work)."""
+    job = job_manager.register(kind, title, owner=owner, title_id=title_id, title_params=title_params)
+    status, error = "cancelled", None
+    try:
+        for ev in events:
+            if ev.get("step") == "error":
+                status, error = "error", str(ev.get("message") or ev.get("error") or "Failed")
+            elif ev.get("done"):
+                status = "done"
+            else:
+                job_manager.update(job.id, percent=ev.get("percent"), detail=str(ev.get("message") or ""))
+            yield ev
+    finally:
+        job_manager.finish(job.id, status=status, error=error)

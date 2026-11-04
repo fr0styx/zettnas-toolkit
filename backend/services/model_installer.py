@@ -92,6 +92,12 @@ def get_job(job_id: str) -> dict[str, Any] | None:
         return dict(job) if job else None
 
 
+def list_jobs() -> list[dict[str, Any]]:
+    """Every download this run, for the Jobs centre (NJOB-2)."""
+    with _LOCK:
+        return [dict(j) for j in _JOBS.values()]
+
+
 def cancel_job(job_id: str) -> bool:
     ev = _CANCEL.get(job_id)
     if not ev:

@@ -75,6 +75,14 @@
   only the opened folder's thumbnails were listed. It now shows from its first thumbnail and says
   when it is paused because the NAS is busy.
 
+- **More background work in the Jobs centre** (NJOB-2): Docker clean-up, AI model downloads, app
+  installs (and the AI pack), virtual machine installer downloads, drive self-tests, Unraid parity
+  checks and the mover, scrubs on other platforms, replication runs, and the idle-time photo
+  descriptions and photo search vectors now show there with their progress; the downloads and the
+  Docker clean-up can be cancelled from it. Background passes show as paused while they wait for
+  an idle NAS or a sleeping disk. Job titles now reach the page in the reader's language (the API
+  had left out their message keys), and restores and snapshot jobs have a name in the list.
+
 #### Performance
 
 - **Converted videos play smoothly** (NVID-1): a video the browser can't play as it is is now

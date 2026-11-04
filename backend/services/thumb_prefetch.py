@@ -169,14 +169,14 @@ class Backfill:
             self.job_id = job.id
         if self.job_id is not None:
             percent = min(99.0, 100.0 * self.cursor / self.last_id) if self.last_id else None
-            job_manager.update(self.job_id, detail=self._detail(), percent=percent)
+            job_manager.update(self.job_id, status="running", detail=self._detail(), percent=percent)
 
     def _paused(self) -> str:
         """A busy NAS stops the pass for a while; its Jobs row stays and says why (NJOB-1)."""
         if self.job_id is not None:
             from backend.services.jobs import job_manager
 
-            job_manager.update(self.job_id, detail=f"{self._detail()}, paused while the NAS is busy")
+            job_manager.update(self.job_id, status="paused", detail=f"{self._detail()}; waiting until the NAS is idle")
         return "busy"
 
     def _finish_pass(self) -> str:

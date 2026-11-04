@@ -453,6 +453,11 @@ class ReplicationEngine:
     def _execute(self, job: dict[str, Any]) -> None:
         job_id = str(job.get("id", ""))
         name = job.get("name") or job_id
+        from backend.services.jobs import job_manager
+
+        run = job_manager.register(
+            "replication", f"Replicating {name}", title_id="jobs.t.replication", title_params={"name": name}
+        )  # NJOB-2
         self.update_job_status(job_id, "running")
         try:
             res = replicate(job)
@@ -460,8 +465,10 @@ class ReplicationEngine:
             err = str(e)[:300]
             logger.error("[Replication] %s failed: %s", name, err)
             self.update_job_status(job_id, "error", error=err)
+            job_manager.finish(run.id, "error", err)
             _notify(f"Replication failed: {name}", err, "warning", job_id)
             return
+        job_manager.finish(run.id)
         self.update_job_status(
             job_id, "success", bytes_transferred=res["bytes"], last_success=time.time(), last_snapshot=res["snapshot"]
         )

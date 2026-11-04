@@ -31,7 +31,10 @@ def pack_install(req: PackInstallRequest | None = None):
     req = req or PackInstallRequest()
 
     def events():
-        for e in ai_pack.stream_install(req.preset, req.storage_root):
+        from backend.services.jobs import follow
+
+        stream = ai_pack.stream_install(req.preset, req.storage_root)
+        for e in follow(stream, "app_install", "Installing AI pack", "jobs.t.app_install", {"name": "AI pack"}):
             yield json.dumps(e) + "\n"
 
     return StreamingResponse(events(), media_type="application/x-ndjson")

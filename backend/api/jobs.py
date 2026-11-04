@@ -1,9 +1,12 @@
 """Jobs: one list of long-running work and its history, with cancel (ARCH-4)."""
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal
+from backend.services import jobs_more  # noqa: F401  (adds its sources to the list, NJOB-2)
 from backend.services.jobs import job_manager
 
 router = APIRouter(tags=["Jobs"])
@@ -21,6 +24,9 @@ class JobOut(BaseModel):
     finished_at: float | None = None
     error: str | None = None
     can_cancel: bool = False
+    # the title in the reader's language (NUX-3); without these the page only had the English
+    title_id: str = ""
+    title_params: dict[str, Any] = {}
 
 
 class JobList(BaseModel):

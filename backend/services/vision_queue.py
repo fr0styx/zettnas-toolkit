@@ -302,6 +302,14 @@ class VisionQueue:
         self.ocr = ocr_image_bytes
         self.last_state = "starting"
         self.last_error = ""
+        from backend.services.jobs import PassReport
+
+        self.report = PassReport("photo_captions", "Describing photos for search", "jobs.t.captions")  # NJOB-2
+
+    def _progress(self) -> tuple[str, float | None]:
+        st = self.status()
+        photos, done = int(st["photos"]), int(st["captioned"])
+        return f"{done:,} of {photos:,} photos described", (100.0 * done / photos if photos else None)
 
     def _host(self) -> str:
         if self.host:
@@ -515,6 +523,7 @@ class VisionQueue:
             except Exception as e:
                 self.last_state, self.last_error = "error", f"{type(e).__name__}: {e}"[:300]
                 logger.debug("vision_queue.run_forever: pass failed", exc_info=True)
+            self.report.note(self.last_state, self._progress, worked=("done", "error"))
             sleep(waits.get(self.last_state, 60))
 
 

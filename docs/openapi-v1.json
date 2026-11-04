@@ -23393,6 +23393,17 @@
      "title": {
       "title": "Title",
       "type": "string"
+     },
+     "title_id": {
+      "default": "",
+      "title": "Title Id",
+      "type": "string"
+     },
+     "title_params": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "Title Params",
+      "type": "object"
      }
     },
     "required": [

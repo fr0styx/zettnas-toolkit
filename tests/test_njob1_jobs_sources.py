@@ -118,5 +118,6 @@ def test_a_pass_shows_from_its_first_thumbnail_and_says_when_it_pauses(tmp_path,
     assert bf.step() == "busy"
     assert seen[0] == [] and seen[1] == ["1 made, 0 waiting for sleeping disks"]
     (job,) = [j for j in job_manager.list(everyone=True)["active"] if j["kind"] == "thumbnails"]
-    assert job["detail"] == "20 made, 0 waiting for sleeping disks, paused while the NAS is busy"
+    assert job["status"] == "paused"
+    assert job["detail"] == "20 made, 0 waiting for sleeping disks; waiting until the NAS is idle"
     assert bf.cursor == 20  # the next try picks up where it stopped

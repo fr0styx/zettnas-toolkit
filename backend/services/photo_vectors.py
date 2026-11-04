@@ -73,10 +73,15 @@ def ensure_schema(conn) -> None:
     conn.executescript(SCHEMA)
 
 
+class _NoReport:
+    def note(self, *_args: Any, **_kw: Any) -> None:
+        pass
+
+
 class PhotoVectorQueue:
     """Makes the missing photo vectors, a batch at a time, while the machine is idle."""
 
-    def __init__(self, engine, idle: Callable[[], bool], post: Callable = post_embeddings):
+    def __init__(self, engine, idle: Callable[[], bool], post: Callable = post_embeddings, report: Any = None):
         """engine: the AI engine; idle: when the GPU may be used (vision_queue.system_idle).
         Both are handed in: this module is used by search, which the engine imports."""
         self.engine = engine
@@ -84,6 +89,12 @@ class PhotoVectorQueue:
         self.post = post
         self.last_state = "starting"
         self.last_error = ""
+        self.report = report or _NoReport()  # NJOB-2: the Jobs centre's PassReport, handed in by main
+
+    def _progress(self) -> tuple[str, float | None]:
+        st = self.status()
+        photos, done = int(st["photos"]), int(st["done"])
+        return f"{done:,} of {photos:,} photos ready", (100.0 * done / photos if photos else None)
 
     def process_batch(self) -> str:
         host, model = settings(self.engine.get_config())
@@ -143,6 +154,7 @@ class PhotoVectorQueue:
             except Exception as e:
                 self.last_state, self.last_error = "error", f"{type(e).__name__}: {e}"[:300]
                 logger.debug("photo_vectors: batch failed", exc_info=True)
+            self.report.note(self.last_state, self._progress)  # NJOB-2
             sleep(waits.get(self.last_state, 60))
 
 
@@ -213,11 +225,11 @@ def matches(conn, cfg: dict[str, Any], query: str, k: int = TOP_K) -> dict[int, 
 _QUEUE: PhotoVectorQueue | None = None
 
 
-def get_queue(engine=None, idle: Callable[[], bool] | None = None) -> PhotoVectorQueue:
-    """The one queue; the first caller hands in the engine and the idle check."""
+def get_queue(engine=None, idle: Callable[[], bool] | None = None, report: Any = None) -> PhotoVectorQueue:
+    """The one queue; the first caller hands in the engine, the idle check and the Jobs centre's report."""
     global _QUEUE
     if _QUEUE is None:
         if engine is None or idle is None:
             raise RuntimeError("the photo vector queue starts with the engine and an idle check")
-        _QUEUE = PhotoVectorQueue(engine, idle)
+        _QUEUE = PhotoVectorQueue(engine, idle, report=report)
     return _QUEUE
