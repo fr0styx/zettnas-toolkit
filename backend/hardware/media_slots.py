@@ -9,13 +9,17 @@ import subprocess
 import time
 
 from backend.config import HOST_SYS
+from backend.hardware import media_events
 from backend.ignored_errors import ignored
+from backend.settings import test_mode
 
 # Slots ejected by the person; shared with the copy service, which ejects and rescans them
 EJECTED_SLOTS: set[str] = set()
 
 
 _LAST_MEDIA_PROBE = 0.0
+# a slot's last size and when it was read (time.monotonic()), for media_events (PERF-18)
+_SIZES: dict[str, tuple[int, float]] = {}
 
 
 def _ensure_slot_polling(block_path: str, dev: str, is_empty: bool):
@@ -39,7 +43,8 @@ def _ensure_slot_polling(block_path: str, dev: str, is_empty: bool):
         pass
 
     now = time.time()
-    if is_empty and (now - _LAST_MEDIA_PROBE) > 3.0:
+    # with the kernel's events heard, its own polling finds a new card: no need to open the slot
+    if is_empty and not media_events.listening() and (now - _LAST_MEDIA_PROBE) > 3.0:
         _LAST_MEDIA_PROBE = now
         for dev_prefix in ["/host/dev", "/dev"]:
             dev_path = os.path.join(dev_prefix, dev)
@@ -119,6 +124,18 @@ def is_card_reader(block_path: str) -> bool:
     return found
 
 
+def _slot_size(block_path: str, dev: str) -> int:
+    """The card's size in a slot, read again only after the kernel reported a change (or every
+    half minute) once its events are heard (PERF-18)."""
+    if not test_mode():
+        media_events.start()
+    size, when = _SIZES.get(dev, (0, 0.0))
+    if media_events.should_probe(when):
+        size = probe_media_slot_capacity(dev, fallback_sysfs_path=os.path.join(block_path, "size"))
+        _SIZES[dev] = (size, time.monotonic())
+    return size
+
+
 def read_media_slots():
     slots = {
         "sd": {"size": 0, "dev": None, "ejected": "sd" in EJECTED_SLOTS},
@@ -131,7 +148,7 @@ def read_media_slots():
                 if "usb" in target and is_card_reader(p):
                     lun_str = target.split("/")[-3]
                     dev = os.path.basename(p)
-                    size = probe_media_slot_capacity(dev, fallback_sysfs_path=os.path.join(p, "size"))
+                    size = _slot_size(p, dev)
                     _ensure_slot_polling(p, dev, size == 0)
                     slot_name = "sd" if lun_str.endswith(":1") else ("tf" if lun_str.endswith(":0") else None)
                     if slot_name:

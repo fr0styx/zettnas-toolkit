@@ -32,7 +32,7 @@
 
 - **Sources from PDFs name the page** (AI-21): a search or chat source from a PDF shows "p. 4"
   next to its section, and Zetty is told the page too. PDFs get their pages when they are next
-  indexed (a changed file, or Re-index in AI settings); empty pages now count, so the numbers
+  indexed (a changed file, or Re-index Knowledge Base in AI settings); empty pages now count, so the numbers
   match the reader's.
 
 - **Summaries of long files cover the whole file** (AI-22): asking Zetty to summarise, or what is
@@ -40,6 +40,13 @@
   very long files), take notes on each, and answer from the notes, with a source per part.
   Before, only the first part was read. "Summarise" and "what's in it" now also work in German,
   French, Spanish and Chinese. Without a model running, the first part is read as before.
+
+#### Performance
+
+- **The card reader is asked about its cards only when something changes** (PERF-18): ZettNAS
+  now listens for the kernel's own notice that a card went in or out, and reads the slots' size
+  then (and every half minute, in case a notice was missed), instead of on every two-second
+  pass. Where those notices can't be heard, the slots are read as before.
 
 #### Usability
 
