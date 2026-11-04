@@ -481,12 +481,12 @@ export function openDiagnosticsPreviewModal(data) {
     let alertItemsHtml = '';
     if (alerts.length > 0) {
       alertItemsHtml = `
-        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--zn-line-8); display: flex; flex-direction: column; gap: 4px;">
+        <div class="syj-col-box">
           ${alerts
             .map(
               (a) => `
-            <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); display: flex; align-items: flex-start; gap: 6px;">
-              <span style="font-size: var(--zn-fs-xs); margin-top: 2px;">${a.level === 'critical' ? '🔴' : '🟡'}</span>
+            <div class="syj-row-xs">
+              <span class="syj-xs">${a.level === 'critical' ? '🔴' : '🟡'}</span>
               <span>${escapeHtml(a.message || '')}</span>
             </div>
           `
@@ -498,14 +498,14 @@ export function openDiagnosticsPreviewModal(data) {
 
     banner.innerHTML = `
       <div style="padding: 10px 14px; background: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 8px;">
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 14px;">${icon}</span>
+        <div class="syj-row">
+          <div class="syj-row-2">
+            <span class="syj-fs14">${icon}</span>
             <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: ${badgeColor}; letter-spacing: 0.5px;">${escapeHtml(title)}</span>
           </div>
-          <span style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: monospace;">${escapeHtml(t('sys.kernel', 'ZettOS kernel {platform}', { platform: data.platform || '' }))}</span>
+          <span class="syj-xs-muted-mono">${escapeHtml(t('sys.kernel', 'ZettOS kernel {platform}', { platform: data.platform || '' }))}</span>
         </div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;">${escapeHtml(desc)}</div>
+        <div class="syj-xs-muted">${escapeHtml(desc)}</div>
         ${alertItemsHtml}
       </div>
     `;
@@ -523,30 +523,30 @@ export function openDiagnosticsPreviewModal(data) {
     const memUsedGb = memory.used_gb !== undefined ? memory.used_gb : Math.round((memory.used_bytes || 0) / (1024 ** 3));
 
     grid.innerHTML = `
-      <div style="background:var(--zn-glaze-4); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dgx.host', 'Host & OS')}</div>
-        <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); margin-top:2px;">${escapeHtml(data.chassis || 'Appliance')}</div>
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;">${t('dgx.uptime', 'Uptime: {h}h', { h: data.uptime_hours || 0 })}</div>
+      <div class="syj-box">
+        <div class="syj-xs-bold-muted">${t('dgx.host', 'Host & OS')}</div>
+        <div class="syj-xs-bold-strong">${escapeHtml(data.chassis || 'Appliance')}</div>
+        <div class="syj-xs-muted-2">${t('dgx.uptime', 'Uptime: {h}h', { h: data.uptime_hours || 0 })}</div>
       </div>
-      <div style="background:var(--zn-glaze-4); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dgx.memory', 'Memory')}</div>
-        <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); margin-top:2px;">${memPct}% Used</div>
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;">${memUsedGb} / ${memTotalGb} GB RAM</div>
+      <div class="syj-box">
+        <div class="syj-xs-bold-muted">${t('dgx.memory', 'Memory')}</div>
+        <div class="syj-xs-bold-strong">${memPct}% Used</div>
+        <div class="syj-xs-muted-2">${memUsedGb} / ${memTotalGb} GB RAM</div>
       </div>
-      <div style="background:var(--zn-glaze-4); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dgx.storage', 'Storage')}</div>
-        <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); margin-top:2px;">${t('dgx.pools', '{count, plural, one {# Pool} other {# Pools}}', { count: storage.pools_count || 0 })}</div>
+      <div class="syj-box">
+        <div class="syj-xs-bold-muted">${t('dgx.storage', 'Storage')}</div>
+        <div class="syj-xs-bold-strong">${t('dgx.pools', '{count, plural, one {# Pool} other {# Pools}}', { count: storage.pools_count || 0 })}</div>
         <div style="font-size:var(--zn-fs-xs); color:${(storage.degraded_disks?.length || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${escapeHtml(t('sys.drives_standby', '{count, plural, one {# drive} other {# drives}} ({standby} asleep)', { count: storage.disks_count || 0, standby: storage.standby_count || 0 }))}</div>
       </div>
-      <div style="background:var(--zn-glaze-4); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dgx.docker', 'Docker Fleet')}</div>
-        <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); margin-top:2px;">${docker.running || 0} / ${docker.total || 0} Running</div>
+      <div class="syj-box">
+        <div class="syj-xs-bold-muted">${t('dgx.docker', 'Docker Fleet')}</div>
+        <div class="syj-xs-bold-strong">${docker.running || 0} / ${docker.total || 0} Running</div>
         <div style="font-size:var(--zn-fs-xs); color:${(docker.restarting || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${escapeHtml(t('sys.restarting_dead', '{restarting} restarting, {dead} failed', { restarting: docker.restarting || 0, dead: docker.dead || 0 }))}</div>
       </div>
-      <div style="background:var(--zn-glaze-4); border:1px solid var(--zn-line-8); border-radius:6px; padding:10px;">
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('dgx.vms', 'Virtual Machines')}</div>
-        <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); margin-top:2px;">${vms.active_vm_count || 0} / ${vms.total_vm_count || 0} Active</div>
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;">${t('dgx.headroom', 'Headroom: Safe')}</div>
+      <div class="syj-box">
+        <div class="syj-xs-bold-muted">${t('dgx.vms', 'Virtual Machines')}</div>
+        <div class="syj-xs-bold-strong">${vms.active_vm_count || 0} / ${vms.total_vm_count || 0} Active</div>
+        <div class="syj-xs-muted-2">${t('dgx.headroom', 'Headroom: Safe')}</div>
       </div>
     `;
   }

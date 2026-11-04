@@ -215,12 +215,6 @@
   "styles": 18,
   "templates": 10
  },
- "frontend/src/components/management/notifications.js": {
-  "buttons": 0,
-  "globals": 0,
-  "styles": 44,
-  "templates": 0
- },
  "frontend/src/components/management/overview.js": {
   "buttons": 0,
   "globals": 0,
@@ -236,7 +230,7 @@
  "frontend/src/components/management/system.js": {
   "buttons": 0,
   "globals": 0,
-  "styles": 33,
+  "styles": 7,
   "templates": 5
  },
  "frontend/src/components/management/ups.js": {

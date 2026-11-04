@@ -129,6 +129,10 @@
 - **The diagnostics preview is built from stylesheet classes** (NUX-15): its 10 inline styles in
   the start page move into the Mission Control sheet; pixel-for-pixel the same in both themes.
 
+- **The notification channel dialog and the diagnostics preview's contents are built from
+  stylesheet classes** (NUX-15): 70 inline styles become 20 classes; pixel-for-pixel the same in
+  both themes.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 

@@ -1003,3 +1003,27 @@
 #diagnostics-preview-modal-overlay .dgp-xs-accent-mono-box { margin: 0; padding: 12px 14px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-8); border-radius: 8px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--zn-text-accent); max-height: 200px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5; }
 #diagnostics-preview-modal-overlay .dgp-row-box { display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid var(--zn-line-8); }
 #diagnostics-preview-modal-overlay .dgp-soft-box { background: var(--zn-glaze-6); border-color: var(--zn-line-15); color: var(--zn-text-soft); }
+
+/* Notification channels (notifications.js): classes instead of inline styles (NUX-15), same look */
+:is(#management-modal-overlay, #modal-notification-channel) .ntf-x { margin-bottom: 12px; }
+:is(#management-modal-overlay, #modal-notification-channel) .ntf-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+:is(#management-modal-overlay, #modal-notification-channel) .ntf-strong-box { width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-25); padding: 8px 10px; color: var(--zn-text-strong); }
+:is(#management-modal-overlay, #modal-notification-channel) .ntf-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; }
+:is(#management-modal-overlay, #modal-notification-channel) .ntf-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 12px; }
+:is(#management-modal-overlay, #modal-notification-channel) .ntf-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+:is(#management-modal-overlay, #modal-notification-channel) .ntf-row-xs-strong { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); }
+:is(#management-modal-overlay, #modal-notification-channel) .ntf-xs-strong-mono-box { width: 100%; height: 120px; font-family: monospace; font-size: var(--zn-fs-xs); border: 1px solid var(--zn-line-12); background: var(--zn-shade-25); padding: 8px 10px; color: var(--zn-text-strong); }
+
+/* System panes (system.js): classes instead of inline styles (NUX-15), same look */
+:is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-col-box { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--zn-line-8); display: flex; flex-direction: column; gap: 4px; }
+:is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-row-xs { font-size: var(--zn-fs-xs); color: var(--zn-text-bright); display: flex; align-items: flex-start; gap: 6px; }
+:is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-xs { font-size: var(--zn-fs-xs); margin-top: 2px; }
+:is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-row { display: flex; align-items: center; justify-content: space-between; }
+:is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-row-2 { display: flex; align-items: center; gap: 8px; }
+:is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-fs14 { font-size: 14px; }
+:is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-xs-muted-mono { font-size: var(--zn-fs-xs); color: var(--muted); font-family: monospace; }
+:is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px; }
+:is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-box { background: var(--zn-glaze-4); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px; }
+:is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-xs-bold-muted { font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase; font-weight: 700; }
+:is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-xs-bold-strong { font-size: var(--zn-fs-xs); font-weight: 800; color: var(--zn-text-strong); margin-top: 2px; }
+:is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 1px; }
