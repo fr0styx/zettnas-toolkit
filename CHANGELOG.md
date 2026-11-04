@@ -138,6 +138,11 @@
 
 #### Usability
 
+- **The file viewer's markup uses classes** (NUX-15): 16 inline styles in the viewer's loading,
+  details, audio, PDF and error views and the video bars moved into 14 classes in its own lazy
+  sheet (74-viewer-markup.css), each checked in a browser to compute the same style in both
+  themes. The 11 left inline are shown and hidden by the code or animated.
+
 - **The Apps window scrolls sideways from its bottom edge**: the horizontal scrollbar is the
   window's bottom edge, like the vertical one on the right, instead of floating above the last
   rows.

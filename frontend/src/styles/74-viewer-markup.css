@@ -1,0 +1,16 @@
+
+/* NUX-15: the viewer's loading, info and fallback markup (file-preview-modal.js): classes instead of inline styles (NUX-15), same look */
+.quicklook-modal-overlay .qlv-col-muted { display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--muted); }
+.quicklook-modal-overlay .qlv-xs { font-size: var(--zn-fs-xs); }
+.quicklook-modal-overlay .qlv-box { max-height: 360px; border-radius: 8px; object-fit: contain; }
+.quicklook-modal-overlay .qlv-size { width: 100%; max-height: 280px; overflow: auto; }
+.quicklook-modal-overlay .qlv-col { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; padding: 14px; }
+.quicklook-modal-overlay .qlv-xs-muted-mono { font-size: var(--zn-fs-xs); color: var(--muted); font-family: monospace; }
+.quicklook-modal-overlay .qlv-col-2 { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.quicklook-modal-overlay .qlv-fs52 { font-size: 52px; }
+.quicklook-modal-overlay .qlv-box-2 { width: 100%; height: 100%; border: none; border-radius: 6px; }
+.quicklook-modal-overlay .qlv-fs36 { font-size: 36px; }
+.quicklook-modal-overlay .qlv-fs32 { font-size: 32px; }
+.quicklook-modal-overlay .qlv-xs-semi { font-size: var(--zn-fs-xs); font-weight: 600; }
+.quicklook-modal-overlay .qlv-size-2 { width: 0%; }
+.quicklook-modal-overlay .qlv-x { left: 0%; }

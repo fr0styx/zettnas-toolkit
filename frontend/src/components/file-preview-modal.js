@@ -199,9 +199,9 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
         <button type="button" class="quicklook-close-btn" id="quicklook-close-btn" title="${t('preview.close', 'Close (Esc)')}" aria-label="${t('preview.close', 'Close (Esc)')}">${ICONS.close}</button>
       </div>
       <div class="quicklook-body" id="quicklook-body">
-        <div style="display:flex; flex-direction:column; align-items:center; gap:12px; color:var(--muted);">
+        <div class="qlv-col-muted">
           <div class="spinner" style="width:28px; height:28px; border:2px solid var(--zn-line-20); border-top-color:var(--accent-cyan, #0ea5e9); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
-          <span style="font-size:var(--zn-fs-xs);">${t('ql.loading', 'Loading preview…')}</span>
+          <span class="qlv-xs">${t('ql.loading', 'Loading preview…')}</span>
         </div>
       </div>
       <div class="quicklook-inspector" id="quicklook-inspector">
@@ -486,20 +486,20 @@ async function loadCurrentItem() {
     setIconLabel(metaEl, '💤', t('ui.nvme_rag_cache_zero_disk', 'Search without waking drives'));
     const isPhoto = isImageFile(_currentName);
     const thumbHtml = isPhoto && _currentAiMeta.thumbnailUrl
-      ? `<img src="${escapeHtml(_currentAiMeta.thumbnailUrl)}" class="quicklook-img" alt="${escapeHtml(_currentName)}" style="max-height:360px; border-radius:8px; object-fit:contain;" />`
+      ? `<img src="${escapeHtml(_currentAiMeta.thumbnailUrl)}" class="quicklook-img qlv-box" alt="${escapeHtml(_currentName)}" />`
       : '';
     const excerptHtml = _currentAiMeta.excerpt
-      ? `<pre class="quicklook-code" style="width:100%; max-height:280px; overflow:auto;"><code>${escapeHtml(_currentAiMeta.excerpt)}</code></pre>`
+      ? `<pre class="quicklook-code qlv-size"><code>${escapeHtml(_currentAiMeta.excerpt)}</code></pre>`
       : '';
     bodyEl.innerHTML = `
-      <div style="display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; padding:14px;">
+      <div class="qlv-col">
         <div style="width:100%; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; border-radius:8px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.28); font-size:var(--zn-fs-xs); color:var(--lt-t-6ee7b7ff, #6ee7b7);">
           <span>💤 <strong>${t('ql.asleep_title', 'The disk is asleep:')}</strong> ${t('ql.asleep_msg', 'this preview comes from the fast drive, so the disks stay asleep.')}</span>
           <button type="button" class="btn-pill-toggle" id="btn-quicklook-wake-load" style="color: var(--zn-text-accent); border-color: rgba(56,189,248,0.4);">⚡ ${t('ql.wake_load', 'Wake the disk and load the whole file')}</button>
         </div>
         ${thumbHtml}
         ${excerptHtml}
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:monospace;">${escapeHtml(_currentPath || '')}</div>
+        <div class="qlv-xs-muted-mono">${escapeHtml(_currentPath)}</div>
       </div>
     `;
     const wakeBtn = bodyEl.querySelector('#btn-quicklook-wake-load');
@@ -575,8 +575,8 @@ async function loadCurrentItem() {
           addGalleryNav(bodyEl);
         } else {
           bodyEl.innerHTML = `
-            <div style="display:flex; flex-direction:column; align-items:center; gap:16px;">
-              <div style="font-size:52px;">🎵</div>
+            <div class="qlv-col-2">
+              <div class="qlv-fs52">🎵</div>
               <audio controls autoplay class="quicklook-audio" src="${streamUrl}"></audio>
             </div>
           `;
@@ -584,7 +584,7 @@ async function loadCurrentItem() {
       } else if (res.type === 'pdf') {
         metaEl.textContent = `${t('ql.pdf', 'PDF document')}${szStr}`;
         const pdfUrl = `/api/fs/download?path=${encodeURIComponent(_currentPath)}`;
-        bodyEl.innerHTML = `<iframe src="${pdfUrl}" style="width:100%; height:100%; border:none; border-radius:6px;"></iframe>`;
+        bodyEl.innerHTML = `<iframe class="qlv-box-2" src="${pdfUrl}"></iframe>`;
       } else if (res.type === 'text') {
         const lines = res.lines_count || 1;
         metaEl.textContent = `${t('ql.lines', '{count, plural, one {# line} other {# lines}}', { count: lines })}${szStr}${res.truncated ? ` ${t('ql.first_64kb', '(first 64 KB)')}` : ''}`;
@@ -601,8 +601,8 @@ async function loadCurrentItem() {
         metaEl.textContent = `${t('ql.binary', 'Binary file')}${szStr}`;
         addGalleryNav(bodyEl);
         bodyEl.innerHTML = `
-          <div style="display:flex; flex-direction:column; align-items:center; gap:12px; color:var(--muted);">
-            <div style="font-size:36px;">📄</div>
+          <div class="qlv-col-muted">
+            <div class="qlv-fs36">📄</div>
             <span>${t('ql.none', 'There is no preview for this kind of file.')}</span>
           </div>
         `;
@@ -613,8 +613,8 @@ async function loadCurrentItem() {
     metaEl.textContent = t('ui.preview_error', 'Preview error');
     bodyEl.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--crit, #ff5c5c);">
-        <div style="font-size:32px;">⚠️</div>
-        <span style="font-size:var(--zn-fs-xs); font-weight:600;">${escapeHtml(err.message || 'Unable to preview file')}</span>
+        <div class="qlv-fs32">⚠️</div>
+        <span class="qlv-xs-semi">${escapeHtml(err.message || 'Unable to preview file')}</span>
       </div>
     `;
   }
@@ -1164,9 +1164,9 @@ function renderVideoPlayer(container, streamUrl, meta) {
         <!-- Interactive Scrubber -->
         <div class="quicklook-video-scrub-container" id="ql-video-scrub-container">
           <div class="quicklook-video-scrub-track" id="ql-video-scrub-track">
-            <div class="quicklook-video-buffer-bar" id="ql-video-buffer-bar" style="width: 0%;"></div>
-            <div class="quicklook-video-progress-bar" id="ql-video-progress-bar" style="width: 0%;"></div>
-            <div class="quicklook-video-scrub-thumb" id="ql-video-scrub-thumb" style="left: 0%;"></div>
+            <div class="quicklook-video-buffer-bar qlv-size-2" id="ql-video-buffer-bar"></div>
+            <div class="quicklook-video-progress-bar qlv-size-2" id="ql-video-progress-bar"></div>
+            <div class="quicklook-video-scrub-thumb qlv-x" id="ql-video-scrub-thumb"></div>
           </div>
           <div class="quicklook-video-time-tooltip" id="ql-video-time-tooltip">00:00</div>
         </div>

@@ -152,7 +152,7 @@
  "frontend/src/components/file-preview-modal.js": {
   "buttons": 0,
   "globals": 2,
-  "styles": 27,
+  "styles": 11,
   "templates": 13
  },
  "frontend/src/components/file-versions.js": {
