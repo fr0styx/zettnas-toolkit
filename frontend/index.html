@@ -273,29 +273,29 @@
     
     <!-- Step 1: Credentials (Dual Mode: Chooser vs Classic) -->
     <form id="login-step-credentials" novalidate>
-      <svg class="ic" style="width: 44px; height: 44px; color: var(--ok2); margin-bottom: 16px;"><use href="#i-chip"/></svg>
-      <h2 style="margin: 0 0 6px 0; font-size: 16px; letter-spacing: 2px; color: var(--zn-text-strong);" data-i18n="login.title">ZettNAS Toolkit</h2>
-      <p id="login-identity-txt" style="margin: 0 0 20px 0; font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="login.auth_required">Select an account or enter credentials</p>
+      <svg class="ic lgn-ok"><use href="#i-chip"/></svg>
+      <h2 class="lgn-fs16-strong" data-i18n="login.title">ZettNAS Toolkit</h2>
+      <p class="lgn-xs-muted" id="login-identity-txt" data-i18n="login.auth_required">Select an account or enter credentials</p>
 
       <!-- Mode A: Account Chooser Grid -->
-      <div id="login-users-chooser" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; max-height: 200px; overflow-y: auto;">
+      <div class="lgn-x" id="login-users-chooser" style="display: flex;">
         <!-- Populated dynamically via JS -->
       </div>
 
       <!-- Selected Account Card (When clicked from chooser) -->
       <div id="login-user-selected-card" role="button" tabindex="0" title="Click to change account" data-i18n-title="ui.click_to_change_account" style="display: none; align-items: center; gap: 12px; background: rgba(14,165,233,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; cursor: pointer; transition: all 0.18s ease; user-select: none;">
         <div id="login-selected-initial" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 13px;">A</div>
-        <div style="text-align: left; flex: 1; min-width: 0;">
-          <div id="login-selected-name" data-sample style="font-weight: 700; color: var(--zn-text-strong); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
+        <div class="lgn-grow">
+          <div class="lgn-fs13-bold-strong" id="login-selected-name" data-sample>Administrator</div>
           <div style="font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); display: flex; align-items: center; gap: 4px;">
-            <span data-i18n="signin.change_user">Change user</span> <span style="font-size: var(--zn-fs-xs);">▼</span>
+            <span data-i18n="signin.change_user">Change user</span> <span class="lgn-xs">▼</span>
           </div>
         </div>
         <button type="button" id="login-change-user-btn" class="btn-pill-toggle is-small" data-i18n="signin.switch">Switch</button>
       </div>
 
       <!-- Mode B: Manual Username Input (Hidden in Chooser mode) -->
-      <div id="login-manual-fields" style="display: none; margin-bottom: 12px;">
+      <div class="lgn-x-2" id="login-manual-fields" style="display: none;">
         <label for="login-username" class="sr-only" data-i18n="login.username_label">Username</label>
         <input type="text" id="login-username" placeholder="Username" data-i18n-placeholder="mgmt.ups_field_user" autocomplete="username" style="width: 100%; padding: 11px 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong); border-radius: 6px; box-sizing: border-box; text-align: center; font-size: 14px; outline: none; margin-bottom: 10px;">
       </div>
@@ -305,20 +305,20 @@
       <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" data-i18n-placeholder="login.placeholder" style="width: 100%; padding: 11px 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-18); color: var(--zn-text-strong); border-radius: 6px; margin-bottom: 12px; box-sizing: border-box; text-align: center; font-size: 15px; outline: none;">
 
       <!-- Remember Me -->
-      <div style="display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin-bottom: 18px; font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer;">
-        <input type="checkbox" id="login-remember-me" checked style="accent-color: var(--ok2); cursor: pointer;">
-        <label for="login-remember-me" style="cursor: pointer; user-select: none;" data-i18n="signin.keep_signed_in">Keep me signed in</label>
+      <div class="lgn-row-xs-muted">
+        <input class="lgn-x-3" type="checkbox" id="login-remember-me" checked>
+        <label class="lgn-x-4" for="login-remember-me" data-i18n="signin.keep_signed_in">Keep me signed in</label>
       </div>
 
-      <button type="button" id="login-btn" class="suite-toolkit-btn" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 700;" data-i18n="login.btn">Sign in</button>
+      <button type="button" id="login-btn" class="suite-toolkit-btn lgn-fs14-bold" data-i18n="login.btn">Sign in</button>
       <button type="button" id="login-sso-btn" class="suite-toolkit-btn login-sso-btn" hidden data-i18n="signin.sso">Sign in with SSO</button>
       <p id="login-error" class="login-sso-error" role="alert" hidden></p>
       <p id="login-sso-error" class="login-sso-error" role="alert" hidden></p>
 
       <!-- Toggle Links -->
-      <div style="margin-top: 16px; font-size: var(--zn-fs-xs);">
-        <a href="#" id="login-toggle-manual" style="color: var(--muted); text-decoration: none;" data-i18n="signin.other_account">Sign in with a different account</a>
-        <a href="#" id="login-toggle-chooser" style="color: var(--muted); text-decoration: none; display: none;" data-i18n="signin.back_to_list">← Back to the list of accounts</a>
+      <div class="lgn-xs-2">
+        <a class="lgn-muted" href="#" id="login-toggle-manual" data-i18n="signin.other_account">Sign in with a different account</a>
+        <a class="lgn-muted" href="#" id="login-toggle-chooser" style="display: none;" data-i18n="signin.back_to_list">← Back to the list of accounts</a>
       </div>
     </form>
 
@@ -327,17 +327,17 @@
       <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.35); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px auto;">
         🛡️
       </div>
-      <h2 style="margin: 0 0 6px 0; font-size: 16px; letter-spacing: 1px; color: var(--zn-text-strong);" data-i18n="signin.mfa_title">Two-step sign-in</h2>
-      <p id="mfa-user-target" style="margin: 0 0 20px 0; font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="signin.mfa_prompt">Enter the code from your authenticator app</p>
+      <h2 class="lgn-fs16-strong-2" data-i18n="signin.mfa_title">Two-step sign-in</h2>
+      <p class="lgn-xs-muted" id="mfa-user-target" data-i18n="signin.mfa_prompt">Enter the code from your authenticator app</p>
 
       <form id="form-mfa-challenge">
         <input type="text" id="mfa-challenge-code" placeholder="6-Digit Code" data-i18n-placeholder="ui.6_digit_code" maxlength="6" autocomplete="one-time-code" style="width: 100%; padding: 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid rgba(56,189,248,0.4); color: var(--zn-text-accent); border-radius: 6px; margin-bottom: 16px; box-sizing: border-box; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: 6px; outline: none; font-family: monospace;" aria-label="6-Digit Code" data-i18n-aria-label="ui.6_digit_code">
-        <button type="submit" id="btn-submit-mfa" class="suite-toolkit-btn ok" style="width: 100%; padding: 12px; font-size: 13.5px; font-weight: 700;" data-i18n="signin.verify">Verify and sign in</button>
+        <button type="submit" id="btn-submit-mfa" class="suite-toolkit-btn ok lgn-fs135-bold" data-i18n="signin.verify">Verify and sign in</button>
       </form>
 
-      <div style="margin-top: 16px; font-size: var(--zn-fs-xs); display: flex; flex-direction: column; gap: 8px;">
-        <a href="#" id="mfa-toggle-recovery" data-i18n="ui.use_8_character_recovery_code" style="color: var(--zn-text-accent); text-decoration: none;">Use 8-character recovery code</a>
-        <a href="#" id="mfa-back-btn" style="color: var(--muted); text-decoration: none;" data-i18n="signin.back_to_password">← Back to the password</a>
+      <div class="lgn-col-xs">
+        <a class="lgn-accent" href="#" id="mfa-toggle-recovery" data-i18n="ui.use_8_character_recovery_code">Use 8-character recovery code</a>
+        <a class="lgn-muted" href="#" id="mfa-back-btn" data-i18n="signin.back_to_password">← Back to the password</a>
       </div>
     </div>
 
@@ -347,24 +347,24 @@
 <!-- Inactivity Auto-Lock & Manual Lock Screen Overlay -->
 <div id="lock-overlay" style="display: none; position: fixed; inset: 0; z-index: 999990; background: var(--lt-b-080c10bf, rgba(8,12,16,0.75)); backdrop-filter: blur(28px) saturate(180%) brightness(0.65); align-items: center; justify-content: center;">
   <div style="background: var(--lt-b-141b24d9, rgba(20,27,36,0.85)); padding: 40px 36px; border-radius: 16px; text-align: center; border: 1px solid var(--zn-line-14); width: 340px; box-shadow: 0 30px 80px rgba(0,0,0,0.9);">
-    <div id="lock-clock" style="font-size: 42px; font-weight: 800; color: var(--zn-text-strong); letter-spacing: -1px; font-family: var(--font-mono, monospace);">12:00</div>
-    <div id="lock-date" data-sample style="font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px;">Monday, October 9</div>
+    <div class="lck-fs42-bold-strong-mono" id="lock-clock">12:00</div>
+    <div class="lck-xs-muted" id="lock-date" data-sample>Monday, October 9</div>
 
-    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; background: var(--zn-glaze-5); border: 1px solid var(--zn-line-10); border-radius: 10px; padding: 12px; margin-bottom: 20px;">
+    <div class="lck-row-box">
       <div id="lock-avatar" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 14px; border: 1px solid var(--lt-r-ffffff40, rgba(255,255,255,0.25));">A</div>
-      <div style="text-align: left; min-width: 0; flex: 1;">
-        <div id="lock-display-name" data-sample style="font-weight: 700; color: var(--zn-text-strong); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
+      <div class="lck-grow">
+        <div class="lck-fs135-bold-strong" id="lock-display-name" data-sample>Administrator</div>
         <div id="lock-role-badge" style="font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); font-weight: 600;" data-i18n="role.superadmin">Administrator</div>
       </div>
     </div>
 
-    <div style="position: relative; margin-bottom: 12px;">
+    <div class="lck-x">
       <input type="password" id="lock-password" placeholder="Enter password to unlock" data-i18n-placeholder="ui.enter_password_to_unlock" autocomplete="current-password" style="width: 100%; padding: 12px 42px 12px 14px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-20); color: var(--zn-text-strong); border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;" aria-label="Enter password to unlock" data-i18n-aria-label="ui.enter_password_to_unlock">
       <button id="lock-unlock-btn" aria-label="Unlock" data-i18n-aria-label="lock.unlock" style="position: absolute; right: 6px; top: 6px; bottom: 6px; width: 32px; background: var(--ok2, #25c2a0); border: none; border-radius: 6px; color: var(--zn-text-strong); font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">➔</button>
     </div>
 
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-size: var(--zn-fs-xs); color: var(--muted); padding: 0 2px;">
-      <label for="lock-timeout-select" style="cursor: pointer; display: flex; align-items: center; gap: 5px; user-select: none;">
+    <div class="lck-row-xs-muted">
+      <label class="lck-row" for="lock-timeout-select">
         <span aria-hidden="true">⏱️</span>
         <span data-i18n="lock.stay_unlocked">Auto-lock after:</span>
       </label>
@@ -380,7 +380,7 @@
 
     <div id="lock-error" style="display: none; font-size: var(--zn-fs-xs); color: var(--crit, #ff6b6b); margin-bottom: 12px;" data-i18n="lock.wrong_password">Wrong password</div>
 
-    <button id="lock-switch-btn" style="background: transparent; border: none; color: var(--muted); font-size: var(--zn-fs-xs); cursor: pointer; text-decoration: underline;" data-i18n="lock.switch_account">Switch account</button>
+    <button class="lck-xs-muted-box" id="lock-switch-btn" data-i18n="lock.switch_account">Switch account</button>
   </div>
 </div>
 
@@ -603,19 +603,19 @@
         <!-- Desktop Widgets Layer -->
     <div id="desktop-widgets-container" class="pos-top-right glass-standard scale-normal">
       <!-- 1. Time Clock Widget -->
-      <div class="desktop-widget" id="widget-clock" role="button" tabindex="0" title="Click to change timezone & clock format" data-i18n-title="ui.click_to_change_timezone_clock" style="cursor: pointer;">
+      <div class="desktop-widget dsk-x" id="widget-clock" role="button" tabindex="0" title="Click to change timezone & clock format" data-i18n-title="ui.click_to_change_timezone_clock">
         <div class="widget-header">
-          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-clock"/></svg> <span data-i18n="widget.clock">Time Clock</span></span>
-          <span class="widget-badge" id="w-clock-tz" title="Click to toggle 12h/24h" data-i18n-title="ui.click_to_toggle_12h_24h" style="cursor: pointer; user-select: none;">24H</span>
+          <span class="widget-title"><svg class="ic dsk-size"><use href="#i-clock"/></svg> <span data-i18n="widget.clock">Time Clock</span></span>
+          <span class="widget-badge dsk-x-2" id="w-clock-tz" title="Click to toggle 12h/24h" data-i18n-title="ui.click_to_toggle_12h_24h">24H</span>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 4px;">
-          <div style="display: flex; align-items: baseline; justify-content: space-between;">
-            <div style="font-size: 24px; font-weight: 800; font-family: var(--font-mono, monospace); letter-spacing: 0.5px; color: var(--zn-text-strong); line-height: 1;" id="w-clock-time">
-              --:--<span style="font-size: 14px; opacity: 0.65; margin-left: 1px;" id="w-clock-sec">:--</span>
+        <div class="dsk-col">
+          <div class="dsk-row">
+            <div class="dsk-fs24-bold-strong-mono" id="w-clock-time">
+              --:--<span class="dsk-fs14" id="w-clock-sec">:--</span>
             </div>
             <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-ink-brand, var(--brand, #00f0ff));" id="w-clock-ampm"></span>
           </div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 500;" id="w-clock-date">--</div>
+          <div class="dsk-xs-muted" id="w-clock-date">--</div>
         </div>
       </div>
 
@@ -659,7 +659,7 @@
                 <path class="circle-bg" stroke="rgba(255,255,255,0.08)" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 <path id="w-ai-gpu-arc" class="circle" stroke="#a855f7" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
               </svg>
-              <div class="ai-dial-val" id="w-ai-gpu-val" style="color: var(--zn-text-ai);">0%</div>
+              <div class="ai-dial-val dsk-x-3" id="w-ai-gpu-val">0%</div>
             </div>
             <div class="ai-gauge-sub" id="w-ai-gpu-freq">0 MHz</div>
           </div>
@@ -667,18 +667,18 @@
 
         <!-- Live Re-indexing Progress Box inside Widget -->
         <div id="w-ai-reindex-strip" style="display:none; margin:8px 0 6px 0; padding:6px 10px; border-radius:6px; background:var(--lt-b-0f172ad9, rgba(15,23,42,0.85)); border:1px solid rgba(14,165,233,0.35); cursor:pointer;" title="Open AI search" data-i18n-title="ui.click_to_view_knowledge_base">
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:var(--zn-fs-xs); margin-bottom:4px;">
-            <div style="display:flex; align-items:center; gap:5px;">
+          <div class="dsk-row-xs">
+            <div class="dsk-row-2">
               <span class="pulsing-dot" style="width:6px; height:6px; border-radius:50%; background:#00f0ff; display:inline-block;"></span>
-              <strong style="color:var(--zn-text-strong);" data-i18n="ai.reindex_label">Re-indexing</strong>
-              <span id="w-ai-reindex-chunks" style="color:var(--zn-text-muted); font-family:monospace; font-size:var(--zn-fs-xs);">0 / 0</span>
+              <strong class="dsk-strong" data-i18n="ai.reindex_label">Re-indexing</strong>
+              <span class="dsk-xs-muted-mono" id="w-ai-reindex-chunks">0 / 0</span>
             </div>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span id="w-ai-reindex-eta" style="color:var(--zn-text-warn); font-size:var(--zn-fs-xs);">ETA: --</span>
+            <div class="dsk-row-3">
+              <span class="dsk-xs-warn" id="w-ai-reindex-eta">ETA: --</span>
               <strong id="w-ai-reindex-pct" style="color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); font-size:var(--zn-fs-xs);">0%</strong>
             </div>
           </div>
-          <div style="height:4px; background:var(--zn-glaze-8); border-radius:999px; overflow:hidden;">
+          <div class="dsk-box">
             <div id="w-ai-reindex-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #0ea5e9, #00f0ff); transition:width 0.3s ease;"></div>
           </div>
         </div>
@@ -686,43 +686,43 @@
         <!-- Active Engine / Silicon Status Strip -->
         <div class="ai-engine-footer" id="w-ai-engine-status">
           <span class="ai-status-dot standby"></span>
-          <span data-sample>Hybrid Dual Silicon</span> <span style="opacity:0.65;" data-sample>(NPU + GPU Ready)</span>
+          <span data-sample>Hybrid Dual Silicon</span> <span class="dsk-x-4" data-sample>(NPU + GPU Ready)</span>
         </div>
       </div>
 
       <!-- 2. Weather Widget -->
       <div class="desktop-widget" id="widget-weather" role="button" tabindex="0" title="Click to open Weather & Widget Settings" data-i18n-title="ui.click_to_open_weather_widget">
         <div class="widget-header">
-          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-weather"/></svg> <span data-i18n="widget.weather">Local Weather</span></span>
+          <span class="widget-title"><svg class="ic dsk-size"><use href="#i-weather"/></svg> <span data-i18n="widget.weather">Local Weather</span></span>
           <span class="widget-badge" id="w-weather-city" title="Detected location" data-i18n-title="ui.detected_location">--</span>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span id="w-weather-icon" style="font-size: 24px; line-height: 1;">⛅</span>
-            <div style="display: flex; flex-direction: column;">
-              <span id="w-weather-temp" style="font-size: 20px; font-weight: 800; font-family: var(--font-mono, monospace); line-height: 1.1; cursor: pointer; user-select: none;" title="Click to toggle °C / °F" data-i18n-title="ui.click_to_toggle_c_f">--°</span>
-              <span id="w-weather-desc" style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 500;" data-sample>Loading…</span>
+        <div class="dsk-row-4">
+          <div class="dsk-row-5">
+            <span class="dsk-fs24" id="w-weather-icon">⛅</span>
+            <div class="dsk-col-2">
+              <span class="dsk-fs20-bold-mono" id="w-weather-temp" title="Click to toggle °C / °F" data-i18n-title="ui.click_to_toggle_c_f">--°</span>
+              <span class="dsk-xs-muted" id="w-weather-desc" data-sample>Loading…</span>
             </div>
           </div>
-          <div style="display: flex; flex-direction: column; text-align: right; gap: 2px;">
-            <span id="w-weather-range" style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-soft); font-family: var(--font-mono, monospace);">H: --° L: --°</span>
-            <span id="w-weather-details" style="font-size: var(--zn-fs-xs); color: var(--muted);">💧 --% • 💨 --</span>
+          <div class="dsk-col-3">
+            <span class="dsk-xs-semi-soft-mono" id="w-weather-range">H: --° L: --°</span>
+            <span class="dsk-xs-muted-2" id="w-weather-details">💧 --% • 💨 --</span>
           </div>
         </div>
       </div>
 
       <!-- 3. Calendar Widget -->
-      <div class="desktop-widget" id="widget-calendar" role="button" tabindex="0" title="Click to view notes, reminders & calendar sync" data-i18n-title="ui.click_to_view_notes_reminders" style="display: none; cursor: pointer;">
+      <div class="desktop-widget dsk-x" id="widget-calendar" role="button" tabindex="0" title="Click to view notes, reminders & calendar sync" data-i18n-title="ui.click_to_view_notes_reminders" style="display: none;">
         <div class="widget-header">
           <span class="widget-title">
-            <svg class="ic" style="width:12px;height:12px;"><use href="#i-calendar"/></svg>
+            <svg class="ic dsk-size"><use href="#i-calendar"/></svg>
             <span data-i18n="widget.calendar">Calendar</span>
-            <span class="widget-badge" id="w-cal-country-badge" style="margin-left: 5px; font-size: var(--zn-fs-xs); opacity: 0.85; cursor: pointer;" title="Official Holidays Country" data-i18n-title="ui.official_holidays_country">US</span>
+            <span class="widget-badge dsk-xs" id="w-cal-country-badge" title="Official Holidays Country" data-i18n-title="ui.official_holidays_country">US</span>
           </span>
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <button id="w-cal-prev" class="btn-icon" style="padding: 1px 5px; font-size: var(--zn-fs-xs); background: var(--zn-glaze-8); border: none; border-radius: 3px; color: var(--zn-text-soft); cursor: pointer;" title="Previous Month" data-i18n-title="ui.previous_month">◀</button>
-            <span class="widget-badge" id="w-cal-month" style="font-size: var(--zn-fs-xs); cursor: pointer;" title="Click to jump to current month" data-i18n-title="ui.click_to_jump_to_current">OCT 2026</span>
-            <button id="w-cal-next" class="btn-icon" style="padding: 1px 5px; font-size: var(--zn-fs-xs); background: var(--zn-glaze-8); border: none; border-radius: 3px; color: var(--zn-text-soft); cursor: pointer;" title="Next Month" data-i18n-title="ui.next_month">▶</button>
+          <div class="dsk-row-6">
+            <button id="w-cal-prev" class="btn-icon dsk-xs-soft-box" title="Previous Month" data-i18n-title="ui.previous_month">◀</button>
+            <span class="widget-badge dsk-xs-2" id="w-cal-month" title="Click to jump to current month" data-i18n-title="ui.click_to_jump_to_current">OCT 2026</span>
+            <button id="w-cal-next" class="btn-icon dsk-xs-soft-box" title="Next Month" data-i18n-title="ui.next_month">▶</button>
           </div>
         </div>
         <div id="w-calendar-grid" class="widget-calendar-grid"></div>
@@ -732,22 +732,22 @@
       <!-- 4. System Widget -->
       <div class="desktop-widget" id="widget-system" role="button" tabindex="0" title="Open the dashboard" data-i18n-title="ui.click_to_open_dashboard_telemetry">
         <div class="widget-header">
-          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-cpu"/></svg> <span data-i18n="widget.system">System Status</span></span>
+          <span class="widget-title"><svg class="ic dsk-size"><use href="#i-cpu"/></svg> <span data-i18n="widget.system">System Status</span></span>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: var(--zn-fs-xs); color: var(--muted);">CPU</span>
-            <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace);" id="w-cpu-val">0%</span>
+        <div class="dsk-col-4">
+          <div class="dsk-row-4">
+            <span class="dsk-xs-muted-2">CPU</span>
+            <span class="dsk-xs-bold-mono" id="w-cpu-val">0%</span>
           </div>
-          <div style="width: 100%; height: 4px; background: var(--zn-glaze-10); border-radius: 2px; overflow: hidden;">
+          <div class="dsk-box-2">
             <div id="w-cpu-bar" style="height: 100%; background: var(--brand, #00f0ff); width: 0%; transition: width 0.3s ease;"></div>
           </div>
           
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
-            <span style="font-size: var(--zn-fs-xs); color: var(--muted);">RAM</span>
-            <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace);" id="w-ram-val">0%</span>
+          <div class="dsk-row-7">
+            <span class="dsk-xs-muted-2">RAM</span>
+            <span class="dsk-xs-bold-mono" id="w-ram-val">0%</span>
           </div>
-          <div style="width: 100%; height: 4px; background: var(--zn-glaze-10); border-radius: 2px; overflow: hidden;">
+          <div class="dsk-box-2">
             <div id="w-ram-bar" style="height: 100%; background: var(--ok2, #25c2a0); width: 0%; transition: width 0.3s ease;"></div>
           </div>
         </div>
@@ -756,16 +756,16 @@
       <!-- 5. Network Widget -->
       <div class="desktop-widget" id="widget-network" role="button" tabindex="0" title="Click to open Network & Switch Inspector" data-i18n-title="ui.click_to_open_network_switch">
         <div class="widget-header">
-          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-net"/></svg> <span data-i18n="widget.network">Network IO</span></span>
+          <span class="widget-title"><svg class="ic dsk-size"><use href="#i-net"/></svg> <span data-i18n="widget.network">Network IO</span></span>
           <span class="widget-badge" id="w-net-iface">bond0</span>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-          <div style="display: flex; flex-direction: column;">
-            <span style="font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase;" data-i18n="ix.download">Download</span>
+        <div class="dsk-row-8">
+          <div class="dsk-col-2">
+            <span class="dsk-xs-muted-3" data-i18n="ix.download">Download</span>
             <span style="font-size: 14.5px; font-weight: 700; color: var(--lt-ink-brand, var(--brand, #00f0ff)); font-family: var(--font-mono, monospace);" id="w-net-rx">0 B/s</span>
           </div>
-          <div style="display: flex; flex-direction: column; text-align: right;">
-            <span style="font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase;" data-i18n="ix.upload">Upload</span>
+          <div class="dsk-col-5">
+            <span class="dsk-xs-muted-3" data-i18n="ix.upload">Upload</span>
             <span style="font-size: 14.5px; font-weight: 700; color: var(--warn, #f5a623); font-family: var(--font-mono, monospace);" id="w-net-tx">0 B/s</span>
           </div>
         </div>
@@ -774,15 +774,15 @@
       <!-- 6. Storage Pool Widget -->
       <div class="desktop-widget" id="widget-storage" role="button" tabindex="0" title="Click to open Storage Pool & Array Topology" data-i18n-title="ui.click_to_open_storage_pool">
         <div class="widget-header">
-          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-storage"/></svg> <span data-i18n="widget.storage">Storage Pool</span></span>
+          <span class="widget-title"><svg class="ic dsk-size"><use href="#i-storage"/></svg> <span data-i18n="widget.storage">Storage Pool</span></span>
           <span class="widget-badge" id="w-storage-status">ONLINE</span>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 4px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="ix.capacity">Capacity</span>
-            <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace);" id="w-storage-val">-- / --</span>
+        <div class="dsk-col">
+          <div class="dsk-row-4">
+            <span class="dsk-xs-muted-2" data-i18n="ix.capacity">Capacity</span>
+            <span class="dsk-xs-bold-mono" id="w-storage-val">-- / --</span>
           </div>
-          <div style="width: 100%; height: 4px; background: var(--zn-glaze-10); border-radius: 2px; overflow: hidden; margin-top: 2px;">
+          <div class="dsk-box-3">
             <div id="w-storage-bar" style="height: 100%; background: linear-gradient(90deg, var(--ok2, #25c2a0), var(--brand, #00f0ff)); width: 0%; transition: width 0.3s ease;"></div>
           </div>
         </div>
@@ -791,36 +791,36 @@
       <!-- 7. Host Info & Uptime Widget -->
       <div class="desktop-widget" id="widget-uptime" style="display: none;">
         <div class="widget-header">
-          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-chip"/></svg> <span data-i18n="widget.host">Host Info</span></span>
+          <span class="widget-title"><svg class="ic dsk-size"><use href="#i-chip"/></svg> <span data-i18n="widget.host">Host Info</span></span>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-          <span style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="ix.host">Host</span>
+        <div class="dsk-row-9">
+          <span class="dsk-xs-muted-2" data-i18n="ix.host">Host</span>
           <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff));" id="w-host-name">NAS</span>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="ix.uptime">Uptime</span>
-          <span style="font-size: var(--zn-fs-xs); font-weight: 600; font-family: var(--font-mono, monospace); color: var(--zn-text-soft);" id="w-host-uptime">--</span>
+        <div class="dsk-row-4">
+          <span class="dsk-xs-muted-2" data-i18n="ix.uptime">Uptime</span>
+          <span class="dsk-xs-semi-soft-mono-2" id="w-host-uptime">--</span>
         </div>
       </div>
 
       <!-- 8. Drive Thermals Heatmap Widget -->
       <div class="desktop-widget" id="widget-drive-temp">
         <div class="widget-header">
-          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-storage"/></svg> <span data-i18n="widget.drive_temp">Drive Thermals</span></span>
+          <span class="widget-title"><svg class="ic dsk-size"><use href="#i-storage"/></svg> <span data-i18n="widget.drive_temp">Drive Thermals</span></span>
           <span class="widget-badge" id="w-drive-temp-summary" data-sample>-- Disks</span>
         </div>
         <div class="widget-drive-temp-grid" id="w-drive-temp-grid">
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted); text-align: center; padding: 6px 0;" data-sample>Scanning bays...</div>
+          <div class="dsk-xs-muted-center" data-sample>Scanning bays...</div>
         </div>
       </div>
 
       <!-- 9. Network Throughput Dial Widget -->
       <div class="desktop-widget" id="widget-net-dial">
         <div class="widget-header">
-          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-net"/></svg> <span data-i18n="widget.net_dial">Network Dial</span></span>
+          <span class="widget-title"><svg class="ic dsk-size"><use href="#i-net"/></svg> <span data-i18n="widget.net_dial">Network Dial</span></span>
           <span class="widget-badge" id="w-net-dial-speed">2.5G</span>
         </div>
-        <div style="display: flex; align-items: center; justify-content: space-around; gap: 8px;">
+        <div class="dsk-row-10">
           <div class="net-dial-svg-wrap">
             <svg viewBox="0 0 36 36" class="circular-chart">
               <path class="circle-bg" stroke="rgba(255,255,255,0.08)" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -828,14 +828,14 @@
             </svg>
             <div class="net-dial-val" id="w-net-dial-pct">0%</div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 4px; font-size: var(--zn-fs-xs);">
-            <div style="display: flex; justify-content: space-between; gap: 8px;">
+          <div class="dsk-col-xs">
+            <div class="dsk-row-11">
               <span style="color: var(--lt-ink-brand, var(--brand, #00f0ff)); font-weight: 600;">▼ RX</span>
-              <span style="font-family: var(--font-mono, monospace); font-weight: 700;" id="w-net-dial-rx">0 B/s</span>
+              <span class="dsk-bold-mono" id="w-net-dial-rx">0 B/s</span>
             </div>
-            <div style="display: flex; justify-content: space-between; gap: 8px;">
+            <div class="dsk-row-11">
               <span style="color: var(--warn, #f5a623); font-weight: 600;">▲ TX</span>
-              <span style="font-family: var(--font-mono, monospace); font-weight: 700;" id="w-net-dial-tx">0 B/s</span>
+              <span class="dsk-bold-mono" id="w-net-dial-tx">0 B/s</span>
             </div>
           </div>
         </div>
@@ -844,20 +844,20 @@
       <!-- 10. UPS Power Gauge Widget -->
       <div class="desktop-widget" id="widget-ups-gauge">
         <div class="widget-header">
-          <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-sliders"/></svg> <span data-i18n="widget.ups_gauge">UPS Power</span></span>
+          <span class="widget-title"><svg class="ic dsk-size"><use href="#i-sliders"/></svg> <span data-i18n="widget.ups_gauge">UPS Power</span></span>
           <span class="widget-badge" id="w-ups-badge">ONLINE</span>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <div style="display: flex; justify-content: space-between; align-items: baseline;">
-            <span style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="ix.battery_charge">Battery Charge</span>
+        <div class="dsk-col-4">
+          <div class="dsk-row-12">
+            <span class="dsk-xs-muted-2" data-i18n="ix.battery_charge">Battery Charge</span>
             <span style="font-size: 14px; font-weight: 800; font-family: var(--font-mono, monospace); color: var(--ok2, #25c2a0);" id="w-ups-battery">100%</span>
           </div>
-          <div style="width: 100%; height: 5px; background: var(--zn-glaze-10); border-radius: 3px; overflow: hidden;">
+          <div class="dsk-box-4">
             <div id="w-ups-bar" style="height: 100%; width: 100%; background: var(--ok2, #25c2a0); transition: width 0.3s ease;"></div>
           </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px; font-size: var(--zn-fs-xs);">
-            <span style="color: var(--muted);"><span data-i18n="wid.ups_load_label">Load:</span> <strong style="color: var(--zn-text-soft); font-family: var(--font-mono, monospace);" id="w-ups-load">-- W</strong></span>
-            <span style="color: var(--muted);"><span data-i18n="wid.ups_runtime_label">Runtime:</span> <strong style="color: var(--zn-text-soft); font-family: var(--font-mono, monospace);" id="w-ups-runtime">-- min</strong></span>
+          <div class="dsk-row-xs-2">
+            <span class="dsk-muted"><span data-i18n="wid.ups_load_label">Load:</span> <strong class="dsk-soft-mono" id="w-ups-load">-- W</strong></span>
+            <span class="dsk-muted"><span data-i18n="wid.ups_runtime_label">Runtime:</span> <strong class="dsk-soft-mono" id="w-ups-runtime">-- min</strong></span>
           </div>
         </div>
       </div>
@@ -941,8 +941,8 @@
       <span class="smart-modal-title" id="smart-modal-title">
         <svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="modal.smart_title">S.M.A.R.T. Diagnostics</span>
       </span>
-      <div style="display:flex; gap:12px; align-items:center;">
-        <button id="smart-modal-refresh" class="btn-icon" title="Refresh SMART data" data-i18n-title="ui.refresh_smart_data" style="font-size: 20px; padding: 2px; margin-right: 8px;">↻</button>
+      <div class="smo-row">
+        <button id="smart-modal-refresh" class="btn-icon smo-fs20" title="Refresh SMART data" data-i18n-title="ui.refresh_smart_data">↻</button>
         <div class="os-window-controls">
           <button class="win-btn min-btn" id="smart-modal-min" title="Minimize" data-i18n-title="window.minimize" aria-label="Minimize" data-i18n-aria-label="window.minimize"></button>
           <button class="win-btn max-btn" id="smart-modal-max" title="Maximize" data-i18n-title="ui.maximize" aria-label="Maximize" data-i18n-aria-label="ui.maximize"></button>
@@ -971,7 +971,7 @@
             <div style="color: var(--lt-t-eab308ff, #eab308); font-weight: 700; font-size: var(--zn-fs-xs); display: flex; align-items: center; gap: 6px;">
               <span aria-hidden="true">💤</span> <span data-i18n="modal.smart_standby_title">Drive Platters in Low-Power Standby</span>
             </div>
-            <div style="color: var(--muted); font-size: var(--zn-fs-xs); margin-top: 2px;" data-i18n="modal.smart_standby_desc">
+            <div class="smo-xs-muted" data-i18n="modal.smart_standby_desc">
               This drive is asleep to save power and wear. Health readings resume when it wakes.
             </div>
           </div>
@@ -985,17 +985,17 @@
           <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-3" data-i18n="modal.smart_health_status">Health</span><span class="val" id="smart-meta-health">--</span></div>
           <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-4" data-i18n="modal.smart_hours_readout">Hours in use</span><span class="val" id="smart-meta-hours">--</span></div>
         </div>
-        <div id="smart-degradation-banner" style="display: none; margin: 8px 0; padding: 8px 10px; border-radius: 6px; font-size: var(--zn-fs-xs); line-height: 1.4; border: 1px solid var(--zn-line-8); background: var(--zn-shade-25);"></div>
+        <div class="smo-xs-box" id="smart-degradation-banner" style="display: none;"></div>
       </div>
 
       <!-- PANE 2: Self-Test & Reports -->
       <div id="smart-pane-selftest" class="smart-pane">
-        <div id="smart-actions-container" style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 8px;">
-          <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="modal.smart_self_tests">Self-tests:</span>
+        <div class="smo-box" id="smart-actions-container" style="display: flex;">
+          <span class="smo-xs-bold-muted" data-i18n="modal.smart_self_tests">Self-tests:</span>
           <button id="smart-btn-short-test" class="smart-test-action-btn" style="background: rgba(37,194,160,0.15); border: 1px solid var(--accent); color: var(--accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;"><span aria-hidden="true">▶</span> <span data-i18n="modal.smart_short_test">Run Short Test (~2m)</span></button>
           <button id="smart-btn-extended-test" class="smart-test-action-btn" style="background: rgba(52,152,219,0.15); border: 1px solid #3498db; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;"><span aria-hidden="true">▶</span> <span data-i18n="modal.smart_extended_test">Run Extended Test</span></button>
           <button id="smart-btn-abort-test" class="smart-test-action-btn" style="display: none; background: rgba(231,76,60,0.15); border: 1px solid #e74c3c; color: var(--lt-t-ff6b6bff, #ff6b6b); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;"><span aria-hidden="true">⏹</span> <span data-i18n="modal.smart_abort_test">Abort Test</span></button>
-          <span id="smart-test-status" style="font-size: var(--zn-fs-xs); color: var(--muted); margin-left: auto;"></span>
+          <span class="smo-xs-muted-2" id="smart-test-status"></span>
         </div>
 
         <!-- S.M.A.R.T. Active Self-Test Progress Card -->
@@ -1011,14 +1011,14 @@
             </div>
           </div>
           <div class="smart-progress-track">
-            <div id="smart-progress-bar" class="smart-progress-bar" style="width: 0%;"></div>
+            <div id="smart-progress-bar" class="smart-progress-bar smo-size"></div>
           </div>
         </div>
 
         <!-- S.M.A.R.T. Executive Diagnostic Report Card -->
         <div id="smart-latest-report-card" class="smart-report-card" style="display: none;">
           <div class="smart-report-header">
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="smo-row-2">
               <span class="smart-report-badge-pill" id="smart-report-badge">✓ PASSED</span>
               <span class="smart-report-meta" id="smart-report-meta" data-sample>Short Test • Completed</span>
             </div>
@@ -1051,7 +1051,7 @@
         <!-- S.M.A.R.T. Self-Test History Card -->
         <div id="smart-test-history-card" class="smart-test-history-card">
           <div class="smart-test-history-header">
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="smo-row-2">
               <span class="smart-test-history-title" data-i18n="modal.smart_test_history_title">Self-test results</span>
               <span class="smart-test-count-badge" id="smart-test-count-badge">0</span>
             </div>
@@ -1060,7 +1060,7 @@
             <table class="smart-test-table" id="smart-test-history-table">
               <thead>
                 <tr>
-                  <th style="width: 38px;">#</th>
+                  <th class="smo-size-2">#</th>
                   <th data-i18n="modal.smart_col_type">Test Type</th>
                   <th data-i18n="modal.smart_col_status">Status / Result</th>
                   <th data-i18n="modal.smart_col_hours">Lifetime Hours</th>
@@ -1084,11 +1084,11 @@
 
       <!-- PANE 3: Raw SMART Telemetry -->
       <div id="smart-pane-raw" class="smart-pane">
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-          <input type="text" id="smart-raw-filter" class="smart-raw-search-input" placeholder="Filter attributes (e.g. realloc, temp, pending, crc)..." data-i18n-placeholder="ui.filter_attributes_e_g_realloc" style="flex: 1; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 6px 10px; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); font-family: monospace;" aria-label="Filter attributes (e.g. realloc, temp, pending, crc)..." data-i18n-aria-label="ui.filter_attributes_e_g_realloc" />
-          <button id="smart-btn-copy-raw" class="smart-test-action-btn" style="background: var(--zn-glaze-6); border: 1px solid var(--zn-line-12); color: var(--zn-text-soft); font-size: var(--zn-fs-xs); font-weight: 600; padding: 5px 10px; border-radius: 4px; cursor: pointer;"><span aria-hidden="true">📋</span> <span data-i18n="ix.copy_raw">Copy Raw</span></button>
+        <div class="smo-row-3">
+          <input type="text" id="smart-raw-filter" class="smart-raw-search-input smo-xs-strong-mono-box-grow" placeholder="Filter attributes (e.g. realloc, temp, pending, crc)..." data-i18n-placeholder="ui.filter_attributes_e_g_realloc" aria-label="Filter attributes (e.g. realloc, temp, pending, crc)..." data-i18n-aria-label="ui.filter_attributes_e_g_realloc" />
+          <button id="smart-btn-copy-raw" class="smart-test-action-btn smo-xs-semi-soft-box"><span aria-hidden="true">📋</span> <span data-i18n="ix.copy_raw">Copy Raw</span></button>
         </div>
-        <pre class="smart-raw-pre" id="smart-raw-output" style="max-height: none; flex: 1; margin: 0;">Querying telemetry...</pre>
+        <pre class="smart-raw-pre smo-grow" id="smart-raw-output">Querying telemetry...</pre>
       </div>
     </div>
   </div>
@@ -1139,54 +1139,54 @@
 
 <div id="event-detail-modal-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="event-detail-title" style="display: none;">
   <div class="smart-modal-window event-detail-window" style="max-width: 580px; width: 92%; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15);">
-    <div class="smart-modal-header" id="event-detail-header" style="cursor: move;">
-      <span class="smart-modal-title" id="event-detail-title" style="display: flex; align-items: center; gap: 8px;">
-        <span id="event-detail-header-icon" style="font-size: 15px;">ℹ️</span>
+    <div class="smart-modal-header evd-x" id="event-detail-header">
+      <span class="smart-modal-title evd-x-2" id="event-detail-title" style="display: flex;">
+        <span class="evd-fs15" id="event-detail-header-icon">ℹ️</span>
         <span data-i18n="event_detail.title">Event Details</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="event-detail-close" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding: 18px 20px;">
+    <div class="smart-modal-body evd-col">
       
       <!-- Top meta pills: Level badge, Subsystem badge, Relative time -->
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--zn-line-8);">
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <span id="event-detail-badge" style="font-size: var(--zn-fs-xs); font-weight: 800; padding: 3px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 4px;">
+      <div class="evd-row-box">
+        <div class="evd-row">
+          <span class="evd-xs-bold-box" id="event-detail-badge" style="display: inline-flex;">
             <span id="event-detail-badge-icon">ℹ️</span>
             <span id="event-detail-badge-text">INFO</span>
           </span>
-          <span id="event-detail-subsystem" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); background: var(--zn-glaze-6); border: 1px solid var(--zn-line-8); padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px;">SYSTEM</span>
+          <span class="evd-xs-bold-muted-box" id="event-detail-subsystem">SYSTEM</span>
         </div>
-        <div id="event-detail-reltime" style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 600;">--</div>
+        <div class="evd-xs-semi-muted" id="event-detail-reltime">--</div>
       </div>
 
       <!-- Main Event Title & Description Box -->
       <div>
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;" data-i18n="event_detail.headline">EVENT HEADLINE</div>
-        <div id="event-detail-event-title" style="font-size: 13.5px; font-weight: 800; color: var(--zn-text-strong); margin-bottom: 8px; word-break: break-word;"></div>
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;" data-i18n="event_detail.message">MESSAGE</div>
-        <div id="event-detail-event-message" style="font-size: var(--zn-fs-xs); color: var(--zn-text); line-height: 1.5; background: var(--zn-shade-30); border: 1px solid var(--zn-line-7); border-radius: 8px; padding: 12px 14px; word-break: break-word;"></div>
+        <div class="evd-xs-bold-muted" data-i18n="event_detail.headline">EVENT HEADLINE</div>
+        <div class="evd-fs135-bold-strong" id="event-detail-event-title"></div>
+        <div class="evd-xs-bold-muted" data-i18n="event_detail.message">MESSAGE</div>
+        <div class="evd-xs-box" id="event-detail-event-message"></div>
       </div>
 
       <!-- Time breakdown: Local time & Epoch -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--zn-glaze-2); border: 1px solid var(--zn-line-5); border-radius: 8px; padding: 10px 14px;">
+      <div class="evd-grid-box">
         <div>
-          <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px;" data-i18n="event_detail.timestamp">LOCAL TIME</div>
-          <div id="event-detail-localtime" style="font-size: var(--zn-fs-xs); color: var(--zn-text-strong); font-weight: 600; margin-top: 3px;">--</div>
+          <div class="evd-xs-bold-muted-2" data-i18n="event_detail.timestamp">LOCAL TIME</div>
+          <div class="evd-xs-semi-strong" id="event-detail-localtime">--</div>
         </div>
         <div>
-          <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px;" data-i18n="event_detail.epoch">UNIX EPOCH</div>
-          <div id="event-detail-epoch" style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: monospace; margin-top: 3px;">--</div>
+          <div class="evd-xs-bold-muted-2" data-i18n="event_detail.epoch">UNIX EPOCH</div>
+          <div class="evd-xs-muted-mono" id="event-detail-epoch">--</div>
         </div>
       </div>
 
       <!-- Technical JSON Diagnostics -->
       <div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="event_detail.technical">Technical details</span>
-          <button id="event-detail-copy-btn" type="button" class="btn-pill-toggle is-small" style="display: inline-flex; align-items: center; gap: 5px;">
+        <div class="evd-row-2">
+          <span class="evd-xs-bold-muted-3" data-i18n="event_detail.technical">Technical details</span>
+          <button id="event-detail-copy-btn" type="button" class="btn-pill-toggle is-small evd-x-3" style="display: inline-flex;">
             <span id="event-detail-copy-icon">📋</span>
             <span id="event-detail-copy-text" data-i18n="event_detail.copy">Copy Details</span>
           </button>
@@ -1195,8 +1195,8 @@
       </div>
 
       <!-- Footer Action Buttons -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--zn-line-8);">
-        <div id="event-detail-actions-left" style="display: flex; gap: 8px;">
+      <div class="evd-row-box-2">
+        <div class="evd-x-4" id="event-detail-actions-left" style="display: flex;">
           <button id="event-detail-context-btn" type="button" class="btn-pill-toggle is-primary is-small" style="display: none;"></button>
         </div>
         <button id="event-detail-close-btn" type="button" class="btn-pill-toggle is-small" data-i18n="event_detail.close">Close</button>
@@ -1209,8 +1209,8 @@
 <!-- Fan Curve Preset Save Modal -->
 <div id="fan-preset-modal-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="fan-preset-title" style="display: none;">
   <div class="smart-modal-window fan-preset-modal-window" style="max-width: 440px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" id="fan-preset-modal-header" style="cursor: default;">
-      <span class="smart-modal-title" id="fan-preset-title" style="display: flex; align-items: center; gap: 8px;">
+    <div class="smart-modal-header fpm-x" id="fan-preset-modal-header">
+      <span class="smart-modal-title fpm-x-2" id="fan-preset-title" style="display: flex;">
         <svg class="ic" style="width: 15px; height: 15px; fill: currentColor; color: var(--lt-ink-brand, var(--brand, #0ea5e9));"><use href="#i-save"/></svg>
         <span data-i18n="fan.save_preset_title">Save Custom Preset</span>
       </span>
@@ -1218,18 +1218,18 @@
         <button class="win-btn close-btn" id="fan-preset-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+    <div class="smart-modal-body fpm-col">
       <div>
-        <label for="fan-preset-name-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="fan.preset_name_label">Preset Name</label>
+        <label class="fpm-xs-bold-muted" for="fan-preset-name-input" data-i18n="fan.preset_name_label">Preset Name</label>
         <input type="text" id="fan-preset-name-input" class="fan-preset-input" placeholder="e.g. Silent Curve, Heavy Load, Render Rig" data-i18n-placeholder="ui.e_g_silent_curve_heavy" maxlength="40" style="width: 100%; box-sizing: border-box; background: var(--zn-shade-40); border: 1px solid var(--zn-line-15); border-radius: 6px; padding: 9px 12px; font-size: 13px; color: var(--zn-text-strong); outline: none; transition: border-color 0.2s;" autocomplete="off" />
       </div>
-      <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.45;" data-i18n="fan.save_preset_hint">
+      <div class="fpm-xs-muted" data-i18n="fan.save_preset_hint">
         Saves current 5-point fan curve to your system presets.
       </div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+      <div class="fpm-row-box">
         <button id="fan-preset-cancel-btn" type="button" class="btn-pill-toggle is-small" data-i18n="fan.cancel">Cancel</button>
-        <button id="fan-preset-submit-btn" type="button" class="btn-pill-toggle is-primary is-small" style="display: inline-flex; align-items: center; gap: 6px;" data-i18n="fan.save_preset_btn">
-          <svg class="ic" style="width: 13px; height: 13px; fill: currentColor;"><use href="#i-save"/></svg>
+        <button id="fan-preset-submit-btn" type="button" class="btn-pill-toggle is-primary is-small fpm-x-3" style="display: inline-flex;" data-i18n="fan.save_preset_btn">
+          <svg class="ic fpm-size"><use href="#i-save"/></svg>
           <span data-i18n="fan.save_preset_btn">Save Preset</span>
         </button>
       </div>
@@ -1240,8 +1240,8 @@
 <!-- Fan Curve Preset Delete Confirmation Modal -->
 <div id="fan-preset-delete-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="fan-delete-title" style="display: none;">
   <div class="smart-modal-window fan-preset-modal-window" style="max-width: 420px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(239, 68, 68, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header" id="fan-preset-delete-header" style="cursor: default;">
-      <span class="smart-modal-title" id="fan-delete-title" style="display: flex; align-items: center; gap: 8px;">
+    <div class="smart-modal-header fpd-x" id="fan-preset-delete-header">
+      <span class="smart-modal-title fpd-x-2" id="fan-delete-title" style="display: flex;">
         <svg class="ic" style="width: 15px; height: 15px; fill: currentColor; color: var(--crit, #ff5c5c);"><use href="#i-trash"/></svg>
         <span data-i18n="fan.delete_preset_title">Delete Fan Preset</span>
       </span>
@@ -1249,15 +1249,15 @@
         <button class="win-btn close-btn" id="fan-delete-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
-      <div style="font-size: var(--zn-fs-xs); color: var(--zn-text); line-height: 1.5;">
-        <span data-i18n="fan.delete_confirm_msg">Are you sure you want to delete fan preset</span> <strong id="fan-delete-preset-target" style="color: var(--zn-text-strong); font-weight: 700;"></strong>?
+    <div class="smart-modal-body fpd-col">
+      <div class="fpd-xs">
+        <span data-i18n="fan.delete_confirm_msg">Are you sure you want to delete fan preset</span> <strong class="fpd-bold-strong" id="fan-delete-preset-target"></strong>?
       </div>
-      <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="fan.delete_preset_warning">This action cannot be undone.</div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+      <div class="fpd-xs-muted" data-i18n="fan.delete_preset_warning">This action cannot be undone.</div>
+      <div class="fpd-row-box">
         <button id="fan-delete-cancel-btn" type="button" class="btn-pill-toggle is-small" data-i18n="fan.cancel">Cancel</button>
-        <button id="fan-delete-confirm-btn" type="button" class="btn-pill-toggle is-danger is-small" style="display: inline-flex; align-items: center; gap: 6px;" data-i18n="fan.delete_preset_btn">
-          <svg class="ic" style="width: 13px; height: 13px; fill: currentColor;"><use href="#i-trash"/></svg>
+        <button id="fan-delete-confirm-btn" type="button" class="btn-pill-toggle is-danger is-small fpd-x-3" style="display: inline-flex;" data-i18n="fan.delete_preset_btn">
+          <svg class="ic fpd-size"><use href="#i-trash"/></svg>
           <span data-i18n="fan.delete_preset_btn">Delete Preset</span>
         </button>
       </div>
@@ -1268,8 +1268,8 @@
 <div id="setup-wizard-modal" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="setup-wizard-title">
   <div class="smart-modal-window" style="width: 540px; border-color: rgba(224, 122, 56, 0.4); box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(224, 122, 56, 0.15);">
     <div class="smart-modal-header" style="background: linear-gradient(90deg, var(--lt-b-182332ff, #182332) 0%, var(--lt-b-1a1e29ff, #1a1e29) 100%); border-bottom: 1px solid rgba(224, 122, 56, 0.25);">
-      <span class="smart-modal-title" id="setup-wizard-title" style="color: var(--zn-text-bright);">
-        <span style="font-size: 18px;">⚡</span> <span data-i18n="setup.title">ZettNAS Setup Wizard</span>
+      <span class="smart-modal-title swz-x" id="setup-wizard-title">
+        <span class="swz-fs18">⚡</span> <span data-i18n="setup.title">ZettNAS Setup Wizard</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn min-btn" id="setup-wizard-min" title="Minimize" data-i18n-title="window.minimize" aria-label="Minimize" data-i18n-aria-label="window.minimize"></button>
@@ -1277,19 +1277,19 @@
         <button class="win-btn close-btn" id="setup-wizard-close" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="padding: 24px; gap: 18px;">
+    <div class="smart-modal-body swz-x-2">
       <div data-setup-step="1" style="background: rgba(224, 122, 56, 0.08); border: 1px solid rgba(224, 122, 56, 0.2); border-radius: 8px; padding: 12px 14px;">
         <div style="font-size: 13px; font-weight: 700; color: var(--lt-t-f8fafcff, #f8fafc); margin-bottom: 4px;" data-i18n="setup.welcome_title">Welcome to your ZettNAS Toolkit!</div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); line-height: 1.45;" data-i18n="setup.welcome_desc">Find any file by what is in it, and ask Zetty about your files. The search runs on this server, and your files and their index stay here. No account, no subscription. First, set your password and name the server.</div>
+        <div class="swz-xs-muted" data-i18n="setup.welcome_desc">Find any file by what is in it, and ask Zetty about your files. The search runs on this server, and your files and their index stay here. No account, no subscription. First, set your password and name the server.</div>
       </div>
 
       <div data-setup-step="1">
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; color: var(--zn-text-muted); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step1_title">Your hardware</div>
-        <div class="smart-meta-grid" style="grid-template-columns: repeat(2, 1fr); gap: 8px;">
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.chassis_model">Model</span><span class="val" id="setup-hw-chassis" style="font-size: var(--zn-fs-xs); color: var(--zn-text-accent);" data-sample>Detecting...</span></div>
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.lcd_screen">Front screen</span><span class="val" id="setup-hw-fb" style="font-size: var(--zn-fs-xs); color: var(--lt-t-4ade80ff, #4ade80);">…</span></div>
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.fans_controller">Fans</span><span class="val" id="setup-hw-fans" style="font-size: var(--zn-fs-xs); color: var(--lt-t-4ade80ff, #4ade80);">…</span></div>
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.argb_lightbar">Light bar</span><span class="val" id="setup-hw-leds" style="font-size: var(--zn-fs-xs); color: var(--lt-t-4ade80ff, #4ade80);">…</span></div>
+        <div class="swz-xs-bold-muted" data-i18n="setup.step1_title">Your hardware</div>
+        <div class="smart-meta-grid swz-x-3">
+          <div class="smart-meta-cell swz-x-4"><span class="lbl" data-i18n="setup.chassis_model">Model</span><span class="val swz-xs-accent" id="setup-hw-chassis" data-sample>Detecting...</span></div>
+          <div class="smart-meta-cell swz-x-4"><span class="lbl" data-i18n="setup.lcd_screen">Front screen</span><span class="val" id="setup-hw-fb" style="font-size: var(--zn-fs-xs); color: var(--lt-t-4ade80ff, #4ade80);">…</span></div>
+          <div class="smart-meta-cell swz-x-4"><span class="lbl" data-i18n="setup.fans_controller">Fans</span><span class="val" id="setup-hw-fans" style="font-size: var(--zn-fs-xs); color: var(--lt-t-4ade80ff, #4ade80);">…</span></div>
+          <div class="smart-meta-cell swz-x-4"><span class="lbl" data-i18n="setup.argb_lightbar">Light bar</span><span class="val" id="setup-hw-leds" style="font-size: var(--zn-fs-xs); color: var(--lt-t-4ade80ff, #4ade80);">…</span></div>
         </div>
       </div>
 
@@ -1300,29 +1300,29 @@
       </div>
 
       <div data-setup-step="2">
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; color: var(--zn-text-muted); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step2_title">Choose your password</div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-bottom: 10px;" data-i18n="setup.step2_desc">The default or first-time password is still active. Replace it with your own password (minimum 8 characters).</div>
+        <div class="swz-xs-bold-muted" data-i18n="setup.step2_title">Choose your password</div>
+        <div class="swz-xs-soft" data-i18n="setup.step2_desc">The default or first-time password is still active. Replace it with your own password (minimum 8 characters).</div>
 
-        <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="swz-col">
           <div>
-            <label for="setup-current-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); margin-bottom: 4px;" data-i18n="setup.cur_pwd">Current password</label>
-            <input id="setup-current-pwd" aria-label="Current password" data-i18n-aria-label="setup.current_password" type="password" value="" autocomplete="current-password" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong);">
+            <label class="swz-xs-bold-muted-2" for="setup-current-pwd" data-i18n="setup.cur_pwd">Current password</label>
+            <input id="setup-current-pwd" aria-label="Current password" data-i18n-aria-label="setup.current_password" type="password" value="" autocomplete="current-password" class="input-text swz-xs-strong-box">
           </div>
           <div>
-            <label for="setup-new-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); margin-bottom: 4px;" data-i18n="setup.new_pwd">New password</label>
-            <input id="setup-new-pwd" type="password" placeholder="At least 8 characters..." data-i18n-placeholder="setup.new_pwd_placeholder" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong);">
+            <label class="swz-xs-bold-muted-2" for="setup-new-pwd" data-i18n="setup.new_pwd">New password</label>
+            <input id="setup-new-pwd" type="password" placeholder="At least 8 characters..." data-i18n-placeholder="setup.new_pwd_placeholder" class="input-text swz-xs-strong-box">
           </div>
           <div>
-            <label for="setup-confirm-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); margin-bottom: 4px;" data-i18n="setup.confirm_pwd">Confirm new password</label>
-            <input id="setup-confirm-pwd" type="password" placeholder="Repeat new password..." data-i18n-placeholder="setup.confirm_pwd_placeholder" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong);">
+            <label class="swz-xs-bold-muted-2" for="setup-confirm-pwd" data-i18n="setup.confirm_pwd">Confirm new password</label>
+            <input id="setup-confirm-pwd" type="password" placeholder="Repeat new password..." data-i18n-placeholder="setup.confirm_pwd_placeholder" class="input-text swz-xs-strong-box">
           </div>
         </div>
-        <div id="setup-wizard-err" style="display: none; margin-top: 8px; font-size: var(--zn-fs-xs); color: var(--crit); font-weight: 600;"></div>
+        <div class="swz-xs-semi-crit" id="setup-wizard-err" style="display: none;"></div>
       </div>
 
       <div data-setup-step="1">
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; color: var(--zn-text-muted); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step4_title">Power protection</div>
-        <div id="setup-hw-ups" style="padding: 10px 12px; background: var(--zn-shade-25); border: 1px solid var(--zn-line-10); border-radius: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-muted);">
+        <div class="swz-xs-bold-muted" data-i18n="setup.step4_title">Power protection</div>
+        <div class="swz-xs-muted-box" id="setup-hw-ups">
           <span id="setup-ups-badge" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #64748b; margin-right: 6px;"></span>
           <span id="setup-ups-text" data-i18n="setup.ups_none">Checking UPS status...</span>
         </div>
@@ -1366,13 +1366,13 @@
       </div>
 
       <div data-setup-step="6">
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; color: var(--zn-text-muted); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step5_title">Alerts (optional)</div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-bottom: 8px;" data-i18n="setup.notif_desc">Receive instant alerts for power outages, failing drives, and emergency thermal clamps.</div>
-        <input id="setup-notif-url" type="text" placeholder="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-placeholder="setup.notif_placeholder" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong);" aria-label="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-aria-label="setup.notif_placeholder">
+        <div class="swz-xs-bold-muted" data-i18n="setup.step5_title">Alerts (optional)</div>
+        <div class="swz-xs-soft-2" data-i18n="setup.notif_desc">Receive instant alerts for power outages, failing drives, and emergency thermal clamps.</div>
+        <input id="setup-notif-url" type="text" placeholder="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-placeholder="setup.notif_placeholder" class="input-text swz-xs-strong-box" aria-label="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-aria-label="setup.notif_placeholder">
       </div>
 
-      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; border-top: 1px solid var(--zn-line-6); padding-top: 16px;">
-        <button id="setup-wizard-skip" class="btn-cancel" style="padding: 8px 16px; font-size: var(--zn-fs-xs);" data-i18n="setup.remind_later">Remind Me Later</button>
+      <div class="swz-row-box">
+        <button id="setup-wizard-skip" class="btn-cancel swz-xs" data-i18n="setup.remind_later">Remind Me Later</button>
         <button id="setup-wizard-submit" class="btn-pill-toggle is-primary" data-i18n="setup.submit">Complete Setup & Save</button>
       </div>
     </div>
@@ -1391,35 +1391,35 @@
 </aside>
 
 <div id="folder-browser-modal" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="folder-browser-title">
-  <div class="smart-modal-window" style="width: 480px;">
+  <div class="smart-modal-window fbm-size">
     <div class="smart-modal-header">
-      <div class="smart-modal-title" id="folder-browser-title"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> <span data-i18n="modal.fb_title">Select Destination Folder</span></div>
+      <div class="smart-modal-title" id="folder-browser-title"><svg class="ic ic-sm fbm-x"><use href="#i-storage"/></svg> <span data-i18n="modal.fb_title">Select Destination Folder</span></div>
       <div class="os-window-controls">
         <button class="win-btn min-btn" id="fb-min" title="Minimize" data-i18n-title="window.minimize" aria-label="Minimize" data-i18n-aria-label="window.minimize"></button>
         <button class="win-btn max-btn" id="fb-max" title="Maximize" data-i18n-title="ui.maximize" aria-label="Maximize" data-i18n-aria-label="ui.maximize"></button>
         <button class="win-btn close-btn" id="fb-close" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
-    <div class="smart-modal-body" style="padding-bottom: 20px;">
+    <div class="smart-modal-body fbm-x-2">
       <div id="fb-current-path" style="font-family: monospace; font-size: var(--zn-fs-xs); padding: 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-5); border-radius: 6px; color: var(--ok2, #3498db); word-break: break-all; display: flex; flex-wrap: wrap; gap: 2px; align-items: center;"></div>
       
-      <div style="display: flex; gap: 8px; margin-top: 5px;">
-        <input type="text" id="fb-search-bar" class="tz-text-input" placeholder="Filter folders..." data-i18n-placeholder="modal.fb_search" style="flex-grow: 1; font-size: var(--zn-fs-xs);" aria-label="Filter folders..." data-i18n-aria-label="modal.fb_search">
+      <div class="fbm-row">
+        <input type="text" id="fb-search-bar" class="tz-text-input fbm-xs" placeholder="Filter folders..." data-i18n-placeholder="modal.fb_search" aria-label="Filter folders..." data-i18n-aria-label="modal.fb_search">
         <button id="fb-sort-btn" class="btn-pill-toggle" title="Toggle Sort" data-i18n-title="ui.toggle_sort">A-Z</button>
       </div>
 
-      <div style="display: flex; gap: 8px; margin-top: 5px;">
-        <input type="text" id="fb-new-folder-name" class="tz-text-input" placeholder="New folder name..." data-i18n-placeholder="modal.fb_new_folder" style="flex-grow: 1; font-size: var(--zn-fs-xs);" aria-label="New folder name..." data-i18n-aria-label="modal.fb_new_folder">
+      <div class="fbm-row">
+        <input type="text" id="fb-new-folder-name" class="tz-text-input fbm-xs" placeholder="New folder name..." data-i18n-placeholder="modal.fb_new_folder" aria-label="New folder name..." data-i18n-aria-label="modal.fb_new_folder">
         <button id="fb-create-folder" class="btn-pill-toggle" data-i18n="modal.fb_create">+ Create</button>
       </div>
 
-      <div id="fb-list" style="max-height: 250px; overflow-y: auto; background: var(--zn-shade-20); border: 1px solid var(--zn-line-5); border-radius: 6px; margin-top: 10px; margin-bottom: 10px;">
+      <div class="fbm-box" id="fb-list">
         <!-- populated via js -->
       </div>
       
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+      <div class="fbm-row-2">
         <button id="fb-cancel" class="btn-pill-toggle" data-i18n="modal.fb_cancel">Cancel</button>
-        <button id="fb-select" class="btn-save-preset" style="padding: 8px 16px;"><span aria-hidden="true">💾</span> <span data-i18n="modal.fb_select">Select Current Folder</span></button>
+        <button id="fb-select" class="btn-save-preset fbm-x-3"><span aria-hidden="true">💾</span> <span data-i18n="modal.fb_select">Select Current Folder</span></button>
       </div>
     </div>
   </div>
@@ -1634,10 +1634,10 @@
 <div id="copy-toast-backdrop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--lt-b-00000099, rgba(0,0,0,0.6)); backdrop-filter: blur(4px); z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;"></div>
 
 <div id="copy-toast" class="smart-modal-window" style="position: fixed; bottom: 20px; right: 20px; width: 360px; max-width: 90vw; height: auto; min-height: 0; resize: none; z-index: 10001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px); border-color: var(--zn-line-10);" role="alertdialog" aria-modal="true">
-  <div class="smart-modal-header" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
-    <div class="smart-modal-title" style="display:flex; align-items:center;"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> <span data-i18n="modal.copy_title">Copy from card</span></div>
-    <div style="display:flex; gap:10px; align-items:center;">
-      <button id="copy-toast-pause" class="btn-icon" style="opacity: 0.8; cursor: pointer; border:none; background:none; color:var(--warn); font-weight:bold; font-size: 14px; margin-right: 2px;" aria-label="Pause copy" data-i18n-aria-label="ui.pause_copy">⏸</button>
+  <div class="smart-modal-header cpt-row">
+    <div class="smart-modal-title cpt-row-2"><svg class="ic ic-sm cpt-x"><use href="#i-storage"/></svg> <span data-i18n="modal.copy_title">Copy from card</span></div>
+    <div class="cpt-row-3">
+      <button id="copy-toast-pause" class="btn-icon cpt-fs14-bold-warn-box" aria-label="Pause copy" data-i18n-aria-label="ui.pause_copy">⏸</button>
       <div class="os-window-controls">
         <button class="win-btn min-btn" id="copy-toast-min" title="Minimize" data-i18n-title="window.minimize" aria-label="Minimize" data-i18n-aria-label="window.minimize"></button>
         <button class="win-btn max-btn" id="copy-toast-max" title="Maximize" data-i18n-title="ui.maximize" aria-label="Maximize" data-i18n-aria-label="ui.maximize" style="display:none;"></button>
@@ -1645,27 +1645,27 @@
       </div>
     </div>
   </div>
-  <div class="smart-modal-body" style="padding: 12px 14px; gap: 8px;">
-    <div style="display:flex; justify-content: space-between;">
-      <span id="copy-toast-status" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); text-transform: uppercase;" data-i18n="modal.copying">Copying...</span>
-      <span id="copy-toast-pct" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--ok2);">0%</span>
+  <div class="smart-modal-body cpt-x-2">
+    <div class="cpt-row-4">
+      <span class="cpt-xs-bold-strong" id="copy-toast-status" data-i18n="modal.copying">Copying...</span>
+      <span class="cpt-xs-bold-ok" id="copy-toast-pct">0%</span>
     </div>
-    <div style="background: var(--zn-glaze-10); height: 6px; border-radius: 3px; overflow: hidden;">
+    <div class="cpt-box">
       <div id="copy-toast-bar" style="background: var(--ok2); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
     </div>
-    <div id="copy-toast-file" style="font-size: var(--zn-fs-xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" data-sample>Preparing files...</div>
-    <div id="copy-toast-time" style="font-size: var(--zn-fs-xs); color: var(--muted); text-align: right;" data-sample>Estimating time...</div>
+    <div class="cpt-xs-muted" id="copy-toast-file" data-sample>Preparing files...</div>
+    <div class="cpt-xs-muted-2" id="copy-toast-time" data-sample>Estimating time...</div>
   </div>
 </div>
 
 <template id="management-window-slot"><!-- Mission Control is inserted here when first needed: src/windows/management-window.html (FE-04) --></template>
 
 <div id="console-modal-overlay" class="smart-modal-backdrop window-minimized" style="display: none;">
-<div class="chassis-front-panel" id="console-window" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+<div class="chassis-front-panel csl-x" id="console-window">
 
       <div class="chassis-panel-header">
         <span class="chassis-engraved-text" id="chassis-panel-engraved" data-i18n="console.engraved_title">ZETTNAS • SYSTEM CONSOLE</span>
-        <div style="display:flex; gap:12px; align-items:center;">
+        <div class="csl-row">
           <span class="chassis-screen-spec">640 × 172 IPS</span>
           <div class="os-window-controls">
             <button class="win-btn min-btn" id="console-min" title="Minimize to dock" data-i18n-title="ui.minimize_to_dock_2" aria-label="Minimize" data-i18n-aria-label="window.minimize"></button>
@@ -1803,7 +1803,7 @@
                         </div>
                       </div>
                       <div class="sl-bar-track">
-                        <div class="sl-bar-fill sl-fill-cpu" id="sl-cpu-bar" style="width: 0%"></div>
+                        <div class="sl-bar-fill sl-fill-cpu csl-size" id="sl-cpu-bar"></div>
                       </div>
                     </div>
                     <div class="sl-bar-row" id="sl-mem-row" title="Click to view Memory diagnostics" data-i18n-title="ui.click_to_view_memory_diagnostics">
@@ -1815,7 +1815,7 @@
                         </div>
                       </div>
                       <div class="sl-bar-track">
-                        <div class="sl-bar-fill sl-fill-mem" id="sl-mem-bar" style="width: 0%"></div>
+                        <div class="sl-bar-fill sl-fill-mem csl-size" id="sl-mem-bar"></div>
                       </div>
                     </div>
                   </div>
@@ -1862,17 +1862,17 @@
             <div class="net-io-grid">
               <div class="net-io-panel">
                 <div class="nio-head"><span class="nio-dir rx">INBOUND (RX)</span><span class="nio-rate" id="lcd-nio-rx">0.0 MB/s</span></div>
-                <div class="nio-bar-bg"><div class="nio-bar-fill rx" id="lcd-nio-rx-bar" style="width:0%"></div></div>
+                <div class="nio-bar-bg"><div class="nio-bar-fill rx csl-size" id="lcd-nio-rx-bar"></div></div>
                 <div class="nio-sub"><span id="lcd-nio-rx-peak" data-sample>Peak: 0 MB/s</span><span data-sample>Target: 10 GbE</span></div>
               </div>
               <div class="net-io-panel">
                 <div class="nio-head"><span class="nio-dir tx">OUTBOUND (TX)</span><span class="nio-rate" id="lcd-nio-tx">0.0 MB/s</span></div>
-                <div class="nio-bar-bg"><div class="nio-bar-fill tx" id="lcd-nio-tx-bar" style="width:0%"></div></div>
+                <div class="nio-bar-bg"><div class="nio-bar-fill tx csl-size" id="lcd-nio-tx-bar"></div></div>
                 <div class="nio-sub"><span id="lcd-nio-tx-peak" data-sample>Peak: 0 MB/s</span><span id="lcd-nio-ip">IP: 0.0.0.0</span></div>
               </div>
               <div class="net-io-panel">
                 <div class="nio-head"><span class="nio-dir io">STORAGE I/O</span><span class="nio-rate" id="lcd-nio-disk-total">0.0 MB/s</span></div>
-                <div class="nio-bar-bg"><div class="nio-bar-fill io" id="lcd-nio-io-bar" style="width:0%"></div></div>
+                <div class="nio-bar-bg"><div class="nio-bar-fill io csl-size" id="lcd-nio-io-bar"></div></div>
                 <div class="nio-sub"><span id="lcd-nio-uptime">up --</span><span id="lcd-nio-disks-active" data-sample>Active</span></div>
               </div>
             </div>
@@ -1896,7 +1896,7 @@
                     <span id="lcd-uc-parity-action">Parity Check</span>
                     <strong id="lcd-uc-parity-pct">0.0%</strong>
                   </div>
-                  <div class="uc-bar-bg"><div class="uc-bar-fill" id="lcd-uc-parity-bar" style="width:0%"></div></div>
+                  <div class="uc-bar-bg"><div class="uc-bar-fill csl-size" id="lcd-uc-parity-bar"></div></div>
                 </div>
               </div>
 
@@ -1911,7 +1911,7 @@
                     <span id="lcd-uc-copy-file">No active transfer</span>
                     <strong id="lcd-uc-copy-pct">--</strong>
                   </div>
-                  <div class="uc-bar-bg"><div class="uc-bar-fill copy" id="lcd-uc-copy-bar" style="width:0%"></div></div>
+                  <div class="uc-bar-bg"><div class="uc-bar-fill copy csl-size" id="lcd-uc-copy-bar"></div></div>
                 </div>
               </div>
             </div>
@@ -1922,7 +1922,7 @@
       <div class="chassis-led-fixture">
         <div class="chassis-led-meta">
           <span class="meta-tag">
-            <svg class="ic" style="width:9px;height:9px;color:currentColor;"><use href="#i-chip"/></svg>
+            <svg class="ic csl-size-2"><use href="#i-chip"/></svg>
             <span data-i18n="console.led_title">ARGB LIGHT BAR // /dev/ttyACM0</span>
           </span>
           <span class="meta-nodes" data-i18n="console.led_nodes">WS2812B • 38 NODES</span>
@@ -1935,28 +1935,28 @@
 </div>
 
 <div id="notif-center-panel" class="notif-center-window" style="display:none; position:fixed; width:380px; min-width:320px; min-height:240px; max-width:calc(100vw - 24px); max-height:calc(100vh - 90px); background:var(--lt-b-141820f5, rgba(20,24,32,0.96)); backdrop-filter:blur(24px); border:1px solid var(--zn-line-12); border-radius:12px; z-index:9999; flex-direction:column; box-shadow:0 14px 40px rgba(0,0,0,0.85); overflow:hidden; user-select:none;">
-  <div id="notif-center-header" style="padding:10px 14px; border-bottom:1px solid var(--zn-line-8); display:flex; justify-content:space-between; align-items:center; cursor:move; user-select:none; background:var(--zn-glaze-3);">
-    <div style="display:flex; align-items:center; gap:8px;">
+  <div class="ncp-box" id="notif-center-header" style="display: flex;">
+    <div class="ncp-row">
       <svg class="ic" style="width:14px; height:14px; fill:currentColor; color:var(--lt-ink-brand, var(--brand, #0ea5e9));"><use href="#i-bell"/></svg>
-      <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); letter-spacing:0.3px;" data-i18n="notif.title">Notification Center</div>
+      <div class="ncp-xs-bold-strong" data-i18n="notif.title">Notification Center</div>
     </div>
-    <div style="display:flex; gap:10px; align-items:center;">
-      <button id="notif-settings-btn" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:var(--zn-fs-xs); padding:2px 4px; display:inline-flex; align-items:center;" title="Configure Alert Channels" data-i18n-title="notif.configure_channels" aria-label="Configure Alert Channels" data-i18n-aria-label="notif.configure_channels">⚙️</button>
+    <div class="ncp-row-2">
+      <button class="ncp-xs-muted-box" id="notif-settings-btn" style="display: inline-flex;" title="Configure Alert Channels" data-i18n-title="notif.configure_channels" aria-label="Configure Alert Channels" data-i18n-aria-label="notif.configure_channels">⚙️</button>
       <button id="notif-mark-read" style="background:none; border:none; color:var(--lt-ink-brand, var(--brand, #0ea5e9)); cursor:pointer; font-size:var(--zn-fs-xs); font-weight:600; padding:2px 4px;" data-i18n="notif.mark_all_read">Mark all read</button>
-      <button id="notif-clear-all" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:var(--zn-fs-xs); font-weight:600; padding:2px 4px;" title="Clear notifications" data-i18n-title="ui.clear_notifications" data-i18n="notif.clear_all">Clear all</button>
-      <div class="os-window-controls" style="display:flex; gap:6px; align-items:center; margin-left:4px;">
+      <button class="ncp-xs-semi-muted-box" id="notif-clear-all" title="Clear notifications" data-i18n-title="ui.clear_notifications" data-i18n="notif.clear_all">Clear all</button>
+      <div class="os-window-controls ncp-row-3">
         <button class="win-btn close-btn" id="notif-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
   </div>
-  <div id="notif-filter-bar" style="display:flex; gap:6px; padding:8px 14px; background:var(--zn-shade-25); border-bottom:1px solid var(--zn-line-5); flex-shrink:0;">
-    <button class="notif-filter-btn active" data-filter="all" style="padding:2px 10px; font-size:var(--zn-fs-xs); font-weight:700; border-radius:12px; border:1px solid var(--zn-line-15); background:var(--zn-glaze-10); color:var(--zn-text-strong); cursor:pointer;" data-i18n="notif.filter_all">All</button>
+  <div class="ncp-box-2" id="notif-filter-bar" style="display: flex;">
+    <button class="notif-filter-btn active ncp-xs-bold-strong-box" data-filter="all" data-i18n="notif.filter_all">All</button>
     <button class="notif-filter-btn" data-filter="error" style="padding:2px 10px; font-size:var(--zn-fs-xs); font-weight:700; border-radius:12px; border:1px solid transparent; background:transparent; color:var(--crit, #ff5c5c); cursor:pointer;" data-i18n="notif.filter_errors">Errors</button>
     <button class="notif-filter-btn" data-filter="warning" style="padding:2px 10px; font-size:var(--zn-fs-xs); font-weight:700; border-radius:12px; border:1px solid transparent; background:transparent; color:var(--warn, #f5a623); cursor:pointer;" data-i18n="notif.filter_warnings">Warnings</button>
     <button class="notif-filter-btn" data-filter="info" style="padding:2px 10px; font-size:var(--zn-fs-xs); font-weight:700; border-radius:12px; border:1px solid transparent; background:transparent; color:var(--lt-t-93c5fdff, #93c5fd); cursor:pointer;" data-i18n="notif.filter_info">Info</button>
   </div>
-  <div id="notif-center-list" data-scrollable="true" style="flex:1; overflow-y:auto; padding:6px 0 16px 0; min-height:160px;">
-    <div style="padding:20px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);" data-i18n="notif.empty">No recent notifications.</div>
+  <div class="ncp-grow" id="notif-center-list" data-scrollable="true">
+    <div class="ncp-xs-muted-center" data-i18n="notif.empty">No recent notifications.</div>
   </div>
   <div id="notif-center-resizer" class="window-resizer-grip" title="Drag to resize window" data-i18n-title="ui.drag_to_resize_window" aria-label="Drag to resize window" data-i18n-aria-label="ui.drag_to_resize_window"></div>
 </div>
@@ -1964,12 +1964,12 @@
 <!-- Connect New Cloud Remote Modal -->
 <div id="modal-new-cloud-remote" class="smart-modal-backdrop os-window-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-remote-title" style="display: none;">
   <div class="smart-modal-window os-window cloud-remote-window" id="cloud-remote-window">
-    <div class="smart-modal-header os-window-header" id="cloud-remote-window-header" style="cursor: move;">
-      <span class="smart-modal-title os-window-title" id="modal-remote-title" style="display: flex; align-items: center; gap: 8px;">
+    <div class="smart-modal-header os-window-header ncr-x" id="cloud-remote-window-header">
+      <span class="smart-modal-title os-window-title ncr-x-2" id="modal-remote-title" style="display: flex;">
         <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--brand, #0ea5e9));"><use href="#i-cloud"/></svg>
         <span data-i18n="ix.connect_new_cloud_remote_storage">Connect New Cloud / Remote Storage</span>
       </span>
-      <div class="os-window-controls" style="display: flex; gap: 6px; align-items: center;">
+      <div class="os-window-controls ncr-row">
         <button class="win-btn min-btn" id="modal-remote-min-btn" title="Minimize" data-i18n-title="window.minimize" aria-label="Minimize" data-i18n-aria-label="window.minimize"></button>
         <button class="win-btn max-btn" id="modal-remote-max-btn" title="Maximize" data-i18n-title="ui.maximize" aria-label="Maximize" data-i18n-aria-label="ui.maximize"></button>
         <button class="win-btn close-btn" id="modal-remote-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
@@ -1979,34 +1979,34 @@
       <div class="cloud-remote-scroll-body">
         <div class="remote-form-section">
           <label for="new-remote-provider-select" class="remote-section-label" data-sample>1. SELECT CLOUD / STORAGE PROVIDER</label>
-          <select id="new-remote-provider-select" class="tz-select-input" style="width: 100%;">
+          <select id="new-remote-provider-select" class="tz-select-input ncr-size">
             <!-- Dynamically populated from /api/remotes/providers -->
           </select>
-          <div id="new-remote-provider-desc" style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); margin-top: 6px; line-height: 1.45;"></div>
+          <div class="ncr-xs-muted" id="new-remote-provider-desc"></div>
         </div>
 
         <div class="remote-form-section">
           <label for="new-remote-name" class="remote-section-label" data-sample>2. REMOTE NAME (Local Identifier)</label>
-          <input type="text" id="new-remote-name" class="tz-select-input" placeholder="e.g. backup-s3, gdrive, onedrive-photos, offsite-nas" data-i18n-placeholder="ph.remote_name" style="width: 100%;" required pattern="^[a-zA-Z0-9_\-\.]{1,64}$" />
-          <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); margin-top: 4px;"><span data-i18n="ix.will_be_mounted_to">Will be mounted to:</span> <code style="color: var(--zn-text-accent); font-weight: 600;">/mnt/remotes/&lt;name&gt;</code></div>
+          <input type="text" id="new-remote-name" class="tz-select-input ncr-size" placeholder="e.g. backup-s3, gdrive, onedrive-photos, offsite-nas" data-i18n-placeholder="ph.remote_name" required pattern="^[a-zA-Z0-9_\-\.]{1,64}$" />
+          <div class="ncr-xs-muted-2"><span data-i18n="ix.will_be_mounted_to">Will be mounted to:</span> <code class="ncr-semi-accent">/mnt/remotes/&lt;name&gt;</code></div>
         </div>
 
         <div class="remote-form-section">
           <div class="remote-section-label" data-sample>3. PROVIDER PARAMETERS</div>
-          <div id="new-remote-dynamic-fields" style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="ncr-x-3" id="new-remote-dynamic-fields" style="display: flex;">
             <!-- Dynamically populated fields based on provider -->
           </div>
         </div>
 
         <div class="remote-form-section" style="padding-top: 4px;">
-          <label for="new-remote-auto-mount" style="display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); color: var(--zn-text); cursor: pointer;">
+          <label class="ncr-row-xs" for="new-remote-auto-mount">
             <input type="checkbox" id="new-remote-auto-mount" checked style="width: 16px; height: 16px; accent-color: var(--ok2, #22c55e);" />
-            <span><span data-i18n="ix.mount_immediately_to">Mount immediately to</span> <code style="color: var(--zn-text-accent);">/mnt/remotes</code> <span data-i18n="ix.via_fuse">via FUSE</span></span>
+            <span><span data-i18n="ix.mount_immediately_to">Mount immediately to</span> <code class="ncr-accent">/mnt/remotes</code> <span data-i18n="ix.via_fuse">via FUSE</span></span>
           </label>
         </div>
       </div>
 
-      <div id="new-remote-test-result" style="display: none; padding: 10px 14px; border-radius: 6px; font-size: var(--zn-fs-xs); line-height: 1.45;"></div>
+      <div class="ncr-xs-box" id="new-remote-test-result" style="display: none;"></div>
       <div id="new-remote-error-box" style="display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; color: var(--zn-text-crit); font-size: var(--zn-fs-xs); line-height: 1.45;"></div>
 
       <div class="cloud-remote-footer">
@@ -2176,7 +2176,7 @@
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="spotlight">
     <span class="context-menu-icon">⚡</span>
     <span class="context-menu-label" data-i18n="ix.command_palette">Command Palette</span>
-    <kbd style="margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6; padding:1px 4px; background:var(--zn-glaze-8); border-radius:3px;">⌘K</kbd>
+    <kbd class="dcm-xs-box">⌘K</kbd>
   </div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="fullscreen">
     <span class="context-menu-icon">⛶</span>
@@ -2221,7 +2221,7 @@
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="spotlight">
     <span class="context-menu-icon">⚡</span>
     <span class="context-menu-label" data-i18n="ix.command_palette">Command Palette</span>
-    <kbd style="margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6; padding:1px 4px; background:var(--zn-glaze-8); border-radius:3px;">⌘K</kbd>
+    <kbd class="wcm-xs-box">⌘K</kbd>
   </div>
 </div>
 

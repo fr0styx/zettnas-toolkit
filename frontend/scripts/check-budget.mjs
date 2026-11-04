@@ -4,7 +4,8 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = process.argv[2] || 'static';
-const BUDGET = Number(process.env.FIRST_LOAD_BUDGET_BYTES || 220_000);
+// 221 kB since NUX-15: the start page's inline styles became classes in the global sheet (+0.9 kB)
+const BUDGET = Number(process.env.FIRST_LOAD_BUDGET_BYTES || 221_000);
 
 const size = (p) => (existsSync(`${p}.br`) ? statSync(`${p}.br`).size : statSync(p).size);
 const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
