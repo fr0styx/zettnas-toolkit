@@ -50,6 +50,8 @@
 - **RAW photos in DNG show their picture** (NPERF-9): iPhone ProRAW and other DNG files get a
   thumbnail and open in the viewer, from the JPEG preview stored inside the file (the RAW data is
   never read); they were plain file icons and opened as a hex dump.
+  The AI index takes DNG photos too, so photo search finds them and their thumbnails are made in
+  the background like other photos'.
 - **The photo viewer always closes** (NUX-25): opening a second photo while a big folder was still
   loading left a second viewer behind whose close button did nothing.
 

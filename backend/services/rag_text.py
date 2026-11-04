@@ -457,6 +457,7 @@ IMAGE_EXTENSIONS: set[str] = {
     ".tiff",
     ".tif",
     ".heic",
+    ".dng",  # RAW (iPhone ProRAW): Pillow reads its tags and its embedded full-size JPEG (NPERF-9)
 }
 
 AUDIO_EXTENSIONS: set[str] = {

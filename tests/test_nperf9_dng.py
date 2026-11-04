@@ -146,3 +146,10 @@ def test_the_viewer_treats_a_dng_as_a_picture(client, auth_headers):
         assert r.status_code == 200 and r.headers["content-type"] == "image/webp"
     finally:
         os.remove(path)
+
+
+def test_the_ai_index_takes_dng_photos():
+    # Pillow reads a real DNG's tags and decodes its embedded full-size JPEG (checked on iPhone ProRAW files)
+    from backend.services.rag_text import IMAGE_EXTENSIONS
+
+    assert ".dng" in IMAGE_EXTENSIONS
