@@ -140,7 +140,7 @@
  "frontend/src/components/file-manager-helpers.js": {
   "buttons": 0,
   "globals": 2,
-  "styles": 54,
+  "styles": 9,
   "templates": 4
  },
  "frontend/src/components/file-manager.js": {

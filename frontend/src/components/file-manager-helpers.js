@@ -352,7 +352,7 @@ export class FmSidebarTree {
       </div>
 
       ${favorites().length ? `
-      <div class="fm-tree-group fm-tree-favorites" style="margin-top: 12px;">
+      <div class="fm-tree-group fm-tree-favorites fmh-x">
         <div class="fm-tree-group-title">${t('fm.favorites', 'Favorites')}</div>
         ${favorites().map((f) => `
           <div class="fm-tree-item fm-fav-item ${this.fm.currentPath === f.path ? 'active' : ''}${f.available === false ? ' is-missing' : ''}" data-path="${escapeHtml(f.path)}" title="${escapeHtml(f.available === false ? t('fm.fav_missing', 'This folder is no longer available') : f.path)}">
@@ -362,14 +362,14 @@ export class FmSidebarTree {
           </div>`).join('')}
       </div>` : ''}
 
-      <div class="fm-tree-group" style="margin-top: 12px;">
+      <div class="fm-tree-group fmh-x">
         <div class="fm-tree-group-title">${t('fm.storage_remotes', 'Storage and remotes')}</div>
         ${place('/mnt/remotes', '☁️', t('fm.cloud_mounts', 'Cloud folders'), isCloudActive)}
         ${mountedRemotes.map((r) => {
           const isRemoteActive = this.fm.currentPath === r.path || this.fm.currentPath.startsWith(r.path + '/');
           const icon = getRemoteIcon(r.type);
           return `
-            <div class="fm-tree-item fm-tree-sub-item ${isRemoteActive ? 'active' : ''}" data-path="${escapeHtml(r.path)}" role="button" tabindex="0"${isRemoteActive ? ' aria-current="true"' : ''} style="padding-left: 24px;" title="${escapeHtml(r.name)} (${escapeHtml(r.type || 'cloud')})">
+            <div class="fm-tree-item fm-tree-sub-item ${isRemoteActive ? 'active' : ''} fmh-x-2" data-path="${escapeHtml(r.path)}" role="button" tabindex="0"${isRemoteActive ? ' aria-current="true"' : ''} title="${escapeHtml(r.name)} (${escapeHtml(r.type || 'cloud')})">
               <span class="fm-tree-icon" aria-hidden="true">${icon}</span>
               <span class="fm-tree-label">${escapeHtml(r.name)}</span>
             </div>
@@ -572,10 +572,10 @@ export class FmInspector {
       // Current folder info
       const folderName = this.fm.currentPath.split('/').filter(Boolean).pop() || 'Root';
       content.innerHTML = `
-        <div style="text-align: center; padding: 16px 0;">
-          <div style="font-size: 40px; margin-bottom: 8px;">📁</div>
-          <div style="font-weight: 700; font-size: 13px; color: var(--fg); word-break: break-all;">${escapeHtml(folderName)}</div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">${escapeHtml(this.fm.currentPath)}</div>
+        <div class="fmh-center">
+          <div class="fmh-fs40">📁</div>
+          <div class="fmh-fs13-bold">${escapeHtml(folderName)}</div>
+          <div class="fmh-xs-muted">${escapeHtml(this.fm.currentPath)}</div>
         </div>
         <div class="fm-inspector-section">
           <div class="fm-inspector-row"><span>${escapeHtml(t('fm.i_items', 'Items:'))}</span> <strong>${this.fm.fileList.length}</strong></div>
@@ -601,10 +601,10 @@ export class FmInspector {
       });
 
       content.innerHTML = `
-        <div style="text-align: center; padding: 16px 0;">
-          <div style="font-size: 40px; margin-bottom: 8px;">📦</div>
+        <div class="fmh-center">
+          <div class="fmh-fs40">📦</div>
           <div style="font-weight: 700; font-size: 14px; color: var(--accent, var(--lt-t-0ea5e9ff, #0ea5e9));">${escapeHtml(t('fm.i_selected', '{n, plural, one {# item selected} other {# items selected}}', { n: count }))}</div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">${formatBytes(totalBytes)} total</div>
+          <div class="fmh-xs-muted">${formatBytes(totalBytes)} total</div>
         </div>
         <div class="fm-inspector-section">
           <div class="fm-inspector-row"><span>${escapeHtml(t('fm.i_files', 'Files:'))}</span> <strong>${fileCount}</strong></div>
@@ -627,28 +627,28 @@ export class FmInspector {
 
     let previewHtml;
     if (item.is_dir) {
-      previewHtml = '<div style="font-size: 48px; margin-bottom: 8px;">📁</div>';
+      previewHtml = '<div class="fmh-fs48">📁</div>';
     } else if (isImage) {
       const fallback = isVideo ? '🎬' : '🖼️';
-      previewHtml = `<img src="${thumbUrl}" style="max-width: 100%; max-height: 140px; border-radius: 6px; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-bottom: 8px;" alt="${escapeHtml(item.name)}" data-img-fallback="hide-show-next:block" /><div style="display:none; font-size: 48px; margin-bottom: 8px;">${fallback}</div>`;
+      previewHtml = `<img src="${thumbUrl}" style="max-width: 100%; max-height: 140px; border-radius: 6px; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-bottom: 8px;" alt="${escapeHtml(item.name)}" data-img-fallback="hide-show-next:block" /><div class="fmh-fs48" style="display: none;">${fallback}</div>`;
     } else {
-      previewHtml = '<div style="font-size: 48px; margin-bottom: 8px;">📄</div>';
+      previewHtml = '<div class="fmh-fs48">📄</div>';
     }
 
     const dateModified = formatDateTime(item.mtime);
 
     const tabsHeaderHtml = `
-      <div class="fm-inspector-tabs" style="display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--zn-line-8); padding-bottom: 6px;">
-        <button type="button" class="btn-pill-toggle ${this.activeTab === 'details' ? 'active' : ''}" id="fm-insp-tab-details" style="flex: 1;">ℹ️ ${escapeHtml(t('fm.i_info', 'Info'))}</button>
-        <button type="button" class="btn-pill-toggle ${this.activeTab === 'permissions' ? 'active' : ''}" id="fm-insp-tab-perms" style="flex: 1;">🔒 ${escapeHtml(t('fm.i_perms', 'Permissions'))}</button>
+      <div class="fm-inspector-tabs fmh-row-box">
+        <button type="button" class="btn-pill-toggle ${this.activeTab === 'details' ? 'active' : ''} fmh-grow" id="fm-insp-tab-details">ℹ️ ${escapeHtml(t('fm.i_info', 'Info'))}</button>
+        <button type="button" class="btn-pill-toggle ${this.activeTab === 'permissions' ? 'active' : ''} fmh-grow" id="fm-insp-tab-perms">🔒 ${escapeHtml(t('fm.i_perms', 'Permissions'))}</button>
       </div>
     `;
 
     if (this.activeTab === 'permissions') {
       content.innerHTML = `
         ${tabsHeaderHtml}
-        <div class="fm-inspector-perms-pane" style="font-size: var(--zn-fs-xs);">
-          <div style="font-weight: 700; color: var(--zn-text-strong); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="fm-inspector-perms-pane fmh-xs">
+          <div class="fmh-row-bold-strong">
             <span>${escapeHtml(t('fm.i_posix', 'Who may read and change it'))}</span>
             <span id="fm-insp-perm-badge" style="font-family: monospace; font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(56,189,248,0.15); color: var(--zn-text-accent);">--</span>
           </div>
@@ -659,50 +659,50 @@ export class FmInspector {
             </div>
           ` : ''}
 
-          <div style="margin-bottom: 10px;">
-            <label for="fm-insp-octal-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">${escapeHtml(t('fm.i_octal', 'Mode as a number (e.g. 0755, 0644)'))}</label>
-            <div style="display: flex; gap: 6px;">
-              <input type="text" id="fm-insp-octal-input" maxlength="4" placeholder="0755" value="${escapeHtml(item.mode || '0755')}" ${isGuarded ? 'disabled' : ''} style="flex: 1; padding: 5px 8px; font-family: monospace; font-size: var(--zn-fs-xs); background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 5px; color: var(--zn-text-strong);" />
-              <span id="fm-insp-human-mode" style="padding: 5px 8px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--zn-text-muted); background: var(--zn-shade-20); border-radius: 5px;">-rwxr-xr-x</span>
+          <div class="fmh-x-3">
+            <label class="fmh-xs-muted-2" for="fm-insp-octal-input">${escapeHtml(t('fm.i_octal', 'Mode as a number (e.g. 0755, 0644)'))}</label>
+            <div class="fmh-row">
+              <input class="fmh-xs-strong-mono-box-grow" type="text" id="fm-insp-octal-input" maxlength="4" placeholder="0755" value="${escapeHtml(item.mode || '0755')}" ${isGuarded ? 'disabled' : ''} />
+              <span class="fmh-xs-muted-mono-box" id="fm-insp-human-mode">-rwxr-xr-x</span>
             </div>
           </div>
 
-          <div class="fm-perms-grid" style="display: grid; grid-template-columns: 1fr repeat(3, 30px); gap: 4px; align-items: center; margin-bottom: 12px; font-size: var(--zn-fs-xs); text-align: center;">
+          <div class="fm-perms-grid fmh-grid-xs-center">
             <div></div>
-            <div style="color: var(--muted); font-weight: 700;">R</div>
-            <div style="color: var(--muted); font-weight: 700;">W</div>
-            <div style="color: var(--muted); font-weight: 700;">X</div>
+            <div class="fmh-bold-muted">R</div>
+            <div class="fmh-bold-muted">W</div>
+            <div class="fmh-bold-muted">X</div>
 
-            <div style="text-align: left; font-weight: 600; color: var(--zn-text-soft);">${escapeHtml(t('fm.i_owner', 'Owner'))}</div>
+            <div class="fmh-semi-soft">${escapeHtml(t('fm.i_owner', 'Owner'))}</div>
             <input type="checkbox" id="fm-perm-ur" data-perm="256" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-uw" data-perm="128" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-ux" data-perm="64" ${isGuarded ? 'disabled' : ''} />
 
-            <div style="text-align: left; font-weight: 600; color: var(--zn-text-soft);">${escapeHtml(t('fm.i_group', 'Group'))}</div>
+            <div class="fmh-semi-soft">${escapeHtml(t('fm.i_group', 'Group'))}</div>
             <input type="checkbox" id="fm-perm-gr" data-perm="32" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-gw" data-perm="16" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-gx" data-perm="8" ${isGuarded ? 'disabled' : ''} />
 
-            <div style="text-align: left; font-weight: 600; color: var(--zn-text-soft);">${escapeHtml(t('fm.i_others', 'Everyone else'))}</div>
+            <div class="fmh-semi-soft">${escapeHtml(t('fm.i_others', 'Everyone else'))}</div>
             <input type="checkbox" id="fm-perm-or" data-perm="4" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-ow" data-perm="2" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-ox" data-perm="1" ${isGuarded ? 'disabled' : ''} />
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+          <div class="fmh-grid">
             <div>
-              <label for="fm-insp-owner-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">${escapeHtml(t('fm.i_owner_user', 'Owner (a person)'))}</label>
-              <input type="text" id="fm-insp-owner-input" placeholder="e.g. root" value="root" ${isGuarded ? 'disabled' : ''} style="width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: var(--zn-fs-xs); background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 5px; color: var(--zn-text-strong);" />
+              <label class="fmh-xs-muted-2" for="fm-insp-owner-input">${escapeHtml(t('fm.i_owner_user', 'Owner (a person)'))}</label>
+              <input class="fmh-xs-strong-box" type="text" id="fm-insp-owner-input" placeholder="e.g. root" value="root" ${isGuarded ? 'disabled' : ''} />
             </div>
             <div>
-              <label for="fm-insp-group-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">${escapeHtml(t('fm.i_group', 'Group'))}</label>
-              <input type="text" id="fm-insp-group-input" placeholder="e.g. users" value="users" ${isGuarded ? 'disabled' : ''} style="width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: var(--zn-fs-xs); background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 5px; color: var(--zn-text-strong);" />
+              <label class="fmh-xs-muted-2" for="fm-insp-group-input">${escapeHtml(t('fm.i_group', 'Group'))}</label>
+              <input class="fmh-xs-strong-box" type="text" id="fm-insp-group-input" placeholder="e.g. users" value="users" ${isGuarded ? 'disabled' : ''} />
             </div>
           </div>
 
           ${item.is_dir ? `
-            <div style="margin-bottom: 14px;">
-              <label style="display: flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-soft); cursor: pointer;">
+            <div class="fmh-x-4">
+              <label class="fmh-row-xs-soft">
                 <input type="checkbox" id="fm-insp-recursive-chk" ${isGuarded ? 'disabled' : ''} />
                 <span>${escapeHtml(t('fm.i_recursive', 'Also to everything inside it'))}</span>
               </label>
@@ -841,10 +841,10 @@ export class FmInspector {
     // Default Details / Info tab
     content.innerHTML = `
       ${tabsHeaderHtml}
-      <div style="text-align: center; padding: 8px 0 14px;">
+      <div class="fmh-center-2">
         ${previewHtml}
-        <div style="font-weight: 700; font-size: 13px; color: var(--fg); word-break: break-all;">${escapeHtml(item.name)}</div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">${item.is_dir ? escapeHtml(t('fm.i_folder', 'Folder')) : formatBytes(item.size)}</div>
+        <div class="fmh-fs13-bold">${escapeHtml(item.name)}</div>
+        <div class="fmh-xs-muted">${item.is_dir ? escapeHtml(t('fm.i_folder', 'Folder')) : formatBytes(item.size)}</div>
       </div>
 
       <div class="fm-inspector-section">
@@ -852,24 +852,24 @@ export class FmInspector {
         <div class="fm-inspector-row"><span>${escapeHtml(t('fm.i_mode', 'Mode:'))}</span> <span id="fm-insp-mode">${item.mode || '--'}</span></div>
         <div class="fm-inspector-row"><span>${escapeHtml(t('fm.i_owner_c', 'Owner:'))}</span> <span id="fm-insp-owner">${escapeHtml(t('common.loading', 'Loading…'))}</span></div>
         ${isVideo ? '<div id="fm-insp-media" class="fm-inspector-media" aria-live="polite"></div>' : ''}
-        <button type="button" id="fm-insp-go-perms-btn" class="btn-pill-toggle is-block is-small" style="margin-top: 8px;">🔒 ${escapeHtml(t('fm.i_edit_perms', 'Change permissions'))}</button>
+        <button type="button" id="fm-insp-go-perms-btn" class="btn-pill-toggle is-block is-small fmh-x-5">🔒 ${escapeHtml(t('fm.i_edit_perms', 'Change permissions'))}</button>
       </div>
 
       ${!item.is_dir ? `
-        <div class="fm-inspector-section" style="margin-top: 10px;">
-          <div style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--muted); margin-bottom: 6px;">${escapeHtml(t('fm.i_checksum', 'Checksum (SHA-256)'))}</div>
+        <div class="fm-inspector-section fmh-x-6">
+          <div class="fmh-xs-semi-muted">${escapeHtml(t('fm.i_checksum', 'Checksum (SHA-256)'))}</div>
           <button type="button" id="fm-btn-calc-sha" class="btn-pill-toggle is-block">${escapeHtml(t('fm.i_compute', 'Work it out'))}</button>
-          <div id="fm-insp-sha-result" style="font-family: monospace; font-size: var(--zn-fs-xs); word-break: break-all; margin-top: 6px; color: var(--accent); display: none;"></div>
+          <div class="fmh-xs-mono" id="fm-insp-sha-result" style="display: none;"></div>
         </div>
       ` : `
-        <div class="fm-inspector-section" style="margin-top: 10px;">
-          <div style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--muted); margin-bottom: 6px;">${escapeHtml(t('fm.folder_size', 'Size and contents'))}</div>
+        <div class="fm-inspector-section fmh-x-6">
+          <div class="fmh-xs-semi-muted">${escapeHtml(t('fm.folder_size', 'Size and contents'))}</div>
           <button type="button" id="fm-btn-calc-folder-sz" class="btn-pill-toggle is-block">${escapeHtml(t('fm.count', 'Count'))}</button>
-          <div id="fm-insp-folder-sz-res" style="font-size: var(--zn-fs-xs); margin-top: 6px; color: var(--fg); display: none;"></div>
+          <div class="fmh-xs-2" id="fm-insp-folder-sz-res" style="display: none;"></div>
         </div>
       `}
 
-      <div class="fm-inspector-actions" style="margin-top: 16px; display: flex; flex-direction: column; gap: 6px;">
+      <div class="fm-inspector-actions fmh-col">
         ${!item.is_dir ? `<button type="button" id="fm-insp-preview-btn" class="btn-pill-toggle is-block">${escapeHtml(t('fm.i_preview', 'Quick look (Space)'))}</button>` : ''}
         ${!item.is_dir ? `<button type="button" id="fm-insp-download-btn" class="btn-pill-toggle is-block">${escapeHtml(t('preview.download', 'Download'))}</button>` : ''}
       </div>

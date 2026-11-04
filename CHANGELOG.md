@@ -114,6 +114,10 @@
   share-link and media-organizer dialogs use 52 classes instead of 76 inline styles, in the sheet
   that loads with the explorer; pixel-for-pixel the same in both themes.
 
+- **The file explorer's sidebar and inspector are built from stylesheet classes** (NUX-15): the
+  favorites list and the inspector's folder, file and permissions views use 30 classes instead of
+  48 inline styles; pixel-for-pixel the same in both themes.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 
