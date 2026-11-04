@@ -1568,7 +1568,7 @@
 
             <!-- Sub-tab 1: Visual Network & Physical Switch -->
             <div id="mgmt-pane-network" class="mgmt-tab-pane" style="display: block;">
-              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div class="mgmt-card-intro net-row">
                 <div>
                   <div class="mgmt-card-intro-title">
                     <svg class="ic"><use href="#i-net"/></svg>
@@ -1578,7 +1578,7 @@
                     Host interface carriers, link negotiation speeds (10GbE / 2.5GbE / 1GbE), bridges, and physical switch faceplate.
                   </div>
                 </div>
-                <div style="display:flex; gap:8px; align-items:center;">
+                <div class="net-row-2">
                   <button class="btn-pill-toggle" id="btn-refresh-network-topology" title="Refresh Network Topology" data-i18n-title="ui.refresh_network_topology"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 </div>
               </div>
@@ -1587,7 +1587,7 @@
                 <!-- 4 KPI Metrics Header -->
                 <div class="network-kpi-grid">
                   <div class="network-kpi-card" id="net-kpi-ip-card">
-                    <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; align-items: flex-start;">
+                    <div class="net-row-3">
                       <div class="network-kpi-label" data-i18n="mw.primary_host_ip">Primary Host IP</div>
                       <button class="btn-pill-toggle is-small" id="btn-open-host-ip-modal" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56, 189, 248, 0.35); text-transform: none; margin-top: -2px;"><span aria-hidden="true">⚙️</span> <span data-i18n="net.host_cfg_btn">Configure</span></button>
                     </div>
@@ -1623,7 +1623,7 @@
                 </div>
 
                 <!-- Physical Interfaces Detailed Table -->
-                <div class="network-section-header" style="margin-top: 24px;">
+                <div class="network-section-header net-x">
                   <span class="network-section-title" data-i18n="mw.physical_interfaces_inventory">PHYSICAL INTERFACES INVENTORY</span>
                 </div>
                 <div class="network-table-wrap" tabindex="0">
@@ -1639,17 +1639,17 @@
                         <th data-i18n="mw.master_bond">Master / Bond</th>
                         <th data-i18n="mw.cumulative_rx_tx">Cumulative Rx / Tx</th>
                         <th data-i18n="mw.hardware_driver">Hardware / Driver</th>
-                        <th style="text-align: right;" data-i18n="mw.action">Action</th>
+                        <th class="net-x-2" data-i18n="mw.action">Action</th>
                       </tr>
                     </thead>
                     <tbody id="network-physical-tbody">
-                      <tr><td colspan="10" style="text-align:center; color:var(--muted); padding:16px;" data-i18n="mw.loading_network_interfaces">Loading network interfaces...</td></tr>
+                      <tr><td class="net-muted" colspan="10" data-i18n="mw.loading_network_interfaces">Loading network interfaces...</td></tr>
                     </tbody>
                   </table>
                 </div>
 
                 <!-- Virtual Switches, Bonds & Bridges -->
-                <div class="network-section-header" style="margin-top: 24px;">
+                <div class="network-section-header net-x">
                   <span class="network-section-title" data-i18n="mw.host_bridges_and_bonding_groups">HOST BRIDGES & BONDING GROUPS</span>
                 </div>
                 <div class="network-grid-two-col" id="network-bridges-container">
@@ -1657,7 +1657,7 @@
                 </div>
 
                 <!-- 802.1Q VLAN Sub-Interfaces -->
-                <div class="network-section-header" style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
+                <div class="network-section-header net-row-4">
                   <span class="network-section-title" data-i18n="mw.vlan_sub_interfaces_802_1q_tagging">VLAN SUB-INTERFACES (802.1Q TAGGING)</span>
                   <button class="btn-pill-toggle is-small" id="btn-open-create-vlan-modal" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56, 189, 248, 0.4);" data-i18n="net.create_vlan_btn">+ Add VLAN</button>
                 </div>
@@ -1672,11 +1672,11 @@
                         <th data-i18n="mw.status">Status</th>
                         <th data-i18n="mw.ip_address">IP Address</th>
                         <th data-i18n="mw.cumulative_rx_tx">Cumulative Rx / Tx</th>
-                        <th style="text-align: right;" data-i18n="mw.action">Action</th>
+                        <th class="net-x-2" data-i18n="mw.action">Action</th>
                       </tr>
                     </thead>
                     <tbody id="network-vlan-tbody">
-                      <tr><td colspan="8" style="text-align:center; color:var(--muted); padding:16px;" data-i18n="mw.loading_vlan_sub_interfaces">Loading VLAN sub-interfaces...</td></tr>
+                      <tr><td class="net-muted" colspan="8" data-i18n="mw.loading_vlan_sub_interfaces">Loading VLAN sub-interfaces...</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -2102,7 +2102,7 @@
 
             <!-- Sub-tab 5: Ports & Listeners -->
             <div id="mgmt-pane-network-ports" class="mgmt-tab-pane" style="display: none;">
-              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div class="mgmt-card-intro nport-row">
                 <div>
                   <div class="mgmt-card-intro-title">
                     <svg class="ic"><use href="#i-terminal"/></svg>
@@ -2112,26 +2112,26 @@
                     Real-time host socket inspector correlating listening TCP and UDP ports with NAS services and Docker containers.
                   </div>
                 </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                  <input type="text" id="net-ports-search" class="ci-input" placeholder="Filter port, service, container..." data-i18n-placeholder="ui.filter_port_service_container" style="width: 220px; font-size: var(--zn-fs-xs); padding: 4px 8px;" aria-label="Filter port, service, container..." data-i18n-aria-label="ui.filter_port_service_container">
+                <div class="nport-row-2">
+                  <input type="text" id="net-ports-search" class="ci-input nport-xs" placeholder="Filter port, service, container..." data-i18n-placeholder="ui.filter_port_service_container" aria-label="Filter port, service, container..." data-i18n-aria-label="ui.filter_port_service_container">
                   <button class="btn-pill-toggle" id="btn-refresh-net-ports"><span aria-hidden="true">🔄</span> <span data-i18n="mw.refresh_ports">Refresh Ports</span></button>
                 </div>
               </div>
               <div class="mgmt-detail-body">
-                <div class="table-wrap" style="max-height: 480px; overflow-y: auto;" tabindex="0">
+                <div class="table-wrap nport-x" tabindex="0">
                   <table class="ci-table" id="table-net-listening-ports">
                     <thead>
                       <tr>
-                        <th style="width: 90px;" data-i18n="mw.port">Port</th>
-                        <th style="width: 80px;" data-i18n="mw.proto">Proto</th>
-                        <th style="width: 140px;" data-i18n="mw.bind_ip">Bind IP</th>
+                        <th class="nport-size" data-i18n="mw.port">Port</th>
+                        <th class="nport-size-2" data-i18n="mw.proto">Proto</th>
+                        <th class="nport-size-3" data-i18n="mw.bind_ip">Bind IP</th>
                         <th data-i18n="mw.service_protocol">Service / Protocol</th>
                         <th data-i18n="mw.container_process">Container / Process</th>
-                        <th style="width: 100px; text-align: right;" data-i18n="mw.status">Status</th>
+                        <th class="nport-size-4" data-i18n="mw.status">Status</th>
                       </tr>
                     </thead>
                     <tbody id="net-listening-ports-tbody">
-                      <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;" data-i18n="mw.loading_active_listening_sockets">Loading active listening sockets...</td></tr>
+                      <tr><td class="nport-muted" colspan="6" data-i18n="mw.loading_active_listening_sockets">Loading active listening sockets...</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -2158,15 +2158,15 @@
             </div>
 
             <div id="mgmt-pane-docker" class="mgmt-tab-pane" style="display: block;">
-              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div class="mgmt-card-intro app-row">
                 <div>
                   <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.docker_sec_title">Docker Containers & App Catalog</span></div>
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.docker_sec_desc">See which apps are running, whether they are healthy and how long they have been up.</div>
                 </div>
-                <div style="display:flex; gap:6px; align-items:center;">
+                <div class="app-row-2">
                   <button class="btn-pill-toggle" id="btn-mgmt-docker-launch-window" title="Open Dedicated Window" data-i18n-title="ui.open_dedicated_window">🪟 <span data-i18n="mgmt.open_dedicated_window">Open Window</span></button>
                   <button class="btn-pill-toggle" id="btn-view-docker-containers" style="display: none;" data-i18n="ui.back_to_containers">← Back to Containers</button>
-                  <button class="btn-pill-toggle" id="btn-view-docker-catalog"><span aria-hidden="true">📦</span> <span data-i18n="sp.catalog">App Catalog</span> <span id="catalog-total-badge" class="docker-count-badge" style="margin-left:4px;">…</span></button>
+                  <button class="btn-pill-toggle" id="btn-view-docker-catalog"><span aria-hidden="true">📦</span> <span data-i18n="sp.catalog">App Catalog</span> <span id="catalog-total-badge" class="docker-count-badge app-x">…</span></button>
                   <button class="btn-pill-toggle" id="btn-docker-prune" title="Clean up unused images, volumes, and stopped containers" data-i18n-title="ui.clean_up_unused_images_volumes"><span aria-hidden="true">🧹</span> <span data-i18n="dk.prune">Prune / Cleanup</span></button>
                   <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n-title="ui.refresh_containers"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 </div>
@@ -2174,8 +2174,8 @@
               <div class="mgmt-detail-body">
                 <!-- 1. Active Containers View -->
                 <div id="docker-view-containers-wrap">
-                  <div class="docker-toolbar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
-                    <div class="docker-filter-pills" style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <div class="docker-toolbar app-row-3">
+                    <div class="docker-filter-pills app-row-4">
                       <button class="btn-pill-toggle docker-filter-btn active" data-filter="all"><span data-i18n="mgmt.docker_filter_all">All</span> <span id="docker-count-all" class="docker-count-badge">0</span></button>
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="running"><span data-i18n="mgmt.docker_filter_running">Running</span> <span id="docker-count-running" class="docker-count-badge">0</span></button>
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="stopped"><span data-i18n="mgmt.docker_filter_stopped">Stopped</span> <span id="docker-count-stopped" class="docker-count-badge">0</span></button>
@@ -2183,7 +2183,7 @@
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="compose"><span data-i18n="mgmt.docker_filter_compose">Stacks</span> <span id="docker-count-compose" class="docker-count-badge">0</span></button>
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="standalone"><span data-i18n="mgmt.docker_filter_standalone">Standalone</span> <span id="docker-count-standalone" class="docker-count-badge">0</span></button>
                     </div>
-                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <div class="app-row-5">
                       <button class="btn-pill-toggle" id="btn-docker-stacks-menu" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8));" title="View & Edit Docker Compose Stacks" data-i18n-title="ui.view_edit_docker_compose_stacks">
                         <span aria-hidden="true">📁</span> <span data-i18n="mw.manage_stacks">Manage Stacks</span>
                       </button>
@@ -2193,12 +2193,12 @@
                       <button class="btn-pill-toggle" id="btn-docker-update-all" style="display: none; color: var(--zn-text-warn); border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="Update all containers with available image updates" data-i18n-title="ui.update_all_containers_with_available">
                         <span style="display:inline-flex; align-items:center; justify-content:center; width:13px; height:13px; border-radius:50%; border:1.5px solid #fbbf24; font-size:var(--zn-fs-xs); line-height:1;">↑</span> <span><span data-i18n="cw.update_all">Update all</span> (<span id="docker-updates-count-badge">0</span>)</span>
                       </button>
-                      <div class="docker-search-wrap" style="position:relative;">
-                        <input type="text" id="docker-search-input" placeholder="Search containers, images, ports..." data-i18n-placeholder="mgmt.docker_search_placeholder" class="tz-text-input" style="font-size:var(--zn-fs-xs); padding:3px 8px; width:180px; height:24px; border-radius:4px;" aria-label="Search containers, images, ports..." data-i18n-aria-label="mgmt.docker_search_placeholder">
+                      <div class="docker-search-wrap app-x-2">
+                        <input type="text" id="docker-search-input" placeholder="Search containers, images, ports..." data-i18n-placeholder="mgmt.docker_search_placeholder" class="tz-text-input app-xs-box" aria-label="Search containers, images, ports..." data-i18n-aria-label="mgmt.docker_search_placeholder">
                       </div>
                     </div>
                   </div>
-                  <div class="docker-table-container" style="overflow-x:auto; background:var(--zn-shade-25); border:1px solid var(--zn-line-6); border-radius:8px;" tabindex="0">
+                  <div class="docker-table-container app-box" tabindex="0">
                     <table class="copy-history-table docker-table responsive-cards">
                       <thead>
                         <tr>
@@ -2221,11 +2221,11 @@
                           <th class="sortable-th" data-sort-col="status" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Status & Uptime" data-i18n-title="ui.click_to_sort_by_status">
                             <span data-i18n="mgmt.tbl_uptime">Status & Uptime</span><span class="docker-sort-indicator" aria-hidden="true"></span>
                           </th>
-                          <th style="text-align:right;" data-i18n="mgmt.tbl_actions">Actions</th>
+                          <th class="app-x-3" data-i18n="mgmt.tbl_actions">Actions</th>
                         </tr>
                       </thead>
                       <tbody id="docker-containers-tbody">
-                        <tr><td colspan="7" style="text-align:center; color:var(--muted); padding:20px;" data-i18n="mw.scanning_docker_socket">Scanning Docker socket...</td></tr>
+                        <tr><td class="app-muted" colspan="7" data-i18n="mw.scanning_docker_socket">Scanning Docker socket...</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -2252,9 +2252,9 @@
 
                 <!-- 2. Curated App Catalog View -->
                 <div id="docker-view-catalog-wrap" style="display:none;">
-                  <div class="catalog-toolbar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
-                    <div class="catalog-filter-pills" style="display:flex; gap:6px; flex-wrap:wrap;">
-                      <button class="btn-pill-toggle catalog-filter-btn active" data-cat="all"><span data-i18n="catalog.cat_all">All Apps</span> <span id="catalog-all-count" class="docker-count-badge" style="margin-left:4px;">…</span></button>
+                  <div class="catalog-toolbar app-row-3">
+                    <div class="catalog-filter-pills app-row-4">
+                      <button class="btn-pill-toggle catalog-filter-btn active" data-cat="all"><span data-i18n="catalog.cat_all">All Apps</span> <span id="catalog-all-count" class="docker-count-badge app-x">…</span></button>
                       <button class="btn-pill-toggle catalog-filter-btn" data-cat="media" data-i18n="mw.media_and_streaming">Media & Streaming</button>
                       <button class="btn-pill-toggle catalog-filter-btn" data-cat="photos" data-i18n="mw.photos">Photos</button>
                       <button class="btn-pill-toggle catalog-filter-btn" data-cat="cloud" data-i18n="mw.cloud_and_files">Cloud & Files</button>
@@ -2262,14 +2262,14 @@
                       <button class="btn-pill-toggle catalog-filter-btn" data-cat="utilities" data-i18n="mw.utilities">Utilities</button>
                       <button class="btn-pill-toggle catalog-filter-btn" data-cat="downloads" data-i18n="mw.downloads">Downloads</button>
                     </div>
-                    <div class="catalog-search-wrap" style="display:flex; align-items:center; gap:8px;">
-                      <input type="text" id="catalog-search-input" placeholder="Search apps..." data-i18n-placeholder="ui.search_apps" class="tz-text-input" style="font-size:var(--zn-fs-xs); padding:3px 8px; width:180px; height:24px; border-radius:4px;" aria-label="Search apps..." data-i18n-aria-label="ui.search_apps">
+                    <div class="catalog-search-wrap app-row-6">
+                      <input type="text" id="catalog-search-input" placeholder="Search apps..." data-i18n-placeholder="ui.search_apps" class="tz-text-input app-xs-box" aria-label="Search apps..." data-i18n-aria-label="ui.search_apps">
                       <button class="btn-pill-toggle" id="btn-manage-app-sources" title="Manage App Template Sources (Portainer/Custom)" data-i18n-title="ui.manage_app_template_sources_portainer"><span aria-hidden="true">🌐</span> <span data-i18n="dk.sources">Sources</span> <span id="catalog-sources-count-badge" class="docker-count-badge" style="margin-left:3px; background:var(--accent); color:#000;">1</span></button>
                       <button class="btn-pill-toggle" id="btn-sideload-app-package" title="Sideload App Package from URL or Compose YAML" data-i18n-title="ui.sideload_app_package_from_url"><span aria-hidden="true">📥</span> <span data-i18n="dk.sideload">Sideload</span></button>
                     </div>
                   </div>
-                  <div id="docker-catalog-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px; overflow-y:auto; padding:2px;">
-                    <div style="color:var(--muted); text-align:center; padding:30px; grid-column:1/-1;" data-i18n="mw.loading_app_catalog">Loading app catalog...</div>
+                  <div class="app-grid" id="docker-catalog-grid">
+                    <div class="app-muted-2" data-i18n="mw.loading_app_catalog">Loading app catalog...</div>
                   </div>
                 </div>
               </div>
@@ -2298,7 +2298,7 @@
 
             <!-- Subpane 1: VM Instances & Fleet -->
             <div id="mgmt-pane-vms-list" class="mgmt-tab-pane" style="display: block;">
-              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div class="mgmt-card-intro vml-row">
                 <div>
                   <div class="mgmt-card-intro-title">
                     <svg class="ic"><use href="#i-vm"/></svg>
@@ -2306,7 +2306,7 @@
                   </div>
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.vms_desc">Manage guest operating systems, web VNC/serial consoles, and hardware passthrough.</div>
                 </div>
-                <div style="display:flex; gap:6px; align-items:center;">
+                <div class="vml-row-2">
                   <button class="btn-pill-toggle" id="btn-mgmt-vm-refresh" title="Refresh VM Fleet" data-i18n-title="ui.refresh_vm_fleet">🔄 <span data-i18n="vm.refresh">Refresh</span></button>
                   <button class="btn-pill-toggle" id="btn-mgmt-vm-launch-window" title="Open Dedicated Window" data-i18n-title="ui.open_dedicated_window">🪟 <span data-i18n="mgmt.open_dedicated_window">Open Window</span></button>
                   <button class="btn-pill-toggle" id="btn-mgmt-vm-iso-library" title="ISO Library & Official Catalog" data-i18n-title="ui.iso_library_official_catalog">💿 <span data-i18n="mw.iso_library">ISO Library</span></button>
@@ -2314,16 +2314,16 @@
                 </div>
               </div>
               <div class="mgmt-detail-body">
-                <div id="mgmt-vms-summary-strip" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px; margin-bottom:14px;">
+                <div class="vml-grid" id="mgmt-vms-summary-strip">
                   <!-- Dynamic Headroom & KVM Status -->
                 </div>
-                <div id="mgmt-vms-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px;">
+                <div class="vml-grid-2" id="mgmt-vms-grid">
                   <!-- Dynamic VM cards populated by fetchAndRenderMgmtVms -->
                 </div>
-                <div id="mgmt-vms-empty" style="display:none; text-align:center; padding:40px 20px; color:var(--muted); background:var(--zn-glaze-2); border:1px dashed var(--zn-line-8); border-radius:8px;">
-                  <div style="font-size:32px; margin-bottom:8px;">🖥️</div>
-                  <div style="font-weight:600; color:var(--zn-text-strong); margin-bottom:4px;" data-i18n="vm.empty_title">No Virtual Machines Found</div>
-                  <div style="font-size:var(--zn-fs-xs); margin-bottom:14px;" data-i18n="vm.empty_desc">Deploy Linux, Windows, or FreeBSD appliances with dedicated CPU cores and RAM.</div>
+                <div class="vml-muted-box" id="mgmt-vms-empty" style="display: none;">
+                  <div class="vml-fs32">🖥️</div>
+                  <div class="vml-semi-strong" data-i18n="vm.empty_title">No Virtual Machines Found</div>
+                  <div class="vml-xs" data-i18n="vm.empty_desc">Deploy Linux, Windows, or FreeBSD appliances with dedicated CPU cores and RAM.</div>
                   <button class="btn-pill-toggle is-primary" id="btn-mgmt-vm-create-empty">+ <span data-i18n="vm.create_btn">Create Virtual Machine</span></button>
                 </div>
               </div>
@@ -3042,26 +3042,26 @@
 
             <!-- Sub-tab 3: Network Shares -->
             <div id="mgmt-pane-storage-shares" class="mgmt-tab-pane" style="display: none;">
-              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div class="mgmt-card-intro sshr-row">
                 <div>
                   <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.shares_title">Network Shares & Protocols</span></div>
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.shares_desc">Host Samba (SMB), NFS, and Universal WebDAV network shares, security levels, and live storage usage.</div>
                 </div>
-                <div style="display:flex; align-items:center; gap:8px;">
+                <div class="sshr-row-2">
                   <span class="mgmt-app-pill" id="mgmt-shares-platform-badge" style="background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); color:var(--lt-t-3bf58bff, #3bf58b);"></span>
                   <button class="btn-pill-toggle is-primary" id="btn-create-network-share" style="display: none;" title="Create Network Share" data-i18n-title="ui.create_network_share"><span aria-hidden="true">+</span> <span data-i18n="shares.create">Create Share</span></button>
                   <button class="btn-pill-toggle" id="btn-refresh-shares" title="Refresh Network Shares" data-i18n-title="ui.refresh_network_shares"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 </div>
               </div>
               <!-- Sharing Protocols Quickbar -->
-              <div class="mgmt-protocol-quickbar" style="margin: 0 16px 12px 16px; padding: 10px 14px; background: var(--zn-glaze-3); border: 1px solid var(--border, var(--zn-line-8)); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <div class="mgmt-protocol-quickbar sshr-row-box">
+                <div class="sshr-row-3">
                   <span style="font-size: var(--zn-fs-sm); font-weight: 600; color: var(--muted, #94a3b8);" data-i18n="mgmt.protocols_status_title">File Sharing Protocols:</span>
                   <span class="mgmt-app-pill proto-pill" id="proto-pill-smb" data-state="unknown">SMB</span>
                   <span class="mgmt-app-pill proto-pill" id="proto-pill-sftp" data-state="unknown">SFTP</span>
                   <span class="mgmt-app-pill proto-pill" id="proto-pill-webdav" data-state="unknown">WebDAV</span>
                 </div>
-                <button class="btn-pill-toggle" id="btn-quick-manage-protocols" style="background: transparent; border-color: var(--border, var(--zn-line-15)); color: var(--text, var(--zn-text));">
+                <button class="btn-pill-toggle sshr-box" id="btn-quick-manage-protocols">
                   ⚙️ <span data-i18n="mgmt.manage_protocols">Sharing services</span>
                 </button>
               </div>
@@ -3160,21 +3160,21 @@
 
             <!-- Sub-tab 7: Automated Snapshot Replication Engine -->
             <div id="mgmt-pane-storage-replication" class="mgmt-tab-pane" style="display: none;">
-              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div class="mgmt-card-intro srep-row">
                 <div>
                   <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-refresh"/></svg> <span data-i18n="mw.automated_snapshot_replication_pipelines">Automated Snapshot Replication Pipelines</span></div>
                   <div class="mgmt-card-intro-desc" data-i18n="mw.asynchronous_recursive_dataset_transfers_support">Asynchronous recursive dataset transfers supporting local pools and remote SSH/WireGuard endpoints with bandwidth throttling and retention.</div>
                 </div>
-                <div style="display:flex; gap:8px;">
+                <div class="srep-row-2">
                   <button class="btn-pill-toggle is-primary" id="btn-create-replication-job" title="Create Replication Pipeline" data-i18n-title="ui.create_replication_pipeline"><span aria-hidden="true">+</span> <span data-i18n="mw.new_replication_pipeline">New Replication Pipeline</span></button>
                   <button class="btn-pill-toggle" id="btn-refresh-replication" title="Refresh Replication Jobs" data-i18n-title="ui.refresh_replication_jobs"><span aria-hidden="true">🔄</span> <span data-i18n="mw.refresh">Refresh</span></button>
                 </div>
               </div>
               <div class="mgmt-detail-body">
-                <div class="network-section-header" style="margin-top:0;">
+                <div class="network-section-header srep-x">
                   <span class="network-section-title" data-i18n="mw.active_replication_pipelines">ACTIVE REPLICATION PIPELINES</span>
                 </div>
-                <div style="overflow-x:auto; background:var(--zn-shade-25); border:1px solid var(--zn-line-6); border-radius:8px; margin-bottom: 24px;">
+                <div class="srep-box">
                   <table class="copy-history-table">
                     <thead>
                       <tr>
@@ -3185,11 +3185,11 @@
                         <th data-i18n="mw.rate_limit">Rate Limit</th>
                         <th data-i18n="mw.retention">Retention</th>
                         <th data-i18n="mw.status">Status</th>
-                        <th style="text-align:right;" data-i18n="mw.actions">Actions</th>
+                        <th class="srep-x-2" data-i18n="mw.actions">Actions</th>
                       </tr>
                     </thead>
                     <tbody id="replication-jobs-tbody">
-                      <tr><td colspan="8" style="text-align:center; color:var(--muted); padding:16px;" data-i18n="mw.loading_replication_pipelines">Loading replication pipelines...</td></tr>
+                      <tr><td class="srep-muted" colspan="8" data-i18n="mw.loading_replication_pipelines">Loading replication pipelines...</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -3197,7 +3197,7 @@
                 <div class="network-section-header">
                   <span class="network-section-title" data-i18n="mw.replication_transfer_history">REPLICATION TRANSFER HISTORY</span>
                 </div>
-                <div style="overflow-x:auto; max-height:260px; background:var(--zn-shade-25); border:1px solid var(--zn-line-6); border-radius:8px;">
+                <div class="srep-box-2">
                   <table class="copy-history-table">
                     <thead>
                       <tr>
@@ -3210,7 +3210,7 @@
                       </tr>
                     </thead>
                     <tbody id="replication-history-tbody">
-                      <tr><td colspan="6" style="text-align:center; color:var(--muted); padding:16px;" data-i18n="mw.loading_history">Loading history...</td></tr>
+                      <tr><td class="srep-muted" colspan="6" data-i18n="mw.loading_history">Loading history...</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -3365,7 +3365,7 @@
 
         <!-- Users & Roles Pane -->
         <div id="mgmt-pane-users" class="mgmt-tab-pane" style="display: none;">
-          <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div class="mgmt-card-intro usr-row">
             <div>
               <div class="mgmt-card-intro-title">
                 <svg class="ic"><use href="#i-users"/></svg>
@@ -3473,38 +3473,38 @@
 
             <!-- Subpane 3: 2FA Self-Service -->
             <div id="users-pane-2fa" class="users-subpane">
-              <div id="mfa-status-card" class="drawer-card" style="padding: 18px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap: 12px; margin-bottom: 14px;">
-                  <div style="display:flex; align-items:center; gap: 12px;">
+              <div id="mfa-status-card" class="drawer-card usr-box">
+                <div class="usr-row-2">
+                  <div class="usr-row-3">
                     <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.3); display:flex; align-items:center; justify-content:center; font-size: 20px;">
                       🛡️
                     </div>
                     <div>
-                      <div style="font-size: var(--zn-fs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="users.2fa_card_title">Two-step sign-in</div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="users.2fa_card_desc">After the password, a code from an app on your phone.</div>
+                      <div class="usr-base-bold-strong" data-i18n="users.2fa_card_title">Two-step sign-in</div>
+                      <div class="usr-xs-muted" data-i18n="users.2fa_card_desc">After the password, a code from an app on your phone.</div>
                     </div>
                   </div>
                   <div>
                     <span id="mfa-status-badge" style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 20px; background: rgba(239,68,68,0.15); color: var(--lt-t-fca5a5ff, #fca5a5); border: 1px solid rgba(239,68,68,0.3);" data-i18n="users.2fa_badge_off">Off</span>
                   </div>
                 </div>
-                <div id="mfa-status-desc" style="font-size: var(--zn-fs-sm); line-height: 1.5; color: var(--zn-text-soft); margin-bottom: 16px;" data-i18n="users.2fa_desc_off">
+                <div class="usr-sm-soft" id="mfa-status-desc" data-i18n="users.2fa_desc_off">
                   Two-step sign-in is off. Turn it on, and a stolen password alone can't open your account.
                 </div>
-                <div style="display: flex; gap: 10px;">
-                  <button type="button" id="btn-enable-2fa" class="btn-save-preset" style="padding: 8px 16px; font-size: var(--zn-fs-sm);" data-i18n="users.2fa_set_up">
+                <div class="usr-row-4">
+                  <button type="button" id="btn-enable-2fa" class="btn-save-preset usr-sm" data-i18n="users.2fa_set_up">
                     Set up two-step sign-in
                   </button>
-                  <button type="button" id="btn-disable-2fa" class="suite-toolkit-btn danger" style="padding: 8px 16px; font-size: var(--zn-fs-sm); display: none;" data-i18n="users.2fa_turn_off">
+                  <button type="button" id="btn-disable-2fa" class="suite-toolkit-btn danger usr-sm" style="display: none;" data-i18n="users.2fa_turn_off">
                     Turn off two-step sign-in
                   </button>
                   <button type="button" id="btn-smb-password" class="btn-pill-toggle" hidden data-i18n="smb.make">Shared folders password</button>
                 </div>
                 <p id="smb-password-why" class="smb-pw-why" hidden data-i18n="smb.why">With two-step sign-in on, your account password no longer opens the shared folders over the network. Make a separate password for them here.</p>
                 <div id="smb-password-box" class="smb-pw-box" hidden></div>
-                <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                  <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="users.2fa_more">Change your username, password or API keys?</div>
-                  <button type="button" class="btn-pill-toggle" id="btn-jump-to-security" style="color: var(--zn-text-strong);" data-i18n="users.2fa_more_btn">Account and password →</button>
+                <div class="usr-row-box">
+                  <div class="usr-xs-muted" data-i18n="users.2fa_more">Change your username, password or API keys?</div>
+                  <button type="button" class="btn-pill-toggle usr-strong" id="btn-jump-to-security" data-i18n="users.2fa_more_btn">Account and password →</button>
                 </div>
               </div>
             </div>
