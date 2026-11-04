@@ -325,7 +325,7 @@ export function updateManagementTelemetry(stats) {
       if (stats.gpu.codecs.length > 0) {
         gpuCodecsEl.innerHTML = stats.gpu.codecs.map(c => `<span class="gpu-codec-tag">${escapeHtml(c)}</span>`).join('');
       } else {
-        gpuCodecsEl.innerHTML = `<span class="gpu-codec-tag" style="color:var(--muted); border-color:var(--zn-line-10);">${t('mgx.cpu_decode', 'CPU Decode Only')}</span>`;
+        gpuCodecsEl.innerHTML = `<span class="gpu-codec-tag mgx-muted-box">${t('mgx.cpu_decode', 'CPU Decode Only')}</span>`;
       }
     }
   }
@@ -375,7 +375,7 @@ export function updateManagementTelemetry(stats) {
           )
           .join('');
       } else {
-        npuFrameworksEl.innerHTML = `<span class="gpu-codec-tag" style="color:var(--muted); border-color:var(--zn-line-10);">${t('mgx.cpu_fallback', 'CPU Fallback')}</span>`;
+        npuFrameworksEl.innerHTML = `<span class="gpu-codec-tag mgx-muted-box">${t('mgx.cpu_fallback', 'CPU Fallback')}</span>`;
       }
     }
   }
@@ -889,21 +889,21 @@ export function initManagement() {
         const cpuRatio = tel?.cpu?.ratio ? `${tel.cpu.ratio}:1 Allocation` : 'Optimal';
 
         strip.innerHTML = `
-          <div style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 10px 14px;">
-            <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 700; text-transform: uppercase;">${t('mvm.engine', 'HYPERVISOR ENGINE')}</div>
+          <div class="mgx-box">
+            <div class="mgx-xs-bold-muted">${t('mvm.engine', 'HYPERVISOR ENGINE')}</div>
             <div style="font-size: 13px; font-weight: 700; color: ${kvmColor}; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
               <span aria-hidden="true">⚡</span> <span>${escapeHtml(kvmBadge)}</span>
             </div>
           </div>
-          <div style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 10px 14px;">
-            <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 700; text-transform: uppercase;">${t('mvm.ceiling', 'MEMORY CEILING')}</div>
+          <div class="mgx-box">
+            <div class="mgx-xs-bold-muted">${t('mvm.ceiling', 'MEMORY CEILING')}</div>
             <div style="font-size: 13px; font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); margin-top: 4px;">
               ${escapeHtml(headroom)}
             </div>
           </div>
-          <div style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 10px 14px;">
-            <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 700; text-transform: uppercase;">${t('mvm.overcommit', 'vCPU OVERCOMMIT')}</div>
-            <div style="font-size: 13px; font-weight: 700; color: var(--zn-text-strong); margin-top: 4px;">
+          <div class="mgx-box">
+            <div class="mgx-xs-bold-muted">${t('mvm.overcommit', 'vCPU OVERCOMMIT')}</div>
+            <div class="mgx-fs13-bold-strong">
               ${escapeHtml(cpuRatio)}
             </div>
           </div>
@@ -928,24 +928,24 @@ export function initManagement() {
 
             return `
               <div class="mgmt-vm-card" data-vm-id="${escapeHtml(vm.id)}" style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-7); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: border-color 0.2s;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 18px;">🖥️</span>
+                <div class="mgx-row">
+                  <div class="mgx-row-2">
+                    <span class="mgx-fs18">🖥️</span>
                     <div>
-                      <div style="font-weight: 700; font-size: 13px; color: var(--zn-text-strong);">${escapeHtml(vm.name || vm.id)}</div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(osType)} • ${cores} vCPU • ${ramGb} RAM</div>
+                      <div class="mgx-fs13-bold-strong-2">${escapeHtml(vm.name || vm.id)}</div>
+                      <div class="mgx-xs-muted">${escapeHtml(osType)} • ${cores} vCPU • ${ramGb} RAM</div>
                     </div>
                   </div>
                   <span style="padding: 2px 8px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; text-transform: uppercase; background: ${statusBg}; color: ${statusColor};">
                     ${escapeHtml(vm.state || 'stopped')}
                   </span>
                 </div>
-                <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--zn-line-5);">
+                <div class="mgx-row-box">
                   ${isRunning
-                    ? `<button class="btn-pill-toggle btn-vm-action-stop is-danger" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1;" title="${t('ui.stop_vm', 'Stop VM')}"><span aria-hidden="true">⏹</span> ${escapeHtml(t('ui.stop', 'Stop'))}</button>`
-                    : `<button class="btn-pill-toggle btn-vm-action-start" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1; color: var(--ok2);" title="${t('ui.start_vm', 'Start VM')}"><span aria-hidden="true">▶</span> ${escapeHtml(t('ui.start', 'Start'))}</button>`
+                    ? `<button class="btn-pill-toggle btn-vm-action-stop is-danger mgx-grow" data-vm-id="${escapeHtml(vm.id)}" title="${t('ui.stop_vm', 'Stop VM')}"><span aria-hidden="true">⏹</span> ${escapeHtml(t('ui.stop', 'Stop'))}</button>`
+                    : `<button class="btn-pill-toggle btn-vm-action-start mgx-ok-grow" data-vm-id="${escapeHtml(vm.id)}" title="${t('ui.start_vm', 'Start VM')}"><span aria-hidden="true">▶</span> ${escapeHtml(t('ui.start', 'Start'))}</button>`
                   }
-                  <button class="btn-pill-toggle btn-vm-action-console" data-vm-id="${escapeHtml(vm.id)}" data-vm-name="${escapeHtml(vm.name || vm.id)}" style="flex: 1; color: var(--lt-ink-brand, var(--accent-cyan));" title="${t('ui.open_web_console', 'Open Web Console')}"><span aria-hidden="true">📺</span> ${t('mvm.console', 'Console')}</button>
+                  <button class="btn-pill-toggle btn-vm-action-console mgx-brand-grow" data-vm-id="${escapeHtml(vm.id)}" data-vm-name="${escapeHtml(vm.name || vm.id)}" title="${t('ui.open_web_console', 'Open Web Console')}"><span aria-hidden="true">📺</span> ${t('mvm.console', 'Console')}</button>
                   <button class="btn-pill-toggle btn-vm-action-edit" data-vm-id="${escapeHtml(vm.id)}" title="${t('ui.edit_vm_config', 'Edit VM Config')}">⚙️</button>
                 </div>
               </div>
@@ -1014,28 +1014,28 @@ export function initManagement() {
 
       if (kvmBody && tel?.kvm) {
         kvmBody.innerHTML = `
-          <div style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div style="font-weight: 700; font-size: 13px; color: var(--zn-text-strong);">${t('mvm.virt_ext', 'Hardware Virtualization Extension')}</div>
+          <div class="mgx-col-box">
+            <div class="mgx-row">
+              <div class="mgx-fs13-bold-strong-2">${t('mvm.virt_ext', 'Hardware Virtualization Extension')}</div>
               <span style="padding: 3px 8px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; background: ${tel.kvm.state === 'active' ? 'rgba(37,194,160,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${tel.kvm.state === 'active' ? 'var(--ok2)' : 'var(--danger)'};">
                 ${escapeHtml(tel.kvm.badge || 'KVM')}
               </span>
             </div>
-            <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.5;">
+            <div class="mgx-xs-muted-2">
               ${escapeHtml(tel.kvm.details || 'Linux KVM hypervisor acceleration provides near bare-metal guest performance.')}
             </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 6px;">
-              <div style="background: var(--zn-shade-20); padding: 8px 12px; border-radius: 6px;">
-                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('mvm.host_threads', 'CPU Host Threads')}</div>
-                <div style="font-size: 14px; font-weight: 700; color: var(--zn-text-strong); margin-top: 2px;">${t('mvm.threads', '{count, plural, one {# Thread} other {# Threads}}', { count: tel.cpu?.host_threads || 8 })}</div>
+            <div class="mgx-grid">
+              <div class="mgx-box-2">
+                <div class="mgx-xs-muted">${t('mvm.host_threads', 'CPU Host Threads')}</div>
+                <div class="mgx-fs14-bold-strong">${t('mvm.threads', '{count, plural, one {# Thread} other {# Threads}}', { count: tel.cpu?.host_threads || 8 })}</div>
               </div>
-              <div style="background: var(--zn-shade-20); padding: 8px 12px; border-radius: 6px;">
-                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('mvm.vhost', 'vhost-net Acceleration')}</div>
-                <div style="font-size: 14px; font-weight: 700; color: var(--ok2); margin-top: 2px;">${t('mvm.supported', 'Supported')}</div>
+              <div class="mgx-box-2">
+                <div class="mgx-xs-muted">${t('mvm.vhost', 'vhost-net Acceleration')}</div>
+                <div class="mgx-fs14-bold-ok">${t('mvm.supported', 'Supported')}</div>
               </div>
-              <div style="background: var(--zn-shade-20); padding: 8px 12px; border-radius: 6px;">
-                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('mvm.bridge', 'Default Network Bridge')}</div>
-                <div style="font-size: 14px; font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan)); margin-top: 2px;" translate="no">br0 / virbr0</div>
+              <div class="mgx-box-2">
+                <div class="mgx-xs-muted">${t('mvm.bridge', 'Default Network Bridge')}</div>
+                <div class="mgx-fs14-bold-brand" translate="no">br0 / virbr0</div>
               </div>
             </div>
           </div>

@@ -163,6 +163,10 @@
   stylesheet classes** (NUX-15): 70 inline styles become 20 classes; pixel-for-pixel the same in
   both themes.
 
+- **Mission Control's hardware and VM cards are built from stylesheet classes** (NUX-15): the
+  graphics and AI-accelerator cards and the VM summary and KVM check use 20 classes instead of 32
+  inline styles; pixel-for-pixel the same in both themes.
+
 - **The Containers window is built from stylesheet classes** (NUX-15): its toolbar, table and
   catalog use 23 classes instead of 28 inline styles, loaded with the window; pixel-for-pixel the
   same in both themes.

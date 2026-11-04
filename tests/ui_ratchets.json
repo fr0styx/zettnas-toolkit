@@ -182,7 +182,7 @@
  "frontend/src/components/management.js": {
   "buttons": 0,
   "globals": 4,
-  "styles": 38,
+  "styles": 6,
   "templates": 4
  },
  "frontend/src/components/management/ai.js": {

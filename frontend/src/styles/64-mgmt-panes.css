@@ -1027,3 +1027,25 @@
 :is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-xs-bold-muted { font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase; font-weight: 700; }
 :is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-xs-bold-strong { font-size: var(--zn-fs-xs); font-weight: 800; color: var(--zn-text-strong); margin-top: 2px; }
 :is(#management-modal-overlay, #modal-create-backup-job, #diagnostics-preview-modal-overlay) .syj-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 1px; }
+
+/* Mission Control status cards (management.js): classes instead of inline styles (NUX-15), same look */
+#management-modal-overlay .mgx-muted-box { color: var(--muted); border-color: var(--zn-line-10); }
+#management-modal-overlay .mgx-box { background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 10px 14px; }
+#management-modal-overlay .mgx-xs-bold-muted { font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 700; text-transform: uppercase; }
+#management-modal-overlay .mgx-fs13-bold-strong { font-size: 13px; font-weight: 700; color: var(--zn-text-strong); margin-top: 4px; }
+#management-modal-overlay .mgx-row { display: flex; justify-content: space-between; align-items: center; }
+#management-modal-overlay .mgx-row-2 { display: flex; align-items: center; gap: 8px; }
+#management-modal-overlay .mgx-fs18 { font-size: 18px; }
+#management-modal-overlay .mgx-fs13-bold-strong-2 { font-weight: 700; font-size: 13px; color: var(--zn-text-strong); }
+#management-modal-overlay .mgx-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); }
+#management-modal-overlay .mgx-row-box { display: flex; gap: 6px; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--zn-line-5); }
+#management-modal-overlay .mgx-grow { flex: 1; }
+#management-modal-overlay .mgx-ok-grow { flex: 1; color: var(--ok2); }
+#management-modal-overlay .mgx-brand-grow { flex: 1; color: var(--lt-ink-brand, var(--accent-cyan)); }
+#management-modal-overlay .mgx-col-box { background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+#management-modal-overlay .mgx-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.5; }
+#management-modal-overlay .mgx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 6px; }
+#management-modal-overlay .mgx-box-2 { background: var(--zn-shade-20); padding: 8px 12px; border-radius: 6px; }
+#management-modal-overlay .mgx-fs14-bold-strong { font-size: 14px; font-weight: 700; color: var(--zn-text-strong); margin-top: 2px; }
+#management-modal-overlay .mgx-fs14-bold-ok { font-size: 14px; font-weight: 700; color: var(--ok2); margin-top: 2px; }
+#management-modal-overlay .mgx-fs14-bold-brand { font-size: 14px; font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan)); margin-top: 2px; }
