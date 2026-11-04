@@ -386,6 +386,10 @@ def prune_docker_system(
 _PRUNE_JOBS: dict[str, dict[str, Any]] = {}
 _PRUNE_LOCK = threading.Lock()
 _STEP_WEIGHTS = {"containers": 1.0, "images": 6.0, "volumes": 1.0, "networks": 0.5, "build_cache": 1.5}
+# How far through the images step each of its phases is (NDOCK-1): removing the images one by one
+# is most of it; Docker's sweep of the layers they left, where the space is actually freed, and
+# measuring what was freed come after the last image, so the bar no longer waits at 99%
+_IMAGE_PHASES = {"before": 0.02, "sweep": 0.88, "after": 0.96}
 
 
 def _job_snapshot(job: dict[str, Any]) -> dict[str, Any]:
@@ -470,8 +474,12 @@ def _update(job: dict[str, Any], **kw: Any) -> None:
             w = _STEP_WEIGHTS[s["key"]]
             if s["state"] in ("done", "skipped", "error"):
                 done += w
-            elif s["state"] == "running" and s["key"] == "images" and job["images_total"]:
-                done += w * job["images_done"] / job["images_total"]
+            elif s["state"] == "running" and s["key"] == "images":
+                phase = job.get("images_phase") or "remove"
+                if phase in _IMAGE_PHASES:
+                    done += w * _IMAGE_PHASES[phase]
+                elif job["images_total"]:
+                    done += w * (0.02 + 0.84 * job["images_done"] / job["images_total"])
         job["percent"] = 100 if job["state"] != "running" else min(99, int(done * 100 / total))
         job["freed_human"] = _format_bytes(job["freed_bytes"])
 
@@ -509,8 +517,9 @@ def _remove_unused_images(job: dict[str, Any], all_images: bool) -> None:
     in_use = {c.get("ImageID") for c in containers} | {c.get("Image") for c in containers}
     unused = [i for i in images if i.get("Id") not in in_use and not (set(i.get("RepoTags") or []) & in_use)]
     unused.sort(key=lambda i: i.get("Created", 0), reverse=True)  # children before their parents
-    _update(job, images_total=len(unused), images_done=0)
+    _update(job, images_total=len(unused), images_done=0, images_phase="before")
     before = _layers_size()
+    _update(job, images_phase="remove")
     removed = 0
     for n, img in enumerate(unused, start=1):
         if job["_cancel"]:
@@ -530,14 +539,22 @@ def _remove_unused_images(job: dict[str, Any], all_images: bool) -> None:
         with _PRUNE_LOCK:
             job["counts"]["images"] = removed
         _update(job, images_done=n)
+    swept = 0
     if not job["_cancel"]:
-        # Sweep what one-by-one removal left (layers released by the removals above)
+        # Sweep what one-by-one removal left (layers released by the removals above); Docker frees
+        # the disk space here, and says how much
+        _update(job, images_phase="sweep")
         status, res = _docker_request("POST", f"/images/prune?filters={filters}", timeout=900)
         if status == 200:
+            swept = int(res.get("SpaceReclaimed") or 0)
             with _PRUNE_LOCK:
                 job["counts"]["images"] += len([i for i in (res.get("ImagesDeleted") or []) if i.get("Deleted")])
+                job["freed_bytes"] += swept  # shown at once; the measurement below replaces it
+    _update(job, images_phase="after")
     after = _layers_size()
-    freed = max(0, before - after) if before is not None and after is not None else 0
+    freed = max(0, before - after) if before is not None and after is not None else swept
+    with _PRUNE_LOCK:
+        job["freed_bytes"] -= swept
     _set_step(job, "images", "done", f"{removed} removed", freed)
 
 

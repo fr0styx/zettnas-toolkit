@@ -65,6 +65,11 @@
   the drive's ID link or the serial number the kernel read at boot, and the model gets its full name
   (ST22000DM000-3Y6103, not ST22000DM000-3Y6); neither wakes a sleeping drive.
 
+- **Docker cleanup says what it is doing after the last image** (NDOCK-1): it used to sit at 99% on
+  "Removing image 10 of 10" with "0 B freed" while Docker swept the layers those images left (where
+  the space is actually freed) and the space freed was measured. Both now show as their own steps
+  in the progress bar, and the space Docker reports for the sweep shows as soon as it is known.
+
 #### Performance
 
 - **Converted videos play smoothly** (NVID-1): a video the browser can't play as it is is now

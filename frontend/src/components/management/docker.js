@@ -2346,7 +2346,10 @@ export function renderPruneJob(job) {
   const msgEl = document.getElementById('dpm-progress-msg');
   if (msgEl) {
     let msg = job.step ? `${labels[job.step] || job.step}…` : '';
-    if (job.step === 'images' && job.images_total) {
+    if (job.step === 'images' && job.images_phase === 'before') msg = t('prune.measuring_before', 'Measuring what the images use…');
+    else if (job.step === 'images' && job.images_phase === 'sweep') msg = t('prune.sweeping', 'Clearing the layers those images used…');
+    else if (job.step === 'images' && job.images_phase === 'after') msg = t('prune.measuring_after', 'Measuring the space freed…');
+    else if (job.step === 'images' && job.images_total) {
       msg = t('prune.images_progress', 'Removing image {done} of {total}', { done: Math.min(job.images_done + 1, job.images_total), total: job.images_total });
     }
     if (job.state !== 'running') msg = '';
