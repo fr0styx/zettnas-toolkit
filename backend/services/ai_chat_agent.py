@@ -1279,11 +1279,16 @@ def _turn_build_prompt(*, accel, active_model, clean_msg, history, is_self_ident
             f"first; the answer is usually in document 1. Documents may be in another language than the question.\n\n"
             f"1. Answer in the language of the question. Start with the answer itself, in one or two sentences.\n"
             f"2. Use only facts stated in the documents; copy numbers, dates and names exactly.\n"
-            f"3. Cite the documents you used inline as [1], [2], by their index.\n"
-            f"4. Only when none of the documents answers the question, say briefly that it is not in the "
-            f"indexed files.\n"
-            f"5. If documents disagree, say so and cite both.\n"
-            f"6. Keep any reasoning (<think>) short and give the full answer outside it."
+            f"3. Answer exactly what was asked: when a document gives the value for that very case (a target "
+            f"to reach, a date that is due, one person's entry), give that value, not a general range or "
+            f"another entry.\n"
+            f"4. Check that the fact is about the same person, thing and kind of event as the question: an "
+            f"inspection date is not an insurance date, and another person's record is not this person's.\n"
+            f"5. Cite the documents you used inline as [1], [2], by their index.\n"
+            f"6. When no document states the answer, say briefly that it is not in the indexed files, and "
+            f"don't offer a related fact in its place.\n"
+            f"7. If documents disagree, say so and cite both.\n"
+            f"8. Keep any reasoning (<think>) short and give the full answer outside it."
         )
     elif tool_results:
         system_prompt = (

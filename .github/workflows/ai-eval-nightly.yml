@@ -4,7 +4,7 @@ name: AI eval (nightly)
 # queries and 2,000 distractor files (AI-3). CI's per-commit eval uses the built-in lexical
 # vectors; this one uses EmbeddingGemma served by Ollama, and for answers Qwen3-4B, the chat
 # model ZettNAS ships with (AI-16; it ran Qwen3-1.7B before). Three jobs side by side: on
-# GitHub's CPUs the 97 answers take hours, so they have a job of their own. The answers'
+# GitHub's CPUs the 108 answers take hours, so they have a job of their own. The answers'
 # first-token time is gated too.
 on:
   schedule:
@@ -136,7 +136,7 @@ jobs:
       - name: Pull the pinned models
         run: |
           python -m tests.rag_eval.pull_models embeddinggemma qwen3:4b-q4_K_M
-      - name: Answers (97 questions, scored; first token within 2 minutes at p95)
+      - name: Answers (108 questions, scored; first token within 2 minutes at p95)
         env:
           TESTING: "1"
         run: |

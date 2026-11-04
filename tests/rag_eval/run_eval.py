@@ -8,7 +8,7 @@ tuned to the engine.
 - queries.json: 200 queries, 5 per file, in the file's language (what CI gates on).
 - queries_extended.json: 50 cross-language queries (asked in one language about a file in
   another) and 40 paraphrases that share few or no words with the file.
-- qa.json: 97 questions with the facts a correct answer must contain, for answer quality.
+- qa.json: 98 questions (and 10 the files can't answer) with the facts a correct answer must contain, for answer quality.
 - queries_ids.json (AI-12): codes, long numbers, versions and quoted phrases in files that are
   otherwise the same (id_docs.py writes them), so only exact matching finds the right one
 - queries_documents.json, qa_documents.json (AI-16): long, Office and scanned documents and
@@ -383,10 +383,22 @@ def _numbers(text: str) -> set[str]:
     return {n.replace(",", ".") for n in _NUMBER.findall(text or "")}
 
 
+_SENTENCE_END = re.compile(r"(?<=[.!?\u3002\uff01\uff1f])\s+|\n+")
+
+
+def _fact_sentences(answer: str, facts: list[str]) -> str:
+    """The sentences of an answer that state one of the facts (the whole answer when none does)."""
+    parts = [p for p in _SENTENCE_END.split(answer) if p.strip()]
+    hits = [p for p in parts if any(_norm(x) and _norm(x) in _norm(p) for x in facts)]
+    return " ".join(hits or parts)
+
+
 def answer_matches(answer: str, accepted: list[str], required: list[str] | None = None) -> bool:
     """One of the accepted facts is in the answer, and every required one (multi-hop). Strict
     (NAI-17): an answer that also gives another number in the place of the accepted one ("185 or
-    190 kg") doesn't pass, since a reader can't tell which is right."""
+    190 kg") doesn't pass, since a reader can't tell which is right. Only the sentences stating the
+    fact are looked at (NAI-19): a next step with its own number ("F22 means below 0.8 bar; refill
+    to 1.2 bar") gives the reader no doubt about the answer."""
     answer = _uncited(answer)
     a = _norm(answer)
     if required and not all(_norm(x) in a for x in required):
@@ -401,7 +413,7 @@ def answer_matches(answer: str, accepted: list[str], required: list[str] | None 
         # 583.20 for 583 is the same fact, more precisely; 190 beside 185 is another one
         rivals = {
             n
-            for n in _numbers(answer)
+            for n in _numbers(_fact_sentences(answer, [*(accepted or []), *(required or [])]))
             if len(n.split(".")[0]) in shapes and not any(n.startswith(e) or e.startswith(n) for e in expected)
         }
         if rivals:

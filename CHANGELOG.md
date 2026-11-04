@@ -100,6 +100,15 @@
   `auth.login_ex`, which TrueNAS 28 requires; without it the older sign-in, which 27 still has,
   stays. The calls ZettNAS makes were checked against the TrueNAS 27 API reference.
 
+- **Ask Zetty answers what was asked, or says it isn't there** (NAI-19): the rules for answers from
+  your files now say to give the value for that very case (a refill target, not the normal range;
+  one person's entry, not another's), to check a fact is about the same person, thing and kind of
+  event (an inspection date is not an insurance date), and not to offer a related fact when the
+  files don't have the answer. The answer test was fixed where it was wrong: two questions labelled
+  "not in the files" had their answer in the test documents (one now asks something they really
+  don't say, the other is scored as a cross-language question, and a new gym question keeps ten
+  that can't be answered), and a next step with its own number no longer counts against an answer.
+
 #### Performance
 
 - **Converted videos play smoothly** (NVID-1): a video the browser can't play as it is is now
