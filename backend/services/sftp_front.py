@@ -179,11 +179,13 @@ async def _run(port: int, internal: int, proc: subprocess.Popen, fail_log: str =
     from backend.services import ip_block
 
     sign_ins = SignIns()
-    server = await serve(port, internal, ip_block.is_blocked, sign_ins=sign_ins)
+    # the stop handler goes in before the port opens: a stop that arrives as soon as the port
+    # answers must still stop rclone and end cleanly, not kill this script and leave rclone running
     stop = asyncio.Event()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGTERM, signal.SIGINT):
         loop.add_signal_handler(sig, stop.set)
+    server = await serve(port, internal, ip_block.is_blocked, sign_ins=sign_ins)
     try:
         while not stop.is_set() and proc.poll() is None:
             if fail_log:

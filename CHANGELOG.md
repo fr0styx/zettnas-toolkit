@@ -4,6 +4,10 @@
 
 #### Security
 
+- **Stopping SFTP right after it starts also stops its file server** (SEC-34): the SFTP front now
+  listens for a stop before it opens its port, so a stop in that first moment no longer ends it
+  abruptly and leaves rclone running.
+
 - **Only a person signed in can reset someone else's password** (SEC-26): an API token or a
   ticket with users:write can no longer change another account's password; resetting your own
   still asks for the current one.
