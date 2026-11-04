@@ -593,6 +593,7 @@ def tool_search_nas_knowledge(
                 "parent_chunk_id": c["chunk_id"],
                 "line_start": int(c.get("line_start") or 1),
                 "line_end": int(c.get("line_end") or 1),
+                "page": int(c.get("page") or 0),
                 "doc_type": one_file.get("doc_type", "document"),
                 "source_modality": "document",
             }
@@ -631,6 +632,7 @@ def tool_search_nas_knowledge(
                 "parent_chunk_id": c.get("parent_chunk_id"),
                 "line_start": int(c.get("line_start", 1)),
                 "line_end": int(c.get("line_end", 1)),
+                "page": int(c.get("page") or 0),
                 "doc_type": c.get("doc_type", "document"),
                 "source_modality": c.get("source_modality", "document"),
             }

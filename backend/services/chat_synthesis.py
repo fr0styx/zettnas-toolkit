@@ -956,8 +956,9 @@ def _document_xml(idx: int, c: dict[str, Any], body: str) -> str:
     line_start = c.get("line_start", 1)
     line_end = c.get("line_end", line_start)
     breadcrumb = c.get("breadcrumb") or "General"
+    page = f' page="{int(c["page"])}"' if c.get("page") else ""  # AI-21
     return (
-        f'<document index="{idx}" title="{_attr(doc_title)}" file="{_attr(file_name)}" path="{_attr(canon_path)}" relevance="{rel_pct}%" modality="{_attr(modality)}" lines="{line_start}-{line_end}">\n'
+        f'<document index="{idx}" title="{_attr(doc_title)}" file="{_attr(file_name)}" path="{_attr(canon_path)}" relevance="{rel_pct}%" modality="{_attr(modality)}" lines="{line_start}-{line_end}"{page}>\n'
         f"[Section: {_as_data(breadcrumb)}]\n"
         f"{_as_data(body)}\n"
         f"</document>"

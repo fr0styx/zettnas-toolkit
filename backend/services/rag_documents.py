@@ -5,6 +5,7 @@ Split out of rag_engine.py (AI-21), which re-exports these names.
 """
 
 import ast
+import bisect
 import html.parser
 import os
 import re
@@ -36,6 +37,30 @@ PDF_MAX_PAGES = 300
 PDFIUM_LOCK = threading.Lock()
 
 
+def page_starts(text: str) -> list[int]:
+    """The 1-based line numbers where each PDF page after the first begins (AI-21)."""
+    return [i + 2 for i, line in enumerate(text.split("\n")) if line == "\f"]
+
+
+def page_of(line: int, starts: list[int]) -> int:
+    """The page a line is on, given page_starts()."""
+    return 1 + bisect.bisect_right(starts, line)
+
+
+def add_pages(file_ext: str, text: str, chunks: list[dict[str, Any]]) -> None:
+    """A PDF's passages get the page each starts on, for their citations (AI-21)."""
+    if file_ext.lower() != ".pdf" or "\f" not in text:
+        return
+    starts = page_starts(text)
+    for ch in chunks:
+        ch["page"] = page_of(int(ch.get("line_start") or 1), starts)
+
+
+def chunk_span(ch: dict[str, Any]) -> tuple[int, int, int]:
+    """A passage's first and last line and its page (0 when unknown), as stored."""
+    return ch["line_start"], ch["line_end"], int(ch.get("page") or 0)
+
+
 def pdf_text(file_path: str, max_pages: int = PDF_MAX_PAGES) -> str:
     """The text of a PDF, page by page (pages separated by a form feed), via PDFium."""
     with PDFIUM_LOCK:
@@ -60,7 +85,7 @@ def _pdf_text(file_path: str, max_pages: int) -> str:
                 page.close()
     finally:
         pdf.close()
-    return "\n\f\n".join(p for p in pages if p)
+    return "\n\f\n".join(pages)  # empty pages kept, so the breaks count pages (AI-21)
 
 
 def extract_document_text(file_path: str, file_ext: str) -> str:

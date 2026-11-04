@@ -3175,6 +3175,7 @@ export default {
   "offsite.lock_ok": "已于 {when} 检查存储桶：{mode}，{n, plural, other {# 天}}",
   "offsite.lock_confirmed": "该存储桶将每份副本锁定 {n, plural, other {# 天}}（{mode}）。",
   "ai.sources_count": "来源（{n}）",
+  "ai.page_n": "第 {n} 页",
   "ai.licence_unknown": "未注明许可证",
   "ai.licence_non_commercial": "不可用于商业用途",
   "compress.off": "关闭",

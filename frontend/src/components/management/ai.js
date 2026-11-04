@@ -2079,6 +2079,12 @@ export async function fetchAndRenderAiStatus() {
   }
 }
 
+/** "p. 4" for a passage from a PDF page (AI-21); empty otherwise. */
+export function citationPage(c) {
+  const n = Number(c?.page) || 0;
+  return n > 0 ? t('ai.page_n', 'p. {n}', { n }) : '';
+}
+
 function renderStructuredCardHtml(card) {
   if (!card) return '';
   const cType = card.type || card.card_type || '';
@@ -2169,7 +2175,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
             <span class="airg-xs-bold-accent">[${cIdx}] 📄 ${escapeHtml(fName)}</span>
             <span style="font-size: var(--zn-fs-xs); padding: 1px 6px; border-radius: 4px; background: rgba(16,185,129,0.12); color: var(--lt-t-6ee7b7ff, #6ee7b7);">💤 ${t('aiq.cached', 'Cached')}</span>
           </div>
-          <div class="airg-xs-muted-mono">${escapeHtml(secTitle)}</div>
+          <div class="airg-xs-muted-mono">${escapeHtml(secTitle)}${citationPage(c) ? ` · ${escapeHtml(citationPage(c))}` : ''}</div>
           <div class="airg-xs-soft">
             ${escapeHtml(cleanExcerpt)}
           </div>
@@ -2860,7 +2866,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
         <div class="aicm-col">
           ${citations.map((c, idx) => {
             const cname = c.name || (c.path ? c.path.split('/').pop() : 'Document');
-            const bcrumb = c.breadcrumb ? ` > ${c.breadcrumb}` : '';
+            const bcrumb = (c.breadcrumb ? ` > ${c.breadcrumb}` : '') + (citationPage(c) ? ` · ${citationPage(c)}` : '');
             const scorePct = Math.round(Number(c.score || 0.9) * 100);
             const escPath = escapeHtml(c.path || '');
             const escName = escapeHtml(cname);

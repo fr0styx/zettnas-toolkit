@@ -261,6 +261,12 @@ def exact_score(score: float, found: int, wanted: int) -> float:
     return score * 0.6
 
 
+def _lines(r: Any) -> dict[str, int]:
+    """Where a passage sits in its file: lines, and the PDF page when known (AI-21)."""
+    page = r["page"] if "page" in r.keys() else 0
+    return {"line_start": int(r["line_start"]), "line_end": int(r["line_end"]), "page": int(page or 0)}
+
+
 class RagSearchMixin:
     """Search, ask and thumbnails for RagSearchEngine (split out of rag_engine.py, ARCH-1)."""
 
@@ -1174,7 +1180,7 @@ class RagSearchMixin:
                 SELECT
                     c.chunk_id, c.file_id, c.chunk_index, c.parent_chunk_id, c.chunk_level, c.source_modality,
                     c.heading_context, c.structural_context, c.chunk_text, c.raw_chunk_text,
-                    c.line_start, c.line_end, c.embedding_f32,
+                    c.line_start, c.line_end, c.page, c.embedding_f32,
                     f.canonical_path, f.file_name, f.file_ext, f.modality, f.doc_type,
                     f.doc_title, f.doc_metadata_json, f.backing_dev, f.mtime_ns, f.size_bytes, f.embedding_model,
                     p.dominant_hex, (p.thumb_webp IS NOT NULL) AS has_thumb
@@ -1220,7 +1226,7 @@ class RagSearchMixin:
                 SELECT
                     c.chunk_id, c.file_id, c.chunk_index, c.parent_chunk_id, c.chunk_level, c.source_modality,
                     c.heading_context, c.structural_context, c.chunk_text, c.raw_chunk_text,
-                    c.line_start, c.line_end, c.embedding_f32,
+                    c.line_start, c.line_end, c.page, c.embedding_f32,
                     f.canonical_path, f.file_name, f.file_ext, f.modality, f.doc_type,
                     f.doc_title, f.doc_metadata_json, f.backing_dev, f.mtime_ns, f.size_bytes, f.embedding_model,
                     p.dominant_hex, (p.thumb_webp IS NOT NULL) AS has_thumb
@@ -1403,8 +1409,7 @@ class RagSearchMixin:
                 "structural_context": r["structural_context"] or "",
                 "raw_chunk_text": r["raw_chunk_text"] or r["chunk_text"],
                 "excerpt": clean_chunk_preview[:420],
-                "line_start": int(r["line_start"]),
-                "line_end": int(r["line_end"]),
+                **_lines(r),
                 "recipe_meta": doc_meta if r["doc_type"] == "recipe" else None,
                 "structured_card": structured_card,
                 "disk_id": backing_dev or "nvme0n1",

@@ -898,20 +898,27 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                 return {"found": False}
             fid, name, title, doc_type = row
             rows = conn.execute(
-                "SELECT chunk_id, chunk_text, heading_context, line_start, line_end FROM document_chunks "
+                "SELECT chunk_id, chunk_text, heading_context, line_start, line_end, page FROM document_chunks "
                 "WHERE file_id = ? AND chunk_level != 'parent' ORDER BY chunk_index",
                 (fid,),
             ).fetchall()
         finally:
             conn.close()
         chunks, used, total = [], 0, 0
-        for chunk_id, text, heading, l0, l1 in rows:
+        for chunk_id, text, heading, l0, l1, page in rows:
             total += len(text or "")
             if used + len(text or "") > max_chars:
                 continue
             used += len(text or "")
             chunks.append(
-                {"chunk_id": chunk_id, "text": text or "", "heading": heading or "", "line_start": l0, "line_end": l1}
+                {
+                    "chunk_id": chunk_id,
+                    "text": text or "",
+                    "heading": heading or "",
+                    "line_start": l0,
+                    "line_end": l1,
+                    "page": page or 0,
+                }
             )
         return {
             "found": True,

@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS document_chunks (
     char_end INTEGER NOT NULL DEFAULT 0,
     line_start INTEGER NOT NULL DEFAULT 1,
     line_end INTEGER NOT NULL DEFAULT 1,
+    page INTEGER NOT NULL DEFAULT 0,
     token_count INTEGER NOT NULL DEFAULT 0,
     embedding_model TEXT NOT NULL DEFAULT 'zettnas-unified-384-v2',
     embedding_dim INTEGER NOT NULL DEFAULT 384,

@@ -3175,6 +3175,7 @@ export default {
   "offsite.lock_ok": "bucket vérifié {when} : {mode}, {n, plural, one {# jour} other {# jours}}",
   "offsite.lock_confirmed": "Le bucket verrouille chaque copie {n, plural, one {# jour} other {# jours}} ({mode}).",
   "ai.sources_count": "Sources ({n})",
+  "ai.page_n": "p. {n}",
   "ai.licence_unknown": "Licence non indiquée",
   "ai.licence_non_commercial": "Pas d'usage commercial",
   "compress.off": "Désactivée",

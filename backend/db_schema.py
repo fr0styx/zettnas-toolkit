@@ -79,6 +79,8 @@ COLUMN_UPGRADES: dict[str, list[tuple[str, str, str]]] = {
         ("indexed_files", "embedding_model", "TEXT NOT NULL DEFAULT 'zett_lexical_384d'"),
         # 1 once the photo's EXIF date and position were read (AI-24); older photos get 0
         ("photo_assets", "when_where_done", "INTEGER NOT NULL DEFAULT 0"),
+        # the PDF page a passage starts on, for its citation (AI-21); 0 = not a PDF or indexed before
+        ("document_chunks", "page", "INTEGER NOT NULL DEFAULT 0"),
     ],
 }
 

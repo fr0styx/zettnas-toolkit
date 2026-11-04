@@ -3175,6 +3175,7 @@ export default {
   "offsite.lock_ok": "Bucket geprüft {when}: {mode}, {n, plural, one {# Tag} other {# Tage}}",
   "offsite.lock_confirmed": "Der Bucket sperrt jede Kopie {n, plural, one {# Tag} other {# Tage}} ({mode}).",
   "ai.sources_count": "Quellen ({n})",
+  "ai.page_n": "S. {n}",
   "ai.licence_unknown": "Lizenz nicht angegeben",
   "ai.licence_non_commercial": "Nicht für kommerzielle Nutzung",
   "compress.off": "Aus",

@@ -36,6 +36,8 @@ from backend.services import (  # noqa: F401
 )
 from backend.services.ai_activity import upgrade_window_open
 from backend.services.rag_documents import (  # noqa: F401
+    add_pages,
+    chunk_span,
     extract_document_text,
     generate_contextual_hierarchical_chunks,
 )
@@ -1541,6 +1543,7 @@ class RagIndexingMixin:
             file_name, file_ext, raw_text, canonical_path
         )
         doc_meta_json = json.dumps(doc_meta)
+        add_pages(file_ext, raw_text, [*child_chunks, *parent_chunks])  # AI-21
 
         cfg = self.get_config()
         configured_emb_model = cfg.get("embedding_model") or "embeddinggemma"
@@ -1654,9 +1657,9 @@ class RagIndexingMixin:
                         INSERT INTO document_chunks (
                             file_id, chunk_index, parent_chunk_id, chunk_level, source_modality, file_name, doc_type,
                             heading_context, structural_context, chunk_text, raw_chunk_text, doc_metadata_json,
-                            line_start, line_end, token_count, embedding_f32, embedding_model, embedding_dim,
+                            line_start, line_end, page, token_count, embedding_f32, embedding_model, embedding_dim,
                             visibility_tier, owner_username, share_name, allowed_users_csv
-                        ) VALUES (?, ?, NULL, 'parent', ?, ?, ?, ?, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ) VALUES (?, ?, NULL, 'parent', ?, ?, ?, ?, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             file_id,
@@ -1668,8 +1671,7 @@ class RagIndexingMixin:
                             p["chunk_text"],
                             p.get("raw_chunk_text", p["chunk_text"]),
                             doc_meta_json,
-                            p["line_start"],
-                            p["line_end"],
+                            *chunk_span(p),
                             p["token_count"],
                             p_emb,
                             effective_file_emb_model,
@@ -1691,9 +1693,9 @@ class RagIndexingMixin:
                         INSERT INTO document_chunks (
                             file_id, chunk_index, parent_chunk_id, chunk_level, source_modality, file_name, doc_type,
                             heading_context, structural_context, chunk_text, raw_chunk_text, doc_metadata_json,
-                            line_start, line_end, token_count, embedding_f32, embedding_model, embedding_dim,
+                            line_start, line_end, page, token_count, embedding_f32, embedding_model, embedding_dim,
                             visibility_tier, owner_username, share_name, allowed_users_csv
-                        ) VALUES (?, ?, ?, 'child', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ) VALUES (?, ?, ?, 'child', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             file_id,
@@ -1707,8 +1709,7 @@ class RagIndexingMixin:
                             ch["chunk_text"],
                             ch.get("raw_chunk_text", ch["chunk_text"]),
                             doc_meta_json,
-                            ch["line_start"],
-                            ch["line_end"],
+                            *chunk_span(ch),
                             ch["token_count"],
                             emb_blob,
                             effective_file_emb_model,

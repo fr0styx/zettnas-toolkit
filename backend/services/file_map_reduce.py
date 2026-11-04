@@ -95,6 +95,7 @@ def context_and_citations(
             "parent_chunk_id": p["chunks"][0].get("chunk_id"),
             "line_start": int(p["chunks"][0].get("line_start") or 1),
             "line_end": int(p["chunks"][-1].get("line_end") or 1),
+            "page": int(p["chunks"][0].get("page") or 0),
             "doc_type": one_file.get("doc_type", "document"),
             "source_modality": "document",
         }
