@@ -221,7 +221,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
       baysHtml += `
         <div class="chassis-bay-slot empty" data-bay="${slotNum}" role="region" aria-label="${t('chassis.bay_empty_aria', 'Bay {n}, empty', { n: slotNum })}">
           <div class="bay-header">
-            <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
+            <div class="cv-row">
               <span class="bay-num">BAY ${slotNum}</span>
               ${customLabel}
             </div>
@@ -230,14 +230,14 @@ export function renderChassisTwin(container, disks = [], options = {}) {
           <div class="bay-tray-handle">
             <div class="bay-led-lens off"></div>
             <div class="bay-drive-info">
-              <span class="bay-drive-model" style="opacity: 0.5;">VACANT</span>
-              <span class="bay-drive-dev" style="opacity: 0.4;">${t('chassis.slot_available', 'Slot {n} available', { n: slotNum })}</span>
-              <span class="bay-sub-badge" style="opacity: 0.35;">${t('chassis.standby_ready', 'STANDBY READY')}</span>
+              <span class="bay-drive-model cv-x">VACANT</span>
+              <span class="bay-drive-dev cv-x-2">${t('chassis.slot_available', 'Slot {n} available', { n: slotNum })}</span>
+              <span class="bay-sub-badge cv-x-3">${t('chassis.standby_ready', 'STANDBY READY')}</span>
             </div>
           </div>
           <div class="bay-footer">
-            <span class="bay-meta" style="font-size:var(--zn-fs-xs); color:var(--muted); letter-spacing:0.04em;">${t('chassis.no_disk', 'NO DISK')}</span>
-            <span class="bay-health-tag" style="opacity:0.3;">EMPTY</span>
+            <span class="bay-meta cv-xs-muted">${t('chassis.no_disk', 'NO DISK')}</span>
+            <span class="bay-health-tag cv-x-4">EMPTY</span>
           </div>
         </div>
       `;
@@ -254,7 +254,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
       baysHtml += `
         <div class="chassis-bay-slot populated ${thermal.cls}" data-bay="${slotNum}" data-dev="${devName}" role="button" tabindex="0" aria-label="${escapeHtml(t('chassis.bay_aria', 'Bay {n}: {model}, {state}', { n: slotNum, model: modelStr, state: thermal.text }))}">
           <div class="bay-header">
-            <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
+            <div class="cv-row">
               <span class="bay-num">BAY ${slotNum}</span>
               ${customLabel}
             </div>
@@ -420,19 +420,19 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
   const currentBays = currentConfig.bays || [];
 
   modalOverlay.innerHTML = `
-    <div class="smart-modal-window chassis-slots-modal" style="width: 660px; max-width: 95vw; max-height: 85vh; display: flex; flex-direction: column;">
-      <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
-        <div class="smart-modal-title" style="display:flex; align-items:center; gap:8px;">
+    <div class="smart-modal-window chassis-slots-modal cv-col">
+      <div class="smart-modal-header cv-row-2">
+        <div class="smart-modal-title cv-row-3">
           <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" fill="currentColor"/></svg>
           <span>${t('chassis.config_title', 'CHASSIS ENCLOSURE & BAY CONFIGURATION')}</span>
         </div>
         <button class="win-btn close-btn" id="chassis-config-close" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
       </div>
-      <div class="smart-modal-body" style="padding: 16px; overflow-y: auto; flex: 1; display:flex; flex-direction:column; gap: 14px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="smart-modal-body cv-col-2">
+        <div class="cv-grid">
           <div>
-            <label for="chassis-profile-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px;">${t('chassis.profile', 'ENCLOSURE PROFILE')}</label>
-            <select id="chassis-profile-select" class="tz-select-input" style="width:100%; padding:8px; border-radius:6px; background:var(--zn-shade-30); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); font-size:var(--zn-fs-xs);">
+            <label class="cv-xs-bold-muted" for="chassis-profile-select">${t('chassis.profile', 'ENCLOSURE PROFILE')}</label>
+            <select id="chassis-profile-select" class="tz-select-input cv-xs-strong-box">
               <option value="auto" ${profile === 'auto' ? 'selected' : ''}>${t('chassis.profile_auto', 'Automatic (detect)')}</option>
               <option value="compact_dual" ${profile === 'compact_dual' ? 'selected' : ''}>${t('chassis.profile_compact', 'Compact (1–2 bays)')}</option>
               <option value="tower_desktop" ${profile === 'tower_desktop' ? 'selected' : ''}>${t('chassis.profile_tower', 'Desktop tower (3–6 bays)')}</option>
@@ -441,23 +441,23 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
             </select>
           </div>
           <div>
-            <label for="chassis-total-bays-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px;">${t('chassis.total_bays', 'TOTAL PHYSICAL BAYS')}</label>
-            <input type="number" id="chassis-total-bays-input" min="1" max="48" value="${totalBays}" style="width:100%; padding:8px; border-radius:6px; background:var(--zn-shade-30); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); font-size:var(--zn-fs-xs);">
+            <label class="cv-xs-bold-muted" for="chassis-total-bays-input">${t('chassis.total_bays', 'TOTAL PHYSICAL BAYS')}</label>
+            <input class="cv-xs-strong-box" type="number" id="chassis-total-bays-input" min="1" max="48" value="${totalBays}">
           </div>
         </div>
 
         <div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;">${t('chassis.allocation', 'PHYSICAL BAY ALLOCATION & LABELS')}</label>
+          <div class="cv-row-4">
+            <label class="cv-xs-bold-muted-2">${t('chassis.allocation', 'PHYSICAL BAY ALLOCATION & LABELS')}</label>
             <button id="chassis-auto-assign-btn" class="btn-pill-toggle">${ico('⚡')} ${t('chassis.auto_assign', 'Auto-assign in order')}</button>
           </div>
-          <div style="max-height: 320px; overflow-y: auto; border: 1px solid var(--zn-line-8); border-radius: 6px; background: var(--zn-shade-20);">
-            <table class="copy-history-table chassis-slots-table" style="width:100%;">
+          <div class="cv-box">
+            <table class="copy-history-table chassis-slots-table cv-size">
               <thead>
                 <tr>
-                  <th style="width:80px;">${t('chassis.col_slot', 'Slot')}</th>
+                  <th class="cv-size-2">${t('chassis.col_slot', 'Slot')}</th>
                   <th>${t('chassis.col_drive', 'Assigned physical drive')}</th>
-                  <th style="width:180px;">${t('chassis.col_label', 'Custom label')}</th>
+                  <th class="cv-size-3">${t('chassis.col_label', 'Custom label')}</th>
                 </tr>
               </thead>
               <tbody id="chassis-slots-tbody">
@@ -466,9 +466,9 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
           </div>
         </div>
       </div>
-      <div class="smart-modal-footer" style="padding: 12px 16px; border-top: 1px solid var(--zn-line-8); display:flex; justify-content:flex-end; gap: 8px;">
+      <div class="smart-modal-footer cv-row-box">
         <button id="chassis-config-cancel-btn" class="btn-pill-toggle">${t('common.cancel', 'Cancel')}</button>
-        <button id="chassis-config-save-btn" class="btn-save-preset" style="padding: 8px 20px;">${t('chassis.save_mapping', 'Save bay mapping')}</button>
+        <button id="chassis-config-save-btn" class="btn-save-preset cv-x-5">${t('chassis.save_mapping', 'Save bay mapping')}</button>
       </div>
     </div>
   `;
@@ -495,12 +495,12 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
         <tr data-slot="${slot}">
           <td style="font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff));">BAY ${slot}</td>
           <td>
-            <select class="slot-drive-select tz-select-input" style="width:100%; padding:6px; font-size:var(--zn-fs-xs); background:var(--zn-shade-30); border:1px solid var(--zn-line-10); color:var(--zn-text-strong); border-radius:4px;">
+            <select class="slot-drive-select tz-select-input cv-xs-strong-box-2">
               ${optionsHtml}
             </select>
           </td>
           <td>
-            <input type="text" class="slot-label-input tz-text-input" maxlength="64" value="${escapeHtml(currentLabel)}" placeholder="${t('ui.e_g_parity_1_pool', 'e.g. Parity 1, Pool A')}" style="width:100%; padding:6px; font-size:var(--zn-fs-xs); background:var(--zn-shade-30); border:1px solid var(--zn-line-10); color:var(--zn-text-strong); border-radius:4px;">
+            <input type="text" class="slot-label-input tz-text-input cv-xs-strong-box-2" maxlength="64" value="${escapeHtml(currentLabel)}" placeholder="${t('ui.e_g_parity_1_pool', 'e.g. Parity 1, Pool A')}">
           </td>
         </tr>
       `;
@@ -782,7 +782,7 @@ function buildPoolBlockInner(pool, isObserver) {
       </div>
     </div>
 
-    <div class="topo-pool-actions" style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    <div class="topo-pool-actions cv-row-5">
       <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.trigger_filesystem_scrub_or_parity', 'Trigger filesystem scrub or parity check')}">${ico('⚡')} ${t('chassis.scrub_pool', 'Scrub pool')}</button>
       ${!isObserver ? `<button class="btn-pool-rename btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name)}" title="${t('ui.rename_storage_pool', 'Rename storage pool')}">${ico('✏️')} ${t('chassis.rename', 'Rename')}</button>` : ''}
       ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3); color: var(--zn-text-accent);" title="${t('ui.manage_subvolume_snapshots', 'Manage Subvolume Snapshots')}">${ico('📸')} ${t('chassis.snapshots', 'Snapshots')}</button>` : ''}
@@ -929,8 +929,8 @@ export async function fetchAndRenderStorageTopology(container) {
   if (!container) return;
   if (!container.firstElementChild || container.querySelector('.loader-spinner')) {
     container.innerHTML = `
-      <div style="text-align:center; padding:30px; color:var(--muted);">
-        <div class="loader-spinner" style="margin:0 auto 10px;"></div>
+      <div class="cv-muted-center">
+        <div class="loader-spinner cv-x-6"></div>
         ${t('chassis.reading_pools', 'Reading the storage pools…')}
       </div>
     `;
@@ -960,12 +960,12 @@ export async function fetchAndRenderStorageTopology(container) {
     if (discoveredList.length > 0) {
       externalBannerHtml = discoveredList.map(p => `
         <div class="external-pools-banner" style="background:rgba(14,165,233,0.12); border:1px solid rgba(14,165,233,0.3); border-radius:8px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span style="font-size:20px;">🔌</span>
+          <div class="cv-row-6">
+            <span class="cv-fs20">🔌</span>
             <div>
-              <strong style="color:var(--zn-text-accent);">${t('chassis.external_pool', 'External storage pool found:')}</strong>
-              <span style="color:var(--zn-text-strong); margin-left:6px; font-weight:600;">${escapeHtml(p.pool_id)}</span>
-              <span style="color:var(--muted); font-size:var(--zn-fs-xs); margin-left:8px;">(${escapeHtml((p.fs_type || 'zfs').toUpperCase())}${p.status ? ` · ${escapeHtml(p.status)}` : ''})</span>
+              <strong class="cv-accent">${t('chassis.external_pool', 'External storage pool found:')}</strong>
+              <span class="cv-semi-strong">${escapeHtml(p.pool_id)}</span>
+              <span class="cv-xs-muted-2">(${escapeHtml((p.fs_type || 'zfs').toUpperCase())}${p.status ? ` · ${escapeHtml(p.status)}` : ''})</span>
             </div>
           </div>
           <button class="btn-import-external-pool btn-pill-toggle" data-pool-id="${escapeHtml(p.pool_id)}" data-fs-type="${escapeHtml(p.fs_type || 'zfs')}" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); color: var(--lt-t-4ade80ff, #4ade80);" title="${t('ui.import_detached_storage_pool', 'Import detached storage pool')}">
@@ -1036,7 +1036,7 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
           <span data-i18n="sftp.title">SFTP file access</span>
           <span class="webdav-status-pill ${sftpPillClass}">${sftpPillText}</span>
         </div>
-        <div style="display:flex; gap:8px; align-items:center;">
+        <div class="cv-row-7">
           <button class="btn-pill-toggle btn-sftp-toggle-action" id="btn-sftp-header-toggle" style="padding:5px 12px; font-size:var(--zn-fs-xs); font-weight:700; ${isRunning ? 'background:rgba(239,68,68,0.15); color:var(--zn-text-crit); border-color:rgba(239,68,68,0.3);' : ''}">
             ${isRunning ? `${ico('⏹')} ${t('chassis.sftp_stop', 'Stop SFTP')}` : `${ico('▶')} ${t('chassis.sftp_start', 'Start SFTP')}`}
           </button>
@@ -1046,10 +1046,10 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
         </div>
       </div>
 
-      <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:var(--zn-fs-xs); color:var(--muted); align-items:center;">
-        <span>${t('chassis.port', 'Port:')} <strong style="color:var(--zn-text-strong);">${port}</strong></span>
-        <span>${t('chassis.subsystem', 'Subsystem:')} <code style="color:var(--zn-text-accent);">internal-sftp</code></span>
-        <span>${t('chassis.isolation', 'Isolation:')} <strong style="color:var(--zn-text-strong);">${t('chassis.chroot_jail', 'Chroot jail (/home/%u)')}</strong></span>
+      <div class="cv-row-xs-muted">
+        <span>${t('chassis.port', 'Port:')} <strong class="cv-strong">${port}</strong></span>
+        <span>${t('chassis.subsystem', 'Subsystem:')} <code class="cv-accent">internal-sftp</code></span>
+        <span>${t('chassis.isolation', 'Isolation:')} <strong class="cv-strong">${t('chassis.chroot_jail', 'Chroot jail (/home/%u)')}</strong></span>
         <span>${t('chassis.host_shell', 'Host shell:')} <strong style="color:var(--ok2, #22c55e); background:rgba(34,197,94,0.12); padding:1px 6px; border-radius:4px; font-size:var(--zn-fs-xs);">${t('chassis.no_shell', 'Not allowed (no PTY)')}</strong></span>
       </div>
 
@@ -1167,8 +1167,8 @@ export function renderProtocolPills({ smb, sftp, webdav } = {}) {
 export async function fetchAndRenderNetworkShares(container) {
   if (!container) return;
   container.innerHTML = `
-    <div style="text-align:center; padding:30px; color:var(--muted);">
-      <div class="loader-spinner" style="margin:0 auto 10px;"></div>
+    <div class="cv-muted-center">
+      <div class="loader-spinner cv-x-6"></div>
       ${t('chassis.reading_shares', 'Reading network shares…')}
     </div>
   `;
@@ -1348,7 +1348,7 @@ function buildShareCardInner(s, canManageShares) {
       </div>
     </div>
 
-    <div class="share-card-actions" style="display:flex; justify-content:space-between; align-items:center;">
+    <div class="share-card-actions cv-row-2">
       <button class="btn-share-reveal" data-path="${escapeHtml(s.mountpoint || '')}" title="${t('ui.open_share_in_file_explorer', 'Open share in File Explorer')}">
         ${ico('📂')} ${t('ui.open_in_file_explorer', 'Open in File Explorer')}
       </button>
@@ -1467,7 +1467,7 @@ export async function openSftpUsersModal(onSuccess) {
       if (statusText) {
         statusText.innerHTML = isRunning
           ? `<span style="color:var(--ok2, #22c55e);">● ${t('chassis.running', 'Running')}</span> ${t('chassis.on_port', 'on port {port}', { port: status?.port || 2222 })}`
-          : `<span style="color:var(--muted);">○ ${t('chassis.stopped', 'Stopped')}</span> ${t('chassis.port_paren', '(port {port})', { port: status?.port || 2222 })}`;
+          : `<span class="cv-muted">○ ${t('chassis.stopped', 'Stopped')}</span> ${t('chassis.port_paren', '(port {port})', { port: status?.port || 2222 })}`;
       }
 
       if (toggleBtn) {
@@ -1508,16 +1508,16 @@ export async function openSftpUsersModal(onSuccess) {
 
       if (usersList) {
         if (users.length === 0) {
-          usersList.innerHTML = `<div style="text-align:center; padding:16px; color:var(--muted); font-size:var(--zn-fs-xs);">${t('chassis.sftp_no_users', 'No SFTP users yet. Create one below.')}</div>`;
+          usersList.innerHTML = `<div class="cv-xs-muted-center">${t('chassis.sftp_no_users', 'No SFTP users yet. Create one below.')}</div>`;
         } else {
           usersList.innerHTML = users.map((u) => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid var(--zn-line-5); font-size:var(--zn-fs-xs);">
+            <div class="cv-row-xs-box">
               <div>
-                <span style="font-weight:700; color:var(--zn-text-strong);">${escapeHtml(u.username)}</span>
-                <span class="ci-badge" style="margin-left:6px; font-size:var(--zn-fs-xs); background:var(--zn-glaze-6); color:var(--muted); padding:1px 5px; border-radius:3px;">
+                <span class="cv-bold-strong">${escapeHtml(u.username)}</span>
+                <span class="ci-badge cv-xs-muted-box">
                   ${u.read_only ? 'Read-Only' : 'Read/Write'}
                 </span>
-                <div style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:monospace; margin-top:2px;">
+                <div class="cv-xs-muted-mono">
                   ${escapeHtml(t('chassis.chroot', 'Chroot: {path}', { path: u.home_dir || '/home/' + u.username }))}
                 </div>
               </div>
@@ -1670,8 +1670,8 @@ const PROVIDER_ICONS = {
 export async function fetchAndRenderRemoteStorage(container) {
   if (!container) return;
   container.innerHTML = `
-    <div style="text-align:center; padding:30px; color:var(--muted);">
-      <div class="loader-spinner" style="margin:0 auto 10px;"></div>
+    <div class="cv-muted-center">
+      <div class="loader-spinner cv-x-6"></div>
       ${t('chassis.reading_remotes', 'Reading cloud drives and WebDAV…')}
     </div>
   `;
@@ -1699,10 +1699,10 @@ export async function fetchAndRenderRemoteStorage(container) {
     let remotesHtml = '';
     if (!remotes || remotes.length === 0) {
       remotesHtml = `
-        <div style="text-align:center; padding:36px 20px; background:var(--zn-shade-25); border:1px dashed var(--zn-line-12); border-radius:10px;">
-          <div style="font-size:32px; margin-bottom:8px;">☁️</div>
-          <div style="font-size:14px; font-weight:700; color:var(--zn-text-strong); margin-bottom:4px;">${t('chassis.no_remotes', 'No cloud drives connected')}</div>
-          <div style="font-size:var(--zn-fs-xs); color:var(--muted); max-width:440px; margin:0 auto 16px auto; line-height:1.45;">
+        <div class="cv-box-center">
+          <div class="cv-fs32">☁️</div>
+          <div class="cv-fs14-bold-strong">${t('chassis.no_remotes', 'No cloud drives connected')}</div>
+          <div class="cv-xs-muted-3">
             ${t('chassis.no_remotes_desc', 'Connect your cloud storage (Amazon S3, Backblaze B2, Google Drive, OneDrive, SFTP) to open it in the File Explorer under /mnt/remotes.')}
           </div>
           <button class="btn-pill-toggle btn-trigger-new-remote is-primary">
@@ -1730,7 +1730,7 @@ export async function fetchAndRenderRemoteStorage(container) {
               <span class="remote-type-tag">${escapeHtml(r.type)}</span>
             </div>
 
-            <div style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:monospace; background:var(--zn-shade-30); padding:6px 8px; border-radius:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            <div class="cv-xs-muted-mono-box">
               /mnt/remotes/${escapeHtml(r.name)}
             </div>
 
@@ -1746,7 +1746,7 @@ export async function fetchAndRenderRemoteStorage(container) {
                   </button>
                 `}
               </div>
-              <div style="display:flex; gap:6px;">
+              <div class="cv-row-8">
                 ${isMounted ? `
                   <button class="btn-remote-unmount btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="${t('ui.unmount_from_system', 'Unmount from system')}">
                     ${ico('⏹')} ${t('chassis.unmount', 'Unmount')}
@@ -1778,7 +1778,7 @@ export async function fetchAndRenderRemoteStorage(container) {
               <span>${t('chassis.webdav_title', 'WebDAV file server')}</span>
               <span class="webdav-status-pill ${webdavPillClass}">${webdavPillText}</span>
             </div>
-            <div style="display:flex; gap:8px; align-items:center;">
+            <div class="cv-row-7">
               <button class="btn-pill-toggle" id="btn-webdav-toggle">
                 ${isRunning ? '⏹ Stop Server' : '▶ Start Server'}
               </button>
@@ -1791,11 +1791,11 @@ export async function fetchAndRenderRemoteStorage(container) {
             </div>
           </div>
 
-          <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:var(--zn-fs-xs); color:var(--muted); align-items:center;">
-            <span>${t('chassis.port', 'Port:')} <strong style="color:var(--zn-text-strong);">${webdavStatus.port}</strong></span>
-            <span>${t('chassis.root_path', 'Root folder:')} <code style="color:var(--zn-text-accent);">${escapeHtml(webdavStatus.root_path)}</code></span>
-            <span>${t('chassis.mode', 'Mode:')} <strong style="color:var(--zn-text-strong);">${webdavStatus.read_only ? 'Read-Only' : 'Read/Write'}</strong></span>
-            <span>${t('chassis.auth', 'Sign-in:')} <strong style="color:var(--zn-text-strong);">${escapeHtml(t('webdav.auth_accounts', 'ZettNAS accounts'))}</strong></span>
+          <div class="cv-row-xs-muted">
+            <span>${t('chassis.port', 'Port:')} <strong class="cv-strong">${webdavStatus.port}</strong></span>
+            <span>${t('chassis.root_path', 'Root folder:')} <code class="cv-accent">${escapeHtml(webdavStatus.root_path)}</code></span>
+            <span>${t('chassis.mode', 'Mode:')} <strong class="cv-strong">${webdavStatus.read_only ? 'Read-Only' : 'Read/Write'}</strong></span>
+            <span>${t('chassis.auth', 'Sign-in:')} <strong class="cv-strong">${escapeHtml(t('webdav.auth_accounts', 'ZettNAS accounts'))}</strong></span>
           </div>
 
           <!-- Quick Connect Grid -->
@@ -1846,9 +1846,9 @@ export async function fetchAndRenderRemoteStorage(container) {
         ${buildSftpCardHtml(sftpStatus, sftpUsers.length, sampleUser)}
 
         <!-- Section 3: Connected Cloud & Remote Drives -->
-        <div style="display:flex; flex-direction:column; gap:12px;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:13px; font-weight:800; color:var(--zn-text-strong); letter-spacing:0.5px; text-transform:uppercase;">
+        <div class="cv-col-3">
+          <div class="cv-row-2">
+            <div class="cv-fs13-bold-strong">
               ${t('chassis.remotes_count', 'Connected cloud drives ({count})', { count: remotes ? remotes.length : 0 })}
             </div>
             <button class="btn-pill-toggle btn-trigger-new-remote" style="background: rgba(14,165,233,0.15); color: var(--zn-text-accent); border-color: rgba(14,165,233,0.3);" title="${t('ui.connect_new_cloud_remote', 'Connect New Cloud Remote')}">
@@ -2248,10 +2248,10 @@ export async function openNewCloudRemoteModal(onSuccess) {
 
           const oauthAssistantHtml = isOAuthProv ? `
             <div class="oauth-assistant-card" style="margin-bottom: 16px; padding: 14px 16px; background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.28); border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--zn-line-6); padding-bottom: 8px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 18px;">🔑</span>
-                  <span style="font-size: 13px; font-weight: 700; color: var(--zn-text-strong); letter-spacing: 0.3px;">${escapeHtml(t('chassis.oauth_connect', 'Connect {name}', { name: provTitle }))}</span>
+              <div class="cv-row-box-2">
+                <div class="cv-row-3">
+                  <span class="cv-fs18">🔑</span>
+                  <span class="cv-fs13-bold-strong-2">${escapeHtml(t('chassis.oauth_connect', 'Connect {name}', { name: provTitle }))}</span>
                 </div>
                 <span style="font-size: var(--zn-fs-xs); padding: 2px 8px; background: rgba(34, 197, 94, 0.15); color: var(--lt-t-4ade80ff, #4ade80); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; font-weight: 600;">
                   ${t('chassis.oauth_badge', 'Sign in here, no terminal needed')}
@@ -2259,11 +2259,11 @@ export async function openNewCloudRemoteModal(onSuccess) {
               </div>
 
               <!-- Auth Mode Switcher (Tabs) -->
-              <div style="display: flex; gap: 6px; margin-bottom: 12px; background: var(--zn-shade-30); padding: 3px; border-radius: 6px; border: 1px solid var(--zn-line-6);">
+              <div class="cv-row-box-3">
                 <button type="button" id="tab-oauth-desktop" style="flex: 1; padding: 6px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border-radius: 4px; border: none; cursor: pointer; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s;">
                   <span>${ico('💻')} ${t('chassis.oauth_tab_desktop', 'On this computer')}</span>
                 </button>
-                <button type="button" id="tab-oauth-qr" class="btn-pill-toggle is-ghost is-small" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <button type="button" id="tab-oauth-qr" class="btn-pill-toggle is-ghost is-small cv-grow" style="display: flex;">
                   <span>${ico('📱')} ${t('chassis.oauth_tab_qr', 'With a phone (QR code)')}</span>
                 </button>
               </div>
@@ -2275,17 +2275,17 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 </button>
 
                 <div style="margin-top: 8px; margin-bottom: 12px; padding: 8px 10px; background: rgba(14, 165, 233, 0.07); border: 1px dashed rgba(14, 165, 233, 0.28); border-radius: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-soft); line-height: 1.45;">
-                  <strong style="color: var(--zn-text-accent);">${ico('📌')} ${t('chassis.oauth_expect', 'What to expect:')}</strong> ${t('chassis.oauth_expect_1', 'After you approve the sign-in, the new tab shows')} <code style="color:var(--zn-text-crit); background:rgba(239,68,68,0.15); padding:1px 4px; border-radius:3px;">This site can't be reached (localhost:53682)</code>. <strong>${t('chassis.oauth_expect_2', 'That is normal.')}</strong> ${t('chassis.oauth_expect_3', 'Copy the address from that tab and paste it in step 2 below.')}
+                  <strong class="cv-accent">${ico('📌')} ${t('chassis.oauth_expect', 'What to expect:')}</strong> ${t('chassis.oauth_expect_1', 'After you approve the sign-in, the new tab shows')} <code style="color:var(--zn-text-crit); background:rgba(239,68,68,0.15); padding:1px 4px; border-radius:3px;">This site can't be reached (localhost:53682)</code>. <strong>${t('chassis.oauth_expect_2', 'That is normal.')}</strong> ${t('chassis.oauth_expect_3', 'Copy the address from that tab and paste it in step 2 below.')}
                 </div>
               </div>
 
               <!-- Step 1: Mobile QR Code Panel -->
-              <div id="oauth-qr-panel" style="display: none; margin-bottom: 12px;">
+              <div class="cv-x-7" id="oauth-qr-panel" style="display: none;">
                 <div id="oauth-qr-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; background: var(--zn-shade-35); border: 1px dashed rgba(14, 165, 233, 0.35); border-radius: 8px;">
                   <div id="oauth-qr-target" style="display: inline-flex; align-items: center; justify-content: center; padding: 8px; background: #ffffff; border-radius: 8px; min-width: 140px; min-height: 140px; box-shadow: 0 4px 14px rgba(0,0,0,0.6);">
                     <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-0284c7ff, #0284c7); font-weight: 600;">${ico('⏳')} ${t('chassis.qr_loading', 'Making the QR code…')}</div>
                   </div>
-                  <div style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text); margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+                  <div class="cv-row-xs-semi">
                     <span>${ico('📱')} ${t('chassis.qr_scan', 'Scan with your phone or tablet camera to sign in')}</span>
                     <button type="button" id="btn-oauth-qr" class="btn-pill-toggle is-small" title="${t('ui.refresh_qr_code', 'Refresh QR Code')}">${ico('🔄')} ${t('common.refresh', 'Refresh')}</button>
                   </div>
@@ -2293,20 +2293,20 @@ export async function openNewCloudRemoteModal(onSuccess) {
               </div>
 
               <!-- Status feedback pill -->
-              <div id="oauth-assistant-status" style="display: none; margin-bottom: 12px; padding: 8px 12px; border-radius: 6px; font-size: var(--zn-fs-xs); line-height: 1.45;"></div>
+              <div class="cv-xs-box" id="oauth-assistant-status" style="display: none;"></div>
 
               <!-- Step 2: Code Relay Input & Complete button -->
-              <div id="oauth-step2-box" style="padding-top: 12px; border-top: 1px solid var(--zn-line-8);">
-                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                  <span style="color: var(--zn-text-accent);">${t('chassis.step2', 'Step 2:')}</span>
+              <div class="cv-box-2" id="oauth-step2-box">
+                <div class="cv-row-xs-bold">
+                  <span class="cv-accent">${t('chassis.step2', 'Step 2:')}</span>
                   <span>${t('chassis.step2_title', 'If the browser says “This site can’t be reached”, paste the address from its address bar here:')}</span>
                 </div>
-                <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); line-height: 1.45; margin-bottom: 8px;">
+                <div class="cv-xs-muted-4">
                   ${t('chassis.step2_desc', 'When the sign-in finishes, copy the full address from the browser’s address bar and paste it below:')}
                 </div>
-                <div style="display: flex; gap: 6px;">
-                  <input type="text" id="oauth-redirect-url" class="tz-select-input" placeholder="http://localhost:53682/?code=M.R3_... or full redirect URL" style="flex: 1; font-family: monospace; font-size: var(--zn-fs-xs);" />
-                  <button type="button" id="btn-oauth-paste" class="btn-pill-toggle is-small" style="white-space: nowrap;">
+                <div class="cv-row-8">
+                  <input type="text" id="oauth-redirect-url" class="tz-select-input cv-xs-mono-grow" placeholder="http://localhost:53682/?code=M.R3_... or full redirect URL" />
+                  <button type="button" id="btn-oauth-paste" class="btn-pill-toggle is-small cv-x-8">
                     ${ico('📋')} ${t('chassis.paste', 'Paste')}
                   </button>
                 </div>
@@ -2322,8 +2322,8 @@ export async function openNewCloudRemoteModal(onSuccess) {
               const opts = (f.options || []).map((o) => `<option value="${o}" ${o === f.default ? 'selected' : ''}>${o}</option>`).join('');
               return `
                 <div>
-                  <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-muted); margin-bottom:4px; letter-spacing:0.5px;">${escapeHtml(f.label.toUpperCase())}</label>
-                  <select name="${escapeHtml(f.name)}" class="tz-select-input" style="width:100%;">
+                  <label class="cv-xs-bold-muted-3">${escapeHtml(f.label.toUpperCase())}</label>
+                  <select name="${escapeHtml(f.name)}" class="tz-select-input cv-size">
                     ${opts}
                   </select>
                 </div>
@@ -2331,8 +2331,8 @@ export async function openNewCloudRemoteModal(onSuccess) {
             } else if (f.type === 'textarea') {
               return `
                 <div>
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-muted); letter-spacing:0.5px;">
+                  <div class="cv-row-9">
+                    <label class="cv-xs-bold-muted-4">
                       ${escapeHtml(f.label.toUpperCase())} ${f.required ? '<span style="color:var(--crit,#ef4444);">*</span>' : ''}
                     </label>
                     ${prov.authorize_cmd ? `
@@ -2344,25 +2344,25 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   <textarea
                     name="${escapeHtml(f.name)}"
                     placeholder="${escapeHtml(f.placeholder || '')}"
-                    class="tz-select-input"
+                    class="tz-select-input cv-mono"
                     rows="4"
-                    style="width:100%; font-family:monospace; resize:vertical;"
+                   
                     ${f.required ? 'required' : ''}>${escapeHtml(f.default != null ? String(f.default) : '')}</textarea>
-                  ${f.help ? `<div style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted); margin-top:4px; line-height:1.4;">${escapeHtml(f.help)}</div>` : ''}
+                  ${f.help ? `<div class="cv-xs-muted-5">${escapeHtml(f.help)}</div>` : ''}
                 </div>
               `;
             } else {
               return `
                 <div>
-                  <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-muted); margin-bottom:4px; letter-spacing:0.5px;">
+                  <label class="cv-xs-bold-muted-3">
                     ${escapeHtml(f.label.toUpperCase())} ${f.required ? '<span style="color:var(--crit,#ef4444);">*</span>' : ''}
                   </label>
                   <input type="${f.type === 'password' ? 'password' : 'text'}"
                     name="${escapeHtml(f.name)}"
                     placeholder="${escapeHtml(f.placeholder || '')}"
                     value="${escapeHtml(f.default != null ? String(f.default) : '')}"
-                    class="tz-select-input"
-                    style="width:100%;"
+                    class="tz-select-input cv-size"
+                   
                     ${f.required ? 'required' : ''} />
                 </div>
               `;
@@ -2464,17 +2464,17 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 }
                 if (directLink) {
                   directLink.innerHTML = `
-                    <div style="color: var(--zn-text-muted); font-size: var(--zn-fs-xs); margin-bottom: 2px;">${t('chassis.qr_cant', 'Can’t scan the QR code?')}</div>
-                    <a href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer" style="color: var(--zn-text-accent); text-decoration: underline; font-weight: 600;">
+                    <div class="cv-xs-muted-6">${t('chassis.qr_cant', 'Can’t scan the QR code?')}</div>
+                    <a class="cv-semi-accent" href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer">
                       ${ico('🔗')} ${t('chassis.qr_direct', 'Open the sign-in page')}
                     </a>
                   `;
                 }
               } catch (qErr) {
                 qrTarget.innerHTML = `
-                  <div style="padding: 12px; text-align: center;">
-                    <div style="color: var(--zn-text-crit); font-size: var(--zn-fs-xs); margin-bottom: 6px;">${t('chassis.qr_failed', 'Could not show the QR code')}</div>
-                    <a href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer" style="color: var(--zn-text-accent); text-decoration: underline; font-size: var(--zn-fs-xs); font-weight: 600;">${t('chassis.qr_direct_link', 'Sign in directly instead')}</a>
+                  <div class="cv-center">
+                    <div class="cv-xs-crit">${t('chassis.qr_failed', 'Could not show the QR code')}</div>
+                    <a class="cv-xs-semi-accent" href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer">${t('chassis.qr_direct_link', 'Sign in directly instead')}</a>
                   </div>
                 `;
               }
@@ -2955,8 +2955,8 @@ export async function openCreateStoragePoolModal(onSuccess) {
         noteIn(disksContainer, t('chassis.no_free_disks', 'No free drives.'), 'color:var(--muted); font-size:var(--zn-fs-xs);');
       } else {
         disksContainer.innerHTML = filtered.map((d) => `
-          <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); cursor:pointer;">
-            <input type="checkbox" name="pool-disk" value="${escapeHtml(d.dev || d.name)}" style="accent-color:var(--ok2);" />
+          <label class="cv-row-xs-strong">
+            <input class="cv-x-9" type="checkbox" name="pool-disk" value="${escapeHtml(d.dev || d.name)}" />
             <span><strong>/dev/${escapeHtml(d.dev || d.name)}</strong> (${d.size || formatBytes(d.size_bytes)}) · ${escapeHtml(d.model || '')}</span>
           </label>
         `).join('');
@@ -3121,19 +3121,19 @@ export function openCreateNetworkShareModal(onSuccess) {
         const uname = u.username || u.name || 'user';
         const role = u.role || 'user';
         return `
-          <div class="user-perm-row" data-username="${uname}" style="display:flex; align-items:center; justify-content:space-between; padding:4px 6px; background:var(--zn-glaze-3); border-radius:4px; font-size:var(--zn-fs-xs);">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span style="font-weight:600; color:var(--zn-text-strong);">👤 ${uname}</span>
-              <span style="font-size:var(--zn-fs-xs); padding:1px 5px; border-radius:3px; background:var(--zn-glaze-8); color:var(--muted);">${role}</span>
+          <div class="user-perm-row cv-row-xs-box-2" data-username="${uname}">
+            <div class="cv-row-10">
+              <span class="cv-semi-strong-2">👤 ${uname}</span>
+              <span class="cv-xs-muted-box-2">${role}</span>
             </div>
-            <div style="display:flex; align-items:center; gap:8px;">
+            <div class="cv-row-3">
               <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:var(--zn-fs-xs); color:var(--lt-t-3bf58bff, #3bf58b);">
                 <input type="radio" name="perm-${uname}" value="rw" checked style="accent-color:#3bf58b; width:12px; height:12px;" /> RW
               </label>
-              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:var(--zn-fs-xs); color:var(--zn-text-accent);">
+              <label class="cv-row-xs-accent">
                 <input type="radio" name="perm-${uname}" value="ro" style="accent-color:#38bdf8; width:12px; height:12px;" /> RO
               </label>
-              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:var(--zn-fs-xs); color:var(--zn-text-crit);">
+              <label class="cv-row-xs-crit">
                 <input type="radio" name="perm-${uname}" value="deny" style="accent-color:#f87171; width:12px; height:12px;" /> ${t('chassis.deny', 'Deny')}
               </label>
             </div>
@@ -3277,7 +3277,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
       let tbody = listMount.querySelector('tbody');
       if (!tbody) {
         listMount.innerHTML = `
-          <table class="copy-history-table" style="width:100%;">
+          <table class="copy-history-table cv-size">
             <thead>
               <tr>
                 <th>${t('chassis.col_snapshot', 'Snapshot')}</th>
@@ -3303,10 +3303,10 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
           tr.dataset.key = s.name;
           tr.innerHTML = `
             <td><strong>${escapeHtml(s.name)}</strong></td>
-            <td style="font-family:monospace; font-size:var(--zn-fs-xs); color:var(--zn-text-accent);">${escapeHtml(s.path)}</td>
-            <td style="color:var(--muted); font-size:var(--zn-fs-xs);">${dt}</td>
+            <td class="cv-xs-accent-mono">${escapeHtml(s.path)}</td>
+            <td class="cv-xs-muted-7">${dt}</td>
             <td>
-              <div style="display:flex; gap:6px; align-items:center;">
+              <div class="cv-row-11">
                 <button class="btn-snap-restore btn-pill-toggle is-small" data-snap="${escapeHtml(s.name)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--zn-text-warn);">
                   ${ico('⏪')} ${t('chassis.revert', 'Restore')}
                 </button>

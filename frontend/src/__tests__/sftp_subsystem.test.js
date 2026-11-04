@@ -32,7 +32,7 @@ describe('Feature 4: SFTP file access Card & User Management', () => {
     expect(html).toContain('RUNNING (Port 2222)');
     expect(html).toContain('Stop SFTP');
     expect(html).toContain('Manage users (2)');
-    expect(html).toMatch(/Port: <strong style="color:(?:var\(--zn-text-strong\)|#fff);">2222<\/strong>/);
+    expect(html).toMatch(/Port: <strong class="cv-strong">2222<\/strong>/);
     expect(html).toContain('internal-sftp');
     expect(html).toContain('Chroot jail (/home/%u)');
     expect(html).toContain('Not allowed (no PTY)');

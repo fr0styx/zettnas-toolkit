@@ -32,7 +32,7 @@
  "frontend/src/components/chassis-visualizer.js": {
   "buttons": 3,
   "globals": 1,
-  "styles": 149,
+  "styles": 44,
   "templates": 22
  },
  "frontend/src/components/container-modal.js": {
