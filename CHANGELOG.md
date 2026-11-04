@@ -59,6 +59,12 @@
   Before, only the first part was read. "Summarise" and "what's in it" now also work in German,
   French, Spanish and Chinese. Without a model running, the first part is read as before.
 
+- **Drive Health no longer lists a drive that is still in the box as taken out** (DRV-9): SATA drives
+  seen from the container came without their serial number, so the data drive that had once been
+  read awake looked removed, and a sleeping drive was never recorded. The serial now comes from
+  the drive's ID link or the serial number the kernel read at boot, and the model gets its full name
+  (ST22000DM000-3Y6103, not ST22000DM000-3Y6); neither wakes a sleeping drive.
+
 #### Performance
 
 - **Converted videos play smoothly** (NVID-1): a video the browser can't play as it is is now

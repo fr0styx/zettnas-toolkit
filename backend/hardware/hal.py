@@ -109,6 +109,37 @@ class DiskDiscoveryHAL:
         return by_id_map
 
     @classmethod
+    def _fill_identity(cls, kname: str, by_id_path: str | None, model: Any, serial: Any) -> tuple[str, str]:
+        """The model and serial when lsblk came without them: SATA drives seen from a container often
+        have no udev serial, and the kernel's model is cut at 16 characters (DRV-9). Taken from the
+        by-id link (ata-<model>_<serial>), else the serial page the kernel read at boot; neither
+        touches the drive, so a sleeping one stays asleep."""
+        model = str(model or "Generic Storage").strip()
+        serial = str(serial or "Unknown").strip()
+        link_model = link_serial = ""
+        name = os.path.basename(by_id_path or "")
+        for prefix in ("ata-", "nvme-", "scsi-", "usb-"):
+            if name.startswith(prefix) and "_" in name:
+                link_model, link_serial = name[len(prefix) :].rsplit("_", 1)
+                link_model = link_model.replace("_", " ").strip()
+                break
+        if serial in ("", "Unknown"):
+            serial = link_serial or cls._vpd_serial(kname) or "Unknown"
+        if link_model and len(link_model) > len(model) and link_model.startswith(model):
+            model = link_model  # the full name where the kernel's is cut short
+        return model, serial
+
+    @classmethod
+    def _vpd_serial(cls, kname: str) -> str:
+        path = os.path.join(cls._resolve_sys_root(), "block", kname, "device", "vpd_pg80")
+        try:
+            with open(path, "rb") as f:
+                raw = f.read(256)
+        except OSError:
+            return ""
+        return "".join(ch for ch in raw[4:].decode("ascii", "ignore") if ch.isprintable()).strip()
+
+    @classmethod
     def _probe_controller_driver(cls, dev_name: str) -> str:
         """Traces sysfs device symlink to determine bus controller driver (ahci, mpt3sas, uas, nvme)."""
         sys_block = os.path.join(cls._resolve_sys_root(), "block", dev_name, "device")
@@ -240,8 +271,7 @@ class DiskDiscoveryHAL:
             by_id_path = by_id_map.get(kname)
             canonical_id = os.path.basename(by_id_path) if by_id_path else kname
 
-            model = (d.get("model") or "Generic Storage").strip()
-            serial = (d.get("serial") or "Unknown").strip()
+            model, serial = cls._fill_identity(kname, by_id_path, d.get("model"), d.get("serial"))
             vendor = (d.get("vendor") or "Generic").strip()
             wwn = d.get("wwn")
             tran = (
