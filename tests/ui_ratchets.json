@@ -212,7 +212,7 @@
  "frontend/src/components/management/network.js": {
   "buttons": 0,
   "globals": 5,
-  "styles": 98,
+  "styles": 18,
   "templates": 10
  },
  "frontend/src/components/management/notifications.js": {

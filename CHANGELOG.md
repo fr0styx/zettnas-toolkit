@@ -97,6 +97,10 @@
   the stack picker use 46 classes instead of 58 inline styles, in a sheet that loads with them;
   pixel-for-pixel the same in both themes.
 
+- **The network panes are built from stylesheet classes** (NUX-15): the network map, replication
+  and copy history, the Tailscale peers and the bond and bridge dialogs use 42 classes instead of
+  80 inline styles; pixel-for-pixel the same in both themes.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 
