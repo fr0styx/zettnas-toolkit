@@ -1,0 +1,4 @@
+/* The toolkit drawer's own stylesheet (NUX-15): it loads with the drawer's markup, not on first
+   paint. Only sheets whose rules no later global sheet can override in a different order belong
+   here; tests/test_lazy_css.py checks that (lazy CSS lands after every global sheet). */
+@import './67-drawer.css';

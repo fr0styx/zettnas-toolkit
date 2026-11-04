@@ -19,7 +19,8 @@ export function whenDrawerDom(fn) {
 export function ensureDrawerDom() {
   if (isDrawerDomReady()) return Promise.resolve();
   if (!pending) {
-    pending = import('./windows/drawer.html?raw').then(({ default: markup }) => {
+    // the drawer's own sheet comes with its markup, not on first paint (NUX-15)
+    pending = Promise.all([import('./windows/drawer.html?raw'), import('./drawer-sheet.js')]).then(([{ default: markup }]) => {
       if (!isDrawerDomReady()) {
         const slot = document.getElementById('led-drawer-slot');
         if (slot) slot.insertAdjacentHTML('beforebegin', markup);

@@ -24,7 +24,7 @@
 
     <div id="layout-sections-container" class="drawer-cards-flow locked">
       <div class="draggable-card mini-preview-box" data-layout-card-id="sec-preview">
-        <div class="card-headline" style="margin-bottom:2px;">
+        <div class="card-headline drw-x">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.canvas_preview">LCD Live Canvas Re-arrange & Preview</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span id="lcd-renderer-badge" class="lcd-status-badge lcd-status-checking" title="LCD Framebuffer Renderer Status" data-i18n-title="ui.lcd_framebuffer_renderer_status" data-sample>&#x2B24; Checking…</span>
         </div>
@@ -35,19 +35,19 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-lcd-style" id="sec-lcd-style">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg><span data-i18n="settings.lcd_layout_style_title">Screen Dashboard Style</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm drw-x-2"><use href="#i-storage"/></svg><span data-i18n="settings.lcd_layout_style_title">Screen Dashboard Style</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span id="lcd-style-active-badge" data-sample class="preset-state-badge" style="color:var(--lt-ink-brand, var(--brand, #00f0ff)); border-color:var(--brand, #00f0ff);">CLASSIC CARDS</span>
         </div>
         <div class="card-instruction" data-i18n="settings.lcd_layout_style_desc">Show several cards with live readings, or one large, high-contrast view with the IP address.</div>
         <div class="lcd-style-picker-row" role="radiogroup" aria-label="Screen Dashboard Style" data-i18n-aria-label="settings.lcd_layout_style_title">
-          <button type="button" class="lcd-style-chip active" data-screen-style="classic" title="Classic Cards" data-i18n-title="settings.style_classic"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-apps"/></svg><span data-i18n="settings.style_classic">Classic Cards</span></button>
-          <button type="button" class="lcd-style-chip" data-screen-style="streamline" title="Streamline Big IP" data-i18n-title="settings.style_streamline"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-globe"/></svg><span data-i18n="settings.style_streamline">Streamline Big IP</span></button>
+          <button type="button" class="lcd-style-chip active" data-screen-style="classic" title="Classic Cards" data-i18n-title="settings.style_classic"><svg class="ic ic-sm drw-x-3"><use href="#i-apps"/></svg><span data-i18n="settings.style_classic">Classic Cards</span></button>
+          <button type="button" class="lcd-style-chip" data-screen-style="streamline" title="Streamline Big IP" data-i18n-title="settings.style_streamline"><svg class="ic ic-sm drw-x-3"><use href="#i-globe"/></svg><span data-i18n="settings.style_streamline">Streamline Big IP</span></button>
         </div>
       </div>
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-lcd-theme" id="sec-lcd-theme">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-screen"/></svg><span data-i18n="settings.lcd_theme_title">LCD Screen Theme</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm drw-x-2"><use href="#i-screen"/></svg><span data-i18n="settings.lcd_theme_title">LCD Screen Theme</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span id="lcd-theme-active-badge" data-sample class="preset-state-badge" style="color:var(--lt-ink-brand, var(--brand, #00f0ff)); border-color:var(--brand, #00f0ff);">CYBER TEAL</span>
         </div>
         <div class="card-instruction" data-i18n="settings.lcd_theme_desc">Select a color scheme specifically for the physical 640x172 LCD screen and console dashboard.</div>
@@ -61,18 +61,18 @@
           <button class="lcd-theme-chip" data-lcd-theme="light" title="Daylight White" data-i18n-title="settings.theme_light"><span class="lcd-chip-swatch" style="background:#f8fafc; border:1px solid #64748b;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_light">White</span></button>
           <button class="lcd-theme-chip" data-lcd-theme="yak" title="Yak Bronze" data-i18n-title="settings.theme_yak"><span class="lcd-chip-swatch" style="background:#d48a37;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_yak">Yak</span></button>
         </div>
-        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 600;" data-i18n="settings.lcd_custom_accent">Custom Accent:</span>
-            <input type="color" id="lcd-custom-color-picker" aria-label="Custom LCD accent colour" data-i18n-aria-label="a11y.lcd_custom_color" value="#00f0ff" style="width: 22px; height: 22px; border: none; padding: 0; background: none; cursor: pointer; border-radius: 3px;">
-            <span id="lcd-custom-hex-val" style="font-size: var(--zn-fs-xs); font-family: monospace; color: var(--muted);">#00F0FF</span>
+        <div class="drw-row">
+          <div class="drw-row-2">
+            <span class="drw-xs-semi-muted" data-i18n="settings.lcd_custom_accent">Custom Accent:</span>
+            <input class="drw-box" type="color" id="lcd-custom-color-picker" aria-label="Custom LCD accent colour" data-i18n-aria-label="a11y.lcd_custom_color" value="#00f0ff">
+            <span class="drw-xs-muted-mono" id="lcd-custom-hex-val">#00F0FF</span>
           </div>
           <button id="lcd-reset-accent-btn" class="btn-pill-toggle is-small" data-i18n="settings.reset_accent">↺ Reset</button>
         </div>
-        <div style="margin-top: 10px; padding: 8px 10px; background: var(--zn-shade-20); border: 1px solid var(--zn-line-6); border-radius: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+        <div class="drw-row-box">
           <div>
-            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="settings.text_clarity_title">High-Contrast Text on Physical Screen</div>
-            <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="settings.text_clarity_desc">Keeps lettering crisp white to eliminate chromatic blur on 640x172 LCD while accenting gauges.</div>
+            <div class="drw-xs-bold-strong" data-i18n="settings.text_clarity_title">High-Contrast Text on Physical Screen</div>
+            <div class="drw-xs-muted" data-i18n="settings.text_clarity_desc">Keeps lettering crisp white to eliminate chromatic blur on 640x172 LCD while accenting gauges.</div>
           </div>
           <label class="switch"><input type="checkbox" id="lcd-text-clarity-toggle" aria-label="Sharper LCD text" data-i18n-aria-label="a11y.lcd_text_clarity" checked><span class="toggle-slider"></span></label>
         </div>
@@ -80,7 +80,7 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-clock">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-clock"/></svg><span data-i18n="settings.clock_tz_title">Clock & Timezone</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm drw-x-2"><use href="#i-clock"/></svg><span data-i18n="settings.clock_tz_title">Clock & Timezone</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
         </div>
         <div class="card-instruction" data-i18n="settings.clock_one_place">The time zone and the 12- or 24-hour clock are set in one place, for the desktop, this screen and the server.</div>
         <div class="clock-one-place">
@@ -93,8 +93,8 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-backlight">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-chip"/></svg><span data-i18n="settings.backlight_title">LCD Backlight & Night Dimming</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
-          <div style="display:flex; align-items:center; gap:8px;">
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm drw-x-2"><use href="#i-chip"/></svg><span data-i18n="settings.backlight_title">LCD Backlight & Night Dimming</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
+          <div class="drw-row-3">
             <span id="screen-bri-val" class="card-head-val">100%</span>
             <button id="btn-toggle-screen-power" type="button" class="btn-pill-toggle" data-i18n="settings.screen_turn_off" title="Turn physical LCD screen off or on" data-i18n-title="ui.turn_physical_lcd_screen_off">Turn Off</button>
           </div>
@@ -103,25 +103,25 @@
         <div class="slider-row">
           <input type="range" id="screen-bri-slider" aria-label="Screen brightness" data-i18n-aria-label="a11y.screen_brightness" min="0" max="100" value="100" step="1" class="custom-slider">
         </div>
-        <div class="schedule-controls-row" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-          <div style="display:flex; align-items:center; gap:8px;">
+        <div class="schedule-controls-row drw-row-4">
+          <div class="drw-row-3">
             <label class="switch"><input type="checkbox" id="screen-night-toggle" aria-label="Night mode" data-i18n-aria-label="a11y.screen_night_mode"><span class="toggle-slider"></span></label>
-            <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--text);" data-i18n="settings.night_dimming">Night Dimming</span>
+            <span class="drw-xs-bold" data-i18n="settings.night_dimming">Night Dimming</span>
           </div>
-          <div style="display:flex; align-items:center; gap:6px; font-size:var(--zn-fs-xs);">
-            <input type="time" id="screen-night-start" aria-label="Night starts at" data-i18n-aria-label="a11y.night_start" value="23:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
-            <span style="color:var(--muted); font-size:var(--zn-fs-xs);" data-i18n="settings.to">to</span>
-            <input type="time" id="screen-night-end" aria-label="Night ends at" data-i18n-aria-label="a11y.night_end" value="07:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
-            <span style="color:var(--muted); font-size:var(--zn-fs-xs);">@</span>
-            <input type="number" id="screen-night-bri" min="0" max="50" value="10" class="tz-text-input" style="width:48px; padding:3px 6px;" title="Night Brightness %" data-i18n-title="ui.night_brightness">
-            <span style="color:var(--muted); font-size:var(--zn-fs-xs);">%</span>
+          <div class="drw-row-xs">
+            <input type="time" id="screen-night-start" aria-label="Night starts at" data-i18n-aria-label="a11y.night_start" value="23:00" class="tz-text-input drw-size">
+            <span class="drw-xs-muted-2" data-i18n="settings.to">to</span>
+            <input type="time" id="screen-night-end" aria-label="Night ends at" data-i18n-aria-label="a11y.night_end" value="07:00" class="tz-text-input drw-size">
+            <span class="drw-xs-muted-2">@</span>
+            <input type="number" id="screen-night-bri" min="0" max="50" value="10" class="tz-text-input drw-size-2" title="Night Brightness %" data-i18n-title="ui.night_brightness">
+            <span class="drw-xs-muted-2">%</span>
           </div>
         </div>
-        <div class="schedule-controls-row" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--text);" data-i18n="settings.autocycle">Auto-Cycle LCD Pages</span>
+        <div class="schedule-controls-row drw-row-4">
+          <div class="drw-row-3">
+            <span class="drw-xs-bold" data-i18n="settings.autocycle">Auto-Cycle LCD Pages</span>
           </div>
-          <select id="screen-carousel-select" aria-label="LCD page rotation" data-i18n-aria-label="a11y.lcd_page_rotation" class="tz-select-input" style="width:170px;">
+          <select id="screen-carousel-select" aria-label="LCD page rotation" data-i18n-aria-label="a11y.lcd_page_rotation" class="tz-select-input drw-size-3">
             <option value="0" data-i18n="settings.autocycle_off">Off (Manual / Button)</option>
             <option value="5" data-i18n="settings.autocycle_5">Every 5 seconds</option>
             <option value="10" data-i18n="settings.autocycle_10">Every 10 seconds</option>
@@ -168,7 +168,7 @@
           </button>
         </div>
         <div class="preset-footer-row">
-          <span style="font-size:var(--zn-fs-xs); color:var(--muted); font-weight:700;" data-i18n="settings.custom_preset_storage">Custom layout storage</span>
+          <span class="drw-xs-bold-muted" data-i18n="settings.custom_preset_storage">Custom layout storage</span>
           <button id="btn-save-custom-preset" class="btn-save-preset"><span aria-hidden="true">💾</span> <span data-i18n="settings.btn_save_my_preset">Save as My Preset</span></button>
         </div>
       </div>
@@ -179,7 +179,7 @@
         </div>
         <div class="card-instruction" data-i18n="settings.modules_desc">Toggle visibility and select compact or full gauge scaling for each module. (Drag cards inside the Live Preview above to reorder).</div>
 
-        <div id="dash-reorder-container" class="dash-reorder-flow" style="margin-top:6px;">
+        <div id="dash-reorder-container" class="dash-reorder-flow drw-x-4">
           
           <div class="dash-module-item" data-metric-target="metric-storage">
             <div class="dash-item-info">
@@ -307,11 +307,11 @@
           <label class="switch"><input type="checkbox" id="led-night-toggle"><span class="toggle-slider"></span></label>
         </div>
         <div class="card-instruction" data-i18n="settings.led_night_desc">Automatically extinguish the ARGB light bar during nighttime hours to prevent room glare.</div>
-        <div class="schedule-controls-row" style="margin-top:6px; display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs);">
-          <span style="color:var(--muted); font-size:var(--zn-fs-xs); font-weight:700;" data-i18n="settings.blackout">Off between:</span>
-          <input type="time" id="led-night-start" aria-label="Night starts at" data-i18n-aria-label="a11y.night_start" value="23:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
-          <span style="color:var(--muted); font-size:var(--zn-fs-xs);" data-i18n="settings.to">to</span>
-          <input type="time" id="led-night-end" aria-label="Night ends at" data-i18n-aria-label="a11y.night_end" value="07:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
+        <div class="schedule-controls-row drw-row-xs-2">
+          <span class="drw-xs-bold-muted-2" data-i18n="settings.blackout">Off between:</span>
+          <input type="time" id="led-night-start" aria-label="Night starts at" data-i18n-aria-label="a11y.night_start" value="23:00" class="tz-text-input drw-size">
+          <span class="drw-xs-muted-2" data-i18n="settings.to">to</span>
+          <input type="time" id="led-night-end" aria-label="Night ends at" data-i18n-aria-label="a11y.night_end" value="07:00" class="tz-text-input drw-size">
         </div>
       </div>
 
@@ -403,7 +403,7 @@
     <div id="fan-cards-container" class="drawer-cards-flow locked">
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-tach">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic" style="margin-right:6px;"><use href="#i-fan"/></svg><span data-i18n="settings.fan_tachometers">Active Fan Tachometers</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic drw-x-5"><use href="#i-fan"/></svg><span data-i18n="settings.fan_tachometers">Active Fan Tachometers</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span class="suite-badge" id="fan-status-badge">ONLINE</span>
         </div>
         <div class="card-instruction" data-i18n="settings.fan_tach_desc">Click any zone column below to isolate and track that zone on the Dynamic Fan Curve above.</div>
@@ -505,12 +505,12 @@
             <path id="curve-area-path" d="M 38 100 L 115 100 L 257 20 L 285 20 L 285 100 Z" fill="url(#curveGradient)"/>
             <path id="curve-svg-path" d="M 38 100 L 115 100 L 257 20 L 285 20" fill="none" stroke="var(--ok2)" stroke-width="2.5" stroke-linecap="round"/>
             
-            <circle class="curve-handle" id="ch-0" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
-            <circle class="curve-handle" id="ch-1" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
-            <circle class="curve-handle" id="ch-2" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
-            <circle class="curve-handle" id="ch-3" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
-            <circle class="curve-handle" id="ch-4" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
-            <circle class="curve-handle" id="ch-5" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" style="cursor:pointer;" />
+            <circle class="curve-handle drw-x-6" id="ch-0" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" />
+            <circle class="curve-handle drw-x-6" id="ch-1" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" />
+            <circle class="curve-handle drw-x-6" id="ch-2" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" />
+            <circle class="curve-handle drw-x-6" id="ch-3" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" />
+            <circle class="curve-handle drw-x-6" id="ch-4" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" />
+            <circle class="curve-handle drw-x-6" id="ch-5" cx="0" cy="0" r="7" fill="#fff" stroke="var(--ok2)" stroke-width="2" />
             <circle id="curve-dot-z1" cx="38" cy="100" r="5" fill="#fff" stroke="#6b8e23" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease; pointer-events: none;"/>
             <circle id="curve-dot-z2" cx="38" cy="100" r="5" fill="#fff" stroke="#38a2ff" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease; pointer-events: none;"/>
             <circle id="curve-dot-cpu" cx="38" cy="100" r="4.5" fill="#fff" stroke="#ffaa00" stroke-width="2.5" style="transition: cx 0.35s ease, cy 0.35s ease; pointer-events: none;"/>
@@ -521,9 +521,9 @@
             <div class="legend-item" id="leg-item-z2"><span class="legend-dot" style="background:#38a2ff;"></span> <span data-i18n="dr.zone_2">Zone 2</span></div>
             <div class="legend-item" id="leg-item-cpu"><span class="legend-dot" style="background:#ffaa00;"></span> CPU</div>
             <button class="btn-reset-curve-view" id="btn-reset-curve" style="display:none;"><span aria-hidden="true">↺</span> <span data-i18n="fan.show_all_zones">Show All Zones</span></button>
-            <div style="display:flex; align-items:center; gap:8px;">
+            <div class="drw-row-3">
               <span id="fan-curve-range-val" class="suite-badge" title="Dynamic Fan Ramp Range" data-i18n-title="ui.dynamic_fan_ramp_range" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);" data-sample>Ramp: 37°C – 50°C</span>
-              <div id="curve-readout-text" style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--ok2);" data-sample>Active Mapping</div>
+              <div class="drw-xs-bold-ok" id="curve-readout-text" data-sample>Active Mapping</div>
             </div>
           </div>
         </div>
@@ -540,11 +540,11 @@
         <div class="card-instruction" data-i18n="settings.control_cpu_desc">
           When enabled, applies software thermal curve with a 30-second anti-flutter hold timer.
         </div>
-        <div class="slider-row" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-          <label for="cpu-hold-slider" class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; cursor: pointer;" data-i18n="settings.cpu_hold_label">Anti-Flutter Hold Delay</label>
-          <span id="cpu-hold-val-display" style="font-family: monospace; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--ok2);">30s</span>
+        <div class="slider-row drw-row-5">
+          <label for="cpu-hold-slider" class="slider-label drw-xs-bold-2" data-i18n="settings.cpu_hold_label">Anti-Flutter Hold Delay</label>
+          <span class="drw-xs-bold-ok-mono" id="cpu-hold-val-display">30s</span>
         </div>
-        <div class="slider-row" style="margin-top: 4px;">
+        <div class="slider-row drw-x-7">
           <input type="range" id="cpu-hold-slider" min="10" max="90" value="30" step="5" class="custom-slider" aria-label="Anti-Flutter Hold Delay" data-i18n-aria-label="settings.cpu_hold_label">
         </div>
       </div>
@@ -560,15 +560,15 @@
         <div class="card-instruction" data-i18n="settings.zero_rpm_desc">
           Allows HDD bay fans to stop completely when all bay hard drives are spun down in standby and thermal conditions are safe. CPU fan is never stopped.
         </div>
-        <div class="zero-rpm-status-row" style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-          <span id="zero-rpm-badge-z1" class="zero-rpm-badge" style="font-size:var(--zn-fs-xs); padding:3px 8px; border-radius:4px; border:1px solid var(--zn-line-10); font-weight:600;" data-sample>Zone 1: Active</span>
-          <span id="zero-rpm-badge-z2" class="zero-rpm-badge" style="font-size:var(--zn-fs-xs); padding:3px 8px; border-radius:4px; border:1px solid var(--zn-line-10); font-weight:600;" data-sample>Zone 2: Active</span>
+        <div class="zero-rpm-status-row drw-row-6">
+          <span id="zero-rpm-badge-z1" class="zero-rpm-badge drw-xs-semi-box" data-sample>Zone 1: Active</span>
+          <span id="zero-rpm-badge-z2" class="zero-rpm-badge drw-xs-semi-box" data-sample>Zone 2: Active</span>
         </div>
-        <div class="slider-row" style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
-          <label for="zero-rpm-delay-slider" class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; cursor: pointer;" data-i18n="settings.zero_rpm_stop_delay_label">Standby Cooldown Delay</label>
-          <span id="zero-rpm-delay-val-display" style="font-family: monospace; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--ok2);">30s</span>
+        <div class="slider-row drw-row-7">
+          <label for="zero-rpm-delay-slider" class="slider-label drw-xs-bold-2" data-i18n="settings.zero_rpm_stop_delay_label">Standby Cooldown Delay</label>
+          <span class="drw-xs-bold-ok-mono" id="zero-rpm-delay-val-display">30s</span>
         </div>
-        <div class="slider-row" style="margin-top: 4px;">
+        <div class="slider-row drw-x-7">
           <input type="range" id="zero-rpm-delay-slider" min="10" max="180" value="30" step="5" class="custom-slider" aria-label="Standby Cooldown Delay" data-i18n-aria-label="settings.zero_rpm_stop_delay_label">
         </div>
       </div>
@@ -578,7 +578,7 @@
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.cooling_duty_profiles">Cooling Duty Profiles</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
         </div>
         <div class="card-instruction" data-i18n="settings.cooling_duty_desc">Select dynamic thermal scaling or fixed duty presets mapped across disk fans.</div>
-        <div class="profiles-grid" style="grid-template-columns: repeat(5, 1fr);">
+        <div class="profiles-grid drw-x-8">
           <button class="profile-pill fan-profile-btn active" data-fan-profile="auto"><span aria-hidden="true">⚡</span> <span data-i18n="dr.auto_dynamic">Auto Dynamic</span></button>
           <button class="profile-pill fan-profile-btn" data-fan-profile="quiet" data-i18n="dr.quiet_67">Quiet (67)</button>
           <button class="profile-pill fan-profile-btn" data-fan-profile="balanced" data-i18n="dr.balanced_120">Balanced (120)</button>
@@ -634,32 +634,32 @@
           Automated PWM step test from 58 to 183 to detect chassis resonance frequencies and map acoustic RPM stability.
         </div>
         
-        <div class="acoustic-calibration-cockpit" style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; gap:8px; align-items:center;">
-              <button id="btn-start-acoustic-sweep" class="btn-fan-action btn-fan-apply" type="button" style="height:28px; padding:0 12px; font-size:var(--zn-fs-xs);">
+        <div class="acoustic-calibration-cockpit drw-col">
+          <div class="drw-row-8">
+            <div class="drw-row-9">
+              <button id="btn-start-acoustic-sweep" class="btn-fan-action btn-fan-apply drw-xs" type="button">
                 <svg class="ic ic-xs"><use href="#i-bolt"/></svg>
                 <span data-i18n="settings.start_acoustic_sweep">Start Sweep</span>
               </button>
-              <button id="btn-stop-acoustic-sweep" class="btn-fan-action btn-fan-delete" type="button" style="height:28px; padding:0 12px; font-size:var(--zn-fs-xs); display:none;">
+              <button id="btn-stop-acoustic-sweep" class="btn-fan-action btn-fan-delete drw-xs" type="button" style="display: none;">
                 <svg class="ic ic-xs"><use href="#i-cross"/></svg>
                 <span data-i18n="settings.stop_acoustic_sweep">Stop</span>
               </button>
             </div>
-            <div style="display:flex; flex-direction:column; align-items:flex-end;">
-              <span id="acoustic-sweep-status" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--text-dim, var(--zn-text-muted));" data-sample>Idle</span>
-              <span id="acoustic-current-step" data-sample style="font-size:var(--zn-fs-xs); font-family:monospace; color:var(--accent, var(--zn-text-accent));">Step --/--</span>
+            <div class="drw-col-2">
+              <span class="drw-xs-bold-muted-3" id="acoustic-sweep-status" data-sample>Idle</span>
+              <span class="drw-xs-accent-mono" id="acoustic-current-step" data-sample>Step --/--</span>
             </div>
           </div>
 
           <!-- Progress bar -->
-          <div id="acoustic-progress-bar-wrap" style="height:4px; width:100%; background:var(--zn-glaze-6); border-radius:2px; overflow:hidden; display:none;">
+          <div class="drw-box-2" id="acoustic-progress-bar-wrap" style="display: none;">
             <div id="acoustic-progress-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #38bdf8, #25c2a0); transition:width 0.3s ease;"></div>
           </div>
 
           <!-- Visualizer chart -->
-          <div class="acoustic-chart-box" style="background:var(--zn-shade-25); border:1px solid var(--zn-line-8); border-radius:6px; padding:8px; min-height:80px;">
-            <svg id="acoustic-chart-svg" viewBox="0 0 280 80" style="width:100%; height:80px; display:block;">
+          <div class="acoustic-chart-box drw-box-3">
+            <svg class="drw-size-4" id="acoustic-chart-svg" viewBox="0 0 280 80" style="display: block;">
               <!-- Grid lines -->
               <line x1="25" y1="15" x2="275" y2="15" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
               <line x1="25" y1="40" x2="275" y2="40" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
@@ -674,7 +674,7 @@
               <path id="acoustic-rpm-path" d="" fill="none" stroke="var(--accent, #38bdf8)" stroke-width="2" stroke-linecap="round"/>
               <g id="acoustic-chart-points"></g>
             </svg>
-            <div id="acoustic-results-summary" style="font-size:var(--zn-fs-xs); color:var(--text-dim, var(--zn-text-muted)); margin-top:4px; text-align:center;">
+            <div class="drw-xs-muted-center" id="acoustic-results-summary">
               <span data-i18n="fan.acoustic_hint">Run test to plot RPM linearity and identify acoustic rattle zones.</span>
             </div>
           </div>
@@ -690,11 +690,11 @@
     </div>
     
     <div id="btn-sections-container" class="drawer-cards-flow locked">
-      <div class="draggable-card drawer-card" data-btn-card-id="sec-copybtn" style="cursor: default;">
+      <div class="draggable-card drawer-card drw-x-9" data-btn-card-id="sec-copybtn">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg><span data-i18n="settings.copy_btn_title">Front-Panel COPY Button</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span id="btn-copy-status-text" style="font-size:var(--zn-fs-xs); font-weight:700; text-transform:uppercase; opacity:0.8;" data-sample>ENABLED</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm drw-x-2"><use href="#i-storage"/></svg><span data-i18n="settings.copy_btn_title">Front-Panel COPY Button</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
+          <div class="drw-row-3">
+            <span class="drw-xs-bold-3" id="btn-copy-status-text" data-sample>ENABLED</span>
             <label class="switch">
             <input type="checkbox" id="btn-copy-toggle">
             <span class="toggle-slider"></span>
@@ -703,67 +703,67 @@
         </div>
         <div class="card-instruction" data-i18n="settings.copy_btn_desc">Press the COPY button on the front of the server to copy photos and videos from an inserted SD card.</div>
         
-        <div id="btn-copy-options" style="margin-top: 15px; border-top: 1px solid var(--zn-line-5); padding-top: 15px;">
-          <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-            <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-              <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.media_slot">Source Media Slot</span>
-              <div style="display:flex; gap:6px; align-items:center;">
-                <span id="media-slot-info-badge" class="suite-badge" style="font-size:var(--zn-fs-xs);" data-sample>SLOTS EMPTY</span>
-                <button id="btn-media-rescan" type="button" class="btn-pill-toggle is-small" style="margin: 0;" title="Rescan and re-detect inserted cards" data-i18n-title="ui.rescan_and_re_detect_inserted"><span aria-hidden="true">🔄</span> <span data-i18n="ui.scan">Scan</span></button>
+        <div class="drw-box-4" id="btn-copy-options">
+          <div class="slider-row drw-x-10">
+            <div class="drw-row-10">
+              <span class="slider-label drw-xs-bold-4" data-i18n="settings.media_slot">Source Media Slot</span>
+              <div class="drw-row-11">
+                <span id="media-slot-info-badge" class="suite-badge drw-xs-2" data-sample>SLOTS EMPTY</span>
+                <button id="btn-media-rescan" type="button" class="btn-pill-toggle is-small drw-x-11" title="Rescan and re-detect inserted cards" data-i18n-title="ui.rescan_and_re_detect_inserted"><span aria-hidden="true">🔄</span> <span data-i18n="ui.scan">Scan</span></button>
                 <button id="btn-media-copy-now" type="button" class="btn-pill-toggle is-small" style="margin: 0; color: var(--ok2, #25c2a0); border-color: rgba(37,194,160,0.4);" title="Copy the inserted card now" data-i18n-title="ui.start_media_ingest_now_from"><span aria-hidden="true">▶</span> <span data-i18n="media.copy_now">Copy Now</span></button>
-                <button id="btn-media-eject" type="button" class="btn-pill-toggle is-danger is-small" style="margin: 0;" title="Safely unmount and eject card" data-i18n-title="ui.safely_unmount_and_eject_card"><span aria-hidden="true">⏏</span> <span data-i18n="media.eject_btn">Eject</span></button>
+                <button id="btn-media-eject" type="button" class="btn-pill-toggle is-danger is-small drw-x-11" title="Safely unmount and eject card" data-i18n-title="ui.safely_unmount_and_eject_card"><span aria-hidden="true">⏏</span> <span data-i18n="media.eject_btn">Eject</span></button>
               </div>
             </div>
-            <select id="btn-copy-src" class="tz-text-input" style="width: 100%; box-sizing: border-box; appearance: auto;">
+            <select id="btn-copy-src" class="tz-text-input drw-size-5">
               <option value="sd" data-i18n="dr.sd_4_0_slot">SD 4.0 Slot</option>
               <option value="tf" data-i18n="dr.tf_4_0_slot_microsd">TF 4.0 Slot (MicroSD)</option>
             </select>
           </div>
           
-          <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 12px;">
-            <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.dest_path">Copy to this folder</span>
-            <div style="display: flex; gap: 8px; width: 100%;">
-              <input type="text" id="btn-copy-dst" class="tz-text-input" placeholder="/mnt/user/" style="width: 100%; box-sizing: border-box; font-family: monospace;" aria-label="/mnt/user/">
-              <button id="btn-browse-dst" class="btn-pill-toggle" style="text-transform: uppercase; margin: 0; height: auto;"><span aria-hidden="true">📁</span> <span data-i18n="settings.browse">Browse</span></button>
+          <div class="slider-row drw-x-12">
+            <span class="slider-label drw-xs-bold-4" data-i18n="settings.dest_path">Copy to this folder</span>
+            <div class="drw-row-12">
+              <input type="text" id="btn-copy-dst" class="tz-text-input drw-mono" placeholder="/mnt/user/" aria-label="/mnt/user/">
+              <button id="btn-browse-dst" class="btn-pill-toggle drw-size-6"><span aria-hidden="true">📁</span> <span data-i18n="settings.browse">Browse</span></button>
             </div>
           </div>
           
 
-          <div class="slider-row" style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <div style="display:flex; flex-direction: column;">
-              <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.auto_sort_exif">Auto-Sort by EXIF Date</span>
-              <span style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="settings.auto_sort_exif_desc">Organize copied photos into YYYY:MM:DD subfolders automatically.</span>
+          <div class="slider-row drw-row-13">
+            <div class="drw-col-3">
+              <span class="slider-label drw-xs-bold-4" data-i18n="settings.auto_sort_exif">Auto-Sort by EXIF Date</span>
+              <span class="drw-xs-muted-3" data-i18n="settings.auto_sort_exif_desc">Organize copied photos into YYYY:MM:DD subfolders automatically.</span>
             </div>
             <label class="switch"><input type="checkbox" id="btn-copy-exif" checked><span class="toggle-slider"></span></label>
           </div>
 
-          <div class="slider-row" style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <div style="display:flex; flex-direction: column;">
-              <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.auto_ingest">Copy automatically</span>
-              <span style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="settings.auto_ingest_desc">Start copying as soon as an SD or microSD card is inserted.</span>
+          <div class="slider-row drw-row-13">
+            <div class="drw-col-3">
+              <span class="slider-label drw-xs-bold-4" data-i18n="settings.auto_ingest">Copy automatically</span>
+              <span class="drw-xs-muted-3" data-i18n="settings.auto_ingest_desc">Start copying as soon as an SD or microSD card is inserted.</span>
             </div>
             <label class="switch"><input type="checkbox" id="btn-copy-auto-ingest"><span class="toggle-slider"></span></label>
           </div>
 
-          <div class="slider-row" style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <div style="display:flex; flex-direction: column;">
-              <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.ingest_prompt">Ask before copying</span>
-              <span style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="settings.ingest_prompt_desc">Show confirmation dialog before starting card copy.</span>
+          <div class="slider-row drw-row-13">
+            <div class="drw-col-3">
+              <span class="slider-label drw-xs-bold-4" data-i18n="settings.ingest_prompt">Ask before copying</span>
+              <span class="drw-xs-muted-3" data-i18n="settings.ingest_prompt_desc">Show confirmation dialog before starting card copy.</span>
             </div>
             <label class="switch"><input type="checkbox" id="btn-copy-require-confirm" checked><span class="toggle-slider"></span></label>
           </div>
 
-          <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 12px;">
-            <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.collision_rule">Existing File Collision Rule</span>
-            <select id="btn-copy-collision" class="tz-text-input" style="width: 100%; box-sizing: border-box; appearance: auto;">
+          <div class="slider-row drw-x-12">
+            <span class="slider-label drw-xs-bold-4" data-i18n="settings.collision_rule">Existing File Collision Rule</span>
+            <select id="btn-copy-collision" class="tz-text-input drw-size-5">
               <option value="skip" selected data-i18n="settings.collision_skip">Skip Existing Files Automatically</option>
               <option value="overwrite" data-i18n="settings.collision_overwrite">Overwrite Existing Files</option>
               <option value="ask" data-i18n="settings.collision_ask">Ask / Prompt in WebUI</option>
             </select>
           </div>
           
-          <div class="slider-row" style="margin-top: 15px; justify-content: flex-end;">
-            <button id="btn-copy-save" class="btn-save-preset" style="width: 100%; justify-content: center;" data-i18n="settings.btn_save_config">💾 Save Configuration</button>
+          <div class="slider-row drw-x-13">
+            <button id="btn-copy-save" class="btn-save-preset drw-size-7" data-i18n="settings.btn_save_config">💾 Save Configuration</button>
 
           </div>
         </div>

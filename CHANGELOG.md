@@ -80,6 +80,10 @@
   and the knowledge-search answer use 60 classes instead of 70 inline styles; pixel-for-pixel
   the same in both themes.
 
+- **The toolkit drawer is built from stylesheet classes** (NUX-15): its panels use 64 classes
+  instead of 105 inline styles, in a sheet that loads with the drawer rather than on first paint;
+  pixel-for-pixel the same in both themes.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 
