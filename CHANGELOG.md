@@ -126,6 +126,9 @@
   resetting a password and setting up two-factor sign-in use 25 classes instead of 66 inline
   styles, in a sheet that loads with the people code; pixel-for-pixel the same in both themes.
 
+- **The diagnostics preview is built from stylesheet classes** (NUX-15): its 10 inline styles in
+  the start page move into the Mission Control sheet; pixel-for-pixel the same in both themes.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 
