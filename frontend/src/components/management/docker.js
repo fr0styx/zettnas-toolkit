@@ -667,12 +667,12 @@ export function renderDockerContainersTable() {
   }
 
   if (totalCount === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:36px 20px;">
-      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;">
-        <div style="font-size:32px; opacity:0.8;">🐳</div>
-        <div style="font-size:13.5px; font-weight:600; color:var(--text, var(--zn-text-strong));">${t('mgmt.docker_none_title', 'No Docker Containers Deployed')}</div>
+    tbody.innerHTML = `<tr><td class="dkr-center" colspan="7">
+      <div class="dkr-col">
+        <div class="dkr-fs32">🐳</div>
+        <div class="dkr-fs135-semi-strong">${t('mgmt.docker_none_title', 'No Docker Containers Deployed')}</div>
         <div style="font-size:var(--zn-fs-xs); color:var(--muted, #94a3b8); max-width:420px; line-height:1.5;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</div>
-        <button id="btn-empty-deploy-app" class="btn-pill-toggle is-primary" style="margin-top: 6px;">
+        <button id="btn-empty-deploy-app" class="btn-pill-toggle is-primary dkr-x">
           🚀 ${t('mgmt.docker_open_catalog', 'Browse App Catalog')}
         </button>
       </div>
@@ -724,7 +724,7 @@ export function renderDockerContainersTable() {
   updateDockerTableHeaderUI();
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:20px;">${t('mgmt.docker_no_matching', 'No containers match your search or filter.')}</td></tr>`;
+    tbody.innerHTML = `<tr><td class="dkr-muted-center" colspan="7">${t('mgmt.docker_no_matching', 'No containers match your search or filter.')}</td></tr>`;
     const stickyScroll = document.getElementById('docker-table-sticky-scroll');
     if (stickyScroll) stickyScroll.style.display = 'none';
     updateDockerBulkBar();
@@ -1045,7 +1045,7 @@ export async function fetchAndRenderDockerContainers(isBackground = false) {
     }
   } catch (err) {
     if (!isBackground || _dockerContainersList.length === 0) {
-      if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--crit); padding:16px;">${escapeHtml(t('dk.load_failed', 'Could not load the containers: {error}', { error: err.message }))}</td></tr>`;
+      if (tbody) tbody.innerHTML = `<tr><td class="dkr-crit-center" colspan="7">${escapeHtml(t('dk.load_failed', 'Could not load the containers: {error}', { error: err.message }))}</td></tr>`;
       if (cwTbody) cwTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--crit); padding:16px;">${escapeHtml(t('dk.load_failed', 'Could not load the containers: {error}', { error: err.message }))}</td></tr>`;
     } else {
       console.warn('Silent docker refresh error:', err);
@@ -1112,7 +1112,7 @@ export async function fetchAndRenderAppCatalog() {
 
     renderAppCatalogGrid();
   } catch (err) {
-    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--crit); padding:20px;">${escapeHtml(t('dk.catalog_failed', 'Could not load the catalog: {error}', { error: err.message }))}</div>`;
+    grid.innerHTML = `<div class="dkr-crit-center-2">${escapeHtml(t('dk.catalog_failed', 'Could not load the catalog: {error}', { error: err.message }))}</div>`;
   }
 }
 
@@ -2865,20 +2865,20 @@ function renderSideloadInspection(app, rating, flags, container) {
   }
 
   const flagsHtml = (flags && flags.length > 0)
-    ? `<div style="margin-top:8px; font-size:var(--zn-fs-xs); background:var(--zn-shade-30); border-radius:4px; padding:6px 10px;">
+    ? `<div class="dkr-xs-box">
         <div style="font-weight:700; color:${badgeColor}; margin-bottom:4px;">${t('dk.audit', 'Security check:')}</div>
-        <ul style="margin:0; padding-left:16px; color:var(--zn-text-soft);">
+        <ul class="dkr-soft">
           ${flags.map((f) => `<li>${escapeHtml(f)}</li>`).join('')}
         </ul>
       </div>`
     : `<div style="margin-top:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-4ade80ff, #4ade80);">${ico('✓')} ${t('dk.audit_clean', 'No high-privilege risks found: a standard, isolated container.')}</div>`;
 
   container.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-      <div style="font-weight:700; font-size:13px; color:var(--zn-text-strong);">${escapeHtml(app.name)}</div>
+    <div class="dkr-row">
+      <div class="dkr-fs13-bold-strong">${escapeHtml(app.name)}</div>
       <span class="ci-badge" style="font-size:var(--zn-fs-xs); background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; padding:2px 8px; border-radius:4px;">${badgeText}</span>
     </div>
-    <div style="font-size:var(--zn-fs-xs); color:var(--muted); line-height:1.4;">
+    <div class="dkr-xs-muted-2">
       <div><strong>${t('dk.image_l', 'Image:')}</strong> <code>${escapeHtml(app.image || 'compose-stack')}</code></div>
       <div><strong>${t('dk.type_l', 'Type:')}</strong> ${escapeHtml(app.type || 'standalone')} · <strong>${t('dk.port_l', 'Default port:')}</strong> ${escapeHtml(String(app.default_port || 'N/A'))}</div>
     </div>

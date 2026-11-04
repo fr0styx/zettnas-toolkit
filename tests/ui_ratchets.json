@@ -206,7 +206,7 @@
  "frontend/src/components/management/docker.js": {
   "buttons": 0,
   "globals": 0,
-  "styles": 73,
+  "styles": 60,
   "templates": 22
  },
  "frontend/src/components/management/network.js": {
