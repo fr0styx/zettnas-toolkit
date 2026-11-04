@@ -79,6 +79,16 @@ def test_other_superadmins_password_never_becomes_the_admin_login(client, auth_h
     assert client.post("/api/auth/login", json={"username": "admin", "password": "admin"}).status_code == 200
 
 
+def test_a_token_cannot_reset_someone_elses_password(client, auth_headers):
+    other = create_user(_name("tp"), "Other", "Dummy-Start-1x", role_id="share_user")
+    raw, _ = create_scoped_api_token(ADMIN, "resetter", ["users:write"])
+    body = {"new_password": "Dummy-Other-77"}
+    r = client.post(f"/api/users/{other['id']}/password", headers=_bearer(raw), json=body)
+    assert r.status_code == 403 and "person_session_required" in r.text
+    assert client.post(f"/api/users/{other['id']}/password", headers=auth_headers, json=body).status_code == 200
+    delete_user(other["id"])
+
+
 def test_an_old_copy_of_the_admin_hash_is_not_a_login(client):
     config.STORED_PASSWORD_HASH = hash_password("Copied-Elsewhere-9")
     r = client.post("/api/auth/login", json={"username": "admin", "password": "Copied-Elsewhere-9"})

@@ -4,6 +4,10 @@
 
 #### Security
 
+- **Only a person signed in can reset someone else's password** (SEC-26): an API token or a
+  ticket with users:write can no longer change another account's password; resetting your own
+  still asks for the current one.
+
 - **Unsafe sign-in setups are refused now** (SEC-29; warned in 1.11, D11). Single sign-on
   needs an `https://` provider, and a sign-in finishes only in the browser that started it.
   Directory sign-in needs `ldaps://` or StartTLS, so no password crosses the network in the

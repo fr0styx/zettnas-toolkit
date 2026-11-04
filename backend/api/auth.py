@@ -1276,7 +1276,14 @@ async def change_user_password(user_id: str, data: UserPasswordChangeRequest, re
         return error_response(403, "Auditors are read-only and cannot change passwords.")
     is_self = current["id"] == user_id
     if not is_self:
-        # Resetting someone else's password is an admin action.
+        # Resetting someone else's password is an admin action, done by a person signed in:
+        # an API token or a ticket can't take over another account (SEC-26).
+        if not _is_person_session(current):
+            return error_response(
+                403,
+                "Another person's password can only be changed while signed in to ZettNAS.",
+                error="person_session_required",
+            )
         sess = getattr(request.state, "session", None) or {}
         scopes = sess.get("scopes") or current.get("scopes") or []
         if current.get("role_id") not in ("superadmin", "admin") or not any(
