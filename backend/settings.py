@@ -476,6 +476,12 @@ class Settings:
         group="Platforms",
     )
     truenas_url: str = _s("TRUENAS_URL", "", "The TrueNAS address for its API (https://...).", group="Platforms")
+    truenas_user: str = _s(
+        "TRUENAS_USER",
+        "",
+        "The TrueNAS user the API key belongs to (TrueNAS 28 signs in with both).",
+        group="Platforms",
+    )
     unraid_api_url: str = _s("UNRAID_API_URL", "", "The Unraid API address (https://...).", group="Platforms")
     unraid_api_ca: str = _s("UNRAID_API_CA", "", "Another CA file to trust for the Unraid API.", group="Platforms")
 

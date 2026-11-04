@@ -161,5 +161,6 @@ used keeps its default, and the log says which variable and why.
 | `ZETTNAS_OBSERVER_ADAPTER` | `(empty)` | The host to read in observer mode; empty or auto detects it. |
 | `ZETTNAS_PAL_MODE` | `(empty)` | observer, readonly or telemetry: only read the host, never change it. |
 | `TRUENAS_URL` | `(empty)` | The TrueNAS address for its API (https://...). |
+| `TRUENAS_USER` | `(empty)` | The TrueNAS user the API key belongs to (TrueNAS 28 signs in with both). |
 | `UNRAID_API_URL` | `(empty)` | The Unraid API address (https://...). |
 | `UNRAID_API_CA` | `(empty)` | Another CA file to trust for the Unraid API. |

@@ -100,7 +100,7 @@ def test_json_rpc_refuses_a_bad_key(monkeypatch):
 
     from backend.hardware.pal import truenas_api
 
-    monkeypatch.setenv("TRUENAS_URL", "http://truenas.local")
+    monkeypatch.setenv("TRUENAS_URL", "https://truenas.local")
     monkeypatch.setenv("TRUENAS_API_KEY", "wrong")
     monkeypatch.setattr(truenas_api, "_open_ws", lambda u: _FakeWS({"auth.login_with_api_key": False}))
     with pytest.raises(truenas_api.TrueNASError, match="refused"):
@@ -134,7 +134,7 @@ class _ErrorWS(_FakeWS):
 
 
 def test_json_rpc_errors_are_reported(monkeypatch):
-    monkeypatch.setenv("TRUENAS_URL", "http://truenas.local")
+    monkeypatch.setenv("TRUENAS_URL", "https://truenas.local")
     monkeypatch.setattr(truenas_api, "_open_ws", lambda u: _ErrorWS({}))
     with pytest.raises(truenas_api.TrueNASError, match="no such method"):
         truenas_api._rpc("pool.query")

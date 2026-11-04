@@ -57,7 +57,10 @@ On TrueNAS SCALE, set `TRUENAS_URL` (for example `https://truenas.local`) and
 `TRUENAS_API_KEY` (TrueNAS: user menu → API Keys) in the container environment. ZettNAS
 then reads pools, datasets and shares through the TrueNAS API and can take ZFS snapshots
 (used by the ransomware guard). It never changes pools or shares. Add
-`TRUENAS_VERIFY_TLS=0` if TrueNAS still uses its self-signed certificate.
+`TRUENAS_VERIFY_TLS=0` if TrueNAS still uses its self-signed certificate. The address must
+start with `https://`: TrueNAS revokes an API key that is sent without encryption, so ZettNAS
+refuses a `http://` address before sending it. Set `TRUENAS_USER` to the TrueNAS user the key
+belongs to; TrueNAS 28 needs it to sign in, and earlier versions accept it too.
 
 ### Image variants
 

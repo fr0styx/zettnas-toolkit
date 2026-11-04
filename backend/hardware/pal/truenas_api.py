@@ -10,6 +10,10 @@ certificate TrueNAS ships with.
 
 TrueNAS 25.04 added a JSON-RPC 2.0 API over a WebSocket (/api/current) and TrueNAS 27 removed
 the REST API; when REST answers 404, 405 or 410 the same calls go over JSON-RPC.
+
+The key only travels over https:// and wss:// (COMP-08): since 25.04 TrueNAS revokes an API key
+sent without encryption. With TRUENAS_USER set, the WebSocket sign-in is auth.login_ex, which
+TrueNAS 28 requires (auth.login_with_api_key is deprecated in 27 and removed in 28).
 """
 
 import json
@@ -33,10 +37,21 @@ def configured() -> bool:
     return bool(_settings.current("truenas_url") and os.environ.get("TRUENAS_API_KEY"))
 
 
-def _client(transport: httpx.BaseTransport | None = None) -> httpx.Client:
+def _base() -> str:
+    """TRUENAS_URL, refused before any key is sent when it isn't https://."""
     base = _settings.current("truenas_url").rstrip("/")
     if not base.startswith(("http://", "https://")):
-        raise TrueNASError("TRUENAS_URL must start with http:// or https://")
+        raise TrueNASError("TRUENAS_URL must start with https://")
+    if base.startswith("http://"):
+        raise TrueNASError(
+            "TRUENAS_URL must use https://: TrueNAS revokes an API key sent without encryption "
+            "(TRUENAS_VERIFY_TLS=0 accepts its self-signed certificate)"
+        )
+    return base
+
+
+def _client(transport: httpx.BaseTransport | None = None) -> httpx.Client:
+    base = _base()
     return httpx.Client(
         base_url=f"{base}/api/v2.0",
         headers={"Authorization": f"Bearer {os.environ.get('TRUENAS_API_KEY', '')}"},
@@ -79,25 +94,35 @@ def _open_ws(url: str):
 
 def _rpc(method: str, params: list | None = None) -> Any:
     """One JSON-RPC 2.0 call over TrueNAS's WebSocket API, signed in with the API key."""
-    base = _settings.current("truenas_url").rstrip("/")
-    if not base.startswith(("http://", "https://")):
-        raise TrueNASError("TRUENAS_URL must start with http:// or https://")
-    url = "wss://" + base[len("https://") :] if base.startswith("https://") else "ws://" + base[len("http://") :]
+    url = "wss://" + _base()[len("https://") :]
     with _open_ws(f"{url}/api/current") as ws:
-        calls = [
-            ("auth.login_with_api_key", [os.environ.get("TRUENAS_API_KEY", "")]),
-            (method, params or []),
-        ]
+        calls = [_login(), (method, params or [])]
         result = None
         for i, (name, args) in enumerate(calls, start=1):
             ws.send(json.dumps({"jsonrpc": "2.0", "id": i, "method": name, "params": args}))
             reply = json.loads(ws.recv(timeout=30))
             if reply.get("error"):
                 raise TrueNASError(f"TrueNAS {name} failed: {reply['error'].get('message') or reply['error']}")
-            if name == "auth.login_with_api_key" and reply.get("result") is not True:
+            if i == 1 and not _signed_in(name, reply.get("result")):
                 raise TrueNASError("TrueNAS refused the API key")
             result = reply.get("result")
         return result
+
+
+def _login() -> tuple[str, list[Any]]:
+    """auth.login_ex with the key's user when TRUENAS_USER is set (TrueNAS 28 needs it), else the
+    older auth.login_with_api_key (TrueNAS 25.04 to 27)."""
+    key = os.environ.get("TRUENAS_API_KEY", "")
+    user = _settings.current("truenas_user")
+    if user:
+        return "auth.login_ex", [{"mechanism": "API_KEY_PLAIN", "username": user, "api_key": key}]
+    return "auth.login_with_api_key", [key]
+
+
+def _signed_in(method: str, result: Any) -> bool:
+    if method == "auth.login_ex":
+        return isinstance(result, dict) and result.get("response_type") == "SUCCESS"
+    return result is True
 
 
 def _query(path: str, method: str, params: list | None = None, transport=None) -> Any:

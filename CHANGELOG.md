@@ -93,6 +93,13 @@
   the queue of opened folders is kept in the data folder, so what was still waiting at a restart is
   made once its disk is awake instead of being forgotten. Nothing wakes a sleeping disk.
 
+- **TrueNAS 27 and 28** (COMP-08): ZettNAS no longer sends the TrueNAS API key to an `http://`
+  address. Since 25.04 TrueNAS revokes a key that arrives without encryption, so it is refused
+  before anything is sent, with a message to use `https://` (`TRUENAS_VERIFY_TLS=0` still accepts
+  the self-signed certificate). New `TRUENAS_USER`: with the key's user set, ZettNAS signs in with
+  `auth.login_ex`, which TrueNAS 28 requires; without it the older sign-in, which 27 still has,
+  stays. The calls ZettNAS makes were checked against the TrueNAS 27 API reference.
+
 #### Performance
 
 - **Converted videos play smoothly** (NVID-1): a video the browser can't play as it is is now
