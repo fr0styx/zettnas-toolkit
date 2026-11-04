@@ -21,6 +21,7 @@ LAZY = {
     "viewer-lazy.css": [os.path.join(COMPONENTS, "file-preview-modal.js")],
     "containers-lazy.css": [os.path.join(COMPONENTS, "container-modal.js")],
     "docker-lazy.css": [os.path.join(COMPONENTS, "management", "docker.js")],
+    "stack-lazy.css": [os.path.join(COMPONENTS, "stack-modal.js")],
     "drawer-lazy.css": [os.path.join(ROOT, "frontend", "src", "drawer-sheet.js")],
 }
 # state classes shared by unrelated components; a rule pair must share another class to collide

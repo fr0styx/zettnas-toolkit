@@ -12,6 +12,7 @@ import { openContainerModal } from './container-modal.js';
 import { lintCompose, composeRiskSummary } from '../compose-lint.js';
 
 import { t } from '../i18n.js';
+import '../styles/stack-lazy.css'; // the inspector's own sheet loads with this code (NUX-15)
 
 // An icon next to translated words: screen readers skip it (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
@@ -24,17 +25,17 @@ export function initStackModal() {
 
   const overlayHtml = `
     <div id="stack-inspector-overlay" class="smart-modal-backdrop" style="display:none; z-index:10015;">
-      <div id="stack-inspector-window" class="smart-modal-window stack-inspector-window" style="width:840px; max-width:96vw; height:640px; max-height:92vh; display:flex; flex-direction:column;">
+      <div id="stack-inspector-window" class="smart-modal-window stack-inspector-window stk-size" style="display: flex;">
         
         <!-- Header -->
-        <div id="stack-inspector-header" class="smart-modal-header" style="cursor:move; user-select:none; display:flex; justify-content:space-between; align-items:center;">
-          <div style="display:flex; align-items:center; gap:8px; min-width:0;">
-            <span style="font-size:16px;">📁</span>
-            <span id="stack-header-title" style="font-weight:700; color:var(--zn-text-strong); font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${t('stk.title', 'Stack Inspector')}</span>
+        <div id="stack-inspector-header" class="smart-modal-header stk-x" style="display: flex;">
+          <div class="stk-row">
+            <span class="stk-fs16">📁</span>
+            <span class="stk-fs135-bold-strong" id="stack-header-title">${t('stk.title', 'Stack Inspector')}</span>
             <span id="stack-header-origin" class="ci-badge" style="font-size:var(--zn-fs-xs); padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border:1px solid rgba(56,189,248,0.3);">${t('stk.badge', 'Compose stack')}</span>
             <span id="stack-header-status" class="ci-state-pill" style="display:none;"></span>
           </div>
-          <div class="os-window-controls" style="display:flex; gap:6px; align-items:center;">
+          <div class="os-window-controls stk-row-2">
             <button class="win-btn min-btn" id="stack-min-btn" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
             <button class="win-btn max-btn" id="stack-max-btn" title="${t('ui.maximize', 'Maximize')}" aria-label="${t('ui.maximize', 'Maximize')}"></button>
             <button class="win-btn close-btn" id="stack-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
@@ -43,11 +44,11 @@ export function initStackModal() {
 
         <!-- Quick Actions Bar & Path Info -->
         <div style="padding:8px 14px; background:var(--lt-b-00000073, rgba(0,0,0,0.45)); border-bottom:1px solid var(--zn-line-6); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-          <div style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--muted); min-width:0; overflow:hidden;">
+          <div class="stk-row-xs-muted">
             <span aria-hidden="true">📂</span>
-            <span id="stack-path-label" style="font-family:var(--font-mono, monospace); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:420px;"></span>
+            <span class="stk-mono" id="stack-path-label"></span>
           </div>
-          <div style="display:flex; gap:6px; align-items:center;">
+          <div class="stk-row-2">
             <button class="btn-pill-toggle is-small" id="stack-action-start" style="color: var(--ok2, #10b981);">${ico('▶')} ${t('vm.start', 'Start')}</button>
             <button class="btn-pill-toggle is-danger is-small" id="stack-action-stop">${ico('⏹')} ${t('stk.stop', 'Stop')}</button>
             <button class="btn-pill-toggle is-small" id="stack-action-restart">${ico('↻')} ${t('vmm.restart', 'Restart')}</button>
@@ -56,53 +57,53 @@ export function initStackModal() {
         </div>
 
         <!-- Navigation Tabs -->
-        <div class="ci-nav-tabs" style="display:flex; gap:4px; padding:8px 14px; background:var(--zn-shade-30); border-bottom:1px solid var(--zn-line-8);">
+        <div class="ci-nav-tabs stk-row-box">
           <button class="btn-pill-toggle stack-tab-btn active" data-tab="compose">${ico('📄')} ${t('stk.tab_compose', 'Compose file (compose.yaml)')}</button>
           <button class="btn-pill-toggle stack-tab-btn" data-tab="env">${ico('⚙️')} ${t('stk.tab_env', 'Environment (.env)')}</button>
           <button class="btn-pill-toggle stack-tab-btn" data-tab="services">${ico('📦')} ${t('stk.tab_services', 'Services')} (<span id="stack-tab-services-count">0</span>)</button>
         </div>
 
         <!-- Tab Content Panes -->
-        <div class="stack-panes-container" style="flex:1; overflow-y:auto; padding:14px; box-sizing:border-box; display:flex; flex-direction:column;">
+        <div class="stack-panes-container stk-col">
           
           <!-- 1. Compose Tab -->
-          <div id="stack-pane-compose" class="stack-pane" style="display:flex; flex-direction:column; flex:1; gap:8px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('stk.compose_hint', 'Edit the Compose file. Changes apply when you save or redeploy.')}</span>
-              <div style="display:flex; gap:6px;">
+          <div id="stack-pane-compose" class="stack-pane stk-grow" style="display: flex;">
+            <div class="stk-row-3">
+              <span class="stk-xs-muted">${t('stk.compose_hint', 'Edit the Compose file. Changes apply when you save or redeploy.')}</span>
+              <div class="stk-row-4">
                 <button class="btn-pill-toggle" id="stack-compose-copy-btn">${ico('📋')} ${t('stk.copy_yaml', 'Copy YAML')}</button>
                 <button class="btn-pill-toggle" id="stack-compose-reset-btn">${ico('↺')} ${t('stk.reload', 'Reload')}</button>
               </div>
             </div>
             <div style="flex:1; min-height:280px; position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--zn-line-12); border-radius:6px; display:flex;">
-              <textarea id="stack-compose-editor" spellcheck="false" style="flex:1; width:100%; height:100%; min-height:280px; background:transparent; border:none; outline:none; resize:none; padding:12px; color:var(--zn-text-bright); font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.55; box-sizing:border-box; tab-size:2;"></textarea>
+              <textarea class="stk-xs-mono-box-grow" id="stack-compose-editor" spellcheck="false"></textarea>
             </div>
           </div>
 
           <!-- 2. Env Tab -->
-          <div id="stack-pane-env" class="stack-pane" style="display:none; flex-direction:column; flex:1; gap:8px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('stk.env_hint', 'Environment variables (.env) the stack’s containers get when they start.')}</span>
+          <div id="stack-pane-env" class="stack-pane stk-grow" style="display: none;">
+            <div class="stk-row-3">
+              <span class="stk-xs-muted">${t('stk.env_hint', 'Environment variables (.env) the stack’s containers get when they start.')}</span>
               <button class="btn-pill-toggle" id="stack-env-copy-btn">${ico('📋')} ${t('stk.copy_env', 'Copy .env')}</button>
             </div>
             <div style="flex:1; min-height:280px; position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--zn-line-12); border-radius:6px; display:flex;">
-              <textarea id="stack-env-editor" spellcheck="false" placeholder="# KEY=VALUE" style="flex:1; width:100%; height:100%; min-height:280px; background:transparent; border:none; outline:none; resize:none; padding:12px; color:var(--zn-text-bright); font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.55; box-sizing:border-box;"></textarea>
+              <textarea class="stk-xs-mono-box-grow-2" id="stack-env-editor" spellcheck="false" placeholder="# KEY=VALUE"></textarea>
             </div>
           </div>
 
           <!-- 3. Services Tab -->
-          <div id="stack-pane-services" class="stack-pane" style="display:none; flex-direction:column; flex:1; gap:10px;">
-            <div id="stack-services-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:10px;"></div>
+          <div id="stack-pane-services" class="stack-pane stk-grow-2" style="display: none;">
+            <div class="stk-x-2" id="stack-services-list" style="display: grid;"></div>
           </div>
 
         </div>
 
         <!-- Footer Controls -->
         <div style="padding:10px 14px; background:var(--lt-b-00000080, rgba(0,0,0,0.5)); border-top:1px solid var(--zn-line-8); display:flex; justify-content:space-between; align-items:center;">
-          <div id="stack-modal-msg" style="font-size:var(--zn-fs-xs); color:var(--muted);"></div>
-          <div style="display:flex; gap:8px;">
+          <div class="stk-xs-muted" id="stack-modal-msg"></div>
+          <div class="stk-row-5">
             <button class="btn-pill-toggle" id="stack-cancel-btn">${t('common.cancel', 'Cancel')}</button>
-            <button class="btn-pill-toggle" id="stack-save-btn" style="background: var(--zn-glaze-10);">${t('stk.save', 'Save')}</button>
+            <button class="btn-pill-toggle stk-box" id="stack-save-btn">${t('stk.save', 'Save')}</button>
             <button class="btn-pill-toggle is-primary" id="stack-save-redeploy-btn">${t('stk.save_redeploy', 'Save and redeploy')}</button>
           </div>
         </div>
@@ -384,7 +385,7 @@ function renderServicesList(containers) {
   if (!containerEl) return;
 
   if (!containers.length) {
-    containerEl.innerHTML = '<div style="color:var(--muted); font-size:var(--zn-fs-xs); grid-column:1/-1;">' + escapeHtml(t('stk.no_containers', 'No containers found for this stack.')) + '</div>';
+    containerEl.innerHTML = '<div class="stk-xs-muted-2">' + escapeHtml(t('stk.no_containers', 'No containers found for this stack.')) + '</div>';
     return;
   }
 
@@ -397,28 +398,28 @@ function renderServicesList(containers) {
 
     const portsHtml = (c.ports || []).map((p) => {
       const hp = p.host_port ? `${p.host_port}➔` : '';
-      return `<code style="font-size:var(--zn-fs-xs); background:var(--zn-glaze-6); padding:1px 4px; border-radius:3px;">${hp}${p.container_port}/${p.proto}</code>`;
-    }).join(' ') || '<span style="font-size:var(--zn-fs-xs); color:var(--muted);">' + escapeHtml(t('stk.no_ports', 'Host network / none')) + '</span>';
+      return `<code class="stk-xs-box">${hp}${p.container_port}/${p.proto}</code>`;
+    }).join(' ') || '<span class="stk-xs-muted">' + escapeHtml(t('stk.no_ports', 'Host network / none')) + '</span>';
 
     html += `
-      <div class="drawer-card" style="padding:12px; background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); border-radius:8px; display:flex; flex-direction:column; gap:8px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-weight:700; color:var(--zn-text-strong); font-size:var(--zn-fs-xs); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+      <div class="drawer-card stk-col-box">
+        <div class="stk-row-3">
+          <div class="stk-xs-bold-strong">
             ${escapeHtml(c.service || c.name)}
           </div>
           <div>${stateBadge}</div>
         </div>
 
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.image)}">
+        <div class="stk-xs-muted-3" title="${escapeHtml(c.image)}">
           🖼️ ${escapeHtml(c.image)}
         </div>
 
-        <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
-          <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('stk.ports', 'Ports:')}</span>
+        <div class="stk-row-6">
+          <span class="stk-xs-muted">${t('stk.ports', 'Ports:')}</span>
           ${portsHtml}
         </div>
 
-        <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:4px;">
+        <div class="stk-row-7">
           ${c.webui_url ? `<a href="${escapeHtml(c.webui_url)}" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size:var(--zn-fs-xs); padding:2px 8px; text-decoration:none; color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8));">${ico('🌐')} ${t('stk.webui', 'Web UI')}</a>` : ''}
           <button class="btn-pill-toggle stack-inspect-container-btn is-small" data-cid="${escapeHtml(c.id)}">${ico('🔍')} ${t('stk.inspect', 'Container details')}</button>
         </div>
@@ -533,10 +534,10 @@ export async function openStackPickerModal(stacksInput = null) {
     overlay.innerHTML = `
       <div id="stack-picker-window" class="smart-modal-window" style="width:620px; max-width:95vw; max-height:86vh; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 25px 70px rgba(0,0,0,0.85);">
         <!-- Header -->
-        <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; user-select:none; cursor:move;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:16px;">📁</span>
-            <span style="font-weight:700; color:var(--zn-text-strong); font-size:13.5px;">${t('stk.picker_title', 'Docker Compose stacks')}</span>
+        <div class="smart-modal-header stk-row-8">
+          <div class="stk-row-9">
+            <span class="stk-fs16">📁</span>
+            <span class="stk-fs135-bold-strong-2">${t('stk.picker_title', 'Docker Compose stacks')}</span>
             <span id="stack-picker-badge" class="ci-badge" style="font-size:var(--zn-fs-xs); padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border:1px solid rgba(56,189,248,0.3);">${t('stk.count', '{count, plural, one {# Stack} other {# Stacks}}', { count: 0 })}</span>
           </div>
           <div class="os-window-controls">
@@ -545,21 +546,21 @@ export async function openStackPickerModal(stacksInput = null) {
         </div>
 
         <!-- Toolbar & Filter -->
-        <div style="padding:12px 16px; background:var(--zn-shade-35); border-bottom:1px solid var(--zn-line-6); display:flex; flex-direction:column; gap:8px;">
-          <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('stk.picker_hint', 'Pick a stack to see its services, edit its Compose file, or start and stop it:')}</div>
-          <div style="position:relative; display:flex; align-items:center;">
-            <span style="position:absolute; left:10px; font-size:var(--zn-fs-xs); color:var(--muted); pointer-events:none;">🔍</span>
-            <input type="text" id="stack-picker-search" placeholder="${t('ui.filter_stacks_by_name_service', 'Filter stacks by name, service, or path...')}" class="tz-text-input" style="width:100%; padding:7px 10px 7px 30px; font-size:var(--zn-fs-xs); background:var(--zn-shade-40); border:1px solid var(--zn-line-12); border-radius:6px; color:var(--zn-text-strong); outline:none; box-sizing:border-box;">
+        <div class="stk-col-box-2">
+          <div class="stk-xs-muted">${t('stk.picker_hint', 'Pick a stack to see its services, edit its Compose file, or start and stop it:')}</div>
+          <div class="stk-row-10">
+            <span class="stk-xs-muted-4">🔍</span>
+            <input type="text" id="stack-picker-search" placeholder="${t('ui.filter_stacks_by_name_service', 'Filter stacks by name, service, or path...')}" class="tz-text-input stk-xs-strong-box">
           </div>
         </div>
 
         <!-- Stacks List Container -->
-        <div id="stack-picker-list" style="flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:8px; min-height:160px; max-height:450px;">
+        <div class="stk-grow-3" id="stack-picker-list" style="display: flex;">
         </div>
 
         <!-- Footer -->
         <div style="padding:10px 16px; background:var(--lt-b-00000080, rgba(0,0,0,0.5)); border-top:1px solid var(--zn-line-8); display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:var(--zn-fs-xs); color:var(--muted); font-style:italic;">${t('stk.picker_foot', 'Click a stack to open it')}</span>
+          <span class="stk-xs-muted-5">${t('stk.picker_foot', 'Click a stack to open it')}</span>
           <button class="btn-pill-toggle" id="stack-picker-cancel-btn">${t('common.cancel', 'Cancel')}</button>
         </div>
       </div>
@@ -602,7 +603,7 @@ export async function openStackPickerModal(stacksInput = null) {
 
     if (filtered.length === 0) {
       listContainer.innerHTML = `
-        <div style="text-align:center; padding:32px 16px; color:var(--muted); font-size:var(--zn-fs-xs);">
+        <div class="stk-xs-muted-center">
           ${escapeHtml(t('stk.no_match', 'No Compose stacks match "{q}"', { q: query }))}
         </div>
       `;
@@ -617,35 +618,35 @@ export async function openStackPickerModal(stacksInput = null) {
       if (isAllRunning) {
         statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--ok2, #10b981); background:rgba(16,185,129,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(16,185,129,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--ok2, #10b981); box-shadow:0 0 6px var(--ok2, #10b981);"></span> ${t('stk.running', '{running}/{total} Running', { running: s.running_count, total: s.total_count })}</span>`;
       } else if (isNoneRunning) {
-        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--muted); background:var(--zn-glaze-6); padding:2px 8px; border-radius:12px; border:1px solid var(--zn-line-10);"><span style="width:6px; height:6px; border-radius:50%; background:var(--muted);"></span> ${t('stk.stopped_n', 'Stopped ({count})', { count: s.total_count })}</span>`;
+        statusPill = `<span class="stk-row-xs-muted-box"><span class="stk-box-2"></span> ${t('stk.stopped_n', 'Stopped ({count})', { count: s.total_count })}</span>`;
       } else {
         statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--warn, #f5a623); background:rgba(245,166,35,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(245,166,35,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--warn, #f5a623); box-shadow:0 0 6px var(--warn, #f5a623);"></span> ${t('stk.running', '{running}/{total} Running', { running: s.running_count, total: s.total_count })}</span>`;
       }
 
       const servicesHtml = (s.services || []).slice(0, 6).map((svc) => `
-        <span class="ci-badge" style="font-size:var(--zn-fs-xs); padding:2px 6px; border-radius:4px; background:var(--zn-glaze-6); color:var(--zn-text-soft); border:1px solid var(--zn-line-10); font-family:var(--font-mono, monospace);">${escapeHtml(svc)}</span>
+        <span class="ci-badge stk-xs-soft-mono-box">${escapeHtml(svc)}</span>
       `).join('');
 
-      const moreCount = (s.services || []).length > 6 ? ` <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('stk.more', '+{count} more', { count: s.services.length - 6 })}</span>` : '';
+      const moreCount = (s.services || []).length > 6 ? ` <span class="stk-xs-muted">${t('stk.more', '+{count} more', { count: s.services.length - 6 })}</span>` : '';
 
       const pathStr = s.working_dir || s.config_files || t('stk.daemon', 'Managed by Docker');
 
       return `
         <div class="stack-picker-card" data-stack="${escapeHtml(s.name)}" style="background:var(--zn-glaze-3); border:1px solid var(--lt-r-ffffff17, rgba(255,255,255,0.09)); border-radius:8px; padding:10px 14px; cursor:pointer; transition:all 0.16s cubic-bezier(0.16, 1, 0.3, 1); display:flex; flex-direction:column; gap:6px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-            <div style="display:flex; align-items:center; gap:8px; min-width:0;">
-              <span style="font-size:14px;">📁</span>
-              <strong style="font-size:13.5px; color:var(--zn-text-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(s.name)}</strong>
+          <div class="stk-row-11">
+            <div class="stk-row">
+              <span class="stk-fs14">📁</span>
+              <strong class="stk-fs135-strong">${escapeHtml(s.name)}</strong>
               <span class="ci-badge" style="font-size:var(--zn-fs-xs); padding:1px 5px; border-radius:3px; background:rgba(14,165,233,0.12); color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border:1px solid rgba(56,189,248,0.25); text-transform:uppercase;">${escapeHtml(s.origin || 'Compose')}</span>
             </div>
             ${statusPill}
           </div>
-          <div style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          <div class="stk-xs-muted-mono">
             📂 ${escapeHtml(pathStr)}
           </div>
           ${servicesHtml ? `
-            <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px; margin-top:2px;">
-              <span style="font-size:var(--zn-fs-xs); color:var(--muted); margin-right:2px;">${t('stk.services', 'Services:')}</span>
+            <div class="stk-row-12">
+              <span class="stk-xs-muted-6">${t('stk.services', 'Services:')}</span>
               ${servicesHtml}${moreCount}
             </div>
           ` : ''}

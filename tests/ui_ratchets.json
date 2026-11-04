@@ -320,7 +320,7 @@
  "frontend/src/components/stack-modal.js": {
   "buttons": 0,
   "globals": 1,
-  "styles": 79,
+  "styles": 28,
   "templates": 2
  },
  "frontend/src/components/time-picker.js": {
