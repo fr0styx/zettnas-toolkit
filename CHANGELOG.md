@@ -38,6 +38,10 @@
   settings and more); 1,230 inline styles became classes, pixel-for-pixel the same in both
   themes.
 
+- **The container details window is built from stylesheet classes** (NUX-15): its tabs and
+  the delete dialog use 112 classes instead of 207 inline styles, in a sheet that loads with
+  the window rather than on first paint; pixel-for-pixel the same in both themes.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 

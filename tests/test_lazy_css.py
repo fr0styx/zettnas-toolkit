@@ -19,6 +19,7 @@ LAZY = {
     "vm-lazy.css": [os.path.join(COMPONENTS, "vm-manager.js")],
     "files-lazy.css": [os.path.join(COMPONENTS, "file-manager.js"), os.path.join(COMPONENTS, "file-preview-modal.js")],
     "viewer-lazy.css": [os.path.join(COMPONENTS, "file-preview-modal.js")],
+    "containers-lazy.css": [os.path.join(COMPONENTS, "container-modal.js")],
 }
 # state classes shared by unrelated components; a rule pair must share another class to collide
 GENERIC = {"active", "open", "show", "visible", "hidden", "collapsed", "disabled", "danger", "ok", "warn", "crit"}

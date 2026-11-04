@@ -38,7 +38,7 @@
  "frontend/src/components/container-modal.js": {
   "buttons": 0,
   "globals": 1,
-  "styles": 259,
+  "styles": 59,
   "templates": 13
  },
  "frontend/src/components/container-network-map.js": {

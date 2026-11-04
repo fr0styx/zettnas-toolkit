@@ -8,6 +8,7 @@
 import { api, auth } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { escapeHtml, trapFocus, copyText } from '../utils.js';
+import '../styles/containers-lazy.css'; // the inspector's own sheet loads with this code (NUX-15)
 import { t } from '../i18n.js';
 import { bringToFront, makeDraggable, DockManager } from './dock.js';
 import { ZettEventBus } from '../event-bus.js';
@@ -41,16 +42,16 @@ export function initContainerModal() {
 
   const overlayHtml = `
     <div id="container-inspector-overlay" class="smart-modal-backdrop" style="display:none; z-index:10010;">
-      <div id="container-inspector-window" class="smart-modal-window container-inspector-window" style="width:780px; max-width:95vw; height:580px; max-height:92vh; display:flex; flex-direction:column;">
+      <div id="container-inspector-window" class="smart-modal-window container-inspector-window ci-window" style="display: flex;">
         <!-- Header -->
-        <div id="container-inspector-header" class="smart-modal-header" style="cursor:move; user-select:none; display:flex; justify-content:space-between; align-items:center;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:16px;">📦</span>
-            <span id="ci-header-title" style="font-weight:700; color:var(--zn-text-strong); font-size:13px;">${t('ci.title', 'Container details')}</span>
-            <code id="ci-header-id" style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace);"></code>
+        <div id="container-inspector-header" class="smart-modal-header ci-head" style="display: flex;">
+          <div class="ci-row">
+            <span class="ci-fs16">📦</span>
+            <span class="ci-fs13-bold-strong" id="ci-header-title">${t('ci.title', 'Container details')}</span>
+            <code class="ci-xs-muted-mono" id="ci-header-id"></code>
             <span id="ci-header-state" class="ci-state-pill" style="display:none;"></span>
           </div>
-          <div class="os-window-controls" style="display:flex; gap:6px; align-items:center;">
+          <div class="os-window-controls ci-row-2">
             <button class="win-btn min-btn" id="ci-min-btn" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
             <button class="win-btn max-btn" id="ci-max-btn" title="${t('ui.maximize', 'Maximize')}" aria-label="${t('ui.maximize', 'Maximize')}"></button>
             <button class="win-btn close-btn" id="ci-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
@@ -58,7 +59,7 @@ export function initContainerModal() {
         </div>
 
         <!-- Navigation Tabs -->
-        <div class="ci-nav-tabs" style="display:flex; gap:4px; padding:8px 14px; background:var(--zn-shade-30); border-bottom:1px solid var(--zn-line-8); overflow-x:auto;">
+        <div class="ci-nav-tabs ci-row-box">
           <button class="btn-pill-toggle ci-tab-btn active" data-tab="overview">${ico('📊')} ${t('ci.tab_overview', 'Overview')}</button>
           <button class="btn-pill-toggle ci-tab-btn" data-tab="ports">${ico('🌐')} ${t('ci.tab_ports', 'Ports & web')}</button>
           <button class="btn-pill-toggle ci-tab-btn" data-tab="mounts">${ico('📁')} ${t('ci.tab_mounts', 'Folders & storage')}</button>
@@ -70,10 +71,10 @@ export function initContainerModal() {
         </div>
 
         <!-- Tab Content Panes -->
-        <div class="ci-panes-container" style="flex:1; overflow-y:auto; padding:14px; box-sizing:border-box;">
+        <div class="ci-panes-container ci-grow">
           <!-- 1. Overview Tab -->
           <div id="ci-pane-overview" class="ci-pane" style="display:block;">
-            <div id="ci-overview-loading" style="text-align:center; padding:30px; color:var(--muted);">${t('ci.loading', 'Loading details…')}</div>
+            <div class="ci-muted-center" id="ci-overview-loading">${t('ci.loading', 'Loading details…')}</div>
             <div id="ci-overview-content" style="display:none;"></div>
           </div>
 
@@ -89,75 +90,75 @@ export function initContainerModal() {
 
           <!-- 4. Environment Tab -->
           <div id="ci-pane-env" class="ci-pane" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px;">
-              <input type="text" id="ci-env-search" placeholder="${t('ui.filter_variables', 'Filter variables...')}" class="tz-text-input" style="font-size:var(--zn-fs-xs); padding:3px 8px; width:220px;">
-              <span id="ci-env-stats" style="font-size:var(--zn-fs-xs); color:var(--muted);"></span>
+            <div class="ci-row-3">
+              <input type="text" id="ci-env-search" placeholder="${t('ui.filter_variables', 'Filter variables...')}" class="tz-text-input ci-xs">
+              <span class="ci-xs-muted" id="ci-env-stats"></span>
             </div>
             <div id="ci-env-content"></div>
           </div>
 
           <!-- 5. Compose Tab -->
           <div id="ci-pane-compose" class="ci-pane" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span id="ci-compose-source-badge" class="ci-badge" style="font-size:var(--zn-fs-xs); padding:2px 7px; border-radius:4px; font-weight:700;"></span>
-                <label style="display:flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--muted); cursor:pointer;">
-                  <input type="checkbox" id="ci-compose-mask-toggle" checked style="cursor:pointer;">
+            <div class="ci-row-4">
+              <div class="ci-row">
+                <span id="ci-compose-source-badge" class="ci-badge ci-xs-bold-box"></span>
+                <label class="ci-row-xs-muted">
+                  <input class="ci-x-2" type="checkbox" id="ci-compose-mask-toggle" checked>
                   ${t('ci.mask', 'Hide secrets')}
                 </label>
               </div>
-              <div style="display:flex; gap:6px;">
+              <div class="ci-row-5">
                 <button class="btn-pill-toggle" id="ci-compose-copy-btn">${ico('📋')} ${t('ci.copy_yaml', 'Copy YAML')}</button>
                 <button class="btn-pill-toggle" id="ci-compose-download-btn">${ico('⬇️')} ${t('ci.download_yml', 'Download .yml')}</button>
               </div>
             </div>
             <div style="position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--zn-line-10); border-radius:6px; overflow:hidden;">
-              <pre style="margin:0; padding:12px; max-height:360px; overflow:auto; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--zn-text); line-height:1.5;"><code id="ci-compose-code">Generating Docker Compose definition...</code></pre>
+              <pre class="ci-xs-mono"><code id="ci-compose-code">Generating Docker Compose definition...</code></pre>
             </div>
           </div>
 
           <!-- 6. Logs Tab -->
           <div id="ci-pane-logs" class="ci-pane" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <select id="ci-logs-tail-select" class="tz-select-input" style="font-size:var(--zn-fs-xs); padding:2px 6px;">
+            <div class="ci-row-4">
+              <div class="ci-row">
+                <select id="ci-logs-tail-select" class="tz-select-input ci-xs-2">
                   ${[50, 100, 200, 500, 1000].map((n) => `<option value="${n}" ${n === 200 ? 'selected' : ''}>${t('ci.last_lines', '{n, plural, one {Last # line} other {Last # lines}}', { n })}</option>`).join('')}
                 </select>
-                <input type="text" id="ci-logs-filter-input" placeholder="${t('ui.filter_output', 'Filter output...')}" class="tz-text-input" style="font-size:var(--zn-fs-xs); padding:3px 8px; width:160px;">
-                <label style="display:flex; align-items:center; gap:4px; font-size:var(--zn-fs-xs); color:var(--muted); cursor:pointer;">
+                <input type="text" id="ci-logs-filter-input" placeholder="${t('ui.filter_output', 'Filter output...')}" class="tz-text-input ci-xs-3">
+                <label class="ci-row-xs-muted-2">
                   <input type="checkbox" id="ci-logs-autoscroll" checked> ${t('ci.autoscroll', 'Auto-scroll')}
                 </label>
                 <label style="display:flex; align-items:center; gap:4px; font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); cursor:pointer; font-weight:600;" title="${t('ui.stream_live_container_logs_continuously', 'Stream live container logs continuously via SSE')}">
                   <input type="checkbox" id="ci-logs-stream-toggle"> <span>${t('ci.follow', 'Follow live')}</span>
                 </label>
               </div>
-              <div style="display:flex; gap:6px;">
+              <div class="ci-row-5">
                 <button class="btn-pill-toggle" id="ci-logs-refresh-btn">${ico('🔄')} ${t('common.refresh', 'Refresh')}</button>
                 <button class="btn-pill-toggle" id="ci-logs-copy-btn">${ico('📋')} ${t('ci.copy_logs', 'Copy logs')}</button>
               </div>
             </div>
             <div id="ci-logs-terminal" style="background:var(--lt-b-05080fff, #05080f); border:1px solid var(--zn-line-10); border-radius:6px; height:340px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.45; color:var(--zn-text-soft);">
-              <div style="color:var(--muted); text-align:center; padding:20px;">${t('ci.fetching_logs', 'Fetching logs…')}</div>
+              <div class="ci-logs-note ci-muted-center-2">${t('ci.fetching_logs', 'Fetching logs…')}</div>
             </div>
           </div>
 
           <!-- 7. Web Terminal Tab -->
           <div id="ci-pane-terminal" class="ci-pane" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
-              <div style="display:flex; align-items:center; gap:8px;">
+            <div class="ci-row-4">
+              <div class="ci-row">
                 <span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(34,197,94,0.15); color:var(--lt-t-22c55eff, #22c55e); border:1px solid rgba(34,197,94,0.3); padding:2px 8px; border-radius:4px; font-weight:700;">${t('ci.live_exec', 'LIVE EXEC')}</span>
-                <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('ci.exec_desc', 'Run commands in the container from the browser')}</span>
+                <span class="ci-xs-muted">${t('ci.exec_desc', 'Run commands in the container from the browser')}</span>
               </div>
-              <div style="display:flex; gap:6px;">
+              <div class="ci-row-5">
                 <button class="btn-pill-toggle" id="ci-term-clear-btn">${ico('🧹')} ${t('ci.clear', 'Clear')}</button>
               </div>
             </div>
             <div id="ci-term-output" style="background:var(--lt-b-030712ff, #030712); border:1px solid var(--zn-line-12); border-radius:6px 6px 0 0; height:310px; padding:6px 4px 6px 8px; box-sizing:border-box; overflow:hidden;"></div>
             <div class="ci-term-mobile-keybar" style="display:flex; gap:6px; overflow-x:auto; background:var(--lt-b-0b1120ff, #0b1120); border-left:1px solid var(--zn-line-12); border-right:1px solid var(--zn-line-12); padding:5px 8px; scrollbar-width:none;">
-              ${['ls -la', 'ps aux', 'df -h'].map((c) => `<button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-cmd="${c}" style="flex-shrink: 0;">${c}</button>`).join('')}
-              <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-key="ArrowUp" style="flex-shrink: 0;">${ico('↑')} ${t('ci.prev', 'Previous')}</button>
-              <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-key="ArrowDown" style="flex-shrink: 0;">${ico('↓')} ${t('common.next', 'Next')}</button>
-              <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-key="clear" style="flex-shrink: 0;">${ico('🧹')} ${t('ci.clear', 'Clear')}</button>
+              ${['ls -la', 'ps aux', 'df -h'].map((c) => `<button type="button" class="btn-pill-toggle ci-term-key-btn is-small ci-x-3" data-cmd="${c}">${c}</button>`).join('')}
+              <button type="button" class="btn-pill-toggle ci-term-key-btn is-small ci-x-3" data-key="ArrowUp">${ico('↑')} ${t('ci.prev', 'Previous')}</button>
+              <button type="button" class="btn-pill-toggle ci-term-key-btn is-small ci-x-3" data-key="ArrowDown">${ico('↓')} ${t('common.next', 'Next')}</button>
+              <button type="button" class="btn-pill-toggle ci-term-key-btn is-small ci-x-3" data-key="clear">${ico('🧹')} ${t('ci.clear', 'Clear')}</button>
             </div>
             <div style="display:flex; background:var(--lt-b-0f172aff, #0f172a); border:1px solid var(--zn-line-12); border-top:none; border-radius:0 0 6px 6px; padding:6px 10px; gap:8px; align-items:center;">
               <span style="color:var(--lt-t-10b981ff, #10b981); font-family:var(--font-mono, monospace); font-weight:bold; font-size:var(--zn-fs-xs);">$</span>
@@ -169,7 +170,7 @@ export function initContainerModal() {
           <!-- 8. Edit Container Tab -->
           <div id="ci-pane-edit" class="ci-pane" style="display:none;">
             <div id="cie-form-host">
-              <div style="text-align:center; padding:30px; color:var(--muted);">${t('ci.loading_config', 'Loading the container settings…')}</div>
+              <div class="ci-muted-center">${t('ci.loading_config', 'Loading the container settings…')}</div>
             </div>
           </div>
         </div>
@@ -637,11 +638,11 @@ async function loadContainerDetails(cid) {
     // Hardware badges HTML
     const hwBadges = (details.hardware_badges || []).map(
       (b) => `<span class="docker-hw-badge docker-hw-${escapeHtml(b.id)}">${escapeHtml(b.label)}</span>`
-    ).join(' ') || `<span style="color:var(--muted); font-size:var(--zn-fs-xs);">${t('ci.none', 'None')}</span>`;
+    ).join(' ') || `<span class="ci-xs-muted-2">${t('ci.none', 'None')}</span>`;
 
     // Stack pill HTML
     const stackHtml = details.stack
-      ? `<span class="docker-stack-pill clickable-stack-pill" data-stack="${escapeHtml(details.stack)}" style="cursor:pointer;" title="${escapeHtml(t('ci.open_stack', 'Open and edit the stack {name}', { name: details.stack }))}">${ico('📁')} ${escapeHtml(details.stack)} <span style="font-size:var(--zn-fs-xs); opacity:0.8;">${t('ci.edit_stack', '(edit stack)')}</span></span>`
+      ? `<span class="docker-stack-pill clickable-stack-pill ci-x-2" data-stack="${escapeHtml(details.stack)}" title="${escapeHtml(t('ci.open_stack', 'Open and edit the stack {name}', { name: details.stack }))}">${ico('📁')} ${escapeHtml(details.stack)} <span class="ci-xs-4">${t('ci.edit_stack', '(edit stack)')}</span></span>`
       : `<span class="docker-origin-pill">${escapeHtml(details.managed_by === 'unraid' ? 'Unraid' : 'Standalone')}</span>`;
 
     const memMb = res.memory_limit ? Math.round(res.memory_limit / (1024 * 1024)) : 0;
@@ -650,55 +651,55 @@ async function loadContainerDetails(cid) {
 
     // Overview Tab Content
     contentEl.innerHTML = `
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-bottom:16px;">
-        <div class="ci-metric-card" style="background:var(--zn-shade-30); border:1px solid var(--zn-line-6); padding:10px; border-radius:6px;">
-          <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('ci.state_uptime', 'State & uptime')}</div>
-          <div style="font-size:13px; font-weight:700; color:var(--zn-text-strong); margin-top:3px;">${escapeHtml(ov.state || 'unknown')}</div>
-          <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">${escapeHtml(t('ci.started', 'Started: {when}', { when: formatDateTime(ov.started_at, undefined, 'N/A') }))}</div>
+      <div class="ci-grid">
+        <div class="ci-metric-card ci-box">
+          <div class="ci-xs-bold-muted">${t('ci.state_uptime', 'State & uptime')}</div>
+          <div class="ci-fs13-bold-strong-2">${escapeHtml(ov.state || 'unknown')}</div>
+          <div class="ci-xs-muted-3">${escapeHtml(t('ci.started', 'Started: {when}', { when: formatDateTime(ov.started_at, undefined, 'N/A') }))}</div>
         </div>
-        <div class="ci-metric-card" style="background:var(--zn-shade-30); border:1px solid var(--zn-line-6); padding:10px; border-radius:6px;">
-          <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('ci.network_ip', 'Network IP')}</div>
+        <div class="ci-metric-card ci-box">
+          <div class="ci-xs-bold-muted">${t('ci.network_ip', 'Network IP')}</div>
           <div style="font-size:13px; font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); margin-top:3px;">${escapeHtml(ov.ip_address || 'Host Network')}</div>
-          <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">${escapeHtml(t('ci.mode', 'Mode: {mode}', { mode: ov.network_mode || 'bridge' }))}</div>
+          <div class="ci-xs-muted-3">${escapeHtml(t('ci.mode', 'Mode: {mode}', { mode: ov.network_mode || 'bridge' }))}</div>
         </div>
-        <div class="ci-metric-card" style="background:var(--zn-shade-30); border:1px solid var(--zn-line-6); padding:10px; border-radius:6px;">
-          <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">${t('ci.hw_stack', 'Hardware & stack')}</div>
-          <div style="margin-top:4px;">${hwBadges}</div>
-          <div style="margin-top:4px;">${stackHtml}</div>
+        <div class="ci-metric-card ci-box">
+          <div class="ci-xs-bold-muted">${t('ci.hw_stack', 'Hardware & stack')}</div>
+          <div class="ci-x-4">${hwBadges}</div>
+          <div class="ci-x-4">${stackHtml}</div>
         </div>
       </div>
 
-      <div style="background:var(--zn-shade-25); border:1px solid var(--zn-line-6); border-radius:6px; overflow:hidden; margin-bottom:14px;">
-        <table class="copy-history-table" style="margin:0;">
+      <div class="ci-box-2">
+        <table class="copy-history-table ci-x-5">
           <tbody>
-            <tr><td style="width:140px; color:var(--muted); font-weight:600;">${t('ci.image', 'Image')}</td><td style="font-family:var(--font-mono, monospace); color:var(--zn-text-strong);">${escapeHtml(ov.image)}</td></tr>
-            <tr><td style="color:var(--muted); font-weight:600;">${t('ci.full_id', 'Full container ID')}</td><td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--muted); word-break:break-all;">${escapeHtml(ov.full_id)}</td></tr>
-            <tr><td style="color:var(--muted); font-weight:600;">${t('ci.restart_policy', 'Restart policy')}</td><td><code>${escapeHtml(ov.restart_policy)}</code></td></tr>
-            <tr><td style="color:var(--muted); font-weight:600;">${t('ci.platform', 'Platform / OS')}</td><td>${escapeHtml(ov.platform)}</td></tr>
-            <tr><td style="color:var(--muted); font-weight:600;">${t('ci.memory_limit', 'Memory limit')}</td><td>${res.memory_limit ? formatFixed(res.memory_limit / (1024 * 1024), 0) + ' MB' : 'Unlimited'}</td></tr>
-            <tr><td style="color:var(--muted); font-weight:600;">${t('ci.startup_cmd', 'Startup command')}</td><td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--zn-text-soft); word-break:break-all;">${escapeHtml(ov.command)}</td></tr>
+            <tr><td class="ci-semi-muted">${t('ci.image', 'Image')}</td><td class="ci-strong-mono">${escapeHtml(ov.image)}</td></tr>
+            <tr><td class="ci-semi-muted-2">${t('ci.full_id', 'Full container ID')}</td><td class="ci-xs-muted-mono-2">${escapeHtml(ov.full_id)}</td></tr>
+            <tr><td class="ci-semi-muted-2">${t('ci.restart_policy', 'Restart policy')}</td><td><code>${escapeHtml(ov.restart_policy)}</code></td></tr>
+            <tr><td class="ci-semi-muted-2">${t('ci.platform', 'Platform / OS')}</td><td>${escapeHtml(ov.platform)}</td></tr>
+            <tr><td class="ci-semi-muted-2">${t('ci.memory_limit', 'Memory limit')}</td><td>${res.memory_limit ? formatFixed(res.memory_limit / (1024 * 1024), 0) + ' MB' : 'Unlimited'}</td></tr>
+            <tr><td class="ci-semi-muted-2">${t('ci.startup_cmd', 'Startup command')}</td><td class="ci-xs-soft-mono">${escapeHtml(ov.command)}</td></tr>
           </tbody>
         </table>
       </div>
 
       <!-- Live Resource Tuning Section (Phase 3) -->
-      <div class="ci-metric-card" style="background:var(--zn-shade-35); border:1px solid var(--zn-line-8); padding:12px; border-radius:8px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); text-transform:uppercase; letter-spacing:0.5px;">${ico('⚡')} ${t('ci.tuning', 'Live resource limits (no downtime)')}</div>
+      <div class="ci-metric-card ci-box-3">
+        <div class="ci-row-6">
+          <div class="ci-xs-bold-strong">${ico('⚡')} ${t('ci.tuning', 'Live resource limits (no downtime)')}</div>
           <span style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); background:var(--lt-b-00f0ff1a, rgba(0,240,255,0.1)); padding:2px 6px; border-radius:4px;">${t('ci.hot', 'Applies at once')}</span>
         </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px; align-items:end;">
+        <div class="ci-grid-2">
           <div>
-            <label for="ci-res-mem" style="font-size:var(--zn-fs-xs); color:var(--muted); display:block; margin-bottom:4px;">${t('ci.mem_mb', 'Memory limit (MB, 0 = no limit)')}</label>
-            <input type="number" id="ci-res-mem" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:4px 8px;" value="${memMb}" min="0" step="64">
+            <label class="ci-xs-muted-4" for="ci-res-mem">${t('ci.mem_mb', 'Memory limit (MB, 0 = no limit)')}</label>
+            <input type="number" id="ci-res-mem" class="tz-text-input ci-xs-5" value="${memMb}" min="0" step="64">
           </div>
           <div>
-            <label for="ci-res-cpu" style="font-size:var(--zn-fs-xs); color:var(--muted); display:block; margin-bottom:4px;">${t('ci.cpu', 'CPU cores (0 = no limit)')}</label>
-            <input type="number" id="ci-res-cpu" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:4px 8px;" value="${cpuCores}" min="0" max="64" step="0.5">
+            <label class="ci-xs-muted-4" for="ci-res-cpu">${t('ci.cpu', 'CPU cores (0 = no limit)')}</label>
+            <input type="number" id="ci-res-cpu" class="tz-text-input ci-xs-5" value="${cpuCores}" min="0" max="64" step="0.5">
           </div>
           <div>
-            <label for="ci-res-restart" style="font-size:var(--zn-fs-xs); color:var(--muted); display:block; margin-bottom:4px;">${t('ci.restart_policy', 'Restart policy')}</label>
-            <select id="ci-res-restart" class="tz-select-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:4px 6px;">
+            <label class="ci-xs-muted-4" for="ci-res-restart">${t('ci.restart_policy', 'Restart policy')}</label>
+            <select id="ci-res-restart" class="tz-select-input ci-xs-6">
               <option value="unless-stopped" ${currentRestart === 'unless-stopped' ? 'selected' : ''}>unless-stopped</option>
               <option value="always" ${currentRestart === 'always' ? 'selected' : ''}>always</option>
               <option value="on-failure" ${currentRestart === 'on-failure' ? 'selected' : ''}>on-failure</option>
@@ -715,13 +716,13 @@ async function loadContainerDetails(cid) {
 
       <!-- App Backup & Recovery Section -->
       <div class="ci-metric-card" style="background:rgba(249,115,22,0.05); border:1px solid rgba(249,115,22,0.25); padding:12px; border-radius:8px; margin-top:12px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div class="ci-row-7">
           <div>
             <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-fb923cff, #fb923c); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
               <span aria-hidden="true">💾</span>
               <span>${t('ci.backup_title', 'App data & settings backup')}</span>
             </div>
-            <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">
+            <div class="ci-xs-muted-3">
               ${t('ci.backup_desc', 'Make a portable backup (.tar.gz) of this container’s settings and app data folders now.')}
             </div>
           </div>
@@ -735,14 +736,14 @@ async function loadContainerDetails(cid) {
 
       <!-- Container Management / Danger Zone -->
       <div class="ci-metric-card" style="background:rgba(255,107,107,0.06); border:1px solid rgba(255,107,107,0.22); padding:12px; border-radius:8px; margin-top:12px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div class="ci-row-7">
           <div>
             <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-fca5a5ff, #fca5a5); text-transform:uppercase; letter-spacing:0.5px;">${ico('⚠️')} ${t('ci.danger', 'Danger zone')}</div>
-            <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">${t('ci.danger_desc', 'Restart this container, or delete it with its volumes and images.')}</div>
+            <div class="ci-xs-muted-3">${t('ci.danger_desc', 'Restart this container, or delete it with its volumes and images.')}</div>
           </div>
-          <div style="display:flex; gap:6px;">
+          <div class="ci-row-5">
             <button class="btn-pill-toggle" id="ci-btn-restart-action">${ico('🔄')} ${t('chassis.restart', 'Restart')}</button>
-            <button class="btn-pill-toggle is-danger" id="ci-btn-destroy-action" style="color: var(--zn-text-strong);">${ico('🗑️')} ${t('ci.destroy', 'Delete container')}</button>
+            <button class="btn-pill-toggle is-danger ci-strong" id="ci-btn-destroy-action">${ico('🗑️')} ${t('ci.destroy', 'Delete container')}</button>
           </div>
         </div>
       </div>
@@ -844,7 +845,7 @@ async function loadContainerDetails(cid) {
     // Populate Environment Tab
     renderEnvTab(details);
   } catch (err) {
-    if (loadingEl) loadingEl.innerHTML = `<span style="color:var(--crit);">${escapeHtml(t('ci.load_failed', 'Could not load the container details: {error}', { error: err.message }))}</span>`;
+    if (loadingEl) loadingEl.innerHTML = `<span class="ci-crit">${escapeHtml(t('ci.load_failed', 'Could not load the container details: {error}', { error: err.message }))}</span>`;
   }
 }
 
@@ -861,10 +862,10 @@ function renderPortsTab(details) {
   const hostBanner = isHostNet
     ? `
       <div style="margin-bottom:14px; padding:12px; background:rgba(56, 189, 248, 0.08); border:1px solid rgba(56, 189, 248, 0.25); border-radius:6px; display:flex; align-items:flex-start; gap:10px;">
-        <span style="font-size:16px; line-height:1.2;">⚡</span>
+        <span class="ci-fs16-2">⚡</span>
         <div>
-          <div style="font-weight:700; color:var(--zn-text-accent); font-size:var(--zn-fs-xs);">${t('ci.host_net', 'Host network mode')}</div>
-          <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin-top:2px; line-height:1.4;">
+          <div class="ci-xs-bold-accent">${t('ci.host_net', 'Host network mode')}</div>
+          <div class="ci-xs-soft">
             ${t('ci.host_net_desc', 'This container uses the host’s network directly, without Docker’s bridge or port forwarding: its services listen on the host’s own addresses.')}
           </div>
         </div>
@@ -876,10 +877,10 @@ function renderPortsTab(details) {
     ? `
       <div style="margin-bottom:14px; padding:12px; background:var(--lt-b-00f0ff14, rgba(0, 240, 255, 0.08)); border:1px solid var(--lt-r-00f0ff40, rgba(0, 240, 255, 0.25)); border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <div style="font-weight:700; color:var(--zn-text-strong); font-size:var(--zn-fs-xs);">${t('ci.webui', 'Web page found')}</div>
-          <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">${isHostNet ? t('ci.webui_port_host', 'On port {port} (host network)', { port: details.primary_port }) : t('ci.webui_port', 'On port {port}', { port: details.primary_port })}</div>
+          <div class="ci-xs-bold-strong-2">${t('ci.webui', 'Web page found')}</div>
+          <div class="ci-xs-muted-3">${isHostNet ? t('ci.webui_port_host', 'On port {port} (host network)', { port: details.primary_port }) : t('ci.webui_port', 'On port {port}', { port: details.primary_port })}</div>
         </div>
-        <a href="${escapeHtml(webUrl)}" target="_blank" rel="noopener noreferrer" class="btn-webui-badge" style="font-size:var(--zn-fs-xs); padding:4px 10px;">
+        <a href="${escapeHtml(webUrl)}" target="_blank" rel="noopener noreferrer" class="btn-webui-badge ci-xs-7">
           ${ico('🌐')} ${t('ci.open_webui', 'Open the web page')} ↗
         </a>
       </div>
@@ -889,11 +890,11 @@ function renderPortsTab(details) {
   const portsList = details.ports || [];
   let tableHtml;
   if (portsList.length === 0) {
-    tableHtml = `<div style="text-align:center; padding:20px; color:var(--muted);">${isHostNet ? 'No exposed ports declared in image metadata. Container listens directly on host interfaces.' : 'No published port mappings configured for this container.'}</div>`;
+    tableHtml = `<div class="ci-muted-center-3">${isHostNet ? 'No exposed ports declared in image metadata. Container listens directly on host interfaces.' : 'No published port mappings configured for this container.'}</div>`;
   } else {
     tableHtml = `
-      <div style="background:var(--zn-shade-25); border:1px solid var(--zn-line-6); border-radius:6px; overflow:hidden;">
-        <table class="copy-history-table" style="margin:0;">
+      <div class="ci-box-4">
+        <table class="copy-history-table ci-x-5">
           <thead>
             <tr>
               <th>${t('ci.col_host_binding', 'Host binding')}</th>
@@ -907,17 +908,17 @@ function renderPortsTab(details) {
               const isWeb = p.public_port === details.primary_port;
               const isHost = p.ip === 'host' || p.is_host_network;
               const hostLabel = isHost
-                ? `<span style="color:var(--zn-text-accent); font-weight:700;">${t('ci.host_direct', 'Host direct (:{port})', { port: p.public_port })}</span>`
-                : (p.public_port ? `${escapeHtml(p.ip || '0.0.0.0')}:${p.public_port}` : `<span style="color:var(--muted);">${t('ci.none', 'None')}</span>`);
+                ? `<span class="ci-bold-accent">${t('ci.host_direct', 'Host direct (:{port})', { port: p.public_port })}</span>`
+                : (p.public_port ? `${escapeHtml(p.ip || '0.0.0.0')}:${p.public_port}` : `<span class="ci-muted">${t('ci.none', 'None')}</span>`);
               const directLink = p.public_port
                 ? `<a href="http://${currentHost}:${p.public_port}/" target="_blank" rel="noopener noreferrer" style="color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); font-size:var(--zn-fs-xs);">http://${currentHost}:${p.public_port} ↗</a>`
                 : '—';
               return `
                 <tr>
-                  <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);">${hostLabel}</td>
-                  <td style="font-family:var(--font-mono, monospace);">${p.private_port || '—'}</td>
-                  <td><span class="ci-proto-tag" style="padding:1px 5px; border-radius:3px; background:var(--zn-glaze-8); font-size:var(--zn-fs-xs); text-transform:uppercase;">${escapeHtml(p.type || 'tcp')}</span></td>
-                  <td>${isWeb ? `<span style="color:var(--ok2); font-weight:700; font-size:var(--zn-fs-xs);">${ico('✓')} ${t('ci.primary_web', 'Main web page')}</span>` : directLink}</td>
+                  <td class="ci-xs-mono-2">${hostLabel}</td>
+                  <td class="ci-mono">${p.private_port || '—'}</td>
+                  <td><span class="ci-proto-tag ci-xs-box">${escapeHtml(p.type || 'tcp')}</span></td>
+                  <td>${isWeb ? `<span class="ci-xs-bold-ok">${ico('✓')} ${t('ci.primary_web', 'Main web page')}</span>` : directLink}</td>
                 </tr>
               `;
             }).join('')}
@@ -927,32 +928,32 @@ function renderPortsTab(details) {
 
       ${isHostNet ? `
         <div class="ci-metric-card" style="margin-top:14px; background:rgba(56,189,248,0.04); border:1px solid rgba(56,189,248,0.2); padding:12px; border-radius:8px;">
-          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-accent); text-transform:uppercase; letter-spacing:0.5px;">${ico('⚡')} ${t('ci.host_active', 'Host network in use')}</div>
-          <p style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin:4px 0 0 0; line-height:1.4;">
+          <div class="ci-xs-bold-accent-2">${ico('⚡')} ${t('ci.host_active', 'Host network in use')}</div>
+          <p class="ci-xs-soft-2">
             ${t('ci.host_active_desc', 'Port forwarding does not apply in host mode. To map your own host ports (for example {example}), change {mode} to bridge mode in the compose file or the container settings.', { example: '<code>8085:8080</code>', mode: '<code>network_mode: host</code>' })}
           </p>
         </div>
       ` : `
         <!-- Port Reconfiguration Section (Phase 3) -->
-        <div class="ci-metric-card" style="margin-top:14px; background:var(--zn-shade-35); border:1px solid var(--zn-line-8); padding:12px; border-radius:8px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); text-transform:uppercase; letter-spacing:0.5px;">${ico('🔄')} ${t('ci.reconfigure', 'Change ports (the container is copied and recreated)')}</div>
+        <div class="ci-metric-card ci-box-5">
+          <div class="ci-row-8">
+            <div class="ci-xs-bold-strong">${ico('🔄')} ${t('ci.reconfigure', 'Change ports (the container is copied and recreated)')}</div>
             <span style="font-size:var(--zn-fs-xs); color:var(--warn); background:rgba(245,158,11,0.12); padding:2px 6px; border-radius:4px;">${t('ci.rollback', 'Rolls back on failure')}</span>
           </div>
-          <p style="font-size:var(--zn-fs-xs); color:var(--muted); margin:0 0 10px 0;">
+          <p class="ci-xs-muted-5">
             ${t('ci.reconfigure_desc', 'Change the host ports. The container is stopped, copied and started with the new ports; every mounted folder stays.')}
           </p>
-          <div style="display:flex; flex-direction:column; gap:8px;">
+          <div class="ci-col">
             ${portsList.map((p, idx) => `
-              <div style="display:flex; align-items:center; gap:8px; background:var(--zn-glaze-3); padding:6px 10px; border-radius:6px;">
-                <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-strong); font-family:var(--font-mono, monospace); width:130px;">${t('ci.container_port_row', 'Container :{port}/{proto}', { port: p.private_port, proto: p.type || 'tcp' })}</span>
-                <span style="color:var(--muted);">➔</span>
-                <label style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('ci.host_port', 'Host port:')}</label>
-                <input type="number" class="tz-text-input ci-port-input" data-idx="${idx}" data-cp="${p.private_port}" data-proto="${p.type || 'tcp'}" value="${p.public_port || ''}" style="width:90px; font-size:var(--zn-fs-xs); padding:3px 6px;">
-                <span id="ci-port-check-${idx}" style="font-size:var(--zn-fs-xs); color:var(--muted);"></span>
+              <div class="ci-row-box-2">
+                <span class="ci-xs-strong-mono">${t('ci.container_port_row', 'Container :{port}/{proto}', { port: p.private_port, proto: p.type || 'tcp' })}</span>
+                <span class="ci-muted">➔</span>
+                <label class="ci-xs-muted">${t('ci.host_port', 'Host port:')}</label>
+                <input type="number" class="tz-text-input ci-port-input ci-xs-8" data-idx="${idx}" data-cp="${p.private_port}" data-proto="${p.type || 'tcp'}" value="${p.public_port || ''}">
+                <span class="ci-xs-muted" id="ci-port-check-${idx}"></span>
               </div>
             `).join('')}
-            <div style="margin-top:6px;">
+            <div class="ci-x-6">
               <button class="btn-pill-toggle" id="ci-btn-apply-ports" style="color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); border-color: var(--accent-cyan,#00f0ff); background: var(--lt-b-00f0ff1f, rgba(0,240,255,0.12));">
                 ${ico('🚀')} ${t('ci.recreate_ports', 'Recreate the container with the new ports')}
               </button>
@@ -980,7 +981,7 @@ function renderPortsTab(details) {
         statusEl.innerHTML = '<span class="ci-port-badge badge-crit" style="color:var(--crit); font-size:var(--zn-fs-xs); padding:2px 6px; border-radius:4px; background:rgba(239,68,68,0.12);">' + t('ci.port_invalid', 'Invalid port') + '</span>';
         return;
       }
-      statusEl.innerHTML = '<span style="color:var(--muted); font-size:var(--zn-fs-xs);">' + t('ci.checking', 'Checking…') + '</span>';
+      statusEl.innerHTML = '<span class="ci-xs-muted-2">' + t('ci.checking', 'Checking…') + '</span>';
 
       clearTimeout(_portCheckTimers[idx]);
       _portCheckTimers[idx] = setTimeout(async () => {
@@ -1008,7 +1009,7 @@ function renderPortsTab(details) {
     applyPortsBtn.addEventListener('click', () => {
       const cname = details.overview?.name || details.cid;
       showConfirmToast(
-        `${escapeHtml(t('ci.recreate_ports_q', 'Recreate container "{name}" with the new port mappings?', { name: cname })).replace(escapeHtml(cname), () => `<strong>${escapeHtml(cname)}</strong>`)}<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(t('ci.recreate_note', 'The container is recreated in 2–3 seconds. Volumes and saved data stay as they are.'))}</span>`,
+        `${escapeHtml(t('ci.recreate_ports_q', 'Recreate container "{name}" with the new port mappings?', { name: cname })).replace(escapeHtml(cname), () => `<strong>${escapeHtml(cname)}</strong>`)}<br><br><span class="ci-xs-muted">${escapeHtml(t('ci.recreate_note', 'The container is recreated in 2–3 seconds. Volumes and saved data stay as they are.'))}</span>`,
         async () => {
           const portInputs = container.querySelectorAll('.ci-port-input');
           const newPorts = [];
@@ -1059,20 +1060,20 @@ function renderMountsTab(details) {
 
   const mounts = details.mounts || [];
   if (mounts.length === 0) {
-    container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted);">' + escapeHtml(t('ci.no_mounts', 'No folders are mounted in this container.')) + '</div>';
+    container.innerHTML = '<div class="ci-muted-center-3">' + escapeHtml(t('ci.no_mounts', 'No folders are mounted in this container.')) + '</div>';
     return;
   }
 
   container.innerHTML = `
-    <div style="background:var(--zn-shade-25); border:1px solid var(--zn-line-6); border-radius:6px; overflow:hidden;">
-      <table class="copy-history-table" style="margin:0;">
+    <div class="ci-box-4">
+      <table class="copy-history-table ci-x-5">
         <thead>
           <tr>
             <th>${t('ci.col_host_path', 'Host path')}</th>
             <th>${t('ci.col_target', 'In the container')}</th>
             <th>${t('ci.col_mode', 'Mode')}</th>
             <th>${t('ci.col_type', 'Type')}</th>
-            <th style="text-align:right;">${t('ci.col_files', 'Files')}</th>
+            <th class="ci-x-7">${t('ci.col_files', 'Files')}</th>
           </tr>
         </thead>
         <tbody>
@@ -1087,13 +1088,13 @@ function renderMountsTab(details) {
 
             return `
               <tr>
-                <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--zn-text-strong); word-break:break-all;">
+                <td class="ci-xs-strong-mono-2">
                   ${escapeHtml(m.source)} ${appdataBadge}
                 </td>
-                <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(m.destination)}</td>
+                <td class="ci-xs-muted-mono-3">${escapeHtml(m.destination)}</td>
                 <td><span style="font-size:var(--zn-fs-xs); font-weight:700; text-transform:uppercase; color:${m.rw ? 'var(--ok2)' : 'var(--warn)'};">${escapeHtml(m.mode)}</span></td>
-                <td style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(m.type)}</td>
-                <td style="text-align:right;">${btnHtml}</td>
+                <td class="ci-xs-muted">${escapeHtml(m.type)}</td>
+                <td class="ci-x-7">${btnHtml}</td>
               </tr>
             `;
           }).join('')}
@@ -1124,7 +1125,7 @@ function renderEnvTab(details) {
   }
 
   if (envs.length === 0) {
-    container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted);">' + escapeHtml(t('ci.no_env', 'No environment variables of its own.')) + '</div>';
+    container.innerHTML = '<div class="ci-muted-center-3">' + escapeHtml(t('ci.no_env', 'No environment variables of its own.')) + '</div>';
     return;
   }
 
@@ -1138,13 +1139,13 @@ function renderEnvTab(details) {
   });
 
   container.innerHTML = `
-    <div style="background:var(--zn-shade-25); border:1px solid var(--zn-line-6); border-radius:6px; overflow:hidden;">
-      <table class="copy-history-table" style="margin:0;">
+    <div class="ci-box-4">
+      <table class="copy-history-table ci-x-5">
         <thead>
           <tr>
-            <th style="width:220px;">${t('ci.col_var', 'Variable')}</th>
+            <th class="ci-size-2">${t('ci.col_var', 'Variable')}</th>
             <th>${t('ci.col_value', 'Value')}</th>
-            <th style="width:60px; text-align:right;">${t('chassis.col_action', 'Action')}</th>
+            <th class="ci-size-3">${t('chassis.col_action', 'Action')}</th>
           </tr>
         </thead>
         <tbody>
@@ -1153,13 +1154,13 @@ function renderEnvTab(details) {
             const secBadge = isSec ? '<span style="font-size:var(--zn-fs-xs); padding:1px 4px; border-radius:3px; background:rgba(239, 68, 68, 0.15); color:var(--zn-text-crit); margin-left:4px;">SECRET</span>' : '';
             return `
               <tr>
-                <td style="font-family:var(--font-mono, monospace); font-weight:700; color:var(--zn-text-strong);">
+                <td class="ci-bold-strong-mono">
                   ${escapeHtml(e.key)} ${secBadge}
                 </td>
-                <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); word-break:break-all;">
+                <td class="ci-xs-mono-3">
                   <span id="env-val-${idx}">${escapeHtml(e.masked_value)}</span>
                 </td>
-                <td style="text-align:right;">
+                <td class="ci-x-7">
                   ${isSec ? `<button class="btn-toggle-secret btn-pill-toggle is-small" data-idx="${idx}" title="${t('ui.toggle_show_hide', 'Toggle show/hide')}">👁️</button>` : ''}
                   <button class="btn-copy-env btn-pill-toggle is-small" data-idx="${idx}" title="${t('ui.copy_value', 'Copy value')}">📋</button>
                 </td>
@@ -1261,7 +1262,7 @@ export function startLogStream(cid) {
 
   const terminal = document.getElementById('ci-logs-terminal');
   if (terminal && _activeLogLines.length === 0) {
-    terminal.innerHTML = '<div style="color:var(--muted); text-align:center; padding:20px;">' + t('ci.connecting', 'Connecting to the live log…') + '</div>';
+    terminal.innerHTML = '<div class="ci-logs-note ci-muted-center-2">' + t('ci.connecting', 'Connecting to the live log…') + '</div>';
   }
 
   try {
@@ -1289,7 +1290,7 @@ export function startLogStream(cid) {
 export function appendLogLine(l) {
   const terminal = document.getElementById('ci-logs-terminal');
   if (!terminal) return;
-  const placeholder = terminal.querySelector('div[style*="text-align:center"]');
+  const placeholder = terminal.querySelector('.ci-logs-note');
   if (placeholder) {
     terminal.innerHTML = '';
   }
@@ -1320,14 +1321,14 @@ async function loadContainerLogs(cid) {
   const tailSelect = document.getElementById('ci-logs-tail-select');
   const tail = tailSelect ? tailSelect.value : 200;
 
-  if (terminal) terminal.innerHTML = '<div style="color:var(--muted); text-align:center; padding:20px;">' + t('ci.fetching_logs', 'Fetching logs…') + '</div>';
+  if (terminal) terminal.innerHTML = '<div class="ci-logs-note ci-muted-center-2">' + t('ci.fetching_logs', 'Fetching logs…') + '</div>';
 
   try {
     const res = await api.get(`/api/docker/containers/${encodeURIComponent(cid)}/logs?tail=${tail}`);
     _activeLogLines = res.lines || [];
     renderLogsOutput();
   } catch (err) {
-    if (terminal) terminal.innerHTML = `<div style="color:var(--crit); text-align:center; padding:20px;">${escapeHtml(t('ci.logs_failed', 'Could not read the logs: {error}', { error: err.message }))}</div>`;
+    if (terminal) terminal.innerHTML = `<div class="ci-logs-note ci-crit-center">${escapeHtml(t('ci.logs_failed', 'Could not read the logs: {error}', { error: err.message }))}</div>`;
   }
 }
 
@@ -1341,7 +1342,7 @@ function renderLogsOutput() {
   });
 
   if (lines.length === 0) {
-    terminal.innerHTML = '<div style="color:var(--muted); text-align:center; padding:20px;">' + t('ci.no_logs', 'No log lines for this period.') + '</div>';
+    terminal.innerHTML = '<div class="ci-logs-note ci-muted-center-2">' + t('ci.no_logs', 'No log lines for this period.') + '</div>';
     return;
   }
 
@@ -1363,46 +1364,46 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
   if (!modal) {
     const html = `
       <div id="container-delete-modal-overlay" class="smart-modal-backdrop" style="display:none; z-index:10020;">
-        <div id="container-delete-modal-window" class="smart-modal-window" style="width:480px; max-width:92vw; display:flex; flex-direction:column;">
-          <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-size:18px;">⚠️</span>
+        <div id="container-delete-modal-window" class="smart-modal-window ci-size-4" style="display: flex;">
+          <div class="smart-modal-header ci-row-9">
+            <div class="ci-row">
+              <span class="ci-fs18">⚠️</span>
               <span style="font-weight:700; color:var(--crit, #ff6b6b); font-size:13px;">${t('ci.destroy', 'Delete container')}</span>
             </div>
             <button class="win-btn close-btn" id="cdm-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
-          <div style="padding:16px; display:flex; flex-direction:column; gap:14px;">
-            <div style="font-size:var(--zn-fs-xs); line-height:1.5; color:var(--zn-text-soft);">
+          <div class="ci-col-2">
+            <div class="ci-xs-soft-3">
               ${t('ci.delete_q', 'Delete the container {name} ({id}) for good?', {
-                name: '<strong id="cdm-cname" style="color:var(--zn-text-strong);"></strong>',
+                name: '<strong class="ci-strong" id="cdm-cname"></strong>',
                 id: '<code id="cdm-cid" style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff));"></code>',
               })}
             </div>
             <div style="background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.25); border-radius:6px; padding:10px 12px; font-size:var(--zn-fs-xs); color:var(--lt-t-fca5a5ff, #fca5a5); line-height:1.4;">
               ${ico('⚠️')} <strong>${t('ci.warning', 'Warning:')}</strong> ${t('ci.delete_warn', 'The container is stopped and removed from Docker. Anything saved only inside the container is lost.')}
             </div>
-            <div style="display:flex; flex-direction:column; gap:8px; background:var(--zn-shade-20); padding:10px; border-radius:6px; border:1px solid var(--zn-line-6);">
+            <div class="ci-col-box">
               <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-fb923cff, #fb923c); font-weight:600; cursor:pointer;">
-                <input type="checkbox" id="cdm-archive" checked style="cursor:pointer;">
+                <input class="ci-x-2" type="checkbox" id="cdm-archive" checked>
                 <span>${t('ci.opt_archive', 'Archive the app data and settings (kept in the backup library, never deleted)')}</span>
               </label>
-              <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text); cursor:pointer;">
-                <input type="checkbox" id="cdm-force" checked style="cursor:pointer;">
+              <label class="ci-row-xs">
+                <input class="ci-x-2" type="checkbox" id="cdm-force" checked>
                 <span>${t('ci.opt_force', 'Stop the container first if it is running')}</span>
               </label>
-              <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text); cursor:pointer;">
-                <input type="checkbox" id="cdm-volumes" checked style="cursor:pointer;">
+              <label class="ci-row-xs">
+                <input class="ci-x-2" type="checkbox" id="cdm-volumes" checked>
                 <span>${t('ci.opt_volumes', 'Delete its anonymous volumes (frees space)')}</span>
               </label>
-              <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text); cursor:pointer;">
-                <input type="checkbox" id="cdm-image" style="cursor:pointer;">
-                <span>${t('ci.opt_image', 'Also delete the container image')} <code id="cdm-image-tag" style="color:var(--muted); font-size:var(--zn-fs-xs);"></code></span>
+              <label class="ci-row-xs">
+                <input class="ci-x-2" type="checkbox" id="cdm-image">
+                <span>${t('ci.opt_image', 'Also delete the container image')} <code class="ci-xs-muted-2" id="cdm-image-tag"></code></span>
               </label>
             </div>
           </div>
-          <div style="padding:10px 16px; border-top:1px solid var(--zn-line-8); display:flex; justify-content:space-between; align-items:center; background:var(--zn-shade-20);">
+          <div class="ci-row-box-3">
             <button class="btn-pill-toggle" id="cdm-cancel-btn">${t('common.cancel', 'Cancel')}</button>
-            <button class="btn-pill-toggle is-danger" id="cdm-confirm-btn" style="color: var(--zn-text-strong); border: none;">
+            <button class="btn-pill-toggle is-danger ci-strong-box" id="cdm-confirm-btn">
               ${ico('💥')} ${t('ci.destroy', 'Delete container')}
             </button>
           </div>
@@ -1480,11 +1481,11 @@ async function renderContainerEditTab(cid) {
   if (!hostEl) return;
 
   if (!_activeDetails || (_activeDetails.overview && _activeDetails.overview.id !== cid && _activeDetails.overview.full_id !== cid)) {
-    hostEl.innerHTML = '<div style="text-align:center; padding:30px; color:var(--muted);">' + t('ci.loading_config', 'Loading the container settings…') + '</div>';
+    hostEl.innerHTML = '<div class="ci-muted-center">' + t('ci.loading_config', 'Loading the container settings…') + '</div>';
     try {
       _activeDetails = await api.get(`/api/docker/containers/${encodeURIComponent(cid)}/details?unmask=true`);
     } catch (e) {
-      hostEl.innerHTML = `<div style="color:var(--crit); padding:20px;">${escapeHtml(t('ci.load_failed', 'Could not load the container details: {error}', { error: e.message }))}</div>`;
+      hostEl.innerHTML = `<div class="ci-crit-2">${escapeHtml(t('ci.load_failed', 'Could not load the container details: {error}', { error: e.message }))}</div>`;
       return;
     }
   }
@@ -1517,12 +1518,12 @@ async function renderContainerEditTab(cid) {
   }));
 
   hostEl.innerHTML = `
-    <div class="cie-form-wrap" style="padding:4px 2px;">
+    <div class="cie-form-wrap ci-x-8">
       <!-- Guidance Notice -->
       <div style="background:rgba(14,165,233,0.08); border:1px solid rgba(14,165,233,0.25); border-radius:6px; padding:10px 12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <div style="font-weight:700; color:var(--zn-text-accent); font-size:var(--zn-fs-xs);">${ico('✏️')} ${t('ci.editor', 'Container settings')}</div>
-          <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">
+          <div class="ci-xs-bold-accent">${ico('✏️')} ${t('ci.editor', 'Container settings')}</div>
+          <div class="ci-xs-muted-3">
             ${t('ci.editor_desc', 'Saving copies the container with the new settings and switches over; if that fails, the old one comes back. Every setting is checked before the container is touched.')}
           </div>
         </div>
@@ -1536,20 +1537,20 @@ async function renderContainerEditTab(cid) {
       ` : ''}
 
       <!-- Section 1: General Settings -->
-      <div class="ci-metric-card" style="background:var(--zn-shade-35); border:1px solid var(--zn-line-8); padding:12px; border-radius:8px; margin-bottom:14px;">
-        <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">${t('ci.general', 'General settings')}</div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+      <div class="ci-metric-card ci-box-6">
+        <div class="ci-xs-bold-strong-3">${t('ci.general', 'General settings')}</div>
+        <div class="ci-grid-3">
           <div>
-            <label for="cie-input-name" style="font-size:var(--zn-fs-xs); color:var(--muted); display:block; margin-bottom:4px; font-weight:600; text-transform:uppercase; ">${t('ci.name_label', 'Container name')}</label>
-            <input type="text" id="cie-input-name" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:5px 8px;" value="${escapeHtml(currentName)}" ${isToolkit ? 'disabled' : ''}>
+            <label class="ci-xs-semi-muted" for="cie-input-name">${t('ci.name_label', 'Container name')}</label>
+            <input type="text" id="cie-input-name" class="tz-text-input ci-xs-9" value="${escapeHtml(currentName)}" ${isToolkit ? 'disabled' : ''}>
           </div>
           <div>
-            <label for="cie-input-image" style="font-size:var(--zn-fs-xs); color:var(--muted); display:block; margin-bottom:4px; font-weight:600; text-transform:uppercase; ">${t('ci.image_label', 'Image and tag')}</label>
-            <input type="text" id="cie-input-image" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:5px 8px;" value="${escapeHtml(currentImage)}" ${isToolkit ? 'disabled' : ''}>
+            <label class="ci-xs-semi-muted" for="cie-input-image">${t('ci.image_label', 'Image and tag')}</label>
+            <input type="text" id="cie-input-image" class="tz-text-input ci-xs-9" value="${escapeHtml(currentImage)}" ${isToolkit ? 'disabled' : ''}>
           </div>
           <div>
-            <label for="cie-select-network" style="font-size:var(--zn-fs-xs); color:var(--muted); display:block; margin-bottom:4px; font-weight:600; text-transform:uppercase; ">${t('ci.network_label', 'Network mode')}</label>
-            <select id="cie-select-network" class="tz-select-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:4px 6px;" ${isToolkit ? 'disabled' : ''}>
+            <label class="ci-xs-semi-muted" for="cie-select-network">${t('ci.network_label', 'Network mode')}</label>
+            <select id="cie-select-network" class="tz-select-input ci-xs-6" ${isToolkit ? 'disabled' : ''}>
               <option value="bridge" ${currentNetwork === 'bridge' ? 'selected' : ''}>${t('ci.net_bridge', 'bridge (default)')}</option>
               <option value="host" ${currentNetwork === 'host' ? 'selected' : ''}>${t('ci.net_host', 'host (the host’s network)')}</option>
               <option value="none" ${currentNetwork === 'none' ? 'selected' : ''}>${t('ci.net_none', 'none (no network)')}</option>
@@ -1557,8 +1558,8 @@ async function renderContainerEditTab(cid) {
             </select>
           </div>
           <div>
-            <label for="cie-select-restart" style="font-size:var(--zn-fs-xs); color:var(--muted); display:block; margin-bottom:4px; font-weight:600; text-transform:uppercase; ">${t('ci.restart_policy', 'Restart policy')}</label>
-            <select id="cie-select-restart" class="tz-select-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:4px 6px;" ${isToolkit ? 'disabled' : ''}>
+            <label class="ci-xs-semi-muted" for="cie-select-restart">${t('ci.restart_policy', 'Restart policy')}</label>
+            <select id="cie-select-restart" class="tz-select-input ci-xs-6" ${isToolkit ? 'disabled' : ''}>
               <option value="unless-stopped" ${currentRestart === 'unless-stopped' ? 'selected' : ''}>${t('ci.restart_recommended', 'unless-stopped (recommended)')}</option>
               <option value="always" ${currentRestart === 'always' ? 'selected' : ''}>always</option>
               <option value="on-failure" ${currentRestart === 'on-failure' ? 'selected' : ''}>on-failure</option>
@@ -1566,58 +1567,58 @@ async function renderContainerEditTab(cid) {
             </select>
           </div>
         </div>
-        <div style="margin-top:10px;">
-          <label style="display:flex; align-items:center; gap:6px; font-size:var(--zn-fs-xs); color:var(--zn-text-soft); cursor:pointer;">
-            <input type="checkbox" id="cie-cb-pull" style="cursor:pointer;" ${isToolkit ? 'disabled' : ''}>
+        <div class="ci-x-9">
+          <label class="ci-row-xs-soft">
+            <input class="ci-x-2" type="checkbox" id="cie-cb-pull" ${isToolkit ? 'disabled' : ''}>
             <span>${t('ci.pull', 'Pull the newest image before recreating')}</span>
           </label>
         </div>
       </div>
 
       <!-- Section 2: Port Mappings -->
-      <div class="ci-metric-card" style="background:var(--zn-shade-35); border:1px solid var(--zn-line-8); padding:12px; border-radius:8px; margin-bottom:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); text-transform:uppercase; letter-spacing:0.5px;">${t('ci.ports_title', 'Port bindings')}</div>
-          <button class="btn-pill-toggle" id="cie-btn-add-port" style="font-size:var(--zn-fs-xs); padding:2px 8px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ ${t('ci.add_port', 'Add port')}</button>
+      <div class="ci-metric-card ci-box-6">
+        <div class="ci-row-8">
+          <div class="ci-xs-bold-strong">${t('ci.ports_title', 'Port bindings')}</div>
+          <button class="btn-pill-toggle ci-xs-10" id="cie-btn-add-port" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ ${t('ci.add_port', 'Add port')}</button>
         </div>
-        <div id="cie-ports-container" style="display:flex; flex-direction:column; gap:6px;"></div>
+        <div class="ci-x-10" id="cie-ports-container" style="display: flex;"></div>
       </div>
 
       <!-- Section 3: Volume Mounts & Paths -->
-      <div class="ci-metric-card" style="background:var(--zn-shade-35); border:1px solid var(--zn-line-8); padding:12px; border-radius:8px; margin-bottom:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); text-transform:uppercase; letter-spacing:0.5px;">${t('ci.mounts_title', 'Mounted folders')}</div>
-          <button class="btn-pill-toggle" id="cie-btn-add-mount" style="font-size:var(--zn-fs-xs); padding:2px 8px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ ${t('ci.add_mount', 'Add folder')}</button>
+      <div class="ci-metric-card ci-box-6">
+        <div class="ci-row-8">
+          <div class="ci-xs-bold-strong">${t('ci.mounts_title', 'Mounted folders')}</div>
+          <button class="btn-pill-toggle ci-xs-10" id="cie-btn-add-mount" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ ${t('ci.add_mount', 'Add folder')}</button>
         </div>
-        <div id="cie-mounts-container" style="display:flex; flex-direction:column; gap:6px;"></div>
+        <div class="ci-x-10" id="cie-mounts-container" style="display: flex;"></div>
       </div>
 
       <!-- Section 4: Environment Variables -->
-      <div class="ci-metric-card" style="background:var(--zn-shade-35); border:1px solid var(--zn-line-8); padding:12px; border-radius:8px; margin-bottom:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
-          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); text-transform:uppercase; letter-spacing:0.5px;">${t('ci.env_title', 'Environment variables')}</div>
-          <div style="display:flex; gap:6px; align-items:center;">
-            <input type="text" id="cie-env-filter" placeholder="${t('ui.filter_variables', 'Filter variables...')}" class="tz-text-input" style="font-size:var(--zn-fs-xs); padding:2px 6px; width:130px;">
-            <button class="btn-pill-toggle" id="cie-btn-add-env" style="font-size:var(--zn-fs-xs); padding:2px 8px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ ${t('ci.add_var', 'Add variable')}</button>
+      <div class="ci-metric-card ci-box-6">
+        <div class="ci-row-10">
+          <div class="ci-xs-bold-strong">${t('ci.env_title', 'Environment variables')}</div>
+          <div class="ci-row-2">
+            <input type="text" id="cie-env-filter" placeholder="${t('ui.filter_variables', 'Filter variables...')}" class="tz-text-input ci-xs-11">
+            <button class="btn-pill-toggle ci-xs-10" id="cie-btn-add-env" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ ${t('ci.add_var', 'Add variable')}</button>
           </div>
         </div>
-        <div id="cie-env-container" style="display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto;"></div>
+        <div class="ci-x-11" id="cie-env-container" style="display: flex;"></div>
       </div>
 
       <!-- Footer Actions -->
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-top:10px; border-top:1px solid var(--zn-line-8);">
-        <label style="display:flex; align-items:center; gap:6px; font-size:var(--zn-fs-xs); color:var(--muted); cursor:pointer;">
-          <input type="checkbox" id="cie-cb-backup" style="cursor:pointer;" ${isToolkit ? 'disabled' : ''}>
+      <div class="ci-row-box-4">
+        <label class="ci-row-xs-muted-3">
+          <input class="ci-x-2" type="checkbox" id="cie-cb-backup" ${isToolkit ? 'disabled' : ''}>
           <span>${t('ci.keep_backup', 'Keep a backup container (the old one stays as {name}.backup)')}</span>
         </label>
-        <div style="display:flex; gap:8px;">
+        <div class="ci-row-11">
           <button class="btn-pill-toggle" id="cie-btn-cancel">${t('common.cancel', 'Cancel')}</button>
           <button class="btn-pill-toggle" id="cie-btn-save" style="font-weight:700; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border:none; padding:6px 16px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>
             ${ico('💾')} ${t('ci.save_recreate', 'Save and recreate the container')}
           </button>
         </div>
       </div>
-      <div id="cie-status-msg" style="display:none; margin-top:10px; padding:8px 12px; border-radius:6px; font-size:var(--zn-fs-xs);"></div>
+      <div class="ci-xs-box-2" id="cie-status-msg" style="display: none;"></div>
     </div>
   `;
 
@@ -1631,17 +1632,17 @@ async function renderContainerEditTab(cid) {
     row.className = 'cie-port-row';
     row.style.cssText = 'display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px;';
     row.innerHTML = `
-      <span style="font-size:var(--zn-fs-xs); color:var(--muted); width:65px;">${t('ci.row_container', 'Container:')}</span>
-      <input type="number" class="tz-text-input cie-cp-input" placeholder="80" value="${p.container_port || ''}" style="width:75px; font-size:var(--zn-fs-xs); padding:3px 6px;">
-      <span style="font-size:var(--zn-fs-xs); color:var(--muted);">/</span>
-      <select class="tz-select-input cie-proto-input" style="font-size:var(--zn-fs-xs); padding:2px 4px;">
+      <span class="ci-xs-muted-6">${t('ci.row_container', 'Container:')}</span>
+      <input type="number" class="tz-text-input cie-cp-input ci-xs-12" placeholder="80" value="${p.container_port || ''}">
+      <span class="ci-xs-muted">/</span>
+      <select class="tz-select-input cie-proto-input ci-xs-13">
         <option value="tcp" ${p.proto === 'udp' ? '' : 'selected'}>TCP</option>
         <option value="udp" ${p.proto === 'udp' ? 'selected' : ''}>UDP</option>
       </select>
-      <span style="color:var(--muted);">➔</span>
-      <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('ci.row_host', 'Host:')}</span>
-      <input type="number" class="tz-text-input cie-hp-input" placeholder="8080" value="${p.host_port || ''}" style="width:75px; font-size:var(--zn-fs-xs); padding:3px 6px;">
-      <input type="text" class="tz-text-input cie-ip-input" placeholder="0.0.0.0" value="${p.host_ip || '0.0.0.0'}" style="width:75px; font-size:var(--zn-fs-xs); padding:3px 6px;" title="${t('ui.host_ip', 'Host IP')}">
+      <span class="ci-muted">➔</span>
+      <span class="ci-xs-muted">${t('ci.row_host', 'Host:')}</span>
+      <input type="number" class="tz-text-input cie-hp-input ci-xs-12" placeholder="8080" value="${p.host_port || ''}">
+      <input type="text" class="tz-text-input cie-ip-input ci-xs-12" placeholder="0.0.0.0" value="${p.host_ip || '0.0.0.0'}" title="${t('ui.host_ip', 'Host IP')}">
       <button class="btn-pill-toggle cie-row-del is-danger is-small" title="${t('ai.remove_model_btn', 'Remove')}">🗑️</button>
     `;
     row.querySelector('.cie-row-del').onclick = () => row.remove();
@@ -1653,12 +1654,12 @@ async function renderContainerEditTab(cid) {
     row.className = 'cie-mount-row';
     row.style.cssText = 'display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px;';
     row.innerHTML = `
-      <span style="font-size:var(--zn-fs-xs); color:var(--muted); width:65px;">${t('ci.row_host_path', 'Host path:')}</span>
-      <input type="text" class="tz-text-input cie-src-input" placeholder="/mnt/user/appdata/app" value="${escapeHtml(m.source || '')}" style="flex:1; font-size:var(--zn-fs-xs); padding:3px 6px; font-family:var(--font-mono, monospace);">
-      <span style="color:var(--muted);">➔</span>
-      <span style="font-size:var(--zn-fs-xs); color:var(--muted); width:65px;">${t('ci.row_container', 'Container:')}</span>
-      <input type="text" class="tz-text-input cie-dst-input" placeholder="/config" value="${escapeHtml(m.destination || '')}" style="flex:1; font-size:var(--zn-fs-xs); padding:3px 6px; font-family:var(--font-mono, monospace);">
-      <select class="tz-select-input cie-mode-input" style="font-size:var(--zn-fs-xs); padding:2px 4px;">
+      <span class="ci-xs-muted-6">${t('ci.row_host_path', 'Host path:')}</span>
+      <input type="text" class="tz-text-input cie-src-input ci-xs-mono-grow" placeholder="/mnt/user/appdata/app" value="${escapeHtml(m.source || '')}">
+      <span class="ci-muted">➔</span>
+      <span class="ci-xs-muted-6">${t('ci.row_container', 'Container:')}</span>
+      <input type="text" class="tz-text-input cie-dst-input ci-xs-mono-grow" placeholder="/config" value="${escapeHtml(m.destination || '')}">
+      <select class="tz-select-input cie-mode-input ci-xs-13">
         <option value="rw" ${m.mode === 'ro' ? '' : 'selected'}>rw</option>
         <option value="ro" ${m.mode === 'ro' ? 'selected' : ''}>ro</option>
       </select>
@@ -1673,9 +1674,9 @@ async function renderContainerEditTab(cid) {
     row.className = 'cie-env-row';
     row.style.cssText = 'display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); padding:4px 8px; border-radius:6px;';
     row.innerHTML = `
-      <input type="text" class="tz-text-input cie-key-input" placeholder="KEY" value="${escapeHtml(e.key || '')}" style="width:180px; font-size:var(--zn-fs-xs); padding:3px 6px; font-family:var(--font-mono, monospace); font-weight:700;">
-      <span style="color:var(--muted);">=</span>
-      <input type="text" class="tz-text-input cie-val-input" placeholder="value" value="${escapeHtml(e.value || '')}" style="flex:1; font-size:var(--zn-fs-xs); padding:3px 6px; font-family:var(--font-mono, monospace);">
+      <input type="text" class="tz-text-input cie-key-input ci-xs-bold-mono" placeholder="KEY" value="${escapeHtml(e.key || '')}">
+      <span class="ci-muted">=</span>
+      <input type="text" class="tz-text-input cie-val-input ci-xs-mono-grow" placeholder="value" value="${escapeHtml(e.value || '')}">
       <button class="btn-pill-toggle cie-row-del is-danger is-small" title="${t('ai.remove_model_btn', 'Remove')}">🗑️</button>
     `;
     row.querySelector('.cie-row-del').onclick = () => row.remove();
@@ -1723,7 +1724,7 @@ async function renderContainerEditTab(cid) {
     }
 
     showConfirmToast(
-      `${escapeHtml(t('ci.save_recreate_q', 'Save changes and recreate container "{name}"?', { name })).replace(escapeHtml(name), () => `<strong>${escapeHtml(name)}</strong>`)}<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(t('ci.save_note', 'The container is stopped and recreated with the new settings. Volumes and folders stay as they are.'))}</span>`,
+      `${escapeHtml(t('ci.save_recreate_q', 'Save changes and recreate container "{name}"?', { name })).replace(escapeHtml(name), () => `<strong>${escapeHtml(name)}</strong>`)}<br><br><span class="ci-xs-muted">${escapeHtml(t('ci.save_note', 'The container is stopped and recreated with the new settings. Volumes and folders stay as they are.'))}</span>`,
       async () => {
         // Collect port bindings
         const portBindings = [];
