@@ -4,6 +4,7 @@ import ast
 import contextvars
 import os
 import re
+import sqlite3
 import time
 from typing import (  # noqa: F401
     Any,
@@ -445,6 +446,20 @@ def _extract_folder_and_intent(query: str) -> tuple[str | None, str, str]:
         "examine",
         "compare all",
         "catalog",
+        # the other interface languages (AI-22)
+        "zusammenfass",
+        "fasse ",
+        "fass ",
+        "überblick",
+        "was steht",
+        "résum",
+        "aperçu",
+        "qu'y a-t-il",
+        "resum",
+        "qué hay",
+        "总结",
+        "概括",
+        "有什么",
     )
     if any(t in low for t in comprehensive_triggers):
         mode = "comprehensive"
@@ -463,6 +478,48 @@ def _extract_folder_and_intent(query: str) -> tuple[str | None, str, str]:
         )
 
     return folder_path, remaining_query, mode
+
+
+def _one_file(rag: Any, path: str | None) -> dict[str, Any]:
+    """The focused file's own text from the index, or {} (AI-22)."""
+    if not path or not hasattr(rag, "file_chunks"):
+        return {}
+    try:
+        return rag.file_chunks(path) or {}
+    except Exception:
+        logger.debug("chat_nas_tools: file_chunks failed", exc_info=True)
+        return {}
+
+
+def _long_file_answer(
+    rag: Any, path: str | None, one_file: dict[str, Any], question: str, mode: str
+) -> tuple[str, list[dict[str, Any]], str] | None:
+    """A whole-file question about a file too long to read at once, answered from the model's
+    notes on each part (AI-22): (context, citations, grade). None when that doesn't apply or the
+    model isn't there, so the first part is read as before."""
+    if not (path and one_file.get("found") and not one_file.get("complete") and mode == "comprehensive"):
+        return None
+    from backend.services import file_map_reduce
+    from backend.services.chat_llm_runtime import quiet_completion
+
+    try:
+        full = rag.file_chunks(path, max_chars=file_map_reduce.WINDOW_CHARS * 40) or {}
+        cfg = rag.get_config() or {}
+    except (OSError, ValueError, sqlite3.Error):
+        logger.debug("chat_nas_tools: long file read failed", exc_info=True)
+        return None
+    model = str(cfg.get("active_model") or cfg.get("llm_model") or "qwen2.5:3b").strip()
+    endpoint = str(cfg.get("llm_endpoint") or "").strip()
+    parts = file_map_reduce.map_notes(
+        one_file.get("name") or path,
+        question,
+        full.get("chunks") or [],
+        lambda messages: quiet_completion(model, endpoint, messages),
+    )
+    if not parts:
+        return None
+    context, cites = file_map_reduce.context_and_citations(path, one_file, parts)
+    return context, cites, "high"
 
 
 def tool_search_nas_knowledge(
@@ -512,13 +569,11 @@ def tool_search_nas_knowledge(
 
     # AI-22: a question about one file is answered from that file's own text, in any language,
     # whenever it fits; only long files fall back to a targeted search inside the file.
-    one_file: dict[str, Any] = {}
-    if target_folder and hasattr(rag, "file_chunks"):
-        try:
-            one_file = rag.file_chunks(target_folder) or {}
-        except Exception:
-            logger.debug("chat_nas_tools: file_chunks failed", exc_info=True)
-    if (
+    one_file = _one_file(rag, target_folder)
+    long_file = _long_file_answer(rag, target_folder, one_file, effective_query, effective_mode)
+    if long_file:
+        context_text, raw_citations, crag_grade = long_file
+    elif (
         one_file.get("found")
         and one_file.get("chunks")
         and (one_file.get("complete") or effective_mode == "comprehensive")

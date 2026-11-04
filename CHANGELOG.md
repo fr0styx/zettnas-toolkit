@@ -28,6 +28,14 @@
   once. Accounts that already had two-step sign-in are switched on the first start of this
   version.
 
+#### Private AI
+
+- **Summaries of long files cover the whole file** (AI-22): asking Zetty to summarise, or what is
+  in, a file too long to read at once makes it read the file in parts (up to six, spread over
+  very long files), take notes on each, and answer from the notes, with a source per part.
+  Before, only the first part was read. "Summarise" and "what's in it" now also work in German,
+  French, Spanish and Chinese. Without a model running, the first part is read as before.
+
 #### Usability
 
 - **The Apps window scrolls sideways from its bottom edge**: the horizontal scrollbar is the

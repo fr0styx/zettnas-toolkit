@@ -684,6 +684,19 @@ def _try_local_llm_completion(
     return (None, None, 0, None, None, None)
 
 
+def quiet_completion(active_model: str, llm_endpoint: str, messages: list[dict[str, str]]) -> str | None:
+    """One answer from the model that streams nowhere: notes on a part of a file and other
+    inner steps that are not the answer itself (AI-22)."""
+    sink = _core()._TOKEN_SINK
+    token = sink.set(None)
+    try:
+        return _try_local_llm_completion(
+            active_model=active_model, llm_endpoint=llm_endpoint, messages=messages, tools=None
+        )[0]
+    finally:
+        sink.reset(token)
+
+
 def _estimate_model_tok_per_sec(active_model: str, model_info: dict[str, Any] | None, tier_num: int) -> float:
     """Computes a realistic hardware token generation speed for the active model and NPU/GPU tier."""
     m_low = str(active_model or "").lower()
