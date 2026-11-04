@@ -3,3 +3,4 @@
    here; tests/test_lazy_css.py checks that (lazy CSS lands after every global sheet). */
 @import './40-vm-console.css';
 @import './68-vm-dialogs.css';
+@import './69-vm-window.css';

@@ -89,6 +89,10 @@
   of 338 inline styles, in the sheet that loads with the VM windows; pixel-for-pixel the same in
   both themes.
 
+- **The Virtual Machines window is built from stylesheet classes** (NUX-15): its title bar, the
+  memory and vCPU strip and the VM cards use 46 classes instead of 70 inline styles, loaded with
+  the window; pixel-for-pixel the same in both themes.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 

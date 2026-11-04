@@ -344,7 +344,7 @@
  "frontend/src/components/vm-manager.js": {
   "buttons": 0,
   "globals": 3,
-  "styles": 97,
+  "styles": 31,
   "templates": 1
  },
  "frontend/src/components/vm/connect-modal.js": {

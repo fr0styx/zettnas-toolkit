@@ -71,12 +71,17 @@ describe('Containers and VM Manager Mobile Touch Scrolling & Ergonomics', () => 
     const contentBody = win.querySelector('.vm-content-body');
     expect(contentBody).not.toBeNull();
     expect(contentBody.getAttribute('data-scrollable')).toBe('true');
-    expect(contentBody.style.minHeight).toBe('0px');
-    expect(contentBody.style.overflowY).toBe('auto');
+    // the layout lives in the window's scoped classes (NUX-15)
+    const ruleOf = (el) => {
+      const cls = [...el.classList].find((c) => c.startsWith('vmm-'));
+      return cssContent.split('\n').find((l) => l.includes(`#vm-manager-window .${cls} {`)) || '';
+    };
+    expect(ruleOf(contentBody)).toContain('min-height: 0;');
+    expect(ruleOf(contentBody)).toContain('overflow-y: auto;');
 
     const telemetryHeader = win.querySelector('#vm-telemetry-header');
     expect(telemetryHeader).not.toBeNull();
-    expect(telemetryHeader.style.flexDirection).toBe('column');
+    expect(ruleOf(telemetryHeader)).toContain('flex-direction: column;');
 
     const actionWrap = win.querySelector('.vm-action-btns-wrap');
     expect(actionWrap).not.toBeNull();

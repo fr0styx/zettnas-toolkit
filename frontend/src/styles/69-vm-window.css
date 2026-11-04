@@ -1,0 +1,50 @@
+/* The Virtual Machines window (vm-manager.js): its title bar, telemetry strip and VM cards. These rules
+   replace inline styles (NUX-15) and load with the window through vm-lazy.css. */
+
+/* Virtual Machines window: classes instead of inline styles (NUX-15), same look */
+#vm-manager-window .vmm-box { flex-direction: column; gap: 10px; padding: 16px; background: var(--zn-shade-25); border-bottom: 1px solid var(--zn-line-6); }
+#vm-manager-window .vmm-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+#vm-manager-window .vmm-row-2 { display: flex; gap: 8px; }
+#vm-manager-window .vmm-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; }
+#vm-manager-window .vmm-box-2 { background: var(--zn-glaze-3); border: 1px solid var(--zn-line-5); border-radius: 8px; padding: 10px 14px; }
+#vm-manager-window .vmm-row-xs { display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); margin-bottom: 6px; }
+#vm-manager-window .vmm-semi-muted { color: var(--muted); font-weight: 600; }
+#vm-manager-window .vmm-bold-accent { color: var(--zn-text-accent); font-weight: 700; }
+#vm-manager-window .vmm-box-3 { height: 10px; border-radius: 5px; background: var(--zn-glaze-8); overflow: hidden; }
+#vm-manager-window .vmm-row-xs-muted { display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 6px; }
+#vm-manager-window .vmm-strong { color: var(--zn-text-strong); }
+#vm-manager-window .vmm-ok { color: var(--zn-text-ok); }
+#vm-manager-window .vmm-row-3 { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
+#vm-manager-window .vmm-fs18-bold-strong { font-size: 18px; font-weight: 700; color: var(--zn-text-strong); }
+#vm-manager-window .vmm-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); }
+#vm-manager-window .vmm-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 6px; }
+#vm-manager-window .vmm-grow { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 16px; }
+#vm-manager-window .vmm-fs13-muted-center { text-align: center; padding: 48px 24px; color: var(--muted); font-size: 13px; }
+#vm-manager-window .vmm-muted { margin-bottom: 12px; color: var(--muted); opacity: 0.6; }
+#vm-manager-window .vmm-semi-muted-2 { font-weight: 600; color: var(--zn-text-muted); margin-bottom: 14px; }
+#vm-manager-window .vmm-x { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+#vm-manager-window .vmm-xs { font-size: var(--zn-fs-xs); opacity: 0.8; margin-left: 2px; }
+#vm-manager-window .vmm-x-2 { flex-shrink: 0; }
+#vm-manager-window .vmm-row-4 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+#vm-manager-window .vmm-row-5 { display: flex; align-items: center; gap: 8px; }
+#vm-manager-window .vmm-fs13-bold-strong { font-weight: 700; color: var(--zn-text-strong); font-size: 13px; }
+#vm-manager-window .vmm-row-6 { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+#vm-manager-window .vmm-muted-2 { color: var(--muted); }
+#vm-manager-window .vmm-accent { color: var(--zn-text-accent); }
+#vm-manager-window .vmm-row-xs-box { display: flex; justify-content: space-between; align-items: center; font-size: var(--zn-fs-xs); padding: 4px 8px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-6); border-radius: 6px; margin-bottom: 8px; }
+#vm-manager-window .vmm-row-xs-mono { display: flex; align-items: center; gap: 6px; font-family: monospace; font-size: var(--zn-fs-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#vm-manager-window .vmm-row-muted-box { background: none; border: none; cursor: pointer; color: var(--muted); padding: 1px 3px; display: inline-flex; align-items: center; }
+#vm-manager-window .vmm-row-accent { color: var(--zn-text-accent); display: inline-flex; align-items: center; gap: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#vm-manager-window .vmm-row-semi-warn { color: var(--zn-text-warn); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+#vm-manager-window .vmm-row-7 { display: flex; gap: 4px; }
+#vm-manager-window .vmm-row-accent-mono { color: var(--zn-text-accent); font-family: monospace; display: flex; align-items: center; gap: 5px; }
+#vm-manager-window .vmm-row-8 { display: flex; align-items: center; gap: 4px; }
+#vm-manager-window .vmm-row-muted-box-2 { background: none; border: none; cursor: pointer; color: var(--muted); padding: 2px 4px; display: flex; align-items: center; }
+#vm-manager-window .vmm-xs-bold-muted-box { font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); padding-bottom: 4px; border-bottom: 1px solid var(--zn-line-6); margin-bottom: 4px; }
+#vm-manager-window .vmm-xs-accent { font-size: var(--zn-fs-xs); color: var(--zn-text-accent); }
+#vm-manager-window .vmm-xs-ok { font-size: var(--zn-fs-xs); color: var(--zn-text-ok); }
+#vm-manager-window .vmm-xs-accent-mono { font-size: var(--zn-fs-xs); font-family: monospace; color: var(--zn-text-accent); }
+#vm-manager-window .vmm-accent-box { border-top: 1px solid var(--zn-line-8); margin-top: 2px; color: var(--zn-text-accent); }
+#vm-manager-window .vmm-row-accent-2 { color: var(--zn-text-accent); display: flex; align-items: center; gap: 6px; }
+#vm-manager-window .vmm-row-box { display: flex; gap: 6px; margin-top: 10px; border-top: 1px solid var(--zn-line-6); padding-top: 10px; flex-wrap: wrap; }
+#vm-manager-window .vmm-grow-2 { flex: 1; }
