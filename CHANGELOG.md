@@ -47,6 +47,12 @@
 
 #### Performance
 
+- **RAW photos in DNG show their picture** (NPERF-9): iPhone ProRAW and other DNG files get a
+  thumbnail and open in the viewer, from the JPEG preview stored inside the file (the RAW data is
+  never read); they were plain file icons and opened as a hex dump.
+- **The photo viewer always closes** (NUX-25): opening a second photo while a big folder was still
+  loading left a second viewer behind whose close button did nothing.
+
 - **Photo and video thumbnails are ready before you scroll to them** (NPERF-8): opening a folder
   makes thumbnails for everything in it, not just what is on screen, and while the NAS is idle a
   background pass fills in the missing ones for every indexed photo and video, only on disks that

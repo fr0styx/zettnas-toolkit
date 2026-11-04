@@ -26,7 +26,7 @@ export const ICONS = {
   eye: svg('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
 };
 
-const IMAGE_RE = /\.(jpe?g|png|webp|gif|svg|bmp|ico|tiff?|heic|heif|avif)$/i;
+const IMAGE_RE = /\.(jpe?g|png|webp|gif|svg|bmp|ico|tiff?|heic|heif|avif|dng)$/i;
 const MEDIA_RE = /\.(mp4|mkv|webm|mov|avi|m4v|mp3|wav|ogg|flac|aac|m4a|opus)$/i;
 
 export const isImageName = (n) => IMAGE_RE.test(n || '');
@@ -40,11 +40,11 @@ export function displayImageUrl(path, maxDim) {
 }
 
 export const originalImageUrl = (path) =>
-  /\.(heic|heif)$/i.test(path) ? `/api/fs/preview/image?path=${encodeURIComponent(path)}` : `/api/fs/download?path=${encodeURIComponent(path)}`;
+  /\.(heic|heif|dng)$/i.test(path) ? `/api/fs/preview/image?path=${encodeURIComponent(path)}` : `/api/fs/download?path=${encodeURIComponent(path)}`;
 
-/** Which files get a server thumbnail: 'image' (photos, HEIC), 'video' (a frame), 'vector' (shown as is), or null. */
+/** Which files get a server thumbnail: 'image' (photos, HEIC, DNG), 'video' (a frame), 'vector' (shown as is), or null. */
 export function thumbKind(name) {
-  if (/\.(jpe?g|png|webp|bmp|tiff?|avif|heic|heif)$/i.test(name || '')) return 'image';
+  if (/\.(jpe?g|png|webp|bmp|tiff?|avif|heic|heif|dng)$/i.test(name || '')) return 'image';
   if (/\.(mp4|m4v|mov|mkv|webm|avi|3gp|mts|m2ts|wmv|mpe?g)$/i.test(name || '')) return 'video';
   if (/\.(gif|svg|ico)$/i.test(name || '')) return 'vector';
   return null;

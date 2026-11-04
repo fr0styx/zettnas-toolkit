@@ -48,9 +48,9 @@ async def fs_preview(path: str, principal: AuthenticatedPrincipal = Depends(get_
     sz = os.path.getsize(target)
 
     # 1. Image formats
-    image_exts = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".ico", ".tiff", ".heic", ".heif"}
+    image_exts = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".ico", ".tiff", ".heic", ".heif", ".dng"}
     if ext in image_exts:
-        is_heif = ext in {".heic", ".heif"}
+        is_heif = ext in {".heic", ".heif", ".dng"}
         preview_url = f"/api/fs/preview/image?path={target}" if is_heif else f"/api/fs/download?path={target}"
         result = {
             "status": "ok",
@@ -197,7 +197,7 @@ async def fs_preview_image(
         raise HTTPException(status_code=400, detail="Cannot preview a directory")
 
     ext = os.path.splitext(target)[1].lower()
-    is_heif = ext in {".heic", ".heif"}
+    is_heif = ext in {".heic", ".heif", ".dng"}
     if not thumb and not max_dim and not is_heif:
         return FileResponse(target, headers=_user_file_headers(mimetypes.guess_type(target)[0]))
 

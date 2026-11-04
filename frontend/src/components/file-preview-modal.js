@@ -27,6 +27,8 @@ import { setIconLabel } from '../ui/primitives.js';
 let _previewAbortController = null;
 let _previewKeydownListener = null;
 let _activeVideoController = null;
+// Each open gets a number; one that finishes loading after a newer open gives up (NUX-25)
+let _openSeq = 0;
 
 // Session state for gallery navigation and pan/zoom transforms
 let _gallery = [];
@@ -48,7 +50,7 @@ let _isMaximized = false;
 let _isInfoOpen = false;
 let _isFilmstripOpen = true;
 
-const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.bmp', '.ico', '.tiff', '.heic', '.heif']);
+const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.bmp', '.ico', '.tiff', '.heic', '.heif', '.dng']);
 const MEDIA_EXTS = new Set(['.mp4', '.mkv', '.webm', '.mov', '.avi', '.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a']);
 
 function isImageFile(filename) {
@@ -97,6 +99,7 @@ export function bindToolbarScrollHint(toolbar, moreBtn) {
 
 export async function openFilePreviewModal(path, name, aiMeta = null, fileList = null) {
   closeFilePreviewModal();
+  const seq = ++_openSeq;
 
   _currentPath = path;
   _currentName = name || (path ? path.split('/').filter(Boolean).pop() : 'Preview');
@@ -141,6 +144,9 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
         loadFolderGallery(_currentPath, (u) => api.get(u), { imagesOnly: isImageName(_currentName) }),
         new Promise((resolve) => setTimeout(() => resolve([]), 2500)),
       ]);
+      // a second open while the folder loaded (a double-click in a big folder) owns the viewer now:
+      // this one stops, so no second window is left behind that its close button can't reach
+      if (seq !== _openSeq) return;
       if (siblings.length > 1) _gallery = siblings;
     } catch (_) {
       // the single file still opens
@@ -158,6 +164,7 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
     }
   }
 
+  if (seq !== _openSeq) return;
   const overlay = document.createElement('div');
   overlay.id = 'quicklook-modal-overlay';
   overlay.className = 'quicklook-modal-overlay';
@@ -1109,7 +1116,7 @@ async function triggerCopy() {
   }
 
   const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
-  const isHeif = /\.(heic|heif)$/i.test(_currentPath || '');
+  const isHeif = /\.(heic|heif|dng)$/i.test(_currentPath || ''); // shown as a server-made picture
   const imgUrl = isHeif
     ? `/api/fs/preview/image?path=${encodeURIComponent(_currentPath)}`
     : `/api/fs/download?path=${encodeURIComponent(_currentPath)}`;
@@ -1661,6 +1668,8 @@ export function closeFilePreviewModal() {
     _activePreviewModal.remove();
     _activePreviewModal = null;
   }
+  // and any viewer left from an earlier open, whose own close button would otherwise do nothing
+  document.querySelectorAll('.quicklook-modal-overlay').forEach((el) => el.remove());
 }
 
 function formatSize(bytes) {

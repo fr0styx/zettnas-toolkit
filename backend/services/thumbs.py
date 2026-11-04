@@ -22,7 +22,7 @@ from backend import config
 
 logger = logging.getLogger("zettnas.thumbs")
 
-IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tif", ".tiff", ".avif", ".heic", ".heif"}
+IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tif", ".tiff", ".avif", ".heic", ".heif", ".dng"}
 VIDEO_EXTS = {".mp4", ".m4v", ".mov", ".mkv", ".webm", ".avi", ".3gp", ".mts", ".m2ts", ".wmv", ".mpg", ".mpeg"}
 THUMB_SIZE = 256
 MAX_SIZE = 3840
@@ -131,10 +131,38 @@ def encode(img, limit: int) -> bytes:
     return buf.getvalue()
 
 
+def _open_raw(path: str, limit: int):
+    """A DNG's embedded JPEG preview, turned upright (NPERF-9)."""
+    from PIL import Image
+
+    from backend.services import raw_preview
+
+    with open(path, "rb") as f:
+        found = raw_preview.preview(f, limit)
+    if found is None:
+        return None
+    data, orientation = found
+    img = Image.open(io.BytesIO(data))
+    img.draft("RGB", (limit, limit))
+    img.load()
+    turn = {
+        2: Image.Transpose.FLIP_LEFT_RIGHT,
+        3: Image.Transpose.ROTATE_180,
+        4: Image.Transpose.FLIP_TOP_BOTTOM,
+        5: Image.Transpose.TRANSPOSE,
+        6: Image.Transpose.ROTATE_270,
+        7: Image.Transpose.TRANSVERSE,
+        8: Image.Transpose.ROTATE_90,
+    }.get(orientation)
+    return img.transpose(turn) if turn is not None else img
+
+
 def _open_image(path: str, limit: int):
     global _heif_ready
     from PIL import Image, ImageOps
 
+    if os.path.splitext(path)[1].lower() == ".dng":
+        return _open_raw(path, limit)
     if not _heif_ready:
         try:
             import pillow_heif
