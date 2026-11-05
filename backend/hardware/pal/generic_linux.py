@@ -2,6 +2,7 @@
 
 Part of the storage abstraction layer (backend/hardware/pal); split out of pal_storage.py (ARC-5)."""
 
+import contextlib
 import json
 import os
 import re
@@ -9,6 +10,7 @@ import shutil
 import sqlite3
 import struct
 import subprocess
+import tempfile
 import time
 from abc import ABC, abstractmethod
 from enum import Enum, StrEnum
@@ -73,6 +75,17 @@ def _mount_rows(mounts: str = "/proc/mounts") -> list[tuple[str, str, str]]:
     return [(r[0].replace("\\040", " "), r[1].replace("\\040", " "), r[2]) for r in rows if len(r) >= 3]
 
 
+def is_mount_point(path: str, mounts: str = "/proc/mounts") -> bool:
+    """Whether something is mounted at path. os.path.ismount() also says yes for every btrfs
+    subvolume (it has a device number of its own), which kept the swap rollback from ever running."""
+    real = os.path.realpath(path)
+    return any(mnt == real for _dev, mnt, _fs in _mount_rows(mounts))
+
+
+# Where ZFS snapshots are mounted to be read when .zfs/snapshot can't show them (in a container)
+SNAPSHOT_VIEWS = os.path.join(tempfile.gettempdir(), "zettnas-snapshot-views")
+
+
 def zfs_mounts(mounts: str = "/proc/mounts") -> dict[str, str]:
     """Mounted ZFS datasets: dataset name -> mount point."""
     return {dev: mnt for dev, mnt, fs in _mount_rows(mounts) if fs == "zfs"}
@@ -128,7 +141,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         return (
             is_subvolume(live_root)
             and is_subvolume(snap_path)
-            and not os.path.ismount(live_root)
+            and not is_mount_point(live_root)
             and not self._nested_subvolumes(live_root)
         )
 
@@ -1448,6 +1461,40 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             items.append(item)
         return items
 
+    def readable_snapshot_path(self, snap: dict[str, Any]) -> str:
+        """Where a snapshot's files can be read. ZFS shows a snapshot at .zfs/snapshot/<name> by
+        mounting it on first access, which the kernel doesn't do inside a container: there the
+        folder reads as empty, and a rollback from it removed the share's files. A ZFS snapshot
+        whose folder reads as empty is mounted read-only under SNAPSHOT_VIEWS and read there;
+        it is unmounted before the snapshot is deleted."""
+        path, name = str(snap.get("path") or ""), str(snap.get("zfs") or "")
+        if not name:
+            return path
+        try:
+            if os.listdir(path):
+                return path
+        except OSError:  # no folder there either: the mount below is the way to read it
+            logger.debug("[PAL] %s can't be listed; mounting the snapshot instead", path)
+        view = self._view_dir(name)
+        if is_mount_point(view):
+            return view
+        os.makedirs(view, mode=0o700, exist_ok=True)
+        code, _, err = self._run_cmd(["mount", "-t", "zfs", "-o", "ro", name, view])
+        if code:
+            raise RuntimeError(f"The snapshot can't be read here ({(err or '').strip() or 'mount failed'}).")
+        return view
+
+    @staticmethod
+    def _view_dir(zfs_name: str) -> str:
+        return os.path.join(SNAPSHOT_VIEWS, re.sub(r"[^A-Za-z0-9._-]", "_", zfs_name))
+
+    def _release_view(self, zfs_name: str) -> None:
+        view = self._view_dir(zfs_name)
+        if is_mount_point(view):
+            self._run_cmd(["umount", view])
+        with contextlib.suppress(OSError):
+            os.rmdir(view)
+
     def delete_snapshot(
         self,
         pool_id: str,
@@ -1496,6 +1543,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
         zsnap = next((s for s in self._zfs_snapshots(pool_id) if s["name"] == snapshot_name), None)
         if zsnap:
+            self._release_view(zsnap["zfs"])  # a mounted snapshot can't be destroyed
             self._run_cmd(["zfs", "release", ZFS_HOLD_TAG, zsnap["zfs"]])  # fails when there was no hold
             code, out, err = self._run_cmd(["zfs", "destroy", zsnap["zfs"]])
             target_path = zsnap["path"]

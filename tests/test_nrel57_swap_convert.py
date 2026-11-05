@@ -267,3 +267,36 @@ def test_the_api(client, auth_headers, monkeypatch):
 def test_converting_asks_first(client, auth_headers):
     res = client.post("/api/snapshots/shares/photos/convert", headers=auth_headers)
     assert res.status_code == 428 and res.json()["action"] == "share.make_subvolume"
+
+
+# --- found by the round trip on real pools (scripts/hardware_snapshots.py) ---------------------
+def test_a_subvolume_is_not_taken_for_a_mount_point(tmp_path, monkeypatch):
+    mounts = tmp_path / "mounts"
+    mounts.write_text(f"/dev/nvme0n1p1 {tmp_path} btrfs rw 0 0\n")
+    assert gl.is_mount_point(str(tmp_path), str(mounts))
+    assert not gl.is_mount_point(str(tmp_path / "photos"), str(mounts))
+    a = gl.GenericLinuxStorageAdapter(str(tmp_path))
+    monkeypatch.setattr(gl, "is_subvolume", lambda p: True)
+    monkeypatch.setattr(gl.os.path, "ismount", lambda p: True)  # what Python says of a subvolume
+    monkeypatch.setattr(a, "_run_cmd", lambda cmd: (0, "", ""))
+    assert a.can_swap_in(str(tmp_path / "photos"), str(tmp_path / "snap"))
+    monkeypatch.setattr(gl, "is_mount_point", lambda p: True)
+    assert not a.can_swap_in(str(tmp_path / "photos"), str(tmp_path / "snap"))
+
+
+def test_a_snapshot_that_reads_empty_never_empties_the_share(pal):
+    (pal.live / "a.jpg").write_text("the only copy")
+    (pal.snapdir / "photos@auto-1").mkdir()  # what a ZFS snapshot looks like in a container
+    with pytest.raises(RuntimeError, match="reads as empty"):
+        snaps.rollback("photos@auto-1", pal=pal, pool_id="tank")
+    assert (pal.live / "a.jpg").read_text() == "the only copy" and not pal.swapped
+    assert not [n for n in pal.created if "before-rollback" in n]  # nothing taken, nothing changed
+
+
+def test_snapshots_are_read_where_the_adapter_says(pal, tmp_path):
+    view = tmp_path / "view"
+    (view / "album").mkdir(parents=True)
+    (view / "album" / "b.jpg").write_text("from the mount")
+    (pal.snapdir / "photos@auto-1").mkdir()
+    pal.readable_snapshot_path = lambda snap: str(view)
+    assert [e["name"] for e in snaps.browse("photos@auto-1", "album", pal=pal, pool_id="tank")["entries"]] == ["b.jpg"]

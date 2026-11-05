@@ -4,6 +4,18 @@
 
 #### Security
 
+- **A ZFS share rolled back inside Docker no longer loses its files** (NREL-7): ZFS shows a
+  snapshot at `.zfs/snapshot/<name>` by mounting it on first access, which the kernel doesn't do
+  inside a container, so there the snapshot read as empty and a rollback removed the share's
+  files (the snapshot of the state before the rollback still held them). ZettNAS now mounts such
+  a snapshot read-only to read it, for rollbacks, browsing and restores, and unmounts it before
+  the snapshot is deleted. A rollback from a snapshot that reads as empty while the share has
+  files is refused. Found by the new round trip on real pools (`scripts/hardware_snapshots.py`).
+
+- **btrfs shares roll back by the quick swap again** (NREL-7): `os.path.ismount` says yes for
+  every btrfs subvolume, so the swap was never used and every rollback copied the files back.
+  Mount points are now read from the mount table.
+
 - **TrueNAS snapshots are deleted only when TrueNAS lists them** (CodeQL 471): deleting a snapshot
   looks it up first and uses the id TrueNAS gave, so the request never carries a dataset name as
   typed (one with "../" or a snapshot that isn't there is refused before anything is sent).

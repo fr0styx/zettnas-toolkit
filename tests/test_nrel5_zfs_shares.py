@@ -2,6 +2,7 @@
 under the names ZettNAS gave them, held while they are locked."""
 
 import json
+import os
 
 import pytest
 
@@ -242,3 +243,45 @@ def test_no_room_or_no_dataset_above_changes_nothing(zfs, monkeypatch):
     with pytest.raises(RuntimeError, match="isn't a ZFS dataset"):
         a._convert_to_dataset(str(nested))
     assert not fake.calls
+
+
+def test_a_zfs_snapshot_that_reads_empty_is_mounted_to_be_read(zfs, tmp_path, monkeypatch):
+    a, fake, pool = zfs
+    monkeypatch.setattr(gl, "SNAPSHOT_VIEWS", str(tmp_path / "views"))
+    mounted = set()
+    monkeypatch.setattr(gl, "is_mount_point", lambda p: p in mounted)
+    folder = pool / "photos" / ".zfs" / "snapshot" / "photos-auto-1"
+    folder.mkdir(parents=True)
+    snap = {"name": "photos@auto-1", "path": str(folder), "zfs": "tank/photos@photos-auto-1"}
+    assert a.readable_snapshot_path({"name": "x", "path": "/somewhere"}) == "/somewhere"  # btrfs: as it is
+    view = a.readable_snapshot_path(snap)
+    assert view == str(tmp_path / "views" / "tank_photos_photos-auto-1")
+    assert ["mount", "-t", "zfs", "-o", "ro", "tank/photos@photos-auto-1", view] in fake.calls
+    mounted.add(view)
+    calls = len(fake.calls)
+    assert a.readable_snapshot_path(snap) == view and len(fake.calls) == calls  # mounted once
+    (folder / "a.jpg").write_text("x")  # where .zfs/snapshot works (on the host), it is used
+    assert a.readable_snapshot_path(snap) == str(folder)
+
+
+def test_a_snapshot_that_cant_be_mounted_says_so(zfs, tmp_path, monkeypatch):
+    a, fake, pool = zfs
+    monkeypatch.setattr(gl, "SNAPSHOT_VIEWS", str(tmp_path / "views"))
+    monkeypatch.setattr(a, "_run_cmd", lambda cmd: (32, "", "permission denied"))
+    with pytest.raises(RuntimeError, match="can't be read here"):
+        a.readable_snapshot_path({"path": str(tmp_path / "nope"), "zfs": "tank/p@s"})
+
+
+def test_a_mounted_snapshot_is_unmounted_before_it_is_destroyed(zfs, tmp_path, monkeypatch):
+    a, fake, pool = zfs
+    monkeypatch.setattr(gl, "SNAPSHOT_VIEWS", str(tmp_path / "views"))
+    a._make_share_dir(str(pool / "photos"))
+    a.create_snapshot("tank", "photos", "photos@auto-1")
+    full = next(iter(fake.snaps))
+    view = a._view_dir(full)
+    (tmp_path / "views").mkdir()
+    (tmp_path / "views" / os.path.basename(view)).mkdir()
+    monkeypatch.setattr(gl, "is_mount_point", lambda p: p == view)
+    assert a.delete_snapshot("tank", "photos@auto-1")["status"] == "deleted"
+    verbs = [c[0] if c[0] == "umount" else c[1] for c in fake.calls]
+    assert verbs.index("umount") < verbs.index("destroy") and not os.path.exists(view)

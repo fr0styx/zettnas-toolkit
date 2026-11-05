@@ -217,6 +217,9 @@ def _snapshot(name: str, pal: Any, pool_id: str | None = None) -> dict[str, Any]
     snap = next((s for s in pal.list_snapshots(pool_id) if s.get("name") == name), None)
     if not snap or not snap.get("path"):
         raise FileNotFoundError("No such snapshot.")
+    readable = getattr(pal, "readable_snapshot_path", None)
+    if callable(readable):  # a ZFS snapshot inside a container is read through a mount of its own
+        snap = {**snap, "path": readable(snap)}
     return snap
 
 
@@ -422,6 +425,12 @@ def rollback(
     src_root = os.path.realpath(snap["path"])
     live_root = os.path.realpath(_live_root(name, pal, pool_id))
     wanted = sorted(e for e in os.listdir(src_root) if e not in KEEP_ON_ROLLBACK)
+    if not wanted and any(e not in KEEP_ON_ROLLBACK for e in os.listdir(live_root)):
+        # a snapshot that can't be read looks empty: never take that for "the share was empty"
+        raise RuntimeError(
+            "This snapshot reads as empty while the share has files, so nothing was changed. "
+            "Restore files from it one by one, or delete the files yourself if the share really was empty then."
+        )
     # a share that is a btrfs subvolume gets the snapshot swapped in: no copy, no room needed
     swap = bool(getattr(pal, "can_swap_in", None) and pal.can_swap_in(live_root, src_root))
     _rollback_checks(share, src_root, live_root, wanted, need_room=not swap)
