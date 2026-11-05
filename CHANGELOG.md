@@ -156,6 +156,10 @@
 
 #### Usability
 
+- **The name service listens only where it has to** (CodeQL alert 473): it listened on port 5353
+  of every interface; it now listens on the mDNS group's address only and answers from the NAS's
+  own address.
+
 - **The share access dialog uses classes** (NUX-15): its 17 inline styles moved into 16 classes in
   76-share-access.css, which loads with the people dialogs; each checked in a browser to compute the
   same style in both themes.

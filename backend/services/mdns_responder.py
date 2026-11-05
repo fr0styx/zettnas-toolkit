@@ -20,6 +20,7 @@ import socket
 import struct
 import sys
 import time
+from typing import Any
 
 GROUP, PORT = "224.0.0.251", 5353
 A, PTR, TXT, AAAA, SRV, NSEC, ANY = 1, 12, 16, 28, 33, 47, 255
@@ -237,22 +238,46 @@ def smb_open(ip: str) -> bool:
         return False
 
 
-def open_socket(ip: str) -> socket.socket:
+def _shared(addr: tuple[str, int]) -> socket.socket:
+    """A UDP socket on port 5353 next to the host's own responder (Unraid's avahi)."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     if hasattr(socket, "SO_REUSEPORT"):
         try:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        except OSError:  # the host's responder may not allow it; SO_REUSEADDR is enough for multicast
+        except OSError:  # the host's responder may not allow it; SO_REUSEADDR is enough here
             print("[mdns] sharing port 5353 without SO_REUSEPORT", flush=True)
-    s.bind(("", PORT))
-    s.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(GROUP) + socket.inet_aton(ip))
-    s.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(ip))
-    s.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 255)
+    s.bind(addr)
     return s
 
 
-def probe(sock: socket.socket, r: Responder) -> bool:
+class Link:
+    """The responder's two sockets, not one on every interface: it listens on the mDNS group's
+    address only, and sends from the NAS's own address, both on port 5353 (a one-shot resolver such
+    as Windows takes answers only from that port)."""
+
+    def __init__(self, ip: str):
+        self.rx = _shared((GROUP, PORT))
+        self.rx.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(GROUP) + socket.inet_aton(ip))
+        self.tx = _shared((ip, PORT))
+        self.tx.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(ip))
+        self.tx.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 255)
+
+    def recvfrom(self, size: int) -> tuple[bytes, Any]:
+        return self.rx.recvfrom(size)
+
+    def sendto(self, data: bytes, addr: tuple[str, int]) -> int:
+        return self.tx.sendto(data, addr)
+
+    def settimeout(self, value: float | None) -> None:
+        self.rx.settimeout(value)
+
+
+def open_socket(ip: str) -> Link:
+    return Link(ip)
+
+
+def probe(sock: Any, r: Responder) -> bool:
     """Asks three times whether anyone else answers for our name; True when it is free."""
     query = struct.pack("!HHHHHH", 0, 0, 1, 0, 0, 0) + encode_name(r.host) + struct.pack("!HH", ANY, IN | 0x8000)
     sock.settimeout(0.25)

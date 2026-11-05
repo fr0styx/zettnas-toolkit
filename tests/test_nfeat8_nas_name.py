@@ -346,3 +346,49 @@ def test_turning_it_on_asks_first(client, auth_headers, docker):
     assert ok.status_code == 200 and ok.json()["running"] is True
     # once on, a rename needs no second yes
     assert client.put("/api/network/nas-name", json={"name": "home-nas"}, headers=auth_headers).status_code == 200
+
+
+class RecordingSocket:
+    """socket.socket as the Link uses it, recording what it was asked."""
+
+    made = []
+
+    def __init__(self, *args, refuse_reuseport=False):
+        self.opts, self.bound, self.sent, self.timeout = [], None, [], "unset"
+        RecordingSocket.made.append(self)
+        self.refuse_reuseport = refuse_reuseport
+
+    def setsockopt(self, level, name, value):
+        if name == getattr(socket, "SO_REUSEPORT", None) and self.refuse_reuseport:
+            raise OSError("not allowed")
+        self.opts.append((level, name, value))
+
+    def bind(self, addr):
+        self.bound = addr
+
+    def sendto(self, data, addr):
+        self.sent.append((data, addr))
+        return len(data)
+
+    def recvfrom(self, n):
+        return b"q", ("192.168.1.50", 5353)
+
+    def settimeout(self, t):
+        self.timeout = t
+
+
+def test_the_link_listens_on_the_group_and_sends_from_the_nas_address(monkeypatch, capsys):
+    RecordingSocket.made = []
+    monkeypatch.setattr(m.socket, "socket", lambda *a: RecordingSocket(*a, refuse_reuseport=True))
+    link = m.open_socket(IP)
+    rx, tx = RecordingSocket.made
+    assert rx.bound == (m.GROUP, m.PORT) and tx.bound == (IP, m.PORT)  # never every interface
+    membership = socket.inet_aton(m.GROUP) + socket.inet_aton(IP)
+    assert (socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, membership) in rx.opts
+    assert (socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(IP)) in tx.opts
+    assert link.recvfrom(10) == (b"q", ("192.168.1.50", 5353))
+    assert link.sendto(b"answer", (m.GROUP, m.PORT)) == 6 and tx.sent == [(b"answer", (m.GROUP, m.PORT))]
+    link.settimeout(0.25)
+    assert rx.timeout == 0.25 and tx.timeout == "unset"
+    if hasattr(socket, "SO_REUSEPORT"):
+        assert "without SO_REUSEPORT" in capsys.readouterr().out
