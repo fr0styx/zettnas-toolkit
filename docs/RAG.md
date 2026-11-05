@@ -69,7 +69,19 @@ Ollama can't serve one, but OpenVINO Model Server, Infinity and Hugging Face TEI
 Set `rerank_endpoint` in the AI config to its rerank URL (OVMS:
 `http://zettnas-ovms:8000/v3/rerank`, TEI/Infinity: `http://host:port/rerank`) and, if
 the server needs it, `rerank_model`. The top `rerank_top_n` results (default 30) are
-re-ordered; if the reranker is down, search keeps its usual order.
+re-ordered; if the reranker is down, search keeps its usual order. The reranker reads each
+result's whole chunk (up to 2,000 characters) and has `rerank_weight` of the say (default 0.2).
+`contrib/openvino-crossencoder` serves `bge-reranker-v2-m3` on an Intel iGPU.
+
+With a reranker set up, Ask Zetty also scores the documents it found against the question before
+it answers. When none of them looks like an answer (best score under `NOT_ANSWERED_BELOW` in
+`rag_rerank.py`), it says the answer isn't in the indexed files without asking the model.
+Otherwise, asked for a TV's warranty, the model gave the washing machine's date, and asked when
+the car insurance runs out, the car's inspection date; a line in the prompt saying the documents
+looked unrelated didn't stop it. An NLI
+model checking each sentence against its source was tried too and left out: on the eval's
+answers it also rejected many right ones (numbers written as words, answers in another language
+than the file, structured files), so it couldn't tell guesses from answers.
 
 ## How results are ranked
 

@@ -23,6 +23,10 @@ from backend.config import logger
 
 TIMEOUT_S = 4.0
 RERANK_WEIGHT = 0.2
+# Below this best score none of the found documents answers the question (AI-28). Measured with
+# bge-reranker-v2-m3 on the eval's questions: seven of the ten the files can't answer scored under
+# it, and one of 98 answerable ones (asked in French about a German file).
+NOT_ANSWERED_BELOW = 0.001
 
 
 def _norm(scores: list[float]) -> list[float]:
@@ -98,6 +102,24 @@ def _scaled(xs: list[float]) -> list[float]:
     return [0.0 if hi <= lo else (x - lo) / (hi - lo) for x in xs]
 
 
+def relevance(question: str, texts: list[str], cfg: dict[str, Any], client: httpx.Client | None = None) -> float | None:
+    """How well the best of these texts answers the question, 0-1, by the reranker; None without one."""
+    docs = [t[:2000] for t in texts if t and t.strip()][:20]
+    if not question.strip() or not docs:
+        return None
+    scores = rerank_scores(question, docs, cfg, client)
+    return max(scores) if scores else None
+
+
+def weight(cfg: dict[str, Any]) -> float:
+    """The reranker's share of the ranking: rerank_weight in the AI config, else RERANK_WEIGHT."""
+    try:
+        w = float(cfg.get("rerank_weight"))  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return RERANK_WEIGHT
+    return min(1.0, max(0.0, w))
+
+
 def rerank_items(
     query: str, items: list[dict[str, Any]], cfg: dict[str, Any], client: httpx.Client | None = None
 ) -> list[dict[str, Any]]:
@@ -106,8 +128,10 @@ def rerank_items(
         return items
     n = max(2, min(100, int(cfg.get("rerank_top_n") or 30)))
     head, tail = items[:n], items[n:]
+    # the whole chunk, not the short excerpt shown in the results (AI-12)
     docs = [
-        f"{it.get('title') or it.get('name') or ''}\n{it.get('excerpt') or it.get('chunk_text') or ''}"[:2000]
+        f"{it.get('title') or it.get('name') or ''}\n"
+        f"{it.get('raw_chunk_text') or it.get('chunk_text') or it.get('excerpt') or ''}"[:2000]
         for it in head
     ]
     scores = rerank_scores(query, docs, cfg, client)
@@ -115,7 +139,8 @@ def rerank_items(
         return items
     first = [float(it.get("score") or 0.0) for it in head]
     lo, hi = min(first), max(first)
-    mixed = [(1 - RERANK_WEIGHT) * a + RERANK_WEIGHT * b for a, b in zip(_scaled(first), _scaled(scores), strict=True)]
+    w = weight(cfg)
+    mixed = [(1 - w) * a + w * b for a, b in zip(_scaled(first), _scaled(scores), strict=True)]
     for it, s, m in zip(head, scores, mixed, strict=True):
         it["rerank_score"] = round(s, 4)
         # back on the original scale, so these still compare fairly with photo results

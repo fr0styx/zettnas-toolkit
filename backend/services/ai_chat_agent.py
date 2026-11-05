@@ -1233,6 +1233,43 @@ def _turn_classify(
     return citations, is_meta_diagnostic, is_pure_conversational, is_self_identity, photos, web_sources
 
 
+# What Zetty says when none of the found documents answers the question (AI-28)
+NOT_FOUND_REPLY = {
+    "en": "I couldn't find that in the indexed files: none of the files the search found is about it.",
+    "de": "Das habe ich in den indexierten Dateien nicht gefunden: keine der gefundenen Dateien handelt davon.",
+    "fr": "Je n'ai pas trouvé cela dans les fichiers indexés : aucun des fichiers trouvés n'en parle.",
+    "es": "No encontré eso en los archivos indexados: ninguno de los archivos encontrados trata de ello.",
+    "zh": "在已索引的文件中没有找到这个信息：搜索到的文件都与此无关。",
+}
+
+
+def _documents_unrelated(question: str, tool_results: list[dict[str, Any]]) -> bool:
+    """With a reranker set up, the found documents are scored against the question once more
+    (AI-28). When none of them looks like an answer, the model isn't asked: it had given the
+    washing machine's warranty date for the TV's, and when told in the prompt that the documents
+    looked unrelated it still did. False without a reranker, or when the web was searched too."""
+    from backend.services import rag_rerank
+
+    cfg = get_rag_engine().get_config()
+    if not cfg.get("rerank_endpoint") or any(tr.get("tool") == "browse_internet" for tr in tool_results):
+        return False
+    texts = [
+        f"{c.get('name') or ''}\n{c.get('raw_chunk_text') or c.get('full_parent_context') or c.get('excerpt') or ''}"
+        for tr in tool_results
+        if tr.get("tool") == "search_nas_knowledge"
+        for c in tr.get("citations") or []
+    ]
+    score = rag_rerank.relevance(question, texts, cfg)
+    return score is not None and score < rag_rerank.NOT_ANSWERED_BELOW
+
+
+def not_found_reply(question: str) -> str:
+    from backend.services import rag_lang
+
+    lang = "zh" if re.search(r"[\u4e00-\u9fff]", question or "") else rag_lang.detect(question)
+    return NOT_FOUND_REPLY.get(lang, NOT_FOUND_REPLY["en"])
+
+
 def _turn_build_prompt(*, accel, active_model, clean_msg, history, is_self_identity, tool_results, web_sources):
     """The model's messages: the system prompt (this NAS, the model, the tool results), recent
     history and the user turn."""
@@ -1376,7 +1413,14 @@ def _turn_call_model(
     user_text="",
 ):
     """Asks the model, running the tools it requests (at most three rounds). user_text is what the
-    person typed this turn: the only place a page the model fetches may come from (SEC-31)."""
+    person typed this turn: the only place a page the model fetches may come from (SEC-31). When
+    none of the found files answers the question, the model isn't asked (AI-28)."""
+    if _documents_unrelated(user_text, tool_results):
+        reply = not_found_reply(user_text)
+        sink = _TOKEN_SINK.get()
+        if sink:
+            sink("token", reply)
+        return 0, reply, 0.0, None, "ZettNAS"
     try:
         MAX_TOOL_RECURSIONS = 3
         tool_recursions = 0

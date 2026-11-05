@@ -553,6 +553,7 @@ def evaluate(
     measure_cut_off: bool = True,
     neutral_names: bool = False,
     hard_distractors: bool = False,
+    extra_cfg: dict | None = None,
 ) -> dict:
     from backend.services import rag_calibration
     from backend.services import rag_engine_search as search_mod
@@ -578,6 +579,7 @@ def evaluate(
         cfg["active_model"] = answers_model
     if llm_host:
         cfg["llm_endpoint"] = llm_host
+    cfg.update(extra_cfg or {})  # the reranker (AI-12)
     docs_root = os.path.join(tmp, "documents")
     neural = model != "zett_lexical_384d"
     measured_patch = patch.object(rag_calibration, "measured", return_value=None)
@@ -797,7 +799,12 @@ def main():
     ap.add_argument(
         "--hard-distractors", action="store_true", help="add near-topic files in each file's language and folder"
     )
+    ap.add_argument("--rerank", default=None, metavar="URL", help="rerank with this /rerank server (AI-12)")
+    ap.add_argument("--rerank-weight", type=float, default=None, help="the reranker's share of the ranking (0-1)")
     args = ap.parse_args()
+    extra = {"rerank_endpoint": args.rerank or ""}
+    if args.rerank_weight is not None:
+        extra["rerank_weight"] = args.rerank_weight
     out = evaluate(
         args.model,
         args.dim,
@@ -811,6 +818,7 @@ def main():
         not args.no_calibration,
         args.neutral_names,
         args.hard_distractors,
+        extra_cfg=extra,
     )
     rows = out.pop("answer_rows", None)
     if args.answers_out and rows is not None:

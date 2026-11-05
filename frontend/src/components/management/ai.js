@@ -13,6 +13,7 @@ import { installDocFilters, selectedTags } from './doc-filters.js';
 import { installPhotoFilters, selectedPhotoFilters, hasPhotoFilters } from './photo-filters.js';
 import { installDuplicatesButton } from './duplicates.js';
 import { installAiAccess } from './ai-access.js';
+import { bindCheckersForm } from './ai-checkers.js';
 import { formatDateTime, formatFixed, formatNumber, formatTime } from '../../format.js';
 import { setIconLabel } from '../../ui/primitives.js';
 
@@ -1723,26 +1724,7 @@ export async function fetchAndRenderAiStatus() {
 
     installAiAccess(document); // who can use Zetty (B8)
 
-    // Optional reranker (AI-13)
-    const rerankForm = document.getElementById('ai-rerank-form');
-    if (rerankForm) {
-      const ep = document.getElementById('ai-rerank-endpoint');
-      const md = document.getElementById('ai-rerank-model');
-      if (ep) ep.value = cfg.rerank_endpoint || '';
-      if (md) md.value = cfg.rerank_model || '';
-      if (!rerankForm.dataset.bound) {
-        rerankForm.dataset.bound = '1';
-        rerankForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          try {
-            await api.post('/api/ai/config', { rerank_endpoint: ep.value.trim(), rerank_model: md.value.trim() });
-            showToast(t('ai.rerank_saved', 'Reranker saved'), 'success');
-          } catch (err) {
-            showToast(t('sso.save_failed', 'Could not save: {error}', { error: err.message }), 'error');
-          }
-        });
-      }
-    }
+    bindCheckersForm(document, cfg); // the optional reranker (AI-13)
 
     // Photo search by meaning (B14)
     const pvForm = document.getElementById('ai-photo-vector-form');

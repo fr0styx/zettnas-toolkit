@@ -50,6 +50,18 @@
 
 #### Private AI
 
+- **Zetty says "not in your files" instead of borrowing a related fact** (AI-28): with a
+  reranker set up, the documents a question found are scored against it once more before Zetty
+  answers. When none of them looks like an answer, Zetty says so in the question's language and
+  the model isn't asked: it had given the washing machine's warranty date when asked about the
+  TV's. A line in the prompt saying the documents looked unrelated didn't stop the model.
+
+- **A multilingual reranker that runs on an Intel iGPU** (AI-12): `contrib/openvino-crossencoder`
+  serves `bge-reranker-v2-m3` from its ONNX export with OpenVINO, at the `/v3/rerank` address the
+  AI settings already take. The reranker now reads each result's whole chunk instead of the short
+  excerpt, and its share of the ranking can be set (`rerank_weight`, default 0.2). The eval can
+  run with it (`--rerank`, `--rerank-weight`).
+
 - **Asking about a PDF, a Word file or a photo is tested end to end** (AI-22), and PDFs printed
   by Chrome are in the PDF tests beside the macOS ones (AI-21).
 
