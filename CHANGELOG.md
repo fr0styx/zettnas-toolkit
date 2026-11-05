@@ -109,6 +109,11 @@
   don't say, the other is scored as a cross-language question, and a new gym question keeps ten
   that can't be answered), and a next step with its own number no longer counts against an answer.
 
+- **The answer test hears more ways of saying "the files don't say"** (NAI-20): "is not provided in
+  the given documents", "the documents do not mention …" and the Chinese "没有在…中提及" were scored
+  as guesses although they decline correctly. A sentence that declines and still gives a number or
+  a date of its own remains a guess.
+
 #### Performance
 
 - **Converted videos play smoothly** (NVID-1): a video the browser can't play as it is is now

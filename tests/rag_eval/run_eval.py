@@ -342,6 +342,16 @@ REFUSAL_MARKERS = (
     "未在",
     "未提及",
     "没有提及",
+    # and how it says it on an OpenVINO int4 build of the same model (NAI-20)
+    "not provided",
+    "do not mention",
+    "does not mention",
+    "don't mention",
+    "doesn't mention",
+    "pas fourni",
+    "no se proporciona",
+    "nicht genannt",
+    "没有在",
 )
 # a refusal later in a sentence counts when the files are named after it: "… is not in the indexed
 # files", not "the warranty is not in effect" (NAI-18)

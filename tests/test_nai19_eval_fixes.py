@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from tests.rag_eval.run_eval import answer_matches
+from tests.rag_eval.run_eval import answer_matches, says_not_found
 
 CORPUS = Path(__file__).parent / "rag_eval" / "corpus"
 
@@ -48,3 +48,16 @@ def test_a_gym_question_the_files_cannot_answer_keeps_ten_refusals():
     qa = json.loads((Path(__file__).parent / "rag_eval" / "qa.json").read_text())
     by_id = {q["id"]: q for q in qa}
     assert by_id["qa-108"]["unanswerable"] and sum(1 for q in qa if q.get("unanswerable")) == 10
+
+
+def test_more_ways_of_saying_the_files_do_not_say_count_as_a_refusal():
+    """NAI-20: three right refusals were scored as guesses."""
+    assert says_not_found("The VIN of your car is not provided in the given documents.", "What is the VIN of my car?")
+    assert says_not_found(
+        "The documents do not mention a hotel booked for a Lisbon trip in 2024.",
+        "Which hotel did we book for the Lisbon trip in 2024?",
+    )
+    assert says_not_found("我们家的无线网络密码没有在提供的文件中提及。", "我们家的无线网络密码是什么？")
+    # still a guess: a date of its own beside the phrase, or a claim
+    assert not says_not_found("The documents do not mention it, but it is probably 2027.", "When does it expire?")
+    assert not says_not_found("Die Garantie meines Fernsehers läuft im Jahr 2027 ab.", "Wann läuft die Garantie ab?")
