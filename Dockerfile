@@ -72,8 +72,11 @@ WORKDIR /app
 
 COPY requirements.txt requirements.lock requirements-dev.txt requirements-dev.lock ./
 ARG DEV_BUILD=0
-RUN --mount=type=cache,target=/root/.cache/pip pip install --require-hashes -r requirements.lock \
-    && if [ "$DEV_BUILD" = "1" ]; then pip install --require-hashes -r requirements-dev.lock; fi
+# --no-compile: no __pycache__ in the layer people download (about 40 MB): Python writes each module's
+# bytecode on its first import instead (a fraction of a second, once per container), and the image
+# stays inside its download budget (PERF-29)
+RUN --mount=type=cache,target=/root/.cache/pip pip install --no-compile --require-hashes -r requirements.lock \
+    && if [ "$DEV_BUILD" = "1" ]; then pip install --no-compile --require-hashes -r requirements-dev.lock; fi
 # ARC-29: in the image people install, the test switches (TESTING, ZETTNAS_TEST_MODE,
 # ZETTNAS_FAST_HASH) do nothing (backend/settings.py: test_mode); the dev build keeps them
 RUN if [ "$DEV_BUILD" != "1" ]; then echo "release image: test switches are off" > /etc/zettnas-release; fi

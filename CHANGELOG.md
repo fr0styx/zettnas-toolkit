@@ -114,6 +114,10 @@
   as guesses although they decline correctly. A sentence that declines and still gives a number or
   a date of its own remains a guess.
 
+- **A smaller image to download**: Python packages are installed without their precompiled
+  bytecode (about 40 MB), which Python writes on first import instead, once per container. The
+  iCloud sign-in's libraries had taken the image just over its 700 MB download budget.
+
 #### Performance
 
 - **Converted videos play smoothly** (NVID-1): a video the browser can't play as it is is now
