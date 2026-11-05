@@ -199,3 +199,18 @@ body.desktop-locked #os-dock-container {
 .zn-hours-days { display: flex; flex-wrap: wrap; gap: 6px; }
 .zn-hours-day { display: inline-flex; align-items: center; gap: 3px; font-size: var(--zn-fs-xs); }
 .zn-hours-times { display: flex; flex-wrap: wrap; gap: 12px; font-size: var(--zn-fs-xs); }
+
+/* The user menu's markup (user-flyout.js): each rule is the inline style it replaced (NUX-15) */
+#user-profile-flyout .ufl-head { display:flex; align-items:center; gap:12px; padding:16px; border-bottom:1px solid var(--zn-line-8); }
+#user-profile-flyout .ufl-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:16px; border:1px solid var(--lt-r-ffffff4c, rgba(255,255,255,0.3)); box-shadow:0 4px 12px rgba(2,132,199,0.3); }
+#user-profile-flyout .ufl-text { flex:1; min-width:0; }
+#user-profile-flyout .ufl-name { font-weight:700; color:var(--zn-text-strong); font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#user-profile-flyout .ufl-user { font-size:var(--zn-fs-xs); color:var(--muted); }
+#user-profile-flyout .ufl-role { font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); background:rgba(56,189,248,0.12); padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px; }
+#user-profile-flyout .ufl-actions { padding:8px; }
+#user-profile-flyout .ufl-btn { width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:var(--zn-text-strong); font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease; }
+#user-profile-flyout .ufl-ico { font-size:15px; }
+#user-profile-flyout .ufl-key { margin-left:auto; font-size:var(--zn-fs-xs); color:var(--muted); font-family:monospace; }
+#user-profile-flyout .ufl-sep { height:1px; background:var(--zn-glaze-6); margin:6px 0; }
+#user-profile-flyout .ufl-btn-soft { width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:var(--zn-text-soft); font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease; }
+#user-profile-flyout .ufl-btn-crit { width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:var(--crit, #ff6b6b); font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease; }

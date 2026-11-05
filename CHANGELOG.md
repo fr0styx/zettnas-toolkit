@@ -195,6 +195,9 @@
 
 #### Usability
 
+- **The user menu uses classes** (NUX-15): its 19 inline styles became 13 classes beside the menu's
+  own rules; the same look, checked in both themes, and the first load stays at its size.
+
 - **Mission Control's time zone list, calendar agenda and feeds use classes** (NUX-15): 41 inline
   styles that widgets.js wrote into them moved into `77-mc-lists.css`, which loads with Mission
   Control; each class computes the same style as the one it replaced, checked in both themes.

@@ -31,33 +31,33 @@ export function toggleUserProfileFlyout(anchorEl) {
     flyout.id = 'user-profile-flyout';
     flyout.className = 'user-profile-flyout glassmorphic-panel';
     flyout.innerHTML = `
-      <div class="user-flyout-header" style="display:flex; align-items:center; gap:12px; padding:16px; border-bottom:1px solid var(--zn-line-8);">
-        <div id="user-flyout-avatar" style="width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:16px; border:1px solid var(--lt-r-ffffff4c, rgba(255,255,255,0.3)); box-shadow:0 4px 12px rgba(2,132,199,0.3);">
+      <div class="user-flyout-header ufl-head">
+        <div id="user-flyout-avatar" class="ufl-avatar">
           A
         </div>
-        <div style="flex:1; min-width:0;">
-          <div id="user-flyout-name" style="font-weight:700; color:var(--zn-text-strong); font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(t('dock.uf_admin', 'Administrator'))}</div>
-          <div id="user-flyout-username" style="font-size:var(--zn-fs-xs); color:var(--muted);">@admin</div>
-          <span id="user-flyout-role" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); background:rgba(56,189,248,0.12); padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px;">${escapeHtml(t('role.superadmin', 'Administrator'))}</span>
+        <div class="ufl-text">
+          <div id="user-flyout-name" class="ufl-name">${escapeHtml(t('dock.uf_admin', 'Administrator'))}</div>
+          <div id="user-flyout-username" class="ufl-user">@admin</div>
+          <span id="user-flyout-role" class="ufl-role">${escapeHtml(t('role.superadmin', 'Administrator'))}</span>
         </div>
       </div>
-      <div class="user-flyout-actions" style="padding:8px;">
-        <button class="user-flyout-btn" id="btn-flyout-lock" style="width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:var(--zn-text-strong); font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease;">
-          <span style="font-size:15px;">🔒</span> <span>${escapeHtml(t('dock.uf_lock', 'Lock screen'))}</span>
-          <span style="margin-left:auto; font-size:var(--zn-fs-xs); color:var(--muted); font-family:monospace;">Cmd+L</span>
+      <div class="user-flyout-actions ufl-actions">
+        <button class="user-flyout-btn ufl-btn" id="btn-flyout-lock">
+          <span class="ufl-ico">🔒</span> <span>${escapeHtml(t('dock.uf_lock', 'Lock screen'))}</span>
+          <span class="ufl-key">Cmd+L</span>
         </button>
-        <button class="user-flyout-btn" id="btn-flyout-users" style="width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:var(--zn-text-strong); font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease;">
-          <span style="font-size:15px;">👥</span> <span>${escapeHtml(t('dock.uf_people', 'People and permissions'))}</span>
+        <button class="user-flyout-btn ufl-btn" id="btn-flyout-users">
+          <span class="ufl-ico">👥</span> <span>${escapeHtml(t('dock.uf_people', 'People and permissions'))}</span>
         </button>
-        <button class="user-flyout-btn" id="btn-flyout-security" style="width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:var(--zn-text-strong); font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease;">
-          <span style="font-size:15px;">🛡️</span> <span>${escapeHtml(t('dock.uf_security', 'Sign-in security'))}</span>
+        <button class="user-flyout-btn ufl-btn" id="btn-flyout-security">
+          <span class="ufl-ico">🛡️</span> <span>${escapeHtml(t('dock.uf_security', 'Sign-in security'))}</span>
         </button>
-        <div style="height:1px; background:var(--zn-glaze-6); margin:6px 0;"></div>
-        <button class="user-flyout-btn" id="btn-flyout-switch" style="width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:var(--zn-text-soft); font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease;">
-          <span style="font-size:15px;">🔄</span> <span>${escapeHtml(t('dock.uf_switch', 'Switch person'))}</span>
+        <div class="ufl-sep"></div>
+        <button class="user-flyout-btn ufl-btn-soft" id="btn-flyout-switch">
+          <span class="ufl-ico">🔄</span> <span>${escapeHtml(t('dock.uf_switch', 'Switch person'))}</span>
         </button>
-        <button class="user-flyout-btn" id="btn-flyout-logout" style="width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:var(--crit, #ff6b6b); font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease;">
-          <span style="font-size:15px;">🚪</span> <span>${escapeHtml(t('mgmt.sec_logout', 'Sign out'))}</span>
+        <button class="user-flyout-btn ufl-btn-crit" id="btn-flyout-logout">
+          <span class="ufl-ico">🚪</span> <span>${escapeHtml(t('mgmt.sec_logout', 'Sign out'))}</span>
         </button>
       </div>
     `;
