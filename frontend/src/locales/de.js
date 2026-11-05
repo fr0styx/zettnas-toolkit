@@ -3027,6 +3027,8 @@ export default {
   "confirm.pool_scrub_schedule.msg": "Den Pool {target} einmal im Monat auf Fehler prüfen? Seine Festplatten laufen dafür an.",
   "confirm.security_advisor_fix.title": "Korrektur anwenden",
   "confirm.security_advisor_fix.msg": "Die Korrektur \"{target}\" des Sicherheitsberaters anwenden? Manche verlieren dadurch bisherige Zugriffe.",
+  "confirm.network_nas_name.title": "Einschalten",
+  "confirm.network_nas_name.msg": "Soll das NAS im Heimnetz auf {target} antworten? Ein kleiner Helfer im Netzwerk des Hosts übernimmt das und beantwortet nur Namensanfragen.",
   "offsite.plain_http": "Diese Adresse liegt außerhalb Ihres Netzwerks und nutzt einfaches http: Das Sicherungspasswort wird unverschlüsselt übertragen. Erreichen Sie sie über Tailscale oder nutzen Sie rest:https://.",
   "fm.bins_asleep": "{count, plural, one {# Papierkorb liegt auf einer schlafenden Festplatte und wird nicht angezeigt, damit sie nicht aufwacht.} other {# Papierkörbe liegen auf einer schlafenden Festplatte und werden nicht angezeigt, damit sie nicht aufwacht.}} Sie erscheinen, sobald die Festplatte wach ist.",
   "updates.busy_title": "Es läuft noch etwas",

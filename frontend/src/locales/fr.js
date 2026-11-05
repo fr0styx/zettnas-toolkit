@@ -3027,6 +3027,8 @@ export default {
   "confirm.pool_scrub_schedule.msg": "Vérifier le pool {target} une fois par mois ? Ses disques démarrent pour la vérification.",
   "confirm.security_advisor_fix.title": "Appliquer la correction",
   "confirm.security_advisor_fix.msg": "Appliquer la correction « {target} » du conseiller de sécurité ? Certaines personnes peuvent perdre des accès qu'elles avaient.",
+  "confirm.network_nas_name.title": "Activer",
+  "confirm.network_nas_name.msg": "Laisser le NAS répondre à {target} sur le réseau de la maison ? Un petit assistant sur le réseau de l'hôte s'en charge et ne répond qu'aux recherches de nom.",
   "offsite.plain_http": "Cette adresse est hors de votre réseau et utilise http simple : le mot de passe de la sauvegarde circule en clair. Passez par Tailscale ou utilisez rest:https://.",
   "fm.bins_asleep": "{count, plural, one {# corbeille se trouve} other {# corbeilles se trouvent}} sur un disque en veille et {count, plural, one {n'est pas affichée} other {ne sont pas affichées}}, pour ne pas le réveiller. Elles apparaîtront à son réveil.",
   "updates.busy_title": "Des tâches sont encore en cours",

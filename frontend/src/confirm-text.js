@@ -32,6 +32,7 @@ const ACTIONS = {
   'share.make_subvolume': ['Make snapshot-ready', 'Make the share {target} snapshot-ready? Its files move into a btrfs subvolume of the same name. Close files on it first: changes saved while it runs may be lost.', true],
   'pool.scrub_schedule': ['Check monthly', 'Check the pool {target} for errors once a month? Its disks spin up for the check.', false],
   'security.advisor_fix': ['Apply the fix', 'Apply the Security Advisor fix "{target}"? People may lose access they had before.', false],
+  'network.nas_name': ['Turn on', 'Let the NAS answer to {target} on the home network? A small helper on the host\'s network does it and only answers name lookups.', false],
 };
 
 const key = (action) => action.replace(/[^a-z0-9]+/gi, '_');

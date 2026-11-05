@@ -3027,6 +3027,8 @@ export default {
   "confirm.pool_scrub_schedule.msg": "Check the pool {target} for errors once a month? Its disks spin up for the check.",
   "confirm.security_advisor_fix.title": "Apply the fix",
   "confirm.security_advisor_fix.msg": "Apply the Security Advisor fix \"{target}\"? People may lose access they had before.",
+  "confirm.network_nas_name.title": "Turn on",
+  "confirm.network_nas_name.msg": "Let the NAS answer to {target} on the home network? A small helper on the host's network does it and only answers name lookups.",
   "offsite.plain_http": "This address is outside your network and uses plain http: the backup password travels in the clear. Reach it over Tailscale, or use rest:https://.",
   "fm.bins_asleep": "{count, plural, one {# Recycle Bin is} other {# Recycle Bins are}} on a sleeping disk and not shown, so the disk stays asleep. They appear once it wakes.",
   "updates.busy_title": "Some work is still running",

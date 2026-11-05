@@ -163,8 +163,8 @@
 
 - **Find the NAS by name** (NFEAT-8): computers and phones on the home network reach it as
   `zettnas.local`: `http://zettnas.local:<port>` in a browser, `\\zettnas.local` in Windows, and in
-  Finder's sidebar when the NAS shares files over SMB. On by default, with a switch and the name in
-  Network → File Sharing Services; a renamed NAS keeps answering to its old name too, so bookmarks
+  Finder's sidebar when the NAS shares files over SMB. Turned on (and confirmed) with the switch in
+  Network → File Sharing Services, where the name is set too; a renamed NAS keeps answering to its old name too, so bookmarks
   and saved shares keep working. A small container on the host's network does the answering (the
   app's own container can't reach the network's multicast); it shares the port with a responder the
   host may already run, such as Unraid's, and steps aside to `<name>-2` if another device has the name.

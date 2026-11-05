@@ -3027,6 +3027,8 @@ export default {
   "confirm.pool_scrub_schedule.msg": "要每月检查一次存储池 {target} 的错误吗？检查时其磁盘会转起来。",
   "confirm.security_advisor_fix.title": "应用修复",
   "confirm.security_advisor_fix.msg": "要应用安全顾问的修复“{target}”吗？有些人可能会失去原有的访问权限。",
+  "confirm.network_nas_name.title": "开启",
+  "confirm.network_nas_name.msg": "让 NAS 在家庭网络中响应 {target}？一个运行在主机网络上的小助手负责这件事，只回答名称查询。",
   "offsite.plain_http": "此地址在你的网络之外，且使用未加密的 http：备份密码会以明文传输。请通过 Tailscale 访问，或使用 rest:https://。",
   "fm.bins_asleep": "有 {count} 个回收站位于休眠的磁盘上，为了不唤醒磁盘暂不显示。磁盘唤醒后即会出现。",
   "updates.busy_title": "仍有任务在运行",

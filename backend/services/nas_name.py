@@ -3,7 +3,9 @@
 The responder (mdns_responder.py) needs the host's network to reach the LAN's multicast, which the
 app's own container doesn't have, so it runs in a small container of its own on the host network,
 made from the app's image (D17). This module starts, updates and removes that container and keeps
-the setting: on by default, the name, and the names the NAS had before.
+the setting: off until the person turns it on and confirms (the Docker guard lets a container on
+the host's network through only then; the yes is remembered, so an update or a rename can make it
+again), the name, and the names the NAS had before.
 
 The rebrand: DEFAULT_NAME is the one place the product's name is used. After the rebrand, the old
 name goes into PREVIOUS_NAMES so bookmarks, saved shares and Finder favourites keep working; a name
@@ -28,6 +30,7 @@ KEEP_OLD = 3  # names the family used before that still answer
 CONTAINER = "zettnas-name"
 RESPONDER = "/app/backend/services/mdns_responder.py"
 STATE_FILE = os.path.join(DATA_DIR, "nas_name.json")
+ELEVATED = {"X-ZettNAS-Elevated": "1"}
 _NAME = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
 _lock = threading.Lock()
 NO_DOCKER = "Docker is not reachable, so the name can't be announced."
@@ -38,7 +41,7 @@ def valid(name: str) -> bool:
 
 
 def config() -> dict[str, Any]:
-    """{enabled, name, previous}: what is saved, else on with the default name (or ZETTNAS_NAS_NAME)."""
+    """{enabled, name, previous}: what is saved, else off with the default name (or ZETTNAS_NAS_NAME)."""
     from backend import settings
 
     data = read_json(STATE_FILE, {})
@@ -46,7 +49,7 @@ def config() -> dict[str, Any]:
     name = str(data.get("name") or settings.current("nas_name") or DEFAULT_NAME).lower()
     previous = [p for p in data.get("previous", []) if isinstance(p, str) and valid(p)]
     return {
-        "enabled": bool(data.get("enabled", True)),
+        "enabled": bool(data.get("enabled", False)),
         "name": name if valid(name) else DEFAULT_NAME,
         "previous": previous,
     }
@@ -85,11 +88,11 @@ def save(enabled: bool | None = None, name: str | None = None) -> dict[str, Any]
 
 
 # --- the container ---------------------------------------------------------------------------------
-def _docker(method: str, path: str, body: dict | None = None) -> tuple[int, Any]:
+def _docker(method: str, path: str, body: dict | None = None, headers: dict | None = None) -> tuple[int, Any]:
     from backend.services.container_mutator import docker_request
 
     try:
-        return docker_request(method, path, body=body)
+        return docker_request(method, path, body=body, headers=headers)
     except (OSError, RuntimeError):  # no Docker socket (or it refused): the same as no answer
         logger.debug("[NasName] Docker did not answer %s %s", method, path, exc_info=True)
         return 0, None
@@ -165,7 +168,8 @@ def ensure() -> dict[str, Any]:
                 start, _ = _docker("POST", f"/containers/{CONTAINER}/start")
                 return status(cfg, running=start in (200, 204, 304), port=web_port(me))
             _remove()
-        created, resp = _docker("POST", f"/containers/create?name={CONTAINER}", want)
+        # the host's network: the person said yes when turning it on (Docker guard, ELEVATED)
+        created, resp = _docker("POST", f"/containers/create?name={CONTAINER}", want, ELEVATED)
         if created not in (200, 201):
             logger.warning("[NasName] Could not create %s: %s %s", CONTAINER, created, resp)
             return status(cfg, running=False, error="The name service could not be started.")

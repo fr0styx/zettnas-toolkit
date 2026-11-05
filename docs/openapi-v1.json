@@ -58999,7 +58999,7 @@
     ]
    },
    "put": {
-    "description": "Turns the name on or off or changes it; the previous name keeps answering.",
+    "description": "Turns the name on or off or changes it; the previous name keeps answering. Turning it on is\nconfirmed first (428 until then): it runs a helper on the host's network.",
     "operationId": "put_nas_name_api_v1_network_nas_name_put",
     "requestBody": {
      "content": {

@@ -115,13 +115,14 @@ class FakeDocker:
         self.box = None
         self.calls = []
 
-    def __call__(self, method, path, body=None):
+    def __call__(self, method, path, body=None, headers=None):
         self.calls.append((method, path.split("?")[0]))
         if path.startswith(f"/containers/{nas_name.CONTAINER}/json"):
             return (200, self.box) if self.box else (404, {})
         if path.startswith("/containers/") and path.endswith("/json"):
             return 200, self.me
         if path.startswith("/containers/create"):
+            self.created_with = headers
             self.box = {"Config": {**body, "Labels": body["Labels"]}, "State": {"Running": False}}
             return 201, {"Id": "x"}
         if path.endswith("/start"):
@@ -141,8 +142,11 @@ def docker(monkeypatch, tmp_path):
     return fake
 
 
-def test_on_by_default_with_the_products_name(docker):
-    st = nas_name.ensure()
+def test_off_until_turned_on_then_with_the_products_name(docker):
+    off = nas_name.ensure()
+    assert off["enabled"] is False and off["running"] is False and docker.box is None
+    st = nas_name.save(enabled=True)
+    assert docker.created_with == {"X-ZettNAS-Elevated": "1"}  # the Docker guard's yes
     assert st == {
         "enabled": True,
         "name": "zettnas",
@@ -161,6 +165,7 @@ def test_on_by_default_with_the_products_name(docker):
 
 
 def test_a_rename_keeps_the_old_name_answering_and_an_update_recreates(docker):
+    nas_name.save(enabled=True)
     nas_name.ensure()
     st = nas_name.save(name="Smith-NAS.local")
     assert st["name"] == "smith-nas" and st["also_answers"] == ["zettnas"]
@@ -179,11 +184,12 @@ def test_a_rename_keeps_the_old_name_answering_and_an_update_recreates(docker):
 def test_after_the_rebrand_the_old_product_name_still_answers(docker, monkeypatch):
     monkeypatch.setattr(nas_name, "DEFAULT_NAME", "newbrand")
     monkeypatch.setattr(nas_name, "PREVIOUS_NAMES", ("zettnas",))
-    st = nas_name.ensure()
+    st = nas_name.save(enabled=True)
     assert st["name"] == "newbrand" and st["also_answers"] == ["zettnas"]
 
 
 def test_turning_it_off_removes_the_container(docker):
+    nas_name.save(enabled=True)
     nas_name.ensure()
     st = nas_name.save(enabled=False)
     assert st["enabled"] is False and st["running"] is False and docker.box is None
@@ -191,11 +197,13 @@ def test_turning_it_off_removes_the_container(docker):
 
 
 def test_on_the_hosts_network_the_apps_own_port_is_used(docker):
+    nas_name.save(enabled=True)
     docker.me["HostConfig"] = {"NetworkMode": "host"}
     assert nas_name.ensure()["url"] == "http://zettnas.local:8082"
 
 
 def test_without_docker_it_says_why(docker, monkeypatch):
+    nas_name.save(enabled=True)
     monkeypatch.setattr(nas_name, "_self", lambda: {})
     st = nas_name.ensure()
     assert st["running"] is False and "Docker" in st["error"]
@@ -210,14 +218,15 @@ def test_without_a_docker_socket_it_says_so_instead_of_failing(monkeypatch, tmp_
         raise RuntimeError("Docker socket not reachable")
 
     monkeypatch.setattr(container_mutator, "docker_request", refused)
-    st = nas_name.ensure()
+    st = nas_name.save(enabled=True)
     assert st["enabled"] and not st["running"] and "Docker" in st["error"]
     assert nas_name.status()["running"] is False and nas_name.status()["error"] == nas_name.NO_DOCKER
 
 
 def test_the_api(client, auth_headers, docker):
     r = client.get("/api/network/nas-name", headers=auth_headers)
-    assert r.status_code == 200 and r.json()["name"] == "zettnas"
+    assert r.status_code == 200 and r.json()["name"] == "zettnas" and r.json()["enabled"] is False
+    assert client.put("/api/network/nas-name", json={"enabled": True}, headers=auth_headers).json()["running"]
     r = client.put("/api/network/nas-name", json={"name": "family-nas"}, headers=auth_headers)
     assert r.status_code == 200 and r.json()["address"] == "family-nas.local"
     assert client.put("/api/network/nas-name", json={"name": "a b"}, headers=auth_headers).status_code == 400
@@ -284,6 +293,7 @@ def test_probing_finds_a_free_name_or_one_taken_by_another_device():
 
 
 def test_a_stopped_container_is_started_and_a_failed_create_is_said(docker):
+    nas_name.save(enabled=True)
     nas_name.ensure()
     docker.box["State"]["Running"] = False
     calls = len(docker.calls)
@@ -294,10 +304,10 @@ def test_a_stopped_container_is_started_and_a_failed_create_is_said(docker):
     real = docker.__call__
 
     class Failing(FakeDocker):
-        def __call__(self, method, path, body=None):
+        def __call__(self, method, path, body=None, headers=None):
             if path.startswith("/containers/create"):
                 return 500, {"message": "no space"}
-            return real(method, path, body)
+            return real(method, path, body, headers)
 
     failing = Failing()
     failing.me, failing.box = docker.me, None
@@ -319,3 +329,20 @@ def test_startup_checks_it_on_a_thread(monkeypatch):
     assert done == [1]
     monkeypatch.setattr(nas_name, "ensure", lambda: (_ for _ in ()).throw(OSError("docker gone")))
     nas_name.ensure_soon()  # a failure is logged, not raised
+
+
+@pytest.mark.real_confirmations
+def test_turning_it_on_asks_first(client, auth_headers, docker):
+    r = client.put("/api/network/nas-name", json={"enabled": True}, headers=auth_headers)
+    assert r.status_code == 428 and r.json()["action"] == "network.nas_name" and docker.box is None
+    tok = client.post(
+        "/api/confirmations", headers=auth_headers, json={"action": "network.nas_name", "target": "zettnas.local"}
+    )
+    ok = client.put(
+        "/api/network/nas-name",
+        json={"enabled": True},
+        headers={**auth_headers, "X-Confirm-Token": tok.json()["token"]},
+    )
+    assert ok.status_code == 200 and ok.json()["running"] is True
+    # once on, a rename needs no second yes
+    assert client.put("/api/network/nas-name", json={"name": "home-nas"}, headers=auth_headers).status_code == 200

@@ -3027,6 +3027,8 @@ export default {
   "confirm.pool_scrub_schedule.msg": "¿Revisar el grupo {target} en busca de errores una vez al mes? Sus discos arrancan para la revisión.",
   "confirm.security_advisor_fix.title": "Aplicar la corrección",
   "confirm.security_advisor_fix.msg": "¿Aplicar la corrección «{target}» del asesor de seguridad? Algunas personas pueden perder accesos que tenían.",
+  "confirm.network_nas_name.title": "Activar",
+  "confirm.network_nas_name.msg": "¿Dejar que el NAS responda a {target} en la red de casa? Un pequeño ayudante en la red del host lo hace y solo responde a consultas de nombre.",
   "offsite.plain_http": "Esta dirección está fuera de tu red y usa http sin cifrar: la contraseña de la copia viaja en claro. Accede a ella por Tailscale o usa rest:https://.",
   "fm.bins_asleep": "{count, plural, one {# papelera está en un disco en reposo y no se muestra, para no despertarlo.} other {# papeleras están en un disco en reposo y no se muestran, para no despertarlo.}} Aparecerán cuando despierte.",
   "updates.busy_title": "Todavía hay tareas en marcha",
