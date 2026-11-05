@@ -181,6 +181,12 @@ class Settings:
         group="File services",
     )
     sftp_port: int = _s("SFTP_PORT", 2222, "Port of the built-in SFTP server.", lo=1, hi=65535, group="File services")
+    nas_name: str = _s(
+        "ZETTNAS_NAS_NAME",
+        "",
+        "The NAS's name on the home network (<name>.local); empty: zettnas.",
+        group="File services",
+    )
     webdav_port: int = _s(
         "WEBDAV_PORT", 8084, "Port of the built-in WebDAV server.", lo=1, hi=65535, group="File services"
     )

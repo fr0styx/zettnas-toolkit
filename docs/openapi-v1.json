@@ -28376,6 +28376,35 @@
     "title": "MyPreferences",
     "type": "object"
    },
+   "NasNameUpdate": {
+    "properties": {
+     "enabled": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Enabled"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "maxLength": 70,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     }
+    },
+    "title": "NasNameUpdate",
+    "type": "object"
+   },
    "NewInviteResponse": {
     "additionalProperties": true,
     "description": "POST /invites",
@@ -58678,6 +58707,83 @@
     "summary": "Post Wireguard Subnet Routing",
     "tags": [
      "Network & Switching"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/network/nas-name": {
+   "get": {
+    "description": "Whether the NAS answers to <name>.local, the name, the older names that still answer and the\nweb address.",
+    "operationId": "get_nas_name_api_v1_network_nas_name_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Nas Name Api V1 Network Nas Name Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Nas Name",
+    "tags": [
+     "Network"
+    ],
+    "x-required-scopes": [
+     "system:view"
+    ]
+   },
+   "put": {
+    "description": "Turns the name on or off or changes it; the previous name keeps answering.",
+    "operationId": "put_nas_name_api_v1_network_nas_name_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NasNameUpdate"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Nas Name Api V1 Network Nas Name Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Nas Name",
+    "tags": [
+     "Network"
     ],
     "x-required-scopes": [
      "system:config"

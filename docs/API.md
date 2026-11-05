@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-656 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+658 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -367,6 +367,13 @@ request and response schemas.
 | `POST` | `/api/v1/metrics/memory/tracing` | `system:config` | Turns allocation tracing on or off (it costs memory and time while on) |
 | `GET` | `/api/v1/metrics/network-topology` | `system:view` | Network topology metrics and switch status |
 | `GET` | `/api/v1/metrics/requests` | `system:view` | The busiest API routes: requests, errors and latency (ARCH-10) |
+
+### Network
+
+| Method | Path | Access | What it does |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/network/nas-name` | `system:view` | Whether the NAS answers to <name>.local, the name, the older names that still answer and the web address |
+| `PUT` | `/api/v1/network/nas-name` | `system:config` | Turns the name on or off or changes it; the previous name keeps answering |
 
 ### Network & Switching
 

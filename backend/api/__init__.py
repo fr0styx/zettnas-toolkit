@@ -28,6 +28,7 @@ from backend.api.led import router as led_router
 from backend.api.mcp import router as mcp_router
 from backend.api.media import router as media_router
 from backend.api.metrics import router as metrics_router
+from backend.api.nas_name import router as nas_name_router
 from backend.api.network import router as network_router
 from backend.api.notifications import router as notifications_router
 from backend.api.offsite import router as offsite_router  # noqa: E402
@@ -94,6 +95,7 @@ api_router.include_router(family_filter_router)
 api_router.include_router(encrypted_folders_router)
 api_router.include_router(media_router)
 api_router.include_router(photo_import_router)  # NFEAT-3
+api_router.include_router(nas_name_router)  # NFEAT-8
 api_router.include_router(sftp_router)
 api_router.include_router(vms_router)
 api_router.include_router(snmp_router)
@@ -130,6 +132,7 @@ __all__ = [
     "encrypted_folders_router",
     "media_router",
     "photo_import_router",
+    "nas_name_router",
     "sftp_router",
     "vms_router",
     "snmp_router",

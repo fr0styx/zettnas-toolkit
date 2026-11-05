@@ -122,6 +122,9 @@ def _start_network_services() -> None:
     from backend.services.nut_server import start_if_enabled as start_nut_server
 
     start_nut_server()
+    from backend.services import nas_name
+
+    nas_name.ensure_soon()  # NFEAT-8: <name>.local, its container on the app's current image
 
 
 def _warn_default_password() -> None:

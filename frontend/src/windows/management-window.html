@@ -2052,6 +2052,29 @@
               </div>
               <div class="mgmt-detail-body">
                 <div class="nsv-grid" id="network-services-grid">
+                  <!-- Find this NAS by name (NFEAT-8) -->
+                  <div class="nsv-col-box" id="nas-name-card">
+                    <div class="nsv-row-3">
+                      <div class="nsv-row-4">
+                        <span class="nsv-fs18" aria-hidden="true">🔎</span>
+                        <div>
+                          <div class="nsv-fs13-bold-strong" data-i18n="nas_name.title">Find this NAS by name</div>
+                          <div class="nsv-xs-muted" id="nas-name-status" aria-live="polite">…</div>
+                        </div>
+                      </div>
+                      <button type="button" class="btn-pill-toggle" id="nas-name-toggle" aria-pressed="false" aria-labelledby="nas-name-title-label" data-i18n="nas_name.btn_off">Off</button>
+                    </div>
+                    <div class="nsv-xs-muted-2" id="nas-name-title-label" data-i18n="nas_name.help">Computers and phones on this network reach the NAS by name: in a browser, in Finder and as \\name.local in Windows.</div>
+                    <div class="nsv-row-4">
+                      <label class="nsv-xs-muted" for="nas-name-input" data-i18n="nas_name.label">Name</label>
+                      <input type="text" class="nas-name-input" id="nas-name-input" spellcheck="false" autocomplete="off" maxlength="63" />
+                      <span class="nsv-xs-muted" translate="no">.local</span>
+                      <button type="button" class="btn-pill-toggle is-small" id="nas-name-save" data-i18n="nas_name.save">Save</button>
+                    </div>
+                    <a class="nsv-xs-muted-2" id="nas-name-link" href="#" target="_blank" rel="noopener" hidden></a>
+                    <div class="nsv-xs-muted-2" id="nas-name-old" hidden></div>
+                  </div>
+
                   <!-- Samba SMB3 Card -->
                   <div class="nsv-col-box">
                     <div class="nsv-row-3">

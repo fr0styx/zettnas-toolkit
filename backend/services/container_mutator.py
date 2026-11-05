@@ -40,6 +40,9 @@ def _docker_request(
         raise RuntimeError(f"Docker socket not reachable: {e.message}") from e
 
 
+docker_request = _docker_request  # shared with the name service (NFEAT-8)
+
+
 def check_port_available_detailed(port: int, proto: str = "tcp", host: str = "0.0.0.0") -> tuple[bool, str | None]:
     """
     Checks if a local port is available to bind without conflicts.

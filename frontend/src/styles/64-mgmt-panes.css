@@ -340,6 +340,7 @@
 #mgmt-pane-network-services .nsv-fs13-bold-strong { font-weight: 700; font-size: 13px; color: var(--zn-text-strong); }
 #mgmt-pane-network-services .nsv-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); }
 #mgmt-pane-network-services .nsv-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4; }
+#mgmt-pane-network-services .nas-name-input { flex: 1; min-width: 0; padding: 6px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong); font-family: monospace; font-size: var(--zn-fs-xs); }
 
 /* The mgmt-pane-unraid pane: classes instead of inline styles (NUX-15), same look */
 #mgmt-pane-unraid .unr-row { display: flex; justify-content: space-between; align-items: center; }

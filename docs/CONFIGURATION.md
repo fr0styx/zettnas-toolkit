@@ -47,6 +47,7 @@ used keeps its default, and the log says which variable and why.
 |---|---|---|
 | `AUTO_INGEST_ENABLED` | `off` | Copy a card as soon as it is inserted, even when Automatic Slot Ingest is off in the settings. |
 | `SFTP_PORT` | `2222` | Port of the built-in SFTP server. (1–65535) |
+| `ZETTNAS_NAS_NAME` | `(empty)` | The NAS's name on the home network (<name>.local); empty: zettnas. |
 | `WEBDAV_PORT` | `8084` | Port of the built-in WebDAV server. (1–65535) |
 
 ## Updates

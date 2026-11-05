@@ -2415,6 +2415,12 @@ export async function deleteVlanSubinterface(vlanName) {
 
 export function initNetworkControls() {
   initNetworkPortsInspector();
+  const servicesBtn = /** @type {HTMLElement | null} */ (document.querySelector('[data-tab-target="mgmt-pane-network-services"]'));
+  if (servicesBtn && !servicesBtn.dataset.boundNasName) {
+    servicesBtn.dataset.boundNasName = '1';
+    // NFEAT-8: <name>.local, loaded when its tab opens
+    servicesBtn.addEventListener('click', () => import('./nas-name.js').then((m) => m.loadNasNameCard()));
+  }
   const portsBtn = document.querySelector('[data-tab-target="mgmt-pane-network-ports"]');
   if (portsBtn && !portsBtn.dataset.boundFetch) {
     portsBtn.dataset.boundFetch = '1';
