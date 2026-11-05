@@ -3,7 +3,6 @@
  * Allows users to drag any image file from their OS desktop / file explorer
  * and drop it anywhere on the ZettNAS desktop to immediately upload and set as wallpaper.
  */
-import { uploadAndApplyWallpaper } from './wallpapers.js';
 import { showToast } from '../toast.js';
 
 import { t } from '../i18n.js';
@@ -81,6 +80,7 @@ export function initDesktopDragAndDrop() {
 
     showToast(t('toast.uploading_wallpaper', 'Uploading wallpaper: {name}...', { name: imageFile.name }), 'info');
     try {
+      const { uploadAndApplyWallpaper } = await import('./wallpaper-pane.js'); // not in the first load
       await uploadAndApplyWallpaper(imageFile);
     } catch (err) {
       console.error('[DESKTOP DND] Failed uploading wallpaper:', err);

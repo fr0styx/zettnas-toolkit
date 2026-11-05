@@ -144,6 +144,11 @@
 
 #### Performance
 
+- **The wallpaper gallery loads when it's opened** (NUX-15): the gallery, upload, rename, delete
+  and the readability and glass sliders moved to `wallpaper-pane.js`, loaded when Mission Control's
+  wallpaper pane opens or an image is dropped on the desktop. The first page load is about 1.7 kB
+  smaller, room for the inline styles still left in the desktop's own modules.
+
 - **The UPS settings are kept in one place** (NARC-8): they were written to four (a file, the
   database, a backup file and a copy on the pool, which could wake a disk on every save) and read
   back through six fallbacks. Now only the file holds them; a copy an older version kept is read

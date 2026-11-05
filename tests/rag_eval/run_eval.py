@@ -801,10 +801,13 @@ def main():
     )
     ap.add_argument("--rerank", default=None, metavar="URL", help="rerank with this /rerank server (AI-12)")
     ap.add_argument("--rerank-weight", type=float, default=None, help="the reranker's share of the ranking (0-1)")
+    ap.add_argument("--rerank-top-n", type=int, default=None, help="how many top results the reranker reads")
     args = ap.parse_args()
     extra = {"rerank_endpoint": args.rerank or ""}
     if args.rerank_weight is not None:
         extra["rerank_weight"] = args.rerank_weight
+    if args.rerank_top_n is not None:
+        extra["rerank_top_n"] = args.rerank_top_n
     out = evaluate(
         args.model,
         args.dim,

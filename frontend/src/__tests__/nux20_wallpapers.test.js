@@ -1,6 +1,6 @@
 /** NUX-20: the wallpaper gallery's counts and titles come from the locale strings. */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { renderWallpaperGallery, filterGalleryByCategory } from '../components/wallpapers.js';
+import { renderWallpaperGallery, filterGalleryByCategory } from '../components/wallpaper-pane.js';
 
 describe('wallpaper gallery text (NUX-20)', () => {
   beforeEach(() => {

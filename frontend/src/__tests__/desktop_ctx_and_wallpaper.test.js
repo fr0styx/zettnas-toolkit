@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { initDraggableDesktopIcons, showDockItemContextMenu, DockManager } from '../components/dock.js';
-import { setWallpaper, loadWallpapers, renameWallpaper, deleteWallpaper } from '../components/wallpapers.js';
+import { setWallpaper, loadWallpapers } from '../components/wallpapers.js';
+import { renameWallpaper, deleteWallpaper } from '../components/wallpaper-pane.js';
 import { api } from '../api.js';
 
 describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => {

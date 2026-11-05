@@ -17,7 +17,7 @@ import {
   applyScreensaverSettings,
   initScreensaverSettingsControls
 } from '../components/screensaver.js';
-import * as wallpapersModule from '../components/wallpapers.js';
+import * as wallpapersModule from '../components/wallpaper-pane.js';
 import { SUBPANE_MAP } from '../components/management.js';
 import { ZettEventBus } from '../event-bus.js';
 
@@ -245,7 +245,7 @@ describe('Batch 4: Desktop Context Menu, Drag & Drop Ingestion & Screensaver Eng
     window.dispatchEvent(dropEv);
 
     expect(dropEv.preventDefault).toHaveBeenCalled();
-    expect(uploadSpy).toHaveBeenCalledWith(mockFile);
+    await vi.waitFor(() => expect(uploadSpy).toHaveBeenCalledWith(mockFile)); // loaded on the drop
     expect(dropZoneEl.style.display).toBe('none');
   });
 

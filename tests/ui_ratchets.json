@@ -401,11 +401,17 @@
   "styles": 11,
   "templates": 7
  },
- "frontend/src/components/wallpapers.js": {
+ "frontend/src/components/wallpaper-pane.js": {
   "buttons": 0,
-  "globals": 5,
+  "globals": 1,
   "styles": 2,
   "templates": 2
+ },
+ "frontend/src/components/wallpapers.js": {
+  "buttons": 0,
+  "globals": 4,
+  "styles": 0,
+  "templates": 0
  },
  "frontend/src/components/widgets.js": {
   "buttons": 0,

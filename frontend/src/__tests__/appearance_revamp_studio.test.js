@@ -19,13 +19,8 @@ import {
   importThemeBundle,
   restoreAppearanceDefaultsWithUndo
 } from '../components/settings.js';
-import {
-  initGlassControls,
-  applyGlassSettings,
-  applyWallpaperReadability,
-  filterGalleryByCategory,
-  uploadAndApplyWallpaper
-} from '../components/wallpapers.js';
+import { applyGlassSettings, applyWallpaperReadability } from '../components/wallpapers.js';
+import { initGlassControls, filterGalleryByCategory, uploadAndApplyWallpaper } from '../components/wallpaper-pane.js';
 import { ALL_TRANSLATIONS as TRANSLATIONS } from '../locales/all.js';
 import * as toastModule from '../toast.js';
 

@@ -3,12 +3,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { applyDesktopTheme } from '../components/dashboard.js';
-import {
-  applyWallpaperReadability,
-  initWallpaperReadabilityControls,
-  applyGlassSettings,
-  initGlassControls
-} from '../components/wallpapers.js';
+import { applyWallpaperReadability, applyGlassSettings } from '../components/wallpapers.js';
+import { initWallpaperReadabilityControls, initGlassControls } from '../components/wallpaper-pane.js';
 import { bringToFront } from '../components/dock.js';
 
 describe('Batch 2: Glassmorphism, Wallpaper Readability, OLED Theme & Specular Glow', () => {
