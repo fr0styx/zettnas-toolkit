@@ -46,30 +46,30 @@ function levelSelect(attrs, value, withInherit) {
   const opts = (withInherit ? ['inherit', ...LEVELS] : LEVELS)
     .map((l) => `<option value="${l}"${l === value ? ' selected' : ''}>${l}</option>`)
     .join('');
-  return `<select ${attrs} style="background:var(--zn-shade-35); color:var(--zn-text-strong); border:1px solid var(--zn-line-15); border-radius:4px; font-size:var(--zn-fs-xs); padding:2px 4px;">${opts}</select>`;
+  return `<select class="sha-xs-strong-box" ${attrs}>${opts}</select>`;
 }
 
 export function buildShareAccessHtml(data, users) {
   const userNames = users.map((u) => String(u.username || '').toLowerCase()).filter(Boolean);
-  const head = userNames.map((u) => `<th style="padding:6px 8px; font-size:var(--zn-fs-xs);">${escapeHtml(u)}</th>`).join('');
+  const head = userNames.map((u) => `<th class="sha-xs">${escapeHtml(u)}</th>`).join('');
   const rows = (data.shares || []).map((s) => {
     const cells = userNames
-      .map((u) => `<td style="padding:4px 8px;">${levelSelect(`data-share="${escapeHtml(s.name)}" data-user="${escapeHtml(u)}"`, (s.users || {})[u] || 'inherit', true)}</td>`)
+      .map((u) => `<td class="sha-x">${levelSelect(`data-share="${escapeHtml(s.name)}" data-user="${escapeHtml(u)}"`, (s.users || {})[u] || 'inherit', true)}</td>`)
       .join('');
-    return `<tr style="border-top:1px solid var(--zn-line-6);">
-      <td style="padding:6px 8px; font-weight:700;" title="${escapeHtml(s.path)}">${escapeHtml(s.name)}</td>
-      <td style="padding:4px 8px;">${levelSelect(`data-share-default="${escapeHtml(s.name)}"`, s.default || 'inherit', true)}</td>
+    return `<tr class="sha-box">
+      <td class="sha-bold" title="${escapeHtml(s.path)}">${escapeHtml(s.name)}</td>
+      <td class="sha-x">${levelSelect(`data-share-default="${escapeHtml(s.name)}"`, s.default || 'inherit', true)}</td>
       ${cells}</tr>`;
   }).join('');
   return `
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:var(--zn-fs-xs);">
+    <div class="sha-row-xs">
       <span>${t('sa.everyone_else', 'Everyone else, on shares without a setting:')}</span>${levelSelect('id="share-access-global"', data.default_level || 'none', false)}
     </div>
-    <div style="overflow-x:auto;"><table style="border-collapse:collapse; min-width:420px; font-size:var(--zn-fs-xs);">
-      <thead><tr style="color:var(--muted); text-transform:uppercase;"><th style="padding:6px 8px; text-align:left;">${t('sa.share', 'Share')}</th><th style="padding:6px 8px;">${t('sa.default', 'Default')}</th>${head}</tr></thead>
-      <tbody>${rows || `<tr><td colspan="${2 + userNames.length}" style="padding:10px; color:var(--muted);">${t('sa.no_shares', 'No shares found.')}</td></tr>`}</tbody>
+    <div class="sha-x-2"><table class="sha-xs-box">
+      <thead><tr class="sha-muted"><th class="sha-x-3">${t('sa.share', 'Share')}</th><th class="sha-x-4">${t('sa.default', 'Default')}</th>${head}</tr></thead>
+      <tbody>${rows || `<tr><td class="sha-muted-2" colspan="${2 + userNames.length}">${t('sa.no_shares', 'No shares found.')}</td></tr>`}</tbody>
     </table></div>
-    <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:8px;">${t('sa.help', `Admins always have full access. Users always have their own home folder. "inherit" uses the share's Samba user lists, then the share default, then the setting above.`)}</div>`;
+    <div class="sha-xs-muted">${t('sa.help', `Admins always have full access. Users always have their own home folder. "inherit" uses the share's Samba user lists, then the share default, then the setting above.`)}</div>`;
 }
 
 export function collectShareAccess(root) {
@@ -106,7 +106,7 @@ export async function openShareAccessModal() {
   backdrop.className = 'smart-modal-backdrop open';
   backdrop.style.zIndex = '10050';
   backdrop.innerHTML = `
-    <div class="smart-modal-window share-access-window" role="dialog" aria-modal="true" aria-labelledby="share-access-title" style="width:min(900px, 94vw); height:auto; min-width:0; min-height:0; max-height:86vh;">
+    <div class="smart-modal-window share-access-window sha-size" role="dialog" aria-modal="true" aria-labelledby="share-access-title">
       <div class="smart-modal-header">
         <span class="smart-modal-title" id="share-access-title"><svg class="ic ic-sm"><use href="#i-users"/></svg> ${t('sa.title', 'Share access')}</span>
         <div class="os-window-controls">
@@ -115,9 +115,9 @@ export async function openShareAccessModal() {
       </div>
       <div class="smart-modal-body">
         <div id="share-access-body">${buildShareAccessHtml(data, plain)}</div>
-        <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <div class="sha-row">
           <button type="button" id="share-access-cancel" class="btn-pill-toggle">${t('common.cancel', 'Cancel')}</button>
-          <button type="button" id="share-access-save" class="btn-save-preset" style="padding:6px 14px; font-size:var(--zn-fs-xs);">${t('common.save', 'Save')}</button>
+          <button type="button" id="share-access-save" class="btn-save-preset sha-xs-2">${t('common.save', 'Save')}</button>
         </div>
       </div>
     </div>`;

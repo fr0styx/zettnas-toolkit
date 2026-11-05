@@ -1,0 +1,18 @@
+
+/* NUX-15: the share access dialog (share-access.js): classes instead of inline styles (NUX-15), same look */
+#share-access-modal .sha-xs-strong-box { background: var(--zn-shade-35); color: var(--zn-text-strong); border: 1px solid var(--zn-line-15); border-radius: 4px; font-size: var(--zn-fs-xs); padding: 2px 4px; }
+#share-access-modal .sha-xs { padding: 6px 8px; font-size: var(--zn-fs-xs); }
+#share-access-modal .sha-x { padding: 4px 8px; }
+#share-access-modal .sha-box { border-top: 1px solid var(--zn-line-6); }
+#share-access-modal .sha-bold { padding: 6px 8px; font-weight: 700; }
+#share-access-modal .sha-row-xs { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: var(--zn-fs-xs); }
+#share-access-modal .sha-x-2 { overflow-x: auto; }
+#share-access-modal .sha-xs-box { border-collapse: collapse; min-width: 420px; font-size: var(--zn-fs-xs); }
+#share-access-modal .sha-muted { color: var(--muted); text-transform: uppercase; }
+#share-access-modal .sha-x-3 { padding: 6px 8px; text-align: left; }
+#share-access-modal .sha-x-4 { padding: 6px 8px; }
+#share-access-modal .sha-muted-2 { padding: 10px; color: var(--muted); }
+#share-access-modal .sha-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 8px; }
+#share-access-modal .sha-size { width: min(900px, 94vw); height: auto; min-width: 0; min-height: 0; max-height: 86vh; }
+#share-access-modal .sha-row { display: flex; justify-content: flex-end; gap: 8px; }
+#share-access-modal .sha-xs-2 { padding: 6px 14px; font-size: var(--zn-fs-xs); }

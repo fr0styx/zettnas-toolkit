@@ -156,6 +156,10 @@
 
 #### Usability
 
+- **The share access dialog uses classes** (NUX-15): its 17 inline styles moved into 16 classes in
+  76-share-access.css, which loads with the people dialogs; each checked in a browser to compute the
+  same style in both themes.
+
 - **"Send me files" links** (NFEAT-2): sharing a folder can make a link that lets anyone with it
   drop files in, without an account and without seeing what is in the folder. Files stream
   straight into the folder, never overwrite one that is there, and get plain names; the link has a
