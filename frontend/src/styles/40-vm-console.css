@@ -6,8 +6,8 @@
   display: flex;
   flex-direction: column;
   background: #090e17 !important;
-  backdrop-filter: blur(28px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 30px rgba(14, 165, 233, 0.15) !important;
   border-radius: 10px;
@@ -186,8 +186,8 @@
   border-radius: 8px;
   font-size: var(--zn-fs-xs);
   font-weight: 600;
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85);
   transition: all 0.25s ease;
   pointer-events: auto;
@@ -497,8 +497,8 @@
   display: flex;
   flex-direction: column;
   background: #0d1522 !important;
-  backdrop-filter: blur(28px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 30px rgba(14, 165, 233, 0.15) !important;
   border-radius: 10px;

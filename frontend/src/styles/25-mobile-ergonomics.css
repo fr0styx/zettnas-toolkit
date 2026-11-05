@@ -705,8 +705,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   display: flex;
   flex-direction: column;
   background: var(--lt-b-0f172afa, rgba(15, 23, 42, 0.98)) !important;
-  backdrop-filter: blur(28px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
   border: 1px solid var(--zn-line-12) !important;
   box-shadow: 0 25px 65px rgba(0, 0, 0, 0.85) !important;
 }
@@ -1106,8 +1106,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   opacity: 0;
   pointer-events: none;
   background: var(--lt-b-0b111ae6, rgba(11, 17, 26, 0.9));
-  backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border: 1px solid var(--zn-line-15);
   border-radius: 5px;
   padding: 2px 3px;
@@ -1146,8 +1146,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   position: fixed;
   z-index: 7200;
   background: var(--lt-b-0f172af0, rgba(15, 23, 42, 0.94));
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--zn-line-15);
   border-radius: 12px;
   padding: 10px;
@@ -1334,8 +1334,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   position: fixed;
   inset: 0;
   background: var(--lt-b-000000bf, rgba(0, 0, 0, 0.75));
-  backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1353,8 +1353,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   height: 86vh;
   max-height: 860px;
   background: var(--lt-b-0d1420f5, rgba(13, 20, 32, 0.96));
-  backdrop-filter: blur(28px) saturate(150%);
   -webkit-backdrop-filter: blur(28px) saturate(150%);
+  backdrop-filter: blur(28px) saturate(150%);
   border: 1px solid var(--zn-line-14);
   border-radius: 14px;
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.85), 0 0 40px rgba(0, 240, 255, 0.08);
@@ -1539,8 +1539,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   height: 46px;
   border-radius: 50%;
   background: var(--lt-b-0f172ac7, rgba(15, 23, 42, 0.78));
-  backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   border: 1px solid var(--zn-line-18);
   color: var(--lt-t-f8fafcff, #f8fafc);
   font-size: 26px;
@@ -1571,8 +1571,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   width: 320px;
   max-width: 85vw;
   background: var(--lt-b-0d1420f5, rgba(13, 20, 32, 0.96));
-  backdrop-filter: blur(28px) saturate(150%);
   -webkit-backdrop-filter: blur(28px) saturate(150%);
+  backdrop-filter: blur(28px) saturate(150%);
   border-left: 1px solid var(--zn-line-14);
   z-index: 25;
   display: flex;
@@ -1683,8 +1683,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   gap: 8px;
   padding: 6px 10px;
   background: var(--lt-b-0d1420e0, rgba(13, 20, 32, 0.88));
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--lt-r-ffffff29, rgba(255, 255, 255, 0.16));
   border-radius: 30px;
   z-index: 14;
@@ -1760,8 +1760,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   height: 68px;
   border-radius: 50%;
   background: rgba(14, 165, 233, 0.88);
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border: 2px solid var(--lt-r-ffffff73, rgba(255, 255, 255, 0.45));
   color: #fff;
   display: flex;
@@ -1788,8 +1788,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   left: 50%;
   transform: translate(-50%, -50%) scale(0.9);
   background: var(--lt-b-000000c7, rgba(0, 0, 0, 0.78));
-  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--lt-r-ffffff38, rgba(255, 255, 255, 0.22));
   border-radius: 10px;
   color: var(--zn-text-strong);
@@ -1815,8 +1815,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   left: 16px;
   right: 16px;
   background: var(--lt-b-0a0f1ad9, rgba(10, 15, 26, 0.85));
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--zn-line-14);
   border-radius: 12px;
   padding: 8px 14px 8px;
@@ -2039,8 +2039,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   display: flex;
   flex-direction: column;
   background: var(--lt-b-0f1622ff, #0f1622) !important;
-  backdrop-filter: blur(28px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
   border: 1px solid var(--zn-line-12) !important;
   box-shadow: 0 25px 65px rgba(0, 0, 0, 0.92) !important;
 }
@@ -2081,8 +2081,8 @@ body.theme-yak #vm-manager-window .vm-content-body {
   display: flex;
   flex-direction: column;
   background: var(--lt-b-0f1622ff, #0f1622) !important;
-  backdrop-filter: blur(28px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
   border: 1px solid var(--zn-line-12) !important;
   box-shadow: 0 25px 65px rgba(0, 0, 0, 0.92) !important;
 }
@@ -2258,8 +2258,8 @@ body.theme-yak #containers-manager-window .containers-content-body {
 .os-window {
   position: fixed;
   background: rgba(17, 24, 34, var(--glass-opacity, 0.75));
-  backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
   -webkit-backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
+  backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
   border: 1px solid var(--track, #333);
   border-radius: var(--window-radius, 12px);
   box-shadow: 0 16px 40px rgba(0,0,0,0.5);
@@ -2422,8 +2422,8 @@ body.theme-yak #containers-manager-window .containers-content-body {
   margin: 0 -20px 14px -20px;
   padding: 8px 20px 8px 20px;
   background: var(--lt-b-0d141ef2, rgba(13, 20, 30, 0.95));
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--zn-line-8);
   display: flex;
   align-items: center;
@@ -2441,8 +2441,8 @@ body.theme-yak #containers-manager-window .containers-content-body {
   top: 0;
   z-index: 45;
   margin-top: 0;
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
 }
 
 body.theme-oled .mgmt-sticky-subnav {

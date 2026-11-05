@@ -43,8 +43,8 @@
   width: 60%;
   height: 60%;
   background: rgba(17, 24, 34, var(--preview-glass-opacity, var(--glass-opacity, 0.72)));
-  backdrop-filter: blur(calc(var(--preview-glass-blur, var(--glass-blur, 24px)) * 0.4)) saturate(140%);
   -webkit-backdrop-filter: blur(calc(var(--preview-glass-blur, var(--glass-blur, 24px)) * 0.4)) saturate(140%);
+  backdrop-filter: blur(calc(var(--preview-glass-blur, var(--glass-blur, 24px)) * 0.4)) saturate(140%);
   border-radius: var(--preview-window-radius, var(--window-radius, 12px));
   border: 1px solid rgba(var(--preview-accent-rgb, var(--accent-rgb, 0, 240, 255)), calc(0.55 * var(--preview-window-glow, var(--window-glow-enabled, 0))));
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7),
@@ -138,8 +138,8 @@
 
 .dt-dock {
   background: rgba(20, 27, 36, 0.75);
-  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
   padding: 4px 8px;

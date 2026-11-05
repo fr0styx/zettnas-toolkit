@@ -17,8 +17,8 @@
   display: flex;
   flex-direction: column;
   background: rgba(13, 20, 30, var(--glass-opacity, 0.72));
-  backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
   -webkit-backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
+  backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
   border: 1px solid var(--zn-line-12);
   border-radius: var(--window-radius, 14px);
   box-shadow: 0 25px 65px rgba(0, 0, 0, 0.88), 0 0 24px rgba(var(--accent-rgb, 37, 194, 160), calc(0.18 * var(--window-glow-enabled, 1)));

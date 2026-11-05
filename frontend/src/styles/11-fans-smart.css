@@ -125,8 +125,8 @@
 .mgmt-hardware-tab-slot .fan-curve-box {
   padding: 16px 20px;
   background: var(--lt-b-080c10d9, rgba(8, 12, 16, 0.85));
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--lt-r-ffffff17, rgba(255, 255, 255, 0.09));
   gap: 12px;
 }
@@ -255,8 +255,8 @@
   opacity: 0; pointer-events: none; transition: opacity 0.2s ease; z-index: var(--z-modal-backdrop, 9000);
   display: flex; align-items: center; justify-content: center; padding: 20px;
   background: var(--lt-b-00000073, rgba(0, 0, 0, 0.45));
-  backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 .smart-modal-backdrop:not(#console-modal-overlay):not(#management-modal-overlay):not(#app-deploy-modal-overlay):not(#modal-new-cloud-remote):not(#modal-vm-snapshots):not(#modal-clock-timezone):not(#modal-calendar-notes):not(.open) {
   display: none !important;
@@ -349,8 +349,8 @@
 #modal-create-snapshot {
   z-index: 10030 !important;
   background: var(--lt-b-000000a6, rgba(0, 0, 0, 0.65)) !important;
-  backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
+  backdrop-filter: blur(8px) !important;
 }
 #container-delete-modal-overlay.open,
 #docker-prune-modal-overlay.open,
@@ -449,8 +449,8 @@
   opacity: 1 !important;
   visibility: visible !important;
   background: transparent !important;
-  backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
   pointer-events: none !important;
 }
 

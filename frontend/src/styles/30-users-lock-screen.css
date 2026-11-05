@@ -101,8 +101,8 @@
 /* User Profile Flyout from Topbar */
 .user-profile-flyout {
   background: var(--lt-b-0f172ae0, rgba(15, 23, 42, 0.88));
-  backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--zn-line-12);
   border-radius: 14px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
@@ -151,8 +151,8 @@
   inset: 0;
   z-index: 99998;
   background: var(--lt-b-0a0f1dbf, rgba(10, 15, 29, 0.75));
-  backdrop-filter: blur(25px) saturate(160%);
   -webkit-backdrop-filter: blur(25px) saturate(160%);
+  backdrop-filter: blur(25px) saturate(160%);
   display: flex;
   align-items: center;
   justify-content: center;

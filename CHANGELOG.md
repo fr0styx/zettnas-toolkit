@@ -195,6 +195,12 @@
 
 #### Usability
 
+- **The frosted-glass blur shows in Chrome and Firefox again**: the CSS minifier keeps only the last
+  of `backdrop-filter` and `-webkit-backdrop-filter` in a rule, and 66 rules wrote the standard one
+  first, so menus, flyouts, toasts and panels had their blur only in Safari. They write it last now.
+  Eco mode and the system's reduce-transparency setting take the blur away everywhere, not only
+  from the main windows, dock and widgets.
+
 - **The Add-a-shortcut dialog uses classes** (NUX-15): 24 inline styles became 23 classes; the
   same look, checked in both themes. The two tab panes keep only their display inline, which the
   dialog switches.

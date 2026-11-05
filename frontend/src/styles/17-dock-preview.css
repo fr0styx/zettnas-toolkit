@@ -13,8 +13,8 @@
               bottom 0.15s ease-out,
               top 0.15s ease-out;
   background: var(--lt-b-0e151ff0, rgba(14, 21, 31, 0.94));
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--lt-r-ffffff29, rgba(255, 255, 255, 0.16));
   border-radius: 14px;
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.85), 0 0 1px rgba(255, 255, 255, 0.25) inset;
@@ -235,8 +235,8 @@
 
 .dock-preview-action-chip {
   background: var(--lt-b-0e151fe0, rgba(14, 21, 31, 0.88));
-  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--zn-line-20);
   color: var(--zn-text-strong);
   font-size: var(--zn-fs-xs);
@@ -319,8 +319,8 @@
 
 .dock-desktop-home-card {
   background: var(--lt-b-0e151fd1, rgba(14, 21, 31, 0.82));
-  backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   border: 1px solid var(--zn-line-18);
   border-radius: 10px;
   padding: 10px 14px;

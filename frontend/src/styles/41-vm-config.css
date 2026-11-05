@@ -6,8 +6,8 @@
 #modal-vm-create.smart-modal-backdrop,
 #modal-vm-snapshots.smart-modal-backdrop {
   background: var(--lt-b-00000099, rgba(0, 0, 0, 0.6)) !important;
-  backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
+  backdrop-filter: blur(8px) !important;
   z-index: var(--z-modal-backdrop, 9000);
 }
 

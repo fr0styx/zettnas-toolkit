@@ -7,8 +7,8 @@
   background: var(--lt-b-00f0ff14, rgba(0, 240, 255, 0.08));
   border: 2px dashed var(--focus-ring, #00f0ff);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(0, 240, 255, 0.18) inset;
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   pointer-events: none;
   z-index: 5500;
   transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
@@ -39,8 +39,8 @@
   background: var(--lt-b-121924f0, rgba(18, 25, 36, 0.94));
   border: 1px solid var(--zn-line-18);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 1px rgba(255, 255, 255, 0.25) inset;
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   border-radius: 12px;
   padding: 12px;
   display: none;

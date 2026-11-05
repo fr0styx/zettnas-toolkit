@@ -98,8 +98,8 @@
   box-sizing: border-box;
   flex-shrink: 0;
   background: var(--lt-b-0d141ea6, rgba(13, 20, 30, 0.65));
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   border: 1px solid var(--zn-line-8);
   border-radius: 14px;
   padding: 14px 16px;
@@ -331,8 +331,8 @@ body.theme-yak .cal-day.cal-holiday:hover {
   font-size: var(--zn-fs-xs);
   color: var(--zn-text-strong);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 14px rgba(246, 173, 85, 0.25);
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   white-space: nowrap;
   display: flex;
   align-items: center;
@@ -575,8 +575,8 @@ body.theme-yak .cal-day.cal-holiday:hover {
   max-height: 220px;
   overflow-y: auto;
   background: var(--lt-b-0d141ef5, rgba(13, 20, 30, 0.96));
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--lt-r-ffffff29, rgba(255, 255, 255, 0.16));
   border-radius: 8px;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 15px rgba(0, 240, 255, 0.1);

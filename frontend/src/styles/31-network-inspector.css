@@ -15,8 +15,8 @@
   border: 1px solid var(--zn-line-8);
   border-radius: 10px;
   padding: 12px 14px;
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   transition: border-color 0.2s, transform 0.2s;
 }
 

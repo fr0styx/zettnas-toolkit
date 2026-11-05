@@ -6,8 +6,8 @@
   .management-window,
   .smart-modal-window,
   .drawer-card {
-    backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
     background: var(--lt-b-111822f5, rgba(17, 24, 34, 0.96)) !important;
   }
 }
@@ -27,16 +27,16 @@
 [data-performance-mode="eco"] .desktop-widget,
 [data-performance-mode="eco"] .suite-navbar,
 [data-performance-mode="eco"] .os-dock {
-  backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
   background: var(--lt-b-111822f2, rgba(17, 24, 34, 0.95)) !important;
 }
 
 /* Transient Dragging & Resizing De-blurring */
 .window-dragging,
 .window-resizing {
-  backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
   background: var(--card-solid, var(--card)) !important;
 }
 
@@ -390,3 +390,24 @@ body.lcd-direct.lcd-theme-light.text-clarity-on #screen {
   text-overflow: ellipsis;
 }
 
+
+/* Eco mode and reduced transparency: no blur anywhere. The rules sit in a cascade layer because an
+   !important declaration in a layer wins over every unlayered !important one, such as the phone
+   layout's blur on cards; -webkit- first, since the minifier keeps the last of the two. */
+@layer no-blur {
+  [data-performance-mode="eco"] *,
+  [data-performance-mode="eco"] *::before,
+  [data-performance-mode="eco"] *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    *,
+    *::before,
+    *::after {
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+  }
+}

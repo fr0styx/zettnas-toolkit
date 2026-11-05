@@ -6,8 +6,8 @@
   inset: 0;
   z-index: 99990;
   background: var(--lt-b-080c10bf, rgba(8, 12, 16, 0.75));
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
   justify-content: center;

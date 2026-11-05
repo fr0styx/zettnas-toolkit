@@ -16,8 +16,8 @@
 .suite-navbar {
   height: 52px;
   background: var(--lt-b-0c1118d9, rgba(12, 17, 24, 0.85));
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--zn-line-8);
   display: flex;
   align-items: center;
@@ -212,8 +212,8 @@ body.drawer-is-open .chassis-workbench-stage {
   background: var(--lt-b-0e151e8c, rgba(14, 21, 30, 0.55));
   border: 1px solid var(--zn-line-10);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   cursor: pointer;
   transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
               box-shadow 0.2s ease,
@@ -421,8 +421,8 @@ body.drawer-is-open .chassis-workbench-stage {
 }
 
 .window-dragging {
-  backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
   user-select: none !important;
   cursor: grabbing !important;
 }

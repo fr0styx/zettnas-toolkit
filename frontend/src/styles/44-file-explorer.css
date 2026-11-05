@@ -153,8 +153,8 @@
   width: max-content;
   max-width: calc(100vw - 16px);
   background: var(--lt-b-0f172af5, rgba(15, 23, 42, 0.96)) !important;
-  backdrop-filter: blur(24px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
+  backdrop-filter: blur(24px) saturate(140%) !important;
   border: 1px solid var(--zn-line-14) !important;
   border-radius: 8px !important;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75) !important;

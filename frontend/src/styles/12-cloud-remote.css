@@ -7,8 +7,8 @@
   display: flex !important;
   flex-direction: column !important;
   background: var(--lt-b-0f1622ff, #0f1622) !important;
-  backdrop-filter: blur(28px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
   border: 1px solid var(--zn-line-14) !important;
   border-radius: 12px !important;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 35px rgba(14, 165, 233, 0.2) !important;
@@ -286,8 +286,8 @@ body.theme-oled #cloud-remote-window select option {
   transform: translateZ(0);
   pointer-events: auto;
   background: var(--lt-b-0f172af5, rgba(15, 23, 42, 0.96));
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--zn-line-15);
   border-radius: 14px;
   width: 520px;
