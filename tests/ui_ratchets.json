@@ -444,9 +444,9 @@
   "templates": 5
  },
  "frontend/src/toast.js": {
-  "buttons": 1,
+  "buttons": 0,
   "globals": 0,
-  "styles": 27,
+  "styles": 2,
   "templates": 10
  },
  "frontend/src/ui/primitives.js": {

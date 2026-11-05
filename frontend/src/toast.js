@@ -42,13 +42,13 @@ export function showActionToast(msg, actionText, onAction, durationMs = 10000) {
   toast.className = "top-toast-item";
   toast.style.borderLeft = `4px solid #38bdf8`;
   toast.innerHTML = `
-    <div style="font-size: 20px; line-height: 1; flex-shrink: 0;" aria-hidden="true">↺</div>
-    <div style="flex: 1; min-width: 0;">
-      <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: var(--zn-text-accent);">${t('toast.notification', 'Notification')}</div>
-      <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
+    <div class="tst-ico" aria-hidden="true">↺</div>
+    <div class="tst-body">
+      <div class="tst-tag">${t('toast.notification', 'Notification')}</div>
+      <div class="tst-msg">${escapeHtml(msg)}</div>
     </div>
-    <button class="top-toast-action-btn" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; padding: 4px 10px; border-radius: 4px; margin-right: 6px;"${UNDO_RE.test(actionText) ? ' aria-keyshortcuts="Control+Z Meta+Z"' : ''}>${escapeHtml(actionText)}</button>
-    <button class="top-toast-close" style="background: transparent; border: none; color: var(--zn-text-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="${escapeHtml(t('toast.dismiss', 'Dismiss'))}" aria-label="${escapeHtml(t('toast.dismiss', 'Dismiss'))}">&times;</button>
+    <button class="top-toast-action-btn tst-act"${UNDO_RE.test(actionText) ? ' aria-keyshortcuts="Control+Z Meta+Z"' : ''}>${escapeHtml(actionText)}</button>
+    <button class="top-toast-close tst-close" title="${escapeHtml(t('toast.dismiss', 'Dismiss'))}" aria-label="${escapeHtml(t('toast.dismiss', 'Dismiss'))}">&times;</button>
   `;
 
   if (UNDO_RE.test(actionText)) toast.dataset.undo = '1';
@@ -179,13 +179,13 @@ function _showTopNotification(msg, type = "error") {
   // UX-22: a translated error keeps the server's own words under "Details"
   const details = isErr ? detailsFor(msg) : '';
   toast.innerHTML = `
-    <div style="font-size: 20px; line-height: 1; flex-shrink: 0;" aria-hidden="true">${icon}</div>
-    <div style="flex: 1; min-width: 0;">
+    <div class="tst-ico" aria-hidden="true">${icon}</div>
+    <div class="tst-body">
       <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: ${tagColor};">${escapeHtml(tagText)}</div>
-      <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
+      <div class="tst-msg">${escapeHtml(msg)}</div>
       ${details ? `<details class="top-toast-details"><summary>${escapeHtml(t('toast.details', 'Details'))}</summary><div class="top-toast-details-text">${escapeHtml(details)}</div></details>` : ''}
     </div>
-    <button class="top-toast-close" style="background: transparent; border: none; color: var(--zn-text-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="${escapeHtml(t('toast.dismiss', 'Dismiss'))}" aria-label="${escapeHtml(t('toast.dismiss', 'Dismiss'))}">&times;</button>
+    <button class="top-toast-close tst-close" title="${escapeHtml(t('toast.dismiss', 'Dismiss'))}" aria-label="${escapeHtml(t('toast.dismiss', 'Dismiss'))}">&times;</button>
   `;
 
   container.appendChild(toast);
@@ -289,18 +289,18 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     card.setAttribute("aria-labelledby", "confirm-toast-title");
     card.setAttribute("aria-describedby", "confirm-toast-msg");
     card.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--zn-line-8); background: rgba(14, 165, 233, 0.1);" id="confirm-toast-header-bg" data-dialog-header>
-        <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--zn-confirm-title);" id="confirm-toast-title">
+      <div class="cfd-head" id="confirm-toast-header-bg" data-dialog-header>
+        <div class="cfd-title" id="confirm-toast-title">
           ${t('toast.confirm_title', 'Please confirm')}
         </div>
         <button type="button" id="confirm-toast-close" class="win-btn close-btn" title="${t('jobs.cancel', 'Cancel')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
       </div>
-      <div style="padding: 16px 20px;">
-        <div id="confirm-toast-msg" style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); line-height: 1.55; word-break: break-word;"></div>
-        <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; align-items: center;">
+      <div class="cfd-body">
+        <div id="confirm-toast-msg" class="cfd-msg"></div>
+        <div class="cfd-actions">
           <button id="confirm-toast-eject" class="btn-pill-toggle is-danger is-small" style="display: none; margin-right: auto;" title="${t('ui.safely_unmount_and_eject_card', 'Safely unmount and eject card')}">⏏ ${t('toast.eject', 'Eject')}</button>
           <button id="confirm-toast-cancel" class="btn-pill-toggle is-small">${t('common.cancel', 'Cancel')}</button>
-          <button id="confirm-toast-ok" style="padding: 7px 18px; background: var(--zn-confirm-ok); border: 1px solid var(--zn-confirm-ok-line); border-radius: 6px; color: var(--zn-confirm-on); font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">${t('toast.confirm', 'Confirm')}</button>
+          <button id="confirm-toast-ok" class="cfd-ok">${t('toast.confirm', 'Confirm')}</button>
         </div>
       </div>
     `;
@@ -390,8 +390,8 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     const wrap = document.createElement('div');
     wrap.id = 'confirm-toast-type';
     wrap.style.marginTop = '12px';
-    wrap.innerHTML = `<label for="confirm-toast-type-input" style="display:block; font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-bottom: 6px;"></label>
-      <input id="confirm-toast-type-input" type="text" autocomplete="off" spellcheck="false" style="width: 100%; box-sizing: border-box; background: var(--lt-b-00000099, rgba(0,0,0,0.6)); border: 1px solid var(--zn-line-15); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: 13px; outline: none;" />`;
+    wrap.innerHTML = `<label for="confirm-toast-type-input" class="cfd-type-label"></label>
+      <input id="confirm-toast-type-input" type="text" autocomplete="off" spellcheck="false" class="cfd-type-input" />`;
     wrap.querySelector('label').textContent = t('confirm.type_to_confirm', 'Type {name} to confirm', { name: expected });
     msgEl.after(wrap);
     typeInput = wrap.querySelector('input');
@@ -523,8 +523,8 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
 
   const isTextarea = inputType === "textarea";
   const inputHtml = isTextarea
-    ? `<textarea id="prompt-toast-input" placeholder="${escapeHtml(placeholder)}" style="width: 100%; box-sizing: border-box; background: var(--lt-b-00000099, rgba(0,0,0,0.6)); border: 1px solid var(--lt-r-00f0ff66, rgba(0, 240, 255, 0.4)); padding: 9px 12px; color: var(--zn-text-strong); border-radius: 6px; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; outline: none; min-height: 96px; resize: vertical; line-height: 1.45;">${escapeHtml(defaultVal || '')}</textarea>`
-    : `<input type="${inputType}" id="prompt-toast-input" placeholder="${escapeHtml(placeholder)}" style="width: 100%; box-sizing: border-box; background: var(--lt-b-00000099, rgba(0,0,0,0.6)); border: 1px solid var(--lt-r-00f0ff66, rgba(0, 240, 255, 0.4)); padding: 9px 12px; color: var(--zn-text-strong); border-radius: 6px; font-size: 13px; outline: none;" value="${escapeHtml(defaultVal || '')}" />`;
+    ? `<textarea id="prompt-toast-input" placeholder="${escapeHtml(placeholder)}" class="pmt-area">${escapeHtml(defaultVal || '')}</textarea>`
+    : `<input type="${inputType}" id="prompt-toast-input" placeholder="${escapeHtml(placeholder)}" class="pmt-input" value="${escapeHtml(defaultVal || '')}" />`;
 
   const safePromptMsg = options.allowHtml === false
     ? escapeHtml(msg || "")
@@ -533,16 +533,16 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
       : escapeHtml(msg || "");
 
   card.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--zn-line-8); background: var(--lt-b-00f0ff14, rgba(0, 240, 255, 0.08));" id="confirm-toast-header-bg" data-dialog-header>
-      <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--lt-ink-brand, var(--brand, #00f0ff));" id="confirm-toast-title">
+    <div class="pmt-head" id="confirm-toast-header-bg" data-dialog-header>
+      <div class="pmt-title" id="confirm-toast-title">
         <span>${icon}</span> ${escapeHtml(title || "Rename")}
       </div>
       <button type="button" id="confirm-toast-close" class="win-btn close-btn" title="${t('jobs.cancel', 'Cancel')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
     </div>
-    <div style="padding: 16px 20px;">
-      <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-bottom: 12px; line-height: 1.5;">${safePromptMsg}</div>
+    <div class="cfd-body">
+      <div class="pmt-msg">${safePromptMsg}</div>
       ${inputHtml}
-      <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; align-items: center;">
+      <div class="cfd-actions">
         <button id="confirm-toast-cancel" class="btn-pill-toggle is-small">${escapeHtml(cancelText)}</button>
         <button id="confirm-toast-ok" class="btn-pill-toggle is-primary is-small">${escapeHtml(okText)}</button>
       </div>

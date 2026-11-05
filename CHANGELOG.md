@@ -195,6 +195,10 @@
 
 #### Usability
 
+- **Toasts and the confirm and prompt dialogs use classes** (NUX-15): 25 inline styles became 19
+  classes beside the toasts' own rules; the same look, checked in both themes, and the first load
+  is a little smaller.
+
 - **The dock's and the desktop's right-click menus use classes** (NUX-15): 35 inline styles became
   12 classes beside the menus' own rules; the same look, checked in both themes.
 
