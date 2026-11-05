@@ -66,9 +66,9 @@
   "templates": 0
  },
  "frontend/src/components/desktop-shortcuts.js": {
-  "buttons": 1,
+  "buttons": 0,
   "globals": 0,
-  "styles": 31,
+  "styles": 9,
   "templates": 2
  },
  "frontend/src/components/dock.js": {

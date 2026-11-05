@@ -195,6 +195,10 @@
 
 #### Usability
 
+- **The Add-a-shortcut dialog uses classes** (NUX-15): 24 inline styles became 23 classes; the
+  same look, checked in both themes. The two tab panes keep only their display inline, which the
+  dialog switches.
+
 - **Toasts and the confirm and prompt dialogs use classes** (NUX-15): 25 inline styles became 19
   classes beside the toasts' own rules; the same look, checked in both themes, and the first load
   is a little smaller.

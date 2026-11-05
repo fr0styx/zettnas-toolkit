@@ -243,7 +243,7 @@ export function createShortcutElement(shortcut) {
 
   const iconInner = shortcut.svg
     ? `<svg class="console-hero-icon" style="${shortcut.color ? `color:${shortcut.color};` : ''}"><use href="${shortcut.icon}"/></svg>`
-    : `<span style="font-size:24px;">${escapeHtml(shortcut.icon || '🔗')}</span>`;
+    : `<span class="dss-emoji">${escapeHtml(shortcut.icon || '🔗')}</span>`;
 
   const dotStyle = shortcut.color
     ? `background:${shortcut.color}; box-shadow:0 0 6px ${shortcut.color};`
@@ -425,49 +425,49 @@ export function openAddDesktopShortcutModal() {
     overlay.style.cssText = 'display:none; z-index:99999;';
 
     overlay.innerHTML = `
-      <div class="smart-modal-window" style="max-width:580px; width:92%; max-height:85vh; display:flex; flex-direction:column; background:var(--lt-b-0f172aeb, rgba(15,23,42,0.92)); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid var(--zn-line-14); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.85), 0 0 35px rgba(0,240,255,0.12); overflow:hidden;">
+      <div class="smart-modal-window asd-win">
         <!-- Header -->
-        <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--zn-line-8); background:var(--zn-glaze-2);">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span style="font-size:18px;">➕</span>
+        <div class="smart-modal-header asd-head">
+          <div class="asd-title-row">
+            <span class="asd-ico">➕</span>
             <div>
-              <div style="font-size:14px; font-weight:700; color:var(--zn-text-strong);">${escapeHtml(t('ds.title', 'Add a desktop shortcut'))}</div>
-              <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(t('ds.sub', 'Put the things you open most on the desktop'))}</div>
+              <div class="asd-title">${escapeHtml(t('ds.title', 'Add a desktop shortcut'))}</div>
+              <div class="asd-sub">${escapeHtml(t('ds.sub', 'Put the things you open most on the desktop'))}</div>
             </div>
           </div>
           <button class="win-btn close-btn" id="btn-close-add-shortcut" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}" style="width:16px; height:16px; border-radius:50%; background:#ff5f56; border:none; cursor:pointer;"></button>
         </div>
 
         <!-- Tab Switcher -->
-        <div style="display:flex; gap:8px; padding:12px 20px 8px; border-bottom:1px solid var(--zn-line-6);">
+        <div class="asd-tabs">
           <button class="btn-pill-toggle active" id="tab-btn-system-shortcuts">📦 ${escapeHtml(t('ds.tab_apps', 'Apps and windows'))}</button>
           <button class="btn-pill-toggle" id="tab-btn-custom-shortcut">🔗 ${escapeHtml(t('ds.tab_link', 'A web address'))}</button>
         </div>
 
         <!-- Body: Tab 1 System Apps -->
-        <div id="pane-system-shortcuts" style="padding:16px 20px; overflow-y:auto; max-height:55vh; display:flex; flex-direction:column; gap:8px;">
+        <div id="pane-system-shortcuts" class="asd-pane-sys" style="display:flex;">
           <!-- Dynamically populated -->
         </div>
 
         <!-- Body: Tab 2 Custom URL -->
-        <div id="pane-custom-shortcut" style="padding:20px; display:none; flex-direction:column; gap:14px;">
+        <div id="pane-custom-shortcut" class="asd-pane-custom" style="display:none;">
           <div>
-            <label for="input-custom-shortcut-name" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:4px;">${escapeHtml(t('ds.name', 'Name'))}</label>
-            <input type="text" id="input-custom-shortcut-name" class="tz-text-input" placeholder="${t('ui.e_g_plex_home_assistant', 'e.g. Plex, Home Assistant, Pi-hole, Proxmox...')}" style="width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--zn-shade-35); border:1px solid var(--zn-line-12); color:var(--zn-text-strong);">
+            <label for="input-custom-shortcut-name" class="asd-label">${escapeHtml(t('ds.name', 'Name'))}</label>
+            <input type="text" id="input-custom-shortcut-name" class="tz-text-input asd-input" placeholder="${t('ui.e_g_plex_home_assistant', 'e.g. Plex, Home Assistant, Pi-hole, Proxmox...')}">
           </div>
           <div>
-            <label for="input-custom-shortcut-url" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:4px;">${escapeHtml(t('ds.url', 'Web address'))}</label>
-            <input type="url" id="input-custom-shortcut-url" class="tz-text-input" placeholder="http://192.168.1.50:8123 or https://..." style="width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--zn-shade-35); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); font-family:var(--font-mono, monospace);">
+            <label for="input-custom-shortcut-url" class="asd-label">${escapeHtml(t('ds.url', 'Web address'))}</label>
+            <input type="url" id="input-custom-shortcut-url" class="tz-text-input asd-input-mono" placeholder="http://192.168.1.50:8123 or https://...">
           </div>
           <div>
-            <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:6px;">${escapeHtml(t('ds.icon', 'Icon'))}</label>
-            <div style="display:flex; flex-wrap:wrap; gap:6px;" id="custom-shortcut-emojis">
+            <label class="asd-label-wide">${escapeHtml(t('ds.icon', 'Icon'))}</label>
+            <div class="asd-emojis" id="custom-shortcut-emojis">
               ${['🌐', '🏠', '🎬', '🛡️', '📦', '⚡', '🔌', '🚀', '🎮', '🎵', '💾', '📊', '📡', '🛠️'].map((emoji, idx) => `
                 <button type="button" class="btn-emoji-chip ${idx === 0 ? 'active' : ''}" data-emoji="${emoji}" style="padding:6px 10px; font-size:16px; background:${idx === 0 ? 'rgba(0,240,255,0.2)' : 'rgba(255,255,255,0.05)'}; border:1px solid ${idx === 0 ? 'rgba(0,240,255,0.6)' : 'rgba(255,255,255,0.1)'}; border-radius:6px; cursor:pointer;">${emoji}</button>
               `).join('')}
             </div>
           </div>
-          <button id="btn-save-custom-shortcut" style="margin-top:6px; padding:10px 16px; border-radius:8px; font-size:var(--zn-fs-xs); font-weight:700; background:linear-gradient(135deg, #0ea5e9, #25c2a0); color:#fff; border:1px solid #0ea5e9; cursor:pointer; box-shadow:0 4px 14px rgba(14,165,233,0.3);">
+          <button id="btn-save-custom-shortcut" class="asd-save">
             ✨ ${escapeHtml(t('ds.add', 'Add to the desktop'))}
           </button>
         </div>
@@ -570,17 +570,17 @@ function renderSystemShortcutsList(overlay) {
   container.innerHTML = SYSTEM_SHORTCUTS.map((s) => {
     const isActive = activeIds.has(s.id);
     return `
-      <div class="shortcut-system-card" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); border-radius:10px; gap:12px;">
-        <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+      <div class="shortcut-system-card asd-card">
+        <div class="asd-card-main">
           <div style="width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--lt-b-00f0ff1f, rgba(0,240,255,0.12)) 0%, rgba(37,194,160,0.08) 100%); border:1px solid var(--lt-r-00f0ff4c, rgba(0,240,255,0.3)); color:${s.color}; flex-shrink:0;">
-            <svg style="width:20px; height:20px; fill:currentColor;"><use href="${s.icon}"/></svg>
+            <svg class="asd-card-svg"><use href="${s.icon}"/></svg>
           </div>
-          <div style="min-width:0;">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span style="font-size:13px; font-weight:700; color:var(--zn-text-strong);">${escapeHtml(s.name)}</span>
+          <div class="asd-card-text">
+            <div class="asd-card-row">
+              <span class="asd-card-name">${escapeHtml(s.name)}</span>
               ${s.badge ? `<span style="font-size:var(--zn-fs-xs); padding:1px 5px; border-radius:3px; background:var(--zn-glaze-8); color:var(--muted); font-family:var(--font-mono, monospace); text-transform:uppercase;">${escapeHtml(s.badge)}</span>` : ''}
             </div>
-            <div style="font-size:var(--zn-fs-xs); color:var(--muted); line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(s.desc)}</div>
+            <div class="asd-card-desc">${escapeHtml(s.desc)}</div>
           </div>
         </div>
 

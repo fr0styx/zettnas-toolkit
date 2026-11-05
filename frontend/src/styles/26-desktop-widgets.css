@@ -889,3 +889,29 @@ body.theme-yak #notif-center-resizer:hover {
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ok { color:var(--ok2, #25c2a0); }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-danger { color:var(--zn-text-crit); }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-kbd { margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6; }
+
+/* The desktop shortcut tiles' emoji and the Add-a-shortcut dialog (desktop-shortcuts.js): each rule is the
+   inline style it replaced; the panes' display stays inline, the script switches it (NUX-15) */
+#desktop-icons-container .dss-emoji { font-size:24px; }
+#add-desktop-shortcut-overlay .asd-win { max-width:580px; width:92%; max-height:85vh; display:flex; flex-direction:column; background:var(--lt-b-0f172aeb, rgba(15,23,42,0.92)); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px); border:1px solid var(--zn-line-14); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.85), 0 0 35px rgba(0,240,255,0.12); overflow:hidden; }
+#add-desktop-shortcut-overlay .asd-head { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--zn-line-8); background:var(--zn-glaze-2); }
+#add-desktop-shortcut-overlay .asd-title-row { display:flex; align-items:center; gap:10px; }
+#add-desktop-shortcut-overlay .asd-ico { font-size:18px; }
+#add-desktop-shortcut-overlay .asd-title { font-size:14px; font-weight:700; color:var(--zn-text-strong); }
+#add-desktop-shortcut-overlay .asd-sub { font-size:var(--zn-fs-xs); color:var(--muted); }
+#add-desktop-shortcut-overlay .asd-tabs { display:flex; gap:8px; padding:12px 20px 8px; border-bottom:1px solid var(--zn-line-6); }
+#add-desktop-shortcut-overlay .asd-pane-sys { padding:16px 20px; overflow-y:auto; max-height:55vh; flex-direction:column; gap:8px; }
+#add-desktop-shortcut-overlay .asd-pane-custom { padding:20px; flex-direction:column; gap:14px; }
+#add-desktop-shortcut-overlay .asd-label { font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:4px; }
+#add-desktop-shortcut-overlay .asd-label-wide { font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:6px; }
+#add-desktop-shortcut-overlay .asd-input { width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--zn-shade-35); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); }
+#add-desktop-shortcut-overlay .asd-input-mono { width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--zn-shade-35); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); font-family:var(--font-mono, monospace); }
+#add-desktop-shortcut-overlay .asd-emojis { display:flex; flex-wrap:wrap; gap:6px; }
+#add-desktop-shortcut-overlay .asd-save { margin-top:6px; padding:10px 16px; border-radius:8px; font-size:var(--zn-fs-xs); font-weight:700; background:linear-gradient(135deg, #0ea5e9, #25c2a0); color:#fff; border:1px solid #0ea5e9; cursor:pointer; box-shadow:0 4px 14px rgba(14,165,233,0.3); }
+#add-desktop-shortcut-overlay .asd-card { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); border-radius:10px; gap:12px; }
+#add-desktop-shortcut-overlay .asd-card-main { display:flex; align-items:center; gap:12px; min-width:0; }
+#add-desktop-shortcut-overlay .asd-card-svg { width:20px; height:20px; fill:currentColor; }
+#add-desktop-shortcut-overlay .asd-card-text { min-width:0; }
+#add-desktop-shortcut-overlay .asd-card-row { display:flex; align-items:center; gap:6px; }
+#add-desktop-shortcut-overlay .asd-card-name { font-size:13px; font-weight:700; color:var(--zn-text-strong); }
+#add-desktop-shortcut-overlay .asd-card-desc { font-size:var(--zn-fs-xs); color:var(--muted); line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
