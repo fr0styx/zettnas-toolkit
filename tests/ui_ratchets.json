@@ -416,7 +416,7 @@
  "frontend/src/components/widgets.js": {
   "buttons": 0,
   "globals": 14,
-  "styles": 46,
+  "styles": 5,
   "templates": 6
  },
  "frontend/src/file-preview-loader.js": {

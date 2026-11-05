@@ -1411,7 +1411,7 @@ function initWeatherCityAutocomplete() {
     _currentSuggestions = items;
     _activeSuggestionIndex = -1;
     if (!items.length) {
-      dropdown.innerHTML = `<div style="padding: 10px 12px; font-size: var(--zn-fs-xs); color: var(--muted); text-align: center;">${escapeHtml(t('w.no_cities', 'No city found with that name'))}</div>`;
+      dropdown.innerHTML = `<div class="wcd-empty">${escapeHtml(t('w.no_cities', 'No city found with that name'))}</div>`;
       dropdown.style.display = 'block';
       return;
     }
@@ -1468,7 +1468,7 @@ function initWeatherCityAutocomplete() {
     if (!q) {
       // Suggest returning to Auto-detect
       dropdown.innerHTML = `
-        <div class="weather-city-item auto-detect-item" style="cursor: pointer;">
+        <div class="weather-city-item auto-detect-item wcd-pointer">
           <div>
             <div class="weather-city-name">📍 ${escapeHtml(t('w.auto_city', 'Find it for me'))}</div>
             <div class="weather-city-sub">${escapeHtml(t('w.auto_city_sub', 'From this network and time zone'))}</div>
@@ -2465,15 +2465,15 @@ export function renderTimezoneList() {
   const localIana = Intl.DateTimeFormat().resolvedOptions().timeZone || 'System Local';
   html += `
     <div class="tz-item-row ${isAutoSelected ? 'selected' : ''}" data-tz-id="auto" role="option" id="tz-opt-auto" aria-selected="${isAutoSelected}">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 14px;">📍</span>
+      <div class="tzl-main">
+        <span class="tzl-icon">📍</span>
         <div>
-          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${escapeHtml(t('tz.auto', "This device's time zone (automatic)"))}</div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(localIana)}</div>
+          <div class="tzl-name">${escapeHtml(t('tz.auto', "This device's time zone (automatic)"))}</div>
+          <div class="tzl-sub">${escapeHtml(localIana)}</div>
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff));">${isAutoSelected ? `✓ ${escapeHtml(t('tz.active', 'In use'))}` : ''}</span>
+      <div class="tzl-side">
+        <span class="tzl-time">${isAutoSelected ? `✓ ${escapeHtml(t('tz.active', 'In use'))}` : ''}</span>
       </div>
     </div>
   `;
@@ -2493,24 +2493,24 @@ export function renderTimezoneList() {
 
     html += `
       <div class="tz-item-row ${isSelected ? 'selected' : ''}" data-tz-id="${escapeHtml(tz.id)}" role="option" id="tz-opt-${escapeHtml(tz.id.replace(/[^A-Za-z0-9_-]/g, '-'))}" aria-selected="${isSelected}">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 14px;">🌐</span>
+        <div class="tzl-main">
+          <span class="tzl-icon">🌐</span>
           <div>
-            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${escapeHtml(tz.name)}</div>
-            <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(tz.id)} • ${escapeHtml(tz.country)}</div>
+            <div class="tzl-name">${escapeHtml(tz.name)}</div>
+            <div class="tzl-sub">${escapeHtml(tz.id)} • ${escapeHtml(tz.country)}</div>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-family: var(--font-mono, monospace);">${escapeHtml(tzAbbr)}</span>
+        <div class="tzl-main">
+          <span class="tzl-offset">${escapeHtml(tzAbbr)}</span>
           <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); color: ${isSelected ? 'var(--lt-ink-brand, var(--brand, #00f0ff))' : 'var(--zn-text)'};">${escapeHtml(timeStr)}</span>
-          <span style="font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--brand, #00f0ff));">${isSelected ? '✓' : ''}</span>
+          <span class="tzl-check">${isSelected ? '✓' : ''}</span>
         </div>
       </div>
     `;
   });
 
   if (!filtered.length && q) {
-    html = `<div style="text-align: center; color: var(--muted); padding: 25px; font-size: var(--zn-fs-xs);">${escapeHtml(t('tz.no_match', 'No time zone matches "{q}".', { q }))}</div>`;
+    html = `<div class="tzl-empty">${escapeHtml(t('tz.no_match', 'No time zone matches "{q}".', { q }))}</div>`;
   }
 
   container.innerHTML = html;
@@ -2950,11 +2950,11 @@ export function renderDayAgenda(dateKey) {
   if (holidays.length > 0) {
     const hNames = holidays.map((h) => h.name || h.localName).join(' / ');
     html += `
-      <div style="background: rgba(236,72,153,0.12); border: 1px solid rgba(236,72,153,0.3); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 16px;">🎉</span>
+      <div class="cag-holiday">
+        <span class="cag-holiday-icon">🎉</span>
         <div>
-          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-f472b6ff, #f472b6);">${escapeHtml(t('w.holiday_named', 'Public holiday: {name}', { name: hNames }))}</div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(t('w.holiday_country', 'Public holiday in {country}', { country }))}</div>
+          <div class="cag-holiday-name">${escapeHtml(t('w.holiday_named', 'Public holiday: {name}', { name: hNames }))}</div>
+          <div class="cag-muted">${escapeHtml(t('w.holiday_country', 'Public holiday in {country}', { country }))}</div>
         </div>
       </div>
     `;
@@ -2962,10 +2962,10 @@ export function renderDayAgenda(dateKey) {
 
   if (!items.length) {
     html += `
-      <div style="text-align: center; color: var(--muted); padding: 40px 20px; font-size: var(--zn-fs-xs);">
-        <div style="font-size: 26px; margin-bottom: 8px;">📝</div>
-        <div style="font-weight: 600; color: var(--zn-text-soft);">${t('cal.empty_agenda') || 'No notes or reminders for this day.'}</div>
-        <div style="font-size: var(--zn-fs-xs); margin-top: 4px;">${escapeHtml(t('w.agenda_empty', 'Add a task, reminder or note in the box above.'))}</div>
+      <div class="cag-empty">
+        <div class="cag-empty-icon">📝</div>
+        <div class="cag-empty-title">${t('cal.empty_agenda') || 'No notes or reminders for this day.'}</div>
+        <div class="cag-empty-sub">${escapeHtml(t('w.agenda_empty', 'Add a task, reminder or note in the box above.'))}</div>
       </div>
     `;
   } else {
@@ -2986,23 +2986,23 @@ export function renderDayAgenda(dateKey) {
         <div class="cal-agenda-card ${isCompleted ? 'completed' : ''}" data-item-id="${escapeHtml(item.id || '')}">
           ${
             isTask
-              ? `<input type="checkbox" class="cal-task-check" ${isCompleted ? 'checked' : ''} style="margin-top: 3px; cursor: pointer; accent-color: var(--ok2, #25c2a0); width: 15px; height: 15px;" />`
-              : `<span style="font-size: 15px; margin-top: 1px;">${typeIcon}</span>`
+              ? `<input type="checkbox" class="cal-task-check cag-done" ${isCompleted ? 'checked' : ''} />`
+              : `<span class="cag-kind">${typeIcon}</span>`
           }
-          <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-              <span class="cal-agenda-title" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${escapeHtml(item.title)}</span>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                ${timeStr ? `<span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); background: var(--zn-glaze-8); padding: 2px 6px; border-radius: 4px; color: var(--lt-ink-brand, var(--brand, #00f0ff));">${escapeHtml(timeStr)}</span>` : ''}
-                ${isSynced ? `<span style="font-size: var(--zn-fs-xs); font-weight: 700; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: var(--lt-t-eab308ff, #eab308); padding: 2px 6px; border-radius: 4px;">${escapeHtml(item.feed_name || 'Synced')}</span>` : `<span style="font-size: var(--zn-fs-xs); color: var(--muted); background: var(--zn-glaze-5); padding: 2px 6px; border-radius: 4px;">${escapeHtml(category)}</span>`}
+          <div class="cag-body">
+            <div class="cag-head">
+              <span class="cal-agenda-title cag-title">${escapeHtml(item.title)}</span>
+              <div class="cag-tags">
+                ${timeStr ? `<span class="cag-time">${escapeHtml(timeStr)}</span>` : ''}
+                ${isSynced ? `<span class="cag-badge-warn">${escapeHtml(item.feed_name || 'Synced')}</span>` : `<span class="cag-badge">${escapeHtml(category)}</span>`}
                 ${
                   !isSynced
-                    ? `<button type="button" class="btn-cal-delete-note btn-icon" style="background: transparent; border: none; color: var(--lt-t-ef4444ff, #ef4444); opacity: 0.7; cursor: pointer; font-size: var(--zn-fs-xs); padding: 2px 4px;" title="${t('ui.delete_note', 'Delete Note')}">🗑️</button>`
+                    ? `<button type="button" class="btn-cal-delete-note btn-icon cag-del" title="${t('ui.delete_note', 'Delete Note')}">🗑️</button>`
                     : ''
                 }
               </div>
             </div>
-            ${item.description ? `<div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.3;">${escapeHtml(item.description)}</div>` : ''}
+            ${item.description ? `<div class="cag-note">${escapeHtml(item.description)}</div>` : ''}
           </div>
         </div>
       `;
@@ -3025,7 +3025,7 @@ export function renderFeedsList() {
 
   if (!_calendarFeeds.length) {
     container.innerHTML = `
-      <div style="font-size: var(--zn-fs-xs); color: var(--muted); text-align: center; padding: 10px;">
+      <div class="cfl-empty">
         ${escapeHtml(t('w.no_feeds', 'No outside calendars yet. Choose "+ Add Feed" to add a Google or Apple calendar.'))}
       </div>
     `;
@@ -3035,15 +3035,15 @@ export function renderFeedsList() {
   let html = '';
   _calendarFeeds.forEach((feed) => {
     html += `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 6px;" data-feed-id="${escapeHtml(feed.id)}">
-        <div style="display: flex; align-items: center; gap: 8px;">
+      <div class="cfl-row" data-feed-id="${escapeHtml(feed.id)}">
+        <div class="cfl-main">
           <span style="width: 8px; height: 8px; border-radius: 50%; background: ${escapeHtml(feed.color || '#38bdf8')};"></span>
           <div>
-            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${escapeHtml(feed.name)}</div>
-            <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(feedMeta(feed))}</div>
+            <div class="cfl-name">${escapeHtml(feed.name)}</div>
+            <div class="cfl-sub">${escapeHtml(feedMeta(feed))}</div>
           </div>
         </div>
-        <button type="button" class="btn-cal-delete-feed btn-icon" style="background: transparent; border: none; color: var(--lt-t-ef4444ff, #ef4444); opacity: 0.7; cursor: pointer; font-size: var(--zn-fs-xs); padding: 2px;" title="${t('ui.delete_feed', 'Delete Feed')}">🗑️</button>
+        <button type="button" class="btn-cal-delete-feed btn-icon cfl-del" title="${t('ui.delete_feed', 'Delete Feed')}">🗑️</button>
       </div>
     `;
   });

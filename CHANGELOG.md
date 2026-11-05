@@ -195,6 +195,10 @@
 
 #### Usability
 
+- **Mission Control's time zone list, calendar agenda and feeds use classes** (NUX-15): 41 inline
+  styles that widgets.js wrote into them moved into `77-mc-lists.css`, which loads with Mission
+  Control; each class computes the same style as the one it replaced, checked in both themes.
+
 - **Time Machine finds ZettNAS's own Time Machine shares** (FEAT-09): with Find the NAS by name on,
   a share with Time Machine turned on is announced to Macs as a backup disk, so it shows up in
   Time Machine's disk list. Only while ZettNAS's own Samba serves it; a host's Samba (Unraid,
