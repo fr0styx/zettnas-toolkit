@@ -1075,6 +1075,7 @@ export class FmContextMenu {
       group([
         hasSelection && it('archive-create', '🗜️', t('fm.ctx_zip', 'Compress to a .zip file')),
         isZip && it('archive-extract', '📦', t('fm.ctx_unzip', 'Extract here')),
+        isSingle && (isDir || /\.zip$/i.test(fileItem.name)) && it('photo-import', '🏠', t('fm.ctx_photo_import', 'Bring photos home…')),
         isSingle && it('share', '🔗', t('fm.ctx_share', 'Share a link…')),
         isSingle && !isDir && it('checksum', '🛡️', t('fm.ctx_checksum', 'Show its SHA-256 checksum')),
         isSingle && !isDir && it('versions', '🕘', t('fm.versions_menu', 'Previous versions…')),
@@ -1178,6 +1179,9 @@ export class FmContextMenu {
         break;
       case 'archive-extract':
         if (item) this.fm.extractArchive(item.path);
+        break;
+      case 'photo-import': // a Google Takeout or iCloud export (NFEAT-3)
+        if (item) import('./photo-import.js').then((m) => m.openPhotoImport(item.path));
         break;
       case 'share':
         if (item) this.fm.handleAction('share', item.path, item.name);

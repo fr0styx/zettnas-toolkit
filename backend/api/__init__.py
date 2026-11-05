@@ -33,6 +33,7 @@ from backend.api.notifications import router as notifications_router
 from backend.api.offsite import router as offsite_router  # noqa: E402
 from backend.api.oidc import ldap_router
 from backend.api.oidc import router as oidc_router
+from backend.api.photo_import import router as photo_import_router
 from backend.api.protection import router as protection_router
 from backend.api.push import router as push_router
 from backend.api.remotes import router as remotes_router
@@ -92,6 +93,7 @@ api_router.include_router(replication_router)
 api_router.include_router(family_filter_router)
 api_router.include_router(encrypted_folders_router)
 api_router.include_router(media_router)
+api_router.include_router(photo_import_router)  # NFEAT-3
 api_router.include_router(sftp_router)
 api_router.include_router(vms_router)
 api_router.include_router(snmp_router)
@@ -127,6 +129,7 @@ __all__ = [
     "family_filter_router",
     "encrypted_folders_router",
     "media_router",
+    "photo_import_router",
     "sftp_router",
     "vms_router",
     "snmp_router",

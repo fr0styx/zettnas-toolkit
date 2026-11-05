@@ -39,6 +39,7 @@ const KIND = {
   restore: ['jobs.kind_restore', 'Restore'],
   rollback: ['jobs.kind_rollback', 'Snapshot'],
   convert: ['jobs.kind_convert', 'Snapshot'],
+  photo_import: ['jobs.kind_photo_import', 'Photo import'],
 };
 const STATUS = {
   queued: ['jobs.status_queued', 'Waiting'],

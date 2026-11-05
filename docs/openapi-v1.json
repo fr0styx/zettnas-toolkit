@@ -29940,6 +29940,26 @@
     "title": "PhoneIn",
     "type": "object"
    },
+   "PhotoImportStart": {
+    "properties": {
+     "destination": {
+      "maxLength": 1024,
+      "title": "Destination",
+      "type": "string"
+     },
+     "source": {
+      "maxLength": 1024,
+      "title": "Source",
+      "type": "string"
+     }
+    },
+    "required": [
+     "source",
+     "destination"
+    ],
+    "title": "PhotoImportStart",
+    "type": "object"
+   },
    "PortConfigUpdateRequest": {
     "properties": {
      "alias": {
@@ -56782,6 +56802,100 @@
     "x-required-scopes": [
      "storage:read",
      "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/media/photo-import": {
+   "post": {
+    "description": "Starts the import as a job (see /api/jobs); the export is only read.",
+    "operationId": "start_import_api_v1_media_photo_import_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PhotoImportStart"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Start Import Api V1 Media Photo Import Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Start Import",
+    "tags": [
+     "Media"
+    ],
+    "x-required-scopes": [
+     "storage:write"
+    ]
+   }
+  },
+  "/api/v1/media/photo-import/inspect": {
+   "get": {
+    "description": "Which export this is (Google Takeout, iCloud or plain folder), how many photos and videos it\nholds and where they would go. Reads only zip directories and file names.",
+    "operationId": "inspect_export_api_v1_media_photo_import_inspect_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "path",
+      "required": true,
+      "schema": {
+       "maxLength": 1024,
+       "title": "Path",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Inspect Export Api V1 Media Photo Import Inspect Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Inspect Export",
+    "tags": [
+     "Media"
+    ],
+    "x-required-scopes": [
+     "storage:read"
     ]
    }
   },

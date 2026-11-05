@@ -91,6 +91,9 @@ def _validate_media_path(path: str, principal: AuthenticatedPrincipal | None, mu
     return real
 
 
+validate_media_path = _validate_media_path  # shared with the photo import (NFEAT-3)
+
+
 class MediaScanRequest(BaseModel):
     media_path: str | None = Field(default="/mnt/storage/media", max_length=512)
 

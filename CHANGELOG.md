@@ -147,6 +147,15 @@
 
 #### Usability
 
+- **Bring photos home from Google Photos and iCloud** (NFEAT-3): right-click a Google Takeout or an
+  iCloud Photos export in the File Explorer (its .zip parts, or the folder they were unpacked into)
+  and choose "Bring photos home…". ZettNAS says what the export holds, files every photo and video
+  under a folder per year and month by when it was taken (from Google's sidecar files, iCloud's
+  "Photo Details" list, else the photo's EXIF) and sets each file's date to that moment. Album
+  copies and photos already there are skipped, photos deleted in iCloud are left out, and the
+  export is only read. The import runs in the Jobs centre and can be cancelled. ZettNAS never signs
+  in to Google or Apple: it reads the files you download from them.
+
 - **The file viewer's markup uses classes** (NUX-15): 16 inline styles in the viewer's loading,
   details, audio, PDF and error views and the video bars moved into 14 classes in its own lazy
   sheet (74-viewer-markup.css), each checked in a browser to compute the same style in both

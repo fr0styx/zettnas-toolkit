@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-654 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+656 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -349,6 +349,13 @@ request and response schemas.
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/mcp` | signed in | Mcp No Stream |
 | `POST` | `/api/v1/mcp` | signed in | Mcp Endpoint |
+
+### Media
+
+| Method | Path | Access | What it does |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/media/photo-import` | `storage:write` | Starts the import as a job (see /api/jobs); the export is only read |
+| `GET` | `/api/v1/media/photo-import/inspect` | `storage:read` | Which export this is (Google Takeout, iCloud or plain folder), how many photos and videos it holds and where they would go |
 
 ### Metrics
 
