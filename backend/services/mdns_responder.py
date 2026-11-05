@@ -6,12 +6,14 @@ multicast), started by nas_name.py with the app's image. Standard library only.
 It answers "<name>.local" with the NAS's address, so http://<name>.local:<port> works in a
 browser on macOS, iOS, Windows 10+, Android and Linux, and \\\\<name>.local in Windows Explorer.
 It advertises the web page (_http._tcp) and, when the host shares files over SMB, the file
-server (_smb._tcp, with a server icon in Finder's sidebar). Older names (after a rename or the
+server (_smb._tcp, with a server icon in Finder's sidebar), and ZettNAS's own Time Machine
+shares as backup disks (_adisk._tcp) so a Mac offers them in Time Machine. Older names (after a rename or the
 rebrand) answer too, so bookmarks keep working. It shares port 5353 with a responder the host
 may already run (Unraid's avahi).
 
 Arguments: --names (first is the name, the rest still answer), --label (shown in Finder),
---http-port, --ip (else the address of the default route).
+--http-port, --ip (else the address of the default route), --timemachine (a Time Machine share;
+repeat it for more).
 """
 
 import argparse
@@ -112,13 +114,22 @@ def txt(*items: str) -> bytes:
 
 # --- what we answer -----------------------------------------------------------------------------
 class Responder:
-    def __init__(self, names: list[str], ip: str, http_port: int, instance: str, smb: bool = False):
+    def __init__(
+        self,
+        names: list[str],
+        ip: str,
+        http_port: int,
+        instance: str,
+        smb: bool = False,
+        timemachine: list[str] | None = None,
+    ):
         self.names = [n.lower().removesuffix(".local") for n in names if n]
         self.host = f"{self.names[0]}.local"
         self.ip = ip
         self.http_port = http_port
         self.instance = instance
         self.smb = smb
+        self.timemachine = [t for t in (timemachine or []) if t][:16]
 
     def _a(self, host: str, ttl: int, flush: bool = True) -> bytes:
         return record(host, A, ttl, socket.inet_aton(self.ip), flush)
@@ -129,6 +140,10 @@ class Responder:
         if self.smb:
             out["_smb._tcp.local"] = (f"{self.instance}._smb._tcp.local", 445, txt())
             out["_device-info._tcp.local"] = (f"{self.instance}._device-info._tcp.local", 0, txt("model=Xserve"))
+            if self.timemachine:  # Apple's backup-disk record: Time Machine lists these shares
+                disks = [f"dk{i}=adVN={share[:200]},adVF=0x82" for i, share in enumerate(self.timemachine)]
+                text = txt("sys=waMa=0,adVF=0x100", *disks)
+                out["_adisk._tcp.local"] = (f"{self.instance}._adisk._tcp.local", 9, text)
         return out
 
     def _no_ipv6(self, host: str, ttl: int, flush: bool = True) -> bytes:
@@ -301,11 +316,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--label", default="ZettNAS", help="how Finder lists the NAS")
     ap.add_argument("--http-port", type=int, default=80)
     ap.add_argument("--ip", default="")
+    ap.add_argument("--timemachine", action="append", default=[], help="a Time Machine share (repeat for more)")
     args = ap.parse_args(argv)
     names = [n.strip() for n in args.names.split(",") if n.strip()]
     ip = args.ip or default_ip()
     port = args.http_port
-    r = Responder(names, ip, port, args.label, smb=smb_open(ip))
+    r = Responder(names, ip, port, args.label, smb=smb_open(ip), timemachine=args.timemachine)
     sock = open_socket(ip)
     if not probe(sock, r):
         base = r.names[0]

@@ -139,6 +139,7 @@ def docker(monkeypatch, tmp_path):
     monkeypatch.delenv("ZETTNAS_NAS_NAME", raising=False)
     fake = FakeDocker()
     monkeypatch.setattr(nas_name, "_docker", fake)
+    monkeypatch.setattr(nas_name, "timemachine_shares", lambda: [])
     return fake
 
 
@@ -392,3 +393,63 @@ def test_the_link_listens_on_the_group_and_sends_from_the_nas_address(monkeypatc
     assert rx.timeout == 0.25 and tx.timeout == "unset"
     if hasattr(socket, "SO_REUSEPORT"):
         assert "without SO_REUSEPORT" in capsys.readouterr().out
+
+
+def test_time_machine_shares_are_announced_as_backup_disks():
+    r = m.Responder(["zettnas"], IP, 8082, "ZettNAS", smb=True, timemachine=["Backups", "Mac", ""])
+    inst, port, text = r.services()["_adisk._tcp.local"]
+    assert inst == "ZettNAS._adisk._tcp.local" and port == 9
+    assert b"sys=waMa=0,adVF=0x100" in text
+    assert b"dk0=adVN=Backups,adVF=0x82" in text and b"dk1=adVN=Mac,adVF=0x82" in text and b"dk2" not in text
+    out = records(r.reply(query(("_adisk._tcp.local", m.PTR)), 5353))
+    assert any(name == "_adisk._tcp.local" and rtype == m.PTR for name, rtype, *_ in out)
+    assert any(rtype == m.SRV and name == inst for name, rtype, *_ in out)
+    no_smb = m.Responder(["zettnas"], IP, 8082, "ZettNAS", smb=False, timemachine=["Backups"])
+    assert "_adisk._tcp.local" not in no_smb.services()
+    assert "_adisk._tcp.local" not in responder().services()
+
+
+def test_only_zettnas_own_samba_counts_for_time_machine(monkeypatch):
+    from backend.services import samba_engine
+
+    class Share:
+        def __init__(self, name, tm):
+            self.name, self.timemachine = name, tm
+
+    class Engine:
+        state = "running"
+
+        def check_sidecar(self):
+            return {"detected": self.state != "", "state": self.state}
+
+        def list_shares(self):
+            return [Share("Mac", True), Share("Media", False), Share("Air", True)]
+
+    engine = Engine()
+    monkeypatch.setattr(samba_engine, "get_samba_engine", lambda: engine)
+    assert nas_name.timemachine_shares() == ["Air", "Mac"]
+    engine.state = "exited"
+    assert nas_name.timemachine_shares() == []
+
+
+def test_the_shares_reach_the_container_whose_health_check_is_off(docker, monkeypatch):
+    nas_name.save(enabled=True)
+    first = docker.box["Config"]["Labels"]["zettnas.config"]
+    assert docker.box["Config"]["Healthcheck"] == {"Test": ["NONE"]}
+    monkeypatch.setattr(nas_name, "timemachine_shares", lambda: ["Mac"])
+    started = []
+    monkeypatch.setattr(nas_name.threading, "Thread", lambda target, **kw: started.append(target) or _NoThread())
+    nas_name.refresh()
+    assert started == [nas_name.ensure]
+    nas_name.ensure()
+    assert docker.box["Config"]["Cmd"][-2:] == ["--timemachine", "Mac"]
+    assert docker.box["Config"]["Labels"]["zettnas.config"] != first  # a new share remakes it
+    nas_name.save(enabled=False)
+    started.clear()
+    nas_name.refresh()
+    assert started == []  # off: nothing to announce
+
+
+class _NoThread:
+    def start(self):
+        pass

@@ -15,6 +15,7 @@ from backend.hardware.pal_storage import (
     StoragePlatformDetector,
     get_storage_platform,
 )
+from backend.services import nas_name
 from backend.services.samba_engine import (
     SambaShareConfig,
     SambaStatus,
@@ -57,7 +58,9 @@ def create_or_update_samba_share(share: SambaShareConfig) -> SambaShareConfig:
         )
     try:
         engine = get_samba_engine()
-        return engine.add_or_update_share(share)
+        saved = engine.add_or_update_share(share)
+        nas_name.refresh()  # a Time Machine share is announced to Macs (FEAT-09)
+        return saved
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -76,6 +79,7 @@ def delete_samba_share(name: str) -> dict[str, Any]:
         )
     engine = get_samba_engine()
     if engine.remove_share(name):
+        nas_name.refresh()
         return {"status": "deleted", "name": name}
     raise HTTPException(status_code=404, detail=f"Share '{name}' not found")
 

@@ -121,19 +121,40 @@ def web_port(me: dict[str, Any]) -> int:
     return inner
 
 
+def timemachine_shares() -> list[str]:
+    """ZettNAS's own Time Machine shares, while its own Samba serves them. A host's Samba (Unraid's,
+    TrueNAS's) announces its Time Machine shares itself."""
+    from backend.services.samba_engine import get_samba_engine
+
+    engine = get_samba_engine()
+    if engine.check_sidecar().get("state") != "running":
+        return []
+    return sorted(s.name for s in engine.list_shares() if s.timemachine)
+
+
 def desired(me: dict[str, Any], cfg: dict[str, Any]) -> dict[str, Any]:
     """The container: the app's image, the responder, the host's network, nothing mounted."""
     names = answering_names(cfg)
     cmd = [RESPONDER, "--names", ",".join(names), "--label", label(cfg["name"]), "--http-port", str(web_port(me))]
+    for share in timemachine_shares():
+        cmd += ["--timemachine", share]
     image = (me.get("Config") or {}).get("Image") or "ghcr.io/fr0styx/zettnas-toolkit:latest"
-    fingerprint = hashlib.sha256(json.dumps([image, cmd], sort_keys=True).encode()).hexdigest()[:16]
-    return {
+    want: dict[str, Any] = {
         "Image": image,
         "Entrypoint": ["python3"],
         "Cmd": cmd,
+        "Healthcheck": {"Test": ["NONE"]},  # the image's own check asks the web app, which isn't here
         "HostConfig": {"NetworkMode": "host", "RestartPolicy": {"Name": "unless-stopped"}, "ReadonlyRootfs": True},
-        "Labels": {"app": CONTAINER, "managed-by": "zettnas-toolkit", "zettnas.config": fingerprint},
     }
+    fingerprint = hashlib.sha256(json.dumps(want, sort_keys=True).encode()).hexdigest()[:16]
+    want["Labels"] = {"app": CONTAINER, "managed-by": "zettnas-toolkit", "zettnas.config": fingerprint}
+    return want
+
+
+def refresh() -> None:
+    """After a share change: the name service announces the Time Machine shares there are now."""
+    if config()["enabled"]:
+        threading.Thread(target=ensure, name="nas-name-refresh", daemon=True).start()
 
 
 def _remove() -> None:

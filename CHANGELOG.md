@@ -156,6 +156,11 @@
 
 #### Usability
 
+- **Time Machine finds ZettNAS's own Time Machine shares** (FEAT-09): with Find the NAS by name on,
+  a share with Time Machine turned on is announced to Macs as a backup disk, so it shows up in
+  Time Machine's disk list. Only while ZettNAS's own Samba serves it; a host's Samba (Unraid,
+  TrueNAS) announces its shares itself. The name service no longer shows the app's health check.
+
 - **The name service listens only where it has to** (CodeQL alert 473): it listened on port 5353
   of every interface; it now listens on the mDNS group's address only and answers from the NAS's
   own address.
