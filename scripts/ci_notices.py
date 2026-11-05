@@ -18,6 +18,7 @@ Uses only the standard library. Needs GITHUB_TOKEN and GITHUB_REPOSITORY.
 from __future__ import annotations
 
 import argparse
+import http.client
 import io
 import json
 import os
@@ -167,7 +168,8 @@ RETRIES = 3
 
 
 def open_url(req: urllib.request.Request, retries: int = RETRIES, wait_s: float = 2.0) -> bytes:
-    """The response body; server errors (5xx) and dropped connections are retried, with growing pauses."""
+    """The response body; server errors (5xx), dropped connections and a body cut off part way (GitHub
+    sometimes ends a run's log download early) are retried, with growing pauses."""
     for attempt in range(retries + 1):
         try:
             with urllib.request.urlopen(req, timeout=60) as resp:
@@ -175,7 +177,7 @@ def open_url(req: urllib.request.Request, retries: int = RETRIES, wait_s: float 
         except urllib.error.HTTPError as exc:
             if exc.code < 500 or attempt == retries:
                 raise
-        except urllib.error.URLError:
+        except (urllib.error.URLError, http.client.IncompleteRead, ConnectionError, TimeoutError):
             if attempt == retries:
                 raise
         time.sleep(wait_s * (attempt + 1))

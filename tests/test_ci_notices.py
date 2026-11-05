@@ -154,3 +154,43 @@ def test_server_errors_are_retried_and_client_errors_are_not(monkeypatch):
     except urllib.error.HTTPError as exc:
         assert exc.code == 503
     assert len(calls) == 3
+
+
+def test_a_download_cut_off_part_way_is_tried_again(monkeypatch):
+    import http.client
+    import io
+    import urllib.request
+
+    calls = []
+
+    class Resp(io.BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    class CutOff(Resp):
+        def read(self, *a):
+            raise http.client.IncompleteRead(b"PK\x03\x04")
+
+    def flaky(req, timeout=60):
+        calls.append(1)
+        return CutOff(b"") if len(calls) == 1 else Resp(b"the whole log")
+
+    monkeypatch.setattr(cn.urllib.request, "urlopen", flaky)
+    monkeypatch.setattr(cn.time, "sleep", lambda s: None)
+    req = urllib.request.Request("https://api.github.com/repos/o/r/actions/runs/1/logs")
+    assert cn.open_url(req) == b"the whole log" and len(calls) == 2
+
+    def reset(req, timeout=60):
+        calls.append(1)
+        raise ConnectionResetError("reset by peer")
+
+    calls.clear()
+    monkeypatch.setattr(cn.urllib.request, "urlopen", reset)
+    try:
+        cn.open_url(req, retries=1)
+    except ConnectionResetError:
+        pass
+    assert len(calls) == 2
