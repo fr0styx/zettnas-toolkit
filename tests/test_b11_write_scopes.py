@@ -23,6 +23,8 @@ OWN_OR_SIGN_IN = {
     "/api/v1/users/{user_id}/erase-data": "their own data; others need users:delete and a confirmation",
     "/api/v1/fs/shared/{token}": "a public link; the token (and password) is the credential",
     "/api/v1/shared/{token}": "a public link; the token (and password) is the credential",
+    "/api/v1/fs/shared/{token}/upload": "a send-me-files link; the token (and password) is the credential",
+    "/api/v1/shared/{token}/upload": "a send-me-files link; the token (and password) is the credential",
     "/api/v1/invite/{token}/accept": "an invite; the token is the credential",
     "/api/v1/remotes/oauth/mobile-exchange": "cloud sign-in on a phone; the state is the credential",
     "/api/v1/immich/me": "their own Immich link",

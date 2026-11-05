@@ -4099,6 +4099,10 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
           <input class="fmx-xs-strong-box" type="password" id="fm-share-password" placeholder="${t('ui.leave_empty_for_public_access', 'Leave empty for public access')}" />
         </div>
 
+        <div class="form-group fmx-x-4" id="fm-share-upload-row" hidden>
+          <label class="fmx-xs-semi-muted"><input type="checkbox" id="fm-share-upload" /> ${escapeHtml(t('fm.share_upload', 'Let people send files into this folder instead (they can\'t see what is in it)'))}</label>
+        </div>
+
         <div class="form-group fmx-x-4">
           <label class="fmx-xs-semi-muted" for="fm-share-max-dl">${t('fm.share_max', 'Most downloads (optional)')}</label>
           <input class="fmx-xs-strong-box" type="number" id="fm-share-max-dl" min="1" placeholder="${t('ui.unlimited', 'Unlimited')}" />
@@ -4156,13 +4160,15 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
       const pwd = pwdInput ? pwdInput.value.trim() : '';
       const maxDlInput = modal.querySelector('#fm-share-max-dl');
       const maxDl = maxDlInput ? parseInt(maxDlInput.value, 10) : 0;
+      const upload = Boolean(/** @type {HTMLInputElement | null} */ (modal.querySelector('#fm-share-upload'))?.checked);
 
       try {
         const res = await api.post('/api/fs/share-links', {
           path,
           expires_hours: expHours > 0 ? expHours : null,
           password: pwd || null,
-          max_downloads: maxDl > 0 ? maxDl : null,
+          max_downloads: maxDl > 0 && !upload ? maxDl : null,
+          kind: upload ? 'upload' : 'download', // a send-me-files link (NFEAT-2)
         });
 
         // from anywhere when public links are on (NFEAT-2), else this NAS's own address
@@ -4198,6 +4204,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
           ];
           if (res.has_password) parts.push(t('fm.share_pw_protected', 'Password protected'));
           if (res.max_downloads) parts.push(t('fm.share_max_dl', 'At most {n, plural, one {# download} other {# downloads}}', { n: res.max_downloads }));
+          if (res.kind === 'upload') parts.push(t('fm.share_upload_meta', 'People can send files here but not see what is in the folder'));
           parts.push(res.public_url ? t('fm.share_anywhere', 'Works from anywhere') : t('fm.share_home_only', 'Works at home and on your tailnet'));
           metaEl.textContent = parts.join(' • ');
         }
@@ -4212,6 +4219,11 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
     };
   }
 
+  // a folder can also receive files (NFEAT-2)
+  const fmInst = /** @type {any} */ (window).getActiveFmInstance?.();
+  const isDir = Boolean(fmInst?.fileList?.find((f) => f.path === path)?.is_dir);
+  const uploadRow = /** @type {HTMLElement | null} */ (modal.querySelector('#fm-share-upload-row'));
+  if (uploadRow) uploadRow.hidden = !isDir;
   modal.style.display = 'flex';
   modal.classList.add('open');
   const pop = modal.querySelector('.fm-share-popover');

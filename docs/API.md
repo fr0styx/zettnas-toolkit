@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-665 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+667 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -271,6 +271,7 @@ request and response schemas.
 | `DELETE` | `/api/v1/fs/share-links/{token}` | any of `files:write`, `storage:admin` | Revokes and deletes an existing share link |
 | `GET` | `/api/v1/fs/shared/{token}` | public ⏱ | Public access endpoint for shared files and folders (no session needed) |
 | `POST` | `/api/v1/fs/shared/{token}` | public ⏱ | Same as the GET route, with the password in a form or JSON body instead of the URL (SEC-21) |
+| `POST` | `/api/v1/fs/shared/{token}/upload` | public ⏱ | A file sent through a send-me-files link (NFEAT-2): the body is the file, X-File-Name its name (URL-encoded), X-Share-Password the link's… |
 | `GET` | `/api/v1/fs/stream` | signed in | HTTP 206 Partial Content Range streaming for video and audio playback |
 | `GET` | `/api/v1/fs/stream/compat` | any of `shares:read`, `storage:read`, `system:view` | The video converted in fragmented MP4 while it plays, from `start` seconds: H.264/AAC (mode=full), or the video as it is with AAC audio (… |
 | `POST` | `/api/v1/fs/thumbs/prefetch` | any of `shares:read`, `storage:read`, `system:view` | Queues a folder's photo and video thumbnails, so they are ready before they scroll into view (NPERF-8) |
@@ -298,6 +299,7 @@ request and response schemas.
 | `DELETE` | `/api/v1/share-links/{token}` | any of `files:write`, `storage:admin` | Revokes and deletes an existing share link |
 | `GET` | `/api/v1/shared/{token}` | public ⏱ | Public access endpoint for shared files and folders (no session needed) |
 | `POST` | `/api/v1/shared/{token}` | public ⏱ | Same as the GET route, with the password in a form or JSON body instead of the URL (SEC-21) |
+| `POST` | `/api/v1/shared/{token}/upload` | public ⏱ | A file sent through a send-me-files link (NFEAT-2): the body is the file, X-File-Name its name (URL-encoded), X-Share-Password the link's… |
 
 ### Files
 

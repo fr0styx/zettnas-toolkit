@@ -2631,6 +2631,8 @@ export default {
   "fm.share_max_dl": "Como máximo {n, plural, one {# descarga} other {# descargas}}",
   "fm.share_anywhere": "Funciona desde cualquier lugar",
   "fm.share_home_only": "Funciona en casa y en su tailnet",
+  "fm.share_upload": "Permitir que envíen archivos a esta carpeta (sin ver lo que contiene)",
+  "fm.share_upload_meta": "Pueden enviar archivos, pero no ver lo que hay en la carpeta",
   "fm.ctx_icloud_photos": "Descargar de Fotos de iCloud…",
   "ic.title": "Descargar de Fotos de iCloud",
   "ic.looking": "Comprobando el inicio de sesión de iCloud…",

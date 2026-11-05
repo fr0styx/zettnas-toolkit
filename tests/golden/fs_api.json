@@ -821,6 +821,34 @@
    "status": null
   },
   {
+   "deps": [],
+   "endpoint": "upload_to_shared_folder",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "request",
+    "token"
+   ],
+   "path": "/shared/{token}/upload",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [],
+   "endpoint": "upload_to_shared_folder",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "request",
+    "token"
+   ],
+   "path": "/fs/shared/{token}/upload",
+   "response_model": null,
+   "status": null
+  },
+  {
    "deps": [
     "require_scope"
    ],
@@ -2134,8 +2162,10 @@
   "CreateShareLinkRequest": {
    "class": [
     "expires_hours",
+    "kind",
     "label",
     "max_downloads",
+    "max_upload_mb",
     "password",
     "path"
    ]

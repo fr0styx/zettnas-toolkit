@@ -2631,6 +2631,8 @@ export default {
   "fm.share_max_dl": "最多下载 {n} 次",
   "fm.share_anywhere": "随处可用",
   "fm.share_home_only": "在家里和你的 tailnet 中可用",
+  "fm.share_upload": "改为让别人向这个文件夹发送文件（看不到里面的内容）",
+  "fm.share_upload_meta": "别人可以发送文件，但看不到文件夹里的内容",
   "fm.ctx_icloud_photos": "从 iCloud 照片下载…",
   "ic.title": "从 iCloud 照片下载",
   "ic.looking": "正在检查 iCloud 登录…",

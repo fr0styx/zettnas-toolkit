@@ -156,6 +156,13 @@
 
 #### Usability
 
+- **"Send me files" links** (NFEAT-2): sharing a folder can make a link that lets anyone with it
+  drop files in, without an account and without seeing what is in the folder. Files stream
+  straight into the folder, never overwrite one that is there, and get plain names; the link has a
+  total size (5 GB unless set), keeps its password and expiry like any share link, stops when its
+  maker can no longer write there, and each file that arrives is noted in the activity log. With
+  public links on, it works from anywhere.
+
 - **Share links from anywhere** (NFEAT-2): a switch in Network → File Sharing Services publishes
   the share links, and only them, through Tailscale Funnel on port 8443, so a link works for
   someone outside the home without router changes. The rest of ZettNAS stays private. New links

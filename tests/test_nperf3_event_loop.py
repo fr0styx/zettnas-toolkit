@@ -35,7 +35,7 @@ BASELINE = {
     "backend/api/files/operations.py": 1,
     "backend/api/files/preview.py": 3,
     "backend/api/files/search.py": 2,
-    "backend/api/files/share_links.py": 2,
+    "backend/api/files/share_links.py": 1,
     "backend/api/files/uploads.py": 8,
     "backend/api/media.py": 2,
     "backend/api/remotes.py": 1,

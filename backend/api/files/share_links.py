@@ -9,13 +9,14 @@ import secrets
 import threading
 import time
 import zipfile
-from typing import IO, Any, cast
+from typing import IO, Any, Literal, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import backend.config as config
+from backend.api.files import upload_links
 from backend.api.files.common import _contained, _user_file_headers
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import logger
@@ -58,6 +59,9 @@ class CreateShareLinkRequest(BaseModel):
     max_downloads: int | None = None
     password: str | None = None
     label: str | None = None
+    # "upload": a send-me-files link on a folder (NFEAT-2), at most max_upload_mb in all
+    kind: Literal["download", "upload"] = "download"
+    max_upload_mb: int | None = Field(default=None, ge=1, le=1024 * 1024)
 
 
 # Sliding-window rate limiter for shared link password attempts: IP -> list of timestamps
@@ -127,6 +131,9 @@ async def create_share_link(
     if resolve_within(real_target, ALLOWED_BROWSE_ROOTS) is None:
         raise HTTPException(status_code=403, detail="Path outside allowed folders")
 
+    is_dir = await asyncio.to_thread(os.path.isdir, real_target)
+    if req.kind == "upload" and not is_dir:
+        raise HTTPException(status_code=400, detail="Only a folder can receive files.")
     token = secrets.token_urlsafe(24)
     now = time.time()
     expires_at = (now + (req.expires_hours * 3600)) if req.expires_hours and req.expires_hours > 0 else None
@@ -138,7 +145,7 @@ async def create_share_link(
     link_data = {
         "token": token,
         "path": target_path,
-        "is_dir": os.path.isdir(real_target),
+        "is_dir": is_dir,
         "filename": os.path.basename(real_target),
         "label": req.label or os.path.basename(real_target),
         "created_by": principal.username,
@@ -149,6 +156,14 @@ async def create_share_link(
         "has_password": password_hash is not None,
         "password_hash": password_hash,
     }
+    if req.kind == "upload":
+        link_data.update(
+            kind="upload",
+            max_downloads=None,
+            max_upload_mb=req.max_upload_mb or upload_links.DEFAULT_LIMIT_MB,
+            received_bytes=0,
+            received_count=0,
+        )
 
     async with _SHARE_LOCK:
         links = _load_share_links()
@@ -259,17 +274,14 @@ async def access_shared_file(
     return await _serve_shared_item(token, request, info, request.headers.get("X-Share-Password") or "")
 
 
-def _share_creator_can_read(created_by: str | None, real_target: str) -> bool:
-    """A link works only while the person who made it is active and can still read the item.
-    Links saved before creators were recorded (no created_by) keep working."""
-    if not created_by:
-        return True
+def _creator(created_by: str) -> AuthenticatedPrincipal | None:
+    """The person who made a link, while their account is active."""
     from backend.users_db import get_user_by_username
 
     user = get_user_by_username(created_by)
     if not user or user.get("status") != "active":
-        return False
-    creator = AuthenticatedPrincipal(
+        return None
+    return AuthenticatedPrincipal(
         {
             "user_id": user["id"],
             "username": user["username"],
@@ -277,7 +289,38 @@ def _share_creator_can_read(created_by: str | None, real_target: str) -> bool:
             "scopes": user.get("scopes") or [],
         }
     )
-    return user_can_access_path(real_target, creator)
+
+
+def _share_creator_can_read(created_by: str | None, real_target: str) -> bool:
+    """A link works only while the person who made it is active and can still read the item.
+    Links saved before creators were recorded (no created_by) keep working."""
+    if not created_by:
+        return True
+    creator = _creator(created_by)
+    return creator is not None and user_can_access_path(real_target, creator)
+
+
+def _upload_folder(item: dict[str, Any]) -> str:
+    """The folder a send-me-files link fills, while it is there and inside the allowed folders."""
+    try:
+        folder = _contained(item["path"], must_exist=True)
+    except HTTPException:
+        raise HTTPException(status_code=404, detail="The folder is no longer there.") from None
+    if resolve_within(folder, ALLOWED_BROWSE_ROOTS) is None or not os.path.isdir(folder):
+        raise HTTPException(status_code=404, detail="The folder is no longer there.")
+    return folder
+
+
+def _share_creator_can_write(created_by: str | None, real_target: str) -> bool:
+    """A send-me-files link works only while its maker is active and may still write there."""
+    creator = _creator(created_by) if created_by else None
+    if creator is None:
+        return False
+    try:
+        check_user_path_access(real_target, creator, write=True)
+    except HTTPException:
+        return False
+    return True
 
 
 SHARE_ZIP_LIMIT = 5 * 1024**3
@@ -454,6 +497,23 @@ async def _serve_shared_item(token: str, request: Request, info: bool, provided_
     if item.get("expires_at") and now > item["expires_at"]:
         raise HTTPException(status_code=410, detail="Share link has expired")
 
+    if item.get("kind") == "upload":  # a send-me-files page: the folder itself is never shown (NFEAT-2)
+        if info:
+            return {  # the documented fields of a link's info, with nothing of the folder's contents
+                "token": token,
+                "kind": "upload",
+                "filename": item.get("label") or "",
+                "label": item.get("label") or "",
+                "is_dir": True,
+                "size_bytes": 0,
+                "download_count": 0,
+                "max_downloads": None,
+                "has_password": bool(item.get("has_password")),
+                "expires_at": item.get("expires_at"),
+                "max_upload_mb": item.get("max_upload_mb"),
+            }
+        return upload_links.page(token, item)
+
     if item.get("max_downloads") and item.get("download_count", 0) >= item["max_downloads"]:
         raise HTTPException(status_code=410, detail="Download limit reached for this share link")
 
@@ -550,3 +610,41 @@ async def _serve_shared_item(token: str, request: Request, info: bool, provided_
             filename=fname,
             headers={"Content-Disposition": f'inline; filename="{fname}"', **_user_file_headers(media_type)},
         )
+
+
+@router.post("/fs/shared/{token}/upload")
+@router.post("/shared/{token}/upload")
+async def upload_to_shared_folder(token: str, request: Request):
+    """A file sent through a send-me-files link (NFEAT-2): the body is the file, X-File-Name its
+    name (URL-encoded), X-Share-Password the link's password when it has one."""
+    from backend.rate_limit import hit as _rl_hit
+
+    ip = _get_client_ip(request)
+    wait = _rl_hit(f"share.upload:{ip}", 200, 3600)
+    if wait:
+        raise HTTPException(
+            status_code=429, detail=f"Too many files. Try again in {wait}s.", headers={"Retry-After": str(wait)}
+        )
+    item = _load_share_links().get(token)
+    if not item or item.get("kind") != "upload":
+        raise HTTPException(status_code=404, detail="Share link not found or revoked")
+    if item.get("expires_at") and time.time() > item["expires_at"]:
+        raise HTTPException(status_code=410, detail="Share link has expired")
+    if item.get("has_password"):
+        await _check_share_rate_limit(ip)
+        given = (request.headers.get("X-Share-Password") or "").strip()
+        if not given or not await asyncio.to_thread(verify_password, given, item.get("password_hash") or ""):
+            await _record_failed_share_attempt(ip)
+            raise HTTPException(status_code=401, detail="The password is missing or wrong.")
+        await _reset_share_rate_limit(ip)
+    folder = await asyncio.to_thread(_upload_folder, item)
+    if not await asyncio.to_thread(_share_creator_can_write, item.get("created_by"), folder):
+        raise HTTPException(status_code=410, detail="This link is no longer available.")
+    name, size = await upload_links.receive(item, folder, request)
+    async with _SHARE_LOCK:
+        links = _load_share_links()
+        if token in links:
+            links[token] = upload_links.counted(links[token], size)
+            _save_share_links(links)
+    await asyncio.to_thread(upload_links.note, item, name, size, ip)
+    return {"name": name, "size": size}

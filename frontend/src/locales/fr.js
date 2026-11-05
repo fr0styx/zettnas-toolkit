@@ -2631,6 +2631,8 @@ export default {
   "fm.share_max_dl": "Au plus {n, plural, one {# téléchargement} other {# téléchargements}}",
   "fm.share_anywhere": "Fonctionne depuis partout",
   "fm.share_home_only": "Fonctionne à la maison et sur votre tailnet",
+  "fm.share_upload": "Laisser plutôt envoyer des fichiers dans ce dossier (sans voir son contenu)",
+  "fm.share_upload_meta": "On peut envoyer des fichiers sans voir le contenu du dossier",
   "fm.ctx_icloud_photos": "Télécharger depuis Photos iCloud…",
   "ic.title": "Télécharger depuis Photos iCloud",
   "ic.looking": "Vérification de la connexion iCloud…",

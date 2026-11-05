@@ -4244,6 +4244,15 @@
       ],
       "title": "Expires Hours"
      },
+     "kind": {
+      "default": "download",
+      "enum": [
+       "download",
+       "upload"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
      "label": {
       "anyOf": [
        {
@@ -4265,6 +4274,19 @@
        }
       ],
       "title": "Max Downloads"
+     },
+     "max_upload_mb": {
+      "anyOf": [
+       {
+        "maximum": 1048576.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Max Upload Mb"
      },
      "password": {
       "anyOf": [
@@ -53056,6 +53078,50 @@
     }
    }
   },
+  "/api/v1/fs/shared/{token}/upload": {
+   "post": {
+    "description": "A file sent through a send-me-files link (NFEAT-2): the body is the file, X-File-Name its\nname (URL-encoded), X-Share-Password the link's password when it has one.",
+    "operationId": "upload_to_shared_folder_api_v1_fs_shared__token__upload_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "token",
+      "required": true,
+      "schema": {
+       "title": "Token",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
+     }
+    },
+    "security": [],
+    "summary": "Upload To Shared Folder",
+    "tags": [
+     "File System & Shares"
+    ],
+    "x-rate-limit": {
+     "description": "200 files an hour per address; 5 wrong passwords in 10 minutes block the address."
+    }
+   }
+  },
   "/api/v1/fs/stream": {
    "get": {
     "description": "HTTP 206 Partial Content Range streaming for video and audio playback.",
@@ -62901,6 +62967,50 @@
     ],
     "x-rate-limit": {
      "description": "120 requests a minute per address; 5 wrong passwords in 10 minutes block the address."
+    }
+   }
+  },
+  "/api/v1/shared/{token}/upload": {
+   "post": {
+    "description": "A file sent through a send-me-files link (NFEAT-2): the body is the file, X-File-Name its\nname (URL-encoded), X-Share-Password the link's password when it has one.",
+    "operationId": "upload_to_shared_folder_api_v1_shared__token__upload_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "token",
+      "required": true,
+      "schema": {
+       "title": "Token",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
+     }
+    },
+    "security": [],
+    "summary": "Upload To Shared Folder",
+    "tags": [
+     "File System & Shares"
+    ],
+    "x-rate-limit": {
+     "description": "200 files an hour per address; 5 wrong passwords in 10 minutes block the address."
     }
    }
   },
