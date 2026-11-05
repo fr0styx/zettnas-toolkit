@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-663 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+665 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -379,6 +379,8 @@ request and response schemas.
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/network/nas-name` | `system:view` | Whether the NAS answers to <name>.local, the name, the older names that still answer and the web address |
 | `PUT` | `/api/v1/network/nas-name` | `system:config` | Turns the name on or off or changes it; the previous name keeps answering |
+| `GET` | `/api/v1/network/public-links` | `system:view` | Whether share links work from the internet, their address, and a Tailscale approval to open |
+| `PUT` | `/api/v1/network/public-links` | `system:config` | Turns public share links on (confirmed first: 428 until then) or off |
 
 ### Network & Switching
 

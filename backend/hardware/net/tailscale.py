@@ -447,3 +447,6 @@ def execute_tailscale_reauth() -> dict[str, Any]:
         "auth_url": auth_url,
         "output": out,
     }
+
+
+run_tailscale_cmd = _run_tailscale_cmd  # shared with public share links (NFEAT-2)

@@ -58,6 +58,7 @@ ACTIONS: dict[str, str] = {
     "share.make_subvolume": "Make share {target} snapshot-ready: its files move into a btrfs subvolume of the same name. Close files on it first; changes saved while it runs may be lost",
     "pool.scrub_schedule": "Check pool {target} for errors once a month. Its disks spin up for the check",
     "security.advisor_fix": "Apply the Security Advisor fix '{target}'. People may lose access they had before",
+    "network.public_links": "Let anyone who has a share link open it from the internet, through Tailscale Funnel on port {target}. Only share links are reachable that way; the rest of the NAS stays private",
     "network.nas_name": "Let the NAS answer to {target} on the home network. A small helper on the host's network does it and only answers name lookups",
 }
 

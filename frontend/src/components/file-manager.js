@@ -4165,7 +4165,8 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
           max_downloads: maxDl > 0 ? maxDl : null,
         });
 
-        const fullUrl = `${window.location.origin}${res.url}`;
+        // from anywhere when public links are on (NFEAT-2), else this NAS's own address
+        const fullUrl = res.public_url || `${window.location.origin}${res.url}`;
         const createSec = modal.querySelector('#fm-share-create-section');
         const resSec = modal.querySelector('#fm-share-result-section');
         if (createSec) createSec.style.display = 'none';
@@ -4190,10 +4191,15 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
 
         const metaEl = modal.querySelector('#fm-share-meta-info');
         if (metaEl) {
-          let metaText = res.expires_at ? `Expires in ${expHours} hour(s)` : 'Never expires';
-          if (res.has_password) metaText += ' • Password protected';
-          if (res.max_downloads) metaText += ` • Max ${res.max_downloads} download(s)`;
-          metaEl.textContent = metaText;
+          const parts = [
+            res.expires_at
+              ? t('fm.share_expires_in', 'Expires in {n, plural, one {# hour} other {# hours}}', { n: expHours })
+              : t('fm.share_never_expires', 'Never expires'),
+          ];
+          if (res.has_password) parts.push(t('fm.share_pw_protected', 'Password protected'));
+          if (res.max_downloads) parts.push(t('fm.share_max_dl', 'At most {n, plural, one {# download} other {# downloads}}', { n: res.max_downloads }));
+          parts.push(res.public_url ? t('fm.share_anywhere', 'Works from anywhere') : t('fm.share_home_only', 'Works at home and on your tailnet'));
+          metaEl.textContent = parts.join(' • ');
         }
 
         const doneBtn = modal.querySelector('#fm-share-done');

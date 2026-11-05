@@ -22,6 +22,7 @@ from backend.config import logger
 from backend.fsutil import atomic_write_json, prune_protected, read_json, resolve_within
 from backend.passwords import hash_password, verify_password
 from backend.rate_limit import rate_limit
+from backend.services import public_links
 from backend.services.path_access import ALLOWED_BROWSE_ROOTS, check_user_path_access, user_can_access_path
 
 router = APIRouter()
@@ -157,6 +158,7 @@ async def create_share_link(
     sanitized = dict(link_data)
     sanitized.pop("password_hash", None)
     sanitized["url"] = f"/api/fs/shared/{token}"
+    sanitized["public_url"] = public_links.public_url(token)  # from anywhere, when that is on (NFEAT-2)
     return sanitized
 
 
@@ -180,6 +182,7 @@ def list_share_links(
         res = dict(item)
         res.pop("password_hash", None)
         res["url"] = f"/api/fs/shared/{token}"
+        res["public_url"] = public_links.public_url(token)
         res["is_expired"] = bool(expired)
         res["limit_reached"] = bool(limit_reached)
         res["is_active"] = not expired and not limit_reached

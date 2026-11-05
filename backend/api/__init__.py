@@ -36,6 +36,7 @@ from backend.api.oidc import ldap_router
 from backend.api.oidc import router as oidc_router
 from backend.api.photo_import import router as photo_import_router
 from backend.api.protection import router as protection_router
+from backend.api.public_links import router as public_links_router
 from backend.api.push import router as push_router
 from backend.api.remotes import router as remotes_router
 from backend.api.replication import router as replication_router
@@ -96,6 +97,7 @@ api_router.include_router(encrypted_folders_router)
 api_router.include_router(media_router)
 api_router.include_router(photo_import_router)  # NFEAT-3
 api_router.include_router(nas_name_router)  # NFEAT-8
+api_router.include_router(public_links_router)  # NFEAT-2
 api_router.include_router(sftp_router)
 api_router.include_router(vms_router)
 api_router.include_router(snmp_router)
@@ -133,6 +135,7 @@ __all__ = [
     "media_router",
     "photo_import_router",
     "nas_name_router",
+    "public_links_router",
     "sftp_router",
     "vms_router",
     "snmp_router",

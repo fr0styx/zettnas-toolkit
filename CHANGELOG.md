@@ -152,6 +152,14 @@
 
 #### Usability
 
+- **Share links from anywhere** (NFEAT-2): a switch in Network → File Sharing Services publishes
+  the share links, and only them, through Tailscale Funnel on port 8443, so a link works for
+  someone outside the home without router changes. The rest of ZettNAS stays private. New links
+  then carry the internet address, and the share dialog says where a link works. Turning it on is
+  confirmed in the app; the first time, Tailscale may ask the tailnet's owner to allow Funnel (the
+  card shows the link). The address carries the NAS's Tailscale name: give the device the family's
+  own name, not the product's, so links already sent survive a rename.
+
 - **Download from iCloud Photos with an Apple ID** (NFEAT-3): right-click a folder in the File
   Explorer and choose "Download from iCloud Photos…". Sign in with the Apple ID and the code Apple
   sends; the password is used for that sign-in only and never kept, only Apple's session is (in a

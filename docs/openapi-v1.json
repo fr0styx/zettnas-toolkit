@@ -32799,6 +32799,19 @@
     "title": "PostUpsTestConnectionResponse",
     "type": "object"
    },
+   "PublicLinksUpdate": {
+    "properties": {
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "enabled"
+    ],
+    "title": "PublicLinksUpdate",
+    "type": "object"
+   },
    "PutHealthSignalResponse": {
     "additionalProperties": true,
     "description": "PUT /system/health-signal",
@@ -59177,6 +59190,83 @@
     "x-required-scopes": [
      "system:config",
      "system:read"
+    ]
+   }
+  },
+  "/api/v1/network/public-links": {
+   "get": {
+    "description": "Whether share links work from the internet, their address, and a Tailscale approval to open.",
+    "operationId": "get_public_links_api_v1_network_public_links_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Public Links Api V1 Network Public Links Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Public Links",
+    "tags": [
+     "Network"
+    ],
+    "x-required-scopes": [
+     "system:view"
+    ]
+   },
+   "put": {
+    "description": "Turns public share links on (confirmed first: 428 until then) or off.",
+    "operationId": "put_public_links_api_v1_network_public_links_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PublicLinksUpdate"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Public Links Api V1 Network Public Links Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Public Links",
+    "tags": [
+     "Network"
+    ],
+    "x-required-scopes": [
+     "system:config"
     ]
    }
   },

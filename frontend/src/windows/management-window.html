@@ -2052,6 +2052,22 @@
               </div>
               <div class="mgmt-detail-body">
                 <div class="nsv-grid" id="network-services-grid">
+                  <!-- Share links from anywhere, through Tailscale Funnel (NFEAT-2) -->
+                  <div class="nsv-col-box" id="pl-card">
+                    <div class="nsv-row-3">
+                      <div class="nsv-row-4">
+                        <span class="nsv-fs18" aria-hidden="true">🌍</span>
+                        <div>
+                          <div class="nsv-fs13-bold-strong" id="pl-title" data-i18n="pl.title">Share links from anywhere</div>
+                          <div class="nsv-xs-muted" id="pl-status" aria-live="polite">…</div>
+                        </div>
+                      </div>
+                      <button type="button" class="btn-pill-toggle" id="pl-toggle" aria-pressed="false" aria-labelledby="pl-title" data-i18n="nas_name.btn_off">Off</button>
+                    </div>
+                    <div class="nsv-xs-muted-2" data-i18n="pl.help">Only the share links are published, through Tailscale Funnel: the rest of the NAS stays private. No router changes. Big downloads go through Tailscale's relays, so they are slower than at home.</div>
+                    <a class="nsv-xs-muted-2" id="pl-approve" href="#" target="_blank" rel="noopener" hidden data-i18n="pl.approve_link">Allow Funnel in Tailscale, then turn it on again</a>
+                  </div>
+
                   <!-- Find this NAS by name (NFEAT-8) -->
                   <div class="nsv-col-box" id="nas-name-card">
                     <div class="nsv-row-3">

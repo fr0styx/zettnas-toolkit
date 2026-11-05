@@ -1757,6 +1757,7 @@
     "label": "golden",
     "max_downloads": null,
     "path": "<work>/a.txt",
+    "public_url": "",
     "token": "<token1>",
     "url": "/api/fs/shared/<token1>"
    },
@@ -1775,6 +1776,7 @@
     "label": "sub",
     "max_downloads": null,
     "path": "<work>/sub",
+    "public_url": "",
     "token": "<token2>",
     "url": "/api/fs/shared/<token2>"
    },
