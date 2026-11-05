@@ -1076,6 +1076,7 @@ export class FmContextMenu {
         hasSelection && it('archive-create', '🗜️', t('fm.ctx_zip', 'Compress to a .zip file')),
         isZip && it('archive-extract', '📦', t('fm.ctx_unzip', 'Extract here')),
         isSingle && (isDir || /\.zip$/i.test(fileItem.name)) && it('photo-import', '🏠', t('fm.ctx_photo_import', 'Bring photos home…')),
+        isSingle && isDir && it('icloud-photos', '☁️', t('fm.ctx_icloud_photos', 'Download from iCloud Photos…')),
         isSingle && it('share', '🔗', t('fm.ctx_share', 'Share a link…')),
         isSingle && !isDir && it('checksum', '🛡️', t('fm.ctx_checksum', 'Show its SHA-256 checksum')),
         isSingle && !isDir && it('versions', '🕘', t('fm.versions_menu', 'Previous versions…')),
@@ -1182,6 +1183,9 @@ export class FmContextMenu {
         break;
       case 'photo-import': // a Google Takeout or iCloud export (NFEAT-3)
         if (item) import('./photo-import.js').then((m) => m.openPhotoImport(item.path));
+        break;
+      case 'icloud-photos': // with an Apple ID sign-in, into this folder (NFEAT-3, D14)
+        if (item) import('./icloud-photos.js').then((m) => m.openICloudPhotos(item.path));
         break;
       case 'share':
         if (item) this.fm.handleAction('share', item.path, item.name);

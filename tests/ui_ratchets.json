@@ -167,6 +167,12 @@
   "styles": 0,
   "templates": 0
  },
+ "frontend/src/components/icloud-photos.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 0,
+  "templates": 1
+ },
  "frontend/src/components/invites.js": {
   "buttons": 0,
   "globals": 0,

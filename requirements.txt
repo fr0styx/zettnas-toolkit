@@ -22,3 +22,5 @@ tinytag==2.3.2
 uvicorn==0.54.0
 websockets>=17.3
 pypdfium2>=5.14.0
+# iCloud Photos with an Apple ID sign-in (NFEAT-3, D14): MIT, reads the session, never stores the password
+pyicloud==2026.10.1

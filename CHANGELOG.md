@@ -152,6 +152,15 @@
 
 #### Usability
 
+- **Download from iCloud Photos with an Apple ID** (NFEAT-3): right-click a folder in the File
+  Explorer and choose "Download from iCloud Photos…". Sign in with the Apple ID and the code Apple
+  sends; the password is used for that sign-in only and never kept, only Apple's session is (in a
+  private folder for each NAS user). Every photo's original is streamed into the folder, filed by
+  year and month with its real date like the export import, and a photo brought home once isn't
+  downloaded again. It runs in the Jobs centre. Through the iCloud web interface (pyicloud), which
+  Apple doesn't promise to keep; with Advanced Data Protection on, "Access iCloud Data on the Web"
+  has to be turned on first. Apple asks for a new sign-in every few weeks to months.
+
 - **Find the NAS by name** (NFEAT-8): computers and phones on the home network reach it as
   `zettnas.local`: `http://zettnas.local:<port>` in a browser, `\\zettnas.local` in Windows, and in
   Finder's sidebar when the NAS shares files over SMB. On by default, with a switch and the name in

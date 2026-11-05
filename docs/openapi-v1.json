@@ -23174,6 +23174,57 @@
     "title": "HuggingFacePullRequest",
     "type": "object"
    },
+   "ICloudCode": {
+    "properties": {
+     "code": {
+      "maxLength": 12,
+      "minLength": 4,
+      "title": "Code",
+      "type": "string"
+     }
+    },
+    "required": [
+     "code"
+    ],
+    "title": "ICloudCode",
+    "type": "object"
+   },
+   "ICloudDownload": {
+    "properties": {
+     "destination": {
+      "maxLength": 1024,
+      "title": "Destination",
+      "type": "string"
+     }
+    },
+    "required": [
+     "destination"
+    ],
+    "title": "ICloudDownload",
+    "type": "object"
+   },
+   "ICloudSignIn": {
+    "properties": {
+     "apple_id": {
+      "maxLength": 254,
+      "minLength": 3,
+      "title": "Apple Id",
+      "type": "string"
+     },
+     "password": {
+      "maxLength": 1024,
+      "minLength": 1,
+      "title": "Password",
+      "type": "string"
+     }
+    },
+    "required": [
+     "apple_id",
+     "password"
+    ],
+    "title": "ICloudSignIn",
+    "type": "object"
+   },
    "IdentityIn": {
     "properties": {
      "server_name": {
@@ -56055,6 +56106,208 @@
     "x-required-scopes": [
      "system:config",
      "ai:manage"
+    ]
+   }
+  },
+  "/api/v1/media/icloud": {
+   "delete": {
+    "description": "Forgets the Apple session; the photos already downloaded stay.",
+    "operationId": "icloud_sign_out_api_v1_media_icloud_delete",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Icloud Sign Out Api V1 Media Icloud Delete",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Icloud Sign Out",
+    "tags": [
+     "Media"
+    ],
+    "x-required-scopes": [
+     "storage:write"
+    ]
+   },
+   "get": {
+    "description": "Whether this NAS user is signed in to iCloud, waits for a code, or is downloading.",
+    "operationId": "icloud_status_api_v1_media_icloud_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Icloud Status Api V1 Media Icloud Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Icloud Status",
+    "tags": [
+     "Media"
+    ],
+    "x-required-scopes": [
+     "storage:read"
+    ]
+   }
+  },
+  "/api/v1/media/icloud/code": {
+   "post": {
+    "description": "The code Apple sent to the person's devices.",
+    "operationId": "icloud_code_api_v1_media_icloud_code_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ICloudCode"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Icloud Code Api V1 Media Icloud Code Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Icloud Code",
+    "tags": [
+     "Media"
+    ],
+    "x-required-scopes": [
+     "storage:write"
+    ]
+   }
+  },
+  "/api/v1/media/icloud/download": {
+   "post": {
+    "description": "Downloads every photo not brought home before into the folder, as a job (see /api/jobs).",
+    "operationId": "icloud_download_api_v1_media_icloud_download_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ICloudDownload"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Icloud Download Api V1 Media Icloud Download Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Icloud Download",
+    "tags": [
+     "Media"
+    ],
+    "x-required-scopes": [
+     "storage:write"
+    ]
+   }
+  },
+  "/api/v1/media/icloud/sign-in": {
+   "post": {
+    "description": "Signs in with an Apple ID; the password is used for this sign-in only and never kept.",
+    "operationId": "icloud_sign_in_api_v1_media_icloud_sign_in_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ICloudSignIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Icloud Sign In Api V1 Media Icloud Sign In Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Icloud Sign In",
+    "tags": [
+     "Media"
+    ],
+    "x-required-scopes": [
+     "storage:write"
     ]
    }
   },

@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-658 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+663 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -354,6 +354,11 @@ request and response schemas.
 
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
+| `DELETE` | `/api/v1/media/icloud` | `storage:write` | Forgets the Apple session; the photos already downloaded stay |
+| `GET` | `/api/v1/media/icloud` | `storage:read` | Whether this NAS user is signed in to iCloud, waits for a code, or is downloading |
+| `POST` | `/api/v1/media/icloud/code` | `storage:write` | The code Apple sent to the person's devices |
+| `POST` | `/api/v1/media/icloud/download` | `storage:write` | Downloads every photo not brought home before into the folder, as a job (see /api/jobs) |
+| `POST` | `/api/v1/media/icloud/sign-in` | `storage:write` | Signs in with an Apple ID; the password is used for this sign-in only and never kept |
 | `POST` | `/api/v1/media/photo-import` | `storage:write` | Starts the import as a job (see /api/jobs); the export is only read |
 | `GET` | `/api/v1/media/photo-import/inspect` | `storage:read` | Which export this is (Google Takeout, iCloud or plain folder), how many photos and videos it holds and where they would go |
 

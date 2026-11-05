@@ -303,6 +303,31 @@ def _place(part: str, digest: str, folder: str, name: str, known: set[str]) -> s
     raise OSError(f"too many files named {name}")
 
 
+def file_entry(e: Entry, when: float | None, destination: str, known: set[str]) -> bool:
+    """Files one photo or video under <destination>/<year>/<month>/ by when it was taken (`when`,
+    else its EXIF, else the entry's own date) and sets its date to that moment. True when it was
+    brought home, False when that content was already there. Shared with the iCloud download."""
+    part = None
+    try:
+        name = _safe_name(e.name)
+        part, digest, head = _copy_in(e, os.path.join(destination, ".zn-import"))
+        if when is None and thumbs.kind(name) == "image":
+            when = exif_taken(head)
+        when = when if when is not None else e.mtime
+        local = time.localtime(when)
+        folder = os.path.join(destination, f"{local.tm_year:04d}", f"{local.tm_mon:02d}")
+        os.makedirs(folder, exist_ok=True)
+        final = _place(part, digest, folder, name, known)
+        part = None
+        if final is None:
+            return False
+        os.utime(final, (when, when))
+        return True
+    finally:
+        if part and os.path.exists(part):
+            os.remove(part)
+
+
 class Importer:
     """One import, run on its own thread; `progress` hears (done, total, result) as it goes."""
 
@@ -332,33 +357,17 @@ class Importer:
         if e.name in dates.icloud_deleted:
             r.skipped_deleted += 1
             return
-        part = None
         try:
-            name = _safe_name(e.name)
             when, _how = dates.taken(e)
-            staging = os.path.join(self.destination, ".zn-import")
-            part, digest, head = _copy_in(e, staging)
-            if when is None and thumbs.kind(name) == "image":
-                when = exif_taken(head)
-            when = when if when is not None else e.mtime
-            local = time.localtime(when)
-            folder = os.path.join(self.destination, f"{local.tm_year:04d}", f"{local.tm_mon:02d}")
-            os.makedirs(folder, exist_ok=True)
-            final = _place(part, digest, folder, name, known)
-            part = None
-            if final is None:
+            if file_entry(e, when, self.destination, known):
+                r.imported += 1
+            else:
                 r.duplicates += 1
-                return
-            os.utime(final, (when, when))
-            r.imported += 1
         except (OSError, ValueError, zipfile.BadZipFile, EOFError) as exc:
             r.failed += 1
             if len(r.errors) < 20:
                 r.errors.append(f"{e.path}: {exc}")
             logger.warning("[PhotoImport] %s failed: %s", e.path, exc)
-        finally:
-            if part and os.path.exists(part):
-                os.remove(part)
 
     def tidy(self) -> None:
         """Removes the staging folder when it is empty (it is, unless the NAS stopped mid-copy)."""

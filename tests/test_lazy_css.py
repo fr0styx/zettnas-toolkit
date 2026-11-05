@@ -27,7 +27,10 @@ LAZY = {
     "stack-lazy.css": [os.path.join(COMPONENTS, "stack-modal.js")],
     "users-lazy.css": [os.path.join(COMPONENTS, "users.js")],
     "drawer-lazy.css": [os.path.join(ROOT, "frontend", "src", "drawer-sheet.js")],
-    "photo-import-lazy.css": [os.path.join(COMPONENTS, "photo-import.js")],
+    "photo-import-lazy.css": [
+        os.path.join(COMPONENTS, "photo-import.js"),
+        os.path.join(COMPONENTS, "icloud-photos.js"),
+    ],
 }
 # state classes shared by unrelated components; a rule pair must share another class to collide
 GENERIC = {"active", "open", "show", "visible", "hidden", "collapsed", "disabled", "danger", "ok", "warn", "crit"}
