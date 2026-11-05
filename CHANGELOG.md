@@ -132,6 +132,16 @@
 
 #### Performance
 
+- **The UPS settings are kept in one place** (NARC-8): they were written to four (a file, the
+  database, a backup file and a copy on the pool, which could wake a disk on every save) and read
+  back through six fallbacks. Now only the file holds them; a copy an older version kept is read
+  once, moved into the file and removed. The copy on the pool is no longer read, so a stale one
+  can't come back.
+
+- **The fan watchdog rests where ZettNAS drives no fan** (NPERF-6): on a host without fan
+  control (no PWM in hwmon, no fan registers) it looked every 5 seconds; after its first minute
+  it now looks once a minute and no longer reports a fan release there.
+
 - **Converted videos play smoothly** (NVID-1): a video the browser can't play as it is is now
   converted once and kept, so it plays, seeks and replays like any file (clips up to two minutes
   are converted on the spot, longer ones in the background while the first viewing streams). When

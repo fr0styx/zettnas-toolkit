@@ -185,6 +185,31 @@ class TestFanWatchdog:
         main.fan_watchdog_daemon()
         assert released == []
 
+    def test_idles_where_zettnas_drives_no_fan(self, monkeypatch):
+        released, ticks = [], []
+        calls = []
+
+        def clock():  # the start, then always more than a minute later (other threads may ask too)
+            calls.append(1)
+            return 1000.0 if len(calls) == 1 else 5000.0
+
+        monkeypatch.setattr(main, "failsafe_release_fans", lambda reason, **k: released.append(reason))
+        monkeypatch.setattr(main.time, "time", clock)
+        monkeypatch.setattr(Z_STATE, "collector_heartbeat", 1.0)  # long stalled
+        monkeypatch.setattr(Z_STATE, "fans_locked", False)
+        monkeypatch.setattr(Z_STATE, "fans_released", False)
+        monkeypatch.setattr(Z_STATE, "fan_driver_mode", "none")
+        monkeypatch.setattr(Z_STATE, "shutting_down", False)
+
+        def sleep(s):
+            ticks.append(s)
+            if len(ticks) > 1:
+                Z_STATE.shutting_down = True
+
+        monkeypatch.setattr(main.time, "sleep", sleep)
+        main.fan_watchdog_daemon()
+        assert ticks[0] == main.FAN_WATCHDOG_IDLE_SECS and released == []
+
     def test_shutdown_fans_never_raises(self, monkeypatch):
         def boom(reason, lock=False):
             raise OSError("pwm gone")

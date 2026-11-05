@@ -376,7 +376,7 @@ def startup_system():
     else:
         logger.debug("[Main] Non-appliance hardware detected; skipping ButtonListener daemon.")
     supervise("LcdRenderer", render_lcd_loop)
-    supervise("FanWatchdog", fan_watchdog_daemon, beat_every=10)
+    supervise("FanWatchdog", fan_watchdog_daemon, beat_every=FAN_WATCHDOG_IDLE_SECS)
     if not test_mode():
         from backend.services.vision_queue import vision_daemon
 
@@ -454,6 +454,9 @@ def _open_encrypted_folders() -> None:
     resume_left_paused()  # a backup cut off by a restart left something paused (NREL-17)
 
 
+FAN_WATCHDOG_IDLE_SECS = 60  # where ZettNAS drives no fan, it looks again a minute later (NPERF-6)
+
+
 def fan_watchdog_daemon():
     """Hand fans back to firmware if the stats collector stops updating.
 
@@ -461,16 +464,22 @@ def fan_watchdog_daemon():
     smartctl call) the fans would stay frozen at their last value, so after
     COLLECTOR_WATCHDOG_SECS without a heartbeat we engage the failsafe. The
     collector automatically reclaims control once it recovers.
+
+    On a host where ZettNAS drives no fan (no PWM in hwmon, no fan registers) there is nothing
+    to hand back: after its first minute it looks once a minute instead of every 5 seconds and
+    reports no release (NPERF-6).
     """
     from backend.services.supervisor import beat
 
+    started = time.time()
     while not Z_STATE.shutting_down:
         beat("FanWatchdog")
-        time.sleep(5)
+        driving = Z_STATE.fan_driver_mode != "none" or time.time() - started < FAN_WATCHDOG_IDLE_SECS
+        time.sleep(5 if driving else FAN_WATCHDOG_IDLE_SECS)
         if Z_STATE.shutting_down:
             break
         hb = Z_STATE.collector_heartbeat
-        if not hb or Z_STATE.fans_locked:
+        if not hb or Z_STATE.fans_locked or not driving:
             continue
         stale = time.time() - hb
         if stale > COLLECTOR_WATCHDOG_SECS and not Z_STATE.fans_released:

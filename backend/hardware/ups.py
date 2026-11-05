@@ -4,6 +4,7 @@ Multi-protocol Hardware Abstraction Layer (HAL) supporting Network UPS Tools (NU
 APCUPSD NIS protocol, direct USB HID discovery, and enterprise SNMP monitoring.
 """
 
+import contextlib
 import copy
 import glob
 import ipaddress
@@ -186,13 +187,11 @@ def _forget_nothing_found() -> None:
 
 
 def load_ups_config() -> dict[str, Any]:
-    """Loads persistent UPS configuration across multi-tier storage:
-    1. Primary JSON state (UPS_CONFIG_FILE)
-    2. SQLite WAL database app_config table
-    3. Secondary backup JSON (ups_config.backup.json)
-    4. Pool-level persistent mirror (POOL_PATH/.zettnas/ups_config.json)
-    5. Host NUT auto-discovery (/etc/nut, /host/etc/nut)
-    6. Environment variables fallback
+    """The UPS settings: UPS_CONFIG_FILE, the one place they are kept (NARC-8). Without it, in order:
+    a copy an older version kept (the app_config table, then ups_config.backup.json), which is then
+    moved into the file; the host's NUT setup (/etc/nut, /host/etc/nut); the environment.
+    Older versions also kept a copy on the pool (POOL_PATH/.zettnas): it is no longer read, so a
+    stale copy can't come back and the array isn't touched.
     """
     cfg = dict(DEFAULT_UPS_CONFIG)
     # saves go through atomic_write_json, which refreshes the cached copy (PERF-5)
@@ -231,14 +230,6 @@ def load_ups_config() -> dict[str, Any]:
             cfg.update(b_stored)
             recovered_from_backup = True
 
-    # Tier 4: Storage Pool Mirror (.zettnas)
-    if not recovered_from_backup and POOL_PATH and os.path.isdir(POOL_PATH):
-        pool_mirror = os.path.join(POOL_PATH, ".zettnas", "ups_config.json")
-        p_stored = read_json(pool_mirror, None)
-        if isinstance(p_stored, dict):
-            cfg.update(p_stored)
-            recovered_from_backup = True
-
     # Tier 5: Host NUT configuration auto-detection
     if not recovered_from_backup:
         host_nut = _detect_host_nut_config()
@@ -271,6 +262,7 @@ def load_ups_config() -> dict[str, Any]:
     if recovered_from_backup:
         try:
             atomic_write_json(UPS_CONFIG_FILE, cfg)
+            _drop_old_copies()
             logger.info(
                 "[UPS] Successfully recovered persistent UPS config (mode: %s, host: %s)",
                 cfg.get("mode"),
@@ -286,6 +278,18 @@ def load_ups_config() -> dict[str, Any]:
     return cfg
 
 
+def _drop_old_copies() -> None:
+    """Removes the copies older versions kept beside the file, once it holds the settings."""
+    try:
+        from backend.db import set_app_config_value
+
+        set_app_config_value("ups_config", None)
+    except Exception:  # the database copy stays; the file wins over it anyway
+        logger.debug("[UPS] the older database copy was not removed", exc_info=True)
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(os.path.join(DATA_DIR, "ups_config.backup.json"))
+
+
 def mask_ups_config(cfg: dict[str, Any]) -> dict[str, Any]:
     """Masks secret passwords before returning over API."""
     out = dict(cfg)
@@ -295,7 +299,7 @@ def mask_ups_config(cfg: dict[str, Any]) -> dict[str, Any]:
 
 
 def save_ups_config(new_cfg: dict[str, Any]) -> dict[str, Any]:
-    """Saves persistent UPS configuration safely across primary, database, and secondary backup tiers."""
+    """Saves the UPS settings into UPS_CONFIG_FILE (written atomically and synced, NARC-7)."""
     global _CACHED_UPS, _LAST_UPS_POLL
     current = load_ups_config()
     merged = dict(current)
@@ -319,33 +323,8 @@ def save_ups_config(new_cfg: dict[str, Any]) -> dict[str, Any]:
             except (ValueError, TypeError):
                 pass
 
-    # Tier 1: Write primary file
     atomic_write_json(UPS_CONFIG_FILE, merged)
-
-    # Tier 2: Write SQLite app_config
-    try:
-        from backend.db import set_app_config_value
-
-        set_app_config_value("ups_config", merged)
-    except Exception as e:
-        logger.debug(f"[UPS] Error writing app_config to database: {e}")
-
-    # Tier 3: Write backup file in DATA_DIR
-    try:
-        backup_file = os.path.join(DATA_DIR, "ups_config.backup.json")
-        atomic_write_json(backup_file, merged)
-    except Exception as e:
-        logger.debug(f"[UPS] Error writing backup config file: {e}")
-
-    # Tier 4: Write pool mirror (.zettnas)
-    try:
-        if POOL_PATH and os.path.isdir(POOL_PATH):
-            pool_dir = os.path.join(POOL_PATH, ".zettnas")
-            os.makedirs(pool_dir, exist_ok=True)
-            pool_mirror = os.path.join(pool_dir, "ups_config.json")
-            atomic_write_json(pool_mirror, merged)
-    except Exception as e:
-        logger.debug(f"[UPS] Error writing pool mirror: {e}")
+    _drop_old_copies()  # nothing older can stand in for this save later
 
     _forget_nothing_found()
     _CACHED_UPS = {}

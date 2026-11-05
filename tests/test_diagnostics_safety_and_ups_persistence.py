@@ -1,5 +1,5 @@
 """Tests for hardware MMIO safety guards (D4 bus abort / reboot prevention)
-and multi-tier UPS configuration persistence and auto-recovery.
+and the UPS settings: one file, older copies moved into it once (NARC-8).
 """
 
 import json
@@ -141,13 +141,16 @@ def test_app_config_db_crud():
 # ==============================================================================
 
 
-def test_ups_save_config_persists_to_all_tiers():
+def test_ups_settings_are_saved_in_one_file_and_older_copies_go():
     with tempfile.TemporaryDirectory() as tmpdir:
         primary_file = os.path.join(tmpdir, "ups_config.json")
         backup_file = os.path.join(tmpdir, "ups_config.backup.json")
         pool_dir = os.path.join(tmpdir, "pool")
         os.makedirs(pool_dir, exist_ok=True)
         pool_mirror = os.path.join(pool_dir, ".zettnas", "ups_config.json")
+        set_app_config_value("ups_config", {"mode": "nut_client", "host": "192.0.2.1"})  # an older copy
+        with open(backup_file, "w") as f:
+            json.dump({"mode": "nut_client", "host": "192.0.2.1"}, f)
 
         test_cfg = {
             "enabled": True,
@@ -167,29 +170,29 @@ def test_ups_save_config_persists_to_all_tiers():
             saved = save_ups_config(test_cfg)
             assert saved["mode"] == "nut_client"
             assert saved["host"] == "192.168.10.100"
-
-            # Tier 1: Primary JSON file
-            assert os.path.exists(primary_file)
             with open(primary_file) as f:
-                p_data = json.load(f)
-            assert p_data["host"] == "192.168.10.100"
+                assert json.load(f)["host"] == "192.168.10.100"
+            # one place: no database copy, no backup file, nothing written on the pool (NARC-8)
+            assert get_app_config_value("ups_config") is None
+            assert not os.path.exists(backup_file)
+            assert not os.path.exists(pool_mirror)
 
-            # Tier 2: SQLite database app_config
-            db_data = get_app_config_value("ups_config")
-            assert db_data is not None
-            assert db_data["host"] == "192.168.10.100"
 
-            # Tier 3: Local backup file
-            assert os.path.exists(backup_file)
-            with open(backup_file) as f:
-                b_data = json.load(f)
-            assert b_data["host"] == "192.168.10.100"
-
-            # Tier 4: Pool mirror
-            assert os.path.exists(pool_mirror)
-            with open(pool_mirror) as f:
-                m_data = json.load(f)
-            assert m_data["host"] == "192.168.10.100"
+def test_a_copy_left_on_the_pool_is_not_read():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        pool_dir = os.path.join(tmpdir, "pool")
+        os.makedirs(os.path.join(pool_dir, ".zettnas"))
+        with open(os.path.join(pool_dir, ".zettnas", "ups_config.json"), "w") as f:
+            json.dump({"mode": "nut_client", "host": "192.0.2.9"}, f)
+        set_app_config_value("ups_config", None)
+        with (
+            patch("backend.hardware.ups.UPS_CONFIG_FILE", os.path.join(tmpdir, "ups_config.json")),
+            patch("backend.hardware.ups.DATA_DIR", tmpdir),
+            patch("backend.hardware.ups.POOL_PATH", pool_dir),
+            patch("backend.hardware.ups._detect_host_nut_config", return_value=None),
+            patch("backend.hardware.ups._DEFAULT_CFG_MEMO", {"until": 0.0, "cfg": None, "env": None}),
+        ):
+            assert load_ups_config().get("host") != "192.0.2.9"
 
 
 def test_ups_load_config_recovers_from_sqlite_app_config():
@@ -216,11 +219,12 @@ def test_ups_load_config_recovers_from_sqlite_app_config():
             assert loaded["host"] == "192.168.50.20"
             assert loaded["ups_name"] == "synology_nut"
 
-            # Auto-sync back to primary file verified
+            # moved into the file, and the database copy is gone (NARC-8)
             assert os.path.exists(primary_file)
             with open(primary_file) as f:
                 synced = json.load(f)
             assert synced["host"] == "192.168.50.20"
+            assert get_app_config_value("ups_config") is None
 
 
 def test_ups_load_config_recovers_from_backup_file():
@@ -249,6 +253,7 @@ def test_ups_load_config_recovers_from_backup_file():
             assert loaded["mode"] == "apcupsd_client"
             assert loaded["host"] == "10.0.0.1"
             assert os.path.exists(primary_file)
+            assert not os.path.exists(backup_file)
 
 
 def test_detect_host_nut_config():
