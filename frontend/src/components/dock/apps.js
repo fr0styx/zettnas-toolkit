@@ -278,7 +278,7 @@ export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning, op
 
   let html = `
     <div class="ctx-item" id="dock-ctx-pin">
-      <span style="font-size:var(--zn-fs-xs); margin-right:6px;">${pinIcon}</span>
+      <span class="cxm-ico">${pinIcon}</span>
       <span>${escapeHtml(pinLabel)}</span>
     </div>
   `;
@@ -286,45 +286,45 @@ export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning, op
   if (isFmApp) {
     html += `
       <div class="ctx-item" id="dock-ctx-new-window">
-        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🪟</span>
+        <span class="cxm-ico">🪟</span>
         <span>${escapeHtml(t('dock.new_fm_window', 'New Window (Ctrl+N)'))}</span>
       </div>
     `;
 
     if (openWindowsList && openWindowsList.length > 0) {
-      html += `<div style="height:1px; background:var(--zn-glaze-8); margin:4px 0;"></div>`;
-      html += `<div style="font-size:var(--zn-fs-xs); color:var(--muted); padding:3px 10px; font-weight:700; text-transform:uppercase;">${escapeHtml(t('dock.open_windows', 'Open Windows'))}</div>`;
+      html += `<div class="cxm-sep"></div>`;
+      html += `<div class="cxm-head">${escapeHtml(t('dock.open_windows', 'Open Windows'))}</div>`;
       openWindowsList.forEach((w) => {
         const wTitle = w.title || t('dock.file_manager', 'File Explorer');
         const isCurrentActive = DockManager.activeId === w.id;
         html += `
-          <div class="ctx-item dock-ctx-fm-win" data-win-id="${escapeHtml(w.id)}" style="display:flex; align-items:center; justify-content:space-between;">
-            <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
-              <span style="font-size:var(--zn-fs-xs);">📁</span>
-              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(wTitle)}</span>
+          <div class="ctx-item dock-ctx-fm-win cxm-row" data-win-id="${escapeHtml(w.id)}">
+            <div class="cxm-row-main">
+              <span class="cxm-ico-plain">📁</span>
+              <span class="cxm-ellipsis">${escapeHtml(wTitle)}</span>
             </div>
-            ${isCurrentActive ? `<span style="color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-size:var(--zn-fs-xs);">✓</span>` : ''}
+            ${isCurrentActive ? `<span class="cxm-check">✓</span>` : ''}
           </div>
         `;
       });
-      html += `<div style="height:1px; background:var(--zn-glaze-8); margin:4px 0;"></div>`;
+      html += `<div class="cxm-sep"></div>`;
       html += `
-        <div class="ctx-item" id="dock-ctx-close-all" style="color:var(--crit, #ff5c5c);">
-          <span style="font-size:var(--zn-fs-xs); margin-right:6px;">✕</span>
+        <div class="ctx-item cxm-crit" id="dock-ctx-close-all">
+          <span class="cxm-ico">✕</span>
           <span>${escapeHtml(t('dock.close_all_windows', 'Close All Windows'))}</span>
         </div>
       `;
     } else if (isRunning) {
       html += `
-        <div class="ctx-item" id="dock-ctx-close" style="color:var(--crit, #ff5c5c);">
-          <span style="font-size:var(--zn-fs-xs); margin-right:6px;">✕</span>
+        <div class="ctx-item cxm-crit" id="dock-ctx-close">
+          <span class="cxm-ico">✕</span>
           <span>${escapeHtml(closeLabel)}</span>
         </div>
       `;
     } else {
       html += `
-        <div class="ctx-item" id="dock-ctx-open" style="color:var(--ok2, #25c2a0);">
-          <span style="font-size:var(--zn-fs-xs); margin-right:6px;">▶</span>
+        <div class="ctx-item cxm-ok" id="dock-ctx-open">
+          <span class="cxm-ico">▶</span>
           <span>${escapeHtml(openLabel)}</span>
         </div>
       `;
@@ -332,15 +332,15 @@ export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning, op
   } else {
     if (isRunning) {
       html += `
-        <div class="ctx-item" id="dock-ctx-close" style="color:var(--crit, #ff5c5c);">
-          <span style="font-size:var(--zn-fs-xs); margin-right:6px;">✕</span>
+        <div class="ctx-item cxm-crit" id="dock-ctx-close">
+          <span class="cxm-ico">✕</span>
           <span>${escapeHtml(closeLabel)}</span>
         </div>
       `;
     } else {
       html += `
-        <div class="ctx-item" id="dock-ctx-open" style="color:var(--ok2, #25c2a0);">
-          <span style="font-size:var(--zn-fs-xs); margin-right:6px;">▶</span>
+        <div class="ctx-item cxm-ok" id="dock-ctx-open">
+          <span class="cxm-ico">▶</span>
           <span>${escapeHtml(openLabel)}</span>
         </div>
       `;

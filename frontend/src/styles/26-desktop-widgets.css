@@ -874,3 +874,18 @@ body.theme-yak #notif-center-resizer:hover {
   filter: brightness(1.15);
 }
 
+
+/* The dock's and the desktop's context menus (dock/apps.js, dock/desktop-icons.js): each rule is the
+   inline style it replaced (NUX-15) */
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ico { font-size:var(--zn-fs-xs); margin-right:6px; }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-sep { height:1px; background:var(--zn-glaze-8); margin:4px 0; }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-head { font-size:var(--zn-fs-xs); color:var(--muted); padding:3px 10px; font-weight:700; text-transform:uppercase; }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-row { display:flex; align-items:center; justify-content:space-between; }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-row-main { display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden; }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ico-plain { font-size:var(--zn-fs-xs); }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ellipsis { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-check { color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-size:var(--zn-fs-xs); }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-crit { color:var(--crit, #ff5c5c); }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ok { color:var(--ok2, #25c2a0); }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-danger { color:var(--zn-text-crit); }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-kbd { margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6; }

@@ -80,7 +80,7 @@
  "frontend/src/components/dock/apps.js": {
   "buttons": 0,
   "globals": 0,
-  "styles": 21,
+  "styles": 1,
   "templates": 2
  },
  "frontend/src/components/dock/console-window.js": {
@@ -92,7 +92,7 @@
  "frontend/src/components/dock/desktop-icons.js": {
   "buttons": 0,
   "globals": 5,
-  "styles": 15,
+  "styles": 0,
   "templates": 2
  },
  "frontend/src/components/dock/dock-manager.js": {

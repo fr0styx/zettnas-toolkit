@@ -239,22 +239,22 @@ export function initDraggableDesktopIcons() {
 
       ctxMenu.innerHTML = `
         <div class="ctx-item" id="ctx-open-app">
-          <span style="font-size:var(--zn-fs-xs); margin-right:6px;">▶</span>
+          <span class="cxm-ico">▶</span>
           <span>${escapeHtml(openLabel)}${iconName ? ` ${escapeHtml(iconName)}` : ''}</span>
         </div>
         ${iconAppId === 'fm' ? `
           <div class="ctx-item" id="ctx-new-window">
-            <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🪟</span>
+            <span class="cxm-ico">🪟</span>
             <span>${escapeHtml(t('dock.new_fm_window', 'New Window'))}</span>
           </div>
         ` : ''}
-        <div style="height:1px; background:var(--zn-glaze-8); margin:4px 0;"></div>
+        <div class="cxm-sep"></div>
         <div class="ctx-item" id="ctx-align-grid">📐 ${t('desktop.align_grid', 'Align to Grid')}</div>
         <div class="ctx-item" id="ctx-sort-name">🔤 ${t('desktop.sort_name', 'Sort by Name')}</div>
         ${isCustom ? `
-          <div style="height:1px; background:var(--zn-glaze-8); margin:4px 0;"></div>
-          <div class="ctx-item" id="ctx-remove-shortcut" style="color:var(--zn-text-crit);">
-            <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🗑️</span>
+          <div class="cxm-sep"></div>
+          <div class="ctx-item cxm-danger" id="ctx-remove-shortcut">
+            <span class="cxm-ico">🗑️</span>
             <span>${escapeHtml(t('dock.remove_shortcut', 'Remove from the desktop'))}</span>
           </div>
         ` : ''}
@@ -309,32 +309,32 @@ export function initDraggableDesktopIcons() {
     e.preventDefault();
     ctxMenu.innerHTML = `
       <div class="ctx-item" id="ctx-spotlight">
-        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">⚡</span>
+        <span class="cxm-ico">⚡</span>
         <span>${escapeHtml(t('dock.palette', 'Search (Cmd+K)'))}</span>
-        <kbd style="margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6;">⌘K</kbd>
+        <kbd class="cxm-kbd">⌘K</kbd>
       </div>
       <div class="ctx-item" id="ctx-open-mc">
-        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🖥️</span>
+        <span class="cxm-ico">🖥️</span>
         <span>${escapeHtml(t('dock.management', 'Settings'))}</span>
       </div>
       <div class="ctx-item" id="ctx-open-fm">
-        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">📁</span>
+        <span class="cxm-ico">📁</span>
         <span>${escapeHtml(t('dock.files', 'Files'))}</span>
       </div>
       <div class="ctx-item" id="ctx-new-fm">
-        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🪟</span>
+        <span class="cxm-ico">🪟</span>
         <span>${escapeHtml(t('dock.new_fm_window', 'New Window'))}</span>
       </div>
       <div class="ctx-item" id="ctx-add-widget">
-        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🧩</span>
+        <span class="cxm-ico">🧩</span>
         <span>${escapeHtml(t('ctx.add_widget', 'Add Widget…'))}</span>
       </div>
-      <div style="height:1px; background:var(--zn-glaze-8); margin:4px 0;"></div>
+      <div class="cxm-sep"></div>
       <div class="ctx-item" id="ctx-align-grid">📐 ${t('desktop.align_grid', 'Align to Grid')}</div>
       <div class="ctx-item" id="ctx-sort-name">🔤 ${t('desktop.sort_name', 'Sort by Name')}</div>
-      <div style="height:1px; background:var(--zn-glaze-8); margin:4px 0;"></div>
+      <div class="cxm-sep"></div>
       <div class="ctx-item" id="ctx-refresh-telemetry">
-        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🔄</span>
+        <span class="cxm-ico">🔄</span>
         <span>${escapeHtml(t('dock.refresh', 'Refresh the desktop'))}</span>
       </div>
     `;

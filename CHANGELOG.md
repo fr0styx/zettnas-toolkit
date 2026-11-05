@@ -195,6 +195,9 @@
 
 #### Usability
 
+- **The dock's and the desktop's right-click menus use classes** (NUX-15): 35 inline styles became
+  12 classes beside the menus' own rules; the same look, checked in both themes.
+
 - **The user menu uses classes** (NUX-15): its 19 inline styles became 13 classes beside the menu's
   own rules; the same look, checked in both themes, and the first load stays at its size.
 
