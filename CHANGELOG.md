@@ -197,6 +197,12 @@
 
 #### Usability
 
+- **index.html has no static inline styles left** (NUX-15): the last 72 (setup wizard, top bar pills,
+  desktop widgets, the diagnostics, event, fan-preset, sideload and media-organizer dialogs, the
+  notification centre and the copy toast) moved into `65-index-markup.css`. What stays inline are
+  display switches that code toggles. Every element computes the same style as before, signed in and
+  out, in both themes; the first load is a little smaller.
+
 - **The sign-in and lock screens use classes** (NUX-15): 17 inline styles in index.html moved into
   the lock screen's sheet; a display the sign-in code switches stays inline. Both overlays keep their
   position, stacking, colours and blur, checked in the browser.
