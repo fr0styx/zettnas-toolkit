@@ -195,6 +195,10 @@
 
 #### Usability
 
+- **The sign-in and lock screens use classes** (NUX-15): 17 inline styles in index.html moved into
+  the lock screen's sheet; a display the sign-in code switches stays inline. Both overlays keep their
+  position, stacking, colours and blur, checked in the browser.
+
 - **The frosted-glass blur shows in Chrome and Firefox again**: the CSS minifier keeps only the last
   of `backdrop-filter` and `-webkit-backdrop-filter` in a rule, and 66 rules wrote the standard one
   first, so menus, flyouts, toasts and panels had their blur only in Safari. They write it last now.

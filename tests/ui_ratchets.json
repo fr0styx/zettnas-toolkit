@@ -1,8 +1,8 @@
 {
  "frontend/index.html": {
-  "buttons": 4,
+  "buttons": 3,
   "globals": 0,
-  "styles": 149,
+  "styles": 138,
   "templates": 0
  },
  "frontend/src/a11y.js": {
