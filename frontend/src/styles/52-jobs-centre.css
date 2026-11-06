@@ -42,6 +42,9 @@
 .jobs-centre-window[hidden] { display: none; }
 .jobs-centre-window[data-snapped] { max-height: none; max-width: none; }
 .jobs-body { padding: 12px 16px 16px; overflow-y: auto; font-size: 14px; }
+.jobs-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.jobs-clear { background: transparent; border: 1px solid var(--zn-line-12); border-radius: 6px; color: var(--muted); font-size: var(--zn-fs-xs); padding: 2px 10px; cursor: pointer; }
+.jobs-clear:hover { color: var(--zn-text-strong); border-color: var(--zn-line-20); }
 .jobs-heading { margin: 8px 0 6px; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .jobs-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .jobs-row { padding: 10px 12px; border-radius: 8px; background: var(--zn-glaze-4); border: 1px solid var(--zn-line-8); }

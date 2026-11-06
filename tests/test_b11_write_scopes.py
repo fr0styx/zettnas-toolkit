@@ -29,6 +29,7 @@ OWN_OR_SIGN_IN = {
     "/api/v1/remotes/oauth/mobile-exchange": "cloud sign-in on a phone; the state is the credential",
     "/api/v1/immich/me": "their own Immich link",
     "/api/v1/immich/phone": "their own phone backup",
+    "/api/v1/jobs/history/clear": "their own finished jobs (admins: everyone's; checked in the route)",
     "/api/v1/jobs/{job_id}/cancel": "their own job (checked in the route)",
     "/api/v1/mcp": "MCP calls; each tool checks the caller's scopes",
     "/api/v1/notifications/notifications/me": "their own alert route",

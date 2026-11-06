@@ -152,6 +152,7 @@ def _unraid_checks() -> list[Job]:
     st = read_unraid_status() or {}
     out = []
     pc = st.get("parity_check") or {}
+    n_err, fixing = int(pc.get("errors") or 0), bool(pc.get("correcting"))
     if pc.get("active") or pc.get("paused"):
         out.append(
             Job(
@@ -161,7 +162,9 @@ def _unraid_checks() -> list[Job]:
                 title_id="jobs.t.parity",
                 status="paused" if pc.get("paused") else "running",
                 percent=pc.get("progress_pct"),
-                detail=f"{int(pc.get('errors') or 0)} errors found so far",
+                detail=f"{n_err} {'error' if n_err == 1 else 'errors'} {'corrected' if fixing else 'found'} so far",
+                detail_id="jobs.d.parity_corrected" if fixing else "jobs.d.parity_found",
+                detail_params={"n": n_err},
             )
         )
     mv = st.get("mover") or {}

@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-667 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+668 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -335,6 +335,7 @@ request and response schemas.
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/jobs` | signed in | Your running jobs and recent history; administrators see everyone's and system jobs |
+| `POST` | `/api/v1/jobs/history/clear` | signed in | Clears your finished jobs from the Recent list; administrators clear everyone's |
 | `POST` | `/api/v1/jobs/{job_id}/cancel` | signed in | Cancel Job |
 
 ### LDAP

@@ -111,7 +111,7 @@ def read_unraid_status(force: bool = False) -> dict[str, Any]:
     resync_action = var_data.get("mdResyncAction", "")
     resync_pos = _to_int("mdResyncPos")
     resync_size = _to_int("mdResyncSize")
-    resync_corr = _to_int("mdResyncCorr")
+    resync_corr = _to_int("mdResyncCorr")  # whether the check corrects parity; the count is sbSyncErrs
     md_resync = _to_int("mdResync")
 
     # In Unraid, mdResyncAction, mdResyncPos, and mdResyncSize persist in var.ini indefinitely
@@ -180,11 +180,11 @@ def read_unraid_status(force: bool = False) -> dict[str, Any]:
             "paused": resync_paused,
             "action": resync_action if (resync_active or resync_paused) else "",
             "progress_pct": resync_pct if (resync_active or resync_paused) else 0.0,
-            "errors": resync_corr if (resync_active or resync_paused) else 0,
+            "errors": _to_int("sbSyncErrs") if (resync_active or resync_paused) else 0,
+            "correcting": bool(resync_corr) if (resync_active or resync_paused) else False,
             "speed": md_resync if resync_active else 0,
         },
-        # the last finished (or stopped) parity check: errors it found, when, and how it ended
-        "last_parity_check": {
+        "last_parity_check": {  # the last finished or stopped check: errors, when, how it ended
             "errors": _to_int("sbSyncErrs"),
             "finished_at": _to_int("sbSynced2") or None,
             "exit": _to_int("sbSyncExit", -1),

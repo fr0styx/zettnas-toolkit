@@ -197,6 +197,15 @@
 
 #### Usability
 
+- **Finished jobs can be cleared**: the Jobs centre's Recent list has a Clear button. It removes the
+  finished jobs you can see (an administrator's clears everyone's); running jobs stay, and a cleared
+  job doesn't come back after a restart.
+
+- **A parity check no longer reports an error it didn't find**: the Jobs centre showed Unraid's
+  "correct parity" switch (on = 1) as the number of errors, so a correcting check that had found
+  nothing said "1 errors found so far". It now shows Unraid's own count and says corrected or found
+  to match the check, in the reader's language.
+
 - **index.html has no static inline styles left** (NUX-15): the last 72 (setup wizard, top bar pills,
   desktop widgets, the diagnostics, event, fan-preset, sideload and media-organizer dialogs, the
   notification centre and the copy toast) moved into `65-index-markup.css`. What stays inline are

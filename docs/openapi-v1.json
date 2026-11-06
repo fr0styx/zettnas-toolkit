@@ -23396,6 +23396,17 @@
       "title": "Detail",
       "type": "string"
      },
+     "detail_id": {
+      "default": "",
+      "title": "Detail Id",
+      "type": "string"
+     },
+     "detail_params": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "Detail Params",
+      "type": "object"
+     },
      "error": {
       "anyOf": [
        {
@@ -23486,6 +23497,19 @@
      "status"
     ],
     "title": "JobOut",
+    "type": "object"
+   },
+   "JobsCleared": {
+    "properties": {
+     "cleared": {
+      "title": "Cleared",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "cleared"
+    ],
+    "title": "JobsCleared",
     "type": "object"
    },
    "KeyIn": {
@@ -54762,6 +54786,34 @@
      }
     },
     "summary": "List Jobs",
+    "tags": [
+     "Jobs"
+    ]
+   }
+  },
+  "/api/v1/jobs/history/clear": {
+   "post": {
+    "description": "Clears your finished jobs from the Recent list; administrators clear everyone's.",
+    "operationId": "clear_job_history_api_v1_jobs_history_clear_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/JobsCleared"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Clear Job History",
     "tags": [
      "Jobs"
     ]

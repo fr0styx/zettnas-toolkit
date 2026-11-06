@@ -62,7 +62,8 @@ mdState="STARTED"
 mdResyncAction="check P"
 mdResyncPos="5000000"
 mdResyncSize="10000000"
-mdResyncCorr="2"
+mdResyncCorr="1"
+sbSyncErrs="2"
 mdResync="145820"
 shareMoverActive="no"
 """
@@ -76,7 +77,8 @@ shareMoverActive="no"
     assert status["parity_check"]["paused"] is False
     assert status["parity_check"]["action"] == "check P"
     assert status["parity_check"]["progress_pct"] == 50.0
-    assert status["parity_check"]["errors"] == 2
+    assert status["parity_check"]["errors"] == 2  # sbSyncErrs, not the correcting switch
+    assert status["parity_check"]["correcting"] is True
     assert status["parity_check"]["speed"] == 145820
 
 
@@ -207,3 +209,24 @@ status="DISK_OK"
     assert "sdb" in status["parity_devices"]
     assert "sdc" in status["parity_devices"]
     assert "sda" not in status["parity_devices"]
+
+
+def test_a_correcting_check_without_errors_says_none(tmp_path, monkeypatch):
+    """mdResyncCorr=1 is the "write corrections" switch: after a crash a correcting check had found
+    nothing, and the Jobs centre said "1 errors found so far"."""
+    emhttp_dir = tmp_path / "emhttp"
+    emhttp_dir.mkdir()
+    (emhttp_dir / "var.ini").write_text(
+        """mdState="STARTED"
+mdResyncAction="check P"
+mdResyncPos="100"
+mdResyncSize="1000"
+mdResyncCorr="1"
+sbSyncErrs="0"
+mdResync="5000"
+shareMoverActive="no"
+"""
+    )
+    monkeypatch.setattr("backend.hardware.unraid._find_emhttp_dir", lambda: str(emhttp_dir))
+    pc = read_unraid_status(force=True)["parity_check"]
+    assert pc["errors"] == 0 and pc["correcting"] is True

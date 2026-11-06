@@ -67,7 +67,7 @@ export function jobRowHtml(job, active) {
   const cancel = active && job.can_cancel
     ? `<button type="button" class="jobs-cancel" data-job-cancel="${escapeHtml(job.id)}">${escapeHtml(t('jobs.cancel', 'Cancel'))}</button>`
     : '';
-  const detail = job.error || job.detail || '';
+  const detail = job.error || (job.detail_id ? t(job.detail_id, job.detail || '', job.detail_params || {}) : job.detail || '');
   return `<li class="jobs-row is-${escapeHtml(job.status)}">
     <div class="jobs-row-head">
       <span class="jobs-kind">${escapeHtml(label(KIND, job.kind))}</span>
@@ -90,6 +90,10 @@ export function renderJobs(data, root = document) {
       ? active.map((j) => jobRowHtml(j, true)).join('')
       : `<li class="jobs-empty">${escapeHtml(t('jobs.none_running', 'Nothing is running. Copies, imports, backups and AI indexing show up here.'))}</li>`;
   }
+  const clear = /** @type {HTMLButtonElement | null} */ (
+    root.getElementById ? root.getElementById('jobs-history-clear') : root.querySelector('#jobs-history-clear')
+  );
+  if (clear) clear.hidden = !history.length;
   if (rec) {
     rec.innerHTML = history.length
       ? history.map((j) => jobRowHtml(j, false)).join('')
@@ -113,6 +117,16 @@ export function setJobsBadge(n) {
     btn.classList.toggle('has-jobs', n > 0);
     btn.setAttribute('aria-label', n > 0 ? t('jobs.button_running', '{n} jobs running', { n }) : t('jobs.title', 'Jobs'));
   }
+}
+
+/** Removes the finished jobs from Recent; running ones stay. */
+export async function clearJobHistory() {
+  try {
+    await api.post('/api/jobs/history/clear', {});
+  } catch (e) {
+    showToast(t('jobs.clear_failed', 'The list could not be cleared.'), 'error');
+  }
+  return refreshJobs();
 }
 
 export async function refreshJobs() {
@@ -147,7 +161,10 @@ function ensureWindow() {
       <div class="jobs-body">
         <h3 class="jobs-heading">${escapeHtml(t('jobs.running', 'Running'))}</h3>
         <ul id="jobs-active-list" class="jobs-list"></ul>
-        <h3 class="jobs-heading">${escapeHtml(t('jobs.recent', 'Recent'))}</h3>
+        <div class="jobs-heading-row">
+          <h3 class="jobs-heading">${escapeHtml(t('jobs.recent', 'Recent'))}</h3>
+          <button type="button" class="jobs-clear" id="jobs-history-clear" hidden>${escapeHtml(t('jobs.clear', 'Clear'))}</button>
+        </div>
         <ul id="jobs-history-list" class="jobs-list"></ul>
       </div>`;
     document.body.appendChild(el);
@@ -162,6 +179,7 @@ function ensureWindow() {
   on('#jobs-centre-close', closeJobsCentre);
   on('#jobs-centre-min', minimizeJobsCentre);
   on('#jobs-centre-max', toggleMaximizeJobsCentre);
+  on('#jobs-history-clear', clearJobHistory);
   _win.addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-job-cancel]');
     if (!btn) return;

@@ -27,11 +27,17 @@ class JobOut(BaseModel):
     # the title in the reader's language (NUX-3); without these the page only had the English
     title_id: str = ""
     title_params: dict[str, Any] = {}
+    detail_id: str = ""
+    detail_params: dict[str, Any] = {}
 
 
 class JobList(BaseModel):
     active: list[JobOut]
     history: list[JobOut]
+
+
+class JobsCleared(BaseModel):
+    cleared: int
 
 
 class JobCancelled(BaseModel):
@@ -47,6 +53,16 @@ def _everyone(principal: AuthenticatedPrincipal) -> bool:
 def list_jobs(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """Your running jobs and recent history; administrators see everyone's and system jobs."""
     return job_manager.list(owner=principal.username if principal else None, everyone=_everyone(principal))
+
+
+@router.post("/jobs/history/clear", response_model=JobsCleared)
+def clear_job_history(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Clears your finished jobs from the Recent list; administrators clear everyone's."""
+    return {
+        "cleared": job_manager.clear_history(
+            owner=principal.username if principal else None, everyone=_everyone(principal)
+        )
+    }
 
 
 @router.post("/jobs/{job_id}/cancel", response_model=JobCancelled)

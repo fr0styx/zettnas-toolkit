@@ -22,6 +22,8 @@ ACTIVE = ("queued", "running", "paused")
 FINAL = ("done", "error", "cancelled")
 HISTORY_FILE = os.path.join(DATA_DIR, "jobs_history.json")
 HISTORY_KEEP = 100
+CLEARED_FILE = os.path.join(DATA_DIR, "jobs_cleared.json")  # ids someone cleared, so sources don't bring them back
+CLEARED_KEEP = 200
 
 
 @dataclass
@@ -41,6 +43,9 @@ class Job:
     # (NUX-3); `title` is the English, for logs and older pages
     title_id: str = ""
     title_params: dict[str, Any] = field(default_factory=dict)
+    # the same for the detail line, when a source has one in the messages ("3 errors corrected so far")
+    detail_id: str = ""
+    detail_params: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -58,6 +63,7 @@ class JobManager:
     _jobs: dict[str, _Registered] = field(default_factory=dict)
     _history: list[dict[str, Any]] = field(default_factory=list)
     _history_loaded: bool = False
+    _cleared: set[str] = field(default_factory=set)  # finished jobs someone cleared: not remembered again
 
     # --- jobs registered directly -------------------------------------------------
     def register(
@@ -141,11 +147,30 @@ class JobManager:
             return False
         return bool(canceller(job_id.split(":", 1)[1]))
 
+    def clear_history(self, owner: str | None = None, everyone: bool = False) -> int:
+        """Removes the finished jobs this person sees from the history (an administrator's: all of
+        them); running jobs aren't touched. Returns how many went."""
+        with self._lock:
+            self._load_history()
+            keep, gone = [], []
+            for j in self._history:
+                (gone if everyone or (owner is not None and j.get("owner") == owner) else keep).append(j)
+            if not gone:
+                return 0
+            self._history = keep
+            self._cleared.update(j["id"] for j in gone)
+            try:
+                atomic_write_json(HISTORY_FILE, self._history)
+                atomic_write_json(CLEARED_FILE, sorted(self._cleared)[-CLEARED_KEEP:])
+            except OSError:
+                logger.debug("[Jobs] could not save the job history", exc_info=True)
+        return len(gone)
+
     # --- history -------------------------------------------------------------------------
     def _remember(self, job: dict[str, Any]) -> None:
         with self._lock:
             self._load_history()
-            if any(h["id"] == job["id"] for h in self._history):
+            if job["id"] in self._cleared or any(h["id"] == job["id"] for h in self._history):
                 return
             self._history.append(job)
             self._history = self._history[-HISTORY_KEEP:]
@@ -159,6 +184,8 @@ class JobManager:
             data = read_json(HISTORY_FILE, [])
             self._history = data if isinstance(data, list) else []
             self._history_loaded = True
+            cleared = read_json(CLEARED_FILE, [])
+            self._cleared = set(cleared) if isinstance(cleared, list) else set()
 
 
 # --- source adapters ------------------------------------------------------------------------

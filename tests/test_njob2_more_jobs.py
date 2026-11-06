@@ -164,13 +164,17 @@ def test_unraid_parity_check_and_mover(monkeypatch):
 
     monkeypatch.setattr(pal_storage, "get_storage_platform", lambda: _Adapter(PlatformType.UNRAID))
     status = {
-        "parity_check": {"active": False, "paused": True, "progress_pct": 41.5, "errors": 2},
+        "parity_check": {"active": False, "paused": True, "progress_pct": 41.5, "errors": 2, "correcting": True},
         "mover": {"active": True, "total_files": 200, "remain_files": 50},
     }
     monkeypatch.setattr(unraid, "read_unraid_status", lambda force=False: status)
     parity, mover = _active("storage_check") + _active("mover")
     parity, mover = jobs.Job(**parity), jobs.Job(**mover)
-    assert (parity.status, parity.percent, parity.detail) == ("paused", 41.5, "2 errors found so far")
+    assert (parity.status, parity.percent, parity.detail) == ("paused", 41.5, "2 errors corrected so far")
+    assert (parity.detail_id, parity.detail_params) == ("jobs.d.parity_corrected", {"n": 2})
+    status["parity_check"] = {"active": True, "paused": False, "progress_pct": 10.0, "errors": 1, "correcting": False}
+    parity = jobs.Job(**_active("storage_check")[0])
+    assert (parity.detail, parity.detail_id) == ("1 error found so far", "jobs.d.parity_found")
     assert (mover.kind, mover.percent, mover.detail) == ("mover", 75.0, "50 files left")
     status["parity_check"] = {"active": False, "paused": False}
     status["mover"] = {"active": False}

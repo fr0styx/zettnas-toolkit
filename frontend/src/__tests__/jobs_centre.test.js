@@ -94,3 +94,34 @@ describe('Jobs centre', () => {
     expect(restoreWindowSnap).toHaveBeenCalledWith(win, 'jobs');
   });
 });
+
+describe('Clearing finished jobs', () => {
+  beforeEach(() => {
+    _resetJobsCentreForTesting();
+    document.body.innerHTML = '<div class="suite-telemetry-pills"></div>';
+    api.post.mockResolvedValue({ cleared: 1 });
+  });
+
+  it('a Clear button empties Recent and keeps running jobs', async () => {
+    api.get.mockResolvedValueOnce(DATA).mockResolvedValue({ active: DATA.active, history: [] });
+    openJobsCentre();
+    const clear = document.getElementById('jobs-history-clear');
+    await vi.waitFor(() => expect(clear.hidden).toBe(false));
+    clear.click();
+    await vi.waitFor(() => expect(api.post).toHaveBeenCalledWith('/api/jobs/history/clear', {}));
+    await vi.waitFor(() => expect(clear.hidden).toBe(true));
+    expect(document.getElementById('jobs-history-list').textContent).toContain('No finished jobs yet');
+    expect(document.getElementById('jobs-active-list').querySelectorAll('.jobs-row').length).toBe(2);
+  });
+
+  it('says so when clearing fails, and shows a detail in the reader\'s words', async () => {
+    const { showToast } = await import('../toast.js');
+    const { jobRowHtml, clearJobHistory } = await import('../components/jobs-centre.js');
+    api.post.mockRejectedValueOnce(new Error('offline'));
+    api.get.mockResolvedValue(DATA);
+    await clearJobHistory();
+    expect(showToast).toHaveBeenCalledWith('The list could not be cleared.', 'error');
+    const row = jobRowHtml({ id: 'storage:parity', kind: 'storage_check', title: 'Parity check', status: 'running', detail: 'x', detail_id: 'jobs.d.parity_corrected', detail_params: { n: 1 } }, true);
+    expect(row).toContain('1 error corrected so far');
+  });
+});
