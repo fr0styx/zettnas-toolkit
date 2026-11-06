@@ -278,6 +278,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
   });
 
   it('renders default icons on clean initial dock startup: Dashboard Home, Spotlight, and Notification Center', () => {
+    state.latestStats = null; // a clean start has no unread events yet
     DockManager.windows = {};
     DockManager.activeId = null;
     DockManager.render();

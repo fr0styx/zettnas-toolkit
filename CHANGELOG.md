@@ -197,6 +197,10 @@
 
 #### Usability
 
+- **Dock badge stays on**: opening or closing a window redrew the dock with an empty notification
+  badge, so the unread count vanished for a couple of seconds until the next update; the dock now
+  puts the count back as it redraws.
+
 - **Job progress to one decimal**: the Jobs centre showed a parity check at 66.7 % as 67 %; it now
   shows progress as the source gives it, to one decimal, in the reader's number format.
 

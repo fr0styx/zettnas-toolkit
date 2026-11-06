@@ -9,7 +9,7 @@ import { formatTime } from '../../format.js';
 import { KNOWN_APPS, showDockItemContextMenu, toggleFmWindowSwitcher } from './apps.js';
 import { ADVANCED_DOCK_APPS, advancedOn } from '../../advanced.js';
 import { _dockPosition } from './dock-settings.js';
-import { DOCK_PINNED_KEY, clearedEventsTs, isEventChecked, showDockToast } from './notifications.js';
+import { DOCK_PINNED_KEY, clearedEventsTs, isEventChecked, showDockToast, updateNotificationBadge } from './notifications.js';
 import { bringToFront, keyboardFocused } from './window-drag.js';
 import { applySavedBounds, saveOpenWindowsState } from './window-state.js';
 
@@ -1024,6 +1024,8 @@ export const DockManager = {
 
     // Atomically swap dock items without geometry collapse
     dock.replaceChildren(frag);
+    // The bell was rebuilt with an empty badge; put the unread count back now rather than at the next stats update
+    updateNotificationBadge();
 
     const dockButtons = Array.from(dock.querySelectorAll('.dock-item'));
     dockButtons.forEach((btn, idx) => {
