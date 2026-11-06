@@ -4,6 +4,8 @@
 
 #### Security
 
+- **oauthlib 4.0.1** (CVE-2026-49272): the dependency behind requests-oauthlib moves to the fixed release.
+
 - **A ZFS share rolled back inside Docker no longer loses its files** (NREL-7): ZFS shows a
   snapshot at `.zfs/snapshot/<name>` by mounting it on first access, which the kernel doesn't do
   inside a container, so there the snapshot read as empty and a rollback removed the share's
