@@ -232,6 +232,8 @@ export function closeStackModal() {
     }
   }
   if (DockManager && typeof DockManager.minimize === 'function') {
+    // closed, not just minimized: the dock and its Home button leave it alone until it is opened again
+    if (DockManager.windows['stack-inspector']) DockManager.windows['stack-inspector'].closed = true;
     DockManager.minimize('stack-inspector');
   }
 }

@@ -197,6 +197,11 @@
 
 #### Usability
 
+- **Home button leaves closed windows closed**: with nothing showing, the dock's Home button
+  brought back every window it had ever tracked, so an empty Stack Inspector or container window
+  could pop up; it now brings back only windows that are open, and closing the Stack Inspector
+  closes it rather than minimizing it.
+
 - **Dock badge stays on**: opening or closing a window redrew the dock with an empty notification
   badge, so the unread count vanished for a couple of seconds until the next update; the dock now
   puts the count back as it redraws.

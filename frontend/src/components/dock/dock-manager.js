@@ -847,7 +847,8 @@ export const DockManager = {
     dashItem.addEventListener('blur', hideDockTooltip);
     dashItem.addEventListener('click', () => {
       hideDockTooltip();
-      const winIds = Object.keys(this.windows);
+      // Only windows that are open count; closed ones (a pinned app, a pop-up set up ahead of use) stay closed
+      const winIds = Object.keys(this.windows).filter((id) => !this.windows[id].closed);
       const anyOpen = winIds.some((id) => !this.windows[id].minimized);
       if (anyOpen) {
         winIds.forEach((id) => this.minimize(id));
