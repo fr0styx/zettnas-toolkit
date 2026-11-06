@@ -197,6 +197,9 @@
 
 #### Usability
 
+- **Job progress to one decimal**: the Jobs centre showed a parity check at 66.7 % as 67 %; it now
+  shows progress as the source gives it, to one decimal, in the reader's number format.
+
 - **Finished jobs can be cleared**: the Jobs centre's Recent list has a Clear button. It removes the
   finished jobs you can see (an administrator's clears everyone's); running jobs stay, and a cleared
   job doesn't come back after a restart.

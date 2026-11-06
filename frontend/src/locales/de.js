@@ -331,6 +331,7 @@ export default {
   "jobs.title": "Aufträge",
   "jobs.running": "Läuft",
   "jobs.recent": "Zuletzt",
+  "jobs.percent": "{p} %",
   "jobs.clear": "Leeren",
   "jobs.clear_failed": "Die Liste konnte nicht geleert werden.",
   "jobs.d.parity_corrected": "{n, plural, one {# Fehler bisher korrigiert} other {# Fehler bisher korrigiert}}",

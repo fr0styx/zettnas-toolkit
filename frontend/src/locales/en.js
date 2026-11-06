@@ -303,6 +303,7 @@ export default {
   "jobs.title": "Jobs",
   "jobs.running": "Running",
   "jobs.recent": "Recent",
+  "jobs.percent": "{p}%",
   "jobs.clear": "Clear",
   "jobs.clear_failed": "The list could not be cleared.",
   "jobs.d.parity_corrected": "{n, plural, one {# error corrected so far} other {# errors corrected so far}}",

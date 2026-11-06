@@ -125,3 +125,14 @@ describe('Clearing finished jobs', () => {
     expect(row).toContain('1 error corrected so far');
   });
 });
+
+describe('Job progress', () => {
+  it('keeps the decimal the source gives, like Unraid does', async () => {
+    const { jobPercent, jobRowHtml } = await import('../components/jobs-centre.js');
+    expect(jobPercent(66.7)).toBe('66.7%');
+    expect(jobPercent(42)).toBe('42%');
+    expect(jobPercent(66.749)).toBe('66.7%');
+    const row = jobRowHtml({ id: 'storage:parity', kind: 'storage_check', title: 'Parity check', status: 'running', percent: 66.7 }, true);
+    expect(row).toContain('66.7%');
+  });
+});

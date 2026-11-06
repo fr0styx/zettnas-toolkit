@@ -331,6 +331,7 @@ export default {
   "jobs.title": "Tareas",
   "jobs.running": "En curso",
   "jobs.recent": "Recientes",
+  "jobs.percent": "{p} %",
   "jobs.clear": "Borrar",
   "jobs.clear_failed": "No se pudo borrar la lista.",
   "jobs.d.parity_corrected": "{n, plural, one {# error corregido hasta ahora} other {# errores corregidos hasta ahora}}",

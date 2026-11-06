@@ -331,6 +331,7 @@ export default {
   "jobs.title": "任务",
   "jobs.running": "进行中",
   "jobs.recent": "最近",
+  "jobs.percent": "{p}%",
   "jobs.clear": "清除",
   "jobs.clear_failed": "无法清除列表。",
   "jobs.d.parity_corrected": "{n, plural, other {目前已纠正 # 个错误}}",

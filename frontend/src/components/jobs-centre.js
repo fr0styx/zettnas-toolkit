@@ -4,7 +4,7 @@
  */
 import { api } from '../api.js';
 import { escapeHtml } from '../utils.js';
-import { formatDateTime } from '../format.js';
+import { formatDateTime, formatNumber } from '../format.js';
 import { t } from '../i18n.js';
 import { applyWindowSnap, bringToFront, makeDraggable, restoreWindowSnap } from './dock.js';
 import { showToast } from '../toast.js';
@@ -56,6 +56,11 @@ export function jobTitle(job) {
   return job && job.title_id ? t(job.title_id, job.title || '', job.title_params || {}) : (job && job.title) || '';
 }
 
+/** A job's progress as the source gives it, to one decimal (a parity check's 66.7 %, not 67 %). */
+export function jobPercent(pct) {
+  return t('jobs.percent', '{p}%', { p: formatNumber(pct, { maximumFractionDigits: 1 }) });
+}
+
 export function jobRowHtml(job, active) {
   const pct = typeof job.percent === 'number' ? Math.max(0, Math.min(100, job.percent)) : null;
   const bar = active
@@ -72,7 +77,7 @@ export function jobRowHtml(job, active) {
     <div class="jobs-row-head">
       <span class="jobs-kind">${escapeHtml(label(KIND, job.kind))}</span>
       <span class="jobs-title">${escapeHtml(jobTitle(job))}</span>
-      <span class="jobs-status">${escapeHtml(label(STATUS, job.status))}${pct !== null && active ? ` · ${Math.round(pct)}%` : ''}</span>
+      <span class="jobs-status">${escapeHtml(label(STATUS, job.status))}${pct !== null && active ? ` · ${escapeHtml(jobPercent(pct))}` : ''}</span>
       ${when}${cancel}
     </div>
     ${bar}
