@@ -4,6 +4,14 @@
 
 #### Security
 
+- **Dependencies updated**: websockets 17.4 and sqlcipher3 0.6.5 in the app; the Node build image
+  at its latest 26.13.0 digest; vitest 5.1, vite 8.3.6, lucide-static 1.70, globals and parse5
+  for the frontend build and tests (jsdom stays on 30: version 31 writes some CSS differently in
+  tests, and turns min-width and min-height into a property that doesn't exist); ruff 0.17.4, pytest-asyncio 1.4.1.post1 and
+  diff-cover 11.0.1 for checks; and four GitHub Actions (docker/login-action 4.8.0,
+  action-gh-release 3.0.4, CodeQL 4.39.3), each pinned by commit. The lock files carry the new
+  versions with their hashes.
+
 - **CI tools updated**: the image scan uses Trivy 0.76.2 (a security release) and image signing
   uses cosign-installer 4.1.3, both pinned by version and commit.
 

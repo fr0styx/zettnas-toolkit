@@ -6,9 +6,9 @@
 #     --constraint requirements.lock --output-file=requirements-dev.lock requirements-dev.txt
 # (the constraint is a flag, not a line here: GitHub's dependency graph can't follow a -c line)
 pytest==9.2.0
-pytest-asyncio==1.4.1
+pytest-asyncio==1.4.1.post1
 pytest-cov==7.1.0
-ruff==0.17.3
+ruff==0.17.4
 pip-audit==2.10.1
 pyright==1.1.414
-diff-cover==11.0.0
+diff-cover==11.0.1
