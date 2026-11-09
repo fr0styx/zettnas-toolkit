@@ -4,6 +4,9 @@
 
 #### Security
 
+- **CI tools updated**: the image scan uses Trivy 0.76.2 (a security release) and image signing
+  uses cosign-installer 4.1.3, both pinned by version and commit.
+
 - **oauthlib 4.0.1** (CVE-2026-49272): the dependency behind requests-oauthlib moves to the fixed release.
 
 - **A ZFS share rolled back inside Docker no longer loses its files** (NREL-7): ZFS shows a
