@@ -1,5 +1,5 @@
 {
- "note": "recorded from the GitHub nightly of 2026-11-02 (run 41491018429, commit a5911c2): EmbeddingGemma through Ollama (embeddinggemma:latest, manifest sha256:85462619ee72, f32 weights), 2,000 distractor files; dev/held-out figures come with the next nightly (the split became by file in 18f2d67)",
+ "note": "recorded from the GitHub nightly of 2026-11-02 (run 41491018429, commit a5911c2): EmbeddingGemma through Ollama (embeddinggemma:latest, manifest sha256:85462619ee72, f32 weights), 2,000 distractor files; dev/held-out figures from the GitHub nightly of 2026-11-09 (run 42611685702, commit 9f43fde); the same figures on 2, 4 and 6 Nov",
  "model": "embeddinggemma",
  "set": "all",
  "distractors": 2000,
@@ -68,6 +68,22 @@
    "all@5": 0.985,
    "mrr@10": 0.974,
    "queries": 200
+  }
+ },
+ "by_split": {
+  "dev": {
+   "recall@1": 0.939,
+   "recall@5": 0.992,
+   "all@5": 0.992,
+   "mrr@10": 0.963,
+   "queries": 358
+  },
+  "heldout": {
+   "recall@1": 0.92,
+   "recall@5": 0.989,
+   "all@5": 0.989,
+   "mrr@10": 0.947,
+   "queries": 88
   }
  }
 }

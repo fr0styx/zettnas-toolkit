@@ -101,11 +101,14 @@ def test_extended_retrieval_does_not_regress():
         baseline = json.load(f)
     got = evaluate(which="extended")
     drops = []
-    for kind, base in baseline["by_kind"].items():
-        now = got["by_kind"][kind]
+    # every scope, so one language can't slip while the kinds hold (NAI-16)
+    scopes = [("overall", baseline["overall"], got["overall"])]
+    for group in ("by_language", "by_kind", "by_split"):
+        scopes += [(f"{group}.{k}", b, got[group][k]) for k, b in baseline[group].items()]
+    for scope, base, now in scopes:
         for metric in ("recall@1", "recall@5", "mrr@10"):
             if now[metric] < base[metric] - TOLERANCE:
-                drops.append(f"{kind} {metric}: {base[metric]} -> {now[metric]}")
+                drops.append(f"{scope} {metric}: {base[metric]} -> {now[metric]}")
     assert not drops, "Retrieval got worse: " + "; ".join(drops)
 
 

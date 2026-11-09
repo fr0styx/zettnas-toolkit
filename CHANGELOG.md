@@ -63,6 +63,12 @@
 
 #### Private AI
 
+- **The search checks hold tighter**: the nightly's hard set (files with names that say nothing,
+  beside near-topic files) now fails the run when it gets worse; it had only been recorded. The
+  nightly baselines carry their held-out figures, and the nightly's search sets allow a 0.01 drop
+  instead of 0.02, since they score the same every night. The per-commit check on cross-language
+  and paraphrase questions now guards each language and split, not only the question kinds.
+
 - **Zetty says "not in your files" instead of borrowing a related fact** (AI-28): with a
   reranker set up, the documents a question found are scored against it once more before Zetty
   answers. When none of them looks like an answer, Zetty says so in the question's language and

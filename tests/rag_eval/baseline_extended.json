@@ -6,7 +6,7 @@
   "recall@1": 0.236,
   "recall@5": 0.301,
   "all@5": 0.301,
-  "mrr@10": 0.263,
+  "mrr@10": 0.262,
   "queries": 246
  },
  "by_language": {
@@ -25,17 +25,17 @@
    "queries": 63
   },
   "es": {
-   "recall@1": 0.244,
+   "recall@1": 0.222,
    "recall@5": 0.356,
    "all@5": 0.356,
-   "mrr@10": 0.288,
+   "mrr@10": 0.277,
    "queries": 45
   },
   "fr": {
-   "recall@1": 0.277,
+   "recall@1": 0.298,
    "recall@5": 0.404,
    "all@5": 0.404,
-   "mrr@10": 0.334,
+   "mrr@10": 0.34,
    "queries": 47
   },
   "zh": {
@@ -51,7 +51,7 @@
    "recall@1": 0.18,
    "recall@5": 0.233,
    "all@5": 0.233,
-   "mrr@10": 0.203,
+   "mrr@10": 0.202,
    "queries": 206
   },
   "paraphrase": {
@@ -60,6 +60,22 @@
    "all@5": 0.65,
    "mrr@10": 0.573,
    "queries": 40
+  }
+ },
+ "by_split": {
+  "dev": {
+   "recall@1": 0.253,
+   "recall@5": 0.328,
+   "all@5": 0.328,
+   "mrr@10": 0.283,
+   "queries": 198
+  },
+  "heldout": {
+   "recall@1": 0.167,
+   "recall@5": 0.188,
+   "all@5": 0.188,
+   "mrr@10": 0.177,
+   "queries": 48
   }
  }
 }

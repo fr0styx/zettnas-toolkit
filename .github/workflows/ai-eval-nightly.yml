@@ -48,7 +48,7 @@ jobs:
         run: |
           python -m tests.rag_eval.run_eval --model embeddinggemma --dim 768 --host http://127.0.0.1:11434 \
             --set all --distractors 2000 --misses --out eval-retrieval.json > /dev/null
-          python -m tests.rag_eval.compare eval-retrieval.json tests/rag_eval/baseline_nightly.json
+          python -m tests.rag_eval.compare eval-retrieval.json tests/rag_eval/baseline_nightly.json --tolerance 0.01
       - name: Hard set (names that say nothing, near-topic files beside them)
         if: always()
         env:
@@ -56,7 +56,7 @@ jobs:
         run: |
           python -m tests.rag_eval.run_eval --model embeddinggemma --dim 768 --host http://127.0.0.1:11434 \
             --set all --distractors 2000 --neutral-names --hard-distractors --misses --out eval-hard.json > /dev/null
-          python -m tests.rag_eval.compare eval-hard.json tests/rag_eval/baseline_nightly_hard.json
+          python -m tests.rag_eval.compare eval-hard.json tests/rag_eval/baseline_nightly_hard.json --tolerance 0.01
       - name: Summary
         if: always()
         run: python -m tests.rag_eval.summary eval-retrieval.json eval-hard.json >> "$GITHUB_STEP_SUMMARY"
@@ -101,7 +101,7 @@ jobs:
         run: |
           python -m tests.rag_eval.run_eval --model embeddinggemma --dim 768 --host http://127.0.0.1:11434 \
             --set documents --ocr standin --misses --out eval-documents.json > /dev/null
-          python -m tests.rag_eval.compare eval-documents.json tests/rag_eval/baseline_nightly_documents.json
+          python -m tests.rag_eval.compare eval-documents.json tests/rag_eval/baseline_nightly_documents.json --tolerance 0.01
       - name: Summary
         if: always()
         run: python -m tests.rag_eval.summary eval-documents.json >> "$GITHUB_STEP_SUMMARY"

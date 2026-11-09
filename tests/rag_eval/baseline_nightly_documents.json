@@ -1,5 +1,5 @@
 {
- "note": "recorded from the GitHub nightly of 2026-11-02 (run 41491018429, commit a5911c2): EmbeddingGemma through Ollama (embeddinggemma:latest, manifest sha256:85462619ee72, f32 weights), documents set, scanned pages read by the stand-in; dev/held-out figures come with the next nightly (the split became by file in 18f2d67)",
+ "note": "recorded from the GitHub nightly of 2026-11-02 (run 41491018429, commit a5911c2): EmbeddingGemma through Ollama (embeddinggemma:latest, manifest sha256:85462619ee72, f32 weights), documents set, scanned pages read by the stand-in; dev/held-out figures from the GitHub nightly of 2026-11-09 (run 42611685702, commit 9f43fde); the same figures on 2, 4 and 6 Nov",
  "model": "embeddinggemma",
  "set": "documents",
  "distractors": 0,
@@ -75,6 +75,22 @@
    "all@5": 1.0,
    "mrr@10": 0.929,
    "queries": 7
+  }
+ },
+ "by_split": {
+  "dev": {
+   "recall@1": 0.958,
+   "recall@5": 1.0,
+   "all@5": 0.958,
+   "mrr@10": 0.979,
+   "queries": 24
+  },
+  "heldout": {
+   "recall@1": 1.0,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 1.0,
+   "queries": 9
   }
  }
 }

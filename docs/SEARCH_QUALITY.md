@@ -46,7 +46,7 @@ Questions that share few words with the file, which lexical vectors can't match 
 
 ## With the EmbeddingGemma model (nightly, on GitHub's runners)
 
-The same sets with EmbeddingGemma as the embedder and 2,000 extra files that answer nothing, to make finding the right one harder. Recorded from the GitHub nightly of 2026-11-02 (run 41491018429, commit a5911c2): EmbeddingGemma through Ollama (embeddinggemma:latest, manifest sha256:85462619ee72, f32 weights), 2,000 distractor files; dev/held-out figures come with the next nightly (the split became by file in 18f2d67).
+The same sets with EmbeddingGemma as the embedder and 2,000 extra files that answer nothing, to make finding the right one harder. Recorded from the GitHub nightly of 2026-11-02 (run 41491018429, commit a5911c2): EmbeddingGemma through Ollama (embeddinggemma:latest, manifest sha256:85462619ee72, f32 weights), 2,000 distractor files; dev/held-out figures from the GitHub nightly of 2026-11-09 (run 42611685702, commit 9f43fde); the same figures on 2, 4 and 6 Nov.
 
 | | Questions | Right file first | Right file in top 5 |
 |---|---|---|---|
@@ -62,6 +62,8 @@ The same sets with EmbeddingGemma as the embedder and 2,000 extra files that ans
 | Same language | 200 | 0.96 | 0.98 |
 | Cross-language | 206 | 0.90 | 0.99 |
 | Paraphrased | 40 | 0.95 | 1.00 |
+
+Held-out half (never used for tuning): right file in the top 5 for 0.99 of 88 questions, against 0.99 for the other 358.
 
 Long, Office and scanned documents:
 
