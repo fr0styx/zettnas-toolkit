@@ -512,7 +512,7 @@ export const DockManager = {
         container.innerHTML = `
           <div class="dkp-head">
             <span class="dkp-head-title">${escapeHtml(t('dock.recent_alerts', 'Recent alerts'))}</span>
-            <span class="dkp-head-count">${events.length} total</span>
+            <span class="dkp-head-count">${escapeHtml(t('dock.alerts_total', '{count, plural, one {# in all} other {# in all}}', { count: events.length }))}</span>
           </div>
           <div class="dkp-list">
             ${itemsHtml}

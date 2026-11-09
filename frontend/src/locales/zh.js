@@ -5045,6 +5045,7 @@ export default {
   "dock.palette_desc": "按 Cmd+K 查找应用、文件和设置",
   "dock.palette_open": "打开搜索",
   "dock.recent_alerts": "最近的警报",
+  "dock.alerts_total": "{count, plural, other {共 # 条}}",
   "dock.refresh": "刷新桌面",
   "dock.remove_shortcut": "从桌面移除",
   "dock.stacked_off": "切换到堆叠视图",

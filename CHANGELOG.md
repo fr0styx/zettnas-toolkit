@@ -219,6 +219,9 @@
   instead of inline styles; only an alert's colour and the progress width stay inline. They look
   the same in both themes.
 
+- **Alert count in the reader's language**: the dock's notification preview said "12 total" in
+  English in every language; it now reads "12 insgesamt", "12 au total", "12 en total" or "共 12 条".
+
 - **Home button leaves closed windows closed**: with nothing showing, the dock's Home button
   brought back every window it had ever tracked, so an empty Stack Inspector or container window
   could pop up; it now brings back only windows that are open, and closing the Stack Inspector

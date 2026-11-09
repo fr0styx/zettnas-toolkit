@@ -5045,6 +5045,7 @@ export default {
   "dock.palette_desc": "Press Cmd+K to find apps, files and settings",
   "dock.palette_open": "Open search",
   "dock.recent_alerts": "Recent alerts",
+  "dock.alerts_total": "{count, plural, one {# in all} other {# in all}}",
   "dock.refresh": "Refresh the desktop",
   "dock.remove_shortcut": "Remove from the desktop",
   "dock.stacked_off": "Switch to the stacked view",

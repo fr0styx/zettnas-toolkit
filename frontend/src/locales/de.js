@@ -5045,6 +5045,7 @@ export default {
   "dock.palette_desc": "Mit Cmd+K finden Sie Apps, Dateien und Einstellungen",
   "dock.palette_open": "Suche öffnen",
   "dock.recent_alerts": "Letzte Warnungen",
+  "dock.alerts_total": "{count, plural, one {# insgesamt} other {# insgesamt}}",
   "dock.refresh": "Schreibtisch neu laden",
   "dock.remove_shortcut": "Vom Schreibtisch entfernen",
   "dock.stacked_off": "Zur gestapelten Ansicht wechseln",

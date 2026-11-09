@@ -206,6 +206,7 @@ describe('Revamped Dock App Hover Preview Engine', () => {
     expect(notifFeed).not.toBeNull();
     expect(notifFeed.textContent).toContain('Drive Warning');
     expect(notifFeed.textContent).toContain('Temp elevated');
+    expect(notifFeed.querySelector('.dkp-head-count').textContent).toBe('2 in all');
   });
 
   it('dynamically computes arrow offset --arrow-x to point directly at dock items', () => {

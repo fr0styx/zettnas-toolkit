@@ -5045,6 +5045,7 @@ export default {
   "dock.palette_desc": "Pulsa Cmd+K para buscar apps, archivos y ajustes",
   "dock.palette_open": "Abrir la búsqueda",
   "dock.recent_alerts": "Alertas recientes",
+  "dock.alerts_total": "{count, plural, one {# en total} other {# en total}}",
   "dock.refresh": "Actualizar el escritorio",
   "dock.remove_shortcut": "Quitar del escritorio",
   "dock.stacked_off": "Cambiar a la vista apilada",

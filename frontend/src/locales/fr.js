@@ -5045,6 +5045,7 @@ export default {
   "dock.palette_desc": "Appuyez sur Cmd+K pour trouver applications, fichiers et réglages",
   "dock.palette_open": "Ouvrir la recherche",
   "dock.recent_alerts": "Alertes récentes",
+  "dock.alerts_total": "{count, plural, one {# au total} other {# au total}}",
   "dock.refresh": "Actualiser le bureau",
   "dock.remove_shortcut": "Retirer du bureau",
   "dock.stacked_off": "Passer à la vue empilée",
