@@ -293,6 +293,14 @@ export const DockManager = {
     }
   },
 
+  /** Home: hide every open window, or bring them back when none shows. Closed windows (a pinned app,
+   *  a pop-up set up ahead of use) stay closed. The Home button and its desktop preview both use it. */
+  toggleDesktop() {
+    const winIds = Object.keys(this.windows).filter((id) => !this.windows[id].closed);
+    const anyOpen = winIds.some((id) => !this.windows[id].minimized);
+    winIds.forEach((id) => (anyOpen ? this.minimize(id) : this.restore(id)));
+  },
+
   setActiveId(id) {
     this.activeId = id;
     const dock = document.getElementById('os-dock');
@@ -435,12 +443,7 @@ export const DockManager = {
         container.addEventListener('click', (e) => {
           e.stopPropagation();
           hideDockTooltip();
-          const anyOpen = winIds.some((k) => !DockManager.windows[k].minimized);
-          if (anyOpen) {
-            winIds.forEach((k) => DockManager.minimize(k));
-          } else {
-            winIds.forEach((k) => DockManager.restore(k));
-          }
+          DockManager.toggleDesktop();
         });
         return container;
       }
@@ -847,14 +850,7 @@ export const DockManager = {
     dashItem.addEventListener('blur', hideDockTooltip);
     dashItem.addEventListener('click', () => {
       hideDockTooltip();
-      // Only windows that are open count; closed ones (a pinned app, a pop-up set up ahead of use) stay closed
-      const winIds = Object.keys(this.windows).filter((id) => !this.windows[id].closed);
-      const anyOpen = winIds.some((id) => !this.windows[id].minimized);
-      if (anyOpen) {
-        winIds.forEach((id) => this.minimize(id));
-      } else {
-        winIds.forEach((id) => this.restore(id));
-      }
+      this.toggleDesktop();
     });
     frag.appendChild(dashItem);
 

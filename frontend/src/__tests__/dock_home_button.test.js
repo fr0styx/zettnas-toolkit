@@ -48,6 +48,23 @@ describe('Dock Home button', () => {
     expect(overlay.style.display).toBe('none');
   });
 
+  it('the desktop preview under Home leaves closed windows closed too', async () => {
+    document.body.innerHTML = '<div id="os-dock-container" class="os-dock-container dock-pos-bottom"><div id="os-dock" class="os-dock active"></div></div>';
+    const { DockManager } = await import('../components/dock.js');
+    DockManager.windows = {};
+    DockManager.register('stack-inspector', mk('stack-inspector'), '#i-grid', 'Stack Inspector', true);
+    DockManager.register('vm', mk('vm'), 'screen', 'Virtual Machines');
+    DockManager.minimize('vm');
+    const home = document.querySelector('#os-dock .dock-item[aria-label="Dashboard Home"]');
+    DockManager.showTooltip(home, 'home', 'Dashboard Home', '#i-globe', false, false);
+    const card = document.querySelector('.dock-preview-desktop-home');
+    expect(card).not.toBeNull();
+    card.click(); // nothing showing: brings back the minimized window only
+    expect(DockManager.windows.vm.minimized).toBe(false);
+    expect(DockManager.windows['stack-inspector'].closed).toBe(true);
+    expect(document.getElementById('stack-inspector').style.display).toBe('none');
+  });
+
   it('closes a Stack Inspector the dock never saw', async () => {
     const { DockManager } = await import('../components/dock.js');
     const { closeStackModal } = await import('../components/stack-modal.js');

@@ -227,6 +227,10 @@
   could pop up; it now brings back only windows that are open, and closing the Stack Inspector
   closes it rather than minimizing it.
 
+- **The desktop preview under Home does the same**: clicking the preview card that shows when you
+  hover the Home button could still bring back an empty Stack Inspector or container window; it
+  now uses the Home button's own rule and brings back only open windows.
+
 - **Dock badge stays on**: opening or closing a window redrew the dock with an empty notification
   badge, so the unread count vanished for a couple of seconds until the next update; the dock now
   puts the count back as it redraws.
