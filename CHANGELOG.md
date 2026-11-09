@@ -226,6 +226,9 @@
   with the language's plural ("1 active window", "2 aktive Fenster"). An alert without a title and
   the copy preview's placeholder words are translated too.
 
+- **Load average in the reader's number format**: Mission Control showed "0.52, 0.48, 0.41" in every
+  language; German now reads "0,52 · 0,48 · 0,41".
+
 - **Home button leaves closed windows closed**: with nothing showing, the dock's Home button
   brought back every window it had ever tracked, so an empty Stack Inspector or container window
   could pop up; it now brings back only windows that are open, and closing the Stack Inspector

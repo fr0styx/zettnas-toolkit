@@ -267,7 +267,8 @@ export function updateManagementTelemetry(stats) {
     }
     if (loadEl) {
       if (Array.isArray(stats.cpu?.load_avg)) {
-        loadEl.textContent = stats.cpu.load_avg.map(v => Number(v).toFixed(2)).join(', ');
+        // in the reader's number format; a dot between, since "0,52, 0,48" would read wrong in German
+        loadEl.textContent = stats.cpu.load_avg.map((v) => formatFixed(Number(v), 2)).join(' · ');
       } else {
         loadEl.textContent = stats.cpu?.load_avg || t('mgmt.load_normal', 'Normal');
       }

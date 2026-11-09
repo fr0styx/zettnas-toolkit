@@ -131,7 +131,7 @@ describe('Hardware Subsystem & GPU Transcode Cockpit (Option C & D)', () => {
     expect(hostLabel.textContent).toBe('Host system');
     expect(osEl.textContent).toBe('Debian GNU/Linux 13 (trixie)');
     expect(cpuEl.textContent).toBe('Intel Core Ultra 5 125H (18T)');
-    expect(loadEl.textContent).toBe('0.15, 0.25, 0.35');
+    expect(loadEl.textContent).toBe('0.15 · 0.25 · 0.35');
     expect(engineEl.textContent).toBe('Btrfs Native Subvolumes');
   });
 
