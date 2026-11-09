@@ -15,12 +15,12 @@ av>=19.0.2
 playwright==1.64.1
 PyYAML>=6.0.3
 sigstore==4.5.1
-sqlcipher3==0.6.4
+sqlcipher3==0.6.5
 sqlite-vec>=0.1.9; platform_system == "Linux" and implementation_name == "cpython" and 'musl' not in platform_release
 sse-starlette==3.6.0
 tinytag==2.3.2
 uvicorn==0.54.0
-websockets>=17.3
+websockets>=17.4
 pypdfium2>=5.14.0
 # iCloud Photos with an Apple ID sign-in (NFEAT-3, D14): MIT, reads the session, never stores the password
 pyicloud==2026.10.1
