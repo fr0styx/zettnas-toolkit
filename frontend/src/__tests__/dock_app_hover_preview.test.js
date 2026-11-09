@@ -182,7 +182,7 @@ describe('Revamped Dock App Hover Preview Engine', () => {
     const homeCard = previewContent.querySelector('.dock-preview-desktop-home');
     expect(homeCard).not.toBeNull();
     expect(homeCard.textContent).toContain('Desktop Workspace');
-    expect(homeCard.textContent).toContain('Active Windows');
+    expect(homeCard.textContent).toMatch(/\d+ active windows?/);
   });
 
   it('renders Notification Center summary feed preview with alerts', () => {

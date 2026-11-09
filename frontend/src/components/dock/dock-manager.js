@@ -427,7 +427,7 @@ export const DockManager = {
         }
         const winIds = Object.keys(DockManager.windows);
         const activeWins = winIds.filter((k) => !DockManager.windows[k].closed && !DockManager.windows[k].minimized);
-        const countStr = `${activeWins.length} ${t('dock.active_windows_count', 'Active Windows')}`;
+        const countStr = t('dock.active_windows', '{count, plural, one {# active window} other {# active windows}}', { count: activeWins.length });
         container.innerHTML = `
           <div class="dock-desktop-home-card">
             <span class="dkp-e18">🖥️</span>
@@ -503,7 +503,7 @@ export const DockManager = {
               <span class="dkp-ico">${nIcon}</span>
               <div class="dkp-body">
                 <div class="dkp-row">
-                  <strong class="dock-notif-feed-item-title" style="color:${col};">${escapeHtml(ev.title || 'Alert')}</strong>
+                  <strong class="dock-notif-feed-item-title" style="color:${col};">${escapeHtml(ev.title || t('dock.alert_untitled', 'Alert'))}</strong>
                   <span class="dkp-time">${timeStr}</span>
                 </div>
                 <div class="dock-notif-feed-item-msg">${escapeHtml(ev.message || '')}</div>
@@ -532,9 +532,9 @@ export const DockManager = {
       if (id === 'copy') {
         const container = document.createElement('div');
         container.className = 'dock-preview-summary';
-        const status = escapeHtml(document.getElementById('copy-toast-status')?.textContent || 'Ingest');
+        const status = escapeHtml(document.getElementById('copy-toast-status')?.textContent || t('dock.copy_default', 'Copying'));
         const pct = escapeHtml(document.getElementById('copy-toast-pct')?.textContent || '0%');
-        const file = escapeHtml(document.getElementById('copy-toast-file')?.textContent || 'Preparing...');
+        const file = escapeHtml(document.getElementById('copy-toast-file')?.textContent || t('dock.copy_preparing', 'Preparing…'));
         container.innerHTML = `
           <div class="dkp-row-xs">
             <strong class="dkp-strong">${status}</strong>

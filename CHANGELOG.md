@@ -222,6 +222,10 @@
 - **Alert count in the reader's language**: the dock's notification preview said "12 total" in
   English in every language; it now reads "12 insgesamt", "12 au total", "12 en total" or "共 12 条".
 
+- **The dock's previews say it right**: the desktop preview said "1 Active Windows"; it now counts
+  with the language's plural ("1 active window", "2 aktive Fenster"). An alert without a title and
+  the copy preview's placeholder words are translated too.
+
 - **Home button leaves closed windows closed**: with nothing showing, the dock's Home button
   brought back every window it had ever tracked, so an empty Stack Inspector or container window
   could pop up; it now brings back only windows that are open, and closing the Stack Inspector
