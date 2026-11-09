@@ -423,7 +423,7 @@ upgrading.
 
 - **Code scanning, 37 open findings checked** (CodeQL on main): none could be reached from outside
   with harm, and the ones that relied on checks the scanner can't see now make them where it can.
-  A snapshot's share is one folder name inside the pool (a snapshot named "..@x" could have
+  A snapshot's share is one folder name inside the pool (a snapshot named `..@x` could have
   made a rollback treat the whole pool as the share); a renamed pool's mount points and a VM's
   folder are single names inside their folder; the share path check returns from inside its
   prefix test; the key rotation no longer logs its counts; the build strips HTML comments until
