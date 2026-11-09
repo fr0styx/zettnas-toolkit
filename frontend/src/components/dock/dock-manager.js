@@ -422,7 +422,7 @@ export const DockManager = {
         const countStr = `${activeWins.length} ${t('dock.active_windows_count', 'Active Windows')}`;
         container.innerHTML = `
           <div class="dock-desktop-home-card">
-            <span style="font-size:18px; line-height:1;">🖥️</span>
+            <span class="dkp-e18">🖥️</span>
             <strong>${escapeHtml(t('dock.desktop_workspace', 'Desktop Workspace'))}</strong>
             <span>${escapeHtml(countStr)}</span>
           </div>
@@ -449,10 +449,10 @@ export const DockManager = {
         const container = document.createElement('div');
         container.className = 'dock-preview-app-splash';
         container.innerHTML = `
-          <div class="dock-splash-icon-ring"><span style="font-size:20px; line-height:1;">🔍</span></div>
+          <div class="dock-splash-icon-ring"><span class="dkp-e20">🔍</span></div>
           <div class="dock-splash-title">${escapeHtml(t('dock.palette', 'Search (Cmd+K)'))}</div>
           <div class="dock-splash-desc">${escapeHtml(t('dock.palette_desc', 'Press Cmd+K to find apps, files and settings'))}</div>
-          <div class="dock-preview-action-chip" style="margin-top:4px;">
+          <div class="dock-preview-action-chip dkp-chip-gap">
             <span>▶ ${escapeHtml(t('dock.palette_open', 'Open search'))}</span>
           </div>
         `;
@@ -479,10 +479,10 @@ export const DockManager = {
 
         if (events.length === 0) {
           container.innerHTML = `
-            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:6px; text-align:center;">
-              <span style="font-size:24px;">🔔</span>
-              <strong style="font-size:var(--zn-fs-xs); color:var(--zn-text-strong);">${escapeHtml(t('dock.notifications', 'Notification Center'))}</strong>
-              <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted);">${escapeHtml(t('dock.no_alerts', 'No recent notifications'))}</span>
+            <div class="dkp-empty">
+              <span class="dkp-empty-icon">🔔</span>
+              <strong class="dkp-strong-xs">${escapeHtml(t('dock.notifications', 'Notification Center'))}</strong>
+              <span class="dkp-muted-xs">${escapeHtml(t('dock.no_alerts', 'No recent notifications'))}</span>
             </div>
           `;
           return container;
@@ -497,11 +497,11 @@ export const DockManager = {
           const timeStr = formatTime(ev.ts, undefined, '');
           return `
             <div class="dock-notif-feed-item">
-              <span style="font-size:var(--zn-fs-xs); line-height:1; flex-shrink:0;">${nIcon}</span>
-              <div style="min-width:0; flex:1; overflow:hidden;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="dkp-ico">${nIcon}</span>
+              <div class="dkp-body">
+                <div class="dkp-row">
                   <strong class="dock-notif-feed-item-title" style="color:${col};">${escapeHtml(ev.title || 'Alert')}</strong>
-                  <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${timeStr}</span>
+                  <span class="dkp-time">${timeStr}</span>
                 </div>
                 <div class="dock-notif-feed-item-msg">${escapeHtml(ev.message || '')}</div>
               </div>
@@ -510,11 +510,11 @@ export const DockManager = {
         }).join('');
 
         container.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--zn-line-8); padding-bottom:3px;">
-            <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong);">${escapeHtml(t('dock.recent_alerts', 'Recent alerts'))}</span>
-            <span style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan)); font-weight:700;">${events.length} total</span>
+          <div class="dkp-head">
+            <span class="dkp-head-title">${escapeHtml(t('dock.recent_alerts', 'Recent alerts'))}</span>
+            <span class="dkp-head-count">${events.length} total</span>
           </div>
-          <div style="display:flex; flex-direction:column; gap:4px; overflow:hidden; flex:1;">
+          <div class="dkp-list">
             ${itemsHtml}
           </div>
           <div class="dock-preview-hover-overlay">
@@ -533,14 +533,14 @@ export const DockManager = {
         const pct = escapeHtml(document.getElementById('copy-toast-pct')?.textContent || '0%');
         const file = escapeHtml(document.getElementById('copy-toast-file')?.textContent || 'Preparing...');
         container.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:var(--zn-fs-xs);">
-            <strong style="color:var(--zn-text-strong);">${status}</strong>
-            <strong style="color:var(--ok2);">${pct}</strong>
+          <div class="dkp-row-xs">
+            <strong class="dkp-strong">${status}</strong>
+            <strong class="dkp-ok">${pct}</strong>
           </div>
-          <div style="background:var(--zn-glaze-12); height:6px; border-radius:3px; overflow:hidden; margin:6px 0;">
-            <div style="background:var(--ok2); height:100%; width:${pct};"></div>
+          <div class="dkp-bar">
+            <div class="dkp-bar-fill" style="width:${pct};"></div>
           </div>
-          <div style="font-size:var(--zn-fs-xs); color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${file}</div>
+          <div class="dkp-file">${file}</div>
         `;
         return container;
       }
@@ -679,7 +679,7 @@ export const DockManager = {
           </div>
           <div class="dock-splash-title">${escapeHtml(appTitle)}</div>
           <div class="dock-splash-desc">${escapeHtml(appDesc)}</div>
-          <div class="dock-preview-action-chip" style="margin-top:4px;">
+          <div class="dock-preview-action-chip dkp-chip-gap">
             <span>▶ ${escapeHtml(t('dock.click_to_open', 'Click to open application'))}</span>
           </div>
         `;
@@ -863,7 +863,7 @@ export const DockManager = {
     spotItem.type = 'button';
     spotItem.className = 'dock-item dock-item-spotlight';
     spotItem.setAttribute('aria-label', t('dock.palette', 'Search (Cmd+K)'));
-    spotItem.innerHTML = `<span style="font-size:15px; line-height:1;">🔍</span>`;
+    spotItem.innerHTML = `<span class="dkp-e15">🔍</span>`;
     spotItem.addEventListener('mouseenter', () => showDockTooltip(spotItem, 'spotlight', t('dock.palette', 'Search (Cmd+K)'), '', false));
     spotItem.addEventListener('focus', () => keyboardFocused(spotItem) && showDockTooltip(spotItem, 'spotlight', t('dock.palette', 'Search (Cmd+K)'), '', false));
     spotItem.addEventListener('mouseleave', hideDockTooltip);
@@ -1012,7 +1012,7 @@ export const DockManager = {
     notifItem.type = 'button';
     notifItem.className = 'dock-item dock-notif-btn';
     notifItem.setAttribute('aria-label', t('dock.notifications', 'Notification Center'));
-    notifItem.innerHTML = `<svg><use href="#i-bell"/></svg><span class="dock-badge" id="dock-notif-badge" aria-hidden="true" style="display:none; position:absolute; top:-2px; right:-2px; background:var(--crit); color:var(--zn-text-strong); font-size:var(--zn-fs-xs); font-weight:800; padding:1px 4px; border-radius:8px; border:1px solid var(--lt-r-000000ff, #000); box-shadow:0 1px 2px rgba(0,0,0,0.5); pointer-events:none;">0</span>`;
+    notifItem.innerHTML = `<svg><use href="#i-bell"/></svg><span class="dock-badge" id="dock-notif-badge" aria-hidden="true">0</span>`;
     notifItem.addEventListener('mouseenter', () => showDockTooltip(notifItem, 'notif', t('dock.notifications', 'Notification Center'), '#i-bell', false));
     notifItem.addEventListener('focus', () => keyboardFocused(notifItem) && showDockTooltip(notifItem, 'notif', t('dock.notifications', 'Notification Center'), '#i-bell', false));
     notifItem.addEventListener('mouseleave', hideDockTooltip);

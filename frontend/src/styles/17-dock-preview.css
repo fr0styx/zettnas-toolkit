@@ -404,3 +404,27 @@
   pointer-events: none;
 }
 
+/* NUX-15: the previews' own styles (the alert colour and the progress width stay inline) */
+.dock-desktop-home-card .dkp-e18 { font-size: 18px; line-height: 1; }
+.dock-splash-icon-ring .dkp-e20 { font-size: 20px; line-height: 1; }
+.dock-preview-action-chip.dkp-chip-gap { margin-top: 4px; }
+.dock-preview-notif-feed .dkp-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 6px; text-align: center; }
+.dock-preview-notif-feed .dkp-empty-icon { font-size: 24px; }
+.dock-preview-notif-feed .dkp-strong-xs { font-size: var(--zn-fs-xs); color: var(--zn-text-strong); }
+.dock-preview-notif-feed .dkp-muted-xs { font-size: var(--zn-fs-xs); color: var(--zn-text-muted); }
+.dock-preview-notif-feed .dkp-ico { font-size: var(--zn-fs-xs); line-height: 1; flex-shrink: 0; }
+.dock-preview-notif-feed .dkp-body { min-width: 0; flex: 1; overflow: hidden; }
+.dock-preview-notif-feed .dkp-row { display: flex; justify-content: space-between; align-items: center; }
+.dock-preview-notif-feed .dkp-time { font-size: var(--zn-fs-xs); color: var(--muted); }
+.dock-preview-notif-feed .dkp-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--zn-line-8); padding-bottom: 3px; }
+.dock-preview-notif-feed .dkp-head-title { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); }
+.dock-preview-notif-feed .dkp-head-count { font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan)); font-weight: 700; }
+.dock-preview-notif-feed .dkp-list { display: flex; flex-direction: column; gap: 4px; overflow: hidden; flex: 1; }
+.dock-preview-summary .dkp-row-xs { display: flex; justify-content: space-between; align-items: center; font-size: var(--zn-fs-xs); }
+.dock-preview-summary .dkp-strong { color: var(--zn-text-strong); }
+.dock-preview-summary .dkp-ok { color: var(--ok2); }
+.dock-preview-summary .dkp-bar { background: var(--zn-glaze-12); height: 6px; border-radius: 3px; overflow: hidden; margin: 6px 0; }
+.dock-preview-summary .dkp-bar-fill { background: var(--ok2); height: 100%; }
+.dock-preview-summary .dkp-file { font-size: var(--zn-fs-xs); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dock-item-spotlight .dkp-e15 { font-size: 15px; line-height: 1; }
+#dock-notif-badge { display: none; position: absolute; top: -2px; right: -2px; background: var(--crit); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); font-weight: 800; padding: 1px 4px; border-radius: 8px; border: 1px solid var(--lt-r-000000ff, #000); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); pointer-events: none; }

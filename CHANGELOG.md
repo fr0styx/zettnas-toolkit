@@ -208,6 +208,11 @@
 
 #### Usability
 
+- **Dock styles in the stylesheet**: the dock's hover previews (desktop, search, notifications,
+  copy progress), the search button and the notification badge take their look from classes
+  instead of inline styles; only an alert's colour and the progress width stay inline. They look
+  the same in both themes.
+
 - **Home button leaves closed windows closed**: with nothing showing, the dock's Home button
   brought back every window it had ever tracked, so an empty Stack Inspector or container window
   could pop up; it now brings back only windows that are open, and closing the Stack Inspector

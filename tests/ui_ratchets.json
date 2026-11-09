@@ -98,7 +98,7 @@
  "frontend/src/components/dock/dock-manager.js": {
   "buttons": 0,
   "globals": 0,
-  "styles": 25,
+  "styles": 2,
   "templates": 12
  },
  "frontend/src/components/dock/notifications.js": {
