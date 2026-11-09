@@ -147,6 +147,30 @@ class TestFanControl:
         run([hdd("sda", 30, bay=1)], cpu_temp=45)
         assert not Z_STATE.critical_temp_active
 
+    def test_a_cpu_hovering_at_80_does_not_flap_or_alert_again(self, hw):
+        crit = ("error", "Critical Temperature Threshold Reached")
+        run([hdd("sda", 30, bay=1)], cpu_temp=84)
+        run([hdd("sda", 30, bay=1)], cpu_temp=78)  # under 80 but not 5 °C under: still forced
+        assert Z_STATE.critical_temp_active
+        run([hdd("sda", 30, bay=1)], cpu_temp=74)
+        assert not Z_STATE.critical_temp_active
+        run([hdd("sda", 30, bay=1)], cpu_temp=86)  # back within 15 minutes: forced, no second alert
+        assert Z_STATE.critical_temp_active and hw["events"].count(crit) == 1
+        Z_STATE.critical_temp_active = False
+        Z_STATE.critical_alert_at -= fc.CRITICAL_ALERT_GAP_SECS
+        run([hdd("sda", 30, bay=1)], cpu_temp=86)  # after 15 minutes it alerts again
+        assert hw["events"].count(crit) == 2
+
+    def test_a_hot_disk_stays_forced_until_3_degrees_under(self, hw):
+        hot = fc.HDD_CRITICAL_TEMP
+        run([hdd("sda", hot, bay=1)])
+        run([hdd("sda", hot - 2, bay=1)])
+        assert Z_STATE.critical_temp_active
+        run([hdd("sda", hot - 3, bay=1)])
+        assert Z_STATE.critical_temp_active
+        run([hdd("sda", hot - 4, bay=1)])
+        assert not Z_STATE.critical_temp_active
+
     def test_zero_rpm_after_the_cooldown(self, hw, monkeypatch):
         disks = [hdd("sda", 28, bay=1, standby=True), hdd("sdb", 28, bay=5, standby=True)]
         first = run(disks, zero_rpm_enabled=True, zero_rpm_stop_delay=60)

@@ -75,6 +75,58 @@ def fan_settings():
     }
 
 
+CPU_CRITICAL_C = 80
+# once forced to 100%, fans stay there until the CPU is this far under 80 °C and every disk this far
+# under its limit: a CPU hovering at 80 had flipped the override (and raised an alert) every few seconds
+CPU_RELEASE_C = 5
+DISK_RELEASE_C = 3
+CRITICAL_ALERT_GAP_SECS = 900  # a return within 15 minutes of the last alert is logged, not alerted again
+
+
+def _critical_override(cpu_temp, disks) -> bool:
+    """Whether fans must run at 100%; alerts and logs when that starts and logs when it ends."""
+    active = Z_STATE.critical_temp_active
+    hot_disks = []
+    for d in disks:
+        t = d.get("temp")
+        if t is not None and not d.get("standby", False):
+            is_nvme = (
+                d.get("is_nvme", False) or d.get("dev", "").startswith("nvme") or d.get("name", "").startswith("nv")
+            )
+            crit_thresh = NVME_CRITICAL_TEMP if is_nvme else HDD_CRITICAL_TEMP
+            if t >= crit_thresh - (DISK_RELEASE_C if active else 0):
+                hot_disks.append((d, crit_thresh))
+    cpu_critical = cpu_temp is not None and cpu_temp >= CPU_CRITICAL_C - (CPU_RELEASE_C if active else 0)
+    critical = bool(hot_disks) or cpu_critical
+    if critical and not active:
+        reasons = []
+        if hot_disks:
+            reasons.append(
+                ", ".join(
+                    f"{d.get('name', d.get('dev', '?'))} ({d['temp']}°C >= {thresh}°C)" for d, thresh in hot_disks
+                )
+            )
+        if cpu_critical:
+            reasons.append(f"CPU ({cpu_temp}°C >= {CPU_CRITICAL_C}°C)")
+        names = "; ".join(reasons)
+        now = time.time()
+        if now - Z_STATE.critical_alert_at >= CRITICAL_ALERT_GAP_SECS:
+            Z_STATE.critical_alert_at = now
+            logger.warning("[FANS] Critical temperature detected: %s. Forcing fans to 100%%.", names)
+            add_event(
+                "error",
+                "Critical Temperature Threshold Reached",
+                f"{names}. Fans forced to 100%.",
+                details={"cpu_temp": cpu_temp, "disks": [d.get("dev") for d, _ in hot_disks]},
+            )
+        else:
+            logger.info("[FANS] Critical temperature again: %s. Fans at 100%% (alerted in the last 15 minutes).", names)
+    elif not critical and active:
+        logger.info("[FANS] Hardware temperatures back below critical threshold.")
+    Z_STATE.critical_temp_active = critical
+    return critical
+
+
 def run_fan_control(
     cpu_hold_secs,
     cpu_temp,
@@ -232,42 +284,8 @@ def run_fan_control(
     else:
         raw_pwm3 = 85
 
-    # Safety override: any spinning or solid state disk at/above its critical temperature,
-    # or CPU at/above 80°C, forces fans to 100% regardless of profile or curve.
-    hot_disks = []
-    for d in disks:
-        t = d.get("temp")
-        if t is not None and not d.get("standby", False):
-            is_nvme = (
-                d.get("is_nvme", False) or d.get("dev", "").startswith("nvme") or d.get("name", "").startswith("nv")
-            )
-            crit_thresh = NVME_CRITICAL_TEMP if is_nvme else HDD_CRITICAL_TEMP
-            if t >= crit_thresh:
-                hot_disks.append((d, crit_thresh))
-
-    cpu_critical = cpu_temp is not None and cpu_temp >= 80
-    critical_override = bool(hot_disks) or cpu_critical
-    if critical_override and not Z_STATE.critical_temp_active:
-        reasons = []
-        if hot_disks:
-            reasons.append(
-                ", ".join(
-                    f"{d.get('name', d.get('dev', '?'))} ({d['temp']}°C >= {thresh}°C)" for d, thresh in hot_disks
-                )
-            )
-        if cpu_critical:
-            reasons.append(f"CPU ({cpu_temp}°C >= 80°C)")
-        names = "; ".join(reasons)
-        logger.warning("[FANS] Critical temperature detected: %s. Forcing fans to 100%%.", names)
-        add_event(
-            "error",
-            "Critical Temperature Threshold Reached",
-            f"{names}. Fans forced to 100%.",
-            details={"cpu_temp": cpu_temp, "disks": [d.get("dev") for d, _ in hot_disks]},
-        )
-    elif not critical_override and Z_STATE.critical_temp_active:
-        logger.info("[FANS] Hardware temperatures back below critical threshold.")
-    Z_STATE.critical_temp_active = critical_override
+    # Safety override: a disk at its critical temperature or the CPU at 80 °C forces fans to 100%
+    critical_override = _critical_override(cpu_temp, disks)
 
     # Continuous Anti-Flutter Gating for Zero RPM
     now = time.time()

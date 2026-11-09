@@ -214,6 +214,12 @@
 
 #### Usability
 
+- **No alert storm from a CPU at 80 °C**: a CPU hovering around 80 °C under load switched the fans'
+  full-speed override on and off every few seconds, and each switch raised a "Critical Temperature"
+  alert (dozens in an evening). Once forced to full speed, fans now stay there until the CPU is 5 °C
+  under 80 and every disk 3 °C under its limit, and a return within 15 minutes of the last alert is
+  logged without a new notification. Fans still go to full speed every time.
+
 - **Dock styles in the stylesheet**: the dock's hover previews (desktop, search, notifications,
   copy progress), the search button and the notification badge take their look from classes
   instead of inline styles; only an alert's colour and the progress width stay inline. They look

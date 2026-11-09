@@ -94,6 +94,7 @@ def _run(monkeypatch, chassis, disks, cpu, zero_rpm, busy):
     )
     Z_STATE.fan_state_tracker.clear()
     Z_STATE.critical_temp_active = False
+    Z_STATE.critical_alert_at = 0.0
     Z_STATE.thermal_watchdog_engaged = False
     out = fn(
         cpu_hold_secs=30,

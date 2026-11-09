@@ -71,6 +71,7 @@ class FanState:
     locked: bool = False
     driver_mode: str = "none"
     critical_temp_active: bool = False
+    critical_alert_at: float = 0.0  # when the last critical-temperature alert was raised
     thermal_watchdog_engaged: bool = False
 
 
@@ -197,6 +198,7 @@ class ZettState:
     fans_locked = _Alias[bool]("fans", "locked")
     fan_driver_mode = _Alias[str]("fans", "driver_mode")
     critical_temp_active = _Alias[bool]("fans", "critical_temp_active")
+    critical_alert_at = _Alias[float]("fans", "critical_alert_at")
     thermal_watchdog_engaged = _Alias[bool]("fans", "thermal_watchdog_engaged")
     lcd_renderer_active = _Alias[bool]("lcd", "renderer_active")
     lcd_renderer_name = _Alias[str]("lcd", "renderer")

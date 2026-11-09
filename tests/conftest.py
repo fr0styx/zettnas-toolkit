@@ -219,6 +219,7 @@ def _fresh_hardware_state():
 
     Z_STATE.fan_state_tracker.clear()
     Z_STATE.critical_temp_active = False
+    Z_STATE.critical_alert_at = 0.0
     Z_STATE.thermal_watchdog_engaged = False
     Z_STATE.cached_smart_data.clear()
     Z_STATE.cached_chassis_model = None

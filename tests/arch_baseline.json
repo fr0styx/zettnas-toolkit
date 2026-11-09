@@ -349,7 +349,7 @@
   "backend.services.chat_synthesis._synthesize_web_grounded_answer": 191,
   "backend.services.chat_web_tools.tool_get_weather": 232,
   "backend.services.container_mutator.recreate_container": 232,
-  "backend.services.fan_control.run_fan_control": 364,
+  "backend.services.fan_control.run_fan_control": 330,
   "backend.services.media_engine.build_llm_recommendations": 203,
   "backend.services.media_engine.detect_hardware_accelerator": 163,
   "backend.services.media_engine.search_huggingface_models": 193,
