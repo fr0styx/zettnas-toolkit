@@ -216,9 +216,15 @@
 
 - **No alert storm from a CPU at 80 °C**: a CPU hovering around 80 °C under load switched the fans'
   full-speed override on and off every few seconds, and each switch raised a "Critical Temperature"
-  alert (dozens in an evening). Once forced to full speed, fans now stay there until the CPU is 5 °C
+  alert. Once forced to full speed, fans now stay there until the CPU is 5 °C
   under 80 and every disk 3 °C under its limit, and a return within 15 minutes of the last alert is
   logged without a new notification. Fans still go to full speed every time.
+
+- **CPU and fan alerts once per crossing, like drives**: a CPU at its warning or critical
+  temperature added an event on every stats tick, and a stalled fan did too, so a long spell of load
+  could push everything else out of the 100-entry event log. Each now alerts when it starts (and
+  again when the CPU goes from warning to critical), re-arming after the CPU has cooled 5 °C or the
+  fan spins again.
 
 - **Dock styles in the stylesheet**: the dock's hover previews (desktop, search, notifications,
   copy progress), the search button and the notification badge take their look from classes

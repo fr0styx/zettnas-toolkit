@@ -211,8 +211,10 @@ def _fresh_hardware_state():
     drive verdicts, the last published stats and the remembered default UPS settings start empty
     (ARC-13; the last four found by the random-order nightly)."""
     from backend.hardware import ups
-    from backend.services import rag_standby
+    from backend.services import rag_standby, stats_collector
     from backend.state import Z_STATE
+
+    stats_collector._alerted.update(cpu="", fans=set())
 
     Z_STATE.cached_stats = None  # a test's {"name": "x"} isn't what /api/stats answers next
     ups._DEFAULT_CFG_MEMO.update(until=0.0, cfg=None, env=None)

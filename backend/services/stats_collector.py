@@ -92,6 +92,26 @@ def _async_notify(**kwargs):
 
 _delta_encoder = StatsDeltaEncoder()
 
+CPU_REARM_C = 5
+# What was alerted and is still going on: a hot CPU or a stalled fan alerts once per crossing, not on
+# every stats tick (a CPU at its warning level could fill the 100-entry event log).
+_alerted: dict = {"cpu": "", "fans": set()}
+
+
+def _cpu_alert_due(cpu_temp, warn, crit) -> str:
+    """'crit' or 'warn' when the CPU has just reached that level (or gone from warn to crit), else ''.
+    It re-arms once the CPU is CPU_REARM_C under the level it was alerted at."""
+    if cpu_temp is None:
+        return ""
+    level = "crit" if cpu_temp >= crit else "warn" if cpu_temp >= warn else ""
+    prev = _alerted["cpu"]
+    if level and (not prev or (level == "crit" and prev == "warn")):
+        _alerted["cpu"] = level
+        return level
+    if prev and cpu_temp <= (crit if prev == "crit" else warn) - CPU_REARM_C:
+        _alerted["cpu"] = "warn" if prev == "crit" and cpu_temp >= warn else ""
+    return ""
+
 
 def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=None):
     """Fan stalls, CPU temperature and drive health: events and notifications."""
@@ -129,7 +149,9 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=No
     is_crit = has_crit or (temp_known and cpu_temp >= cpu_crit_threshold) or is_failing_fan
     is_warn = (len(bad) > 0) or (temp_known and cpu_temp >= cpu_warn_threshold)
 
-    if is_failing_fan:
+    new_stalls = set(stalled_fans) - _alerted["fans"]
+    _alerted["fans"] = set(stalled_fans)  # a fan that spins again can alert again later
+    if new_stalls:
         stalled_names = [f"pwm{idx + 1}" for idx in stalled_fans]
         add_event(
             "error",
@@ -150,7 +172,8 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=No
             text=_text("fan_stall", fans=", ".join(stalled_names)),
         )
 
-    if temp_known and cpu_temp >= cpu_crit_threshold:
+    due = _cpu_alert_due(cpu_temp, cpu_warn_threshold, cpu_crit_threshold)
+    if due == "crit":
         add_event(
             "error",
             "CPU Thermal Critical",
@@ -165,7 +188,7 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=No
             dedup_key="cpu_temp_crit",
             text=_text("cpu_hot.crit", temp=cpu_temp),
         )
-    elif temp_known and cpu_temp >= cpu_warn_threshold:
+    elif due == "warn":
         add_event(
             "warning",
             "CPU Thermal Warning",

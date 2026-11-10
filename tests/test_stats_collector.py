@@ -232,6 +232,36 @@ class TestHealth:
         assert hw["notify"][0]["level"] == level
         assert r["is_crit"] == (level == "critical") and r["is_warn"]
 
+    def test_a_hot_cpu_alerts_once_per_crossing(self, hw):
+        levels = lambda: [n["level"] for n in hw["notify"]]  # noqa: E731
+        for t in (78, 79, 78):  # warning level (75) on three ticks: one warning
+            assert sc._check_health([], t, False, [], False, time.time())["is_warn"]
+        assert levels() == ["warning"]
+        sc._check_health([], 88, False, [], False, time.time())  # on to critical (85): one more
+        sc._check_health([], 87, False, [], False, time.time())
+        assert levels() == ["warning", "critical"]
+        sc._check_health([], 79, False, [], False, time.time())  # cooled 5 under 85: re-armed for critical
+        sc._check_health([], 86, False, [], False, time.time())
+        assert levels() == ["warning", "critical", "critical"]
+        sc._check_health([], 60, False, [], False, time.time())  # cooled under 70: quiet until it rises
+        sc._check_health([], 76, False, [], False, time.time())
+        assert levels()[-1] == "warning" and len(levels()) == 4
+        assert [e for e in hw["events"] if e[1].startswith("CPU Thermal")] == [
+            ("warning", "CPU Thermal Warning"),
+            ("error", "CPU Thermal Critical"),
+            ("error", "CPU Thermal Critical"),
+            ("warning", "CPU Thermal Warning"),
+        ]
+
+    def test_a_stalled_fan_alerts_once_until_it_spins_again(self, hw):
+        Z_STATE.fan_state_tracker["pwm1"] = {"current": 120, "last_spinup_time": 0.0}
+        for _ in range(3):
+            assert sc._check_health([], 45, False, [0, 900, 900], False, time.time())["is_crit"]
+        assert [n["dedup_key"] for n in hw["notify"]] == ["fan_stall"]
+        sc._check_health([], 45, False, [900, 900, 900], False, time.time())
+        sc._check_health([], 45, False, [0, 900, 900], False, time.time())
+        assert [n["dedup_key"] for n in hw["notify"]] == ["fan_stall", "fan_stall"]
+
     def test_no_cpu_sensor(self, hw):
         assert sc._check_health([], None, False, [], False, time.time()) == {"is_crit": False, "is_warn": False}
 
