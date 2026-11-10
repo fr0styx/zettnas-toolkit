@@ -390,6 +390,7 @@ export function showEditUserModal(user) {
   document.getElementById('edit-user-quota').value = quotaGb || '';
 
   import('./management/user-data.js').then((m) => m.installUserDataFor(modal, user)).catch(() => {}); // B8
+  import('./passkeys-card.js').then((m) => m.installPasskeyResetFor(modal, user)).catch(() => {}); // RES-3
   // COMP-13: sign-in hours, for accounts that don't manage people
   const hoursBox = document.getElementById('edit-user-hours');
   const limitable = (role) => !['superadmin', 'storage_admin'].includes(role);

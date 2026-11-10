@@ -237,3 +237,16 @@ def test_an_administrator_can_remove_someones_passkeys(client, auth_headers, ann
     assert res.status_code == 200 and res.json() == {"removed": 1}
     assert not passkeys.has_passkeys(ann["id"])
     assert client.delete("/api/users/nobody/passkeys", headers=auth_headers).status_code == 404
+
+
+def test_a_passkey_counts_where_people_without_two_step_are_reported(ann, monkeypatch):
+    from backend.api.security import _mfa_policy_view
+    from backend.services import security_advisor
+
+    before = _mfa_policy_view()["without_two_step"].get("share_user", 0)
+    _add(ann, FakeAuthenticator())
+    assert ann["id"] in passkeys.users_with_passkeys() and passkeys.count_for(ann["id"]) == 1
+    assert _mfa_policy_view()["without_two_step"].get("share_user", 0) == before - 1
+    checks, issues = [], []
+    security_advisor._check_admin_2fa(checks, issues)
+    assert checks[0]["id"] == "admin_mfa"

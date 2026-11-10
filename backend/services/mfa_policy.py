@@ -53,6 +53,11 @@ def forget(user_id: str) -> None:
         _ACCOUNTS.pop(str(user_id), None)
 
 
+# Other second steps register a check here, each saying whether it protects an account (passkeys);
+# this module sits below them and doesn't import them.
+SECOND_STEPS: list[Callable[[dict[str, Any]], bool]] = []
+
+
 def account_needs_setup(user: dict[str, Any] | None) -> bool:
     """A person in a role that requires two-step sign-in who hasn't turned it on (not a directory
     account signing in through OpenID Connect)."""
@@ -62,9 +67,7 @@ def account_needs_setup(user: dict[str, Any] | None) -> bool:
         return False
     if user.get("mfa_enabled"):
         return False
-    from backend.services import passkeys
-
-    return not passkeys.has_passkeys(user["id"])  # a passkey is a second step too (RES-3)
+    return not any(check(user) for check in SECOND_STEPS)  # a passkey, when that module is loaded (RES-3)
 
 
 def setup_pending(sess: dict[str, Any] | None, lookup: Callable[[str], dict[str, Any] | None]) -> bool:

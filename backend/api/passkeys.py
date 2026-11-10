@@ -7,12 +7,12 @@ from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 
 from backend.api.auth import (
-    _build_session_response,
-    _client_ip,
-    _lockout_remaining,
-    _rate_limited,
-    _register_failure,
-    _role_within,
+    build_session_response,
+    client_ip,
+    lockout_remaining,
+    rate_limited,
+    register_failure,
+    role_within,
     verify_mfa_token,
 )
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
@@ -98,7 +98,7 @@ def passkey_register(
         "success",
         actor_id=user["id"],
         actor_username=user["username"],
-        actor_ip=_client_ip(request),
+        actor_ip=client_ip(request),
         details={"name": added["name"]},
     )
     return {"added": added, "passkeys": passkeys.list_for(user["id"])}
@@ -145,7 +145,7 @@ def passkey_delete(pk_id: str, request: Request, principal: AuthenticatedPrincip
         "success",
         actor_id=user["id"],
         actor_username=user["username"],
-        actor_ip=_client_ip(request),
+        actor_ip=client_ip(request),
     )
     return {"passkeys": passkeys.list_for(user["id"])}
 
@@ -154,10 +154,10 @@ def passkey_delete(pk_id: str, request: Request, principal: AuthenticatedPrincip
 def passkey_login_options(req: LoginOptionsIn, request: Request):
     """A challenge to sign in with a passkey: any passkey on this address, or, with the token the
     password step gave, one of that person's own."""
-    ip = _client_ip(request)
-    remaining = _lockout_remaining(ip)
+    ip = client_ip(request)
+    remaining = lockout_remaining(ip)
     if remaining > 0:
-        return _rate_limited(remaining)
+        return rate_limited(remaining)
     user_id = ""
     remember = req.remember_me
     if req.mfa_token:
@@ -176,20 +176,20 @@ def passkey_login_options(req: LoginOptionsIn, request: Request):
 @router.post("/auth/passkey/login")
 async def passkey_login(req: LoginIn, request: Request):
     """Signs in with the signed challenge (counts as both steps: the device checked who you are)."""
-    ip = _client_ip(request)
-    remaining = _lockout_remaining(ip)
+    ip = client_ip(request)
+    remaining = lockout_remaining(ip)
     if remaining > 0:
-        return _rate_limited(remaining)
+        return rate_limited(remaining)
     try:
         user_id, extra = await run_in_threadpool(passkeys.login_finish, req.ticket, req.credential)
     except passkeys.PasskeyError as e:
-        _register_failure(ip, is_ip=True)
+        register_failure(ip, is_ip=True)
         log_security_event("auth.passkey.failure", "failure", actor_ip=ip, details={"reason": str(e)[:120]})
         return _fail(e, 401)
     user = await run_in_threadpool(get_user_by_id, user_id)
     if not user or user.get("status") != "active":
         return error_response(403, "Account is disabled or locked.", error="account_disabled")
-    return _build_session_response(user, bool(extra.get("remember_me")), request, method="passkey")
+    return build_session_response(user, bool(extra.get("remember_me")), request, method="passkey")
 
 
 @router.delete("/users/{user_id}/passkeys", dependencies=[Depends(require_scope("users:write"))])
@@ -201,7 +201,7 @@ def admin_remove_passkeys(
     target = get_user_by_id(user_id)
     if not target:
         return error_response(404, "No such person.", error="not_found")
-    if not _role_within(list(getattr(principal, "scopes", None) or []), target.get("role_id")):
+    if not role_within(list(getattr(principal, "scopes", None) or []), target.get("role_id")):
         return error_response(403, "That account can do more than you can.", error="forbidden")
     removed = len(passkeys.list_for(user_id))
     passkeys.forget_user(user_id)
@@ -210,7 +210,7 @@ def admin_remove_passkeys(
         "success",
         actor_id=getattr(principal, "user_id", None),
         actor_username=getattr(principal, "username", None),
-        actor_ip=_client_ip(request),
+        actor_ip=client_ip(request),
         details={"user": target["username"], "removed": removed},
     )
     return {"removed": removed}

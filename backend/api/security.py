@@ -86,11 +86,14 @@ def rotate_secret_key_route():
 
 
 def _mfa_policy_view() -> dict[str, Any]:
+    from backend.services import passkeys
     from backend.users_db import list_users
 
+    with_passkey = passkeys.users_with_passkeys()  # a passkey is a second step too (RES-3)
     people: dict[str, int] = {}  # per role: active people without two-step sign-in (not directory sign-ins)
     for u in list_users():
-        if u.get("status", "active") == "active" and not u.get("mfa_enabled") and u.get("idp_type") != "oidc":
+        protected = u.get("mfa_enabled") or u["id"] in with_passkey
+        if u.get("status", "active") == "active" and not protected and u.get("idp_type") != "oidc":
             people[u["role_id"]] = people.get(u["role_id"], 0) + 1
     return {"required_roles": sorted(mfa_policy.required_roles()), "without_two_step": people}
 
@@ -105,6 +108,7 @@ def get_mfa_policy() -> dict[str, Any]:
 def put_mfa_policy(
     req: MfaPolicyIn, principal: AuthenticatedPrincipal = Depends(get_current_principal)
 ) -> dict[str, Any]:
+    from backend.services import passkeys
     from backend.users_db import get_role, get_user_by_id, log_security_event
 
     unknown = [r for r in req.required_roles if not get_role(r)]
@@ -115,6 +119,7 @@ def put_mfa_policy(
         me
         and me.get("role_id") in req.required_roles
         and not me.get("mfa_enabled")
+        and not passkeys.has_passkeys(me["id"])
         and not (me.get("idp_type") == "oidc" and not me.get("password_hash"))
     ):
         raise HTTPException(

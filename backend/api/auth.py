@@ -1614,3 +1614,12 @@ async def post_security(data: SecurityUpdateRequest, request: Request):
 
 
 _load_failures()
+
+
+# shared with the passkey routes (backend/api/passkeys.py)
+build_session_response = _build_session_response
+client_ip = _client_ip
+lockout_remaining = _lockout_remaining
+rate_limited = _rate_limited
+register_failure = _register_failure
+role_within = _role_within

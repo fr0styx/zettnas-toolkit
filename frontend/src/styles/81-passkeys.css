@@ -4,3 +4,4 @@
 #passkeys-card .pk-item > span:first-child { display: grid; gap: 2px; }
 #passkeys-card .pk-actions { display: flex; gap: var(--zn-space-1); }
 #passkeys-card .pk-note { margin: var(--zn-space-2) 0; }
+.pk-reset { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: center; margin-top: var(--zn-space-2); }

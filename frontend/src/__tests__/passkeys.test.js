@@ -156,3 +156,26 @@ describe('the passkeys card', () => {
     expect(api.get).not.toHaveBeenCalled();
   });
 });
+
+describe('an administrator removes someone\'s passkeys', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('adds the button to the dialog once and removes on confirm', async () => {
+    const { installPasskeyResetFor } = await import('../components/passkeys-card.js');
+    document.body.innerHTML = '<div id="modal-edit-user"><form></form></div>';
+    const modal = document.getElementById('modal-edit-user');
+    expect(installPasskeyResetFor(null, {})).toBeNull();
+    installPasskeyResetFor(modal, { id: 'u1', username: 'ann' });
+    installPasskeyResetFor(modal, { id: 'u1', username: 'ann' });
+    expect(modal.querySelectorAll('#passkeys-reset')).toHaveLength(1);
+    api.delete.mockResolvedValueOnce({ removed: 2 });
+    modal.querySelector('[data-pk-reset]').click();
+    await tick();
+    expect(api.delete).toHaveBeenCalledWith('/api/users/u1/passkeys');
+    expect(toast.showToast).toHaveBeenCalledWith('Removed 2 passkeys of ann.', 'success');
+    api.delete.mockRejectedValueOnce(new Error('That account can do more than you can.'));
+    modal.querySelector('[data-pk-reset]').click();
+    await tick();
+    expect(toast.showToast).toHaveBeenCalledWith('That account can do more than you can.', 'error');
+  });
+});

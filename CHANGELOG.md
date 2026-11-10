@@ -109,7 +109,10 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Users → Two-step sign-in → Passkeys. On the sign-in page, "Sign in with a passkey" needs no name or
   password; after a password, a passkey works as the second step, and it counts for roles that require
   two-step sign-in. Passkeys work on Kiboto's address with a name over https (such as its Tailscale
-  address), not at an IP address; the card says so when they can't. How it works: docs/PASSKEYS.md.
+  address), not at an IP address; the card says so when they can't. A passkey counts wherever Kiboto
+  reports who still lacks two-step sign-in (the role list, the Security Advisor), and an administrator can
+  remove someone's passkeys from their edit dialog when they lose their devices. How it works:
+  docs/PASSKEYS.md.
 
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in

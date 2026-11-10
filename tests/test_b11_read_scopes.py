@@ -10,6 +10,7 @@ ANY_SIGNED_IN = {
     # their own account, sign-in and devices
     "/api/v1/auth/me": "their own account",
     "/api/v1/auth/mfa/status": "their own two-factor state",
+    "/api/v1/auth/passkeys": "their own passkeys",
     "/api/v1/auth/sessions": "their own sessions",
     "/api/v1/users/{user_id}": "their own profile; others need users:read (checked in the route)",
     "/api/v1/users/{user_id}/export": "their own data; others need users:write and a confirmation",

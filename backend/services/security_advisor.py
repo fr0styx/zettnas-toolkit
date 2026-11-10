@@ -51,7 +51,10 @@ def _check_admin_2fa(checks: list[dict[str, Any]], issues: list[dict[str, Any]])
                 "SELECT id, username, mfa_enabled FROM users WHERE role_id IN ('superadmin', 'admin')"
             ).fetchall()
             if admins:
-                admin_mfa_active = any(bool(a["mfa_enabled"]) for a in admins)
+                from backend.services import passkeys
+
+                with_passkey = passkeys.users_with_passkeys()  # a passkey counts too (RES-3)
+                admin_mfa_active = any(bool(a["mfa_enabled"]) or a["id"] in with_passkey for a in admins)
     except Exception as e:
         logger.debug(f"[SecurityAdvisor] Failed checking admin MFA: {e}")
 
@@ -63,7 +66,9 @@ def _check_admin_2fa(checks: list[dict[str, Any]], issues: list[dict[str, Any]])
             "passed": admin_mfa_active,
             "penalty": 0 if admin_mfa_active else 15,
             "severity": "high" if not admin_mfa_active else "info",
-            "details": "Admin TOTP 2FA enabled" if admin_mfa_active else "Admin accounts lack two-factor protection",
+            "details": "Admin two-step sign-in (code or passkey) is on"
+            if admin_mfa_active
+            else "Admin accounts lack two-factor protection",
         }
     )
     if not admin_mfa_active:

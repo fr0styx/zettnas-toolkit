@@ -80,6 +80,8 @@ def document_responses(app: Any) -> int:
 OWN_RATE_LIMITS = {
     "POST /auth/login": "Failed sign-ins lock the address and the account for a while; Retry-After says how long.",
     "POST /auth/mfa/challenge": "Failed second steps lock the address and the account for a while.",
+    "POST /auth/passkey/login/options": "A locked address (failed sign-ins) gets no passkey challenge for a while.",
+    "POST /auth/passkey/login": "Failed passkey sign-ins count against the address like passwords.",
     "POST /auth/mfa/enable": "Wrong passwords lock MFA changes for this account for a while.",
     "POST /auth/mfa/disable": "Wrong passwords lock MFA changes for this account for a while.",
     "POST /auth/me/smb-password": "Wrong passwords lock this for the account for a while.",

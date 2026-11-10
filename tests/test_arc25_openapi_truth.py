@@ -84,7 +84,7 @@ def test_path_parameters_can_be_not_found():
 # --- 429: from rate_limit() or from the operation's own code ---
 
 _ANSWERS_429 = re.compile(
-    r"status_code=429|error_response\(429|_rate_limited\(|_lockout_remaining\(|login_lockout\.remaining\(|\b429,"
+    r"status_code=429|error_response\(429|\b_?rate_limited\(|\b_?lockout_remaining\(|login_lockout\.remaining\(|\b429,"
 )
 
 

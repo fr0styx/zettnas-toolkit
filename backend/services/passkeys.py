@@ -31,26 +31,13 @@ from fido2.webauthn import (
 )
 
 from backend.config import logger
+from backend.services import mfa_policy
 
 RP_NAME = "Kiboto"
 TICKET_SECONDS = 300
 MAX_PER_USER = 20
 _TICKETS: dict[str, dict[str, Any]] = {}
 _LOCK = threading.Lock()
-
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS passkeys (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    credential_id BLOB NOT NULL UNIQUE,
-    credential BLOB NOT NULL,
-    rp_id TEXT NOT NULL,
-    name TEXT NOT NULL DEFAULT '',
-    created_at REAL NOT NULL,
-    last_used_at REAL
-);
-CREATE INDEX IF NOT EXISTS idx_passkeys_user ON passkeys(user_id);
-"""
 
 
 class PasskeyError(ValueError):
@@ -138,6 +125,17 @@ def list_for(user_id: str) -> list[dict[str, Any]]:
 def has_passkeys(user_id: str) -> bool:
     with _db() as conn:
         return conn.execute("SELECT 1 FROM passkeys WHERE user_id = ? LIMIT 1", (user_id,)).fetchone() is not None
+
+
+def users_with_passkeys() -> set[str]:
+    """Everyone who has at least one passkey (for the "without two-step sign-in" counts)."""
+    with _db() as conn:
+        return {r[0] for r in conn.execute("SELECT DISTINCT user_id FROM passkeys").fetchall()}
+
+
+def count_for(user_id: str) -> int:
+    with _db() as conn:
+        return int(conn.execute("SELECT COUNT(*) FROM passkeys WHERE user_id = ?", (user_id,)).fetchone()[0])
 
 
 def register_options(user: dict[str, Any], host: str) -> dict[str, Any]:
@@ -242,3 +240,11 @@ def delete(user_id: str, pk_id: str) -> bool:
 def forget_user(user_id: str) -> None:
     with _db() as conn:
         conn.execute("DELETE FROM passkeys WHERE user_id = ?", (user_id,))
+
+
+def _protects(user: dict[str, Any]) -> bool:
+    return bool(user.get("id")) and has_passkeys(user["id"])
+
+
+# a passkey is a second step too: the role rule asks here (mfa_policy sits below and can't import us)
+mfa_policy.SECOND_STEPS.append(_protects)
