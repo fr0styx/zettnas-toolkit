@@ -67,7 +67,7 @@ A cross-encoder reranker (for example `bge-reranker-v2-m3`) reads the query toge
 with each of the top results and orders them better than vector similarity alone.
 Ollama can't serve one, but OpenVINO Model Server, Infinity and Hugging Face TEI can.
 Set `rerank_endpoint` in the AI config to its rerank URL (OVMS:
-`http://zettnas-ovms:8000/v3/rerank`, TEI/Infinity: `http://host:port/rerank`) and, if
+`http://kiboto-ovms:8000/v3/rerank`, TEI/Infinity: `http://host:port/rerank`) and, if
 the server needs it, `rerank_model`. The top `rerank_top_n` results (default 30) are
 re-ordered; if the reranker is down, search keeps its usual order. The reranker reads each
 result's whole chunk (up to 2,000 characters) and has `rerank_weight` of the say (default 0.2).

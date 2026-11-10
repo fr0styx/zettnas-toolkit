@@ -110,7 +110,7 @@ def _check_https(checks: list[dict[str, Any]], issues: list[dict[str, Any]], req
                 "severity": "medium",
                 "description": "Session traffic and login credentials travel over plain HTTP. Passwords could be intercepted over unencrypted local networks or Wi-Fi.",
                 "remediation": "Place Kiboto behind an SSL reverse proxy (e.g., Nginx, Caddy, Cloudflare Tunnel, or Traefik) and access via HTTPS.",
-                "action_url": "https://github.com/fr0styx/zettnas-toolkit/blob/main/docs/INSTALLATION.md#reverse-proxy-sso",
+                "action_url": "https://github.com/fr0styx/kiboto/blob/main/docs/INSTALLATION.md#reverse-proxy-sso",
             }
         )
 
@@ -225,8 +225,8 @@ def _check_ai_runtimes(checks: list[dict[str, Any]], issues: list[dict[str, Any]
                 "description": "Ollama / OpenVINO Model Server answer anyone on your network: they can read your prompts' context, "
                 "use your hardware, and pull or delete models. " + ", ".join(exposed),
                 "remediation": "Remove the published ports and put the AI container on the same Docker network as Kiboto "
-                "(Kiboto finds zettnas-ollama / zettnas-ovms by name), or publish to 127.0.0.1 only.",
-                "action_url": "https://github.com/fr0styx/zettnas-toolkit/blob/main/docs/INSTALLATION.md#local-ai-runtimes",
+                "(Kiboto finds kiboto-ollama / kiboto-ovms by name, or zettnas-ollama / zettnas-ovms from before), or publish to 127.0.0.1 only.",
+                "action_url": "https://github.com/fr0styx/kiboto/blob/main/docs/INSTALLATION.md#local-ai-runtimes",
             }
         )
 

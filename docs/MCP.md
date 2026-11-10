@@ -42,13 +42,13 @@ Every call, from the chat or MCP, is written to the security audit log
 **Claude Code**
 
 ```bash
-claude mcp add --transport http zettnas http://<nas-address>:8082/api/mcp --header "Authorization: Bearer <token>"
+claude mcp add --transport http kiboto http://<nas-address>:8082/api/mcp --header "Authorization: Bearer <token>"
 ```
 
 **Cursor** (`~/.cursor/mcp.json`)
 
 ```json
-{ "mcpServers": { "zettnas": { "url": "http://<nas-address>:8082/api/mcp",
+{ "mcpServers": { "kiboto": { "url": "http://<nas-address>:8082/api/mcp",
   "headers": { "Authorization": "Bearer <token>" } } } }
 ```
 
@@ -56,7 +56,7 @@ claude mcp add --transport http zettnas http://<nas-address>:8082/api/mcp --head
 `mcp-remote` bridge.
 
 ```json
-{ "mcpServers": { "zettnas": { "command": "npx",
+{ "mcpServers": { "kiboto": { "command": "npx",
   "args": ["mcp-remote", "http://<nas-address>:8082/api/mcp", "--header", "Authorization: Bearer <token>"] } } }
 ```
 

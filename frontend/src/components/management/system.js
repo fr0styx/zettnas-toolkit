@@ -154,7 +154,7 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
         }
         if (detailsBox) detailsBox.style.display = 'block';
         if (releaseTitle) releaseTitle.textContent = data.release_name || t('sysu.release', 'Release {tag}', { tag: data.latest_tag });
-        if (releaseLink) releaseLink.href = data.release_url || 'https://github.com/fr0styx/zettnas-toolkit/releases';
+        if (releaseLink) releaseLink.href = data.release_url || 'https://github.com/fr0styx/kiboto/releases';
         if (releaseNotes) releaseNotes.textContent = data.release_notes || t('sysu.no_notes', 'No release notes provided.');
 
         if (applyBtn && applyText) {

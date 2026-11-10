@@ -21,16 +21,16 @@ When proxying Kiboto, two items are strictly required:
 
 ## 2. Nginx Configuration
 
-Save this block inside your Nginx server configuration (e.g. `/etc/nginx/conf.d/zettnas.conf` or in a SWAG site config):
+Save this block inside your Nginx server configuration (e.g. `/etc/nginx/conf.d/kiboto.conf` or in a SWAG site config):
 
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name zettnas.yourdomain.com;
+    server_name kiboto.yourdomain.com;
 
     # SSL certificates
-    ssl_certificate     /etc/letsencrypt/live/zettnas.yourdomain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/zettnas.yourdomain.com/privkey.pem;
+    ssl_certificate     /etc/letsencrypt/live/kiboto.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/kiboto.yourdomain.com/privkey.pem;
 
     # Client body limit: Set to 0 (unlimited) or higher if using the File Explorer upload
     client_max_body_size 0;
@@ -69,7 +69,7 @@ server {
 Caddy automatically handles TLS certificate issuance and HTTP/2. Add this block to your `Caddyfile`:
 
 ```caddy
-zettnas.yourdomain.com {
+kiboto.yourdomain.com {
     # Increase or disable body limit for large file uploads
     request_body {
         max_size 10GB
@@ -89,7 +89,7 @@ Without a proxy, Kiboto is plain HTTP and passwords cross your network unencrypt
 
 ```yaml
 services:
-  zettnas-https:
+  kiboto-https:
     image: caddy:2
     restart: unless-stopped
     network_mode: host
@@ -130,13 +130,13 @@ services:
     # ... other configuration ...
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.zettnas.rule=Host(`zettnas.yourdomain.com`)"
-      - "traefik.http.routers.zettnas.entrypoints=websecure"
-      - "traefik.http.routers.zettnas.tls.certresolver=letsencrypt"
-      - "traefik.http.services.zettnas.loadbalancer.server.port=8082"
+      - "traefik.http.routers.kiboto.rule=Host(`kiboto.yourdomain.com`)"
+      - "traefik.http.routers.kiboto.entrypoints=websecure"
+      - "traefik.http.routers.kiboto.tls.certresolver=letsencrypt"
+      - "traefik.http.services.kiboto.loadbalancer.server.port=8082"
       # Buffering middleware disabled to support SSE
-      - "traefik.http.middlewares.zettnas-buffering.buffering.maxResponseBodyBytes=0"
-      - "traefik.http.routers.zettnas.middlewares=zettnas-buffering"
+      - "traefik.http.middlewares.kiboto-buffering.buffering.maxResponseBodyBytes=0"
+      - "traefik.http.routers.kiboto.middlewares=kiboto-buffering"
 ```
 
 ---

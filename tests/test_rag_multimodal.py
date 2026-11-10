@@ -554,7 +554,7 @@ def test_hardware_aware_npu_gpu_llm_recommendations(tmp_path):
 def test_zettai_learning_lifecycle_favorites_and_multimode_search(tmp_path):
     """
     Verifies Kib official learning & search features:
-      1. Master Switch (`enabled: False` pauses learning and sets zettai_status to 'Disabled')
+      1. Master Switch (`enabled: False` pauses learning and sets kib_status to 'Disabled')
       2. Learning Results (`get_learning_results`) and `relearn_failed_files`
       3. Multi-mode search (`match_tab='keyword'`, `sort_by='mtime'`, `category_groups`)
       4. Favorites toggle (`toggle_favorite`) reflected in search results
@@ -575,7 +575,7 @@ def test_zettai_learning_lifecycle_favorites_and_multimode_search(tmp_path):
         learn_res = engine.get_learning_results()
         assert learn_res["succeeded_count"] == 1
         assert learn_res["failed_count"] == 0
-        assert learn_res["zettai_status"] == "Idle"
+        assert learn_res["kib_status"] == "Idle"
 
         # Toggle favorite on doc_a
         fav_on = engine.toggle_favorite(str(doc_a))
@@ -590,7 +590,7 @@ def test_zettai_learning_lifecycle_favorites_and_multimode_search(tmp_path):
 
         # Disable Kib globally -> status becomes Disabled and indexing skips
         engine.update_config({"enabled": False})
-        assert engine.get_learning_results()["zettai_status"] == "Disabled"
+        assert engine.get_learning_results()["kib_status"] == "Disabled"
         disabled_idx = engine.index_directory(str(docs_dir), respect_standby=False)
         assert disabled_idx["status"] == "disabled"
 

@@ -147,7 +147,7 @@ def handle_message(msg: Any, principal: Any, base_url: str) -> dict[str, Any] | 
             {
                 "protocolVersion": asked if asked in PROTOCOL_VERSIONS else PROTOCOL_VERSIONS[0],
                 "capabilities": {"tools": {"listChanged": False}},
-                "serverInfo": {"name": "zettnas", "title": "Kiboto", "version": __version__},
+                "serverInfo": {"name": "kiboto", "title": "Kiboto", "version": __version__},
                 "instructions": "Tools that change the NAS return a link; the user confirms them in Kiboto.",
             },
         )

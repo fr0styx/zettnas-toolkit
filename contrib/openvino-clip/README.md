@@ -21,13 +21,13 @@ weights (`--fp32` keeps full precision), and checks OpenVINO's vectors against P
 On the app's Docker network with no published port; the token is optional:
 
 ```bash
-docker build -t zettnas-clip contrib/openvino-clip
-docker run -d --name zettnas-clip --restart unless-stopped --device /dev/dri \
-  --network <the app's network> -e TOKEN=<a long random string> -v <dir>:/models:ro zettnas-clip
+docker build -t kiboto-clip contrib/openvino-clip
+docker run -d --name kiboto-clip --restart unless-stopped --device /dev/dri \
+  --network <the app's network> -e TOKEN=<a long random string> -v <dir>:/models:ro kiboto-clip
 ```
 
 Give Kiboto the same value as `PHOTO_VECTOR_TOKEN`, and set the address in AI settings,
-"Photo search by meaning": `http://zettnas-clip:11436`. Vectors are then made in the background
+"Photo search by meaning": `http://kiboto-clip:11436`. Vectors are then made in the background
 while the machine is idle; AI settings shows how many photos have one.
 
 ## API

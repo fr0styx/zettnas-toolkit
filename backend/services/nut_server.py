@@ -138,7 +138,7 @@ def ups_vars(status: dict[str, Any], fsd: bool = False) -> dict[str, str]:
         "device.type": "ups",
         "device.model": str(status.get("model") or "UPS"),
         "ups.model": str(status.get("model") or "UPS"),
-        "driver.name": "zettnas",
+        "driver.name": "kiboto",
         "battery.charge": _num(charge),
         "battery.runtime": _num(left * 60) if left is not None else None,
         "battery.voltage": _num(status.get("battery_volts")),

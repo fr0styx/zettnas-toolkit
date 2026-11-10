@@ -1193,7 +1193,7 @@ def get_system_about():
         "python_version": sys.version.split()[0],
         "uptime_secs": uptime_secs,
         "containerized": os.path.exists("/.dockerenv") or config.SETTINGS.containerized or os.path.exists("/app"),
-        "github_repo": "https://github.com/fr0styx/zettnas-toolkit",
+        "github_repo": "https://github.com/fr0styx/kiboto",
     }
 
 
@@ -1393,7 +1393,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
     }
 
     if channel_key == "edge":
-        url = "https://api.github.com/repos/fr0styx/zettnas-toolkit/commits/main"
+        url = "https://api.github.com/repos/fr0styx/kiboto/commits/main"
         try:
             async with httpx.AsyncClient(timeout=8.0) as client:
                 resp = await client.get(url, headers=headers)
@@ -1422,7 +1422,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
                         "latest_tag": f"main@{latest_sha}",
                         "update_available": update_available,
                         "release_name": f"main @ {latest_sha}: {msg}",
-                        "release_url": f"https://github.com/fr0styx/zettnas-toolkit/commit/{full_sha}",
+                        "release_url": f"https://github.com/fr0styx/kiboto/commit/{full_sha}",
                         "published_at": published_at,
                         "release_notes": f"Author: {author}\nCommit: {latest_sha}\nMessage: {msg}",
                         "checked_at": now,
@@ -1442,7 +1442,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
             "latest_tag": f"main@{current_commit}" if current_commit else "main",
             "update_available": False,
             "release_name": "Edge Channel (Latest Commits)",
-            "release_url": "https://github.com/fr0styx/zettnas-toolkit/commits/main",
+            "release_url": "https://github.com/fr0styx/kiboto/commits/main",
             "published_at": None,
             "release_notes": "",
             "checked_at": now,
@@ -1453,9 +1453,9 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
     # Stable: GitHub's "latest release" skips pre-releases, so a release only shows up here
     # once it has been promoted after its 3-day soak (OPS-07). Beta: the newest release.
     if channel_key == "beta":
-        url = "https://api.github.com/repos/fr0styx/zettnas-toolkit/releases?per_page=10"
+        url = "https://api.github.com/repos/fr0styx/kiboto/releases?per_page=10"
     else:
-        url = "https://api.github.com/repos/fr0styx/zettnas-toolkit/releases/latest"
+        url = "https://api.github.com/repos/fr0styx/kiboto/releases/latest"
 
     try:
         async with httpx.AsyncClient(timeout=6.0) as client:
@@ -1481,8 +1481,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
                     "latest_tag": tag,
                     "update_available": update_available,
                     "release_name": data.get("name") or tag,
-                    "release_url": data.get("html_url")
-                    or f"https://github.com/fr0styx/zettnas-toolkit/releases/tag/{tag}",
+                    "release_url": data.get("html_url") or f"https://github.com/fr0styx/kiboto/releases/tag/{tag}",
                     "published_at": data.get("published_at"),
                     "release_notes": data.get("body", ""),
                     "checked_at": now,
@@ -1493,9 +1492,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
             elif channel_key == "beta":
                 # No release published at all: the newest version tag. Never for stable,
                 # where it would skip the soak.
-                tags_resp = await client.get(
-                    "https://api.github.com/repos/fr0styx/zettnas-toolkit/tags", headers=headers
-                )
+                tags_resp = await client.get("https://api.github.com/repos/fr0styx/kiboto/tags", headers=headers)
                 if tags_resp.status_code == 200 and tags_resp.json():
                     latest_tag = tags_resp.json()[0].get("name", "")
                     clean_tag = latest_tag.lstrip("v")
@@ -1508,7 +1505,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
                         "latest_tag": latest_tag,
                         "update_available": update_available,
                         "release_name": f"Release {latest_tag}",
-                        "release_url": f"https://github.com/fr0styx/zettnas-toolkit/releases/tag/{latest_tag}",
+                        "release_url": f"https://github.com/fr0styx/kiboto/releases/tag/{latest_tag}",
                         "published_at": None,
                         "release_notes": "",
                         "checked_at": now,
@@ -1529,7 +1526,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
         "latest_tag": f"v{__version__}",
         "update_available": False,
         "release_name": f"Kiboto v{__version__}",
-        "release_url": "https://github.com/fr0styx/zettnas-toolkit/releases",
+        "release_url": "https://github.com/fr0styx/kiboto/releases",
         "published_at": None,
         "release_notes": "",
         "checked_at": now,

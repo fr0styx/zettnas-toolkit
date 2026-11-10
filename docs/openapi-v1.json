@@ -42289,7 +42289,7 @@
   "/api/v1/ai/chat": {
    "post": {
     "description": "Ask Kib: answers about your files and your server, with web search and the server tools.",
-    "operationId": "chat_with_zettai_agent_api_v1_ai_chat_post",
+    "operationId": "chat_with_kib_agent_api_v1_ai_chat_post",
     "requestBody": {
      "content": {
       "application/json": {
@@ -42306,7 +42306,7 @@
        "application/json": {
         "schema": {
          "additionalProperties": true,
-         "title": "Response Chat With Zettai Agent Api V1 Ai Chat Post",
+         "title": "Response Chat With Kib Agent Api V1 Ai Chat Post",
          "type": "object"
         }
        }
@@ -42326,7 +42326,7 @@
       "$ref": "#/components/responses/TooManyRequests"
      }
     },
-    "summary": "Chat With Zettai Agent",
+    "summary": "Chat With Kib Agent",
     "tags": [
      "Smart Media & AI RAG Engine"
     ],
@@ -42344,7 +42344,7 @@
   "/api/v1/ai/chat/stream": {
    "post": {
     "description": "Streams real-time Server-Sent Events (SSE) tokens, tool activity traces, and thought chains from Kib.",
-    "operationId": "chat_with_zettai_agent_stream_api_v1_ai_chat_stream_post",
+    "operationId": "chat_with_kib_agent_stream_api_v1_ai_chat_stream_post",
     "requestBody": {
      "content": {
       "application/json": {
@@ -42377,7 +42377,7 @@
       "$ref": "#/components/responses/TooManyRequests"
      }
     },
-    "summary": "Chat With Zettai Agent Stream",
+    "summary": "Chat With Kib Agent Stream",
     "tags": [
      "Smart Media & AI RAG Engine"
     ],
@@ -43417,14 +43417,14 @@
   "/api/v1/ai/learning/results": {
    "get": {
     "description": "Returns Kib 6-state learning status, succeeded/failed counts, and failed file list.",
-    "operationId": "get_zettai_learning_results_api_v1_ai_learning_results_get",
+    "operationId": "get_kib_learning_results_api_v1_ai_learning_results_get",
     "responses": {
      "200": {
       "content": {
        "application/json": {
         "schema": {
          "additionalProperties": true,
-         "title": "Response Get Zettai Learning Results Api V1 Ai Learning Results Get",
+         "title": "Response Get Kib Learning Results Api V1 Ai Learning Results Get",
          "type": "object"
         }
        }
@@ -43438,7 +43438,7 @@
       "$ref": "#/components/responses/Forbidden"
      }
     },
-    "summary": "Get Zettai Learning Results",
+    "summary": "Get Kib Learning Results",
     "tags": [
      "Smart Media & AI RAG Engine"
     ],
@@ -55458,7 +55458,7 @@
   "/api/v1/media/chat": {
    "post": {
     "description": "Ask Kib: answers about your files and your server, with web search and the server tools.",
-    "operationId": "chat_with_zettai_agent_api_v1_media_chat_post",
+    "operationId": "chat_with_kib_agent_api_v1_media_chat_post",
     "requestBody": {
      "content": {
       "application/json": {
@@ -55475,7 +55475,7 @@
        "application/json": {
         "schema": {
          "additionalProperties": true,
-         "title": "Response Chat With Zettai Agent Api V1 Media Chat Post",
+         "title": "Response Chat With Kib Agent Api V1 Media Chat Post",
          "type": "object"
         }
        }
@@ -55495,7 +55495,7 @@
       "$ref": "#/components/responses/TooManyRequests"
      }
     },
-    "summary": "Chat With Zettai Agent",
+    "summary": "Chat With Kib Agent",
     "tags": [
      "Smart Media & AI RAG Engine"
     ],
@@ -55513,7 +55513,7 @@
   "/api/v1/media/chat/stream": {
    "post": {
     "description": "Streams real-time Server-Sent Events (SSE) tokens, tool activity traces, and thought chains from Kib.",
-    "operationId": "chat_with_zettai_agent_stream_api_v1_media_chat_stream_post",
+    "operationId": "chat_with_kib_agent_stream_api_v1_media_chat_stream_post",
     "requestBody": {
      "content": {
       "application/json": {
@@ -55546,7 +55546,7 @@
       "$ref": "#/components/responses/TooManyRequests"
      }
     },
-    "summary": "Chat With Zettai Agent Stream",
+    "summary": "Chat With Kib Agent Stream",
     "tags": [
      "Smart Media & AI RAG Engine"
     ],
@@ -56638,14 +56638,14 @@
   "/api/v1/media/learning/results": {
    "get": {
     "description": "Returns Kib 6-state learning status, succeeded/failed counts, and failed file list.",
-    "operationId": "get_zettai_learning_results_api_v1_media_learning_results_get",
+    "operationId": "get_kib_learning_results_api_v1_media_learning_results_get",
     "responses": {
      "200": {
       "content": {
        "application/json": {
         "schema": {
          "additionalProperties": true,
-         "title": "Response Get Zettai Learning Results Api V1 Media Learning Results Get",
+         "title": "Response Get Kib Learning Results Api V1 Media Learning Results Get",
          "type": "object"
         }
        }
@@ -56659,7 +56659,7 @@
       "$ref": "#/components/responses/Forbidden"
      }
     },
-    "summary": "Get Zettai Learning Results",
+    "summary": "Get Kib Learning Results",
     "tags": [
      "Smart Media & AI RAG Engine"
     ],

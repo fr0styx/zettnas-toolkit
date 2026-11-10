@@ -64,6 +64,11 @@ belongs to; TrueNAS 28 needs it to sign in, and earlier versions accept it too.
 
 ### Image variants
 
+The image is `ghcr.io/fr0styx/kiboto`, published under its name before the rebrand,
+`ghcr.io/fr0styx/zettnas-toolkit`, as well until Kiboto 2.2 (the same image). The examples below use the
+old name for `:latest` until 2.0.0 reaches the stable channel (17 November 2026); every other tag is under
+both names already.
+
 | Tag | Size | Includes |
 | --- | ---- | -------- |
 | `latest`, `edge` | about 1.8 GB | Everything: virtual machines (QEMU, UEFI, vTPM), Chromium for the front-panel LCD, and the ZFS tools |
@@ -325,7 +330,7 @@ For **UGOS (Ugreen NAS OS)**, **FygoOS**, **ZettOS**, or **Proxmox VE**, Kiboto 
          - /sys:/host/sys:rw
          - /dev:/host/dev:rw
          - /volume1:/mnt/storage:rw
-         - /volume1/docker/zettnas/data:/app/data:rw
+         - /volume1/docker/kiboto/data:/app/data:rw
          - /var/run/docker.sock:/var/run/docker.sock:ro
        cap_add:
          - SYS_RAWIO
@@ -400,7 +405,7 @@ For developers, homelab maintainers, and air-gapped homelabs building custom ima
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/fr0styx/zettnas-toolkit.git
+   git clone https://github.com/fr0styx/kiboto.git
    cd kiboto
    mkdir -p data
    ```
@@ -535,21 +540,21 @@ To expose Kiboto behind Nginx, Caddy, Traefik, or Cloudflare Tunnel:
 
 ## Local AI runtimes
 
-Kib talks to an Ollama or OpenVINO Model Server (OVMS) runtime. It looks for one only on this NAS: `OLLAMA_HOST` / `LLM_HOST` if you set them, containers named `zettnas-ollama`, `ollama`, `zettnas-ovms` or `ovms` on a shared Docker network, then the Docker host itself. It never sends prompts to your router or other machines on the LAN unless you point `OLLAMA_HOST` there.
+Kib talks to an Ollama or OpenVINO Model Server (OVMS) runtime. It looks for one only on this NAS: `OLLAMA_HOST` / `LLM_HOST` if you set them, containers named `kiboto-ollama`, `ollama`, `kiboto-ovms` or `ovms` (`zettnas-ollama` and `zettnas-ovms` from before still count) on a shared Docker network, then the Docker host itself. It never sends prompts to your router or other machines on the LAN unless you point `OLLAMA_HOST` there.
 
 Neither runtime has a password. Don't publish their ports (11434, 8000) to the LAN; attach them to the Kiboto network instead:
 
 ```yaml
 services:
-  zettnas-ollama:
+  kiboto-ollama:
     image: ollama/ollama
-    networks: [zettnas]
+    networks: [kiboto]
     volumes:
       - ./ollama:/root/.ollama
     # no "ports:" section: only Kiboto can reach it
 
 networks:
-  zettnas:
+  kiboto:
     external: true
     name: kiboto_default   # the network your Kiboto container is on
 ```
@@ -582,7 +587,7 @@ In the Unraid WebUI, navigate to **Docker**, click **Check for Updates**, and cl
 ### Snapshots, pinning a version and going back by hand
 - **Every update is snapshotted.** Before the data is touched, Kiboto copies its settings and databases (not the AI index) to `data/backups/pre-update/<date>-from-<version+commit>/`. The in-app updater does this when it stops the old version; an update from the Unraid Docker tab or `docker compose pull` gets one when the new version first starts. The newest three are kept, plus the newest one taken from a Stable build.
 - **The previous image is kept.** After an in-app update the old image is tagged `kiboto-rollback:<version+commit>`, so `docker image prune` doesn't remove it. **Mission Control → Settings → About & Updates → Revert to previous version** uses it.
-- **Pin a version** by using a version tag instead of `latest`, e.g. `ghcr.io/fr0styx/zettnas-toolkit:1.10.1` (Compose `image:` line, or the Unraid template's Repository field). It changes only when you change the tag.
+- **Pin a version** by using a version tag instead of `latest`, e.g. `ghcr.io/fr0styx/kiboto:2.0.0` (Compose `image:` line, or the Unraid template's Repository field). It changes only when you change the tag.
 - **Go back by hand:** stop the container, copy the files of the snapshot you want from `data/backups/pre-update/<snapshot>/` back into `data/` (overwrite), set the image to the version that snapshot came from (its folder name and `manifest.json` say which), and start it again. Don't start an older version on data a newer one has migrated without restoring its snapshot first: Kiboto refuses to open newer databases.
 
 ---

@@ -31,6 +31,7 @@ def verifier():
 
 def test_a_real_ci_signature_verifies(verifier):
     identity = sig.verify_bundle(_bundle(), DIGEST, verifier)
+    # a real bundle CI made before the repository was renamed: it names the old identity
     assert identity == "https://github.com/fr0styx/zettnas-toolkit/.github/workflows/ci.yml@refs/heads/main"
 
 
@@ -52,12 +53,12 @@ def test_a_changed_statement_fails(verifier):
 @pytest.mark.parametrize(
     "uri, ok",
     [
-        ("https://github.com/fr0styx/zettnas-toolkit/.github/workflows/ci.yml@refs/heads/main", True),
-        ("https://github.com/fr0styx/zettnas-toolkit/.github/workflows/ci.yml@refs/tags/v1.9.4", True),
-        ("https://github.com/fr0styx/zettnas-toolkit/.github/workflows/ci.yml@refs/heads/feature", False),
-        ("https://github.com/fr0styx/zettnas-toolkit/.github/workflows/promote.yml@refs/heads/main", False),
+        ("https://github.com/fr0styx/kiboto/.github/workflows/ci.yml@refs/heads/main", True),
+        ("https://github.com/fr0styx/kiboto/.github/workflows/ci.yml@refs/tags/v1.9.4", True),
+        ("https://github.com/fr0styx/kiboto/.github/workflows/ci.yml@refs/heads/feature", False),
+        ("https://github.com/fr0styx/kiboto/.github/workflows/promote.yml@refs/heads/main", False),
         ("https://github.com/someone/zettnas-toolkit/.github/workflows/ci.yml@refs/heads/main", False),
-        ("https://github.com/fr0styx/zettnas-toolkit/.github/workflows/ci.yml@refs/heads/main/x", False),
+        ("https://github.com/fr0styx/kiboto/.github/workflows/ci.yml@refs/heads/main/x", False),
     ],
 )
 def test_only_this_projects_ci_on_main_or_a_version_tag(uri, ok):

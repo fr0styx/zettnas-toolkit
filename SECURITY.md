@@ -15,7 +15,7 @@ Security fixes go to the release on Stable (`:latest` / `:stable`) and to the ne
 Please **do not open a public issue** for security problems.
 
 Report privately through GitHub: **Security → Report a vulnerability** on
-[fr0styx/zettnas-toolkit](https://github.com/fr0styx/zettnas-toolkit/security/advisories/new).
+[fr0styx/zettnas-toolkit](https://github.com/fr0styx/kiboto/security/advisories/new).
 Include the version, how the container is deployed (Unraid template, Compose, `docker run`), and steps to reproduce.
 
 What to expect:
@@ -54,9 +54,9 @@ text of indexed files) and the AI chat history (`ai_conversations.db`) with SQLC
   drive, and with compose use `.env` or a secret store. Then a copy of the data folder
   (config backups, pre-update snapshots, the appdata share, a replicated or stolen cache
   drive) cannot be read without it.
-- Under systemd, a credential named `zettnas-data-key` is read as well, so on a dedicated
+- Under systemd, a credential named `kiboto-data-key` (or `zettnas-data-key`, its name before the rebrand) is read as well, so on a dedicated
   machine the key can be sealed to its TPM with `systemd-creds` and
-  `LoadCredentialEncrypted=zettnas-data-key:...`; it then unlocks itself at boot.
+  `LoadCredentialEncrypted=kiboto-data-key:...`; it then unlocks itself at boot.
 - Keep a copy in a password manager. Without it the chat history is lost and the index
   must be rebuilt from your files.
 - The first start with a key converts the existing files: the chat history at startup,
@@ -165,7 +165,7 @@ updater checks this signature before it installs an update (`UPDATE_SIGNATURES`,
 `enforce`). To check an image yourself:
 
 ```
-cosign verify ghcr.io/fr0styx/zettnas-toolkit:<tag> \
+cosign verify ghcr.io/fr0styx/kiboto:<tag> \
   --certificate-identity-regexp '^https://github\.com/fr0styx/(kiboto|zettnas-toolkit)/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9].*)$' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```

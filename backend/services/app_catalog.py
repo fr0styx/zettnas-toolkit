@@ -286,7 +286,7 @@ def sync_catalog_source(source_id: str) -> dict[str, Any]:
         status, _hdrs, body = safe_fetch(
             url,
             context="lan",
-            headers={"User-Agent": "Kiboto/1.5 (+https://github.com/fr0styx/zettnas-toolkit)"},
+            headers={"User-Agent": "Kiboto/1.5 (+https://github.com/fr0styx/kiboto)"},
             timeout=15,
             max_bytes=20 * 1024 * 1024,
         )
@@ -1760,7 +1760,7 @@ def stream_deploy_catalog_app(
             "net.unraid.docker.managed": "dockerman",
             "net.unraid.docker.webui": f"{app.get('webui_scheme', 'http')}://[IP]:[PORT:{port}]{(app.get('webui_path') or '/')}",
             "net.unraid.docker.icon": app.get("logo")
-            or f"https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icons/{app_id}.png",
+            or f"https://raw.githubusercontent.com/fr0styx/kiboto/main/static/img/icons/{app_id}.png",
         },
     }
 

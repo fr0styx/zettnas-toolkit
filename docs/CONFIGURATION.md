@@ -31,7 +31,7 @@ name set beside an old one wins.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `KIBOTO_PUSH_CONTACT` | `https://github.com/fr0styx/zettnas-toolkit` | Contact address sent to browser push services with each notification. |
+| `KIBOTO_PUSH_CONTACT` | `https://github.com/fr0styx/kiboto` | Contact address sent to browser push services with each notification. |
 | `PORT` | `8082` | Port of the web interface. (1–65535) |
 | `TRUSTED_PROXIES` | `127.0.0.1, ::1` | Reverse proxies whose X-Forwarded-For is believed (comma-separated). |
 | `ENABLE_PROXY_SSO` | `off` | Accept a signed-in user from a trusted proxy's header. Since 1.12 the header reaches only accounts the proxy created; other accounts, admins included, sign in with their own password. |
@@ -49,7 +49,7 @@ name set beside an old one wins.
 |---|---|---|
 | `AUTO_INGEST_ENABLED` | `off` | Copy a card as soon as it is inserted, even when Automatic Slot Ingest is off in the settings. |
 | `SFTP_PORT` | `2222` | Port of the built-in SFTP server. (1–65535) |
-| `KIBOTO_NAS_NAME` | `(empty)` | The NAS's name on the home network (<name>.local); empty: zettnas. |
+| `KIBOTO_NAS_NAME` | `(empty)` | The NAS's name on the home network (<name>.local); empty: kiboto. |
 | `WEBDAV_PORT` | `8084` | Port of the built-in WebDAV server. (1–65535) |
 
 ## Updates

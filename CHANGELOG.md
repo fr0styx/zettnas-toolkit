@@ -4,6 +4,18 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 
 ## Unreleased
 
+#### Kiboto
+
+- **The project lives at github.com/fr0styx/kiboto**: the repository was renamed after 2.0.0; the old
+  address redirects. Links in the app (release notes, update checks, the docs and the security advice),
+  the README's quick start and the image's labels point to the new address.
+- **The rest of the names**: the dev and install docs, the reverse-proxy, MCP, fan-watchdog and
+  model-server examples, Kib's own words and actions ("Ask Kib about this"), the calendar export, the MCP
+  server's name, the UPS server's driver name and a new Tailscale node say Kiboto or Kib. What still says
+  ZettNAS on purpose is what data or other systems already hold: setting and file names restores and
+  snapshots depend on, the hardware runner's label, and the old names Kiboto keeps accepting until 2.2.
+  A test now keeps the old names from spreading.
+
 #### Security
 
 - **Require two-step sign-in by role**: Mission Control → Security has a "Require two-step sign-in" list

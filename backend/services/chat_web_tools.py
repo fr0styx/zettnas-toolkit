@@ -558,7 +558,7 @@ def tool_browse_internet(query: str, max_results: int = 5, allow_fetch: bool = T
     extracted_facts: dict[str, str] = {}
     direct_answer = ""
 
-    wiki_headers = {"User-Agent": "Kiboto/2.0 (+https://github.com/fr0styx/zettnas-toolkit)"}
+    wiki_headers = {"User-Agent": "Kiboto/2.0 (+https://github.com/fr0styx/kiboto)"}
     browser_headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     }
@@ -966,7 +966,7 @@ def _fetch_wttr_in(query: str, timeout: float = 4.0) -> dict[str, Any] | None:
         url = f"https://wttr.in/{encoded}?format=j1"
         req = urllib.request.Request(
             url,
-            headers={"User-Agent": "Kiboto-Weather/2.0 (+https://github.com/fr0styx/zettnas-toolkit)"},
+            headers={"User-Agent": "Kiboto-Weather/2.0 (+https://github.com/fr0styx/kiboto)"},
         )
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             if resp.status == 200:

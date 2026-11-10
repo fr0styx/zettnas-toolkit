@@ -28,14 +28,14 @@ ENV MALLOC_ARENA_MAX=2
 # Without /dev/zfs, zpool and zfs wait 10 s for a kernel module a container can't load
 ENV ZFS_MODULE_TIMEOUT=0
 
-LABEL org.opencontainers.image.source="https://github.com/fr0styx/zettnas-toolkit"
+LABEL org.opencontainers.image.source="https://github.com/fr0styx/kiboto"
 LABEL org.opencontainers.image.description="Kiboto: Hardware telemetry, custom fan curves, ARGB lightbar, and LCD dashboard"
 # No net.unraid.docker.managed label here: Unraid adds it to containers it creates from a template,
 # and stops every container that carries it with an explicit `docker stop` on shutdown and array
 # stop, which defeats --restart unless-stopped. The fan watchdog and other containers run from this
 # image by hand would then stay down after every reboot.
 LABEL net.unraid.docker.webui="http://[IP]:[PORT:8082]/"
-LABEL net.unraid.docker.icon="https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png"
+LABEL net.unraid.docker.icon="https://raw.githubusercontent.com/fr0styx/kiboto/main/static/img/icon.png"
 LABEL net.unraid.docker.shell="bash"
 
 # Package docs, man pages and translations are never read in the container: leave them out of
@@ -44,7 +44,7 @@ RUN printf '%s\n' \
     'path-exclude=/usr/share/doc/*' 'path-include=/usr/share/doc/*/copyright' \
     'path-exclude=/usr/share/man/*' 'path-exclude=/usr/share/info/*' \
     'path-exclude=/usr/share/locale/*' 'path-include=/usr/share/locale/locale.alias' \
-    > /etc/dpkg/dpkg.cfg.d/01-zettnas-nodoc
+    > /etc/dpkg/dpkg.cfg.d/01-kiboto-nodoc
 
 # Core: disks, SMART, UPS, USB, cloud remotes (OPS-11), btrfs and software RAID (REL-4, D2), XFS project quotas (FEAT-10)
 RUN apt-get update && apt-get install -y --no-install-recommends \

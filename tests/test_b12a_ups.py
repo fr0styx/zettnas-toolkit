@@ -67,7 +67,7 @@ def test_on_unraid_and_truenas_the_host_shuts_down(failsafe, monkeypatch, host):
 
 
 def test_elsewhere_zettnas_shuts_down_and_only_then_cuts(failsafe, monkeypatch):
-    monkeypatch.setattr(uw, "shutdown_owner", lambda: "zettnas")
+    monkeypatch.setattr(uw, "shutdown_owner", lambda: "kiboto")
     uw.execute_atomic_failsafe_shutdown(5, 2, "battery low")
     assert failsafe["powerdown"] == 1 and failsafe["cut"] == 1
 
@@ -82,11 +82,11 @@ def test_the_drill_reports_the_host_s_ups_service(monkeypatch):
     assert rep["ok"] is False and "nothing shuts the server down" in rep["detail"]
 
 
-def test_the_drill_reports_zettnas_s_own_shutdown_command(monkeypatch):
-    monkeypatch.setattr(uw, "shutdown_owner", lambda: "zettnas")
+def test_the_drill_reports_kibotos_own_shutdown_command(monkeypatch):
+    monkeypatch.setattr(uw, "shutdown_owner", lambda: "kiboto")
     monkeypatch.setattr(uw, "host_shutdown_paths", lambda: ["/host/powerdown"])
     assert uw.shutdown_path_report() == {
-        "by": "zettnas",
+        "by": "kiboto",
         "ok": True,
         "detail": "Kiboto shuts the server down with /host/powerdown.",
     }
@@ -138,7 +138,7 @@ def test_the_shutdown_owner_follows_the_platform(monkeypatch):
     for platform, owner in (
         (PlatformType.UNRAID, "unraid"),
         (PlatformType.TRUENAS, "truenas"),
-        (PlatformType.GENERIC_LINUX, "zettnas"),
+        (PlatformType.GENERIC_LINUX, "kiboto"),
     ):
         adapter = SimpleNamespace(get_platform_type=lambda p=platform: p)
         monkeypatch.setattr("backend.hardware.pal_storage.get_storage_platform", lambda a=adapter: a)
@@ -181,7 +181,7 @@ def test_an_unknown_platform_or_catalog_falls_back_safely(monkeypatch):
         raise RuntimeError("no platform")
 
     monkeypatch.setattr("backend.hardware.pal_storage.get_storage_platform", broken)
-    assert uw.shutdown_owner() == "zettnas"
+    assert uw.shutdown_owner() == "kiboto"
     monkeypatch.setattr("backend.services.app_catalog.get_all_catalog_apps", broken)
     assert uw._catalog_ids() == set()
 

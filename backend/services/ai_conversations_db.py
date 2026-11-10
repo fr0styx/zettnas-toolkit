@@ -568,7 +568,7 @@ def generate_auto_title_heuristic(prompt: str) -> str:
         r"^(?:how\s+do\s+i|how\s+to|how\s+can\s+i)\b",
         r"^(?:what\s+is|what\s+are|what\s+does|which)\b",
         r"^(?:check|look\s+at|audit|inspect|verify|diagnose)\b",
-        r"^(?:hey\s+zetty|hello|hi|good\s+morning|good\s+evening)\b",
+        r"^(?:hey\s+(?:kib|zetty)|hello|hi|good\s+morning|good\s+evening)\b",
     ]
     changed = True
     while changed:

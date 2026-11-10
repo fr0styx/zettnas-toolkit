@@ -27,7 +27,7 @@ from backend import settings as _settings
 from backend.config import logger
 
 STATUS_QUERY = """
-query ZettNASStatus {
+query KibotoStatus {
   array {
     state
     capacity { kilobytes { free used total } }
@@ -41,7 +41,7 @@ query ZettNASStatus {
 }
 """
 NOTIFY_MUTATION = """
-mutation ZettNASNotify($input: NotificationData!) {
+mutation KibotoNotify($input: NotificationData!) {
   createNotification(input: $input) { title }
 }
 """

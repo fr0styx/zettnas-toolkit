@@ -99,7 +99,7 @@ def kiboto_containers(containers: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if c.get("state") != "running":
             continue
         name = (c.get("name") or "").lower().lstrip("/")
-        if name.startswith("zettnas"):
+        if name.startswith(("kiboto", "zettnas")):  # Kiboto itself, under either name
             continue
         if c.get("kiboto_app") or c.get("zettnas_app") or (c.get("stack") and c["stack"] in ids):
             out.append(c)
@@ -192,14 +192,14 @@ def restart_stopped_apps() -> list[str]:
 
 def shutdown_owner() -> str:
     """'unraid' / 'truenas' when the host's own UPS service shuts the server down (D10), else
-    'zettnas'."""
+    'kiboto'."""
     try:
         from backend.hardware.pal_storage import get_storage_platform
 
         platform = str(get_storage_platform().get_platform_type().value)
     except Exception:
         platform = ""
-    return platform if platform in HOST_OWNED else "zettnas"
+    return platform if platform in HOST_OWNED else "kiboto"
 
 
 def _gateway(route_file: str = "/proc/net/route") -> str | None:
@@ -270,9 +270,9 @@ def shutdown_path_report() -> dict[str, Any]:
         }
     paths = host_shutdown_paths()
     if paths:
-        return {"by": "zettnas", "ok": True, "detail": f"Kiboto shuts the server down with {paths[0]}."}
+        return {"by": "kiboto", "ok": True, "detail": f"Kiboto shuts the server down with {paths[0]}."}
     return {
-        "by": "zettnas",
+        "by": "kiboto",
         "ok": False,
         "detail": "Kiboto has no way to shut this server down (no host shutdown command is mounted). "
         "Set up the host's own UPS shutdown, or mount a powerdown command at /host/powerdown.",

@@ -36,7 +36,7 @@ def test_check_system_updates_up_to_date(client, auth_headers):
     mock_gh_response = {
         "tag_name": f"v{__version__}",
         "name": f"Release v{__version__}",
-        "html_url": f"https://github.com/fr0styx/zettnas-toolkit/releases/tag/v{__version__}",
+        "html_url": f"https://github.com/fr0styx/kiboto/releases/tag/v{__version__}",
         "published_at": "2026-10-08T20:00:00Z",
         "body": "Latest release notes",
     }
@@ -58,7 +58,7 @@ def test_check_system_updates_newer_available(client, auth_headers):
     mock_gh_response = {
         "tag_name": "v9.9.9",
         "name": "Release v9.9.9",
-        "html_url": "https://github.com/fr0styx/zettnas-toolkit/releases/tag/v9.9.9",
+        "html_url": "https://github.com/fr0styx/kiboto/releases/tag/v9.9.9",
         "published_at": "2026-10-09T00:00:00Z",
         "body": "Exciting new features in v9.9.9",
     }

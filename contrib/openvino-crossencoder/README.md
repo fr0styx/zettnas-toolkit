@@ -23,14 +23,14 @@ About 2.3 GB. `onnx/model_int8.onnx` (0.6 GB) runs on CPU instead (`DEVICE=CPU`,
 On the app's Docker network with no published port:
 
 ```bash
-docker build -t zettnas-xenc contrib/openvino-crossencoder
-docker run -d --name zettnas-xenc --restart unless-stopped --device /dev/dri \
+docker build -t kiboto-xenc contrib/openvino-crossencoder
+docker run -d --name kiboto-xenc --restart unless-stopped --device /dev/dri \
   --network <the app's network> -e DEVICE=GPU -e PRECISION=f16 \
   -e RERANK_DIR=/models/rerank \
-  -v <dir>:/models:ro zettnas-xenc
+  -v <dir>:/models:ro kiboto-xenc
 ```
 
-Then in AI settings, Reranker: `http://zettnas-xenc:8000/v3/rerank`.
+Then in AI settings, Reranker: `http://kiboto-xenc:8000/v3/rerank`.
 
 ## API
 

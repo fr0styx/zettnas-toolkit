@@ -37,18 +37,18 @@ Kiboto install runs three every night (`.github/workflows/hardware.yml`), in thi
 
 1. Build the image on the server, from the repository root (the app's Python packages for the AI
    eval are installed from `requirements.lock`):
-   `docker build -t zettnas-hw-runner --build-context app=. tools/hardware-runner`
+   `docker build -t kiboto-hw-runner --build-context app=. tools/hardware-runner`
 2. On GitHub: Settings → Actions → Runners → New self-hosted runner, copy the token.
 3. Start it (the token is used once; the registration is kept in the state folder):
 
 ```bash
-docker run -d --name zettnas-hw-runner --restart unless-stopped --hostname zettnas-hw \
+docker run -d --name kiboto-hw-runner --restart unless-stopped --hostname zettnas-hw \
   -e RUNNER_TOKEN=<token> -e HOST_PROC=/host/proc -e HW_RESULTS_DIR=/results \
   -v /proc:/host/proc:ro \
-  -v /mnt/user/appdata/zettnas-hw-runner/state:/home/runner/state \
-  -v /mnt/user/appdata/zettnas-hw-runner/results:/results \
+  -v /mnt/user/appdata/kiboto-hw-runner/state:/home/runner/state \
+  -v /mnt/user/appdata/kiboto-hw-runner/results:/results \
   --memory 1g --cap-drop ALL --security-opt no-new-privileges \
-  --network kiboto_default zettnas-hw-runner
+  --network kiboto_default kiboto-hw-runner
 ```
 
 When `requirements.lock` changes, rebuild the image and re-create the container the same way

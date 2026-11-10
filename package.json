@@ -21,15 +21,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fr0styx/zettnas-toolkit.git"
+    "url": "git+https://github.com/fr0styx/kiboto.git"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/fr0styx/zettnas-toolkit/issues"
+    "url": "https://github.com/fr0styx/kiboto/issues"
   },
-  "homepage": "https://github.com/fr0styx/zettnas-toolkit#readme",
+  "homepage": "https://github.com/fr0styx/kiboto#readme",
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@vitest/coverage-v8": "^5.1.0",

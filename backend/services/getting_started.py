@@ -43,7 +43,7 @@ def _has_share() -> bool:
 def _has_app() -> bool:
     from backend.hardware.docker_stats import read_docker_containers
 
-    return any(not str(c.get("name") or "").startswith("zettnas") for c in read_docker_containers())
+    return any(not str(c.get("name") or "").startswith(("kiboto", "zettnas")) for c in read_docker_containers())
 
 
 OFF_BOX_ROOTS = ("/mnt/disks/", "/mnt/remotes/", "/mnt/addons/")  # USB and network disks

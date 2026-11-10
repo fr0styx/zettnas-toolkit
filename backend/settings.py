@@ -136,7 +136,7 @@ class Settings:
     # Web server
     push_contact: str = _s(
         "KIBOTO_PUSH_CONTACT",
-        "https://github.com/fr0styx/zettnas-toolkit",
+        "https://github.com/fr0styx/kiboto",
         "Contact address sent to browser push services with each notification.",
         group="Web",
     )
@@ -186,7 +186,7 @@ class Settings:
     nas_name: str = _s(
         "KIBOTO_NAS_NAME",
         "",
-        "The NAS's name on the home network (<name>.local); empty: zettnas.",
+        "The NAS's name on the home network (<name>.local); empty: kiboto.",
         group="File services",
     )
     webdav_port: int = _s(

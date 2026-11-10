@@ -260,7 +260,7 @@ export class FileManagerWindow {
               <div class="fm-search-wrap fmx-row-3">
                 <input type="text" class="fm-search-input fmx-xs-box" placeholder="${t('fm.search_placeholder', 'Search...')}" />
                 <svg class="fmx-muted" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <button type="button" class="fm-tool-btn fm-ai-search-toggle fmx-xs-box-2" title="${t('ui.toggle_zettai_semantic_visual_rag', 'Turn AI search on or off (it never wakes sleeping drives)')}" aria-label="${t('ui.ai_semantic_search', 'AI Semantic Search')}">✨ AI</button>
+                <button type="button" class="fm-tool-btn fm-ai-search-toggle fmx-xs-box-2" title="${t('ui.toggle_kib_semantic_visual_rag', 'Turn AI search on or off (it never wakes sleeping drives)')}" aria-label="${t('ui.ai_semantic_search', 'AI Semantic Search')}">✨ AI</button>
               </div>
               <button id="fm-new-folder-btn" class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="${t('fm.new_folder', 'New Folder')}">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
@@ -376,7 +376,7 @@ export class FileManagerWindow {
             <div class="fm-search-wrap fmx-row-3">
               <input type="text" class="fm-search-input fmx-xs-box" placeholder="${t('fm.search_placeholder', 'Search...')}" />
               <svg class="fmx-muted" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <button type="button" class="fm-tool-btn fm-ai-search-toggle fmx-xs-box-2" title="${t('ui.toggle_zettai_semantic_visual_rag', 'Turn AI search on or off (it never wakes sleeping drives)')}" aria-label="${t('ui.ai_semantic_search', 'AI Semantic Search')}">✨ AI</button>
+              <button type="button" class="fm-tool-btn fm-ai-search-toggle fmx-xs-box-2" title="${t('ui.toggle_kib_semantic_visual_rag', 'Turn AI search on or off (it never wakes sleeping drives)')}" aria-label="${t('ui.ai_semantic_search', 'AI Semantic Search')}">✨ AI</button>
             </div>
             <button class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="${t('fm.new_folder', 'New Folder')}">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
@@ -1546,7 +1546,7 @@ export class FileManagerWindow {
     const cleanQ = q.replace(/^(\?|ai:\s*)/i, '').trim() || q;
     try {
       if (useAi) {
-        showToast(t('toast.zettai_searching', 'Kib searching "{cleanQ}"...', { cleanQ: cleanQ }), 'info');
+        showToast(t('toast.kib_searching', 'Kib searching "{cleanQ}"...', { cleanQ: cleanQ }), 'info');
         const aiRes = await api.post('/api/media/search', {
           query: cleanQ,
           path_prefix: this.currentPath && this.currentPath !== '/' ? this.currentPath : null,

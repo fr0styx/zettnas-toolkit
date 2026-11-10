@@ -1080,7 +1080,7 @@ export class FmContextMenu {
         isSingle && it('share', '🔗', t('fm.ctx_share', 'Share a link…')),
         isSingle && !isDir && it('checksum', '🛡️', t('fm.ctx_checksum', 'Show its SHA-256 checksum')),
         isSingle && !isDir && it('versions', '🕘', t('fm.versions_menu', 'Previous versions…')),
-        isSingle && it('ask-zetty', '✨', t('fm.ask_zetty', 'Ask Kib about this')),
+        isSingle && it('ask-kib', '✨', t('fm.ask_kib', 'Ask Kib about this')),
         isSingle && isDir && fav(false),
         !fileItem && fav(true),
       ]),
@@ -1217,8 +1217,8 @@ export class FmContextMenu {
           import('./file-versions.js').then((m) => m.openPreviousVersions(item.path, item.name, () => this.fm.loadPath(this.fm.currentPath)));
         }
         break;
-      case 'ask-zetty':
-        if (item) window.askZettyAbout?.(item.path, item.name);
+      case 'ask-kib':
+        if (item) window.askKibAbout?.(item.path, item.name);
         break;
       case 'fav-toggle':
         if (item && item.is_dir) toggleFavorite(item.path, item.name);

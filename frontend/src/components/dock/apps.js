@@ -164,7 +164,7 @@ export const KNOWN_APPS = {
   zettai: {
     id: 'zettai',
     icon: '#i-search',
-    getTitle: () => t('dock.zettai', 'Ask Kib'),
+    getTitle: () => t('dock.kib', 'Ask Kib'),
     launch: () => {
       if (typeof window.openManagementWindow === 'function') {
         window.openManagementWindow('mgmt-sec-ai-rag', 'mgmt-pane-ai-rag');

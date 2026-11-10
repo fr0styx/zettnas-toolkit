@@ -232,7 +232,7 @@ def test_without_tailscale_the_container_is_set_up_with_the_login_server(tmp_pat
 
     monkeypatch.setattr(tailscale_setup, "deploy_tailscale_container", deploy)
     s = remote_access.connect(login_server="https://hs.example.com")
-    assert deployed == [{"auth_key": None, "hostname": "zettnas"}]
+    assert deployed == [{"auth_key": None, "hostname": "kiboto"}]
     assert s["auth_url"] == "https://hs.example.com/register/nodekey:x"
 
 

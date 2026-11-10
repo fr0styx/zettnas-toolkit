@@ -34,7 +34,7 @@ in AI settings still applies. Revoke a key there to cut an app off.
   settings → Connections.
 - **Home Assistant**: its built-in OpenAI integration can't change its address. Use an
   OpenAI-compatible conversation integration (for example from HACS) with the address, the key
-  and the model `zettnas-chat`.
+  and the model `kiboto-chat`.
 
 ## Fair use of the GPU
 

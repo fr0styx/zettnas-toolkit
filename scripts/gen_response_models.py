@@ -10,9 +10,9 @@ against its schema (tests/response_contract.py), so a required field that goes m
 fails a test instead of breaking an API client.
 
     docker compose -f docker-compose.dev.yml --profile test run --rm -v /tmp/rec:/rec \\
-        -e KIBOTO_RECORD_RESPONSES=/rec/responses.jsonl zettnas-test tests
+        -e KIBOTO_RECORD_RESPONSES=/rec/responses.jsonl kiboto-test tests
     docker compose -f docker-compose.dev.yml --profile test run --rm -v /tmp/rec:/rec \\
-        -v $PWD:/out --entrypoint python zettnas-test scripts/gen_response_models.py \\
+        -v $PWD:/out --entrypoint python kiboto-test scripts/gen_response_models.py \\
         /rec/responses.jsonl /out/backend/models/responses.py
 """
 

@@ -241,7 +241,7 @@ async def fs_upload_init(
         raise HTTPException(status_code=507, detail="Not enough free space for this file.")
 
     upload_id = secrets.token_hex(16)
-    staging_dir = os.path.join(target_canonical, f".zettnas_staging_{upload_id}_{filename}")
+    staging_dir = os.path.join(target_canonical, f".kiboto_staging_{upload_id}_{filename}")
     os.makedirs(staging_dir, exist_ok=True)
     from backend.services import upload_staging
 

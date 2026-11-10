@@ -18,7 +18,7 @@ def test_promotion_verifies_the_ci_workflow_identity():
     m = re.search(r"--certificate-identity-regexp '([^']+)'", text)
     assert m, "promotion must verify a pinned identity"
     pattern = m.group(1).replace("${{ github.repository }}", "fr0styx/zettnas-toolkit")
-    base = "https://github.com/fr0styx/zettnas-toolkit/.github/workflows/"
+    base = "https://github.com/fr0styx/kiboto/.github/workflows/"
     assert re.fullmatch(pattern, base + "ci.yml@refs/tags/v1.9.4")
     assert re.fullmatch(pattern, base + "ci.yml@refs/heads/main")
     assert not re.fullmatch(pattern, base + "other.yml@refs/heads/main")

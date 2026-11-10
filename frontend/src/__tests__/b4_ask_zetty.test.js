@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { setAiChatFocus, aiChatFocus, askZettyAbout } from '../components/management/ai.js';
+import { setAiChatFocus, aiChatFocus, askKibAbout } from '../components/management/ai.js';
 
 describe('Ask Kib about this (missing feature 6)', () => {
   it('shows what the questions are about and can drop it', () => {
@@ -17,11 +17,11 @@ describe('Ask Kib about this (missing feature 6)', () => {
     vi.useFakeTimers();
     document.body.innerHTML = '<div><input id="ai-chat-input" /></div>';
     window.openManagementSection = vi.fn();
-    askZettyAbout('/mnt/user/docs/plan.txt', 'plan.txt');
+    askKibAbout('/mnt/user/docs/plan.txt', 'plan.txt');
     vi.advanceTimersByTime(400);
     expect(window.openManagementSection).toHaveBeenCalledWith('mgmt-sec-ai', 'mgmt-pane-ai-chat');
     expect(document.getElementById('ai-chat-input').placeholder).toContain('plan.txt');
-    expect(window.askZettyAbout).toBe(askZettyAbout);
+    expect(window.askKibAbout).toBe(askKibAbout);
     vi.useRealTimers();
     setAiChatFocus(null);
   });

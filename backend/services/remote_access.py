@@ -144,7 +144,7 @@ def connect(login_server: str = "", auth_key: str = "") -> dict[str, Any]:
     if tailscale.installed():
         res = tailscale_setup.execute_tailscale_up(auth_key=key)
     else:
-        res = tailscale_setup.deploy_tailscale_container(auth_key=key, hostname="zettnas")
+        res = tailscale_setup.deploy_tailscale_container(auth_key=key, hostname="kiboto")
     if res.get("status") == "error":
         raise RemoteAccessError(str(res.get("message") or res.get("output") or "Tailscale could not start."))
     now = status()

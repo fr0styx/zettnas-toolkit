@@ -312,7 +312,7 @@ def probe(sock: Any, r: Responder) -> bool:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Answers <name>.local on the home network.")
-    ap.add_argument("--names", default="zettnas", help="the name, then older names that still answer")
+    ap.add_argument("--names", default="kiboto,zettnas", help="the name, then older names that still answer")
     ap.add_argument("--label", default="Kiboto", help="how Finder lists the NAS")
     ap.add_argument("--http-port", type=int, default=80)
     ap.add_argument("--ip", default="")

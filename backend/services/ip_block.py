@@ -207,7 +207,7 @@ def _reset_for_tests() -> None:
 
 
 if __name__ == "__main__":
-    # docker exec zettnas-toolkit python3 -m backend.services.ip_block --unblock 192.168.1.50
+    # docker exec kiboto python3 -m backend.services.ip_block --unblock 192.168.1.50
     import sys
 
     if len(sys.argv) == 3 and sys.argv[1] == "--unblock":

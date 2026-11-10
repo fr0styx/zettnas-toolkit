@@ -109,7 +109,7 @@ until the period ends. It works with Backblaze B2, Wasabi, Amazon S3 and other S
 3. Add a lifecycle rule that removes old (noncurrent or hidden) versions a day after the lock
    ends, or they are kept and billed forever.
 4. Add the bucket in Cloud Drives (an `s3` remote, or `b2` for Backblaze) with a key limited to
-   that bucket, and add an off-site backup to `rclone:<remote>:<bucket>/zettnas` with the same
+   that bucket, and add an off-site backup to `rclone:<remote>:<bucket>/kiboto` with the same
    number of days under **Days the bucket locks each copy**.
 5. Press **Check the lock**. Kiboto reads the bucket's settings from the provider and shows
    whether it is locked, in which mode and for how long; the list then shows **Cloud copy

@@ -5,7 +5,7 @@ Thanks for helping. This page covers the setup, the checks every pull request mu
 ## Setup
 
 ```bash
-git clone https://github.com/fr0styx/zettnas-toolkit.git && cd zettnas-toolkit
+git clone https://github.com/fr0styx/kiboto.git && cd zettnas-toolkit
 
 # Run it with your working copy mounted
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
@@ -24,7 +24,7 @@ Pull requests run the same checks as CI. Locally:
 
 ```bash
 # Backend tests in the test container (tests are not shipped in the image)
-docker compose -f docker-compose.dev.yml --profile test run --rm zettnas-test
+docker compose -f docker-compose.dev.yml --profile test run --rm kiboto-test
 
 npm run lint          # Ruff lint and format check (Python)
 npm test              # frontend tests (Vitest)

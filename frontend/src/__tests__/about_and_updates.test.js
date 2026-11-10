@@ -107,7 +107,7 @@ describe('System About & Software Updates Frontend Component', () => {
           latest_tag: 'v1.8.0',
           update_available: true,
           release_name: 'Kiboto v1.8.0 7-Pillar Architecture',
-          release_url: 'https://github.com/fr0styx/zettnas-toolkit/releases/tag/v1.8.0',
+          release_url: 'https://github.com/fr0styx/kiboto/releases/tag/v1.8.0',
           release_notes: '## Improvements\n- 7-Pillar Mission Control\n- Containers Dedicated Window',
           checked_at: 1775685600,
         };
@@ -121,10 +121,23 @@ describe('System About & Software Updates Frontend Component', () => {
     expect(document.getElementById('update-status-title').textContent).toContain('Update Available: v1.8.0');
     expect(document.getElementById('update-details-box').style.display).toBe('block');
     expect(document.getElementById('update-release-title').textContent).toBe('Kiboto v1.8.0 7-Pillar Architecture');
-    expect(document.getElementById('update-release-link').href).toBe('https://github.com/fr0styx/zettnas-toolkit/releases/tag/v1.8.0');
+    expect(document.getElementById('update-release-link').href).toBe('https://github.com/fr0styx/kiboto/releases/tag/v1.8.0');
     expect(document.getElementById('update-release-notes').textContent).toContain('7-Pillar Mission Control');
     expect(document.getElementById('btn-apply-system-update').style.display).toBe('flex');
     expect(document.getElementById('btn-apply-update-text').textContent).toContain('Install Release v1.8.0');
+  });
+
+  it('links to the releases page when an update names no release page', async () => {
+    vi.spyOn(api, 'get').mockImplementation(async (url) => {
+      if (url === '/api/system/about') return { name: 'Kiboto', version: '1.7.0', tag: 'v1.7.0', release_channel: 'Stable', uptime_secs: 60 };
+      if (url.startsWith('/api/system/updates')) {
+        return { channel: 'stable', current_version: '1.7.0', latest_version: '1.8.0', latest_tag: 'v1.8.0', update_available: true };
+      }
+      return null;
+    });
+    await fetchAndRenderSystemAbout(true);
+    expect(document.getElementById('update-release-link').href).toBe('https://github.com/fr0styx/kiboto/releases');
+    expect(document.getElementById('update-release-notes').textContent).toBe('No release notes provided.');
   });
 
   it('allows opting in to Edge channel to download latest commit features', async () => {
@@ -147,7 +160,7 @@ describe('System About & Software Updates Frontend Component', () => {
           latest_tag: 'main@5c0639d',
           update_available: true,
           release_name: 'main @ 5c0639d: fix(ci): restore ruff target-version',
-          release_url: 'https://github.com/fr0styx/zettnas-toolkit/commit/5c0639d',
+          release_url: 'https://github.com/fr0styx/kiboto/commit/5c0639d',
           release_notes: 'Author: fr0styx\nCommit: 5c0639d\nMessage: fix(ci): restore ruff target-version',
           checked_at: 1775685600,
         };

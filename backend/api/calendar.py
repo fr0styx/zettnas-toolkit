@@ -211,7 +211,7 @@ async def _sync_single_feed(feed: dict[str, Any]) -> list[dict[str, Any]]:
             raw_url,
             context=where,
             headers={
-                "User-Agent": "Kiboto-Calendar/1.0 (Home Cloud OS; +https://zettnas.local)",
+                "User-Agent": "Kiboto-Calendar/1.0 (Home Cloud OS; +https://kiboto.local)",
                 "Accept": "text/calendar, text/plain, */*",
             },
             timeout=12,
@@ -571,5 +571,5 @@ async def export_calendar_ics(principal: AuthenticatedPrincipal = Depends(get_cu
     return Response(
         content=content,
         media_type="text/calendar",
-        headers={"Content-Disposition": "attachment; filename=zettnas_calendar.ics"},
+        headers={"Content-Disposition": "attachment; filename=kiboto_calendar.ics"},
     )

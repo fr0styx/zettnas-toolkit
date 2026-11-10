@@ -4008,7 +4008,7 @@
                 <div class="ab-box-4" id="update-details-box" style="display: none;">
                   <div class="ab-row-7">
                     <strong id="update-release-title" style="color:var(--warn, #f5a623); font-size:var(--zn-fs-xs);" data-sample>New Release Available</strong>
-                    <a id="update-release-link" href="https://github.com/fr0styx/zettnas-toolkit/releases" target="_blank" rel="noopener noreferrer" style="color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-size:var(--zn-fs-xs); text-decoration:none;"><span data-i18n="upd.view_github">View on GitHub</span> <span aria-hidden="true">↗</span></a>
+                    <a id="update-release-link" href="https://github.com/fr0styx/kiboto/releases" target="_blank" rel="noopener noreferrer" style="color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-size:var(--zn-fs-xs); text-decoration:none;"><span data-i18n="upd.view_github">View on GitHub</span> <span aria-hidden="true">↗</span></a>
                   </div>
                   <div id="update-release-notes" style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); max-height:160px; overflow-y:auto; background:var(--zn-shade-30); border:1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04)); border-radius:6px; padding:10px; font-family:var(--font-mono, monospace); line-height:1.45; white-space:pre-wrap;"></div>
 
@@ -4215,7 +4215,7 @@
                   <!-- Chat Composer -->
                   <div class="ai-chat-composer-row aic-row-4">
                     <input type="text" id="ai-chat-input" class="tz-select-input aic-xs-box" placeholder="Ask any question, browse the web to verify facts, or run a NAS hardware task (e.g. 'Set fan profile to balanced', 'Which disks are sleeping?')..." data-i18n-placeholder="ui.ask_any_question_browse_the" aria-label="Ask any question, browse the web to verify facts, or run a NAS hardware task (e.g. 'Set fan profile to balanced', 'Which disks are sleeping?')..." data-i18n-aria-label="ui.ask_any_question_browse_the" />
-                    <label class="aic-row-xs-bold-soft" id="ai-chat-web-toggle-wrap" title="Off: Kib stays on this NAS. On: it may search the web and fetch the weather, which sends your question to outside services." data-i18n-title="ui.off_zettai_stays_on_this">
+                    <label class="aic-row-xs-bold-soft" id="ai-chat-web-toggle-wrap" title="Off: Kib stays on this NAS. On: it may search the web and fetch the weather, which sends your question to outside services." data-i18n-title="ui.off_kib_stays_on_this">
                       <input class="aic-x-2" type="checkbox" id="ai-chat-web-toggle"> 🌐 <span data-i18n="ai.web_toggle">Web</span>
                     </label>
                     <button type="button" id="btn-ai-chat-send" class="btn-pill-toggle" style="height:38px; padding:0 18px; font-size:var(--zn-fs-xs); font-weight:700; background:linear-gradient(135deg, rgba(99,102,241,0.35), rgba(14,165,233,0.35)); border:1px solid rgba(99,102,241,0.6); color:var(--zn-text-strong); border-radius:8px; cursor:pointer; white-space:nowrap;">
@@ -4234,7 +4234,7 @@
               <div class="ai-rag-composer" style="background:var(--lt-b-0f172a73, rgba(15,23,42,0.45)); border:1px solid var(--zn-line-10); border-radius:10px; padding:14px; margin-bottom:12px;">
                 <!-- Row 1: Omni-Search Input + Scope + Search & Ask + Visual Filters Drawer Toggle + Reset -->
                 <div class="rag-row">
-                  <input type="text" id="ai-rag-query-input" aria-label="Search files or ask Kib" data-i18n-aria-label="ui.search_files_or_ask_zettai" class="tz-select-input rag-fs13-box-grow" placeholder="Search photos, documents, or ask a question (e.g. 'pasta recipe with garlic', 'red car at the beach')..." data-i18n-placeholder="ai.rag_placeholder" />
+                  <input type="text" id="ai-rag-query-input" aria-label="Search files or ask Kib" data-i18n-aria-label="ui.search_files_or_ask_kib" class="tz-select-input rag-fs13-box-grow" placeholder="Search photos, documents, or ask a question (e.g. 'pasta recipe with garlic', 'red car at the beach')..." data-i18n-placeholder="ai.rag_placeholder" />
                   <input type="hidden" id="ai-visual-search-input" value="" />
                   <select id="ai-rag-scope-select" aria-label="Knowledge scope" data-i18n-aria-label="ui.knowledge_scope" class="tz-select-input rag-xs-box">
                     <option value="all" data-i18n="ai.scope_all">All Knowledge</option>
@@ -4515,7 +4515,7 @@
                     <div class="aix-fs13-bold-strong-2" data-i18n="ai.config_policy_title">🛡️ Service Control, Learning Scope &amp; Disk Standby Policy</div>
                     <div style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); margin-top:2px;" data-i18n="ai.config_policy_desc">Configure when and how Kib learns from your NAS storage while protecting sleeping hard drives.</div>
                   </div>
-                  <label style="display:inline-flex; align-items:center; gap:8px; padding:5px 12px; border-radius:999px; background:rgba(99,102,241,0.18); border:1px solid rgba(99,102,241,0.45); font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-e0e7ffff, #e0e7ff); cursor:pointer;" title="Enable or disable Kib service globally. Turning off pauses unfinished learning tasks." data-i18n-title="ui.enable_or_disable_zettai_service">
+                  <label style="display:inline-flex; align-items:center; gap:8px; padding:5px 12px; border-radius:999px; background:rgba(99,102,241,0.18); border:1px solid rgba(99,102,241,0.45); font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-e0e7ffff, #e0e7ff); cursor:pointer;" title="Enable or disable Kib service globally. Turning off pauses unfinished learning tasks." data-i18n-title="ui.enable_or_disable_kib_service">
                     <input type="checkbox" id="ai-master-enable-toggle" checked style="accent-color:#6366f1; cursor:pointer;" />
                     <span data-i18n="ai.service_switch_label">Kib Service Enabled</span>
                   </label>
@@ -4634,7 +4634,7 @@
                 <!-- Kib Learning Results & Failed Files Panel (Toggled inline) -->
                 <div id="ai-learning-results-panel" style="display:none; background:var(--lt-b-0f172abf, rgba(15,23,42,0.75)); border:1px solid rgba(99,102,241,0.45); border-radius:8px; padding:12px;">
                   <div class="aix-row-10">
-                    <div class="aix-xs-bold-strong"><span aria-hidden="true">📊</span> <span data-i18n="mw.zettai_learning_results">Kib Learning Results</span></div>
+                    <div class="aix-xs-bold-strong"><span aria-hidden="true">📊</span> <span data-i18n="mw.kib_learning_results">Kib Learning Results</span></div>
                     <div class="aix-row-11">
                       <button type="button" id="btn-ai-relearn-failed" class="btn-pill-toggle is-small" style="background: rgba(99,102,241,0.25); border: 1px solid rgba(99,102,241,0.55); color: var(--zn-text-strong);">
                         <span aria-hidden="true">🔁</span> <span data-i18n="ai.relearn_failed_btn">Relearn Failed Files</span>

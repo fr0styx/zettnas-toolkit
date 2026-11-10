@@ -13,8 +13,8 @@ Find it under **Network → Tailscale & WireGuard → Use from anywhere**.
 2. Scan the code with your phone, or open the link, and sign in with Google, Apple, Microsoft
    or GitHub. The card updates by itself.
 3. Install the Tailscale app on your phone and sign in with the same account.
-4. Press **Turn on HTTPS**. Kiboto then has an address like `https://zettnas.tail1234.ts.net/`
-   and Immich `https://zettnas.tail1234.ts.net:8443/`. Scan the code on the card to open
+4. Press **Turn on HTTPS**. Kiboto then has an address like `https://kiboto.tail1234.ts.net/`
+   and Immich `https://kiboto.tail1234.ts.net:8443/`. Scan the code on the card to open
    Kiboto on the phone, and type the Immich address in the Immich app.
 
 HTTPS needs **MagicDNS** and **HTTPS certificates** turned on, on the DNS page of the

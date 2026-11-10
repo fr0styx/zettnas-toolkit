@@ -11,8 +11,11 @@ The same goes for names stored outside Kiboto's data: replication's ZFS snapshot
 (zettnas-repl-, the next incremental send's base), the encrypted-dataset and data-id properties,
 the snapshot views, WORM and version folders, the NFS exports file, the fan watchdog's heartbeat
 file (its own contract), the secrets file, the restic location backup_migration made
-(zettnas-restic), the family calendar's DAV identity, the RAG schema's embedding id, and the WebDAV
-fallback secret (tokens signed with it).
+(zettnas-restic), the family calendar's DAV identity, the RAG schema's embedding id, the WebDAV
+fallback secret (tokens signed with it), the recovery-code hash prefix, the restic host id, VM serial
+sockets in saved VM definitions, the apps' .zettnas-secrets.json, the backup versions and dump names,
+and outside the app: the hardware runner's label (set on the runner), the deployed health worker's
+names, and the alert webhook's event name (zettnas_alert, which automations match on).
 """
 
 import os

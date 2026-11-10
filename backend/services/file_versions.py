@@ -127,7 +127,7 @@ def restore_version(path: str, version_id: str, overwrite: bool = False) -> str:
     real = os.path.realpath(path)
     folder = os.path.dirname(real)
     if overwrite:
-        fd, tmp = tempfile.mkstemp(prefix=".zettnas-restore-", dir=folder)
+        fd, tmp = tempfile.mkstemp(prefix=".kiboto-restore-", dir=folder)
         os.close(fd)
         try:
             shutil.copy2(src, tmp)

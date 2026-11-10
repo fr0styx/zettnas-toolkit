@@ -3,7 +3,7 @@
   <h1>Kiboto</h1>
   <p><strong>Find any file by what is in it, and ask about your files, privately on your own NAS. Plus files, apps, storage, backups and hardware in one web desktop.</strong></p>
   <p>
-    <a href="https://github.com/fr0styx/zettnas-toolkit/releases"><img src="https://img.shields.io/github/v/release/fr0styx/zettnas-toolkit?color=25c2a0&style=flat-square" alt="Latest release"></a>
+    <a href="https://github.com/fr0styx/kiboto/releases"><img src="https://img.shields.io/github/v/release/fr0styx/kiboto?color=25c2a0&style=flat-square" alt="Latest release"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="MIT license"></a>
     <img src="https://img.shields.io/badge/Runs%20on-Unraid%20%7C%20Linux%20%7C%20Docker-orange?style=flat-square" alt="Runs on Unraid, Linux and Docker">
   </p>
@@ -35,8 +35,8 @@ Kiboto runs as one container next to your existing system: Unraid, Debian, Ubunt
 ## Quick start
 
 ```bash
-mkdir -p zettnas && cd zettnas
-curl -fsSLO https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/docker-compose.linux.yml
+mkdir -p kiboto && cd kiboto
+curl -fsSLO https://raw.githubusercontent.com/fr0styx/kiboto/main/docker-compose.linux.yml
 docker compose -f docker-compose.linux.yml up -d
 ```
 
@@ -82,7 +82,7 @@ The backend is FastAPI with SQLite; the frontend is plain JavaScript modules bui
 ```bash
 npm install && npm run build      # frontend into static/
 npm test                          # frontend tests (Vitest)
-docker compose -f docker-compose.dev.yml --profile test run --rm zettnas-test   # backend tests (pytest)
+docker compose -f docker-compose.dev.yml --profile test run --rm kiboto-test   # backend tests (pytest)
 ```
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request, and [AGENTS.md](AGENTS.md) for the project's rules and invariants.

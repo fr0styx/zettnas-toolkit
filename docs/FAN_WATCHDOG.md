@@ -21,9 +21,9 @@ Add a second container from the template `unraid/kiboto-fan-watchdog.xml` (Docke
 → the template), or by hand:
 
 ```bash
-docker run -d --name zettnas-fan-watchdog --restart unless-stopped --no-healthcheck --network none \
+docker run -d --name kiboto-fan-watchdog --restart unless-stopped --no-healthcheck --network none \
   --cap-add SYS_RAWIO -v /sys:/host/sys:rw -v /dev:/host/dev:rw --device-cgroup-rule='c 1:1 rwm' \
-  -e HOST_SYS=/host/sys -e HOST_DEV=/host/dev -e DATA_DIR=/tmp/zettnas-watchdog \
+  -e HOST_SYS=/host/sys -e HOST_DEV=/host/dev -e DATA_DIR=/tmp/kiboto-watchdog \
   --memory 128m ghcr.io/fr0styx/zettnas-toolkit:latest python3 -m backend.fan_watchdog
 ```
 
@@ -33,13 +33,13 @@ After a reboot or an array stop:
   **Autostart** on. Turn it on for the watchdog on the Docker page.
 - **By hand:** `--restart unless-stopped` brings it back. A watchdog created from an image older
   than this fix carries Unraid's "managed" label, so Unraid stops it on purpose and it stays down:
-  remove it and run the command above again. `docker inspect zettnas-fan-watchdog --format
+  remove it and run the command above again. `docker inspect kiboto-fan-watchdog --format
   '{{index .Config.Labels "net.unraid.docker.managed"}}'` prints nothing when it is fine.
 
 ## Checking it
 
 ```bash
-docker exec zettnas-fan-watchdog python3 -m backend.fan_watchdog --check
+docker exec kiboto-fan-watchdog python3 -m backend.fan_watchdog --check
 ```
 
 prints the fan controller it can reach and how old the app's last heartbeat is.

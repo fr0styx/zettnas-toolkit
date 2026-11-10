@@ -154,7 +154,7 @@ raises is logged with its traceback and restarted after 1 s, 2 s, 4 s … up to 
 `/api/health` lists each daemon's state and restart count.
 
 `backend/docker_proxy.py` runs as a child process listening on
-`/run/zettnas/docker.sock`. The app reaches Docker only through it
+`/run/kiboto/docker.sock`. The app reaches Docker only through it
 (`backend.config.docker_sock()`). It handles one request per connection, checks
 the method and path against an allow-list, and inspects container-create and exec
 bodies for host-level settings. See SECURITY.md for the policy.

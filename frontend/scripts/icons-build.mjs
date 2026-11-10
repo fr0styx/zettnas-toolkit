@@ -143,7 +143,7 @@ export function iconizeDocument(src) {
 /** The Vite plugin: index.html and the window templates imported with ?raw. */
 export function iconsAtBuildTime() {
   return {
-    name: 'zettnas-icons-at-build-time',
+    name: 'kiboto-icons-at-build-time',
     enforce: 'pre',
     transformIndexHtml: { order: 'pre', handler: (html) => iconizeDocument(html) },
     load(id) {

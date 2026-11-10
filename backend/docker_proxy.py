@@ -32,7 +32,7 @@ from backend import legacy_names
 
 logger = logging.getLogger("Kiboto.docker_proxy")
 UPSTREAM = legacy_names.getenv("KIBOTO_DOCKER_UPSTREAM", "/var/run/docker.sock")
-LISTEN = legacy_names.getenv("KIBOTO_DOCKER_PROXY_SOCK", "/run/zettnas/docker.sock")
+LISTEN = legacy_names.getenv("KIBOTO_DOCKER_PROXY_SOCK", "/run/kiboto/docker.sock")
 ELEVATED_HEADER = "x-kiboto-elevated"
 MAX_HEAD = 64 * 1024
 MAX_POLICY_BODY = 4 * 1024 * 1024

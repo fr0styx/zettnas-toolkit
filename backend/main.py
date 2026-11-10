@@ -67,7 +67,7 @@ def _start_docker_proxy(supervise) -> None:
         return
     if not os.path.exists(RAW_DOCKER_SOCK):
         return
-    sock = legacy_names.getenv("KIBOTO_DOCKER_PROXY_SOCK", "/run/zettnas/docker.sock")
+    sock = legacy_names.getenv("KIBOTO_DOCKER_PROXY_SOCK", "/run/kiboto/docker.sock")
 
     def run() -> None:
         env = {**os.environ, "KIBOTO_DOCKER_PROXY_SOCK": sock}

@@ -7,7 +7,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: zettnas-toolkit:dev
+    image: kiboto:dev
     volumes:
       - ./app.py:/app/app.py:ro
       - ./backend:/app/backend:ro
@@ -16,15 +16,15 @@ services:
 
   # Test runner (OPS-14): same image with the dev tools, the working tree mounted
   # read-only, nothing shared with a running Kiboto. Run with:
-  #   docker compose -f docker-compose.dev.yml --profile test run --rm zettnas-test
-  zettnas-test:
+  #   docker compose -f docker-compose.dev.yml --profile test run --rm kiboto-test
+  kiboto-test:
     profiles: ["test"]
     build:
       context: .
       dockerfile: Dockerfile
       args:
         DEV_BUILD: "1"
-    image: zettnas-toolkit:test
+    image: kiboto:test
     working_dir: /src
     volumes:
       - ./:/src:ro

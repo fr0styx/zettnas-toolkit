@@ -183,7 +183,7 @@ def test_initialize_remembers_the_client(monkeypatch):
         _token_principal([]),
         "http://nas",
     )
-    assert reply["result"]["serverInfo"]["name"] == "zettnas"
+    assert reply["result"]["serverInfo"]["name"] == "kiboto"
     assert seen == [("t1", "Cursor 1.4")]
     seen.clear()
     mcp.handle_message(

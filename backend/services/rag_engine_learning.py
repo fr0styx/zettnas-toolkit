@@ -870,7 +870,7 @@ class RagLearningMixin:
             ]
         except Exception as e:
             return {
-                "zettai_status": "Error",
+                "kib_status": "Error",
                 "status_reason": str(e),
                 "succeeded_count": 0,
                 "failed_count": 0,
@@ -897,7 +897,7 @@ class RagLearningMixin:
             reason = "No pending learning tasks."
 
         return {
-            "zettai_status": z_status,
+            "kib_status": z_status,
             "status_reason": reason,
             "resume_time": resume_time or None,
             "succeeded_count": int(succeeded_count),

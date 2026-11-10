@@ -73,7 +73,11 @@ def sweep(now: float | None = None, force: bool = False) -> list[str]:
             at = float(entry.get("at") or 0)
             if at >= PROCESS_START and now - at < TTL_S:
                 continue  # may still be going on
-            paths = [str(p) for p in entry.get("paths") or [] if ".zettnas_" in os.path.basename(str(p))]
+            paths = [
+                str(p)
+                for p in entry.get("paths") or []
+                if (".kiboto_" in os.path.basename(str(p)) or ".zettnas_" in os.path.basename(str(p)))
+            ]  # zettnas_: before the rebrand
             if any(_asleep(p) for p in paths):
                 continue  # next time, once the disk is awake
             try:

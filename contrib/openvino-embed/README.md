@@ -22,14 +22,14 @@ Run it on the app's Docker network with no published port, so only containers on
 can reach it. An optional token keeps the other containers out too:
 
 ```bash
-docker build -t zettnas-eg2 contrib/openvino-embed
-docker run -d --name zettnas-eg2 --restart unless-stopped --device /dev/dri \
-  --network <the app's network> -e TOKEN=<a long random string> -v <dir>:/models:ro zettnas-eg2
+docker build -t kiboto-eg2 contrib/openvino-embed
+docker run -d --name kiboto-eg2 --restart unless-stopped --device /dev/dri \
+  --network <the app's network> -e TOKEN=<a long random string> -v <dir>:/models:ro kiboto-eg2
 ```
 
 Give the Kiboto container the same value as `EMBEDDING_TOKEN`; it is sent only with embedding
 requests. Then re-embed the index onto it (AI settings, or `POST /api/ai/reindex` with
-`{"embedding_model": "embeddinggemma-2-ov", "embedding_dim": 768, "embedding_host": "http://zettnas-eg2:11434"}`).
+`{"embedding_model": "embeddinggemma-2-ov", "embedding_dim": 768, "embedding_host": "http://kiboto-eg2:11434"}`).
 Search keeps using the old vectors until every chunk is done.
 
 ## Notes

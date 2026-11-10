@@ -563,7 +563,7 @@ export async function updateAiServiceConfig(partialConfig = {}) {
     await fetchAndRenderAiStatus();
     return res;
   } catch (err) {
-    showToast(t('toast.failed_to_update_zettai_configuration', 'Failed to update Kib configuration: {error}', { error: err.message }), 'error');
+    showToast(t('toast.failed_to_update_kib_configuration', 'Failed to update Kib configuration: {error}', { error: err.message }), 'error');
     return null;
   }
 }
@@ -628,12 +628,12 @@ export async function relearnAiFailedFiles() {
   }
 }
 
-export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, zettaiStatus = '') {
+export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, kibStatus = '') {
   const state = String(syncProg.state || 'idle').toLowerCase();
   const isRunning = state === 'running' || Boolean(syncProg.is_scanning);
   const isPaused = state === 'paused' || Boolean(syncProg.is_paused);
   const isStopped = state === 'stopped';
-  const isDisabled = String(zettaiStatus || '').toLowerCase() === 'disabled' || syncProg.enabled === false;
+  const isDisabled = String(kibStatus || '').toLowerCase() === 'disabled' || syncProg.enabled === false;
   const isComplete = !isRunning && !isPaused && !isStopped && !isDisabled && (
     state === 'completed' ||
     Number(syncProg.indexed_files || 0) > 0 ||
@@ -717,7 +717,7 @@ export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, zettaiS
             ? 'STOPPED'
             : isComplete
               ? 'COMPLETE'
-              : (zettaiStatus ? String(zettaiStatus).toUpperCase() : 'IDLE');
+              : (kibStatus ? String(kibStatus).toUpperCase() : 'IDLE');
     statePill.textContent = pillLabel;
     statePill.style.background = isPaused
       ? 'rgba(245,158,11,0.22)'
@@ -2048,7 +2048,7 @@ export async function fetchAndRenderAiStatus() {
       is_paused: Boolean(res.is_paused),
       enabled: res.enabled,
     };
-    updateAiSyncProgressUi(syncProg, res.standby_guard || {}, res.zettai_status || '');
+    updateAiSyncProgressUi(syncProg, res.standby_guard || {}, res.kib_status || res.zettai_status || '');
 
     // Update Watched Folders & Discovered Shares
     const watchedList = res.watched_paths || res.config?.watched_paths || stats.watched_paths || ['/mnt/user'];
@@ -3288,7 +3288,7 @@ export async function exportActiveAiThread(format = 'markdown') {
     const a = document.createElement('a');
     a.href = url;
     const cleanFileName = title.toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 40) || 'chat';
-    a.download = `zettai_${cleanFileName}.${ext}`;
+    a.download = `kib_${cleanFileName}.${ext}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -3593,7 +3593,7 @@ export function setAiChatFocus(path, name = '') {
 }
 
 /** Opens Ask Kib with a file or folder in focus. */
-export function askZettyAbout(path, name = '') {
+export function askKibAbout(path, name = '') {
   if (typeof window.openManagementSection === 'function') window.openManagementSection('mgmt-sec-ai', 'mgmt-pane-ai-chat');
   setTimeout(() => {
     document.querySelector('.mgmt-inner-tab[data-tab-target="mgmt-pane-ai-chat"]')?.click();
@@ -3605,7 +3605,7 @@ export function askZettyAbout(path, name = '') {
     }
   }, 350);
 }
-if (typeof window !== 'undefined') window.askZettyAbout = askZettyAbout;
+if (typeof window !== 'undefined') window.askKibAbout = askKibAbout;
 
 export async function sendAiChatMessage(rawMessage = null) {
   const inputEl = document.getElementById('ai-chat-input');

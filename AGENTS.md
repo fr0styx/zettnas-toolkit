@@ -52,7 +52,7 @@ This document serves as your operational blueprint, covering the architecture, d
 ## 2. Repository Layout & Key Directories
 
 ```
-zettnas-toolkit/
+kiboto/
 ├── backend/
 │   ├── main.py                     # Entry point: the FastAPI app, middleware, routers and daemons
 │   ├── auth.py                     # Session validation, cookie handling, reverse proxy auth
@@ -120,7 +120,7 @@ zettnas-toolkit/
 ### 3.1 Where Commands Run
 - Run git, builds, linters and test suites **on the machine that physically hosts the repository** (your dev box or NAS), in the repository root.
 - Host-specific details (hostnames, IPs, SSH users, mount paths) are **never committed**. Keep them in your own untracked notes or shell environment, not in this file.
-- The examples below assume you are in the repository root and the app container is named `zettnas-toolkit` (the default `container_name` in the Compose files). Adjust if yours differs.
+- The examples below assume you are in the repository root and the app container is named `kiboto` (the default `container_name` in the Compose files). Adjust if yours differs.
 
 ### 3.2 Network Share Rule
 > [!CRITICAL]
@@ -138,7 +138,7 @@ Whenever you modify files in `frontend/src/` or `frontend/index.html`:
    ```
 3. **Copy built assets to the running container** (dev deployments only):
    ```bash
-   docker cp ./static/. zettnas-toolkit:/app/static/
+   docker cp ./static/. kiboto:/app/static/
    ```
 4. **Verify container response** (replace `8082` if you changed `PORT`):
    ```bash
@@ -178,7 +178,7 @@ npm test
 
 #### Step 3: Run Backend Pytest Suite:
 ```bash
-docker exec -i zettnas-toolkit python3 -m pytest -q /app/tests
+docker exec -i kiboto python3 -m pytest -q /app/tests
 ```
 
 #### Run Specific Frontend Test:
@@ -188,7 +188,7 @@ node ./node_modules/vitest/dist/cli.js run frontend/src/__tests__/<test_name>.te
 
 #### Run Specific Backend Test:
 ```bash
-docker exec -i zettnas-toolkit python3 -m pytest -v /app/tests/test_docker_updates.py
+docker exec -i kiboto python3 -m pytest -v /app/tests/test_docker_updates.py
 ```
 
 ---

@@ -825,7 +825,7 @@ def delete_model_endpoint(model_id: str) -> dict[str, Any]:
     "/ai/learning/results",
     dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))],
 )
-def get_zettai_learning_results(
+def get_kib_learning_results(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
     """Returns Kib 6-state learning status, succeeded/failed counts, and failed file list."""
@@ -1207,7 +1207,7 @@ def get_ai_chat_tools() -> dict[str, Any]:
         Depends(rate_limit("ai.chat", 20, 60)),
     ],
 )
-async def chat_with_zettai_agent(
+async def chat_with_kib_agent(
     req: AiChatRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
@@ -1292,7 +1292,7 @@ async def chat_with_zettai_agent(
         Depends(rate_limit("ai.chat", 20, 60)),
     ],
 )
-async def chat_with_zettai_agent_stream(
+async def chat_with_kib_agent_stream(
     req: AiChatRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> Response:
