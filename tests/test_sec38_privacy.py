@@ -38,6 +38,16 @@ def test_only_the_logo_hosts(url, ok):
     assert catalog_logos.allowed(url) is ok
 
 
+def test_the_fetched_address_is_rebuilt_from_the_allow_list():
+    assert catalog_logos.rebuilt(ICON) == ICON
+    assert (
+        catalog_logos.rebuilt("https://cdn.jsdelivr.net/a b/c%20d.png?x=1#y")
+        == "https://cdn.jsdelivr.net/a%20b/c%20d.png"
+    )
+    with pytest.raises(ValueError):
+        catalog_logos.rebuilt("https://evil.example/x.png")
+
+
 def test_fetched_once_then_served_from_the_cache(cache):
     calls = []
 

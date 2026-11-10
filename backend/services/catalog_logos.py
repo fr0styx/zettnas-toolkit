@@ -58,12 +58,21 @@ class _SameHostRedirects(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def fetch(url: str) -> tuple[bytes, str]:
-    """The logo's bytes and media type, from one of the logo hosts only."""
+def rebuilt(url: str) -> str:
+    """The address Kiboto fetches: the host is one of LOGO_HOSTS' own strings and the path is quoted,
+    so nothing from the request decides where the connection goes (CodeQL py/full-ssrf)."""
     if not allowed(url):
         raise ValueError("not a logo host")
+    u = urllib.parse.urlsplit(url)
+    host = next(h for h in LOGO_HOSTS if h == u.hostname)
+    return f"https://{host}{urllib.parse.quote(urllib.parse.unquote(u.path), safe='/@:+-._~')}"
+
+
+def fetch(url: str) -> tuple[bytes, str]:
+    """The logo's bytes and media type, from one of the logo hosts only."""
+    target = rebuilt(url)
     opener = urllib.request.build_opener(_SameHostRedirects)
-    req = urllib.request.Request(url, headers={"User-Agent": "Kiboto-catalog/1.0", "Accept": "image/*"})
+    req = urllib.request.Request(target, headers={"User-Agent": "Kiboto-catalog/1.0", "Accept": "image/*"})
     with opener.open(req, timeout=TIMEOUT) as r:  # noqa: S310 (https to LOGO_HOSTS only, checked above)
         ctype = (r.headers.get("Content-Type") or "").split(";")[0].strip().lower()
         data = r.read(MAX_BYTES + 1)
