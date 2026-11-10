@@ -3,6 +3,7 @@
  * the internet through Tailscale Funnel, on a port of its own. Kiboto's own page never goes there.
  */
 import { api } from '../../api.js';
+import '../../styles/80-public-apps.css'; // loads with the card, not on every page
 import { t } from '../../i18n.js';
 import { showToast } from '../../toast.js';
 import { escapeHtml } from '../../utils.js';

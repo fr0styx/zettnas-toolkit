@@ -4,6 +4,7 @@
  * module puts its row in here and reports how many of its chips are chosen.
  */
 import { t } from '../../i18n.js';
+import '../../styles/82-ai-filters.css'; // loads with the AI search
 
 const FOLD_ID = 'ai-more-filters';
 const OPEN_KEY = 'kiboto_ai_filters_open';

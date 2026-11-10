@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../passkeys.js', () => ({ passkeySignIn: vi.fn(), passkeysAvailable: vi.fn(() => true) }));
+vi.mock('../passkeys-check.js', () => ({ passkeysAvailable: vi.fn(() => true) }));
 vi.mock('../toast.js', () => ({ showToast: vi.fn() }));
 vi.mock('../components/setup-wizard-gate.js', () => ({ openSetupWizard: vi.fn() }));
 vi.mock('../components/session.js', () => ({

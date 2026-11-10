@@ -4,12 +4,7 @@
  * with a name (https://<name>, or localhost), never on http://<an IP address>.
  */
 
-/** Whether this page can use passkeys at all. */
-export function passkeysAvailable(win = window) {
-  const host = String(win?.location?.hostname || '');
-  const isIp = /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(':') || host.startsWith('[');
-  return Boolean(win && win.PublicKeyCredential && win.isSecureContext && host && !isIp);
-}
+export { passkeysAvailable } from './passkeys-check.js';
 
 /** base64url text → ArrayBuffer */
 export function fromB64(text) {

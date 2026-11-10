@@ -10,7 +10,7 @@ import { escapeHtml } from '../utils.js';
 import { showToast } from '../toast.js';
 import { fetchCurrentProfile, getCurrentUser, setCurrentUser, promptRequiredMfa } from './session.js';
 import { openSetupWizard } from './setup-wizard-gate.js';
-import { passkeySignIn, passkeysAvailable } from '../passkeys.js';
+import { passkeysAvailable } from '../passkeys-check.js';
 
 import { formatDate, formatTime } from '../format.js';
 let _pendingMfaToken = null;
@@ -471,6 +471,7 @@ export async function signInWithPasskey(mfaToken = '') {
   const remember = /** @type {HTMLInputElement | null} */ (document.getElementById('login-remember-me'));
   _showLoginError('');
   try {
+    const { passkeySignIn } = await import('../passkeys.js'); // loaded only when used (first-load budget)
     const data = await passkeySignIn({ mfaToken, rememberMe: remember ? remember.checked : true });
     _pendingMfaToken = null;
     finishSignIn(data);

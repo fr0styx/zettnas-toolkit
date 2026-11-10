@@ -3,6 +3,7 @@
  * a security key), rename it, remove it.
  */
 import { api } from '../api.js';
+import '../styles/81-passkeys.css'; // loads with the card, not on every page
 import { t } from '../i18n.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { escapeHtml } from '../utils.js';
