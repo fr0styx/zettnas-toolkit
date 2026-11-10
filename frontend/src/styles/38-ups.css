@@ -10,7 +10,7 @@
   margin: 16px 0;
   padding: 18px 20px;
   border-radius: 12px;
-  background: var(--lt-b-10192873, rgba(16, 25, 40, 0.45));
+  background: var(--lt-b-11232773, rgba(17, 35, 39, 0.45));
   border: 1px solid var(--zn-line-8);
   backdrop-filter: blur(16px);
   position: relative;
@@ -329,7 +329,7 @@
   background: var(--zn-shade-40);
   border: 1px solid var(--zn-line-12);
   border-radius: 8px;
-  color: var(--fg, #eaf1f8);
+  color: var(--fg, #e6efef);
   font-size: 13px;
   font-weight: 500;
   padding: 8px 12px;
@@ -347,12 +347,12 @@
 
 .input-modern:focus {
   border-color: var(--ok2, #33cdb8);
-  background: var(--lt-b-0b131eff, #0b131e);
+  background: var(--lt-b-0c1a1dff, #0c1a1d);
   box-shadow: 0 0 0 3px rgba(51, 205, 184, 0.22);
 }
 
 .input-modern::placeholder {
-  color: var(--lt-t-94a3b873, rgba(148, 163, 184, 0.45));
+  color: var(--lt-t-95a8ab73, rgba(149, 168, 171, 0.45));
   font-weight: 400;
 }
 

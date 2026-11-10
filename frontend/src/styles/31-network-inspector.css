@@ -11,7 +11,7 @@
 }
 
 .network-kpi-card {
-  background: var(--lt-b-0f172a73, rgba(15, 23, 42, 0.45));
+  background: var(--lt-b-0e1c1e73, rgba(14, 28, 30, 0.45));
   border: 1px solid var(--zn-line-8);
   border-radius: 10px;
   padding: 12px 14px;
@@ -37,7 +37,7 @@
 .network-kpi-val {
   font-size: 18px;
   font-weight: 700;
-  color: var(--lt-t-f8fafcff, #f8fafc);
+  color: var(--lt-t-f5f9f9ff, #f5f9f9);
   font-family: var(--font-mono, monospace);
   letter-spacing: -0.02em;
 }
@@ -84,7 +84,7 @@
 
 /* Front-Panel Switch Chassis */
 .network-switch-chassis {
-  background: linear-gradient(180deg, var(--lt-b-131b2eff, #131b2e) 0%, var(--lt-b-0b1120ff, #0b1120) 100%);
+  background: linear-gradient(180deg, var(--lt-b-14292dff, #14292d) 0%, var(--lt-b-0c1c1fff, #0c1c1f) 100%);
   border: 1px solid var(--zn-line-12);
   border-radius: 12px;
   padding: 16px;
@@ -102,7 +102,7 @@
 .switch-port-jack {
   flex: 1 1 200px;
   max-width: 320px;
-  background: var(--lt-b-0f172aa6, rgba(15, 23, 42, 0.65));
+  background: var(--lt-b-0e1c1ea6, rgba(14, 28, 30, 0.65));
   border: 1px solid var(--zn-line-10);
   border-radius: 8px;
   padding: 12px;
@@ -147,7 +147,7 @@
 .net-docker-delete-btn {
   background: transparent;
   border: 1px solid transparent;
-  color: var(--muted, #64748b);
+  color: var(--muted, #6c8084);
   cursor: pointer;
   border-radius: 4px;
   padding: 3px 6px;
@@ -194,7 +194,7 @@
 .switch-led-lbl {
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  color: var(--lt-t-64748bff, #64748b);
+  color: var(--lt-t-6c8084ff, #6c8084);
   text-transform: uppercase;
 }
 
@@ -202,7 +202,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--lt-b-334155ff, #334155);
+  background: var(--lt-b-33464aff, #33464a);
   transition: all 0.3s;
 }
 
@@ -229,7 +229,7 @@
 
 /* Port SVG Cutout representation */
 .switch-port-socket {
-  background: var(--lt-b-090e1aff, #090e1a);
+  background: var(--lt-b-0a1719ff, #0a1719);
   border: 1px solid var(--zn-line-15);
   border-radius: 5px;
   height: 44px;
@@ -277,14 +277,14 @@
 }
 
 .switch-speed-pill.speed-down {
-  background: rgba(148, 163, 184, 0.1);
+  background: rgba(149, 168, 171, 0.1);
   color: var(--zn-text-muted);
-  border-color: rgba(148, 163, 184, 0.2);
+  border-color: rgba(149, 168, 171, 0.2);
 }
 
 .switch-port-meta {
   font-size: var(--zn-fs-xs);
-  color: var(--lt-t-64748bff, #64748b);
+  color: var(--lt-t-6c8084ff, #6c8084);
   font-family: var(--font-mono, monospace);
 }
 
@@ -304,7 +304,7 @@
 }
 
 .network-card {
-  background: var(--lt-b-0f172a73, rgba(15, 23, 42, 0.45));
+  background: var(--lt-b-0e1c1e73, rgba(14, 28, 30, 0.45));
   border: 1px solid var(--zn-line-8);
   border-radius: 8px;
   overflow: hidden;
@@ -331,7 +331,7 @@
 }
 
 .network-bridge-card {
-  background: var(--lt-b-0f172a66, rgba(15, 23, 42, 0.4));
+  background: var(--lt-b-0e1c1e66, rgba(14, 28, 30, 0.4));
   border: 1px solid var(--zn-line-8);
   border-radius: 8px;
   padding: 12px 14px;
@@ -348,7 +348,7 @@
   font-weight: 700;
   font-size: 13px;
   font-family: var(--font-mono, monospace);
-  color: var(--lt-t-f8fafcff, #f8fafc);
+  color: var(--lt-t-f5f9f9ff, #f5f9f9);
 }
 
 .network-bridge-ip {
@@ -382,7 +382,7 @@
 }
 
 .network-docker-card {
-  background: var(--lt-b-0f172a66, rgba(15, 23, 42, 0.4));
+  background: var(--lt-b-0e1c1e66, rgba(14, 28, 30, 0.4));
   border: 1px solid var(--zn-line-8);
   border-radius: 8px;
   padding: 12px 14px;
@@ -448,7 +448,7 @@
 
 .network-chip-name {
   font-weight: 600;
-  color: var(--lt-t-f8fafcff, #f8fafc);
+  color: var(--lt-t-f5f9f9ff, #f5f9f9);
 }
 
 .network-chip-ip {

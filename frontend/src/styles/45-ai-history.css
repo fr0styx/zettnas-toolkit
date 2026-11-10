@@ -20,7 +20,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--card, rgba(15, 23, 42, 0.65));
+  background: var(--card, rgba(14, 28, 30, 0.65));
   border: 1px solid var(--border, rgba(99, 102, 241, 0.35));
   border-radius: 10px;
   padding: 10px;
@@ -102,7 +102,7 @@
   height: 30px;
   padding: 0 8px;
   font-size: var(--zn-fs-xs);
-  background: var(--lt-b-02061766, rgba(2, 6, 23, 0.4));
+  background: var(--lt-b-050b0c66, rgba(5, 11, 12, 0.4));
   border: 1px solid var(--border, var(--zn-line-8));
   border-radius: 6px;
   color: var(--zn-text-bright);
@@ -242,7 +242,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--card, rgba(15, 23, 42, 0.52));
+  background: var(--card, rgba(14, 28, 30, 0.52));
   border: 1px solid var(--border, rgba(99, 102, 241, 0.35));
   border-radius: 10px;
   padding: 14px;

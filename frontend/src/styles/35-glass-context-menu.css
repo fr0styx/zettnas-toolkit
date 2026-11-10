@@ -35,7 +35,7 @@
 
 /* The light theme lightens whatever wallpaper is under it instead of darkening it (UX-33) */
 body.theme-light #desktop-wallpaper-dimmer {
-  background: rgba(248, 250, 252, calc(var(--wallpaper-dim, 0.15) + 0.35));
+  background: rgba(245, 249, 249, calc(var(--wallpaper-dim, 0.15) + 0.35));
 }
 
 html.has-wallpaper-blur #desktop-wallpaper-dimmer {
@@ -67,7 +67,7 @@ body.no-specular-glow .active-window {
 /* 3. Window Corner Radius Selector */
 .window-radius-btn.active {
   background: var(--brand, #33cdb8) !important;
-  color: #0b1118 !important;
+  color: #0c1517 !important;
   font-weight: 700 !important;
   border-color: var(--brand, #33cdb8) !important;
   box-shadow: 0 0 10px rgba(var(--accent-rgb, 51, 205, 184), 0.35);
@@ -93,7 +93,7 @@ input[type="range"].tz-range-slider::-webkit-slider-thumb {
   background: var(--brand, #33cdb8);
   box-shadow: 0 0 8px rgba(var(--accent-rgb, 51, 205, 184), 0.5);
   cursor: pointer;
-  border: 2px solid var(--lt-r-0d141eff, #0d141e);
+  border: 2px solid var(--lt-r-0e1b1dff, #0e1b1d);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -109,7 +109,7 @@ input[type="range"].tz-range-slider::-moz-range-thumb {
   background: var(--brand, #33cdb8);
   box-shadow: 0 0 8px rgba(var(--accent-rgb, 51, 205, 184), 0.5);
   cursor: pointer;
-  border: 2px solid var(--lt-r-0d141eff, #0d141e);
+  border: 2px solid var(--lt-r-0e1b1dff, #0e1b1d);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -120,7 +120,7 @@ input[type="range"].tz-range-slider::-moz-range-thumb {
   position: fixed;
   z-index: 99998;
   min-width: 220px;
-  background: var(--lt-b-121a24e0, rgba(18, 26, 36, 0.88));
+  background: var(--lt-b-132023e0, rgba(19, 32, 35, 0.88));
   -webkit-backdrop-filter: blur(28px);
   backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid var(--zn-line-12);

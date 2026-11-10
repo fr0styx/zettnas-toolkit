@@ -1091,7 +1091,7 @@
     min-width: 100% !important;
     height: auto !important;
     flex-shrink: 0 !important;
-    background: var(--lt-b-0a1018fa, rgba(10, 16, 24, 0.98)) !important;
+    background: var(--lt-b-0b1517fa, rgba(11, 21, 23, 0.98)) !important;
     border-right: none !important;
     border-bottom: 1px solid var(--zn-line-8) !important;
     padding: 6px 8px !important;
@@ -1226,7 +1226,7 @@
     border-right: none !important;
     border-bottom: none !important;
     border-top: 1px solid var(--zn-line-12) !important;
-    background: var(--lt-b-0a101af0, rgba(10, 16, 26, 0.94)) !important;
+    background: var(--lt-b-0b1719f0, rgba(11, 23, 25, 0.94)) !important;
     -webkit-backdrop-filter: blur(24px) !important;
     backdrop-filter: blur(24px) !important;
     padding: 0 4px calc(env(safe-area-inset-bottom, 0px)) 4px !important;
@@ -1395,7 +1395,7 @@
   .copy-history-table.responsive-cards tbody tr {
     display: flex !important;
     flex-direction: column !important;
-    background: var(--lt-b-0f172aa6, rgba(15, 23, 42, 0.65)) !important;
+    background: var(--lt-b-0e1c1ea6, rgba(14, 28, 30, 0.65)) !important;
     border: 1px solid var(--zn-line-8) !important;
     border-radius: 10px !important;
     padding: 12px 14px !important;

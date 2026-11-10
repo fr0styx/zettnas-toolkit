@@ -232,7 +232,7 @@ export function openVmEditModal(vmId, vmObj = null) {
               <label class="vme-xs-bold-muted-2" for="vm-edit-iso">${t('vmd.iso_label', 'ISO image (CD-ROM)')}</label>
               ${targetVm.iso_path ? `<span class="vme-xs-warn">${ico('💿')} ${t('vmd.iso_attached', 'Attached')}</span>` : ''}
             </div>
-            <select id="vm-edit-iso" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
+            <select id="vm-edit-iso" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
               <option value="">${t('vmd.iso_none', 'None (empty drive)')}</option>
               ${vmState.isos.map((iso) => `<option value="${escapeHtml(iso.path)}" ${iso.path === targetVm.iso_path ? 'selected' : ''}>${escapeHtml(iso.name)} (${iso.size_formatted})</option>`).join('')}
             </select>
@@ -297,7 +297,7 @@ export function openVmEditModal(vmId, vmObj = null) {
               ${t('vmd.gpu_accel', 'GPU accelerated')}
             </span>
           </div>
-          <select id="vm-edit-video-adapter" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
+          <select id="vm-edit-video-adapter" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
             <option value="virtio-gpu" ${targetVideo === 'virtio-gpu' ? 'selected' : ''}>${t('vmd.v_virtio', 'VirtIO-GPU (recommended, 2D/3D acceleration on Linux)')}</option>
             <option value="qxl" ${targetVideo === 'qxl' ? 'selected' : ''}>${t('vmd.v_qxl', 'QXL (SPICE, Windows drivers)')}</option>
             <option value="vga" ${targetVideo === 'vga' ? 'selected' : ''}>${t('vmd.v_vga', 'Standard VGA (works everywhere)')}</option>
@@ -603,11 +603,11 @@ export function openVmEditModal(vmId, vmObj = null) {
     row.innerHTML = `
       <input type="text" class="share-host-path vme-xs-strong-box-grow" placeholder="/mnt/user/appdata" value="${escapeHtml(share.host_path || '/mnt/user/appdata')}" />
       <input type="text" class="share-mount-tag vme-xs-strong-box-grow-2" placeholder="appdata" value="${escapeHtml(share.mount_tag || 'appdata')}" />
-      <select class="share-driver" style="flex: 1; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
+      <select class="share-driver" style="flex: 1; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
         <option value="virtiofs" ${share.driver === 'virtiofs' ? 'selected' : ''}>${'VirtIO-FS'}</option>
         <option value="9p" ${share.driver === '9p' ? 'selected' : ''}>9p</option>
       </select>
-      <select class="share-mode" style="width: 60px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
+      <select class="share-mode" style="width: 60px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
         <option value="rw" ${!share.readonly ? 'selected' : ''}>RW</option>
         <option value="ro" ${share.readonly ? 'selected' : ''}>RO</option>
       </select>
@@ -634,7 +634,7 @@ export function openVmEditModal(vmId, vmObj = null) {
     row.innerHTML = `
       <input type="text" class="disk-name vme-xs-strong-box-grow" placeholder="${t('ui.disk_name', 'Disk Name')}" value="${escapeHtml(disk.name || `data-disk-${idx}`)}" />
       <input type="number" class="disk-size vme-xs-strong-box-4" min="5" max="4000" placeholder="${t('ui.size_gb', 'Size (GB)')}" value="${disk.size_gb || 50}" />
-      <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
+      <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
         <option value="virtio" ${disk.bus === 'virtio' ? 'selected' : ''}>virtio</option>
         <option value="sata" ${disk.bus === 'sata' ? 'selected' : ''}>sata</option>
         <option value="nvme" ${disk.bus === 'nvme' ? 'selected' : ''}>nvme</option>

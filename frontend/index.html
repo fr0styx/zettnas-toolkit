@@ -67,9 +67,9 @@
           css += '#desktop-widgets-container { transform: scale(1.1) !important; transform-origin: ' + origin + ' !important; height: calc((100% - var(--workspace-inset-bottom, 68px) - 48px) / 1.1) !important; }\n';
         }
         if (wCfg.opacity === 'glass-subtle') {
-          css += '#desktop-widgets-container .desktop-widget { background: rgba(13, 20, 30, 0.4) !important; backdrop-filter: blur(8px) !important; }\n';
+          css += '#desktop-widgets-container .desktop-widget { background: rgba(14, 27, 29, 0.4) !important; backdrop-filter: blur(8px) !important; }\n';
         } else if (wCfg.opacity === 'glass-solid') {
-          css += '#desktop-widgets-container .desktop-widget { background: rgba(13, 20, 30, 0.88) !important; backdrop-filter: blur(24px) !important; }\n';
+          css += '#desktop-widgets-container .desktop-widget { background: rgba(14, 27, 29, 0.88) !important; backdrop-filter: blur(24px) !important; }\n';
         }
         if (wCfg.widgets) {
           for (var wid in wCfg.widgets) {
@@ -198,7 +198,7 @@
             var sec = subToSec[ap] || ap;
             var subCss = '';
             // Reset active styles from HUB sidebar button
-            subCss += '.mgmt-sidebar-item[data-mgmt-target="management-hub-view"] { background: transparent !important; border-color: transparent !important; color: #94a3b8 !important; font-weight: 600 !important; }\n';
+            subCss += '.mgmt-sidebar-item[data-mgmt-target="management-hub-view"] { background: transparent !important; border-color: transparent !important; color: #95a8ab !important; font-weight: 600 !important; }\n';
             subCss += '.mgmt-sidebar-item[data-mgmt-target="management-hub-view"]::before { display: none !important; }\n';
             // Apply active styles to the target section sidebar button
             subCss += '.mgmt-sidebar-item[data-mgmt-target="' + sec + '"] { background: rgba(51, 205, 184, 0.14) !important; border-color: rgba(51, 205, 184, 0.35) !important; color: #fff !important; font-weight: 700 !important; }\n';
@@ -213,7 +213,7 @@
               subCss += '.mgmt-content-pane { padding-top: 0 !important; }\n';
             }
             if (ap !== sec) {
-              subCss += '#' + sec + ' .mgmt-inner-tab { background: transparent !important; color: #94a3b8 !important; border-color: transparent !important; }\n';
+              subCss += '#' + sec + ' .mgmt-inner-tab { background: transparent !important; color: #95a8ab !important; border-color: transparent !important; }\n';
               subCss += '#' + sec + ' .mgmt-inner-tab[data-tab-target="' + ap + '"] { background: rgba(51, 205, 184, 0.16) !important; color: #fff !important; border-color: rgba(51, 205, 184, 0.4) !important; font-weight: 700 !important; }\n';
               subCss += '#' + sec + ' .mgmt-tab-pane { display: none !important; }\n';
               subCss += '#' + ap + ' { display: block !important; }\n';
@@ -232,8 +232,8 @@
 </script>
 <style>
   html, body {
-    background-color: #080c10;
-    color: #eaf1f8;
+    background-color: #080e10;
+    color: #e6efef;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -241,15 +241,15 @@
     overflow: hidden;
   }
   html.auth-required body {
-    background-color: #080c10 !important;
-    background: radial-gradient(circle at 50% 20%, #151d29 0%, #080c10 70%) !important;
+    background-color: #080e10 !important;
+    background: radial-gradient(circle at 50% 20%, #162528 0%, #080e10 70%) !important;
   }
   #login-overlay {
     display: flex;
     position: fixed;
     inset: 0;
     z-index: 999999;
-    background: #080c10;
+    background: #080e10;
     align-items: center;
     justify-content: center;
   }
@@ -498,8 +498,8 @@
     </symbol>
     <symbol id="i-yak" viewBox="0 0 32 32">
       <path d="M5 6 C3 12, 8 14, 11 14 C10 16, 9 18, 10 20 C8 21, 6 22, 6 25 C6 28, 10 29, 16 29 C22 29, 26 28, 26 25 C26 22, 24 21, 22 20 C23 18, 22 16, 21 14 C24 14, 29 12, 27 6 C24 6, 20 10, 18 12 C14 12, 12 12, 8 10 C7 8, 6 6, 5 6 Z" fill="currentColor"/>
-      <circle cx="13" cy="22" r="1.5" fill="#0b131a"/>
-      <circle cx="19" cy="22" r="1.5" fill="#0b131a"/>
+      <circle cx="13" cy="22" r="1.5" fill="#0c1719"/>
+      <circle cx="19" cy="22" r="1.5" fill="#0c1719"/>
     </symbol>
     <symbol id="i-storage" viewBox="0 0 24 24">
       <path d="M18 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 2v2h-2V4h2zm-4 0v2h-2V4h2zm6 16H8V8h12v12z" fill="currentColor"/>

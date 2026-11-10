@@ -46,7 +46,7 @@
 .sec-advisor-item:focus-visible .sec-advisor-action-pill {
   background: var(--brand, #38bdf8);
   border-color: var(--brand, #38bdf8);
-  color: #0b1120;
+  color: #0c1c1f;
 }
 
 @keyframes elementFocusPulse {

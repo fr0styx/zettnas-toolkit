@@ -64,7 +64,7 @@ def test_other_themes_get_the_original_colour():
     assert "var(--lt-b-0d141eff, #0d141e)" in out
     assert "var(--lt-r-ffffff17, rgba(255,255,255,0.09))" in out
     # colours with a semantic token (UX-10) get the token, whose dark value is that colour
-    assert lt.rewrite_css(".y { color: #e2e8f0; }") == ".y { color: var(--zn-text); }"
+    assert lt.rewrite_css(".y { color: #e6efef; }") == ".y { color: var(--zn-text); }"
     # every fallback is exactly the original literal
     for _k, key, fallback in re.findall(r"var\(--lt-([tbr])-([0-9a-f]{8}), ([^()]*(?:\([^()]*\))?)\)", out):
         assert lt.key(lt.parse(fallback)) == key
@@ -73,9 +73,9 @@ def test_other_themes_get_the_original_colour():
 def test_lcd_and_previews_are_left_alone():
     css = "#screen .card { color: #e2e8f0; } .dt-window { background: #0d141e; } body.theme-light .x { color: #fff; }"
     assert lt.rewrite_css(css) == css
-    html = '<div id="console-window"><div id="screen"><span style="color:#e2e8f0">x</span></div></div><b style="color:#e2e8f0">y</b>'
+    html = '<div id="console-window"><div id="screen"><span style="color:#e6efef">x</span></div></div><b style="color:#e6efef">y</b>'
     out = lt.rewrite_markup(html)
-    assert '<span style="color:#e2e8f0">' in out and "var(--zn-text)" in out
+    assert '<span style="color:#e6efef">' in out and "var(--zn-text)" in out
 
 
 def test_white_text_on_a_coloured_fill_stays_white():

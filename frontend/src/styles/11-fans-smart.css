@@ -9,7 +9,7 @@
   margin-top: 4px;
 }
 .drawer-fan-unified-col {
-  background: var(--lt-b-0d141eff, #0d141e);
+  background: var(--lt-b-0e1b1dff, #0e1b1d);
   border: 1px solid var(--zn-line-6);
   border-radius: 10px;
   padding: 10px 8px;
@@ -91,7 +91,7 @@
    SVG THERMAL FAN CURVE WORKSTATION
    ========================================================================= */
 .fan-curve-box {
-  background: var(--lt-b-080c10ff, #080c10);
+  background: var(--lt-b-080e10ff, #080e10);
   border: 1px solid var(--zn-line-8);
   border-radius: 10px;
   padding: 12px 14px;
@@ -102,7 +102,7 @@
 .fan-curve-svg {
   width: 100%;
   height: 145px;
-  background: var(--lt-b-040609ff, #040609);
+  background: var(--lt-b-040809ff, #040809);
   border-radius: 8px;
   border: 1px solid rgba(51, 205, 184, 0.25);
   box-shadow: inset 0 0 14px rgba(0,0,0,0.85);
@@ -124,7 +124,7 @@
 /* Mission Control Enhanced Stretching for Dynamic Fan Curve Thermal Map */
 .mgmt-hardware-tab-slot .fan-curve-box {
   padding: 16px 20px;
-  background: var(--lt-b-080c10d9, rgba(8, 12, 16, 0.85));
+  background: var(--lt-b-080e10d9, rgba(8, 14, 16, 0.85));
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border: 1px solid var(--lt-r-ffffff17, rgba(255, 255, 255, 0.09));
@@ -207,9 +207,9 @@
   border-radius: 50%;
 }
 .btn-reset-curve-view {
-  background: var(--lt-b-1a2533ff, #1a2533);
+  background: var(--lt-b-1b2e32ff, #1b2e32);
   border: 1px solid var(--zn-line-10);
-  color: var(--lt-t-a4b4c4ff, #a4b4c4);
+  color: var(--lt-t-a8bcc0ff, #a8bcc0);
   font-size: var(--zn-fs-xs);
   font-weight: 800;
   padding: 2px 8px;
@@ -218,12 +218,12 @@
   margin-left: auto;
 }
 .btn-reset-curve-view:hover {
-  background: var(--lt-b-253547ff, #253547);
+  background: var(--lt-b-274045ff, #274045);
   color: var(--zn-text-strong);
 }
 
 .thermal-inspector-box {
-  background: var(--lt-b-0d141eff, #0d141e);
+  background: var(--lt-b-0e1b1dff, #0e1b1d);
   border: 1px solid var(--zn-line-6);
   border-radius: 8px;
   padding: 10px 12px;
@@ -413,14 +413,14 @@
 
 #stack-inspector-overlay .stack-inspector-window,
 .stack-inspector-window {
-  background: var(--lt-b-0d141eff, #0d141e) !important;
+  background: var(--lt-b-0e1b1dff, #0e1b1d) !important;
   border: 1px solid var(--zn-line-12) !important;
   box-shadow: 0 25px 65px rgba(0, 0, 0, 0.9) !important;
   border-radius: 12px;
   overflow: hidden;
 }
 #stack-inspector-overlay .smart-modal-header {
-  background: var(--lt-b-111a26ff, #111a26) !important;
+  background: var(--lt-b-122225ff, #122225) !important;
   border-bottom: 1px solid var(--zn-line-8);
 }
 

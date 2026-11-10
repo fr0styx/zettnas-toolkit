@@ -69,10 +69,10 @@ SHADOW = re.compile(r"(?<![\w-])(text-shadow)(\s*:\s*)([^;{}\"'`]+)")
 PROPS = r"color|background|background-color|background-image|border(?:-(?:top|bottom|left|right))?(?:-color)?"
 DECL = re.compile(r"(?<![\w-])(" + PROPS + r")(\s*:\s*)([^;{}\"'`]+)")
 VAR_USE = re.compile(r"var\(--lt-([tbr])-([0-9a-f]{8}),\s*([^()]*(?:\([^()]*\))?[^()]*?)\)")
-SLATE = (15, 23, 42)
-PAGE = (248, 250, 252)
+SLATE = (14, 28, 30)
+PAGE = (245, 249, 249)
 # Text must read on the darkest light surface it can sit on, not only on white
-DARKEST_SURFACE = (214, 218, 224)
+DARKEST_SURFACE = (214, 223, 224)
 # Text set in the brand colour gets a dark shade in the light theme (the brand stays for fills)
 BRAND_VARS = ("brand", "accent-cyan")
 BRAND_INK = "#08695f"
@@ -82,10 +82,10 @@ BRAND_INK = "#08695f"
 # in percent: --zn-line-8 is a white line at 8 %.
 SEMANTIC = {
     ("t", "ffffffff"): "zn-text-strong",
-    ("t", "f1f5f9ff"): "zn-text-bright",
-    ("t", "e2e8f0ff"): "zn-text",
-    ("t", "cbd5e1ff"): "zn-text-soft",
-    ("t", "94a3b8ff"): "zn-text-muted",
+    ("t", "f1f7f7ff"): "zn-text-bright",
+    ("t", "e6efefff"): "zn-text",
+    ("t", "c9d6d7ff"): "zn-text-soft",
+    ("t", "95a8abff"): "zn-text-muted",
     ("t", "38bdf8ff"): "zn-text-accent",
     ("t", "34d399ff"): "zn-text-ok",
     ("t", "fbbf24ff"): "zn-text-warn",
@@ -212,7 +212,7 @@ def light_text(rgba):
         return None
     h, lig, s = hls(r, g, b)
     if s < 0.35 and lig >= 0.5:  # whites and slate greys
-        return css((15, 23, 42) if lig >= 0.86 else (30, 41, 59) if lig >= 0.7 else (71, 85, 105))
+        return css((14, 28, 30) if lig >= 0.86 else (26, 38, 41) if lig >= 0.7 else (74, 92, 96))
     l2 = min(lig, 0.5)
     rgb = from_hls(h, l2, s)
     while contrast(rgb, DARKEST_SURFACE) < 4.6 and l2 > 0.05:

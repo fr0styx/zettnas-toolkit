@@ -20,7 +20,7 @@ export function renderLightbar(el, look, opts = {}) {
   if (!opts.force && el.dataset.look === key) return; // the same look: leave the animation running
   el.dataset.look = key;
   if (look.power === 'off' || Number(look.brightness) <= 0) {
-    el.style.background = '#1a2330';
+    el.style.background = '#1b2c2f';
     el.style.boxShadow = 'none';
     el.style.animation = 'none';
     el.style.opacity = String(opts.offOpacity ?? 0.2);

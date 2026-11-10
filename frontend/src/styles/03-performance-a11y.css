@@ -8,7 +8,7 @@
   .drawer-card {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
-    background: var(--lt-b-111822f5, rgba(17, 24, 34, 0.96)) !important;
+    background: var(--lt-b-121f21f5, rgba(18, 31, 33, 0.96)) !important;
   }
 }
 
@@ -29,7 +29,7 @@
 [data-performance-mode="eco"] .os-dock {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
-  background: var(--lt-b-111822f2, rgba(17, 24, 34, 0.95)) !important;
+  background: var(--lt-b-121f21f2, rgba(18, 31, 33, 0.95)) !important;
 }
 
 /* Transient Dragging & Resizing De-blurring */

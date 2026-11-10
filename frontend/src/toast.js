@@ -193,7 +193,7 @@ function _showTopNotification(msg, type = "error") {
   const closeBtn = toast.querySelector(".top-toast-close");
   if (closeBtn) {
     closeBtn.onmouseover = () => { closeBtn.style.color = "#fff"; closeBtn.style.background = "rgba(255,255,255,0.1)"; };
-    closeBtn.onmouseout = () => { closeBtn.style.color = "#94a3b8"; closeBtn.style.background = "transparent"; };
+    closeBtn.onmouseout = () => { closeBtn.style.color = "#95a8ab"; closeBtn.style.background = "transparent"; };
     closeBtn.onclick = () => _dismissToastItem(toast);
   }
 
@@ -341,7 +341,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     okBtn.innerHTML = options.okText ? escapeHtml(options.okText) : "⚡ Wake & Inspect";
     okBtn.style.background = "#fbbf24";
     okBtn.style.border = "1px solid #f59e0b";
-    okBtn.style.color = "#0a0e13";
+    okBtn.style.color = "#0a1113";
     headerBg.style.background = "rgba(245, 158, 11, 0.08)";
     titleEl.style.color = "#fbbf24";
   } else if (isUpdate) {
@@ -349,7 +349,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     okBtn.innerHTML = options.okText ? escapeHtml(options.okText) : "⬆️ Update Now";
     okBtn.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
     okBtn.style.border = "1px solid #f59e0b";
-    okBtn.style.color = "#0a0e13";
+    okBtn.style.color = "#0a1113";
     okBtn.style.fontWeight = "700";
     headerBg.style.background = "rgba(245, 158, 11, 0.14)";
     titleEl.style.color = "#fbbf24";

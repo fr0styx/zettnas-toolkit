@@ -50,7 +50,7 @@ export function setDeployButtonTone(btn, tone) {
   const color = tone === 'danger' ? 'var(--err, #eb5757)' : 'var(--brand, #0ea5e9)';
   btn.style.background = `color-mix(in srgb, ${color} 22%, transparent)`;
   btn.style.border = `1px solid color-mix(in srgb, ${color} 55%, transparent)`;
-  btn.style.color = 'var(--text, #e5e7eb)';
+  btn.style.color = 'var(--text, #e6eaea)';
 }
 
 export const SUBPANE_MAP = {
@@ -921,7 +921,7 @@ export function initManagement() {
           grid.innerHTML = vmsList.map((vm) => {
             const isRunning = vm.state === 'running';
             const isPaused = vm.state === 'paused';
-            const statusColor = isRunning ? 'var(--ok2, #33cdb8)' : (isPaused ? 'var(--warn, #f5a623)' : 'var(--muted, #94a3b8)');
+            const statusColor = isRunning ? 'var(--ok2, #33cdb8)' : (isPaused ? 'var(--warn, #f5a623)' : 'var(--muted, #95a8ab)');
             const statusBg = isRunning ? 'rgba(51,205,184,0.15)' : (isPaused ? 'rgba(245,166,35,0.15)' : 'rgba(255,255,255,0.06)');
 
             const ramGb = vm.ram_gb ? `${vm.ram_gb} GB` : (vm.memory_mb ? (vm.memory_mb >= 1024 ? `${formatFixed(vm.memory_mb / 1024, 0)} GB` : `${vm.memory_mb} MB`) : '1 GB');

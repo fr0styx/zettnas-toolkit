@@ -56,13 +56,13 @@
 .topo-pool-name {
   font-size: 14px;
   font-weight: 700;
-  color: var(--lt-t-f8fafcff, #f8fafc);
+  color: var(--lt-t-f5f9f9ff, #f5f9f9);
   display: block;
 }
 
 .topo-pool-fs {
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #64748b);
+  color: var(--muted, #6c8084);
   text-transform: uppercase;
 }
 
@@ -132,7 +132,7 @@
 }
 
 .topo-free-space {
-  color: var(--muted, #64748b);
+  color: var(--muted, #6c8084);
 }
 
 .topo-usage-track {
@@ -159,7 +159,7 @@
 .topo-members-label {
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  color: var(--muted, #64748b);
+  color: var(--muted, #6c8084);
   letter-spacing: 0.5px;
 }
 
@@ -186,8 +186,8 @@
 }
 
 .topo-disk-card.disk-standby {
-  border-color: rgba(148, 163, 184, 0.2);
-  background: var(--lt-b-0f172a66, rgba(15, 23, 42, 0.4));
+  border-color: rgba(149, 168, 171, 0.2);
+  background: var(--lt-b-0e1c1e66, rgba(14, 28, 30, 0.4));
 }
 
 .topo-disk-top {
@@ -223,9 +223,9 @@
 }
 
 .topo-role-badge.role-boot {
-  background: rgba(148, 163, 184, 0.15);
+  background: rgba(149, 168, 171, 0.15);
   color: var(--zn-text-muted);
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid rgba(149, 168, 171, 0.3);
 }
 
 .topo-dev-name {
@@ -243,14 +243,14 @@
 
 .topo-temp-badge.thermal-standby {
   color: var(--zn-text-muted);
-  background: rgba(148, 163, 184, 0.1);
+  background: rgba(149, 168, 171, 0.1);
 }
 
 .topo-disk-sub {
   display: flex;
   justify-content: space-between;
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #64748b);
+  color: var(--muted, #6c8084);
 }
 
 .topo-disk-actions {
@@ -320,13 +320,13 @@
 .share-name {
   font-size: 14px;
   font-weight: 700;
-  color: var(--lt-t-f8fafcff, #f8fafc);
+  color: var(--lt-t-f5f9f9ff, #f5f9f9);
   display: block;
 }
 
 .share-comment {
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #64748b);
+  color: var(--muted, #6c8084);
   margin-top: 2px;
 }
 
@@ -372,9 +372,9 @@
 }
 
 .proto-tag.proto-off {
-  background: rgba(148, 163, 184, 0.1);
-  color: var(--lt-t-64748bff, #64748b);
-  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(149, 168, 171, 0.1);
+  color: var(--lt-t-6c8084ff, #6c8084);
+  border: 1px solid rgba(149, 168, 171, 0.15);
 }
 
 .share-cache-tag {
@@ -502,9 +502,9 @@
 }
 
 .webdav-status-pill.stopped {
-  background: rgba(148, 163, 184, 0.15);
+  background: rgba(149, 168, 171, 0.15);
   color: var(--zn-text-muted);
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  border: 1px solid rgba(149, 168, 171, 0.25);
 }
 
 .webdav-quickconnect-grid {
@@ -526,7 +526,7 @@
 .webdav-qc-label {
   font-size: var(--zn-fs-xs);
   font-weight: 800;
-  color: var(--muted, #94a3b8);
+  color: var(--muted, #95a8ab);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   display: flex;
@@ -552,7 +552,7 @@
 .btn-qc-copy {
   background: transparent;
   border: none;
-  color: var(--muted, #94a3b8);
+  color: var(--muted, #95a8ab);
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 4px;
@@ -623,7 +623,7 @@
 
 .remote-mount-status {
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #94a3b8);
+  color: var(--muted, #95a8ab);
   display: flex;
   align-items: center;
   gap: 6px;

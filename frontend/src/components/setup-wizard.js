@@ -546,9 +546,9 @@ export function openSetupWizard(stats = null, forced = false) {
         upsText.textContent = `${t('setup.ups_detected', 'UPS Online & Monitored')} (${ups.model || ups.ups_name || 'NUT'}) - ${ups.battery_charge || 100}%`;
         upsText.style.color = 'var(--ok2, #4ade80)';
       } else {
-        upsBadge.style.background = 'var(--muted, #64748b)';
+        upsBadge.style.background = 'var(--muted, #6c8084)';
         upsText.textContent = t('setup.ups_none', 'No UPS detected. You can configure a NUT host later in Settings.');
-        upsText.style.color = 'var(--muted, #94a3b8)';
+        upsText.style.color = 'var(--muted, #95a8ab)';
       }
     }
   }

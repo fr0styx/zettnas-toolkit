@@ -206,7 +206,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
       y: {
         grid: { color: 'rgba(255,255,255,0.05)' },
         beginAtZero: true,
-        title: { display: true, text: t('mch.util_temp', 'Utilization (%) / Temp (°C)'), font: { size: 9 }, color: '#94a3b8' }
+        title: { display: true, text: t('mch.util_temp', 'Utilization (%) / Temp (°C)'), font: { size: 9 }, color: '#95a8ab' }
       }
     };
 
@@ -439,7 +439,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
     }
 
     const ctx = canvas.getContext('2d');
-    Chart.defaults.color = '#a0aec0';
+    Chart.defaults.color = '#a4b8bc';
     Chart.defaults.font.family = 'Inter, sans-serif';
 
     _metricsChart = new Chart(ctx, {
@@ -456,10 +456,10 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
         plugins: {
           legend: {
             position: 'top',
-            labels: { boxWidth: 10, usePointStyle: true, font: { size: 10 }, color: '#cbd5e1' }
+            labels: { boxWidth: 10, usePointStyle: true, font: { size: 10 }, color: '#c9d6d7' }
           },
           tooltip: {
-            backgroundColor: 'rgba(13, 20, 30, 0.95)',
+            backgroundColor: 'rgba(14, 27, 29, 0.95)',
             borderColor: 'rgba(255, 255, 255, 0.15)',
             borderWidth: 1,
             padding: 10,

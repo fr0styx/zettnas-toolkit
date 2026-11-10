@@ -440,7 +440,7 @@ function buildVmCardHtml(vm, vms) {
       const stateKey = `${vm.state}|${vm.qemu_pid}|${vm.cpu_usage_pct}|${vm.ram_usage_pct}|${vm.ip_address}|${vm.vcpus}|${vm.ram_gb}|${vm.disk_size_gb}|${vm.name}`;
       const isRunning = vm.state === 'running';
       const isPaused = vm.state === 'paused';
-      const statusColor = isRunning ? '#34d399' : isPaused ? '#fbbf24' : '#94a3b8';
+      const statusColor = isRunning ? '#34d399' : isPaused ? '#fbbf24' : '#95a8ab';
       const statusBg = isRunning
         ? 'rgba(16,185,129,0.15)'
         : isPaused
@@ -466,10 +466,10 @@ function buildVmCardHtml(vm, vms) {
           ? `<svg class="vmm-x-2" width="18" height="18" viewBox="0 0 24 24" fill="#38bdf8"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801"/></svg>`
           : vm.os_family === 'linux'
           ? `<svg class="vmm-x-2" width="18" height="18" viewBox="0 0 24 24" fill="#fbbf24"><path d="M12 2a5 5 0 0 0-5 5v3.1c-1.3.8-2 2-2 3.9 0 2.2 1.3 4 3 4.8V20a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-1.2c1.7-.8 3-2.6 3-4.8 0-1.9-.7-3.1-2-3.9V7a5 5 0 0 0-5-5zm-2 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm4 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>`
-          : `<svg class="vmm-x-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
+          : `<svg class="vmm-x-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#95a8ab" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
 
       return `
-      <div class="glassmorphic-card" data-vm-id="${escapeHtml(vm.id)}" data-state-key="${escapeHtml(stateKey)}" style="border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--zn-line-8); background: var(--lt-b-121a26a6, rgba(18, 26, 38, 0.65));">
+      <div class="glassmorphic-card" data-vm-id="${escapeHtml(vm.id)}" data-state-key="${escapeHtml(stateKey)}" style="border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--zn-line-8); background: var(--lt-b-132225a6, rgba(19, 34, 37, 0.65));">
         <div>
           <div class="vmm-row-4">
             <div class="vmm-row-5">

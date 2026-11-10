@@ -79,7 +79,7 @@ export function renderEventLog(events) {
     row.innerHTML = topHtml;
 
     const detailsBox = document.createElement('pre');
-    detailsBox.style.cssText = 'display: none; margin: 0; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 6px; font-size: var(--zn-fs-xs); color: #a0aec0; border: 1px solid rgba(255,255,255,0.05); white-space: pre-wrap; word-break: break-all;';
+    detailsBox.style.cssText = 'display: none; margin: 0; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 6px; font-size: var(--zn-fs-xs); color: #a4b8bc; border: 1px solid rgba(255,255,255,0.05); white-space: pre-wrap; word-break: break-all;';
     detailsBox.textContent = JSON.stringify(e, null, 2);
     row.appendChild(detailsBox);
 

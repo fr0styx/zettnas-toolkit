@@ -671,7 +671,7 @@ export function renderDockerContainersTable() {
       <div class="dkr-col">
         <div class="dkr-fs32">🐳</div>
         <div class="dkr-fs135-semi-strong">${t('mgmt.docker_none_title', 'No Docker Containers Deployed')}</div>
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted, #94a3b8); max-width:420px; line-height:1.5;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted, #95a8ab); max-width:420px; line-height:1.5;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</div>
         <button id="btn-empty-deploy-app" class="btn-pill-toggle is-primary dkr-x">
           🚀 ${t('mgmt.docker_open_catalog', 'Browse App Catalog')}
         </button>
@@ -1272,7 +1272,7 @@ export async function openAppDeployModal(appId) {
                       <button class="btn-pill-toggle" id="adm-download-btn">${ico('⬇️')} ${t('dk.download', 'Download')}</button>
                     </div>
                   </div>
-                  <pre id="adm-compose-pre" style="margin:0; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--zn-line-10); border-radius:6px; padding:10px; max-height:200px; overflow:auto; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--zn-text); line-height:1.45;"></pre>
+                  <pre id="adm-compose-pre" style="margin:0; background:var(--lt-b-091213ff, #091213); border:1px solid var(--zn-line-10); border-radius:6px; padding:10px; max-height:200px; overflow:auto; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--zn-text); line-height:1.45;"></pre>
                 </div>
               </div>
             </details>
@@ -1299,7 +1299,7 @@ export async function openAppDeployModal(appId) {
             <!-- Real-time Activity Log Terminal -->
             <div class="dkd-x-3">
               <div class="dkd-xs-bold-muted">${t('catalog.install_log', 'What is happening')}</div>
-              <div id="adm-deploy-logs" style="background:var(--lt-b-05080fff, #05080f); border:1px solid var(--zn-line-10); border-radius:6px; height:160px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.5; color:var(--zn-text-soft);">
+              <div id="adm-deploy-logs" style="background:var(--lt-b-060d0eff, #060d0e); border:1px solid var(--zn-line-10); border-radius:6px; height:160px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.5; color:var(--zn-text-soft);">
                 <div class="dkd-muted">${t('catalog.waiting', 'Starting...')}</div>
               </div>
             </div>
@@ -1841,7 +1841,7 @@ export async function openAppDeployModal(appId) {
   function logDeployLine(msg, type = 'info') {
     if (!deployLogs) return;
     const now = new Date().toTimeString().split(' ')[0];
-    const color = type === 'error' ? 'var(--crit, #ff6b6b)' : type === 'success' ? 'var(--ok2, #33cdb8)' : '#cbd5e1';
+    const color = type === 'error' ? 'var(--crit, #ff6b6b)' : type === 'success' ? 'var(--ok2, #33cdb8)' : '#c9d6d7';
     const line = document.createElement('div');
     line.style.color = color;
     line.textContent = `[${now}] ${msg}`;

@@ -42,7 +42,7 @@
   resize: both;
   min-width: 480px;
   min-height: 400px;
-  background: var(--lt-b-0d131dff, #0d131d) !important;
+  background: var(--lt-b-0e1a1cff, #0e1a1c) !important;
   border: 1px solid var(--zn-line-12) !important;
   border-radius: var(--window-radius, 14px) !important;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
@@ -70,7 +70,7 @@
 .vm-modal-window .smart-modal-body {
   overflow-x: hidden !important;
   overflow-y: auto !important;
-  background: var(--lt-b-0d131dff, #0d131d) !important;
+  background: var(--lt-b-0e1a1cff, #0e1a1c) !important;
 }
 
 .vm-modal-window .smart-modal-body > * {
@@ -81,7 +81,7 @@
   height: 40px !important;
   min-height: 40px !important;
   padding: 0 16px !important;
-  background: var(--lt-b-141c28ff, #141c28) !important;
+  background: var(--lt-b-152427ff, #152427) !important;
   border-bottom: 1px solid var(--zn-line-8) !important;
   display: flex !important;
   justify-content: space-between !important;
@@ -91,7 +91,7 @@
 }
 
 .vm-modal-window .smart-modal-footer {
-  background: var(--lt-b-0a0e16ff, #0a0e16) !important;
+  background: var(--lt-b-0b1415ff, #0b1415) !important;
   border-top: 1px solid var(--zn-line-8) !important;
 }
 

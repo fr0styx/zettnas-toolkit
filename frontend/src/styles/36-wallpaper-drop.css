@@ -5,7 +5,7 @@
   position: fixed;
   inset: 0;
   z-index: 99990;
-  background: var(--lt-b-080c10bf, rgba(8, 12, 16, 0.75));
+  background: var(--lt-b-080e10bf, rgba(8, 14, 16, 0.75));
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   display: flex;
@@ -21,7 +21,7 @@
 }
 
 .desktop-drop-card {
-  background: var(--lt-b-121a24eb, rgba(18, 26, 36, 0.92));
+  background: var(--lt-b-132023eb, rgba(19, 32, 35, 0.92));
   border: 2px dashed var(--brand, #33cdb8);
   border-radius: 20px;
   padding: 48px 56px;

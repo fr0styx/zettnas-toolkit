@@ -423,7 +423,7 @@ export const DockManager = {
         if (bgUrl && bgUrl !== 'none') {
           container.style.backgroundImage = bgUrl;
         } else {
-          container.style.background = 'radial-gradient(ellipse at 50% 40%, #1e293b 0%, #0a0e17 100%)';
+          container.style.background = 'radial-gradient(ellipse at 50% 40%, #1a2629 0%, #0b1416 100%)';
         }
         const winIds = Object.keys(DockManager.windows);
         const activeWins = winIds.filter((k) => !DockManager.windows[k].closed && !DockManager.windows[k].minimized);

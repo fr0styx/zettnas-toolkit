@@ -58,7 +58,7 @@ export function openVmCreateModal() {
         <div class="vmc-grid">
           <div>
             <label class="vmc-xs-bold-muted" for="vm-create-os">${t('vmd.os_family', 'OS family')}</label>
-            <select id="vm-create-os" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
+            <select id="vm-create-os" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
               <option value="linux">${'Linux (Ubuntu / Debian / Alpine)'}</option>
               <option value="windows">${'Microsoft Windows'}</option>
               <option value="bsd">${'BSD / TrueNAS'}</option>
@@ -121,7 +121,7 @@ export function openVmCreateModal() {
               <label class="vmc-xs-bold-muted-2" for="vm-create-iso">${t('vmd.boot_iso_label', 'Boot ISO')}</label>
               <button class="vmc-xs-accent-box" type="button" id="btn-browse-iso-catalog">${ico('🌐')} ${t('vmd.iso_catalog', 'ISO catalog')}</button>
             </div>
-            <select id="vm-create-iso" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
+            <select id="vm-create-iso" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
               <option value="">${t('vmd.iso_none_net', 'None (network boot or empty disk)')}</option>
               ${vmState.isos.map((iso) => `<option value="${escapeHtml(iso.path)}">${escapeHtml(iso.name)} (${iso.size_formatted})</option>`).join('')}
             </select>
@@ -211,7 +211,7 @@ export function openVmCreateModal() {
         <!-- Step 6: Network Bridge -->
         <div>
           <label class="vmc-xs-bold-muted" for="vm-create-bridge">${t('vmd.bridge_label', 'Network bridge')}</label>
-          <select id="vm-create-bridge" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
+          <select id="vm-create-bridge" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
             ${vmState.bridges.map((b) => `<option value="${escapeHtml(b)}">${escapeHtml(t('vmd.host_bridge', '{name} (host bridge)', { name: b }))}</option>`).join('')}
           </select>
         </div>
@@ -230,7 +230,7 @@ export function openVmCreateModal() {
           <div class="vmc-grid-2">
             <div>
               <label class="vmc-xs-muted-2" for="vm-create-gpu-driver">${t('vmd.video_adapter', 'Video adapter')}</label>
-              <select id="vm-create-gpu-driver" class="tz-select" style="width: 100%; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
+              <select id="vm-create-gpu-driver" class="tz-select" style="width: 100%; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
                 <option value="virtio-gpu" selected>${t('vmd.v_virtio', 'VirtIO-GPU (recommended, 2D/3D acceleration on Linux)')}</option>
                 <option value="qxl">${t('vmd.v_qxl', 'QXL (SPICE, Windows drivers)')}</option>
                 <option value="vga">${t('vmd.v_vga', 'Standard VGA (works everywhere)')}</option>
@@ -490,11 +490,11 @@ export function openVmCreateModal() {
       row.innerHTML = `
         <input type="text" class="share-host-path vmc-xs-strong-box-grow" placeholder="/mnt/user/appdata" value="/mnt/user/appdata" />
         <input type="text" class="share-mount-tag vmc-xs-strong-box-grow-2" placeholder="appdata" value="appdata" />
-        <select class="share-driver" style="flex: 1; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
+        <select class="share-driver" style="flex: 1; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
           <option value="virtiofs">${'VirtIO-FS'}</option>
           <option value="9p">9p</option>
         </select>
-        <select class="share-mode" style="width: 60px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
+        <select class="share-mode" style="width: 60px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
           <option value="rw">RW</option>
           <option value="ro">RO</option>
         </select>
@@ -517,7 +517,7 @@ export function openVmCreateModal() {
       row.innerHTML = `
         <input type="text" class="disk-name vmc-xs-strong-box-grow" placeholder="${t('ui.disk_name', 'Disk Name')}" value="data-disk-${idx}" />
         <input type="number" class="disk-size vmc-xs-strong-box-4" min="5" max="4000" placeholder="${t('ui.size_gb', 'Size (GB)')}" value="50" />
-        <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
+        <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
           <option value="virtio">virtio</option>
           <option value="sata">sata</option>
           <option value="nvme">nvme</option>

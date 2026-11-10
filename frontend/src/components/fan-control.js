@@ -840,7 +840,7 @@ export function initAcousticCalibration() {
         const isRes = !!item.resonance_detected;
         if (isRes) hasResonance = true;
         const color = isRes ? '#f43f5e' : 'var(--accent, #38bdf8)';
-        pointsHtml += `<circle cx="${x.toFixed(1)}" cy="${yClamped.toFixed(1)}" r="3" fill="${color}" stroke="#0f172a" stroke-width="1.5"><title>PWM: ${item.pwm} (${item.pct}%), RPM: ${item.rpm_avg || 0}${isRes ? ' [Resonance!]' : ''}</title></circle>`;
+        pointsHtml += `<circle cx="${x.toFixed(1)}" cy="${yClamped.toFixed(1)}" r="3" fill="${color}" stroke="#0e1c1e" stroke-width="1.5"><title>PWM: ${item.pwm} (${item.pct}%), RPM: ${item.rpm_avg || 0}${isRes ? ' [Resonance!]' : ''}</title></circle>`;
       });
 
       rpmPath.setAttribute('d', d);

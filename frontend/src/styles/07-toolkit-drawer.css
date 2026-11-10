@@ -12,7 +12,7 @@
   width: 520px; 
   max-width: 95vw; 
   height: 100vh;
-  background: var(--lt-b-0f1620ff, #0f1620); 
+  background: var(--lt-b-101d1fff, #101d1f); 
   box-shadow: -10px 0 40px rgba(0, 0, 0, 0.88);
   transform: translateX(100%); 
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -46,10 +46,10 @@
   border-bottom: 1px solid var(--zn-line-8); padding-bottom: 12px; flex-shrink: 0;
 }
 .btn-lock-toggle {
-  background: var(--lt-b-1e2a38ff, #1e2a38); color: var(--zn-text-soft); border: 1px solid var(--zn-line-10);
+  background: var(--lt-b-1f3337ff, #1f3337); color: var(--zn-text-soft); border: 1px solid var(--zn-line-10);
   border-radius: 6px; font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 9px; cursor: pointer; transition: all 0.15s ease;
 }
-.btn-lock-toggle:hover { background: var(--lt-b-283749ff, #283749); color: var(--zn-text-strong); }
+.btn-lock-toggle:hover { background: var(--lt-b-2a4247ff, #2a4247); color: var(--zn-text-strong); }
 .btn-lock-toggle.unlocked { background: rgba(51, 205, 184, 0.15); color: var(--ok2); border-color: var(--ok2); }
 
 .drawer-sub { font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.12em; color: var(--ok2); }
@@ -59,7 +59,7 @@
 .btn-icon:hover { color: var(--zn-text-strong); }
 
 .drawer-tabs-nav {
-  display: flex; background: var(--lt-b-080c10ff, #080c10); padding: 4px; border-radius: 10px; gap: 4px;
+  display: flex; background: var(--lt-b-080e10ff, #080e10); padding: 4px; border-radius: 10px; gap: 4px;
   border: 1px solid var(--zn-line-6); flex-shrink: 0;
 }
 .drawer-tab-btn {
@@ -67,7 +67,7 @@
   font-weight: 700; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
 }
 .drawer-tab-btn:hover { color: var(--zn-text-strong); }
-.drawer-tab-btn.active { background: var(--lt-b-1e2a38ff, #1e2a38); color: var(--ok2); box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+.drawer-tab-btn.active { background: var(--lt-b-1f3337ff, #1f3337); color: var(--ok2); box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
 
 .drawer-tab-content { 
   display: none; 
@@ -103,14 +103,14 @@
    ========================================================================= */
 .dash-reorder-flow { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .dash-module-item {
-  background: var(--lt-b-151f2bff, #151f2b); border: 1px solid var(--zn-line-7); border-radius: 10px;
+  background: var(--lt-b-16272aff, #16272a); border: 1px solid var(--zn-line-7); border-radius: 10px;
   padding: 10px 14px; display: flex; align-items: center; gap: 12px;
   transition: opacity 0.25s ease, background 0.2s ease, border-color 0.2s ease;
   width: 100%;
 }
 .dash-module-item.disabled {
   opacity: 0.42;
-  background: var(--lt-b-0f1620ff, #0f1620);
+  background: var(--lt-b-101d1fff, #101d1f);
   border-color: var(--lt-r-ffffff08, rgba(255, 255, 255, 0.03));
 }
 
@@ -132,7 +132,7 @@
 
 .seg-size-selector {
   display: inline-flex;
-  background: var(--lt-b-090e15ff, #090e15);
+  background: var(--lt-b-0a1314ff, #0a1314);
   border: 1px solid var(--zn-line-10);
   border-radius: 7px;
   padding: 2px;
@@ -152,7 +152,7 @@
   transition: all 0.15s ease;
 }
 .seg-size-btn.active {
-  background: var(--lt-b-1e2c3dff, #1e2c3d);
+  background: var(--lt-b-20373bff, #20373b);
   color: var(--ok2);
   box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
@@ -170,7 +170,7 @@
   gap: 8px;
 }
 .preset-btn-card {
-  background: var(--lt-b-141f2dff, #141f2d);
+  background: var(--lt-b-15282cff, #15282c);
   border: 1px solid var(--zn-line-8);
   border-radius: 9px;
   padding: 10px 14px;
@@ -181,7 +181,7 @@
   transition: all 0.18s ease;
 }
 .preset-btn-card:hover {
-  background: var(--lt-b-1b2a3dff, #1b2a3d);
+  background: var(--lt-b-1d363bff, #1d363b);
   border-color: rgba(51, 205, 184, 0.4);
   transform: translateY(-1px);
 }
@@ -214,7 +214,7 @@
   color: var(--warn);
 }
 .btn-save-preset {
-  background: var(--lt-b-1c2736ff, #1c2736);
+  background: var(--lt-b-1d3135ff, #1d3135);
   border: 1px solid var(--zn-line-10);
   color: var(--zn-text-soft);
   border-radius: 6px;
@@ -225,7 +225,7 @@
   transition: all 0.15s ease;
 }
 .btn-save-preset:hover {
-  background: var(--lt-b-253547ff, #253547);
+  background: var(--lt-b-274045ff, #274045);
   color: var(--zn-text-strong);
   border-color: #f97316;
   box-shadow: 0 0 8px rgba(249, 115, 22, 0.35);

@@ -190,7 +190,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
     const h = canvas.height;
 
     // 1. Sleek deep hypervisor console background
-    ctx.fillStyle = '#060a12';
+    ctx.fillStyle = '#071011';
     ctx.fillRect(0, 0, w, h);
 
     // Phosphor CRT scanlines
@@ -200,7 +200,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
     }
 
     // 2. Hardware Video Frame Header
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillStyle = 'rgba(14, 28, 30, 0.85)';
     ctx.fillRect(0, 0, w, 32);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.strokeRect(0, 0, w, 32);
@@ -211,7 +211,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
     ctx.fillText(`⚡ QEMU/KVM Hardware Video Display (:0) — ${vmName}`, 16, 16);
 
     ctx.font = '500 11px "JetBrains Mono", monospace';
-    ctx.fillStyle = '#94a3b8';
+    ctx.fillStyle = '#95a8ab';
     const hdrRight = `1920 × 1080 @ 60 FPS  •  VirtIO-GPU DRM`;
     const hdrRightW = ctx.measureText(hdrRight).width;
     ctx.fillText(hdrRight, w - hdrRightW - 16, 16);
@@ -222,7 +222,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
     const cardX = Math.floor((w - cardW) / 2);
     const cardY = 56;
 
-    ctx.fillStyle = 'rgba(10, 16, 26, 0.75)';
+    ctx.fillStyle = 'rgba(11, 23, 25, 0.75)';
     ctx.strokeStyle = 'rgba(14, 165, 233, 0.25)';
     ctx.lineWidth = 1;
     if (ctx.roundRect) {
@@ -243,7 +243,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
     ctx.fillText('🖥️', w / 2, cardY + 16);
 
     ctx.font = '700 15px system-ui, -apple-system, sans-serif';
-    ctx.fillStyle = '#f8fafc';
+    ctx.fillStyle = '#f5f9f9';
     ctx.fillText(`VNC REMOTE DISPLAY (:0)`, w / 2, cardY + 52);
 
     ctx.font = '500 12px "JetBrains Mono", monospace';
@@ -251,7 +251,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
     ctx.fillText(`● VNC Server Listening on 127.0.0.1:${vncPort}`, w / 2, cardY + 76);
 
     ctx.font = '400 11px system-ui, -apple-system, sans-serif';
-    ctx.fillStyle = '#94a3b8';
+    ctx.fillStyle = '#95a8ab';
     ctx.fillText(`Guest OS video output is running on physical display :0 with hardware acceleration.`, w / 2, cardY + 96);
 
     // Telemetry Grid Box
@@ -278,32 +278,32 @@ function initGuiDesktopSimulation(canvas, vmName) {
     const col1X = gridX + 16;
     const col2X = gridX + Math.floor(gridW / 2) + 16;
 
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = '#6c8084';
     ctx.fillText('Host Hypervisor:', col1X, gridY + 14);
     ctx.fillStyle = '#38bdf8';
     ctx.fillText('Linux KVM (VT-x Active)', col1X + 130, gridY + 14);
 
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = '#6c8084';
     ctx.fillText('Graphics Driver:', col1X, gridY + 38);
     ctx.fillStyle = '#fff';
     ctx.fillText('VirtIO-GPU (DRM / KMS)', col1X + 130, gridY + 38);
 
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = '#6c8084';
     ctx.fillText('Display Protocol:', col1X, gridY + 62);
     ctx.fillStyle = '#a78bfa';
     ctx.fillText('RFB 3.8 / noVNC WebSocket', col1X + 130, gridY + 62);
 
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = '#6c8084';
     ctx.fillText('Guest IP Address:', col2X, gridY + 14);
     ctx.fillStyle = '#38bdf8';
     ctx.fillText(vmIp, col2X + 130, gridY + 14);
 
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = '#6c8084';
     ctx.fillText('Network Bridge:', col2X, gridY + 38);
     ctx.fillStyle = '#fff';
     ctx.fillText(targetVm.bridge || 'br0', col2X + 130, gridY + 38);
 
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = '#6c8084';
     ctx.fillText('Display Port:', col2X, gridY + 62);
     ctx.fillStyle = '#f59e0b';
     ctx.fillText(`Port ${vncPort}`, col2X + 130, gridY + 62);
@@ -356,7 +356,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
       ctx.fillRect(550, btnY, 170, 34);
       ctx.strokeRect(550, btnY, 170, 34);
     }
-    ctx.fillStyle = '#e2e8f0';
+    ctx.fillStyle = '#e6efef';
     ctx.fillText('💻 Copy SSH Command', 550 + 85, btnY + 17);
 
     // Mouse pointer
@@ -458,7 +458,7 @@ function ensureSerialView(host, vmId) {
   if (_serialView && _serialView.host === host && _serialViewVmId === vmId && intact) return _serialView;
   if (_serialView) _serialView.dispose();
   _serialView = createTerminalView(host, {
-    theme: { background: '#0a0f18', cursorAccent: '#0a0f18' },
+    theme: { background: '#0b1517', cursorAccent: '#0b1517' },
     onData: (d) => {
       if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) _activeSerialWs.send(d);
     },
@@ -1094,13 +1094,13 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         </div>
 
         <!-- Viewport -->
-        <div class="vm-console-viewport" id="vm-console-viewport" style="position: relative; flex: 1; display: flex; align-items: center; justify-content: center; background: var(--lt-b-060a12ff, #060a12); overflow: hidden;">
+        <div class="vm-console-viewport" id="vm-console-viewport" style="position: relative; flex: 1; display: flex; align-items: center; justify-content: center; background: var(--lt-b-071011ff, #071011); overflow: hidden;">
           <div id="vm-console-banner" class="vm-console-banner" style="display: none;"></div>
           <input type="text" id="vm-console-hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="-1" style="position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; left: 0; top: 0; z-index: -1;" />
           <div id="vm-vnc-container" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
             <canvas id="vm-console-canvas" tabindex="0" width="880" height="510"></canvas>
           </div>
-          <div id="vm-cli-container" tabindex="0" style="width: 100%; height: 100%; display: none; background: var(--lt-b-0a0f18ff, #0a0f18); padding: 10px 8px 10px 12px; color: var(--zn-text-ok); overflow: hidden; box-sizing: border-box; outline: none;">
+          <div id="vm-cli-container" tabindex="0" style="width: 100%; height: 100%; display: none; background: var(--lt-b-0b1517ff, #0b1517); padding: 10px 8px 10px 12px; color: var(--zn-text-ok); overflow: hidden; box-sizing: border-box; outline: none;">
             <div id="vm-cli-output" style="width: 100%; height: 100%;"></div>
           </div>
           <div class="console-scanlines" style="pointer-events: none;"></div>
@@ -1254,7 +1254,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
           try {
             window.close();
           } catch (_) {}
-          document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:var(--lt-b-060a12ff, #060a12);color:var(--zn-text-muted);font-family:sans-serif;font-size:14px;">' + escapeHtml(t('vmc.disconnected_close', 'Console disconnected. You can close this window.')) + '</div>';
+          document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:var(--lt-b-071011ff, #071011);color:var(--zn-text-muted);font-family:sans-serif;font-size:14px;">' + escapeHtml(t('vmc.disconnected_close', 'Console disconnected. You can close this window.')) + '</div>';
           return;
         }
         consoleWin.classList.add('window-minimized');
@@ -1628,7 +1628,7 @@ function initConsoleSimulation(canvas, vmName) {
 
   function render() {
     if (!ctx) return;
-    ctx.fillStyle = '#0a0f18';
+    ctx.fillStyle = '#0b1517';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.font = '12px "JetBrains Mono", "Fira Code", monospace';
@@ -1647,7 +1647,7 @@ function initConsoleSimulation(canvas, vmName) {
     for (let i = 0; i < visibleSlice.length - 1; i++) {
       const line = visibleSlice[i];
       if (line.startsWith('[  ')) {
-        ctx.fillStyle = '#64748b'; // boot dmesg timestamp
+        ctx.fillStyle = '#6c8084'; // boot dmesg timestamp
       } else if (line.startsWith('root@')) {
         ctx.fillStyle = '#38bdf8'; // shell prompt
       } else if (line.includes('command not found')) {
@@ -1655,7 +1655,7 @@ function initConsoleSimulation(canvas, vmName) {
       } else if (line.startsWith('Ubuntu') || line.startsWith('Linux')) {
         ctx.fillStyle = '#34d399'; // system info
       } else {
-        ctx.fillStyle = '#94a3b8'; // standard output
+        ctx.fillStyle = '#95a8ab'; // standard output
       }
       ctx.fillText(line, startX, startY + (i * lineHeight));
     }

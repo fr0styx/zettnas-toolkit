@@ -354,7 +354,7 @@ export function openKvmDiagnosticsModal(kvm = null) {
             </div>
             
             <div class="vmk-x-2">
-              <pre style="margin: 0; padding: 8px 12px; background: var(--lt-b-0c121cff, #0c121c); border: 1px solid var(--zn-line-10); border-radius: 4px; font-size: var(--zn-fs-xs); color: var(--zn-text-accent); font-family: monospace;">--device /dev/kvm</pre>
+              <pre style="margin: 0; padding: 8px 12px; background: var(--lt-b-0d191bff, #0d191b); border: 1px solid var(--zn-line-10); border-radius: 4px; font-size: var(--zn-fs-xs); color: var(--zn-text-accent); font-family: monospace;">--device /dev/kvm</pre>
               <button id="btn-copy-kvm-param" class="btn-pill-toggle vmk-xs-3">${t('catalog.copy', 'Copy')}</button>
             </div>
 

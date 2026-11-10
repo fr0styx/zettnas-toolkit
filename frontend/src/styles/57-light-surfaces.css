@@ -9,7 +9,7 @@
   padding: 14px 16px; background: var(--zn-shade-25); border-bottom: 1px solid var(--zn-line-6);
 }
 .sec-advisor-card {
-  margin: 12px 0; padding: 14px; background: var(--lt-b-0f172aa6, rgba(15, 23, 42, 0.65)); border: 1px solid var(--zn-line-12);
+  margin: 12px 0; padding: 14px; background: var(--lt-b-0e1c1ea6, rgba(14, 28, 30, 0.65)); border: 1px solid var(--zn-line-12);
   border-radius: 8px; display: flex; flex-direction: column; gap: 10px;
 }
 
@@ -23,7 +23,7 @@ body.theme-light {
   --danger: #b91c1c;
   --err: #b91c1c;
   --alert: #b91c1c;
-  --text: #1e293b;
+  --text: #1a2629;
 }
 
 /* Labels set on the --ok2 fill, which is dark in the light theme */

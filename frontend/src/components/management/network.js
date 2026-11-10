@@ -306,12 +306,12 @@ export async function fetchAndRenderWireguard() {
       if (!ts.installed) {
         if (tsBadgeEl) {
           tsBadgeEl.textContent = t('ui.not_installed', 'Not Installed');
-          tsBadgeEl.style.color = 'var(--muted, #94a3b8)';
+          tsBadgeEl.style.color = 'var(--muted, #95a8ab)';
           tsBadgeEl.style.borderColor = 'rgba(255,255,255,0.1)';
         }
         if (tsPillEl) {
           tsPillEl.textContent = t('ui.daemon_not_found', 'App service not found');
-          tsPillEl.style.color = 'var(--muted, #94a3b8)';
+          tsPillEl.style.color = 'var(--muted, #95a8ab)';
           tsPillEl.style.background = 'rgba(255,255,255,0.06)';
         }
         if (tsDeployBanner) tsDeployBanner.style.display = 'block';
@@ -616,7 +616,7 @@ export async function fetchAndRenderWireguard() {
     if (res && ipFwdEl) {
       const isFwd = Boolean(res.ip_forwarding);
       ipFwdEl.textContent = isFwd ? t('net.fwd_on', 'On (forwarding)') : t('net.disabled', 'Disabled');
-      ipFwdEl.style.color = isFwd ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)';
+      ipFwdEl.style.color = isFwd ? 'var(--ok2, #3bf58b)' : 'var(--muted, #6c8084)';
       if (wgBadgeEl) {
         wgBadgeEl.textContent = res.enabled ? t('net.nat_on', 'NAT routing on') : t('net.wg_ready', 'Ready');
         wgBadgeEl.style.color = res.enabled ? '#3bf58b' : '#38bdf8';
@@ -1388,7 +1388,7 @@ export async function fetchAndRenderNetworkTopology() {
             <div class="switch-port-jack ${isUp ? 'is-active' : ''} clickable" data-iface="${escapeHtml(nic.name)}" title="${escapeHtml(t('net.configure', 'Set up {name}', { name: nic.name }))}">
               <div class="switch-port-top">
                 <div class="switch-port-id">
-                  <svg style="width:12px; height:12px; fill:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)'};"><circle cx="6" cy="6" r="4"/></svg>
+                  <svg style="width:12px; height:12px; fill:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #6c8084)'};"><circle cx="6" cy="6" r="4"/></svg>
                   ${escapeHtml(nic.name.toUpperCase())}
                   ${nic.alias ? `<span class="switch-port-alias-tag" title="${escapeHtml(nic.alias)}">${escapeHtml(nic.alias)}</span>` : ''}
                 </div>
@@ -1444,7 +1444,7 @@ export async function fetchAndRenderNetworkTopology() {
             <tr>
               <td>
                 <div class="nw-row-bold-mono">
-                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)'};"></span>
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #6c8084)'};"></span>
                   ${escapeHtml(nic.name)}
                 </div>
               </td>
@@ -1457,7 +1457,7 @@ export async function fetchAndRenderNetworkTopology() {
                 </span>
               </td>
               <td>
-                <span style="font-weight:600; color:${isUp ? '#f8fafc' : 'var(--muted)'};">${escapeHtml(nic.speed_human)}</span>
+                <span style="font-weight:600; color:${isUp ? '#f5f9f9' : 'var(--muted)'};">${escapeHtml(nic.speed_human)}</span>
                 <span class="nw-xs-muted-4">(${escapeHtml(nic.duplex)})</span>
               </td>
               <td class="nw-xs-mono">${escapeHtml(nic.mac || '--')}</td>
@@ -1572,7 +1572,7 @@ export async function fetchAndRenderNetworkTopology() {
             <tr>
               <td>
                 <div class="nw-row-bold-mono">
-                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)'};"></span>
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #6c8084)'};"></span>
                   ${escapeHtml(v.name)}
                 </div>
               </td>
@@ -1734,7 +1734,7 @@ export async function openNetworkPortModal(ifaceName) {
     const nic = data.interface || {};
 
     if (dot) {
-      dot.style.background = nic.is_up ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)';
+      dot.style.background = nic.is_up ? 'var(--ok2, #3bf58b)' : 'var(--muted, #6c8084)';
     }
 
     if (aliasInput) aliasInput.value = data.alias || '';
@@ -2168,7 +2168,7 @@ export async function openBondConfigModal(bondName) {
             return `
             <label class="nw-row-xs">
               <input type="checkbox" class="net-bond-slave-checkbox nw-x-7" value="${escapeHtml(nic.name)}" ${isChecked ? 'checked' : ''} />
-              <span style="font-family:var(--font-mono, monospace); font-weight:600; color:var(--lt-t-f8fafcff, #f8fafc);">${escapeHtml(nic.name)}</span>
+              <span style="font-family:var(--font-mono, monospace); font-weight:600; color:var(--lt-t-f5f9f9ff, #f5f9f9);">${escapeHtml(nic.name)}</span>
               ${nic.alias ? `<span class="switch-port-alias-tag">${escapeHtml(nic.alias)}</span>` : ''}
               <span class="nw-xs-muted-5">${escapeHtml(nic.speed_human || (nic.is_up ? t('net.connected', 'Connected') : t('net.disconnected', 'Disconnected')))}</span>
             </label>
@@ -2271,7 +2271,7 @@ export async function openBridgeConfigModal(brName) {
             return `
             <label class="nw-row-xs">
               <input type="checkbox" class="net-bridge-member-checkbox nw-x-7" value="${escapeHtml(cand.name)}" ${isChecked ? 'checked' : ''} />
-              <span style="font-family:var(--font-mono, monospace); font-weight:600; color:var(--lt-t-f8fafcff, #f8fafc);">${escapeHtml(cand.name)}</span>
+              <span style="font-family:var(--font-mono, monospace); font-weight:600; color:var(--lt-t-f5f9f9ff, #f5f9f9);">${escapeHtml(cand.name)}</span>
               <span class="network-member-pill nw-xs-4">${escapeHtml(cand.type || 'interface')}</span>
               ${cand.alias ? `<span class="switch-port-alias-tag">${escapeHtml(cand.alias)}</span>` : ''}
               <span class="nw-xs-muted-5">${escapeHtml(cand.speed_human || (cand.is_up ? 'Connected' : 'Disconnected'))}</span>

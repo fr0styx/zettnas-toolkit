@@ -164,7 +164,7 @@ describe('Batch 1: Accessibility, Form Label Linking & ARIA Radiogroups', () => 
     expect(crit.cls).toBe('crit');
 
     const standby = getThermalLevel(null, true);
-    expect(standby.color).toBe('var(--muted, #64748b)');
+    expect(standby.color).toBe('var(--muted, #6c8084)');
     expect(standby.cls).toBe('standby');
   });
 });

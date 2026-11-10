@@ -8,7 +8,7 @@
   margin-top: 8px;
 }
 .theme-preset-card {
-  background: var(--lt-b-141f2dff, #141f2d);
+  background: var(--lt-b-15282cff, #15282c);
   border: 1px solid var(--zn-line-8);
   border-radius: 9px;
   padding: 8px 10px;
@@ -21,7 +21,7 @@
   user-select: none;
 }
 .theme-preset-card:hover {
-  background: var(--lt-b-1b2a3dff, #1b2a3d);
+  background: var(--lt-b-1d363bff, #1d363b);
   border-color: var(--lt-r-33cdb866, rgba(51, 205, 184, 0.4));
   transform: translateY(-1px);
 }

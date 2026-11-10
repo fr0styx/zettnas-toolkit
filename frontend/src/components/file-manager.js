@@ -1990,13 +1990,13 @@ export class FileManagerWindow {
     menu = document.createElement('div');
     menu.id = 'fm-breadcrumbs-dropdown';
     menu.className = 'os-context-menu';
-    menu.style.cssText = 'position: fixed; z-index: 10000; background: rgba(18,25,35,0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); backdrop-filter: blur(12px); font-size: var(--zn-fs-xs); font-family: monospace; max-height: 200px; overflow-y: auto;';
+    menu.style.cssText = 'position: fixed; z-index: 10000; background: rgba(19,32,34,0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); backdrop-filter: blur(12px); font-size: var(--zn-fs-xs); font-family: monospace; max-height: 200px; overflow-y: auto;';
 
     for (let i = from; i < to; i++) {
       const segPath = '/' + parts.slice(0, i + 1).join('/');
       const item = document.createElement('div');
       item.className = 'ctx-item';
-      item.style.cssText = 'padding: 4px 8px; border-radius: 4px; cursor: pointer; color: #cbd5e1; display: flex; align-items: center; gap: 6px;';
+      item.style.cssText = 'padding: 4px 8px; border-radius: 4px; cursor: pointer; color: #c9d6d7; display: flex; align-items: center; gap: 6px;';
       item.innerHTML = `<span aria-hidden="true">📁</span> <span>${escapeHtml(parts[i])}</span>`;
       item.onmouseover = () => { item.style.background = 'rgba(255,255,255,0.1)'; };
       item.onmouseout = () => { item.style.background = 'transparent'; };

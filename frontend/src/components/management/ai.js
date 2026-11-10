@@ -265,7 +265,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
   const filteredModels = allModels;
 
   if (filteredModels.length === 0) {
-    gridEl.innerHTML = `<div style="grid-column:1 / -1; padding:14px; text-align:center; color:var(--muted,#94a3b8); font-size:var(--zn-fs-xs); border:1px dashed var(--zn-line-12); border-radius:8px;">${t('ait.no_models', 'No models match the selected hardware filter.')}</div>`;
+    gridEl.innerHTML = `<div style="grid-column:1 / -1; padding:14px; text-align:center; color:var(--muted,#95a8ab); font-size:var(--zn-fs-xs); border:1px dashed var(--zn-line-12); border-radius:8px;">${t('ait.no_models', 'No models match the selected hardware filter.')}</div>`;
     return;
   }
 
@@ -310,7 +310,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
         <div class="aik-col">
           <div class="aik-xs-bold-strong" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</div>
           <div class="aik-row">
-            <div style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+            <div style="font-size:var(--zn-fs-xs); color:var(--muted,#95a8ab); display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
               <span>${escapeHtml(m.family || m.category || 'Hugging Face')} • ${escapeHtml(m.params || '')} • ${escapeHtml(m.quantization || '')}</span>
               ${hfRepo ? `<a href="${escapeHtml(hfUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--lt-t-fde047ff, #fde047); text-decoration:none; font-family:monospace; font-size:var(--zn-fs-xs);" title="View on https://huggingface.co">🤗 ${escapeHtml(hfRepo)} ↗</a>` : ''}
             </div>
@@ -322,7 +322,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
         <div class="aik-row-xs">
           ${m.target_device ? `<span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fca5a5' : '#6ee7b7'};">⚡ ${escapeHtml(m.target_device)}</span>` : ''}
           <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fdba74' : '#bae6fd'};">${ico('💾')} ${t('ait.model_gb', '~{gb} GB Model', { gb: m.vram_or_ram_gb ?? m.est_ram_gb ?? 2.0 })}${m.min_ram_gb ? t('ait.host_gb', ' ({gb}GB+ Host)', { gb: m.min_ram_gb }) : ''}</span>
-          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-f8fafcff, #f8fafc);" title="${escapeHtml(t('ait.release_date', 'Hugging Face Release Date: {date}', { date: releaseDateText }))}">📅 ${escapeHtml(releaseDateText)}</span>
+          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-f5f9f9ff, #f5f9f9);" title="${escapeHtml(t('ait.release_date', 'Hugging Face Release Date: {date}', { date: releaseDateText }))}">📅 ${escapeHtml(releaseDateText)}</span>
           ${m.estimated_speed ? `<span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-fde68aff, #fde68a);">🚀 ${escapeHtml(m.estimated_speed)}</span>` : ''}
         </div>
         ${hasWarn ? `
@@ -648,10 +648,10 @@ export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, kibStat
   const stateText = document.getElementById('ai-sync-state-text');
   if (stateDot && stateText && stateBadge) {
     if (isDisabled) {
-      stateDot.style.background = '#64748b';
+      stateDot.style.background = '#6c8084';
       stateText.textContent = t('ai.sync_state_disabled', 'Status: Disabled');
-      stateBadge.style.borderColor = 'rgba(100,116,139,0.4)';
-      stateBadge.style.color = '#94a3b8';
+      stateBadge.style.borderColor = 'rgba(108,128,132,0.4)';
+      stateBadge.style.color = '#95a8ab';
     } else if (isPaused) {
       stateDot.style.background = '#fbbf24';
       stateText.textContent = t('ai.sync_state_paused', 'Sync: Paused');
@@ -673,10 +673,10 @@ export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, kibStat
       stateBadge.style.borderColor = 'rgba(16,185,129,0.45)';
       stateBadge.style.color = '#6ee7b7';
     } else {
-      stateDot.style.background = '#94a3b8';
+      stateDot.style.background = '#95a8ab';
       stateText.textContent = t('ai.sync_state_idle', 'Sync: Idle');
-      stateBadge.style.borderColor = 'rgba(148,163,184,0.28)';
-      stateBadge.style.color = '#cbd5e1';
+      stateBadge.style.borderColor = 'rgba(149,168,171,0.28)';
+      stateBadge.style.color = '#c9d6d7';
     }
   }
 
@@ -728,8 +728,8 @@ export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, kibStat
           ? 'rgba(239,68,68,0.22)'
           : isComplete
             ? 'rgba(16,185,129,0.22)'
-            : 'rgba(148,163,184,0.18)';
-    statePill.style.color = isPaused ? '#fbbf24' : isRunning ? '#34d399' : isStopped ? '#f87171' : isComplete ? '#34d399' : '#e2e8f0';
+            : 'rgba(149,168,171,0.18)';
+    statePill.style.color = isPaused ? '#fbbf24' : isRunning ? '#34d399' : isStopped ? '#f87171' : isComplete ? '#34d399' : '#e6efef';
   }
 
   const curPathEl = document.getElementById('ai-index-current-path');
@@ -840,7 +840,7 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
       const inStandby = Boolean(info?.in_standby);
       const dev = info?.backing_dev || '';
       return `
-        <div class="ai-watched-folder-chip" data-folder-path="${escapeHtml(fp)}" style="display:inline-flex; align-items:center; gap:7px; padding:4px 9px; border-radius:8px; background:rgba(14,165,233,0.14); border:1px solid rgba(14,165,233,0.38); font-size:var(--zn-fs-xs); color:var(--lt-t-f8fafcff, #f8fafc);">
+        <div class="ai-watched-folder-chip" data-folder-path="${escapeHtml(fp)}" style="display:inline-flex; align-items:center; gap:7px; padding:4px 9px; border-radius:8px; background:rgba(14,165,233,0.14); border:1px solid rgba(14,165,233,0.38); font-size:var(--zn-fs-xs); color:var(--lt-t-f5f9f9ff, #f5f9f9);">
           <span aria-hidden="true">☑</span>
           <span class="aik-bold-mono">${escapeHtml(fp)}</span>
           <span style="font-size:var(--zn-fs-xs); padding:1px 6px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.18)' : 'rgba(51,205,184,0.18)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
@@ -894,7 +894,7 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
         const inStandby = Boolean(f.in_standby);
         const dev = f.backing_dev || '';
         return `
-          <div role="option" aria-selected="${isWatched ? 'true' : 'false'}" class="btn-pill-toggle ai-discovered-share-pill ai-watched-dropdown-item ${isWatched ? 'active' : ''}" data-folder-path="${escapeHtml(f.path)}" data-watched="${isWatched ? '1' : '0'}" style="display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:7px 10px; border-radius:8px; background:${isWatched ? 'rgba(51,205,184,0.16)' : 'rgba(255,255,255,0.03)'}; border:1px solid ${isWatched ? 'rgba(51,205,184,0.48)' : 'rgba(255,255,255,0.08)'}; color:${isWatched ? '#fff' : '#cbd5e1'}; cursor:pointer; text-align:left;" title="${inStandby ? `Backing disk (${dev}) is in STANDBY — will only sync when disk is running` : `Backing disk (${dev || 'NVMe/Pool'}) is RUNNING — click to check/uncheck for RAG`}">
+          <div role="option" aria-selected="${isWatched ? 'true' : 'false'}" class="btn-pill-toggle ai-discovered-share-pill ai-watched-dropdown-item ${isWatched ? 'active' : ''}" data-folder-path="${escapeHtml(f.path)}" data-watched="${isWatched ? '1' : '0'}" style="display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:7px 10px; border-radius:8px; background:${isWatched ? 'rgba(51,205,184,0.16)' : 'rgba(255,255,255,0.03)'}; border:1px solid ${isWatched ? 'rgba(51,205,184,0.48)' : 'rgba(255,255,255,0.08)'}; color:${isWatched ? '#fff' : '#c9d6d7'}; cursor:pointer; text-align:left;" title="${inStandby ? `Backing disk (${dev}) is in STANDBY — will only sync when disk is running` : `Backing disk (${dev || 'NVMe/Pool'}) is RUNNING — click to check/uncheck for RAG`}">
             <div class="aik-row-3">
               <span class="ai-folder-checkbox-icon" style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:4px; background:${isWatched ? '#10b981' : 'rgba(255,255,255,0.08)'}; border:1px solid ${isWatched ? '#34d399' : 'rgba(255,255,255,0.28)'}; color:#042f2e; font-size:var(--zn-fs-xs); font-weight:900; flex-shrink:0;">${isWatched ? '✓' : ''}</span>
               <span aria-hidden="true">📁</span>
@@ -904,7 +904,7 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
               <span style="font-size:var(--zn-fs-xs); padding:1px 7px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.16)' : 'rgba(51,205,184,0.16)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
                 ${inStandby ? `💤 ${escapeHtml(dev || 'Standby')}` : `🟢 ${escapeHtml(dev || 'Running')}`}
               </span>
-              <span style="font-size:var(--zn-fs-xs); font-weight:700; padding:1px 6px; border-radius:6px; background:${isWatched ? 'rgba(16,185,129,0.22)' : 'rgba(255,255,255,0.06)'}; color:${isWatched ? '#6ee7b7' : '#94a3b8'};">
+              <span style="font-size:var(--zn-fs-xs); font-weight:700; padding:1px 6px; border-radius:6px; background:${isWatched ? 'rgba(16,185,129,0.22)' : 'rgba(255,255,255,0.06)'}; color:${isWatched ? '#6ee7b7' : '#95a8ab'};">
                 ${isWatched ? 'RAG Checked' : 'Click to Add'}
               </span>
             </div>
@@ -1454,7 +1454,7 @@ export function initAiKnowledgeEngine() {
         const isAct = b === tabBtn;
         b.classList.toggle('active', isAct);
         b.style.background = isAct ? 'rgba(14,165,233,0.28)' : 'transparent';
-        b.style.color = isAct ? '#fff' : '#94a3b8';
+        b.style.color = isAct ? '#fff' : '#95a8ab';
       });
       runAiVisualSearch(_getActiveAiSearchQuery());
     });
@@ -2207,7 +2207,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
     const activeLlmId = llmTel.active_model || _aiLastActiveModel || '—';
     const tokPerSec = llmTel.tokens_per_sec || null;
     const combinedHtml = `
-      <div class="ai-rag-synthesis-box" style="background: var(--lt-b-0f172aa6, rgba(15,23,42,0.65)); border: 1px solid rgba(56,189,248,0.28); border-radius: 10px; padding: 12px 15px; display: flex; flex-direction: column; gap: 10px;">
+      <div class="ai-rag-synthesis-box" style="background: var(--lt-b-0e1c1ea6, rgba(14,28,30,0.65)); border: 1px solid rgba(56,189,248,0.28); border-radius: 10px; padding: 12px 15px; display: flex; flex-direction: column; gap: 10px;">
         <div class="airg-row">
           <div class="airg-row-2">
             <span class="airg-fs15">🧠</span>
@@ -2303,12 +2303,12 @@ function buildVisualPhotoCardHtml(item) {
                <span class="aik-xs-muted-3">${escapeHtml((item.excerpt || fPath).slice(0, 75))}</span>
              </div>`
         }
-        <span title="${escapeHtml(matchReason)}" style="position: absolute; top: 6px; left: 6px; max-width: calc(100% - 82px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--lt-b-0f172ad9, rgba(15,23,42,0.85)); color: var(--zn-text-accent);">${catIcon} ${escapeHtml(matchReason)}</span>
+        <span title="${escapeHtml(matchReason)}" style="position: absolute; top: 6px; left: 6px; max-width: calc(100% - 82px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--lt-b-0e1c1ed9, rgba(14,28,30,0.85)); color: var(--zn-text-accent);">${catIcon} ${escapeHtml(matchReason)}</span>
         <span style="position: absolute; top: 6px; right: 6px; font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--lt-b-000000b8, rgba(0,0,0,0.72)); color: var(--lt-t-6ee7b7ff, #6ee7b7); white-space: nowrap;">${isFav ? '⭐ ' : ''}💤 ${t('aiq.cached', 'Cached')}</span>
       </div>
       <div class="aik-col-2">
         <div class="aik-xs-bold-strong-2" title="${escapeHtml(fName)}">${escapeHtml(fName)}</div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted,#94a3b8); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(fPath)}</div>
+        <div style="font-size: var(--zn-fs-xs); color: var(--muted,#95a8ab); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(fPath)}</div>
         <div class="aik-row-6">
           ${colors.map((c) => `<span style="font-size: var(--zn-fs-xs); padding: 1px 5px; border-radius: 4px; background: rgba(56,189,248,0.14); color: var(--zn-text-accent); font-weight: 700; text-transform: capitalize;">🎨 ${escapeHtml(c)}</span>`).join('')}
           ${scenes.map((s) => `<span style="font-size: var(--zn-fs-xs); padding: 1px 5px; border-radius: 4px; background: var(--lt-b-ffffff12, rgba(255,255,255,0.07)); color: var(--zn-text-soft);">#${escapeHtml(s)}</span>`).join('')}
@@ -2367,7 +2367,7 @@ export function renderAiPreviewInspector(item) {
       <button type="button" id="btn-ai-inspector-download" class="btn-pill-toggle">
         ⬇️ ${t('aiq.download', 'Download')}
       </button>
-      <button type="button" id="btn-ai-inspector-favorite" class="btn-pill-toggle" style="font-size:var(--zn-fs-xs); padding:6px 8px; cursor:pointer; color:${isFav ? '#fbbf24' : '#cbd5e1'};">
+      <button type="button" id="btn-ai-inspector-favorite" class="btn-pill-toggle" style="font-size:var(--zn-fs-xs); padding:6px 8px; cursor:pointer; color:${isFav ? '#fbbf24' : '#c9d6d7'};">
         ${isFav ? `⭐ ${t('aiq.favorited', 'Favorited')}` : `☆ ${t('aiq.favorite', 'Favorite')}`}
       </button>
       <button type="button" id="btn-ai-inspector-share" class="btn-pill-toggle aik-x">
@@ -2527,10 +2527,10 @@ export function renderAiRagInitialEmptyState() {
   const grid = document.getElementById('ai-visual-results-grid');
   if (grid) {
     grid.innerHTML = `
-      <div class="ai-rag-initial-placeholder" style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; color: var(--muted, #94a3b8);">
+      <div class="ai-rag-initial-placeholder" style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; color: var(--muted, #95a8ab);">
         <div class="aik-fs32">🔍</div>
         <div class="aik-fs14-semi" data-i18n="ai.search_placeholder_prompt">${escapeHtml(t('ai.search_placeholder_prompt', 'Search Your NAS Knowledge & Media'))}</div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted, #94a3b8); max-width: 480px; margin: 0 auto; line-height: 1.5;" data-i18n="ai.search_placeholder_sub">${escapeHtml(t('ai.search_placeholder_sub', 'Type a query above to search documents, recipes, photos, or audio, or ask Kib a question. Results will appear here once you search.'))}</div>
+        <div style="font-size: var(--zn-fs-xs); color: var(--muted, #95a8ab); max-width: 480px; margin: 0 auto; line-height: 1.5;" data-i18n="ai.search_placeholder_sub">${escapeHtml(t('ai.search_placeholder_sub', 'Type a query above to search documents, recipes, photos, or audio, or ask Kib a question. Results will appear here once you search.'))}</div>
       </div>
     `;
   }
@@ -2823,7 +2823,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
         </div>
         ${groundingScore === null ? `
           <div class="aicm-row-2">
-            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-soft); background: rgba(148,163,184,0.14); border: 1px solid rgba(148,163,184,0.35); padding: 1px 7px; border-radius: 999px;" title="${t('ui.this_answer_s_support_in', 'This answer\'s support in the sources wasn\'t measured.')}">${t('aiq.unverified', 'Unverified')}</span>
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-soft); background: rgba(149,168,171,0.14); border: 1px solid rgba(149,168,171,0.35); padding: 1px 7px; border-radius: 999px;" title="${t('ui.this_answer_s_support_in', 'This answer\'s support in the sources wasn\'t measured.')}">${t('aiq.unverified', 'Unverified')}</span>
           </div>
         ` : ''}
         ${groundingScore !== null ? `
@@ -2854,7 +2854,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
             const escPath = escapeHtml(c.path || '');
             const escName = escapeHtml(cname);
             return `
-              <div class="ai-citation-card" style="padding: 7px 10px; border-radius: 7px; background: var(--lt-b-0f172ad9, rgba(15,23,42,0.85)); border: 1px solid rgba(56,189,248,0.22); font-size: var(--zn-fs-xs);">
+              <div class="ai-citation-card" style="padding: 7px 10px; border-radius: 7px; background: var(--lt-b-0e1c1ed9, rgba(14,28,30,0.85)); border: 1px solid rgba(56,189,248,0.22); font-size: var(--zn-fs-xs);">
                 <div class="aicm-row-3">
                   <button type="button" class="btn-preview-citation aicm-xs-bold-accent-box" data-action="open-file-preview" data-path="${escPath}" data-name="${escName}">
                     📄 [${idx + 1}] ${escName}<span class="aicm-muted">${escapeHtml(bcrumb)}</span> 👁️
@@ -3101,7 +3101,7 @@ export async function selectAiConversation(convId) {
         const userMsgEl = document.createElement('div');
         userMsgEl.className = 'ai-chat-msg ai-chat-msg-user';
         userMsgEl.dataset.convId = convId;
-        userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(14, 165, 233, 0.22); border: 1px solid rgba(56, 189, 248, 0.45); color: #f8fafc; font-size: var(--zn-fs-xs); line-height: 1.45;';
+        userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(14, 165, 233, 0.22); border: 1px solid rgba(56, 189, 248, 0.45); color: #f5f9f9; font-size: var(--zn-fs-xs); line-height: 1.45;';
         userMsgEl.innerHTML = `<div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-7dd3fcff, #7dd3fc); margin-bottom:3px;">🧑 ${t('aiq.you', 'You')}</div><div>${escapeHtml(m.content)}</div>`;
         listEl.appendChild(userMsgEl);
       } else if (m.role === 'assistant') {
@@ -3502,8 +3502,8 @@ export function _formatChatMarkdown(rawText, sources = null) {
       ? `<button type="button" class="btn-deploy-stack-code" data-action="deploy-compose-code" style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(52, 211, 153, 0.45); border-radius: 4px; color: var(--lt-t-6ee7b7ff, #6ee7b7); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px;">🚀 ${t('aiq.deploy', 'Deploy Stack')}</button>`
       : '';
 
-    return `<div class="ai-chat-code-block" style="margin: 8px 0; border-radius: 8px; background: var(--lt-b-020617e0, rgba(2, 6, 23, 0.88)); border: 1px solid rgba(56, 189, 248, 0.3); overflow: hidden;">
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; background: var(--lt-b-0f172af2, rgba(15, 23, 42, 0.95)); border-bottom: 1px solid var(--zn-line-8); font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-family: monospace;">
+    return `<div class="ai-chat-code-block" style="margin: 8px 0; border-radius: 8px; background: var(--lt-b-050b0ce0, rgba(5, 11, 12, 0.88)); border: 1px solid rgba(56, 189, 248, 0.3); overflow: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; background: var(--lt-b-0e1c1ef2, rgba(14, 28, 30, 0.95)); border-bottom: 1px solid var(--zn-line-8); font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-family: monospace;">
         <span style="font-weight: 700; color: var(--lt-t-7dd3fcff, #7dd3fc);">${escapeHtml(item.lang)}</span>
         <div class="aimd-row">
           ${deployBtnHtml}
@@ -3635,7 +3635,7 @@ export async function sendAiChatMessage(rawMessage = null) {
   if (listEl) {
     const userMsgEl = document.createElement('div');
     userMsgEl.className = 'ai-chat-msg ai-chat-msg-user';
-    userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(14, 165, 233, 0.22); border: 1px solid rgba(56, 189, 248, 0.45); color: #f8fafc; font-size: var(--zn-fs-xs); line-height: 1.45;';
+    userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(14, 165, 233, 0.22); border: 1px solid rgba(56, 189, 248, 0.45); color: #f5f9f9; font-size: var(--zn-fs-xs); line-height: 1.45;';
     userMsgEl.innerHTML = `<div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-7dd3fcff, #7dd3fc); margin-bottom:3px;">🧑 ${t('aiq.you', 'You')}</div><div>${escapeHtml(msg)}</div>`;
     listEl.appendChild(userMsgEl);
 
@@ -3653,7 +3653,7 @@ export async function sendAiChatMessage(rawMessage = null) {
         <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-d8b4feff, #d8b4fe); margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(192, 132, 252, 0.35);">${escapeHtml(activeModel)}</span>
       `;
     } else {
-      pendingEl.style.cssText = 'align-self: flex-start; max-width: 85%; padding: 10px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); display: flex; align-items: center; gap: 9px; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.12);';
+      pendingEl.style.cssText = 'align-self: flex-start; max-width: 85%; padding: 10px 14px; border-radius: 10px; background: rgba(14, 28, 30, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); display: flex; align-items: center; gap: 9px; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.12);';
       pendingEl.innerHTML = `
         <div class="ai-typing-indicator aik-row-8">
           <span class="ai-typing-dot"></span>
@@ -3759,7 +3759,7 @@ export async function sendAiChatMessage(rawMessage = null) {
           if (currentConvId) streamBotMsgEl.dataset.convId = currentConvId;
           streamBotMsgEl.dataset.activeModel = activeModel;
           streamBotMsgEl.dataset.isStreaming = '1';
-          streamBotMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.78); border: 1px solid rgba(56, 189, 248, 0.28);';
+          streamBotMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(14, 28, 30, 0.78); border: 1px solid rgba(56, 189, 248, 0.28);';
 
           streamBotMsgEl.innerHTML = `
             <div class="ai-chat-llm-proof-bar aik-row-box-4">
@@ -3978,7 +3978,7 @@ export async function sendAiChatMessage(rawMessage = null) {
         botMsgEl.className = 'ai-chat-msg ai-chat-msg-assistant';
         botMsgEl.dataset.activeModel = usedModel;
         if (_activeConversationId) botMsgEl.dataset.convId = _activeConversationId;
-        botMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.78); border: 1px solid rgba(56, 189, 248, 0.28);';
+        botMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(14, 28, 30, 0.78); border: 1px solid rgba(56, 189, 248, 0.28);';
         botMsgEl.innerHTML = _buildAiAssistantMessageHtml(res, activeModel);
         listEl.appendChild(botMsgEl);
       }

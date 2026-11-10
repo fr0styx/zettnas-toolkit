@@ -34,7 +34,7 @@ body.theme-light { --zn-toast-err: #b91c1c; --zn-toast-warn: #b45309; --zn-toast
   min-width: 340px;
   max-width: 620px;
   width: max-content;
-  background: var(--lt-b-0d141ef5, rgba(13, 20, 30, 0.96));
+  background: var(--lt-b-0e1b1df5, rgba(14, 27, 29, 0.96));
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   border: 1px solid var(--zn-line-15);
@@ -84,7 +84,7 @@ body.theme-light { --zn-toast-err: #b91c1c; --zn-toast-warn: #b45309; --zn-toast
   transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   width: 480px;
   max-width: 92vw;
-  background: var(--lt-b-0f1722fa, rgba(15, 23, 34, 0.98));
+  background: var(--lt-b-101e21fa, rgba(16, 30, 33, 0.98));
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(245, 158, 11, 0.5);

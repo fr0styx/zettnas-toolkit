@@ -133,7 +133,7 @@ export function showDockToast(msg, targetId = null) {
 
   const toast = document.createElement('div');
   toast.className = 'dock-pin-toast';
-  toast.style.cssText = 'background:rgba(18,25,35,0.92); border:1px solid rgba(255,255,255,0.22); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); color:#fff; font-size:var(--zn-fs-xs); font-weight:600; padding:6px 14px; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,0.6), 0 0 1px rgba(255,255,255,0.2) inset; pointer-events:none; transition:opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1); transform:translateY(8px) scale(0.96); opacity:0; white-space:nowrap;';
+  toast.style.cssText = 'background:rgba(19,32,34,0.92); border:1px solid rgba(255,255,255,0.22); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); color:#fff; font-size:var(--zn-fs-xs); font-weight:600; padding:6px 14px; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,0.6), 0 0 1px rgba(255,255,255,0.2) inset; pointer-events:none; transition:opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1); transform:translateY(8px) scale(0.96); opacity:0; white-space:nowrap;';
   toast.textContent = msg;
   container.appendChild(toast);
 
@@ -270,7 +270,7 @@ export function renderNotificationCenter() {
   visibleEvents.forEach(e => {
     const isChecked = isEventChecked(e);
     const dt = new Date(e.ts * 1000);
-    let color = '#cbd5e1';
+    let color = '#c9d6d7';
     let icon = 'ℹ️';
     if (e.level === 'error') { color = 'var(--crit)'; icon = '❌'; }
     else if (e.level === 'warning') { color = 'var(--warn)'; icon = '⚠️'; }
@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
         b.classList.remove('active');
         b.style.background = 'transparent';
         b.style.borderColor = 'transparent';
-        b.style.color = b.dataset.filter === 'error' ? 'var(--crit, #ff5c5c)' : (b.dataset.filter === 'warning' ? 'var(--warn, #f5a623)' : (b.dataset.filter === 'info' ? '#93c5fd' : '#cbd5e1'));
+        b.style.color = b.dataset.filter === 'error' ? 'var(--crit, #ff5c5c)' : (b.dataset.filter === 'warning' ? 'var(--warn, #f5a623)' : (b.dataset.filter === 'info' ? '#93c5fd' : '#c9d6d7'));
       });
       btn.classList.add('active');
       btn.style.background = 'rgba(255,255,255,0.1)';

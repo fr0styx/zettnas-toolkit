@@ -75,7 +75,7 @@ export function initStackModal() {
                 <button class="btn-pill-toggle" id="stack-compose-reset-btn">${ico('↺')} ${t('stk.reload', 'Reload')}</button>
               </div>
             </div>
-            <div style="flex:1; min-height:280px; position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--zn-line-12); border-radius:6px; display:flex;">
+            <div style="flex:1; min-height:280px; position:relative; background:var(--lt-b-091213ff, #091213); border:1px solid var(--zn-line-12); border-radius:6px; display:flex;">
               <textarea class="stk-xs-mono-box-grow" id="stack-compose-editor" spellcheck="false"></textarea>
             </div>
           </div>
@@ -86,7 +86,7 @@ export function initStackModal() {
               <span class="stk-xs-muted">${t('stk.env_hint', 'Environment variables (.env) the stack’s containers get when they start.')}</span>
               <button class="btn-pill-toggle" id="stack-env-copy-btn">${ico('📋')} ${t('stk.copy_env', 'Copy .env')}</button>
             </div>
-            <div style="flex:1; min-height:280px; position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--zn-line-12); border-radius:6px; display:flex;">
+            <div style="flex:1; min-height:280px; position:relative; background:var(--lt-b-091213ff, #091213); border:1px solid var(--zn-line-12); border-radius:6px; display:flex;">
               <textarea class="stk-xs-mono-box-grow-2" id="stack-env-editor" spellcheck="false" placeholder="# KEY=VALUE"></textarea>
             </div>
           </div>

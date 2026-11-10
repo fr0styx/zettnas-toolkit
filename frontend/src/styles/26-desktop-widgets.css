@@ -97,7 +97,7 @@
   max-width: 270px;
   box-sizing: border-box;
   flex-shrink: 0;
-  background: var(--lt-b-0d141ea6, rgba(13, 20, 30, 0.65));
+  background: var(--lt-b-0e1b1da6, rgba(14, 27, 29, 0.65));
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   border: 1px solid var(--zn-line-8);
@@ -153,15 +153,15 @@ body.theme-yak .desktop-widget.clickable:hover {
 
 /* Glass Transparency Themes */
 #desktop-widgets-container.glass-subtle .desktop-widget {
-  background: var(--lt-b-0d141e66, rgba(13, 20, 30, 0.4));
+  background: var(--lt-b-0e1b1d66, rgba(14, 27, 29, 0.4));
   backdrop-filter: blur(8px);
 }
 #desktop-widgets-container.glass-standard .desktop-widget {
-  background: var(--lt-b-0d141ea6, rgba(13, 20, 30, 0.65));
+  background: var(--lt-b-0e1b1da6, rgba(14, 27, 29, 0.65));
   backdrop-filter: blur(16px);
 }
 #desktop-widgets-container.glass-solid .desktop-widget {
-  background: var(--lt-b-0d141ee0, rgba(13, 20, 30, 0.88));
+  background: var(--lt-b-0e1b1de0, rgba(14, 27, 29, 0.88));
   backdrop-filter: blur(24px);
 }
 
@@ -227,7 +227,7 @@ body.theme-yak .desktop-widget.clickable:hover {
 .cal-weekday {
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  color: var(--lt-t-64748bff, #64748b);
+  color: var(--lt-t-6c8084ff, #6c8084);
   padding: 2px 0;
   text-transform: uppercase;
   user-select: none;
@@ -249,7 +249,7 @@ body.theme-yak .desktop-widget.clickable:hover {
 }
 .cal-day.cal-today {
   background: var(--brand, #33cdb8);
-  color: #0b1118;
+  color: #0c1517;
   font-weight: 800;
   box-shadow: 0 0 10px rgba(51, 205, 184, 0.4);
 }
@@ -292,11 +292,11 @@ body.theme-yak .cal-day.cal-today {
 }
 .cal-day.cal-holiday.cal-today {
   background: var(--brand, #33cdb8);
-  color: #0b1118;
+  color: #0c1517;
   box-shadow: 0 0 12px rgba(51, 205, 184, 0.5);
 }
 .cal-day.cal-holiday.cal-today::after {
-  background: var(--lt-b-0b1118ff, #0b1118);
+  background: var(--lt-b-0c1517ff, #0c1517);
   box-shadow: none;
 }
 .cal-day.cal-other-month.cal-holiday {
@@ -324,7 +324,7 @@ body.theme-yak .cal-day.cal-holiday:hover {
   position: fixed;
   pointer-events: none;
   z-index: 10000;
-  background: var(--lt-b-0d141ef5, rgba(13, 20, 30, 0.96));
+  background: var(--lt-b-0e1b1df5, rgba(14, 27, 29, 0.96));
   border: 1px solid rgba(246, 173, 85, 0.5);
   border-radius: 7px;
   padding: 6px 10px;
@@ -387,7 +387,7 @@ body.theme-yak .cal-day.cal-holiday:hover {
   transition: color 0.18s ease;
 }
 .cal-glance-bar.empty {
-  color: var(--muted, #64748b);
+  color: var(--muted, #6c8084);
   font-size: var(--zn-fs-xs);
   font-weight: 500;
 }
@@ -574,7 +574,7 @@ body.theme-yak .cal-day.cal-holiday:hover {
   right: 0;
   max-height: 220px;
   overflow-y: auto;
-  background: var(--lt-b-0d141ef5, rgba(13, 20, 30, 0.96));
+  background: var(--lt-b-0e1b1df5, rgba(14, 27, 29, 0.96));
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border: 1px solid var(--lt-r-ffffff29, rgba(255, 255, 255, 0.16));
@@ -672,7 +672,7 @@ body.theme-yak .weather-city-item.active {
 
 .widget-drag-handle {
   cursor: grab;
-  color: var(--lt-t-64748bff, #64748b);
+  color: var(--lt-t-6c8084ff, #6c8084);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -832,7 +832,7 @@ body.theme-yak #notif-center-resizer:hover {
 
 /* Dock Item Context Menu */
 .dock-context-menu {
-  background: var(--lt-b-141820f5, rgba(20, 24, 32, 0.96)) !important;
+  background: var(--lt-b-151e1ff5, rgba(21, 30, 31, 0.96)) !important;
   backdrop-filter: blur(20px) !important;
   border: 1px solid var(--zn-line-12) !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
@@ -893,7 +893,7 @@ body.theme-yak #notif-center-resizer:hover {
 /* The desktop shortcut tiles' emoji and the Add-a-shortcut dialog (desktop-shortcuts.js): each rule is the
    inline style it replaced; the panes' display stays inline, the script switches it (NUX-15) */
 #desktop-icons-container .dss-emoji { font-size:24px; }
-#add-desktop-shortcut-overlay .asd-win { max-width:580px; width:92%; max-height:85vh; display:flex; flex-direction:column; background:var(--lt-b-0f172aeb, rgba(15,23,42,0.92)); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px); border:1px solid var(--zn-line-14); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.85), 0 0 35px rgba(51,205,184,0.12); overflow:hidden; }
+#add-desktop-shortcut-overlay .asd-win { max-width:580px; width:92%; max-height:85vh; display:flex; flex-direction:column; background:var(--lt-b-0e1c1eeb, rgba(14,28,30,0.92)); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px); border:1px solid var(--zn-line-14); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.85), 0 0 35px rgba(51,205,184,0.12); overflow:hidden; }
 #add-desktop-shortcut-overlay .asd-head { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--zn-line-8); background:var(--zn-glaze-2); }
 #add-desktop-shortcut-overlay .asd-title-row { display:flex; align-items:center; gap:10px; }
 #add-desktop-shortcut-overlay .asd-ico { font-size:18px; }

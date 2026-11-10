@@ -19,14 +19,14 @@
   padding: 0 4px;
   border-radius: 8px;
   background: var(--brand);
-  color: var(--accent-contrast-fg, #0b1118);
+  color: var(--accent-contrast-fg, #0c1517);
   font-size: var(--zn-fs-xs);
   font-weight: 700;
   text-align: center;
 }
 /* Solid like the file manager: on the glass surface the wallpaper showed through the list */
 .os-window.jobs-centre-window {
-  background: var(--lt-b-0f172afa, rgba(15, 23, 42, 0.98));
+  background: var(--lt-b-0e1c1efa, rgba(14, 28, 30, 0.98));
   border-color: var(--zn-line-12);
 }
 .jobs-centre-window {

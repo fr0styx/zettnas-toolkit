@@ -126,8 +126,8 @@ export function getThermalLevel(tempC, isStandby = false) {
   if (isStandby || tempC == null) {
     return {
       cls: 'standby',
-      color: 'var(--muted, #64748b)',
-      glow: 'rgba(100, 116, 139, 0.3)',
+      color: 'var(--muted, #6c8084)',
+      glow: 'rgba(108, 128, 132, 0.3)',
       text: isStandby ? t('chassis.standby', 'STANDBY') : t('chassis.unknown', 'UNKNOWN'),
       toString() { return this.cls; }
     };
@@ -589,7 +589,7 @@ export function generateSmartSparklineSvg(points = [], width = 280, height = 50)
   if (!points || points.length === 0) {
     return `
       <svg class="smart-sparkline-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-        <text x="${width / 2}" y="${height / 2 + 4}" font-size="10" fill="#64748b" text-anchor="middle">No historical data recorded</text>
+        <text x="${width / 2}" y="${height / 2 + 4}" font-size="10" fill="#6c8084" text-anchor="middle">No historical data recorded</text>
       </svg>
     `;
   }
@@ -622,7 +622,7 @@ export function generateSmartSparklineSvg(points = [], width = 280, height = 50)
   if (hasErrors) {
     circlesHtml = coords
       .filter((c) => c.val > 0)
-      .map((c) => `<circle cx="${c.x}" cy="${c.y}" r="3" fill="${strokeColor}" stroke="#0b1118" stroke-width="1"/>`)
+      .map((c) => `<circle cx="${c.x}" cy="${c.y}" r="3" fill="${strokeColor}" stroke="#0c1517" stroke-width="1"/>`)
       .join('');
   } else if (coords.length > 0) {
     const first = coords[0];
@@ -2401,7 +2401,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 tabDesktop.style.background = '#0284c7';
                 tabDesktop.style.color = '#fff';
                 tabQr.style.background = 'transparent';
-                tabQr.style.color = '#94a3b8';
+                tabQr.style.color = '#95a8ab';
                 if (desktopPanel) desktopPanel.style.display = 'block';
                 if (qrPanel) qrPanel.style.display = 'none';
               };
@@ -2409,7 +2409,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 tabQr.style.background = '#0284c7';
                 tabQr.style.color = '#fff';
                 tabDesktop.style.background = 'transparent';
-                tabDesktop.style.color = '#94a3b8';
+                tabDesktop.style.color = '#95a8ab';
                 if (desktopPanel) desktopPanel.style.display = 'none';
                 if (qrPanel) qrPanel.style.display = 'block';
                 if (qrBox) qrBox.style.display = 'block';
@@ -2606,7 +2606,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 }
                 if (tabDesktop) {
                   tabDesktop.style.background = 'transparent';
-                  tabDesktop.style.color = '#94a3b8';
+                  tabDesktop.style.color = '#95a8ab';
                 }
                 startOAuth(true, true);
               };

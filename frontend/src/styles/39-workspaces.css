@@ -31,7 +31,7 @@
 
 .drive-temp-bay {
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #94a3b8);
+  color: var(--muted, #95a8ab);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }

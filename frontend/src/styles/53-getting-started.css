@@ -8,7 +8,7 @@
   max-width: calc(100vw - 32px);
   padding: 16px;
   border-radius: 12px;
-  background: var(--lt-b-0f172af0, rgba(15, 23, 42, 0.94));
+  background: var(--lt-b-0e1c1ef0, rgba(14, 28, 30, 0.94));
   border: 1px solid var(--zn-line-12);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
   color: var(--fg);

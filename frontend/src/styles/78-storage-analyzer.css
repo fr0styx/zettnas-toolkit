@@ -19,8 +19,8 @@
 #space-modal .space-kind-document { fill: #3b82f6; }
 #space-modal .space-kind-archive { fill: #a16207; }
 #space-modal .space-kind-disk_image { fill: #ef4444; }
-#space-modal .space-kind-backup { fill: #64748b; }
-#space-modal .space-kind-other { fill: #94a3b8; }
+#space-modal .space-kind-backup { fill: #6c8084; }
+#space-modal .space-kind-other { fill: #95a8ab; }
 #space-modal .space-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--zn-space-2) var(--zn-space-3); font-size: var(--zn-fs-xs); }
 #space-modal .space-legend li { display: flex; align-items: center; gap: 6px; }
 #space-modal .space-swatch { width: 10px; height: 10px; }

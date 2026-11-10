@@ -91,7 +91,7 @@
   display: flex;
   gap: 10px;
   padding: 6px 10px;
-  background: var(--lt-b-121923a6, rgba(18, 25, 35, 0.65));
+  background: var(--lt-b-132022a6, rgba(19, 32, 34, 0.65));
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border: 1px solid var(--zn-line-12);
@@ -301,10 +301,10 @@
   transform: translateY(-4px) scale(1.05);
 }
 .dock-item.active-window svg {
-  color: #0a0e13;
+  color: #0a1113;
   filter: none;
 }
 .dock-item.active-window::after {
-  background: var(--lt-b-0a0e13ff, #0a0e13);
+  background: var(--lt-b-0a1113ff, #0a1113);
 }
 

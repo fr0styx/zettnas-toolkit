@@ -519,7 +519,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
       );
 
       return `
-        <div class="catalog-card glassmorphic-card" style="padding: 14px; border-radius: 8px; border: 1px solid var(--zn-line-8); background: var(--lt-b-121a2699, rgba(18,26,38,0.6));">
+        <div class="catalog-card glassmorphic-card" style="padding: 14px; border-radius: 8px; border: 1px solid var(--zn-line-8); background: var(--lt-b-13222599, rgba(19,34,37,0.6));">
           <div class="vmi-row-5">
             <div>
               <span style="font-size: var(--zn-fs-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: var(--zn-text-accent);">${item.badge}</span>

@@ -484,7 +484,7 @@ export function applyDesktopTheme(themeName, customAccent = null) {
     const glowStr = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35)` : '';
     const hoverStr = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` : '';
     const lum = rgb ? getRelativeLuminance(rgb.r, rgb.g, rgb.b) : 0.5;
-    const contrastFg = lum > 0.45 ? '#0b1118' : '#ffffff';
+    const contrastFg = lum > 0.45 ? '#0c1517' : '#ffffff';
 
     if (typeof document !== 'undefined' && document.documentElement) {
       document.documentElement.style.setProperty('--brand', customAccent);

@@ -112,7 +112,7 @@ export function initContainerModal() {
                 <button class="btn-pill-toggle" id="ci-compose-download-btn">${ico('⬇️')} ${t('ci.download_yml', 'Download .yml')}</button>
               </div>
             </div>
-            <div style="position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--zn-line-10); border-radius:6px; overflow:hidden;">
+            <div style="position:relative; background:var(--lt-b-091213ff, #091213); border:1px solid var(--zn-line-10); border-radius:6px; overflow:hidden;">
               <pre class="ci-xs-mono"><code id="ci-compose-code">Generating Docker Compose definition...</code></pre>
             </div>
           </div>
@@ -137,7 +137,7 @@ export function initContainerModal() {
                 <button class="btn-pill-toggle" id="ci-logs-copy-btn">${ico('📋')} ${t('ci.copy_logs', 'Copy logs')}</button>
               </div>
             </div>
-            <div id="ci-logs-terminal" style="background:var(--lt-b-05080fff, #05080f); border:1px solid var(--zn-line-10); border-radius:6px; height:340px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.45; color:var(--zn-text-soft);">
+            <div id="ci-logs-terminal" style="background:var(--lt-b-060d0eff, #060d0e); border:1px solid var(--zn-line-10); border-radius:6px; height:340px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.45; color:var(--zn-text-soft);">
               <div class="ci-logs-note ci-muted-center-2">${t('ci.fetching_logs', 'Fetching logs…')}</div>
             </div>
           </div>
@@ -154,15 +154,15 @@ export function initContainerModal() {
               </div>
             </div>
             <div id="ci-term-output" style="background:var(--lt-b-030712ff, #030712); border:1px solid var(--zn-line-12); border-radius:6px 6px 0 0; height:310px; padding:6px 4px 6px 8px; box-sizing:border-box; overflow:hidden;"></div>
-            <div class="ci-term-mobile-keybar" style="display:flex; gap:6px; overflow-x:auto; background:var(--lt-b-0b1120ff, #0b1120); border-left:1px solid var(--zn-line-12); border-right:1px solid var(--zn-line-12); padding:5px 8px; scrollbar-width:none;">
+            <div class="ci-term-mobile-keybar" style="display:flex; gap:6px; overflow-x:auto; background:var(--lt-b-0c1c1fff, #0c1c1f); border-left:1px solid var(--zn-line-12); border-right:1px solid var(--zn-line-12); padding:5px 8px; scrollbar-width:none;">
               ${['ls -la', 'ps aux', 'df -h'].map((c) => `<button type="button" class="btn-pill-toggle ci-term-key-btn is-small ci-x-3" data-cmd="${c}">${c}</button>`).join('')}
               <button type="button" class="btn-pill-toggle ci-term-key-btn is-small ci-x-3" data-key="ArrowUp">${ico('↑')} ${t('ci.prev', 'Previous')}</button>
               <button type="button" class="btn-pill-toggle ci-term-key-btn is-small ci-x-3" data-key="ArrowDown">${ico('↓')} ${t('common.next', 'Next')}</button>
               <button type="button" class="btn-pill-toggle ci-term-key-btn is-small ci-x-3" data-key="clear">${ico('🧹')} ${t('ci.clear', 'Clear')}</button>
             </div>
-            <div style="display:flex; background:var(--lt-b-0f172aff, #0f172a); border:1px solid var(--zn-line-12); border-top:none; border-radius:0 0 6px 6px; padding:6px 10px; gap:8px; align-items:center;">
+            <div style="display:flex; background:var(--lt-b-0e1c1eff, #0e1c1e); border:1px solid var(--zn-line-12); border-top:none; border-radius:0 0 6px 6px; padding:6px 10px; gap:8px; align-items:center;">
               <span style="color:var(--lt-t-10b981ff, #10b981); font-family:var(--font-mono, monospace); font-weight:bold; font-size:var(--zn-fs-xs);">$</span>
-              <input type="text" id="ci-term-input" placeholder="${t('ui.type_a_command_and_press', 'Type a command and press Enter...')}" style="flex:1; background:transparent; border:none; outline:none; color:var(--lt-t-f8fafcff, #f8fafc); font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);" autocomplete="off" spellcheck="false">
+              <input type="text" id="ci-term-input" placeholder="${t('ui.type_a_command_and_press', 'Type a command and press Enter...')}" style="flex:1; background:transparent; border:none; outline:none; color:var(--lt-t-f5f9f9ff, #f5f9f9); font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);" autocomplete="off" spellcheck="false">
               <button class="btn-pill-toggle is-small" id="ci-term-send-btn">${t('ci.run', 'Run')}</button>
             </div>
           </div>
@@ -1299,7 +1299,7 @@ export function appendLogLine(l) {
     if (!textMatch) return;
   }
   const tsHtml = l.ts ? `<span style="color:var(--lt-t-33cdb8ff, #33cdb8); opacity:0.6; margin-right:6px;">${escapeHtml(l.ts.slice(11, 19))}</span>` : '';
-  const color = l.stream === 'stderr' ? '#f87171' : '#e2e8f0';
+  const color = l.stream === 'stderr' ? '#f87171' : '#e6efef';
   const row = document.createElement('div');
   row.style.cssText = `white-space:pre-wrap; word-break:break-all; color:${color}; margin-bottom:2px;`;
   row.innerHTML = `${tsHtml}${escapeHtml(l.msg)}`;
@@ -1349,7 +1349,7 @@ function renderLogsOutput() {
   terminal.innerHTML = lines
     .map((l) => {
       const tsHtml = l.ts ? `<span style="color:var(--lt-t-33cdb8ff, #33cdb8); opacity:0.6; margin-right:6px;">${escapeHtml(l.ts.slice(11, 19))}</span>` : '';
-      const color = l.stream === 'stderr' ? '#f87171' : '#e2e8f0';
+      const color = l.stream === 'stderr' ? '#f87171' : '#e6efef';
       return `<div style="white-space:pre-wrap; word-break:break-all; color:${color}; margin-bottom:2px;">${tsHtml}${escapeHtml(l.msg)}</div>`;
     })
     .join('');
@@ -1613,7 +1613,7 @@ async function renderContainerEditTab(cid) {
         </label>
         <div class="ci-row-11">
           <button class="btn-pill-toggle" id="cie-btn-cancel">${t('common.cancel', 'Cancel')}</button>
-          <button class="btn-pill-toggle" id="cie-btn-save" style="font-weight:700; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border:none; padding:6px 16px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'Kiboto cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>
+          <button class="btn-pill-toggle" id="cie-btn-save" style="font-weight:700; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0c1517); border:none; padding:6px 16px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'Kiboto cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>
             ${ico('💾')} ${t('ci.save_recreate', 'Save and recreate the container')}
           </button>
         </div>

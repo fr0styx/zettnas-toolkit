@@ -263,7 +263,7 @@ export async function fetchAndRenderSecurityPosture() {
             <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
               <span class="sec-advisor-item-icon" style="color:${passColor}; font-weight:800; font-size: var(--zn-fs-sm); line-height:1;">${passIcon}</span>
               <div style="min-width:0;">
-                <div style="font-weight:600; color:var(--lt-t-f8fafcff, #f8fafc); font-size: var(--zn-fs-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
+                <div style="font-weight:600; color:var(--lt-t-f5f9f9ff, #f5f9f9); font-size: var(--zn-fs-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
                 <div style="font-size: var(--zn-fs-xs); color:${c.passed ? 'var(--zn-text-muted)' : 'var(--lt-t-fca5a5ff, #fca5a5)'}; margin-top:2px;">${escapeHtml(c.details || '')}</div>
               </div>
             </div>

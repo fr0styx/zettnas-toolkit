@@ -15,7 +15,7 @@ tr.docker-row-selected {
   align-items: center;
   gap: 12px;
   padding: 8px 18px;
-  background: var(--lt-b-0f172af0, rgba(15, 23, 42, 0.94));
+  background: var(--lt-b-0e1c1ef0, rgba(14, 28, 30, 0.94));
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   border: 1px solid var(--lt-r-ffffff29, rgba(255, 255, 255, 0.16));
@@ -183,7 +183,7 @@ tr.docker-row-selected {
     position: sticky;
     top: 0;
     z-index: 2;
-    background: var(--lt-b-080c13ff, #080c13);
+    background: var(--lt-b-091112ff, #091112);
   }
 
   /* One horizontal scrollbar: keep the synced bar under the table, hide the one
@@ -208,12 +208,12 @@ tr.docker-row-selected {
   }
 
   body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container::-webkit-scrollbar-thumb {
-    background: rgba(148, 163, 184, 0.28);
+    background: rgba(149, 168, 171, 0.28);
     border-radius: 4px;
   }
 
   body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(148, 163, 184, 0.45);
+    background: rgba(149, 168, 171, 0.45);
   }
 }
 

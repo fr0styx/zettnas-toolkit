@@ -88,7 +88,7 @@ export function renderNetworkMapSvg(layout, highlight = null) {
     .map((e) => {
       if (e.kind === 'shares') {
         const op = highlight ? (ctrLit.has(e.container) || ctrLit.has(e.target) ? 0.9 : 0.12) : 0.8;
-        return `<path class="nm-edge nm-edge-shares" d="${edgePath(e)}" fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4 3" opacity="${op}"><title>${escapeHtml(t('cw.netmap_shares', 'uses network of {name}', { name: e.target }))}</title></path>`;
+        return `<path class="nm-edge nm-edge-shares" d="${edgePath(e)}" fill="none" stroke="#95a8ab" stroke-width="1.4" stroke-dasharray="4 3" opacity="${op}"><title>${escapeHtml(t('cw.netmap_shares', 'uses network of {name}', { name: e.target }))}</title></path>`;
       }
       const label = e.ip
         ? `<text x="${CTR_X - 6}" y="${e.y2 - 4}" text-anchor="end" font-size="9" fill="${e.color}" opacity="${dim(e.network)}" font-family="monospace">${escapeHtml(e.ip)}</text>`
@@ -107,7 +107,7 @@ export function renderNetworkMapSvg(layout, highlight = null) {
         <rect x="${NET_X}" y="${n.y - 12}" width="${NET_W}" height="24" rx="6" fill="rgba(0,0,0,0.45)" stroke="${n.color}" stroke-width="${highlight === n.name ? 2.2 : 1.2}"/>
         <text x="${NET_X + 10}" y="${n.y + 1}" font-size="11" font-weight="700" fill="#fff">${escapeHtml(trimLabel(n.name, 20))}</text>
         <text x="${NET_X + NET_W - 8}" y="${n.y + 1}" font-size="9" text-anchor="end" fill="${n.color}">${n.container_count || escapeHtml(t('cw.netmap_unused', 'unused'))}</text>
-        <text x="${NET_X + 10}" y="${n.y + 10}" font-size="7.5" fill="#94a3b8">${escapeHtml(trimLabel(meta, 30))}</text>
+        <text x="${NET_X + 10}" y="${n.y + 10}" font-size="7.5" fill="#95a8ab">${escapeHtml(trimLabel(meta, 30))}</text>
       </g>`;
     })
     .join('');
@@ -123,10 +123,10 @@ export function renderNetworkMapSvg(layout, highlight = null) {
       return `
       <g class="nm-ctr" data-ctr="${escapeHtml(c.name)}" opacity="${op}">
         <title>${escapeHtml(tip)}</title>
-        <rect x="${CTR_X}" y="${c.y - 11}" width="${CTR_W}" height="22" rx="5" fill="rgba(18,26,38,0.85)" stroke="rgba(255,255,255,0.1)"/>
-        <circle cx="${CTR_X + 10}" cy="${c.y}" r="3.5" fill="${running ? '#34d399' : '#64748b'}"/>
-        <text x="${CTR_X + 20}" y="${c.y + 4}" font-size="11" fill="#e2e8f0">${escapeHtml(trimLabel(c.name, 24))}</text>
-        ${ports.length ? `<text x="${CTR_X + CTR_W - 7}" y="${c.y + 4}" font-size="8.5" text-anchor="end" fill="#94a3b8">${escapeHtml(trimLabel(ports[0].split('→')[0], 6))}${ports.length > 1 ? '+' : ''}</text>` : ''}
+        <rect x="${CTR_X}" y="${c.y - 11}" width="${CTR_W}" height="22" rx="5" fill="rgba(19,34,37,0.85)" stroke="rgba(255,255,255,0.1)"/>
+        <circle cx="${CTR_X + 10}" cy="${c.y}" r="3.5" fill="${running ? '#34d399' : '#6c8084'}"/>
+        <text x="${CTR_X + 20}" y="${c.y + 4}" font-size="11" fill="#e6efef">${escapeHtml(trimLabel(c.name, 24))}</text>
+        ${ports.length ? `<text x="${CTR_X + CTR_W - 7}" y="${c.y + 4}" font-size="8.5" text-anchor="end" fill="#95a8ab">${escapeHtml(trimLabel(ports[0].split('→')[0], 6))}${ports.length > 1 ? '+' : ''}</text>` : ''}
       </g>`;
     })
     .join('');

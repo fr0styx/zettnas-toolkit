@@ -6,7 +6,7 @@
 .cloud-remote-window {
   display: flex !important;
   flex-direction: column !important;
-  background: var(--lt-b-0f1622ff, #0f1622) !important;
+  background: var(--lt-b-101e21ff, #101e21) !important;
   -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
   backdrop-filter: blur(28px) saturate(140%) !important;
   border: 1px solid var(--zn-line-14) !important;
@@ -36,7 +36,7 @@
 
 #cloud-remote-window .smart-modal-header,
 #cloud-remote-window #cloud-remote-window-header {
-  background: var(--lt-b-141d2cff, #141d2c) !important;
+  background: var(--lt-b-15272bff, #15272b) !important;
   border-bottom: 1px solid var(--zn-line-8) !important;
   padding: 12px 18px !important;
   height: 44px !important;
@@ -47,7 +47,7 @@
 }
 
 #cloud-remote-window #new-remote-form {
-  background: var(--lt-b-0b1019ff, #0b1019) !important;
+  background: var(--lt-b-0c1618ff, #0c1618) !important;
   display: flex !important;
   flex-direction: column !important;
   flex: 1 1 auto !important;
@@ -89,7 +89,7 @@
 
 #cloud-remote-window .cloud-remote-footer {
   flex-shrink: 0 !important;
-  background: var(--lt-b-141d2cff, #141d2c) !important;
+  background: var(--lt-b-15272bff, #15272b) !important;
   border-top: 1px solid var(--zn-line-8) !important;
   padding: 12px 20px !important;
   display: flex !important;
@@ -105,7 +105,7 @@
 #cloud-remote-window input[type="text"],
 #cloud-remote-window input[type="password"],
 #cloud-remote-window textarea {
-  background: var(--lt-b-141d2cff, #141d2c) !important;
+  background: var(--lt-b-15272bff, #15272b) !important;
   border: 1px solid var(--zn-line-14) !important;
   color: var(--zn-text-strong) !important;
   border-radius: 6px !important;
@@ -125,7 +125,7 @@
 }
 
 #cloud-remote-window select option {
-  background: var(--lt-b-141d2cff, #141d2c) !important;
+  background: var(--lt-b-15272bff, #15272b) !important;
   color: var(--zn-text-strong) !important;
 }
 
@@ -285,7 +285,7 @@ body.theme-oled #cloud-remote-window select option {
   contain: layout style;
   transform: translateZ(0);
   pointer-events: auto;
-  background: var(--lt-b-0f172af5, rgba(15, 23, 42, 0.96));
+  background: var(--lt-b-0e1c1ef5, rgba(14, 28, 30, 0.96));
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border: 1px solid var(--zn-line-15);
@@ -317,7 +317,7 @@ body.theme-oled #cloud-remote-window select option {
   contain: layout style;
   transform: translateZ(0);
   pointer-events: auto;
-  background: var(--lt-b-0f1620ff, #0f1620); border: 1px solid var(--zn-line-10); border-radius: 14px;
+  background: var(--lt-b-101d1fff, #101d1f); border: 1px solid var(--zn-line-10); border-radius: 14px;
   width: 620px; height: 600px; min-width: 480px; min-height: 360px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column;
   box-shadow: 0 25px 60px rgba(0,0,0,0.9); overflow: hidden;
   resize: both;
@@ -370,7 +370,7 @@ body.theme-oled #cloud-remote-window select option {
 }
 .smart-modal-header {
   padding: 16px 20px; border-bottom: 1px solid var(--zn-line-8); display: flex;
-  justify-content: space-between; align-items: center; background: var(--lt-b-131c27ff, #131c27); flex-shrink: 0;
+  justify-content: space-between; align-items: center; background: var(--lt-b-142326ff, #142326); flex-shrink: 0;
 }
 .smart-modal-title { font-size: 15px; font-weight: 800; color: var(--zn-text-strong); display: flex; align-items: center; gap: 8px; }
 .smart-modal-body {
@@ -381,13 +381,13 @@ body.theme-oled #cloud-remote-window select option {
   display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
 }
 .smart-meta-cell {
-  background: var(--lt-b-151f2bff, #151f2b); border: 1px solid var(--zn-line-5); padding: 8px 12px; border-radius: 8px;
+  background: var(--lt-b-16272aff, #16272a); border: 1px solid var(--zn-line-5); padding: 8px 12px; border-radius: 8px;
   display: flex; flex-direction: column; gap: 2px;
 }
 .smart-meta-cell .lbl { font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 800; letter-spacing: 0.5px; }
 .smart-meta-cell .val { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text); font-variant-numeric: tabular-nums; }
 .smart-raw-pre {
-  background: var(--lt-b-080c11ff, #080c11); border: 1px solid var(--zn-line-5); border-radius: 8px;
+  background: var(--lt-b-080f11ff, #080f11); border: 1px solid var(--zn-line-5); border-radius: 8px;
   padding: 12px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--zn-text-muted); overflow-x: auto; max-height: 220px;
 }
 
@@ -448,7 +448,7 @@ body.theme-oled #cloud-remote-window select option {
 
 /* Usable Diagnostic Report Card */
 .smart-report-card {
-  background: var(--lt-b-0f172abf, rgba(15, 23, 42, 0.75));
+  background: var(--lt-b-0e1c1ebf, rgba(14, 28, 30, 0.75));
   border: 1px solid rgba(16, 185, 129, 0.35);
   border-radius: 8px;
   padding: 14px 16px;
@@ -545,7 +545,7 @@ body.theme-oled #cloud-remote-window select option {
 
 /* SMART Self-Test Progress Card */
 .smart-progress-card {
-  background: var(--lt-b-0f172ab2, rgba(15, 23, 42, 0.7));
+  background: var(--lt-b-0e1c1eb2, rgba(14, 28, 30, 0.7));
   border: 1px solid rgba(56, 189, 248, 0.25);
   border-radius: 8px;
   padding: 10px 14px;
@@ -627,7 +627,7 @@ body.theme-oled #cloud-remote-window select option {
 
 /* SMART Self-Test History Card */
 .smart-test-history-card {
-  background: var(--lt-b-111827ff, #111827);
+  background: var(--lt-b-122326ff, #122326);
   border: 1px solid var(--zn-line-7);
   border-radius: 8px;
   overflow: hidden;
@@ -691,7 +691,7 @@ body.theme-oled #cloud-remote-window select option {
 .smart-test-table th {
   position: sticky;
   top: 0;
-  background: var(--lt-b-151f2bff, #151f2b);
+  background: var(--lt-b-16272aff, #16272a);
   color: var(--muted);
   font-size: var(--zn-fs-xs);
   font-weight: 700;

@@ -18,7 +18,7 @@
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--zn-line-8);
-  background: var(--lt-b-0a101af2, rgba(10, 16, 26, 0.95));
+  background: var(--lt-b-0b1719f2, rgba(11, 23, 25, 0.95));
   user-select: none;
   overflow: hidden;
   transition: width 0.2s ease;
@@ -33,7 +33,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: var(--muted, #64748b);
+  color: var(--muted, #6c8084);
   padding: 8px 10px 4px;
 }
 
@@ -45,7 +45,7 @@
   margin: 1px 4px;
   border-radius: 6px;
   font-size: var(--zn-fs-xs);
-  color: var(--fg, #e2e8f0);
+  color: var(--fg, #e6efef);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
@@ -79,7 +79,7 @@
   min-height: 0;
   position: relative;
   overflow: hidden;
-  background: var(--lt-b-0b111aff, #0b111a);
+  background: var(--lt-b-0c1719ff, #0c1719);
 }
 
 .fm-inspector-pane {
@@ -87,7 +87,7 @@
   min-width: 220px;
   max-width: 320px;
   border-left: 1px solid var(--zn-line-8);
-  background: var(--lt-b-0a101af2, rgba(10, 16, 26, 0.95));
+  background: var(--lt-b-0b1719f2, rgba(11, 23, 25, 0.95));
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -110,11 +110,11 @@
   justify-content: space-between;
   font-size: var(--zn-fs-xs);
   padding: 3px 0;
-  color: var(--fg, #cbd5e1);
+  color: var(--fg, #c9d6d7);
 }
 
 .fm-inspector-row span:first-child {
-  color: var(--muted, #94a3b8);
+  color: var(--muted, #95a8ab);
 }
 
 /* Compact View Mode */
@@ -152,7 +152,7 @@
   min-width: 210px;
   width: max-content;
   max-width: calc(100vw - 16px);
-  background: var(--lt-b-0f172af5, rgba(15, 23, 42, 0.96)) !important;
+  background: var(--lt-b-0e1c1ef5, rgba(14, 28, 30, 0.96)) !important;
   -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
   backdrop-filter: blur(24px) saturate(140%) !important;
   border: 1px solid var(--zn-line-14) !important;
@@ -176,7 +176,7 @@
   white-space: nowrap; /* the menu widens to the longest row instead of wrapping it */
   padding: 6px 10px;
   font-size: var(--zn-fs-xs);
-  color: var(--fg, #e2e8f0);
+  color: var(--fg, #e6efef);
   border-radius: 5px;
   cursor: pointer;
   transition: background 0.12s ease;
@@ -202,7 +202,7 @@
 .fm-ctx-key {
   margin-left: auto;
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #64748b);
+  color: var(--muted, #6c8084);
   font-family: monospace;
 }
 

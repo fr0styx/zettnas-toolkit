@@ -66,7 +66,7 @@
   height: 6px;
   background: var(--ok2, #33cdb8);
   border-radius: 50%;
-  border: 1px solid var(--lt-r-0c1118ff, #0c1118);
+  border: 1px solid var(--lt-r-0d1617ff, #0d1617);
   box-shadow: 0 0 4px var(--ok2, #33cdb8);
 }
 
@@ -83,7 +83,7 @@
 
 .topbar-user-caret {
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #94a3b8);
+  color: var(--muted, #95a8ab);
   transition: transform 0.2s ease, color 0.2s ease;
   line-height: 1;
 }
@@ -100,7 +100,7 @@
 
 /* User Profile Flyout from Topbar */
 .user-profile-flyout {
-  background: var(--lt-b-0f172ae0, rgba(15, 23, 42, 0.88));
+  background: var(--lt-b-0e1c1ee0, rgba(14, 28, 30, 0.88));
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--zn-line-12);
@@ -150,7 +150,7 @@
   position: fixed;
   inset: 0;
   z-index: 99998;
-  background: var(--lt-b-0a0f1dbf, rgba(10, 15, 29, 0.75));
+  background: var(--lt-b-0b191cbf, rgba(11, 25, 28, 0.75));
   -webkit-backdrop-filter: blur(25px) saturate(160%);
   backdrop-filter: blur(25px) saturate(160%);
   display: flex;
@@ -217,8 +217,8 @@ body.desktop-locked #os-dock-container {
 
 /* The sign-in and lock screens (index.html): each rule is the inline style it replaced; a display the
    sign-in code can switch (on an element with an id, or none) stays inline (NUX-15) */
-#login-overlay { position: fixed; inset: 0; z-index: 999999; background: var(--lt-b-080c10ff, #080c10); align-items: center; justify-content: center; }
-#login-overlay .lgn-div1 { background: var(--card, #141b24); padding: 36px 32px; border-radius: 14px; text-align: center; border: 1px solid var(--zn-line-12); width: 340px; box-shadow: 0 25px 60px rgba(0,0,0,0.85); position: relative; }
+#login-overlay { position: fixed; inset: 0; z-index: 999999; background: var(--lt-b-080e10ff, #080e10); align-items: center; justify-content: center; }
+#login-overlay .lgn-div1 { background: var(--card, #152123); padding: 36px 32px; border-radius: 14px; text-align: center; border: 1px solid var(--zn-line-12); width: 340px; box-shadow: 0 25px 60px rgba(0,0,0,0.85); position: relative; }
 #login-overlay .lgn-user-selected-card { align-items: center; gap: 12px; background: rgba(14,165,233,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; cursor: pointer; transition: all 0.18s ease; user-select: none; }
 #login-overlay .lgn-selected-initial { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 13px; }
 #login-overlay .lgn-div2 { font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); display: flex; align-items: center; gap: 4px; }
@@ -226,8 +226,8 @@ body.desktop-locked #os-dock-container {
 #login-overlay .lgn-password { width: 100%; padding: 11px 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-18); color: var(--zn-text-strong); border-radius: 6px; margin-bottom: 12px; box-sizing: border-box; text-align: center; font-size: 15px; outline: none; }
 #login-overlay .lgn-div3 { width: 48px; height: 48px; border-radius: 50%; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.35); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px auto; }
 #login-overlay .lgn-mfa-challenge-code { width: 100%; padding: 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid rgba(56,189,248,0.4); color: var(--zn-text-accent); border-radius: 6px; margin-bottom: 16px; box-sizing: border-box; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: 6px; outline: none; font-family: monospace; }
-#lock-overlay { position: fixed; inset: 0; z-index: 999990; background: var(--lt-b-080c10bf, rgba(8,12,16,0.75)); backdrop-filter: blur(28px) saturate(180%) brightness(0.65); align-items: center; justify-content: center; }
-#lock-overlay .lck-div1 { background: var(--lt-b-141b24d9, rgba(20,27,36,0.85)); padding: 40px 36px; border-radius: 16px; text-align: center; border: 1px solid var(--zn-line-14); width: 340px; box-shadow: 0 30px 80px rgba(0,0,0,0.9); }
+#lock-overlay { position: fixed; inset: 0; z-index: 999990; background: var(--lt-b-080e10bf, rgba(8,14,16,0.75)); backdrop-filter: blur(28px) saturate(180%) brightness(0.65); align-items: center; justify-content: center; }
+#lock-overlay .lck-div1 { background: var(--lt-b-152123d9, rgba(21,33,35,0.85)); padding: 40px 36px; border-radius: 16px; text-align: center; border: 1px solid var(--zn-line-14); width: 340px; box-shadow: 0 30px 80px rgba(0,0,0,0.9); }
 #lock-overlay .lck-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 14px; border: 1px solid var(--lt-r-ffffff40, rgba(255,255,255,0.25)); }
 #lock-overlay .lck-role-badge { font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); font-weight: 600; }
 #lock-overlay .lck-password { width: 100%; padding: 12px 42px 12px 14px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-20); color: var(--zn-text-strong); border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }

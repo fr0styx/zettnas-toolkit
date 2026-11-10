@@ -192,7 +192,7 @@
   border-radius: 12px;
   border: 1px solid var(--zn-line-10);
   background: var(--zn-glaze-4);
-  color: var(--muted, #8493a5);
+  color: var(--muted, #889da1);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -283,7 +283,7 @@
 .wallpaper-gradient-preview {
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at 50% 30%, var(--lt-b-172436ff, #172436) 0%, var(--lt-b-0a0e17ff, #0a0e17) 80%, var(--lt-b-05080eff, #05080e) 100%);
+  background: radial-gradient(circle at 50% 30%, var(--lt-b-193034ff, #193034) 0%, var(--lt-b-0b1416ff, #0b1416) 80%, var(--lt-b-050c0eff, #050c0e) 100%);
 }
 
 .wallpaper-card-active-indicator {
@@ -325,7 +325,7 @@
 }
 
 .wallpaper-action-btn {
-  background: var(--lt-b-0a0f18d9, rgba(10, 15, 24, 0.85));
+  background: var(--lt-b-0b1517d9, rgba(11, 21, 23, 0.85));
   backdrop-filter: blur(8px);
   border: 1px solid var(--zn-line-15);
   color: var(--zn-text-bright);
