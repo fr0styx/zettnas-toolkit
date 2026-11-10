@@ -22,7 +22,7 @@
 
 .desktop-drop-card {
   background: var(--lt-b-132023eb, rgba(19, 32, 35, 0.92));
-  border: 2px dashed var(--brand, #33cdb8);
+  border: 2px dashed var(--brand);
   border-radius: 20px;
   padding: 48px 56px;
   text-align: center;
@@ -35,11 +35,11 @@
 @keyframes dropCardPulse {
   0%, 100% {
     transform: scale(1);
-    border-color: var(--brand, #33cdb8);
+    border-color: var(--brand);
   }
   50% {
     transform: scale(1.02);
-    border-color: var(--ok2, #33cdb8);
+    border-color: var(--ok2);
     box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 50px rgba(51, 205, 184, 0.35);
   }
 }

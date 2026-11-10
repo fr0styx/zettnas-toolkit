@@ -173,12 +173,12 @@
 #modal-vm-snapshots .vmsn-x-4 { padding: 8px 12px; text-align: right; }
 #modal-vm-snapshots .vmsn-bold-strong { padding: 8px 12px; font-weight: 700; color: var(--zn-text-strong); }
 #modal-vm-snapshots .vmsn-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); font-weight: normal; }
-#modal-vm-snapshots .vmsn-muted-mono { padding: 8px 12px; color: var(--muted); font-family: var(--font-mono, monospace); }
+#modal-vm-snapshots .vmsn-muted-mono { padding: 8px 12px; color: var(--muted); font-family: var(--font-mono); }
 #modal-vm-snapshots .vmsn-muted { padding: 8px 12px; color: var(--muted); }
 #modal-vm-snapshots .vmsn-row-7 { display: flex; gap: 6px; justify-content: flex-end; }
 #modal-vm-snapshots .vmsn-xs-crit-center { color: var(--crit); text-align: center; padding: 24px; font-size: var(--zn-fs-xs); }
 #modal-vm-snapshots .vmsn-fs24 { font-size: 24px; opacity: 0.6; }
-#modal-vm-snapshots .vmsn-xs-muted-mono { font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono, monospace); }
+#modal-vm-snapshots .vmsn-xs-muted-mono { font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono); }
 
 /* ISO library: classes instead of inline styles (NUX-15), same look */
 #modal-iso-manager .vmi-x { cursor: move; }

@@ -54,7 +54,7 @@
 .canary-digits {
   font-size: 34px;
   font-weight: 800;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   line-height: 1;
   color: var(--zn-text-warn);
 }
@@ -67,7 +67,7 @@
   font-size: var(--zn-fs-xs);
   font-weight: 800;
   letter-spacing: 1px;
-  color: var(--muted, #95a8ab);
+  color: var(--muted);
   margin-top: 4px;
 }
 

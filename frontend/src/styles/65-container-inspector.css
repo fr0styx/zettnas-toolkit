@@ -7,7 +7,7 @@
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-row { display: flex; align-items: center; gap: 8px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-fs16 { font-size: 16px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-fs13-bold-strong { font-weight: 700; color: var(--zn-text-strong); font-size: 13px; }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-muted-mono { font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono, monospace); }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-muted-mono { font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono); }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-row-2 { display: flex; gap: 6px; align-items: center; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-row-box { display: flex; gap: 4px; padding: 8px 14px; background: var(--zn-shade-30); border-bottom: 1px solid var(--zn-line-8); overflow-x: auto; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-grow { flex: 1; overflow-y: auto; padding: 14px; box-sizing: border-box; }
@@ -20,7 +20,7 @@
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-row-xs-muted { display: flex; align-items: center; gap: 5px; font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-x-2 { cursor: pointer; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-row-5 { display: flex; gap: 6px; }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-mono { margin: 0; padding: 12px; max-height: 360px; overflow: auto; font-family: var(--font-mono, monospace); font-size: var(--zn-fs-xs); color: var(--zn-text); line-height: 1.5; }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-mono { margin: 0; padding: 12px; max-height: 360px; overflow: auto; font-family: var(--font-mono); font-size: var(--zn-fs-xs); color: var(--zn-text); line-height: 1.5; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-2 { font-size: var(--zn-fs-xs); padding: 2px 6px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-3 { font-size: var(--zn-fs-xs); padding: 3px 8px; width: 160px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-row-xs-muted-2 { display: flex; align-items: center; gap: 4px; font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer; }
@@ -37,10 +37,10 @@
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-box-2 { background: var(--zn-shade-25); border: 1px solid var(--zn-line-6); border-radius: 6px; overflow: hidden; margin-bottom: 14px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-x-5 { margin: 0; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-semi-muted { width: 140px; color: var(--muted); font-weight: 600; }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-strong-mono { font-family: var(--font-mono, monospace); color: var(--zn-text-strong); }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-strong-mono { font-family: var(--font-mono); color: var(--zn-text-strong); }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-semi-muted-2 { color: var(--muted); font-weight: 600; }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-muted-mono-2 { font-family: var(--font-mono, monospace); font-size: var(--zn-fs-xs); color: var(--muted); word-break: break-all; }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-soft-mono { font-family: var(--font-mono, monospace); font-size: var(--zn-fs-xs); color: var(--zn-text-soft); word-break: break-all; }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-muted-mono-2 { font-family: var(--font-mono); font-size: var(--zn-fs-xs); color: var(--muted); word-break: break-all; }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-soft-mono { font-family: var(--font-mono); font-size: var(--zn-fs-xs); color: var(--zn-text-soft); word-break: break-all; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-box-3 { background: var(--zn-shade-35); border: 1px solid var(--zn-line-8); padding: 12px; border-radius: 8px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-row-6 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-bold-strong { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -60,8 +60,8 @@
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-box-4 { background: var(--zn-shade-25); border: 1px solid var(--zn-line-6); border-radius: 6px; overflow: hidden; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-bold-accent { color: var(--zn-text-accent); font-weight: 700; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-muted { color: var(--muted); }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-mono-2 { font-family: var(--font-mono, monospace); font-size: var(--zn-fs-xs); }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-mono { font-family: var(--font-mono, monospace); }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-mono-2 { font-family: var(--font-mono); font-size: var(--zn-fs-xs); }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-mono { font-family: var(--font-mono); }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-box { padding: 1px 5px; border-radius: 3px; background: var(--zn-glaze-8); font-size: var(--zn-fs-xs); text-transform: uppercase; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-bold-ok { color: var(--ok2); font-weight: 700; font-size: var(--zn-fs-xs); }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-bold-accent-2 { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-accent); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -71,16 +71,16 @@
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-muted-5 { font-size: var(--zn-fs-xs); color: var(--muted); margin: 0 0 10px 0; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-col { display: flex; flex-direction: column; gap: 8px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-row-box-2 { display: flex; align-items: center; gap: 8px; background: var(--zn-glaze-3); padding: 6px 10px; border-radius: 6px; }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-strong-mono { font-size: var(--zn-fs-xs); color: var(--zn-text-strong); font-family: var(--font-mono, monospace); width: 130px; }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-strong-mono { font-size: var(--zn-fs-xs); color: var(--zn-text-strong); font-family: var(--font-mono); width: 130px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-8 { width: 90px; font-size: var(--zn-fs-xs); padding: 3px 6px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-x-6 { margin-top: 6px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-x-7 { text-align: right; }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-strong-mono-2 { font-family: var(--font-mono, monospace); font-size: var(--zn-fs-xs); color: var(--zn-text-strong); word-break: break-all; }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-muted-mono-3 { font-family: var(--font-mono, monospace); font-size: var(--zn-fs-xs); color: var(--muted); }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-strong-mono-2 { font-family: var(--font-mono); font-size: var(--zn-fs-xs); color: var(--zn-text-strong); word-break: break-all; }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-muted-mono-3 { font-family: var(--font-mono); font-size: var(--zn-fs-xs); color: var(--muted); }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-size-2 { width: 220px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-size-3 { width: 60px; text-align: right; }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-bold-strong-mono { font-family: var(--font-mono, monospace); font-weight: 700; color: var(--zn-text-strong); }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-mono-3 { font-family: var(--font-mono, monospace); font-size: var(--zn-fs-xs); word-break: break-all; }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-bold-strong-mono { font-family: var(--font-mono); font-weight: 700; color: var(--zn-text-strong); }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-mono-3 { font-family: var(--font-mono); font-size: var(--zn-fs-xs); word-break: break-all; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-crit-center { color: var(--crit); text-align: center; padding: 20px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-size-4 { width: 480px; max-width: 92vw; flex-direction: column; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-row-9 { display: flex; justify-content: space-between; align-items: center; }
@@ -112,5 +112,5 @@
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-muted-6 { font-size: var(--zn-fs-xs); color: var(--muted); width: 65px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-12 { width: 75px; font-size: var(--zn-fs-xs); padding: 3px 6px; }
 :is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-13 { font-size: var(--zn-fs-xs); padding: 2px 4px; }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-mono-grow { flex: 1; font-size: var(--zn-fs-xs); padding: 3px 6px; font-family: var(--font-mono, monospace); }
-:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-bold-mono { width: 180px; font-size: var(--zn-fs-xs); padding: 3px 6px; font-family: var(--font-mono, monospace); font-weight: 700; }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-mono-grow { flex: 1; font-size: var(--zn-fs-xs); padding: 3px 6px; font-family: var(--font-mono); }
+:is(#container-inspector-overlay, #container-delete-modal-overlay) .ci-xs-bold-mono { width: 180px; font-size: var(--zn-fs-xs); padding: 3px 6px; font-family: var(--font-mono); font-weight: 700; }

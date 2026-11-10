@@ -3,7 +3,7 @@
    ========================================================================== */
 tr.docker-row-selected {
   background: rgba(51, 205, 184, 0.09) !important;
-  box-shadow: inset 2px 0 0 var(--brand, #33cdb8);
+  box-shadow: inset 2px 0 0 var(--brand);
 }
 
 .docker-floating-bulk-bar {
@@ -52,7 +52,7 @@ tr.docker-row-selected {
   height: 20px;
   padding: 0 6px;
   border-radius: 10px;
-  background: var(--brand, #33cdb8);
+  background: var(--brand);
   color: var(--accent-contrast-fg);
   font-size: var(--zn-fs-xs);
   font-weight: 700;
@@ -248,12 +248,12 @@ tr.docker-row-selected {
 
 /* Docker cleanup progress */
 .dpm-bar { height: 8px; border-radius: 999px; background: var(--zn-glaze-8); overflow: hidden; }
-.dpm-bar-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--brand, #33cdb8), var(--ok2, #33cdb8)); transition: width 0.4s ease; }
+.dpm-bar-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--brand), var(--ok2)); transition: width 0.4s ease; }
 .dpm-progress-pct { font-size: var(--zn-fs-xs); color: var(--zn-text-strong); font-variant-numeric: tabular-nums; }
 .dpm-step-icon { width: 14px; text-align: center; color: var(--zn-text-muted); }
-.dpm-step.is-done .dpm-step-icon { color: var(--ok, #33d17a); }
-.dpm-step.is-error .dpm-step-icon { color: var(--crit, #f0553b); }
-.dpm-step.is-running .dpm-step-icon { color: var(--lt-ink-brand, var(--brand, #33cdb8)); display: inline-block; animation: dpm-spin 1.2s linear infinite; }
+.dpm-step.is-done .dpm-step-icon { color: var(--ok); }
+.dpm-step.is-error .dpm-step-icon { color: var(--crit); }
+.dpm-step.is-running .dpm-step-icon { color: var(--lt-ink-brand, var(--brand)); display: inline-block; animation: dpm-spin 1.2s linear infinite; }
 @keyframes dpm-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
   .dpm-bar-fill { transition: none; }

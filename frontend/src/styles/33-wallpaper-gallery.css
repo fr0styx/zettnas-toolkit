@@ -33,7 +33,7 @@
   padding: 3px 9px;
   background: var(--lt-b-ffffff12, rgba(255, 255, 255, 0.07));
   border-radius: 12px;
-  color: var(--muted, #95a8ab);
+  color: var(--muted);
 }
 
 .wallpaper-toolbar-actions {
@@ -44,13 +44,13 @@
 
 .btn-primary-accent {
   background: rgba(var(--ok2-rgb, 51, 205, 184), 0.15) !important;
-  color: var(--ok2, #33cdb8) !important;
+  color: var(--ok2) !important;
   border-color: rgba(var(--ok2-rgb, 51, 205, 184), 0.35) !important;
   font-weight: 600;
 }
 
 .btn-primary-accent:hover {
   background: rgba(var(--ok2-rgb, 51, 205, 184), 0.25) !important;
-  border-color: var(--ok2, #33cdb8) !important;
+  border-color: var(--ok2) !important;
 }
 

@@ -19,4 +19,4 @@
 .empty-state-action { margin-top: var(--zn-space-1); }
 .empty-state-row > td { padding: 0; }
 /* Share protocols: whether each service is really running (UX-11) */
-.proto-tag.proto-down { background: rgba(245, 158, 11, 0.12); color: var(--warn, #f59e0b); border-color: rgba(245, 158, 11, 0.3); }
+.proto-tag.proto-down { background: rgba(245, 158, 11, 0.12); color: var(--warn); border-color: rgba(245, 158, 11, 0.3); }

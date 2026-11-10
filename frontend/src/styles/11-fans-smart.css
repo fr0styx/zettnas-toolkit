@@ -118,7 +118,7 @@
   transition: stroke 0.15s ease, filter 0.15s ease;
 }
 .curve-handle:hover {
-  filter: drop-shadow(0 0 6px var(--ok2, #33cdb8));
+  filter: drop-shadow(0 0 6px var(--ok2));
 }
 
 /* Mission Control Enhanced Stretching for Dynamic Fan Curve Thermal Map */

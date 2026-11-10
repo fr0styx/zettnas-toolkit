@@ -1274,8 +1274,8 @@
     right: 20% !important;
     height: 3px !important;
     border-radius: 0 0 3px 3px !important;
-    background: var(--brand, #33cdb8) !important;
-    box-shadow: 0 0 8px var(--brand, #33cdb8) !important;
+    background: var(--brand) !important;
+    box-shadow: 0 0 8px var(--brand) !important;
   }
   #dock-hover-tooltip {
     display: none !important;

@@ -38,7 +38,7 @@
   font-size: 18px;
   font-weight: 700;
   color: var(--lt-t-f5f9f9ff, #f5f9f9);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   letter-spacing: -0.02em;
 }
 
@@ -147,7 +147,7 @@
 .net-docker-delete-btn {
   background: transparent;
   border: 1px solid transparent;
-  color: var(--muted, #6c8084);
+  color: var(--muted);
   cursor: pointer;
   border-radius: 4px;
   padding: 3px 6px;
@@ -157,7 +157,7 @@
 }
 
 .net-docker-delete-btn:hover {
-  color: var(--crit, #ef4444);
+  color: var(--crit);
   background: rgba(239, 68, 68, 0.12);
   border-color: rgba(239, 68, 68, 0.3);
 }
@@ -171,7 +171,7 @@
 .switch-port-id {
   font-size: 13px;
   font-weight: 700;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   color: var(--zn-text-bright);
   display: flex;
   align-items: center;
@@ -264,7 +264,7 @@
   border-radius: 4px;
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   background: rgba(79, 216, 196, 0.12);
   color: var(--zn-text-accent);
   border: 1px solid rgba(79, 216, 196, 0.25);
@@ -285,7 +285,7 @@
 .switch-port-meta {
   font-size: var(--zn-fs-xs);
   color: var(--lt-t-6c8084ff, #6c8084);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
 }
 
 .network-table-wrap {
@@ -347,14 +347,14 @@
 .network-bridge-name {
   font-weight: 700;
   font-size: 13px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   color: var(--lt-t-f5f9f9ff, #f5f9f9);
 }
 
 .network-bridge-ip {
   font-size: var(--zn-fs-xs);
   color: var(--zn-text-accent);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
 }
 
 .network-bridge-members {
@@ -366,7 +366,7 @@
 
 .network-member-pill {
   font-size: var(--zn-fs-xs);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   padding: 2px 6px;
   border-radius: 4px;
   background: var(--zn-glaze-6);
@@ -418,7 +418,7 @@
 
 .network-docker-cidr {
   font-size: var(--zn-fs-xs);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   color: var(--zn-text-muted);
 }
 
@@ -453,14 +453,14 @@
 
 .network-chip-ip {
   color: var(--zn-text-accent);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--zn-fs-xs);
 }
 
 .network-chip-ports {
   color: var(--zn-text-muted);
   font-size: var(--zn-fs-xs);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
 }
 
 /* COMP-01: "Use from anywhere" */

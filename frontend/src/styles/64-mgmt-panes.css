@@ -71,7 +71,7 @@
 #mgmt-pane-calendar .cal-col-box-2 { padding: 14px 20px; border-bottom: 1px solid var(--zn-line-8); background: var(--zn-shade-25); display: flex; flex-direction: column; gap: 10px; }
 #mgmt-pane-calendar .cal-row-6 { display: flex; gap: 10px; align-items: center; }
 #mgmt-pane-calendar .cal-xs-strong-box-grow { flex: 1; border: 1px solid var(--zn-line-14); background: var(--zn-shade-30); padding: 7px 12px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); outline: none; }
-#mgmt-pane-calendar .cal-xs-strong-box-3 { border: 1px solid var(--zn-line-14); background: var(--zn-shade-30); padding: 6px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace); }
+#mgmt-pane-calendar .cal-xs-strong-box-3 { border: 1px solid var(--zn-line-14); background: var(--zn-shade-30); padding: 6px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); font-family: var(--font-mono); }
 #mgmt-pane-calendar .cal-xs-strong-box-4 { border: 1px solid var(--zn-line-14); background: var(--zn-shade-35); padding: 6px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); }
 #mgmt-pane-calendar .cal-x-3 { white-space: nowrap; }
 #mgmt-pane-calendar .cal-xs-soft-box-grow { flex: 1; border: 1px solid var(--zn-line-8); background: var(--zn-shade-20); padding: 5px 10px; color: var(--zn-text-soft); border-radius: 5px; font-size: var(--zn-fs-xs); outline: none; }
@@ -88,8 +88,8 @@
 #mgmt-pane-language .lng-row-box { background: var(--zn-shade-35); border: 1px solid var(--zn-line-10); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden; margin-bottom: 16px; }
 #mgmt-pane-language .lng-col-2 { display: flex; flex-direction: column; gap: 4px; }
 #mgmt-pane-language .lng-row { display: flex; align-items: baseline; gap: 6px; }
-#mgmt-pane-language .lng-fs32-bold-strong { font-size: 32px; font-weight: 800; font-family: var(--font-mono, monospace); color: var(--zn-text-strong); line-height: 1; }
-#mgmt-pane-language .lng-fs18-strong { font-size: 18px; opacity: 0.65; font-family: var(--font-mono, monospace); color: var(--zn-text-strong); }
+#mgmt-pane-language .lng-fs32-bold-strong { font-size: 32px; font-weight: 800; font-family: var(--font-mono); color: var(--zn-text-strong); line-height: 1; }
+#mgmt-pane-language .lng-fs18-strong { font-size: 18px; opacity: 0.65; font-family: var(--font-mono); color: var(--zn-text-strong); }
 #mgmt-pane-language .lng-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 500; }
 #mgmt-pane-language .lng-col-3 { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 #mgmt-pane-language .lng-row-box-2 { display: flex; background: var(--zn-glaze-6); border: 1px solid var(--zn-line-10); border-radius: 6px; padding: 2px; }
@@ -431,7 +431,7 @@
 #network-port-config-overlay .pcfg-size { width: 100%; box-sizing: border-box; }
 #network-port-config-overlay .pcfg-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; }
 #network-port-config-overlay .pcfg-row-2 { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
-#network-port-config-overlay .pcfg-size-2 { width: 100px; text-align: center; font-family: var(--font-mono, monospace); }
+#network-port-config-overlay .pcfg-size-2 { width: 100px; text-align: center; font-family: var(--font-mono); }
 #network-port-config-overlay .pcfg-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); }
 #network-port-config-overlay .pcfg-row-box { display: flex; justify-content: space-between; align-items: center; background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px 12px; }
 #network-port-config-overlay .pcfg-xs-semi { font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-bright); }
@@ -440,7 +440,7 @@
 #network-port-config-overlay .pcfg-grid-xs-box { background: var(--zn-shade-30); border: 1px solid var(--zn-line-6); border-radius: 6px; padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: var(--zn-fs-xs); }
 #network-port-config-overlay .pcfg-row-3 { display: flex; align-items: center; justify-content: space-between; grid-column: span 2; }
 #network-port-config-overlay .pcfg-muted { color: var(--muted); }
-#network-port-config-overlay .pcfg-soft { font-family: var(--font-mono, monospace); color: var(--zn-text-soft); }
+#network-port-config-overlay .pcfg-soft { font-family: var(--font-mono); color: var(--zn-text-soft); }
 #network-port-config-overlay .pcfg-soft-2 { color: var(--zn-text-soft); }
 #network-port-config-overlay .pcfg-row-box-2 { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
 
@@ -450,7 +450,7 @@
 #network-docker-create-overlay .ndc-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
 #network-docker-create-overlay .ndc-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
 #network-docker-create-overlay .ndc-size { width: 100%; box-sizing: border-box; }
-#network-docker-create-overlay .ndc-size-2 { width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace); }
+#network-docker-create-overlay .ndc-size-2 { width: 100%; box-sizing: border-box; font-family: var(--font-mono); }
 #network-docker-create-overlay .ndc-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.45; }
 #network-docker-create-overlay .ndc-row-box { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
 
@@ -461,7 +461,7 @@
 #network-host-config-overlay .hcfg-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
 #network-host-config-overlay .hcfg-row-2 { display: flex; gap: 8px; }
 #network-host-config-overlay .hcfg-grow { flex: 1; }
-#network-host-config-overlay .hcfg-size { width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace); }
+#network-host-config-overlay .hcfg-size { width: 100%; box-sizing: border-box; font-family: var(--font-mono); }
 #network-host-config-overlay .hcfg-col-2 { display: flex; flex-direction: column; gap: 12px; }
 #network-host-config-overlay .hcfg-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px; }
 #network-host-config-overlay .hcfg-row-3 { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
@@ -494,7 +494,7 @@
 #network-bond-config-overlay .bond-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 5px; line-height: 1.45; }
 #network-bond-config-overlay .bond-col-box { display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px; }
 #network-bond-config-overlay .bond-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; }
-#network-bond-config-overlay .bond-size-2 { width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace); }
+#network-bond-config-overlay .bond-size-2 { width: 100%; box-sizing: border-box; font-family: var(--font-mono); }
 #network-bond-config-overlay .bond-xs-muted-3 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px; }
 #network-bond-config-overlay .bond-fs16 { font-size: 16px; line-height: 1; }
 #network-bond-config-overlay .bond-row-box { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
@@ -508,7 +508,7 @@
 #network-bridge-config-overlay .brg-row-2 { display: flex; gap: 8px; }
 #network-bridge-config-overlay .brg-grow { flex: 1; }
 #network-bridge-config-overlay .brg-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 5px; line-height: 1.45; }
-#network-bridge-config-overlay .brg-size { width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace); }
+#network-bridge-config-overlay .brg-size { width: 100%; box-sizing: border-box; font-family: var(--font-mono); }
 #network-bridge-config-overlay .brg-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px; }
 #network-bridge-config-overlay .brg-col-box { display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 10px; }
 #network-bridge-config-overlay .brg-xs-muted-3 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; }
@@ -519,7 +519,7 @@
 #network-vlan-create-overlay .vlan-row { display: flex; align-items: center; gap: 8px; }
 #network-vlan-create-overlay .vlan-col { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
 #network-vlan-create-overlay .vlan-xs-bold-muted { display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
-#network-vlan-create-overlay .vlan-size { width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace); }
+#network-vlan-create-overlay .vlan-size { width: 100%; box-sizing: border-box; font-family: var(--font-mono); }
 #network-vlan-create-overlay .vlan-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px; }
 #network-vlan-create-overlay .vlan-size-2 { width: 100%; box-sizing: border-box; }
 #network-vlan-create-overlay .vlan-row-box { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); }
@@ -892,7 +892,7 @@
 /* Network panes and dialogs (network.js): classes instead of inline styles (NUX-15), same look */
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-muted-center { text-align: center; color: var(--muted); padding: 16px; }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-xs-muted { color: var(--muted); font-size: var(--zn-fs-xs); }
-:is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-xs-muted-mono { font-family: var(--font-mono, monospace); font-size: var(--zn-fs-xs); color: var(--muted); }
+:is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-xs-muted-mono { font-family: var(--font-mono); font-size: var(--zn-fs-xs); color: var(--muted); }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-x { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-crit-center { text-align: center; color: var(--crit); padding: 16px; }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-muted-center-2 { text-align: center; color: var(--muted); padding: 20px; }
@@ -919,13 +919,13 @@
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-semi-strong { font-weight: 600; color: var(--zn-text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-xs-muted-3 { color: var(--muted); font-size: var(--zn-fs-xs); padding: 12px; }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-brand { color: var(--lt-ink-brand, var(--accent-cyan)); }
-:is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-row-bold-mono { display: flex; align-items: center; gap: 6px; font-weight: 700; font-family: var(--font-mono, monospace); }
+:is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-row-bold-mono { display: flex; align-items: center; gap: 6px; font-weight: 700; font-family: var(--font-mono); }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-xs-muted-4 { font-size: var(--zn-fs-xs); color: var(--muted); margin-left: 4px; }
-:is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-xs-mono { font-family: var(--font-mono, monospace); font-size: var(--zn-fs-xs); }
-:is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-mono-2 { font-family: var(--font-mono, monospace); }
+:is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-xs-mono { font-family: var(--font-mono); font-size: var(--zn-fs-xs); }
+:is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-mono-2 { font-family: var(--font-mono); }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-row-2 { display: flex; align-items: center; gap: 8px; }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-xs-3 { font-size: var(--zn-fs-xs); padding: 2px 6px; }
-:is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-xs-muted-mono-2 { font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono, monospace); }
+:is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-xs-muted-mono-2 { font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono); }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-row-3 { display: flex; align-items: center; gap: 6px; }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-size { width: 14px; height: 14px; }
 :is(#management-modal-overlay, #modal-wg-qr, #network-bond-config-overlay, #network-bridge-config-overlay, #network-canary-overlay, #network-docker-create-overlay, #network-host-config-overlay, #network-port-config-overlay, #network-vlan-create-overlay) .nw-row-xs { display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); cursor: pointer; user-select: none; }

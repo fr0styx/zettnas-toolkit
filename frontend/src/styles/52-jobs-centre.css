@@ -19,7 +19,7 @@
   padding: 0 4px;
   border-radius: 8px;
   background: var(--brand);
-  color: var(--accent-contrast-fg, #0c1517);
+  color: var(--accent-contrast-fg);
   font-size: var(--zn-fs-xs);
   font-weight: 700;
   text-align: center;

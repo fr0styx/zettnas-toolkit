@@ -62,7 +62,7 @@
 
 .topo-pool-fs {
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #6c8084);
+  color: var(--muted);
   text-transform: uppercase;
 }
 
@@ -132,7 +132,7 @@
 }
 
 .topo-free-space {
-  color: var(--muted, #6c8084);
+  color: var(--muted);
 }
 
 .topo-usage-track {
@@ -159,7 +159,7 @@
 .topo-members-label {
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  color: var(--muted, #6c8084);
+  color: var(--muted);
   letter-spacing: 0.5px;
 }
 
@@ -250,7 +250,7 @@
   display: flex;
   justify-content: space-between;
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #6c8084);
+  color: var(--muted);
 }
 
 .topo-disk-actions {
@@ -326,7 +326,7 @@
 
 .share-comment {
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #6c8084);
+  color: var(--muted);
   margin-top: 2px;
 }
 
@@ -526,7 +526,7 @@
 .webdav-qc-label {
   font-size: var(--zn-fs-xs);
   font-weight: 800;
-  color: var(--muted, #95a8ab);
+  color: var(--muted);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   display: flex;
@@ -535,7 +535,7 @@
 }
 
 .webdav-qc-code {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--zn-fs-xs);
   color: var(--zn-text-accent);
   background: var(--zn-shade-40);
@@ -552,7 +552,7 @@
 .btn-qc-copy {
   background: transparent;
   border: none;
-  color: var(--muted, #95a8ab);
+  color: var(--muted);
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 4px;
@@ -623,7 +623,7 @@
 
 .remote-mount-status {
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #95a8ab);
+  color: var(--muted);
   display: flex;
   align-items: center;
   gap: 6px;

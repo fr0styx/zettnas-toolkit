@@ -33,7 +33,7 @@
     width: 48px !important;
     height: 48px !important;
     border-radius: 50% !important;
-    background: linear-gradient(135deg, var(--brand, #33cdb8), var(--ok2, #33cdb8)) !important;
+    background: linear-gradient(135deg, var(--brand), var(--ok2)) !important;
     color: var(--accent-contrast-fg) !important;
     font-size: 26px !important;
     font-weight: 700 !important;
@@ -163,7 +163,7 @@ body.mobile-mode .fm-mobile-fab {
   width: 48px !important;
   height: 48px !important;
   border-radius: 50% !important;
-  background: linear-gradient(135deg, var(--brand, #33cdb8), var(--ok2, #33cdb8)) !important;
+  background: linear-gradient(135deg, var(--brand), var(--ok2)) !important;
   color: var(--accent-contrast-fg) !important;
   font-size: 26px !important;
   font-weight: 700 !important;
@@ -2260,14 +2260,14 @@ body.theme-yak #containers-manager-window .containers-content-body {
   background: rgba(18, 31, 33, var(--glass-opacity, 0.75));
   -webkit-backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
   backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
-  border: 1px solid var(--track, #333);
+  border: 1px solid var(--track);
   border-radius: var(--window-radius, 12px);
   box-shadow: 0 16px 40px rgba(0,0,0,0.5);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   z-index: var(--z-window-base, 1000);
-  color: var(--fg, #eee);
+  color: var(--fg);
   font-family: inherit;
   resize: both;
   min-width: 480px;
@@ -2278,8 +2278,8 @@ body.theme-yak #containers-manager-window .containers-content-body {
 }
 .os-window-header {
   height: 40px;
-  background: var(--card-hi, #222);
-  border-bottom: 1px solid var(--track, #333);
+  background: var(--card-hi);
+  border-bottom: 1px solid var(--track);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2336,13 +2336,13 @@ body.theme-yak #containers-manager-window .containers-content-body {
   display: none;
   position: fixed;
   z-index: var(--z-palette, 8100);
-  background: var(--card-hi, #222);
-  border: 1px solid var(--track, #333);
+  background: var(--card-hi);
+  border: 1px solid var(--track);
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   padding: 4px;
   min-width: 150px;
-  color: var(--fg, #eee);
+  color: var(--fg);
   font-size: 13px;
 }
 .ctx-item {
@@ -2351,12 +2351,12 @@ body.theme-yak #containers-manager-window .containers-content-body {
   border-radius: 4px;
 }
 .ctx-item:hover {
-  background: var(--track, #444);
+  background: var(--track);
 }
 
 /* Accessibility: Focus Visible styles (WCAG 2.2 Level AA Adaptive Focus Rings) */
 :focus-visible {
-  outline: 2px solid var(--focus-ring, #33cdb8) !important;
+  outline: 2px solid var(--focus-ring) !important;
   outline-offset: 2px !important;
   box-shadow: var(--focus-shadow, 0 0 0 3px rgba(51, 205, 184, 0.35)) !important;
 }
@@ -2375,7 +2375,7 @@ body.theme-yak #containers-manager-window .containers-content-body {
 .btn-pill-toggle:focus-visible,
 .btn-sm:focus-visible,
 .tz-select-input:focus-visible {
-  outline: 2px solid var(--focus-ring, #33cdb8) !important;
+  outline: 2px solid var(--focus-ring) !important;
   outline-offset: 2px !important;
   box-shadow: var(--focus-shadow, 0 0 0 3px rgba(51, 205, 184, 0.35)) !important;
 }
@@ -2383,7 +2383,7 @@ body.theme-yak #containers-manager-window .containers-content-body {
 .switch input:focus-visible + .toggle-slider,
 .switch-toggle input:focus-visible + .slider,
 .switch-toggle input:focus-visible + .slider-round {
-  outline: 2px solid var(--focus-ring, #33cdb8) !important;
+  outline: 2px solid var(--focus-ring) !important;
   outline-offset: 2px !important;
   box-shadow: var(--focus-shadow, 0 0 0 3px rgba(51, 205, 184, 0.35)) !important;
 }
@@ -2508,7 +2508,7 @@ body.theme-oled .mgmt-sticky-subnav {
 
 .mgmt-inner-tab.active .ic {
   opacity: 1;
-  color: var(--ok2, #33cdb8);
+  color: var(--ok2);
 }
 
 body.theme-yak .mgmt-inner-tab.active {

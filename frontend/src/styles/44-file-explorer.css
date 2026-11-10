@@ -33,7 +33,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: var(--muted, #6c8084);
+  color: var(--muted);
   padding: 8px 10px 4px;
 }
 
@@ -45,7 +45,7 @@
   margin: 1px 4px;
   border-radius: 6px;
   font-size: var(--zn-fs-xs);
-  color: var(--fg, #e6efef);
+  color: var(--fg);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
@@ -110,11 +110,11 @@
   justify-content: space-between;
   font-size: var(--zn-fs-xs);
   padding: 3px 0;
-  color: var(--fg, #c9d6d7);
+  color: var(--fg);
 }
 
 .fm-inspector-row span:first-child {
-  color: var(--muted, #95a8ab);
+  color: var(--muted);
 }
 
 /* Compact View Mode */
@@ -176,7 +176,7 @@
   white-space: nowrap; /* the menu widens to the longest row instead of wrapping it */
   padding: 6px 10px;
   font-size: var(--zn-fs-xs);
-  color: var(--fg, #e6efef);
+  color: var(--fg);
   border-radius: 5px;
   cursor: pointer;
   transition: background 0.12s ease;
@@ -202,7 +202,7 @@
 .fm-ctx-key {
   margin-left: auto;
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #6c8084);
+  color: var(--muted);
   font-family: monospace;
 }
 

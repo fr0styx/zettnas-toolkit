@@ -587,7 +587,7 @@ body.theme-oled #cloud-remote-window select option {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--zn-fs-xs);
 }
 .smart-progress-pct-label {
@@ -704,7 +704,7 @@ body.theme-oled #cloud-remote-window select option {
   padding: 6px 10px;
   border-bottom: 1px solid var(--lt-r-ffffff0a, rgba(255, 255, 255, 0.04));
   color: var(--zn-text);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--zn-fs-xs);
 }
 .smart-test-table tr:hover td {

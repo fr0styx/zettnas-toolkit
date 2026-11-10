@@ -192,7 +192,7 @@
   border-radius: 12px;
   border: 1px solid var(--zn-line-10);
   background: var(--zn-glaze-4);
-  color: var(--muted, #889da1);
+  color: var(--muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -203,9 +203,9 @@
 }
 
 .wallpaper-cat-pill.active {
-  background: rgba(var(--accent-rgb, 51, 205, 184), 0.15);
-  border-color: rgba(var(--accent-rgb, 51, 205, 184), 0.4);
-  color: var(--lt-ink-brand, var(--brand, #33cdb8));
+  background: rgba(var(--accent-rgb), 0.15);
+  border-color: rgba(var(--accent-rgb), 0.4);
+  color: var(--lt-ink-brand, var(--brand));
 }
 
 .wallpaper-gallery-grid {
@@ -220,7 +220,7 @@
 }
 
 .wallpaper-gallery-grid.dragover {
-  border: 2px dashed var(--ok2, #33cdb8);
+  border: 2px dashed var(--ok2);
   background: rgba(var(--ok2-rgb, 51, 205, 184), 0.04);
 }
 
@@ -249,12 +249,12 @@
 }
 
 .wallpaper-card:focus-visible {
-  border-color: var(--ok2, #33cdb8);
+  border-color: var(--ok2);
   box-shadow: 0 0 0 2px rgba(var(--ok2-rgb, 51, 205, 184), 0.4);
 }
 
 .wallpaper-card.active {
-  border-color: var(--ok2, #33cdb8);
+  border-color: var(--ok2);
   background: rgba(var(--ok2-rgb, 51, 205, 184), 0.08);
   box-shadow: 0 0 20px -2px rgba(var(--ok2-rgb, 51, 205, 184), 0.35);
 }
@@ -293,7 +293,7 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  background: var(--ok2, #33cdb8);
+  background: var(--ok2);
   color: var(--accent-contrast-fg);
   font-size: var(--zn-fs-xs);
   font-weight: 800;

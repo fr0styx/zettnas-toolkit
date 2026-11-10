@@ -23,7 +23,7 @@
 #login-overlay .lgn-accent { color: var(--zn-text-accent); text-decoration: none; }
 
 /* Lock screen: classes instead of inline styles (NUX-15), same look */
-#lock-overlay .lck-fs42-bold-strong-mono { font-size: 42px; font-weight: 800; color: var(--zn-text-strong); letter-spacing: -1px; font-family: var(--font-mono, monospace); }
+#lock-overlay .lck-fs42-bold-strong-mono { font-size: 42px; font-weight: 800; color: var(--zn-text-strong); letter-spacing: -1px; font-family: var(--font-mono); }
 #lock-overlay .lck-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px; }
 #lock-overlay .lck-row-box { display: flex; align-items: center; justify-content: center; gap: 12px; background: var(--zn-glaze-5); border: 1px solid var(--zn-line-10); border-radius: 10px; padding: 12px; margin-bottom: 20px; }
 #lock-overlay .lck-grow { text-align: left; min-width: 0; flex: 1; }
@@ -39,7 +39,7 @@
 #desktop-widgets-container .dsk-x-2 { cursor: pointer; user-select: none; }
 #desktop-widgets-container .dsk-col { display: flex; flex-direction: column; gap: 4px; }
 #desktop-widgets-container .dsk-row { display: flex; align-items: baseline; justify-content: space-between; }
-#desktop-widgets-container .dsk-fs24-bold-strong-mono { font-size: 24px; font-weight: 800; font-family: var(--font-mono, monospace); letter-spacing: 0.5px; color: var(--zn-text-strong); line-height: 1; }
+#desktop-widgets-container .dsk-fs24-bold-strong-mono { font-size: 24px; font-weight: 800; font-family: var(--font-mono); letter-spacing: 0.5px; color: var(--zn-text-strong); line-height: 1; }
 #desktop-widgets-container .dsk-fs14 { font-size: 14px; opacity: 0.65; margin-left: 1px; }
 #desktop-widgets-container .dsk-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 500; }
 #desktop-widgets-container .dsk-x-3 { color: var(--zn-text-ai); }
@@ -55,16 +55,16 @@
 #desktop-widgets-container .dsk-row-5 { display: flex; align-items: center; gap: 8px; }
 #desktop-widgets-container .dsk-fs24 { font-size: 24px; line-height: 1; }
 #desktop-widgets-container .dsk-col-2 { display: flex; flex-direction: column; }
-#desktop-widgets-container .dsk-fs20-bold-mono { font-size: 20px; font-weight: 800; font-family: var(--font-mono, monospace); line-height: 1.1; cursor: pointer; user-select: none; }
+#desktop-widgets-container .dsk-fs20-bold-mono { font-size: 20px; font-weight: 800; font-family: var(--font-mono); line-height: 1.1; cursor: pointer; user-select: none; }
 #desktop-widgets-container .dsk-col-3 { display: flex; flex-direction: column; text-align: right; gap: 2px; }
-#desktop-widgets-container .dsk-xs-semi-soft-mono { font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-soft); font-family: var(--font-mono, monospace); }
+#desktop-widgets-container .dsk-xs-semi-soft-mono { font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-soft); font-family: var(--font-mono); }
 #desktop-widgets-container .dsk-xs-muted-2 { font-size: var(--zn-fs-xs); color: var(--muted); }
 #desktop-widgets-container .dsk-xs { margin-left: 5px; font-size: var(--zn-fs-xs); opacity: 0.85; cursor: pointer; }
 #desktop-widgets-container .dsk-row-6 { display: flex; align-items: center; gap: 4px; }
 #desktop-widgets-container .dsk-xs-soft-box { padding: 1px 5px; font-size: var(--zn-fs-xs); background: var(--zn-glaze-8); border: none; border-radius: 3px; color: var(--zn-text-soft); cursor: pointer; }
 #desktop-widgets-container .dsk-xs-2 { font-size: var(--zn-fs-xs); cursor: pointer; }
 #desktop-widgets-container .dsk-col-4 { display: flex; flex-direction: column; gap: 6px; }
-#desktop-widgets-container .dsk-xs-bold-mono { font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); }
+#desktop-widgets-container .dsk-xs-bold-mono { font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono); }
 #desktop-widgets-container .dsk-box-2 { width: 100%; height: 4px; background: var(--zn-glaze-10); border-radius: 2px; overflow: hidden; }
 #desktop-widgets-container .dsk-row-7 { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
 #desktop-widgets-container .dsk-row-8 { display: flex; justify-content: space-between; align-items: flex-end; }
@@ -72,17 +72,17 @@
 #desktop-widgets-container .dsk-col-5 { display: flex; flex-direction: column; text-align: right; }
 #desktop-widgets-container .dsk-box-3 { width: 100%; height: 4px; background: var(--zn-glaze-10); border-radius: 2px; overflow: hidden; margin-top: 2px; }
 #desktop-widgets-container .dsk-row-9 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-#desktop-widgets-container .dsk-xs-semi-soft-mono-2 { font-size: var(--zn-fs-xs); font-weight: 600; font-family: var(--font-mono, monospace); color: var(--zn-text-soft); }
+#desktop-widgets-container .dsk-xs-semi-soft-mono-2 { font-size: var(--zn-fs-xs); font-weight: 600; font-family: var(--font-mono); color: var(--zn-text-soft); }
 #desktop-widgets-container .dsk-xs-muted-center { font-size: var(--zn-fs-xs); color: var(--muted); text-align: center; padding: 6px 0; }
 #desktop-widgets-container .dsk-row-10 { display: flex; align-items: center; justify-content: space-around; gap: 8px; }
 #desktop-widgets-container .dsk-col-xs { display: flex; flex-direction: column; gap: 4px; font-size: var(--zn-fs-xs); }
 #desktop-widgets-container .dsk-row-11 { display: flex; justify-content: space-between; gap: 8px; }
-#desktop-widgets-container .dsk-bold-mono { font-family: var(--font-mono, monospace); font-weight: 700; }
+#desktop-widgets-container .dsk-bold-mono { font-family: var(--font-mono); font-weight: 700; }
 #desktop-widgets-container .dsk-row-12 { display: flex; justify-content: space-between; align-items: baseline; }
 #desktop-widgets-container .dsk-box-4 { width: 100%; height: 5px; background: var(--zn-glaze-10); border-radius: 3px; overflow: hidden; }
 #desktop-widgets-container .dsk-row-xs-2 { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; font-size: var(--zn-fs-xs); }
 #desktop-widgets-container .dsk-muted { color: var(--muted); }
-#desktop-widgets-container .dsk-soft-mono { color: var(--zn-text-soft); font-family: var(--font-mono, monospace); }
+#desktop-widgets-container .dsk-soft-mono { color: var(--zn-text-soft); font-family: var(--font-mono); }
 
 /* Smart modal overlay: classes instead of inline styles (NUX-15), same look */
 #smart-modal-overlay .smo-row { display: flex; gap: 12px; align-items: center; }

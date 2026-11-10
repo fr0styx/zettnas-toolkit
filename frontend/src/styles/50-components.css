@@ -158,7 +158,7 @@ body.theme-light button.catalog-deploy:focus-visible { color: #fff; background: 
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .cat-card-image {
-  display: block; font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono, monospace);
+  display: block; font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .cat-card-badges { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -181,7 +181,7 @@ body.theme-light button.catalog-deploy:focus-visible { color: #fff; background: 
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding-top: 8px; border-top: 1px solid var(--zn-line-6);
 }
-.cat-card-port { font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-t-93e6d9ff, #93e6d9); }
+.cat-card-port { font-size: var(--zn-fs-xs); font-family: var(--font-mono); color: var(--lt-t-93e6d9ff, #93e6d9); }
 /* Sign-in details after a deploy */
 .adm-credentials {
   margin-top: 10px; padding: 10px 12px; border-radius: 8px;
@@ -206,7 +206,7 @@ body.theme-light button.catalog-deploy:focus-visible { color: #fff; background: 
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* Button variants (UX-6) on the system button, .btn-pill-toggle */
-.btn-pill-toggle.is-primary { background: var(--brand); border-color: var(--brand); color: var(--accent-contrast-fg, #0c1517); font-weight: 700; }
+.btn-pill-toggle.is-primary { background: var(--brand); border-color: var(--brand); color: var(--accent-contrast-fg); font-weight: 700; }
 .btn-pill-toggle.is-primary:hover { filter: brightness(1.08); background: var(--brand); }
 .btn-pill-toggle.is-danger { background: var(--zn-danger-bg); border-color: var(--zn-danger-line); color: var(--zn-danger-text); }
 .btn-pill-toggle.is-danger:hover { background: rgba(235, 87, 87, 0.3); }
@@ -277,7 +277,7 @@ body.theme-light button.catalog-deploy:focus-visible { color: #fff; background: 
 .zn-datatable .is-muted { color: var(--muted); font-size: var(--zn-fs-xs); }
 .zn-datatable .is-soft { font-size: var(--zn-fs-sm); color: var(--zn-text-soft); }
 .zn-datatable .is-dim { font-size: var(--zn-fs-sm); color: var(--zn-text-muted); }
-.zn-datatable .is-mono { font-family: var(--font-mono, monospace); }
+.zn-datatable .is-mono { font-family: var(--font-mono); }
 .zn-datatable-msg { text-align: center; padding: 24px; color: var(--muted); }
 .zn-datatable-msg.is-crit { color: var(--crit); }
 .zn-sub { font-size: var(--zn-fs-xs); color: var(--muted); font-weight: normal; }

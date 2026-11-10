@@ -133,7 +133,7 @@
 
 .desktop-widget[role="button"]:focus-visible,
 .desktop-widget.clickable:focus-visible {
-  outline: 2px solid var(--brand, #33cdb8);
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
 
@@ -200,7 +200,7 @@ body.theme-yak .desktop-widget.clickable:hover {
   padding: 1px 6px;
   border-radius: 4px;
   background: rgba(51, 205, 184, 0.15);
-  color: var(--ok2, #33cdb8);
+  color: var(--ok2);
   border: 1px solid rgba(51, 205, 184, 0.3);
   white-space: nowrap;
   flex-shrink: 0;
@@ -248,7 +248,7 @@ body.theme-yak .desktop-widget.clickable:hover {
   color: var(--lt-t-ffffff33, rgba(255, 255, 255, 0.2));
 }
 .cal-day.cal-today {
-  background: var(--brand, #33cdb8);
+  background: var(--brand);
   color: var(--accent-contrast-fg);
   font-weight: 800;
   box-shadow: 0 0 10px rgba(51, 205, 184, 0.4);
@@ -291,7 +291,7 @@ body.theme-yak .cal-day.cal-today {
   box-shadow: 0 0 8px rgba(246, 173, 85, 1);
 }
 .cal-day.cal-holiday.cal-today {
-  background: var(--brand, #33cdb8);
+  background: var(--brand);
   color: var(--accent-contrast-fg);
   box-shadow: 0 0 12px rgba(51, 205, 184, 0.5);
 }
@@ -387,7 +387,7 @@ body.theme-yak .cal-day.cal-holiday:hover {
   transition: color 0.18s ease;
 }
 .cal-glance-bar.empty {
-  color: var(--muted, #6c8084);
+  color: var(--muted);
   font-size: var(--zn-fs-xs);
   font-weight: 500;
 }
@@ -419,8 +419,8 @@ body.theme-yak .cal-day.cal-holiday:hover {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--brand, #33cdb8);
-  box-shadow: 0 0 5px var(--brand, #33cdb8);
+  background: var(--brand);
+  box-shadow: 0 0 5px var(--brand);
 }
 .cal-day.has-task::before {
   background: #10b981;
@@ -462,16 +462,16 @@ body.theme-yak .cal-day.cal-holiday:hover {
   background: transparent;
 }
 .modal-calendar-grid .cal-day.cal-today {
-  border-color: var(--brand, #33cdb8);
-  color: var(--lt-ink-brand, var(--brand, #33cdb8));
+  border-color: var(--brand);
+  color: var(--lt-ink-brand, var(--brand));
   background: var(--lt-b-33cdb814, rgba(51, 205, 184, 0.08));
   font-weight: 800;
 }
 .modal-calendar-grid .cal-day.cal-selected {
-  background: var(--brand, #33cdb8) !important;
+  background: var(--brand) !important;
   color: var(--accent-contrast-fg) !important;
   font-weight: 800;
-  border-color: var(--brand, #33cdb8) !important;
+  border-color: var(--brand) !important;
   box-shadow: 0 0 14px rgba(51, 205, 184, 0.45);
 }
 .modal-calendar-grid .cal-day.cal-selected::after,
@@ -496,9 +496,9 @@ body.theme-yak .cal-day.cal-holiday:hover {
   color: var(--zn-text-strong);
 }
 .tz-region-pill.active {
-  background: var(--brand, #33cdb8);
+  background: var(--brand);
   color: var(--accent-contrast-fg);
-  border-color: var(--brand, #33cdb8);
+  border-color: var(--brand);
   font-weight: 700;
 }
 .tz-item-row {
@@ -537,9 +537,9 @@ body.theme-yak .cal-day.cal-holiday:hover {
   background: var(--zn-glaze-8);
 }
 .cal-filter-pill.active {
-  background: var(--brand, #33cdb8);
+  background: var(--brand);
   color: var(--accent-contrast-fg);
-  border-color: var(--brand, #33cdb8);
+  border-color: var(--brand);
   font-weight: 700;
 }
 
@@ -623,7 +623,7 @@ body.theme-yak .weather-city-item.active {
 
 /* Toggle Switch Component */
 .switch-toggle input:checked + .slider-round {
-  background: var(--ok2, #33cdb8) !important;
+  background: var(--ok2) !important;
 }
 .switch-toggle .slider-round:before {
   position: absolute;
@@ -814,7 +814,7 @@ body.theme-yak #notif-center-resizer:hover {
 .notif-center-item:not(.notif-event-checked) {
   opacity: 1 !important;
   background: var(--zn-glaze-5);
-  border-left: 2.5px solid var(--brand, #33cdb8);
+  border-left: 2.5px solid var(--brand);
 }
 
 /* Dock Pinned closed apps */
@@ -860,7 +860,7 @@ body.theme-yak #notif-center-resizer:hover {
 }
 
 .fan-preset-input:focus {
-  border-color: var(--brand, #33cdb8) !important;
+  border-color: var(--brand) !important;
   box-shadow: 0 0 0 2px rgba(51, 205, 184, 0.25) !important;
 }
 
@@ -885,8 +885,8 @@ body.theme-yak #notif-center-resizer:hover {
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ico-plain { font-size:var(--zn-fs-xs); }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ellipsis { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-check { color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); font-size:var(--zn-fs-xs); }
-:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-crit { color:var(--crit, #ff5c5c); }
-:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ok { color:var(--ok2, #33cdb8); }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-crit { color:var(--crit); }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ok { color:var(--ok2); }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-danger { color:var(--zn-text-crit); }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-kbd { margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6; }
 
@@ -905,7 +905,7 @@ body.theme-yak #notif-center-resizer:hover {
 #add-desktop-shortcut-overlay .asd-label { font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:4px; }
 #add-desktop-shortcut-overlay .asd-label-wide { font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:6px; }
 #add-desktop-shortcut-overlay .asd-input { width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--zn-shade-35); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); }
-#add-desktop-shortcut-overlay .asd-input-mono { width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--zn-shade-35); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); font-family:var(--font-mono, monospace); }
+#add-desktop-shortcut-overlay .asd-input-mono { width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--zn-shade-35); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); font-family:var(--font-mono); }
 #add-desktop-shortcut-overlay .asd-emojis { display:flex; flex-wrap:wrap; gap:6px; }
 #add-desktop-shortcut-overlay .asd-save { margin-top:6px; padding:10px 16px; border-radius:8px; font-size:var(--zn-fs-xs); font-weight:700; background:linear-gradient(135deg, #33cdb8, #33cdb8); color:#fff; border:1px solid #33cdb8; cursor:pointer; box-shadow:0 4px 14px rgba(51,205,184,0.3); }
 #add-desktop-shortcut-overlay .asd-card { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); border-radius:10px; gap:12px; }

@@ -101,7 +101,7 @@
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-  color: var(--ok2, #33cdb8);
+  color: var(--ok2);
 }
 
 .dock-tooltip-actions {
@@ -122,19 +122,19 @@
 
 .dock-tooltip-status.active {
   background: rgba(51, 209, 122, 0.18);
-  color: var(--ok, #33d17a);
+  color: var(--ok);
   border: 1px solid rgba(51, 209, 122, 0.35);
 }
 
 .dock-tooltip-status.minimized {
   background: var(--lt-b-7b898c2e, rgba(123, 137, 140, 0.18));
-  color: var(--muted, #95a8ab);
+  color: var(--muted);
   border: 1px solid rgba(123, 137, 140, 0.3);
 }
 
 .dock-tooltip-status.alert {
   background: rgba(235, 87, 87, 0.2);
-  color: var(--crit, #ff5c5c);
+  color: var(--crit);
   border: 1px solid rgba(235, 87, 87, 0.4);
 }
 
@@ -285,7 +285,7 @@
 .dock-splash-icon-ring svg {
   width: 22px;
   height: 22px;
-  color: var(--ok2, #33cdb8);
+  color: var(--ok2);
 }
 
 .dock-splash-title {
@@ -339,7 +339,7 @@
 
 .dock-desktop-home-card span {
   font-size: var(--zn-fs-xs);
-  color: var(--ok2, #33cdb8);
+  color: var(--ok2);
   font-weight: 600;
 }
 

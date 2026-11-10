@@ -85,7 +85,7 @@
 }
 
 .screensaver-style-card.active {
-  border-color: var(--brand, #33cdb8) !important;
+  border-color: var(--brand) !important;
   background: var(--lt-b-33cdb814, rgba(51, 205, 184, 0.08)) !important;
   box-shadow: 0 0 16px rgba(51, 205, 184, 0.15) !important;
 }

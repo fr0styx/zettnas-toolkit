@@ -27,7 +27,7 @@
 }
 .theme-preset-card.active {
   background: var(--lt-b-33cdb81f, rgba(51, 205, 184, 0.12));
-  border-color: var(--brand, #33cdb8);
+  border-color: var(--brand);
   box-shadow: 0 0 12px rgba(51, 205, 184, 0.25);
 }
 .theme-swatch-circle {
@@ -52,7 +52,7 @@
   text-overflow: ellipsis;
 }
 .theme-preset-card.active .theme-preset-name {
-  color: var(--lt-ink-brand, var(--brand, #33cdb8));
+  color: var(--lt-ink-brand, var(--brand));
 }
 .theme-preset-desc {
   font-size: var(--zn-fs-xs);

@@ -2,20 +2,20 @@
    which widgets.js draws: each rule is the inline style it replaced, scoped to its list (NUX-15) */
 #widget-weather-city-dropdown .wcd-empty { padding: 10px 12px; font-size: var(--zn-fs-xs); color: var(--muted); text-align: center; }
 #widget-weather-city-dropdown .wcd-pointer { cursor: pointer; }
-#tz-items-list .tzl-check { font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--brand, #33cdb8)); }
+#tz-items-list .tzl-check { font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--brand)); }
 #tz-items-list .tzl-empty { text-align: center; color: var(--muted); padding: 25px; font-size: var(--zn-fs-xs); }
 #tz-items-list .tzl-icon { font-size: 14px; }
 #tz-items-list .tzl-main { display: flex; align-items: center; gap: 10px; }
 #tz-items-list .tzl-name { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); }
-#tz-items-list .tzl-offset { font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-family: var(--font-mono, monospace); }
+#tz-items-list .tzl-offset { font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-family: var(--font-mono); }
 #tz-items-list .tzl-side { display: flex; align-items: center; gap: 8px; }
 #tz-items-list .tzl-sub { font-size: var(--zn-fs-xs); color: var(--muted); }
-#tz-items-list .tzl-time { font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #33cdb8)); }
+#tz-items-list .tzl-time { font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono); color: var(--lt-ink-brand, var(--brand)); }
 #modal-cal-agenda-list .cag-badge { font-size: var(--zn-fs-xs); color: var(--muted); background: var(--zn-glaze-5); padding: 2px 6px; border-radius: 4px; }
 #modal-cal-agenda-list .cag-badge-warn { font-size: var(--zn-fs-xs); font-weight: 700; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: var(--lt-t-eab308ff, #eab308); padding: 2px 6px; border-radius: 4px; }
 #modal-cal-agenda-list .cag-body { flex: 1; display: flex; flex-direction: column; gap: 3px; }
 #modal-cal-agenda-list .cag-del { background: transparent; border: none; color: var(--lt-t-ef4444ff, #ef4444); opacity: 0.7; cursor: pointer; font-size: var(--zn-fs-xs); padding: 2px 4px; }
-#modal-cal-agenda-list .cag-done { margin-top: 3px; cursor: pointer; accent-color: var(--ok2, #33cdb8); width: 15px; height: 15px; }
+#modal-cal-agenda-list .cag-done { margin-top: 3px; cursor: pointer; accent-color: var(--ok2); width: 15px; height: 15px; }
 #modal-cal-agenda-list .cag-empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: var(--zn-fs-xs); }
 #modal-cal-agenda-list .cag-empty-icon { font-size: 26px; margin-bottom: 8px; }
 #modal-cal-agenda-list .cag-empty-sub { font-size: var(--zn-fs-xs); margin-top: 4px; }
@@ -28,7 +28,7 @@
 #modal-cal-agenda-list .cag-muted { font-size: var(--zn-fs-xs); color: var(--muted); }
 #modal-cal-agenda-list .cag-note { font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.3; }
 #modal-cal-agenda-list .cag-tags { display: flex; align-items: center; gap: 6px; }
-#modal-cal-agenda-list .cag-time { font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); background: var(--zn-glaze-8); padding: 2px 6px; border-radius: 4px; color: var(--lt-ink-brand, var(--brand, #33cdb8)); }
+#modal-cal-agenda-list .cag-time { font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono); background: var(--zn-glaze-8); padding: 2px 6px; border-radius: 4px; color: var(--lt-ink-brand, var(--brand)); }
 #modal-cal-agenda-list .cag-title { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); }
 #cal-feeds-list .cfl-del { background: transparent; border: none; color: var(--lt-t-ef4444ff, #ef4444); opacity: 0.7; cursor: pointer; font-size: var(--zn-fs-xs); padding: 2px; }
 #cal-feeds-list .cfl-empty { font-size: var(--zn-fs-xs); color: var(--muted); text-align: center; padding: 10px; }

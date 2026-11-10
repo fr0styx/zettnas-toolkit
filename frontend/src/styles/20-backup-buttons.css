@@ -73,7 +73,7 @@
   align-items: center;
   gap: 4px;
   background: rgba(51, 205, 184, 0.14) !important;
-  color: var(--ok2, #33cdb8) !important;
+  color: var(--ok2) !important;
   border: 1px solid rgba(51, 205, 184, 0.35) !important;
   border-radius: 5px !important;
   font-size: var(--zn-fs-xs) !important;
@@ -214,7 +214,7 @@
   font-size: var(--zn-fs-xs);
   border-radius: 10px;
   background: var(--zn-glaze-15);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-weight: 700;
 }
 .docker-count-badge.badge-warning {
@@ -252,7 +252,7 @@
   gap: 4px;
   padding: 2px 7px;
   border-radius: 4px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--zn-fs-xs);
   font-weight: 700;
   color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));
@@ -276,7 +276,7 @@
   display: inline-block;
   padding: 1px 5px;
   border-radius: 3px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--zn-fs-xs);
   color: var(--muted);
   background: var(--zn-glaze-5);
@@ -364,7 +364,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--zn-fs-xs);
   color: var(--zn-text-soft);
   background: var(--zn-shade-30);
@@ -484,7 +484,7 @@
   border-radius: 3px;
   background: var(--zn-glaze-8);
   font-size: var(--zn-fs-xs);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-weight: 600;
   color: var(--muted);
 }
@@ -651,7 +651,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--crit, #eb5757);
+  background: var(--crit);
   color: var(--zn-text-strong);
   font-size: var(--zn-fs-xs);
   font-weight: 800;
@@ -715,7 +715,7 @@
 .mgmt-app-action {
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  color: var(--ok2, #33cdb8);
+  color: var(--ok2);
   transition: transform 0.15s ease;
 }
 
@@ -803,17 +803,17 @@ body.theme-yak .mgmt-back-btn:hover {
 
 
 /* Sharing-protocol pills: live state (UX-4) */
-.proto-pill { font-size: var(--zn-fs-xs); border: 1px solid var(--border, var(--zn-line-12)); color: var(--muted, #95a8ab); background: transparent; }
-.proto-pill[data-state="on"] { color: var(--ok2, #33cdb8); border-color: color-mix(in srgb, var(--ok2, #33cdb8) 40%, transparent); }
-.proto-pill[data-state="off"] { color: var(--muted, #95a8ab); }
+.proto-pill { font-size: var(--zn-fs-xs); border: 1px solid var(--border, var(--zn-line-12)); color: var(--muted); background: transparent; }
+.proto-pill[data-state="on"] { color: var(--ok2); border-color: color-mix(in srgb, var(--ok2) 40%, transparent); }
+.proto-pill[data-state="off"] { color: var(--muted); }
 
 /* AI search ran on keywords only (AI-4) */
-.ai-search-degraded { margin: 0 0 10px; padding: 8px 12px; border-radius: 8px; font-size: var(--zn-fs-sm); color: var(--warn, #f5a623); border: 1px solid color-mix(in srgb, var(--warn, #f5a623) 40%, transparent); }
+.ai-search-degraded { margin: 0 0 10px; padding: 8px 12px; border-radius: 8px; font-size: var(--zn-fs-sm); color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent); }
 
 /* AI Configuration tab: two groups, Chatbot and Search & knowledge */
 .ai-config-group { margin: 22px 0 10px; padding-top: 14px; border-top: 1px solid var(--border, var(--zn-line-8)); }
 .ai-config-group:first-of-type { border-top: 0; }
 .ai-config-group-title { margin: 0 0 4px; font-size: var(--zn-fs-lg, 15px); font-weight: 700; color: var(--text, #e6efef); }
-.ai-config-group-desc { margin: 0; font-size: var(--zn-fs-sm); color: var(--muted, #95a8ab); }
+.ai-config-group-desc { margin: 0; font-size: var(--zn-fs-sm); color: var(--muted); }
 .ai-config-card { margin-bottom: 12px; }
 .ai-config-card-title { font-weight: 700; font-size: var(--zn-fs-sm); margin-bottom: 8px; color: var(--text, #e6efef); }

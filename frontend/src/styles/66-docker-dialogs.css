@@ -11,12 +11,12 @@
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-grow { flex: 1; overflow-y: auto; padding: 16px; flex-direction: column; gap: 12px; }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-box { padding: 10px 12px; border-radius: 6px; font-size: var(--zn-fs-xs); line-height: 1.4; }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-3 { display: flex; align-items: center; justify-content: space-between; }
-:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-bold-mono-box { font-size: var(--zn-fs-xs); padding: 2px 7px; border-radius: 4px; background: var(--zn-glaze-8); font-family: var(--font-mono, monospace); font-weight: 700; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-bold-mono-box { font-size: var(--zn-fs-xs); padding: 2px 7px; border-radius: 4px; background: var(--zn-glaze-8); font-family: var(--font-mono); font-weight: 700; }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-soft { color: var(--zn-text-soft); font-size: var(--zn-fs-xs); line-height: 1.4; }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs { width: 100%; box-sizing: border-box; font-size: var(--zn-fs-xs); padding: 6px 8px; }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-col { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-mono { width: 100%; box-sizing: border-box; font-size: var(--zn-fs-xs); padding: 6px 8px; font-family: var(--font-mono, monospace); }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-mono { width: 100%; box-sizing: border-box; font-size: var(--zn-fs-xs); padding: 6px 8px; font-family: var(--font-mono); }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-4 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-x-2 { margin: 0; }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-5 { display: flex; gap: 6px; }
@@ -63,7 +63,7 @@
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-grow-4 { overflow: hidden; flex: 1; }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-strong { font-size: var(--zn-fs-xs); color: var(--zn-text-strong); }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-soft-box { font-size: var(--zn-fs-xs); background: var(--zn-glaze-6); color: var(--zn-text-soft); }
-:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-muted-mono { font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono, monospace); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+:is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-muted-mono { font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-row-8 { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-xs-3 { font-size: var(--zn-fs-xs); padding: 3px 8px; cursor: pointer; }
 :is(#app-deploy-modal-overlay, #docker-prune-modal-overlay, #app-sources-modal-overlay) .dkd-crit-center { text-align: center; color: var(--crit); padding: 16px; }

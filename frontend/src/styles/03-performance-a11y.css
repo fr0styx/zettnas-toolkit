@@ -336,7 +336,7 @@ body.lcd-direct.lcd-theme-light.text-clarity-on #screen {
   font-weight: 800;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  color: var(--lt-ink-brand, var(--brand, #33cdb8));
+  color: var(--lt-ink-brand, var(--brand));
   display: inline-block;
   line-height: 1.2;
 }

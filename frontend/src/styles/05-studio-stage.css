@@ -290,7 +290,7 @@ body.drawer-is-open .chassis-workbench-stage {
   background: linear-gradient(135deg, rgba(51, 205, 184, 0.14) 0%, rgba(79, 216, 196, 0.08) 100%);
   border: 1px solid rgba(51, 205, 184, 0.25);
   border-radius: 8px;
-  color: var(--ok2, #33cdb8);
+  color: var(--ok2);
 }
 
 .management-hero-icon {
@@ -317,8 +317,8 @@ body.drawer-is-open .chassis-workbench-stage {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--ok2, #33cdb8);
-  box-shadow: 0 0 6px var(--ok2, #33cdb8);
+  background: var(--ok2);
+  box-shadow: 0 0 6px var(--ok2);
   animation: pulseDot 2s infinite ease-in-out;
   flex-shrink: 0;
 }

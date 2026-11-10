@@ -44,17 +44,17 @@
   position: absolute;
   top: 10px;
   right: 10px;
-  background: var(--muted, #8e8e93);
+  background: var(--muted);
 }
 
 .ups-card-status-dot.active {
-  background: var(--ok2, #33cdb8);
-  box-shadow: 0 0 8px var(--ok2, #33cdb8);
+  background: var(--ok2);
+  box-shadow: 0 0 8px var(--ok2);
 }
 
 .ups-card-status-dot.warning {
-  background: var(--warn, #f5a623);
-  box-shadow: 0 0 8px var(--warn, #f5a623);
+  background: var(--warn);
+  box-shadow: 0 0 8px var(--warn);
 }
 
 .ups-card-status-dot.danger {
@@ -71,7 +71,7 @@
   font-size: var(--zn-fs-xs);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--muted, #8e8e93);
+  color: var(--muted);
   margin-bottom: 4px;
   font-weight: 600;
 }
@@ -86,13 +86,13 @@
 
 .ups-card-sub {
   font-size: var(--zn-fs-xs);
-  color: var(--ok2, #33cdb8);
+  color: var(--ok2);
   font-weight: 500;
 }
 
 .ups-card-meta {
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #8e8e93);
+  color: var(--muted);
   margin-top: 4px;
 }
 
@@ -120,7 +120,7 @@
 }
 
 .ups-pulse-line {
-  stroke: var(--ok2, #33cdb8);
+  stroke: var(--ok2);
   stroke-width: 3;
   stroke-linecap: round;
   fill: none;
@@ -130,7 +130,7 @@
 
 .ups-flow-rate {
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #8e8e93);
+  color: var(--muted);
   margin-top: 2px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
@@ -163,7 +163,7 @@
 
 .ups-radial-fill {
   fill: none;
-  stroke: var(--ok2, #33cdb8);
+  stroke: var(--ok2);
   stroke-width: 5;
   stroke-dasharray: 175.9;
   stroke-dashoffset: 0;
@@ -202,7 +202,7 @@
 }
 
 .ups-power-flow-container.on-battery #ups-pulse-line-2 {
-  stroke: var(--warn, #f5a623);
+  stroke: var(--warn);
   animation-duration: 0.8s;
 }
 
@@ -219,7 +219,7 @@
   margin: 12px 0 16px;
   border-radius: 10px;
   background: rgba(245, 166, 35, 0.15);
-  border: 1px solid var(--warn, #f5a623);
+  border: 1px solid var(--warn);
   animation: ups-banner-pulse 2s ease infinite;
 }
 
@@ -239,7 +239,7 @@
 .ups-eb-title {
   font-weight: 700;
   font-size: 14px;
-  color: var(--warn, #f5a623);
+  color: var(--warn);
   margin-bottom: 2px;
 }
 
@@ -252,8 +252,8 @@
   padding: 6px 12px;
   border-radius: 6px;
   background: rgba(245, 166, 35, 0.25);
-  border: 1px solid var(--warn, #f5a623);
-  color: var(--warn, #f5a623);
+  border: 1px solid var(--warn);
+  color: var(--warn);
   font-weight: 700;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
@@ -292,11 +292,11 @@
 
 .ups-mode-box small {
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #8e8e93);
+  color: var(--muted);
 }
 
 .ups-mode-option input:checked + .ups-mode-box {
-  border-color: var(--ok2, #33cdb8);
+  border-color: var(--ok2);
   background: rgba(51, 205, 184, 0.15);
   box-shadow: 0 0 10px rgba(51, 205, 184, 0.3);
 }
@@ -311,7 +311,7 @@
   text-align: right;
   font-size: var(--zn-fs-xs);
   font-weight: 600;
-  color: var(--ok2, #33cdb8);
+  color: var(--ok2);
   font-variant-numeric: tabular-nums;
 }
 
@@ -321,7 +321,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--muted, #8e8e93);
+  color: var(--muted);
   margin-bottom: 6px;
 }
 
@@ -329,7 +329,7 @@
   background: var(--zn-shade-40);
   border: 1px solid var(--zn-line-12);
   border-radius: 8px;
-  color: var(--fg, #e6efef);
+  color: var(--fg);
   font-size: 13px;
   font-weight: 500;
   padding: 8px 12px;
@@ -346,7 +346,7 @@
 }
 
 .input-modern:focus {
-  border-color: var(--ok2, #33cdb8);
+  border-color: var(--ok2);
   background: var(--lt-b-0c1a1dff, #0c1a1d);
   box-shadow: 0 0 0 3px rgba(51, 205, 184, 0.22);
 }
@@ -380,7 +380,7 @@ body.theme-yak .input-modern:focus {
 .ups-save-badge {
   font-size: var(--zn-fs-xs);
   font-weight: 600;
-  color: var(--ok2, #33cdb8);
+  color: var(--ok2);
   background: rgba(51, 205, 184, 0.12);
   border: 1px solid rgba(51, 205, 184, 0.3);
   padding: 2px 8px;

@@ -56,7 +56,7 @@
   gap: 6px;
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  color: var(--muted, #95a8ab);
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.6px;
 }
@@ -64,7 +64,7 @@
 .fan-presets-title .ic {
   width: 13px;
   height: 13px;
-  color: var(--ok2, #33cdb8);
+  color: var(--ok2);
 }
 
 .fan-presets-controls {
@@ -98,7 +98,7 @@ select.fan-preset-select:hover {
 }
 
 select.fan-preset-select:focus {
-  border-color: var(--ok2, #33cdb8);
+  border-color: var(--ok2);
   box-shadow: 0 0 8px rgba(51, 205, 184, 0.35);
   outline: none;
 }
@@ -149,13 +149,13 @@ select.fan-preset-select:focus {
 
 .btn-fan-apply {
   background: rgba(51, 205, 184, 0.16);
-  color: var(--ok2, #33cdb8);
+  color: var(--ok2);
   border: 1px solid rgba(51, 205, 184, 0.4);
 }
 
 .btn-fan-apply:hover:not(:disabled) {
   background: rgba(51, 205, 184, 0.28);
-  border-color: var(--ok2, #33cdb8);
+  border-color: var(--ok2);
   box-shadow: 0 0 10px rgba(51, 205, 184, 0.35);
   color: var(--zn-text-strong);
 }

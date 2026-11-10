@@ -19,7 +19,7 @@
   border-radius: 6px;
   background: var(--zn-glaze-3);
   border: 1px solid var(--zn-line-6);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   transition: all 0.2s ease;
   cursor: pointer;
 }
@@ -31,7 +31,7 @@
 
 .drive-temp-bay {
   font-size: var(--zn-fs-xs);
-  color: var(--muted, #95a8ab);
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -43,11 +43,11 @@
 }
 
 .drive-temp-cell.temp-cool .drive-temp-val {
-  color: var(--ok2, #33cdb8);
+  color: var(--ok2);
 }
 
 .drive-temp-cell.temp-warm .drive-temp-val {
-  color: var(--warn, #f5a623);
+  color: var(--warn);
 }
 
 .drive-temp-cell.temp-hot .drive-temp-val {
@@ -82,7 +82,7 @@
   justify-content: center;
   font-size: var(--zn-fs-xs);
   font-weight: 800;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   color: var(--zn-text-strong);
 }
 
@@ -173,14 +173,14 @@
   justify-content: center;
   font-size: var(--zn-fs-xs);
   font-weight: 800;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   color: var(--zn-text-strong);
 }
 
 .ai-gauge-sub {
   font-size: var(--zn-fs-xs);
   font-weight: 600;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   color: var(--muted);
 }
 
@@ -212,8 +212,8 @@
 }
 
 .ai-status-dot.active {
-  background: var(--brand, #33cdb8);
-  box-shadow: 0 0 8px var(--brand, #33cdb8);
+  background: var(--brand);
+  box-shadow: 0 0 8px var(--brand);
 }
 
 .ai-status-dot.active-gpu {
@@ -222,7 +222,7 @@
 }
 
 .ai-status-dot.standby {
-  background: var(--ok2, #33cdb8);
+  background: var(--ok2);
   opacity: 0.8;
 }
 
