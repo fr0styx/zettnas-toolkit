@@ -273,7 +273,7 @@ function _buildDefaultSpotlightItems() {
       run: () => {
         document.body.className = 'theme-cyber';
         localStorage.setItem('kiboto_desktop_theme', 'cyber');
-        showToast(t('toast.switched_to_cyber_teal_theme', 'Switched to Cyber Teal theme'), 'info');
+        showToast(t('toast.switched_to_cyber_teal_theme', 'Switched to Lagoon theme'), 'info');
       },
     },
     {
