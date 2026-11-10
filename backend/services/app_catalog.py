@@ -459,14 +459,43 @@ def save_sideloaded_apps(items: list[dict[str, Any]]) -> None:
     atomic_write_json(SIDELOADED_APPS_FILE, items)
 
 
+def _assess(text: str, extra_flags: list[str] | None = None) -> tuple[list[str], str]:
+    """What in a manifest asks for more than a plain container, and the rating that follows."""
+    security_flags = list(extra_flags or [])
+    text_lower = text.lower()
+    if "privileged: true" in text_lower or "privileged: yes" in text_lower:
+        security_flags.append("Runs in Privileged Mode (Full Host Kernel Access)")
+    if "/var/run/docker.sock" in text_lower:
+        security_flags.append("Mounts Docker Unix Socket (/var/run/docker.sock)")
+    if "network_mode: host" in text_lower or 'network_mode: "host"' in text_lower:
+        security_flags.append("Uses Host Networking (Bypasses Container Network Isolation)")
+    if any(m in text_lower for m in ("/:/host", ":/:", ":/host", ":/root", " /:", "/:/")):
+        security_flags.append("Mounts Root Filesystem of Host")
+    security_rating = "verified"
+    if security_flags:
+        security_rating = (
+            "review_required" if len(security_flags) == 1 and "/var/run/docker.sock" not in text_lower else "elevated"
+        )
+    return security_flags, security_rating
+
+
 def sideload_app_manifest(
     url: str | None = None,
     manifest_content: str | None = None,
+    origin: str = "",
+    scan_text: str | None = None,
+    extra_flags: list[str] | None = None,
 ) -> dict[str, Any]:
     """Sideloads an application from a direct URL (zett-app.json / docker-compose.yml)
 
     or raw JSON/YAML content. Performs security assessment for privileged flags and socket mounts.
+    An Unraid template, a CasaOS or Umbrel app, or a GitHub folder of their app stores is turned
+    into a manifest first and marked untested (RES-8, import_template).
     """
+    from backend.services import template_import
+
+    if url and not origin and template_import.is_store_folder(url):
+        return import_template(*template_import.fetch(url))
     raw_text = ""
     if url:
         u = url.strip()
@@ -485,6 +514,8 @@ def sideload_app_manifest(
 
     if not raw_text:
         raise ValueError("Manifest content is empty.")
+    if not origin and template_import.is_foreign(raw_text):
+        return import_template(raw_text)
 
     # Try parsing as JSON first
     parsed_json = None
@@ -569,29 +600,7 @@ def sideload_app_manifest(
         env = manifest_data.get("env", {})
 
     # 2. Security Assessment
-    security_flags = []
-    text_lower = raw_text.lower()
-    if "privileged: true" in text_lower or "privileged: yes" in text_lower:
-        security_flags.append("Runs in Privileged Mode (Full Host Kernel Access)")
-    if "/var/run/docker.sock" in text_lower:
-        security_flags.append("Mounts Docker Unix Socket (/var/run/docker.sock)")
-    if "network_mode: host" in text_lower or 'network_mode: "host"' in text_lower:
-        security_flags.append("Uses Host Networking (Bypasses Container Network Isolation)")
-    if (
-        "/:/host" in text_lower
-        or ":/:" in text_lower
-        or ":/host" in text_lower
-        or ":/root" in text_lower
-        or " /:" in text_lower
-        or "/:/" in text_lower
-    ):
-        security_flags.append("Mounts Root Filesystem of Host")
-
-    security_rating = "verified"
-    if security_flags:
-        security_rating = (
-            "review_required" if len(security_flags) == 1 and "/var/run/docker.sock" not in text_lower else "elevated"
-        )
+    security_flags, security_rating = _assess(scan_text or raw_text, extra_flags)
 
     app_record = {
         "id": app_id,
@@ -604,13 +613,15 @@ def sideload_app_manifest(
         "volumes": volumes,
         "env": env,
         "logo": logo,
-        "source_id": "sideload",
-        "source_name": "Sideloaded",
+        "source_id": "community" if origin else "sideload",
+        "source_name": f"Community: {origin}, untested" if origin else "Sideloaded",
+        "origin": origin,
+        "untested": bool(origin),
         "type": "compose" if is_compose else "standalone",
         "sideloaded_at": time.time(),
         "security_rating": security_rating,
         "security_flags": security_flags,
-        "raw_manifest": raw_text,
+        "raw_manifest": scan_text or raw_text,
     }
 
     sideloaded = get_sideloaded_apps()
@@ -624,6 +635,20 @@ def sideload_app_manifest(
         "security_rating": security_rating,
         "security_flags": security_flags,
     }
+
+
+def import_template(text: str, extra: dict[str, str] | None = None) -> dict[str, Any]:
+    """An app from another system's template (RES-8), sideloaded and marked untested."""
+    from backend.services import template_import
+
+    kind, manifest = template_import.convert(text, extra)
+    flags = manifest.pop("flags", [])
+    return sideload_app_manifest(
+        manifest_content=json.dumps(manifest),
+        origin=template_import.KIND_NAMES[kind],
+        scan_text=text,
+        extra_flags=flags,
+    )
 
 
 def get_all_catalog_apps() -> list[dict[str, Any]]:

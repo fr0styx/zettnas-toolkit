@@ -78,6 +78,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   analyzer's result files are checked to stay in their folder, settings-file names in the log can't add
   lines, and the catalog's logo download checks the host itself.
 
+#### Apps
+
+- **Apps from Unraid, CasaOS and Umbrel templates**: Docker → Sideload takes an Unraid template (the XML
+  Community Applications uses), a CasaOS app's compose file or an Umbrel app, pasted or by address, and a
+  GitHub folder of the Umbrel or CasaOS app store (…/tree/master/<app>). Kiboto turns it into one app:
+  the image, the web port, the folders the container uses (Kiboto chooses where they live, never
+  /mnt/user/appdata, /DATA or the other system's own paths), the settings it asks for, a name, a picture
+  and a description. Such apps are marked "Community, untested" and the check lists what deserves a look:
+  host devices, host networking, privileged mode, a Docker socket (always left out) and companion
+  containers that are not imported.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

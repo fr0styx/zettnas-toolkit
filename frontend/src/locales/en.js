@@ -5602,6 +5602,7 @@ export default {
   "dk.sources_failed": "Could not load the sources: {error}",
   "dk.inspect_failed": "Check failed: {error}",
   "dk.inspect": "Check the template",
+  "dk.untested": "Imported from: {origin}. Kiboto has not tested it: check its folders and settings before you install it.",
   "dk.audit": "Security check:",
   "dk.audit_clean": "No high-privilege risks found: a standard, isolated container.",
   "dk.image_l": "Image:",

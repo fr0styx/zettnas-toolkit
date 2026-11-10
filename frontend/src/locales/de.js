@@ -5602,6 +5602,7 @@ export default {
   "dk.sources_failed": "Quellen konnten nicht geladen werden: {error}",
   "dk.inspect_failed": "Prüfung fehlgeschlagen: {error}",
   "dk.inspect": "Vorlage prüfen",
+  "dk.untested": "Importiert aus: {origin}. Kiboto hat es nicht getestet: Prüfen Sie Ordner und Einstellungen, bevor Sie es installieren.",
   "dk.audit": "Sicherheitsprüfung:",
   "dk.audit_clean": "Keine Risiken durch hohe Rechte gefunden: ein normaler, isolierter Container.",
   "dk.image_l": "Image:",

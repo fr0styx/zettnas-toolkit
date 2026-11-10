@@ -193,7 +193,9 @@ async def post_docker_catalog_source_toggle(source_id: str, req: AppSourceToggle
 
 @router.post("/docker/catalog/sideload", dependencies=[Depends(require_scope("containers:manage"))])
 async def post_docker_catalog_sideload(req: AppSideloadRequest):
-    """Sideloads an application from a URL (e.g. GitHub raw zett-app.json / compose) or direct manifest content."""
+    """Sideloads an application from a URL (e.g. GitHub raw zett-app.json / compose) or direct manifest content.
+    Unraid templates, CasaOS and Umbrel apps (or a GitHub folder of their app stores) are converted and
+    marked untested (RES-8)."""
     from backend.services.app_catalog import sideload_app_manifest
 
     try:

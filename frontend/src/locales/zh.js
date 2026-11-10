@@ -5602,6 +5602,7 @@ export default {
   "dk.sources_failed": "无法加载来源：{error}",
   "dk.inspect_failed": "检查失败：{error}",
   "dk.inspect": "检查模板",
+  "dk.untested": "导入自：{origin}。Kiboto 未测试过它：安装前请检查它的文件夹和设置。",
   "dk.audit": "安全检查：",
   "dk.audit_clean": "未发现高权限风险：标准的隔离容器。",
   "dk.image_l": "镜像：",

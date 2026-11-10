@@ -5602,6 +5602,7 @@ export default {
   "dk.sources_failed": "Impossible de charger les sources : {error}",
   "dk.inspect_failed": "Échec de la vérification : {error}",
   "dk.inspect": "Vérifier le modèle",
+  "dk.untested": "Importée depuis : {origin}. Kiboto ne l'a pas testée : vérifiez ses dossiers et réglages avant de l'installer.",
   "dk.audit": "Contrôle de sécurité :",
   "dk.audit_clean": "Aucun risque de privilèges élevés : un conteneur isolé standard.",
   "dk.image_l": "Image :",

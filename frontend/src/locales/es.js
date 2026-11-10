@@ -5602,6 +5602,7 @@ export default {
   "dk.sources_failed": "No se pudieron cargar las fuentes: {error}",
   "dk.inspect_failed": "La comprobación falló: {error}",
   "dk.inspect": "Comprobar la plantilla",
+  "dk.untested": "Importada de: {origin}. Kiboto no la ha probado: revisa sus carpetas y ajustes antes de instalarla.",
   "dk.audit": "Comprobación de seguridad:",
   "dk.audit_clean": "Sin riesgos de privilegios altos: un contenedor aislado estándar.",
   "dk.image_l": "Imagen:",

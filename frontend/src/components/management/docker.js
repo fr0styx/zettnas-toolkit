@@ -2846,7 +2846,7 @@ export function openSideloadAppModal() {
   modal.classList.add('open');
 }
 
-function renderSideloadInspection(app, rating, flags, container) {
+export function renderSideloadInspection(app, rating, flags, container) {
   if (!container) return;
   container.style.display = 'block';
 
@@ -2885,6 +2885,7 @@ function renderSideloadInspection(app, rating, flags, container) {
       <div><strong>${t('dk.image_l', 'Image:')}</strong> <code>${escapeHtml(app.image || 'compose-stack')}</code></div>
       <div><strong>${t('dk.type_l', 'Type:')}</strong> ${escapeHtml(app.type || 'standalone')} · <strong>${t('dk.port_l', 'Default port:')}</strong> ${escapeHtml(String(app.default_port || 'N/A'))}</div>
     </div>
+    ${app.untested ? `<div class="dkr-xs-muted-2">${escapeHtml(t('dk.untested', 'Imported from: {origin}. Kiboto has not tested it: check its folders and settings before you install it.', { origin: app.origin || '' }))}</div>` : ''}
     ${flagsHtml}
   `;
 }
