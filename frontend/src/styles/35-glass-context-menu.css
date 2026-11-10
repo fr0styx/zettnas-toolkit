@@ -67,7 +67,7 @@ body.no-specular-glow .active-window {
 /* 3. Window Corner Radius Selector */
 .window-radius-btn.active {
   background: var(--brand, #33cdb8) !important;
-  color: #0c1517 !important;
+  color: var(--accent-contrast-fg) !important;
   font-weight: 700 !important;
   border-color: var(--brand, #33cdb8) !important;
   box-shadow: 0 0 10px rgba(var(--accent-rgb, 51, 205, 184), 0.35);

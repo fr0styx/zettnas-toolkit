@@ -1128,8 +1128,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   position: absolute;
   top: -2px;
   right: -2px;
-  background: var(--accent-cyan, #33cdb8);
-  color: #0c1719;
+  background: var(--brand);
+  color: var(--accent-contrast-fg);
   font-size: var(--zn-fs-xs);
   font-weight: 800;
   line-height: 1;

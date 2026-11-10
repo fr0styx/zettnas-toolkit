@@ -2319,7 +2319,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                     ${ico('📋')} ${t('chassis.paste', 'Paste')}
                   </button>
                 </div>
-                <button type="button" id="btn-oauth-exchange" style="margin-top: 10px; width: 100%; padding: 10px 14px; background: var(--ok2, #22c55e); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); font-weight: 700; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);">
+                <button type="button" id="btn-oauth-exchange" style="margin-top: 10px; width: 100%; padding: 10px 14px; background: var(--ok2, #22c55e); color: var(--accent-contrast-fg); font-size: var(--zn-fs-xs); font-weight: 700; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);">
                   <span>${ico('✓')} ${t('chassis.oauth_finish', 'Finish sign-in')}</span>
                 </button>
               </div>

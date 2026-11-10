@@ -98,7 +98,7 @@ export function initVmManager() {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/></svg>
                 <span>${t('vmm.iso_library', 'ISO library')}</span>
               </button>
-              <button id="btn-vm-create" class="btn-save-preset" style="background: var(--accent-cyan, #33cdb8); border-color: rgba(51, 205, 184, 0.4); color: var(--zn-text-strong); font-weight: 700;">
+              <button id="btn-vm-create" class="btn-save-preset" style="background: var(--brand); border-color: rgba(51, 205, 184, 0.4); color: var(--accent-contrast-fg); font-weight: 700;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 <span data-i18n="vm.create_btn">${escapeHtml(t('vm.create_btn', 'Create Virtual Machine'))}</span>
               </button>
@@ -145,7 +145,7 @@ export function initVmManager() {
               <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             </div>
             <div class="vmm-semi-muted-2" data-i18n="vm.no_vms">${t('vm.no_vms', 'No virtual machines configured yet.')}</div>
-            <button id="btn-vm-empty-create" class="btn-save-preset" style="background: var(--accent-cyan, #33cdb8); border-color: rgba(51, 205, 184, 0.4); color: var(--zn-text-strong); margin: 0 auto;">
+            <button id="btn-vm-empty-create" class="btn-save-preset" style="background: var(--brand); border-color: rgba(51, 205, 184, 0.4); color: var(--accent-contrast-fg); margin: 0 auto;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               <span data-i18n="vm.create_btn">${escapeHtml(t('vm.create_btn', 'Create Virtual Machine'))}</span>
             </button>

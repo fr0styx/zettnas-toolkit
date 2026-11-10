@@ -249,7 +249,7 @@ body.theme-yak .desktop-widget.clickable:hover {
 }
 .cal-day.cal-today {
   background: var(--brand, #33cdb8);
-  color: #0c1517;
+  color: var(--accent-contrast-fg);
   font-weight: 800;
   box-shadow: 0 0 10px rgba(51, 205, 184, 0.4);
 }
@@ -292,7 +292,7 @@ body.theme-yak .cal-day.cal-today {
 }
 .cal-day.cal-holiday.cal-today {
   background: var(--brand, #33cdb8);
-  color: #0c1517;
+  color: var(--accent-contrast-fg);
   box-shadow: 0 0 12px rgba(51, 205, 184, 0.5);
 }
 .cal-day.cal-holiday.cal-today::after {
@@ -469,7 +469,7 @@ body.theme-yak .cal-day.cal-holiday:hover {
 }
 .modal-calendar-grid .cal-day.cal-selected {
   background: var(--brand, #33cdb8) !important;
-  color: #000 !important;
+  color: var(--accent-contrast-fg) !important;
   font-weight: 800;
   border-color: var(--brand, #33cdb8) !important;
   box-shadow: 0 0 14px rgba(51, 205, 184, 0.45);
@@ -497,7 +497,7 @@ body.theme-yak .cal-day.cal-holiday:hover {
 }
 .tz-region-pill.active {
   background: var(--brand, #33cdb8);
-  color: #000;
+  color: var(--accent-contrast-fg);
   border-color: var(--brand, #33cdb8);
   font-weight: 700;
 }
@@ -538,7 +538,7 @@ body.theme-yak .cal-day.cal-holiday:hover {
 }
 .cal-filter-pill.active {
   background: var(--brand, #33cdb8);
-  color: #000;
+  color: var(--accent-contrast-fg);
   border-color: var(--brand, #33cdb8);
   font-weight: 700;
 }

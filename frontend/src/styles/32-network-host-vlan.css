@@ -72,8 +72,8 @@
 }
 
 .net-proto-btn.active {
-  background: var(--accent-cyan, #33cdb8);
-  color: var(--zn-text-strong);
+  background: var(--brand);
+  color: var(--accent-contrast-fg);
   border-color: var(--accent-cyan, #33cdb8);
 }
 
@@ -133,8 +133,8 @@
 }
 
 .net-stp-toggle-btn.active {
-  background: var(--accent-cyan, #33cdb8);
-  color: var(--zn-text-strong);
+  background: var(--brand);
+  color: var(--accent-contrast-fg);
   border-color: var(--accent-cyan, #33cdb8);
 }
 

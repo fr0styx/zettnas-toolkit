@@ -1310,7 +1310,7 @@ export async function openAppDeployModal(appId) {
                 <div style="font-weight:700; color:var(--ok2, #33cdb8); font-size:var(--zn-fs-xs);">🚀 ${t('catalog.live', 'The app is running')}</div>
                 <div class="dkd-xs-soft-2" id="adm-success-msg">${t('catalog.live_desc', 'It is installed and started.')}</div>
               </div>
-              <a id="adm-webui-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:var(--ok2, #33cdb8); color:#000; font-weight:700; font-size:var(--zn-fs-xs); padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+              <a id="adm-webui-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:var(--ok2, #33cdb8); color:var(--accent-contrast-fg); font-weight:700; font-size:var(--zn-fs-xs); padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
                 🌐 ${t('catalog.open_app', 'Open the app')} ↗
               </a>
             </div>

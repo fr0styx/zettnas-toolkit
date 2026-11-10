@@ -181,8 +181,8 @@ body.desktop-locked #os-dock-container {
 }
 
 .users-nav-bar .btn-pill-toggle.active {
-  background: var(--accent-cyan, #33cdb8);
-  color: var(--zn-text-strong);
+  background: var(--brand);
+  color: var(--accent-contrast-fg);
   border-color: rgba(51, 205, 184, 0.4);
 }
 
@@ -231,6 +231,6 @@ body.desktop-locked #os-dock-container {
 #lock-overlay .lck-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0a7a70, #08695f); align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 14px; border: 1px solid var(--lt-r-ffffff40, rgba(255,255,255,0.25)); }
 #lock-overlay .lck-role-badge { font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); font-weight: 600; }
 #lock-overlay .lck-password { width: 100%; padding: 12px 42px 12px 14px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-20); color: var(--zn-text-strong); border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
-#lock-overlay .lck-unlock-btn { position: absolute; right: 6px; top: 6px; bottom: 6px; width: 32px; background: var(--ok2, #33cdb8); border: none; border-radius: 6px; color: var(--zn-text-strong); font-weight: 800; cursor: pointer; align-items: center; justify-content: center; }
+#lock-overlay .lck-unlock-btn { position: absolute; right: 6px; top: 6px; bottom: 6px; width: 32px; background: var(--ok2, #33cdb8); border: none; border-radius: 6px; color: var(--accent-contrast-fg); font-weight: 800; cursor: pointer; align-items: center; justify-content: center; }
 #lock-overlay .lck-timeout-select { background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-18); color: var(--zn-text-strong); border-radius: 6px; padding: 4px 8px; font-size: var(--zn-fs-xs); cursor: pointer; outline: none; }
 #lock-overlay .lck-error { font-size: var(--zn-fs-xs); color: var(--crit, #ff6b6b); margin-bottom: 12px; }

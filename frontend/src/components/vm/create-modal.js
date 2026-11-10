@@ -286,7 +286,7 @@ export function openVmCreateModal() {
 
       <div class="smart-modal-footer vmc-row-box-2">
         <button id="vm-create-cancel" class="btn-pill-toggle">${t('common.cancel', 'Cancel')}</button>
-        <button id="vm-create-submit" class="btn-save-preset" style="padding: 7px 18px; font-weight: 700; background: var(--accent-cyan, #33cdb8); border-color: rgba(51, 205, 184, 0.4); color: var(--zn-text-strong);">${t('vm.create_btn', 'Create Virtual Machine')}</button>
+        <button id="vm-create-submit" class="btn-save-preset" style="padding: 7px 18px; font-weight: 700; background: var(--brand); border-color: rgba(51, 205, 184, 0.4); color: var(--accent-contrast-fg);">${t('vm.create_btn', 'Create Virtual Machine')}</button>
       </div>
     </div>
   `;

@@ -18,6 +18,12 @@ body.theme-light {
   --track: #c9d4d5;
   --focus-ring: #0a7a70;
   --focus-shadow: 0 0 0 3px rgba(10, 122, 112, 0.3);
+  --brand: #0a7a70;
+  --brand-rgb: 10, 122, 112;
+  --accent-rgb: 10, 122, 112;
+  --accent-contrast-fg: #ffffff;
+  --accent-glow: rgba(10, 122, 112, 0.3);
+  --accent-hover: rgba(10, 122, 112, 0.12);
   background: radial-gradient(circle at 50% 50%, #f9fbfb 0%, #e3eaea 70%);
   color: var(--fg);
 }

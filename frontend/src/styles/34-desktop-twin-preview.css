@@ -294,7 +294,7 @@
   align-items: center;
   gap: 3px;
   background: var(--ok2, #33cdb8);
-  color: #040910;
+  color: var(--accent-contrast-fg);
   font-size: var(--zn-fs-xs);
   font-weight: 800;
   letter-spacing: 0.5px;

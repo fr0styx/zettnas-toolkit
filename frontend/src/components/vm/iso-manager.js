@@ -552,7 +552,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
                   ${ico('✓')} ${t('viso.ready', 'Ready')}
                 </button>
               ` : `
-                <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" style="padding: 5px 12px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--accent-cyan, #33cdb8); color: var(--zn-text-strong);">
+                <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" style="padding: 5px 12px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand); color: var(--accent-contrast-fg);">
                   <span>${ico('⬇')} ${t('viso.download', 'Download')}</span>
                 </button>
               `}

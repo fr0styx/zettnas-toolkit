@@ -202,8 +202,8 @@
   color: var(--zn-text-strong);
 }
 .docker-filter-btn.active {
-  background: var(--accent-cyan, #33cdb8) !important;
-  color: #0c1516 !important;
+  background: var(--brand) !important;
+  color: var(--accent-contrast-fg) !important;
   font-weight: 700;
   border-color: var(--accent-cyan, #33cdb8) !important;
   box-shadow: 0 0 10px rgba(51, 205, 184, 0.25);
