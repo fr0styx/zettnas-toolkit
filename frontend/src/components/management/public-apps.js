@@ -7,6 +7,7 @@ import '../../styles/80-public-apps.css'; // loads with the card, not on every p
 import { t } from '../../i18n.js';
 import { showToast } from '../../toast.js';
 import { escapeHtml } from '../../utils.js';
+import { funnelStepsHtml, recheckWhileOpen } from './funnel-steps.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -48,7 +49,10 @@ export function publicAppsHtml(st) {
       <div class="pa-warn" data-pa-warn hidden>${escapeHtml(t('pa.controls_warn', 'This app controls the server: whoever gets past its sign-in can change or erase everything. Publish it only with a strong password and two-step sign-in in the app.'))}</div>
     </form>`;
   }
-  return `${list}${form}<div class="nsv-xs-muted-2">${escapeHtml(t('pa.help', 'Anyone with the address reaches the app\'s own sign-in page, so publish only apps that have one. Kiboto\'s own page never goes on the internet.'))}</div>`;
+  const waiting = st.pending
+    ? t('funnel.waiting_app', 'Kiboto puts {name} on the internet as soon as both are done.', { name: st.pending.name })
+    : '';
+  return `${funnelStepsHtml(st.funnel, waiting)}${list}${form}<div class="nsv-xs-muted-2">${escapeHtml(t('pa.help', 'Anyone with the address reaches the app\'s own sign-in page, so publish only apps that have one. Kiboto\'s own page never goes on the internet.'))}</div>`;
 }
 
 function cardShell() {
@@ -107,8 +111,15 @@ export async function loadPublicAppsCard() {
       if (stop) act(() => api.delete(`/api/network/public-apps/${encodeURIComponent(stop.getAttribute('data-pa-stop') || '')}`));
     });
   }
+  await refreshPublicApps();
+}
+
+/** Reads the card again, and again every few seconds while the owner's steps are open. */
+export async function refreshPublicApps(started = Date.now()) {
   try {
-    renderPublicApps(await api.get('/api/network/public-apps'));
+    const st = await api.get('/api/network/public-apps');
+    renderPublicApps(st);
+    if ($('pa-card')) recheckWhileOpen(st.funnel, refreshPublicApps, undefined, started);
   } catch (err) {
     const body = $('pa-body');
     if (body) body.textContent = /** @type {Error} */ (err).message || '';

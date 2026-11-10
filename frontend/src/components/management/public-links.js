@@ -5,6 +5,8 @@
 import { api } from '../../api.js';
 import { t } from '../../i18n.js';
 import { showToast } from '../../toast.js';
+import { funnelStepsHtml, recheckWhileOpen } from './funnel-steps.js';
+import '../../styles/80-public-apps.css'; // the steps' styles
 
 const $ = (id) => document.getElementById(id);
 
@@ -12,6 +14,7 @@ const $ = (id) => document.getElementById(id);
 export function publicLinksStatus(st) {
   if (st.error) return st.error;
   if (!st.tailscale) return t('pl.no_tailscale', 'Needs Tailscale: connect it in Network → WireGuard & Tailscale first.');
+  if (st.pending) return t('funnel.waiting_links', 'Share links go on the internet as soon as both are done.');
   if (st.approval_url) return t('pl.approve', 'Tailscale asks the tailnet owner to allow Funnel first.');
   if (!st.enabled) return t('pl.off', 'Off: share links work at home and on your tailnet.');
   if (!st.live) return t('pl.starting', 'Starting…');
@@ -26,6 +29,13 @@ export function renderPublicLinks(st) {
   toggle.textContent = st.enabled ? t('nas_name.btn_on', 'On') : t('nas_name.btn_off', 'Off');
   toggle.disabled = !st.tailscale && !st.enabled;
   $('pl-status').textContent = publicLinksStatus(st);
+  let steps = $('pl-funnel-steps');
+  if (!steps) {
+    steps = document.createElement('div');
+    steps.id = 'pl-funnel-steps';
+    $('pl-status').insertAdjacentElement('afterend', steps);
+  }
+  steps.innerHTML = funnelStepsHtml(st.funnel);
   const approve = /** @type {HTMLAnchorElement} */ ($('pl-approve'));
   approve.hidden = !st.approval_url;
   approve.href = st.approval_url || '#';
@@ -47,8 +57,15 @@ export async function loadPublicLinksCard() {
     card.dataset.bound = '1';
     $('pl-toggle').addEventListener('click', () => put($('pl-toggle').getAttribute('aria-pressed') !== 'true'));
   }
+  await refreshPublicLinks();
+}
+
+/** Reads the card again, and again every few seconds while the owner's steps are open. */
+export async function refreshPublicLinks(started = Date.now()) {
   try {
-    renderPublicLinks(await api.get('/api/network/public-links'));
+    const st = await api.get('/api/network/public-links');
+    renderPublicLinks(st);
+    if ($('pl-card')) recheckWhileOpen(st.funnel, refreshPublicLinks, undefined, started);
   } catch (err) {
     $('pl-status').textContent = /** @type {Error} */ (err).message || '';
   }

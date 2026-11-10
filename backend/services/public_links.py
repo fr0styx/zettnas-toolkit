@@ -16,7 +16,9 @@ owner to allow Funnel (the approval link is shown).
 import json
 import os
 import re
+import time
 from typing import Any
+from urllib.parse import quote
 
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
@@ -24,6 +26,10 @@ from backend.fsutil import atomic_write_json, read_json
 FUNNEL_PORT = 8443
 PATH = "/api/fs/shared"
 STATE_FILE = os.path.join(DATA_DIR, "public_links.json")
+DNS_URL = "https://login.tailscale.com/admin/dns"  # where the owner turns on HTTPS certificates
+PENDING_SECONDS = 3600  # a request made before Funnel was allowed is finished within this time
+_NODE_ID = re.compile(r"^[A-Za-z0-9]{6,40}$")
+_PORTS_CAP = "https://tailscale.com/cap/funnel-ports"
 _APPROVAL = re.compile(r"https://login\.tailscale\.com/f/funnel\S*")
 
 
@@ -48,6 +54,49 @@ def _dns_name() -> str:
         return ""
 
 
+def _status_doc() -> dict[str, Any]:
+    code, out = _ts(["status", "--json"], timeout=4.0)
+    if code != 0:
+        return {}
+    try:
+        doc = json.loads(out) or {}
+    except ValueError:
+        return {}
+    return doc if isinstance(doc, dict) else {}
+
+
+def funnel_readiness(doc: dict[str, Any] | None = None) -> dict[str, Any]:
+    """What Funnel needs that only the tailnet's owner can switch on, read from Tailscale's own status:
+    HTTPS certificates for the tailnet (CertDomains) and Funnel allowed for this device (its funnel
+    capability, with the ports it may use). Links to both steps; the approval link is built from the
+    device's id, so no command has to wait for it."""
+    from backend.hardware.net import tailscale
+
+    doc = _status_doc() if doc is None else doc
+    me = doc.get("Self") or {}
+    caps = me.get("CapMap") or {}
+    ports: list[int] = []
+    for key in caps:
+        if key.startswith(_PORTS_CAP):
+            m = re.search(r"ports=([\d,]+)", key)
+            ports = sorted({int(p) for p in (m.group(1) if m else "").split(",") if p.isdigit()})
+    node = str(me.get("ID") or "")
+    connected = bool(me.get("DNSName"))
+    headscale = bool(tailscale.login_server())
+    https = bool(doc.get("CertDomains"))
+    allowed = "funnel" in caps or any(k.startswith(_PORTS_CAP) for k in caps)
+    return {
+        "connected": connected,
+        "headscale": headscale,
+        "https": https,
+        "funnel": allowed,
+        "ports": ports,
+        "dns_url": DNS_URL,
+        "approve_url": f"https://login.tailscale.com/f/funnel?node={quote(node)}" if _NODE_ID.match(node) else "",
+        "ready": connected and https and allowed and not headscale,
+    }
+
+
 def live(dns: str) -> bool:
     """Whether Funnel serves the share links on FUNNEL_PORT right now."""
     code, out = _ts(["funnel", "status", "--json"], timeout=4.0)
@@ -66,9 +115,16 @@ def live(dns: str) -> bool:
 
 def status() -> dict[str, Any]:
     st = _state()
+    ready = funnel_readiness()
+    pending = st.get("pending") or {}
+    if pending and ready["ready"] and time.time() - float(pending.get("since") or 0) < PENDING_SECONDS:
+        logger.info("[PublicLinks] Funnel is allowed now: finishing the waiting request")
+        return enable(int(pending.get("web_port") or 8082))
     dns = _dns_name()
     on = bool(st.get("enabled"))
     return {
+        "funnel": ready,
+        "pending": bool(pending) and time.time() - float(pending.get("since") or 0) < PENDING_SECONDS,
         "enabled": on,
         "live": live(dns) if on else False,
         "tailscale": bool(dns),
@@ -83,6 +139,10 @@ def enable(web_port: int) -> dict[str, Any]:
     dns = _dns_name()
     if not dns:
         atomic_write_json(STATE_FILE, {"enabled": False, "error": "Tailscale isn't connected on this NAS."})
+        return status()
+    if not funnel_readiness()["ready"]:
+        # the owner's steps aren't done: remember the request; status() finishes it once they are
+        atomic_write_json(STATE_FILE, {"enabled": False, "pending": {"web_port": web_port, "since": time.time()}})
         return status()
     target = f"http://127.0.0.1:{web_port}{PATH}"
     code, out = _ts(["funnel", "--bg", "--yes", f"--https={FUNNEL_PORT}", f"--set-path={PATH}", target])

@@ -18,7 +18,26 @@ class FakeTailscale:
     def __call__(self, args, timeout=8.0):
         self.calls.append(args)
         if args[:2] == ["status", "--json"]:
-            return (0, json.dumps({"Self": {"DNSName": DNS + "."}})) if self.connected else (1, "not running")
+            return (
+                (
+                    0,
+                    json.dumps(
+                        {
+                            "Self": {
+                                "DNSName": DNS + ".",
+                                "ID": "nTestNode1CNTRL",
+                                "CapMap": {
+                                    "funnel": None,
+                                    "https://tailscale.com/cap/funnel-ports?ports=443,8443,10000": None,
+                                },
+                            },
+                            "CertDomains": [DNS],
+                        }
+                    ),
+                )
+                if self.connected
+                else (1, "not running")
+            )
         if args[:3] == ["funnel", "status", "--json"]:
             return 0, json.dumps(self.funnel)
         if args[0] == "funnel" and args[-1] == "off":
@@ -59,6 +78,7 @@ def test_only_the_share_link_path_is_published_on_its_own_port(ts):
         "--set-path=/api/fs/shared",
         "http://127.0.0.1:8082/api/fs/shared",
     ]
+    assert st.pop("funnel")["ready"] is True and st.pop("pending") is False
     assert st == {
         "enabled": True,
         "live": True,

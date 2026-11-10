@@ -41,7 +41,16 @@ def ts(tmp_path, monkeypatch):
     def fake(args, timeout=8.0):
         calls.append(args)
         if args[:2] == ["status", "--json"]:
-            return 0, json.dumps({"Self": {"DNSName": DNS + "."}})
+            return 0, json.dumps(
+                {
+                    "Self": {
+                        "DNSName": DNS + ".",
+                        "ID": "nTestNode1CNTRL",
+                        "CapMap": {"funnel": None, "https://tailscale.com/cap/funnel-ports?ports=443,8443,10000": None},
+                    },
+                    "CertDomains": [DNS],
+                }
+            )
         if args[:3] == ["funnel", "status", "--json"]:
             return 0, json.dumps({"Web": web, "AllowFunnel": allow})
         if args[0] == "funnel" and args[-1].startswith("http://"):
@@ -136,7 +145,14 @@ def test_an_approval_link_is_kept_and_a_refusal_said(ts, monkeypatch):
 def test_without_tailscale_nothing_is_offered(ts, monkeypatch):
     monkeypatch.setattr(public_links, "_ts", lambda args, timeout=8.0: (1, "Tailscale container is stopped"))
     st = pa.status()
-    assert st == {"tailscale": False, "published": [], "free_ports": [10000, 443], "apps": []}
+    assert {k: st[k] for k in ("tailscale", "published", "free_ports", "apps", "pending")} == {
+        "tailscale": False,
+        "published": [],
+        "free_ports": [10000, 443],
+        "apps": [],
+        "pending": None,
+    }
+    assert st["funnel"]["ready"] is False
     with pytest.raises(pa.PublishError, match="isn't connected"):
         pa.publish("immich_server", 2283, 10000)
 

@@ -29,6 +29,7 @@ from backend.services import public_links
 
 APP_PORTS = (10000, 443)  # 8443 is the share links'; 443 is free only when remote access doesn't serve Kiboto there
 STATE_FILE = os.path.join(DATA_DIR, "public_apps.json")
+PENDING_FILE = os.path.join(DATA_DIR, "public_apps_pending.json")  # one request waiting for the owner's steps
 _CONTROL = re.compile(
     r"portainer|dockge|dockhand|dozzle|yacht|cockpit|webmin|ttyd|wetty|shellinabox|filebrowser|code-server|"
     r"guacamole|unraid|komodo|cosmos",
@@ -113,7 +114,28 @@ def _serve_config() -> tuple[dict[str, Any], dict[str, Any]]:
     return doc.get("Web") or {}, doc.get("AllowFunnel") or {}
 
 
+def _pending() -> dict[str, Any]:
+    p = read_json(PENDING_FILE, {})
+    if not isinstance(p, dict) or not p.get("name"):
+        return {}
+    if time.time() - float(p.get("since") or 0) > public_links.PENDING_SECONDS:
+        return {}
+    return p
+
+
 def status() -> dict[str, Any]:
+    ready = public_links.funnel_readiness()
+    waiting = _pending()
+    if waiting and ready["ready"]:
+        atomic_write_json(PENDING_FILE, {})
+        logger.info("[PublicApps] Funnel is allowed now: publishing %s", waiting["name"])
+        try:
+            return publish(
+                waiting["name"], int(waiting["host_port"]), int(waiting["funnel_port"]), waiting.get("actor", "")
+            )
+        except PublishError as e:
+            logger.warning("[PublicApps] the waiting request could not be finished: %s", e)
+            waiting = {}
     dns = public_links._dns_name()
     web, allowed = _serve_config() if dns else ({}, {})
     published = []
@@ -131,8 +153,10 @@ def status() -> dict[str, Any]:
     taken = {int(p) for p in _state()} | {p for p in APP_PORTS if f"{dns}:{p}" in web}
     return {
         "tailscale": bool(dns),
+        "funnel": ready,
+        "pending": {"name": waiting["name"], "funnel_port": waiting["funnel_port"]} if waiting else None,
         "published": published,
-        "free_ports": [p for p in APP_PORTS if p not in taken],
+        "free_ports": [p for p in APP_PORTS if p not in taken and (not ready["ports"] or p in ready["ports"])],
         "apps": apps() if dns else [],
     }
 
@@ -153,6 +177,14 @@ def publish(name: str, host_port: int, funnel_port: int, actor: str = "") -> dic
     dns = public_links._dns_name()
     if not dns:
         raise PublishError("Tailscale isn't connected on this NAS.")
+    if not public_links.funnel_readiness()["ready"]:
+        # the owner's steps aren't done yet: keep the request; status() finishes it once they are
+        atomic_write_json(
+            PENDING_FILE,
+            {"name": name, "host_port": host_port, "funnel_port": funnel_port, "actor": actor, "since": time.time()},
+        )
+        _audit("public_app.pending", f"{name}:{host_port} on :{funnel_port}", actor)
+        return status()
     with locked_json(STATE_FILE):
         state = _state()
         if str(funnel_port) in state:
@@ -179,6 +211,9 @@ def publish(name: str, host_port: int, funnel_port: int, actor: str = "") -> dic
 
 
 def unpublish(funnel_port: int, actor: str = "") -> dict[str, Any]:
+    if _pending().get("funnel_port") == funnel_port:  # a waiting request is withdrawn the same way
+        atomic_write_json(PENDING_FILE, {})
+        return status()
     with locked_json(STATE_FILE):
         state = _state()
         entry = state.pop(str(funnel_port), None)

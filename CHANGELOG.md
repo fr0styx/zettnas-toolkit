@@ -129,6 +129,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   QR code; the other apps fold into one line ("15 apps on your tailnet") that opens a compact grid of app
   names with their ports, each a link. The card remembers in this browser whether you left it open.
 
+#### Remote access
+
+- **Funnel tells you what to switch on**: putting share links or apps on the internet needs two switches in
+  Tailscale that only the tailnet's owner can turn on, HTTPS certificates and Funnel for this device. Both
+  cards now show them as a checklist with a link for each that ticks itself within seconds of each click,
+  and a request made before that is finished by itself once both are on. With your own Headscale server
+  the cards say Funnel isn't available.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

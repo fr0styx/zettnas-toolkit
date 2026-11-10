@@ -52,8 +52,14 @@ shared address (CGNAT).
   managers, log viewers, web terminals) are marked and come with a warning. Publishing and taking an
   app off are written to the security log.
 
-Funnel traffic goes through Tailscale's relays, so big transfers are slower than at home. The first
-time, Tailscale may ask the tailnet's owner to allow Funnel; the card shows the link.
+Funnel traffic goes through Tailscale's relays, so big transfers are slower than at home.
+
+**Before Funnel works**, the tailnet's owner turns on two things in Tailscale, once: HTTPS certificates
+(admin console → DNS → Enable HTTPS) and Funnel for this device (an approval page). Kiboto can't switch
+these on itself; it reads them from Tailscale's status and shows both cards a checklist with a link
+for each, which ticks itself within seconds of each click. Pressing a card's button before that is
+fine: Kiboto keeps the request for an hour and finishes it as soon as both are done. With your own
+Headscale server there is no Funnel.
 
 ## What it does and doesn't do
 

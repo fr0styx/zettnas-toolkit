@@ -5,3 +5,8 @@
 #pa-card .pa-form label { display: grid; gap: 4px; font-size: var(--zn-fs-xs); }
 #pa-card .pa-warn { color: var(--alert, #ef4444); font-size: var(--zn-fs-xs); flex-basis: 100%; }
 #pa-card .pa-item .pa-warn { flex-basis: auto; }
+.funnel-steps { display: grid; gap: 6px; margin: var(--zn-space-2) 0; }
+.funnel-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.funnel-step { display: flex; flex-wrap: wrap; gap: 6px var(--zn-space-2); align-items: center; }
+.funnel-step.is-done { opacity: 0.7; }
+.funnel-mark { width: 1.2em; text-align: center; font-weight: 700; color: var(--zn-text-accent); }
