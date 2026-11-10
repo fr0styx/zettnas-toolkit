@@ -69,6 +69,15 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   NAS's own network is never accepted: Kiboto turns Accept Routes off, records it in Events and says
   which device offers which route beside the box.
 
+#### Security
+
+- **Restoring a file version could write outside the shares**: when the file was a symlink pointing
+  outside the shared folders, restoring an earlier version "over the original" followed it. The file is
+  now checked where it really leads, and such a restore is refused.
+- Hardening from code scanning: the Home Assistant connection asks for TLS 1.2 at least, the space
+  analyzer's result files are checked to stay in their folder, settings-file names in the log can't add
+  lines, and the catalog's logo download checks the host itself.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

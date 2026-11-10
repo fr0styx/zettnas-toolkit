@@ -123,8 +123,13 @@ def version_path(path: str, version_id: str) -> str:
 
 def restore_version(path: str, version_id: str, overwrite: bool = False) -> str:
     """Copies a version back: beside the file as "<name> (version YYYY-MM-DD HHMM)", or over it."""
+    from backend.services.path_access import ALLOWED_BROWSE_ROOTS
+
     src = version_path(path, version_id)
-    real = os.path.realpath(path)
+    # the file itself, resolved: a symlink in a share must not lead the copy outside the shares
+    real = resolve_within(path, ALLOWED_BROWSE_ROOTS)
+    if real is None:
+        raise PermissionError("That file leads outside the shared folders.")
     folder = os.path.dirname(real)
     if overwrite:
         fd, tmp = tempfile.mkstemp(prefix=".kiboto-restore-", dir=folder)

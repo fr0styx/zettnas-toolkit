@@ -166,13 +166,18 @@ UNREADABLE_LISTENERS: list = []
 _UNREADABLE: set[str] = set()
 
 
+def _shown(path: str) -> str:
+    """A settings file's name for the log: no line breaks, so it can't forge a log line."""
+    return os.path.basename(path).replace("\r", "?").replace("\n", "?")
+
+
 def _restore(path: str) -> bool:
     for restorer in list(RESTORERS):
         try:
             if restorer(path):
                 return True
         except Exception:
-            logger.warning(f"[fsutil] could not restore {os.path.basename(path)}", exc_info=True)
+            logger.warning("[fsutil] could not restore %s", _shown(path), exc_info=True)
     return False
 
 
@@ -182,7 +187,7 @@ def _mark_unreadable(path: str, error: OSError) -> None:
     _UNREADABLE.add(key)
     if not first:
         return
-    logger.error("[fsutil] %s exists but could not be opened: %s", os.path.basename(path), error)
+    logger.error("[fsutil] %s exists but could not be opened: %s", _shown(path), str(error).replace("\n", " "))
     for listener in list(UNREADABLE_LISTENERS):
         try:
             listener(path, str(error))
@@ -201,9 +206,9 @@ def quarantine_corrupt(path: str) -> str | None:
     try:
         os.replace(path, dest)
     except OSError:
-        logger.warning(f"[fsutil] {path} is unreadable and could not be moved aside", exc_info=True)
+        logger.warning("[fsutil] %s is unreadable and could not be moved aside", _shown(path), exc_info=True)
         return None
-    logger.error("[fsutil] %s was not valid JSON; kept as %s", os.path.basename(path), os.path.basename(dest))
+    logger.error("[fsutil] %s was not valid JSON; kept as %s", _shown(path), _shown(dest))
     for listener in list(CORRUPT_LISTENERS):
         try:
             listener(path, dest)

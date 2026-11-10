@@ -82,7 +82,11 @@ def publish(
 ) -> int:
     """Sends (topic, payload, retain) messages; returns how many. Raises MqttError."""
     raw = socket.create_connection((host, int(port)), timeout=timeout)
-    sock: socket.socket = ssl.create_default_context().wrap_socket(raw, server_hostname=host) if tls else raw
+    sock: socket.socket = raw
+    if tls:
+        ctx = ssl.create_default_context()
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+        sock = ctx.wrap_socket(raw, server_hostname=host)
     try:
         sock.settimeout(timeout)
         sock.sendall(connect_packet(client_id, username, password))

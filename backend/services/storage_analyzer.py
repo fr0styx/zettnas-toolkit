@@ -153,7 +153,13 @@ def _human(size: float) -> str:
 
 
 def _result_path(share: str) -> str:
-    return os.path.join(RESULT_DIR, re.sub(r"[^A-Za-z0-9_.-]", "_", share)[:100] + ".json")
+    """The share's result file: its name made safe, and checked to stay in RESULT_DIR."""
+    name = re.sub(r"[^A-Za-z0-9_.-]", "_", share)[:100] + ".json"
+    base = os.path.normpath(RESULT_DIR)
+    path = os.path.normpath(os.path.join(base, name))
+    if not path.startswith(base + os.sep):
+        raise ValueError("That share name can't be analysed.")
+    return path
 
 
 def last_result(share: str) -> dict[str, Any] | None:

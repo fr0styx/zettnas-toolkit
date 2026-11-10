@@ -66,6 +66,8 @@ def restore_version(req: RestoreVersionIn, principal: AuthenticatedPrincipal = D
         dest = file_versions.restore_version(target, req.version, overwrite=req.overwrite)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from None
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e)) from None
     add_event(
         "info",
         "File Explorer",

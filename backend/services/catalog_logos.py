@@ -60,6 +60,8 @@ class _SameHostRedirects(urllib.request.HTTPRedirectHandler):
 
 def fetch(url: str) -> tuple[bytes, str]:
     """The logo's bytes and media type, from one of the logo hosts only."""
+    if not allowed(url):
+        raise ValueError("not a logo host")
     opener = urllib.request.build_opener(_SameHostRedirects)
     req = urllib.request.Request(url, headers={"User-Agent": "Kiboto-catalog/1.0", "Accept": "image/*"})
     with opener.open(req, timeout=TIMEOUT) as r:  # noqa: S310 (https to LOGO_HOSTS only, checked above)
