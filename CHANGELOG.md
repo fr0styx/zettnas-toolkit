@@ -95,6 +95,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   search index without saying who was asking, which (since a security fix in 1.x) finds nothing. Retry
   now goes over every failed file, and the AI page counts the files the person looking at it may see.
 
+#### Remote access
+
+- **Apps from anywhere**: Network → File Sharing Services has an "Apps from anywhere" card that puts an
+  app you choose on the internet through Tailscale Funnel, on a port of its own (10000, or 443 when
+  remote access doesn't use it), at its own https address with Tailscale's certificate. Kiboto's own page
+  is never offered, nor its helpers or anything on its port; apps that control the server are marked
+  and warned about. Turning one on is confirmed and written to the security log, like taking it off.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

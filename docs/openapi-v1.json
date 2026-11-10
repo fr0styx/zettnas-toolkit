@@ -32992,6 +32992,34 @@
     "title": "PostUpsTestConnectionResponse",
     "type": "object"
    },
+   "PublicAppIn": {
+    "properties": {
+     "funnel_port": {
+      "description": "443 or 10000; 8443 is the share links'",
+      "title": "Funnel Port",
+      "type": "integer"
+     },
+     "host_port": {
+      "maximum": 65535.0,
+      "minimum": 1.0,
+      "title": "Host Port",
+      "type": "integer"
+     },
+     "name": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "host_port",
+     "funnel_port"
+    ],
+    "title": "PublicAppIn",
+    "type": "object"
+   },
    "PublicLinksUpdate": {
     "properties": {
      "enabled": {
@@ -38101,8 +38129,8 @@
    "TailscaleDeployRequest": {
     "properties": {
      "accept_routes": {
-      "default": true,
-      "description": "Accept subnet routes from other nodes",
+      "default": false,
+      "description": "Accept subnet routes from other nodes (never one over the NAS's own network)",
       "title": "Accept Routes",
       "type": "boolean"
      },
@@ -38225,8 +38253,8 @@
    "TailscaleUpRequest": {
     "properties": {
      "accept_routes": {
-      "default": true,
-      "description": "Accept subnet routes from other nodes",
+      "default": false,
+      "description": "Accept subnet routes from other nodes (never one over the NAS's own network)",
       "title": "Accept Routes",
       "type": "boolean"
      },
@@ -48420,7 +48448,7 @@
   },
   "/api/v1/docker/catalog/sideload": {
    "post": {
-    "description": "Sideloads an application from a URL (e.g. GitHub raw zett-app.json / compose) or direct manifest content.",
+    "description": "Sideloads an application from a URL (e.g. GitHub raw zett-app.json / compose) or direct manifest content.\nUnraid templates, CasaOS and Umbrel apps (or a GitHub folder of their app stores) are converted and\nmarked untested (RES-8).",
     "operationId": "post_docker_catalog_sideload_api_v1_docker_catalog_sideload_post",
     "requestBody": {
      "content": {
@@ -59578,6 +59606,133 @@
     "x-required-scopes": [
      "system:config",
      "system:read"
+    ]
+   }
+  },
+  "/api/v1/network/public-apps": {
+   "get": {
+    "description": "The apps on the internet, the Funnel ports still free and the apps that could go (RES-6).",
+    "operationId": "get_public_apps_api_v1_network_public_apps_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Public Apps Api V1 Network Public Apps Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Public Apps",
+    "tags": [
+     "Network"
+    ],
+    "x-required-scopes": [
+     "system:view"
+    ]
+   },
+   "post": {
+    "description": "Puts one app's port on the internet (confirmed first: 428 until then). Never Kiboto's page.",
+    "operationId": "post_public_app_api_v1_network_public_apps_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PublicAppIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Public App Api V1 Network Public Apps Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Public App",
+    "tags": [
+     "Network"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/network/public-apps/{funnel_port}": {
+   "delete": {
+    "description": "Takes the app on that Funnel port off the internet.",
+    "operationId": "delete_public_app_api_v1_network_public_apps__funnel_port__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "funnel_port",
+      "required": true,
+      "schema": {
+       "title": "Funnel Port",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Delete Public App Api V1 Network Public Apps  Funnel Port  Delete",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Delete Public App",
+    "tags": [
+     "Network"
+    ],
+    "x-required-scopes": [
+     "system:config"
     ]
    }
   },

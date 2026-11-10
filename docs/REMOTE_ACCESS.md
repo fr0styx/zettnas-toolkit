@@ -39,6 +39,22 @@ Headscale gives no HTTPS certificates, so the addresses start with `http://` and
 node's tailnet name or its 100.x address. The traffic is still encrypted end to end by
 WireGuard.
 
+## Share links and chosen apps from anywhere
+
+Two cards in Network → File Sharing Services put things on the public internet through Tailscale
+Funnel, each confirmed first. Nothing changes on your router, and it works behind a provider's
+shared address (CGNAT).
+
+- **Share links from anywhere** publishes only the share links, on port 8443.
+- **Apps from anywhere** puts one app you choose on a port of its own: 10000, or 443 when remote
+  access doesn't serve Kiboto there. Anyone with the address reaches the app's own sign-in page, so
+  pick apps that have one. Kiboto's own page is never offered. Apps that control the server (Docker
+  managers, log viewers, web terminals) are marked and come with a warning. Publishing and taking an
+  app off are written to the security log.
+
+Funnel traffic goes through Tailscale's relays, so big transfers are slower than at home. The first
+time, Tailscale may ask the tailnet's owner to allow Funnel; the card shows the link.
+
 ## What it does and doesn't do
 
 - Nothing is opened on your router, and nobody outside your tailnet can reach the addresses.

@@ -1,0 +1,7 @@
+/* Apps from anywhere (public-apps.js): the published list, the form and the warning */
+#pa-card .pa-list { list-style: none; margin: var(--zn-space-2) 0; padding: 0; display: grid; gap: var(--zn-space-2); }
+#pa-card .pa-item { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: center; justify-content: space-between; overflow-wrap: anywhere; }
+#pa-card .pa-form { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: flex-end; margin: var(--zn-space-2) 0; }
+#pa-card .pa-form label { display: grid; gap: 4px; font-size: var(--zn-fs-xs); }
+#pa-card .pa-warn { color: var(--alert, #ef4444); font-size: var(--zn-fs-xs); flex-basis: 100%; }
+#pa-card .pa-item .pa-warn { flex-basis: auto; }

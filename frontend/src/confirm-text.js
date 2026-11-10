@@ -34,6 +34,7 @@ const ACTIONS = {
   'pool.scrub_schedule': ['Check monthly', 'Check the pool {target} for errors once a month? Its disks spin up for the check.', false],
   'security.advisor_fix': ['Apply the fix', 'Apply the Security Advisor fix "{target}"? People may lose access they had before.', false],
   'network.nas_name': ['Turn on', 'Let the NAS answer to {target} on the home network? A small helper on the host\'s network does it and only answers name lookups.', false],
+  'network.publish_app': ['Put it on the internet', 'Put {target} on the internet through Tailscale Funnel? Anyone with its address reaches its own sign-in page; Kiboto\'s page stays private.', true],
   'network.public_links': ['Publish share links', 'Let anyone who has a share link open it from the internet, through Tailscale Funnel on port {target}? Only share links are reachable that way; the rest of the NAS stays private.', false],
 };
 
