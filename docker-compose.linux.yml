@@ -8,8 +8,11 @@ version: "3.8"
 
 services:
   zettnas-toolkit:
-    image: ghcr.io/fr0styx/zettnas-toolkit:latest
-    container_name: zettnas-toolkit
+    image: ghcr.io/fr0styx/kiboto:latest
+    container_name: kiboto
+    networks:
+      default:
+        aliases: [zettnas-toolkit] # apps set up before the rebrand know this name (until 2.2)
     restart: unless-stopped
     logging:  # keep container logs from filling the disk (OPS-13)
       driver: "json-file"
@@ -89,7 +92,7 @@ services:
     # Maintained Samba on Alpine (github.com/crazy-max/docker-samba); dperson/samba stopped at 2021.
     # Kiboto writes the whole smb.conf; this container only runs it.
     image: crazymax/samba:4.23.8
-    container_name: zettnas-samba
+    container_name: kiboto-samba
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -99,13 +102,13 @@ services:
     network_mode: host                    # Line-rate 10GbE throughput + Windows (WSD) discovery
     volumes:
       - /mnt/storage:/mnt/storage:rw
-      - ./data/samba:/etc/samba/zettnas:ro
+      - ./data/samba:/etc/samba/kiboto:ro
       - ./data/samba/private:/var/lib/samba/private:rw
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        CONF=/etc/samba/zettnas/smb.conf
-        if [ -f /etc/samba/zettnas/disable_sidecar ] || nc -z 127.0.0.1 445 2>/dev/null; then
+        CONF=/etc/samba/kiboto/smb.conf
+        if [ -f /etc/samba/kiboto/disable_sidecar ] || nc -z 127.0.0.1 445 2>/dev/null; then
           echo "[Kiboto Samba] The host already serves SMB on port 445. Standby mode."
           while true; do sleep 86400; done
         fi

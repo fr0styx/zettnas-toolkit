@@ -15,7 +15,7 @@ def test_docs_and_templates_do_not_publish_admin_admin():
     for rel in (
         "README.md",
         "docs/INSTALLATION.md",
-        "unraid/zettnas-toolkit.xml",
+        "unraid/kiboto.xml",
         "docker-compose.yml",
         ".env.example",
     ):

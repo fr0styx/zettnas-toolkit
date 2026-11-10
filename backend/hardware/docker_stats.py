@@ -595,7 +595,8 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
                     "stack": stack,
                     "service": service,
                     "managed_by": managed_by,
-                    "zettnas_app": legacy_names.is_managed(labels),  # installed by Kiboto (REL-10)
+                    "kiboto_app": legacy_names.is_managed(labels),  # installed by Kiboto (REL-10)
+                    "zettnas_app": legacy_names.is_managed(labels),  # the same, for clients from before (until 2.2)
                     "network_mode": net_mode,
                     "ports": ports,
                     "primary_port": primary_port,

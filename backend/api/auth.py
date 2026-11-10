@@ -208,7 +208,7 @@ def _rate_limited(remaining: int):
 
 def _persist_security() -> None:
     # No password hash here any more (ARC-9): the admin account in users.db is the only copy.
-    atomic_write_json(config.SECURITY_FILE, {"username": config.ZETTNAS_USERNAME, "email": config.ZETTNAS_EMAIL})
+    atomic_write_json(config.SECURITY_FILE, {"username": config.ADMIN_USERNAME, "email": config.ADMIN_EMAIL})
 
 
 ADMIN_USER_ID = "admin-00000000-0000-0000-0000-000000000001"
@@ -229,7 +229,7 @@ def _credential_user(sess: dict[str, Any]) -> dict[str, Any] | None:
             "role_id": "superadmin",
             "role_name": "SuperAdmin",
             "scopes": ["*"],
-            "email": config.ZETTNAS_EMAIL,
+            "email": config.ADMIN_EMAIL,
             "status": "active",
             "is_system": True,
         }
@@ -276,7 +276,7 @@ def _is_person_session(user: dict[str, Any] | None) -> bool:
 def _is_builtin_admin(user: dict[str, Any] | None) -> bool:
     if not user:
         return False
-    name = (getattr(config, "ZETTNAS_USERNAME", "admin") or "admin").lower()
+    name = (getattr(config, "ADMIN_USERNAME", "admin") or "admin").lower()
     return user.get("id") == ADMIN_USER_ID or (user.get("username") or "").lower() == name
 
 
@@ -308,7 +308,7 @@ def retire_admin_password_copy() -> None:
     """
     from backend.users_db import retire_weak_hashes, users_db_session
 
-    admin = get_user_by_id(ADMIN_USER_ID) or get_user_by_username(config.ZETTNAS_USERNAME or "admin")
+    admin = get_user_by_id(ADMIN_USER_ID) or get_user_by_username(config.ADMIN_USERNAME or "admin")
     if admin and admin.get("idp_type") != "ldap":
         copy = config.STORED_PASSWORD_HASH or ""
         if not admin.get("password_hash") and copy:
@@ -316,7 +316,7 @@ def retire_admin_password_copy() -> None:
                 conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (copy, admin["id"]))
             logger.info("[Auth] Moved the admin password from security.json into the admin account.")
     retire_weak_hashes()
-    admin = get_user_by_id(ADMIN_USER_ID) or get_user_by_username(config.ZETTNAS_USERNAME or "admin")
+    admin = get_user_by_id(ADMIN_USER_ID) or get_user_by_username(config.ADMIN_USERNAME or "admin")
     if admin and admin.get("password_hash"):
         config.STORED_PASSWORD_HASH = admin["password_hash"]
     try:
@@ -475,7 +475,7 @@ async def login(req: LoginRequest, request: Request):
         return await run_in_threadpool(mfa_challenge, challenge_req, request)
 
     username = (req.username or "").strip().lower()
-    target_username = username or (getattr(config, "ZETTNAS_USERNAME", "admin") or "admin").lower()
+    target_username = username or (getattr(config, "ADMIN_USERNAME", "admin") or "admin").lower()
 
     # Rate limit check on both IP and targeted username
     remaining_ip = _lockout_remaining(ip)
@@ -989,12 +989,12 @@ def get_current_user_profile(request: Request):
         # Fallback for internal LCD token or legacy session
         return {
             "id": "admin-00000000-0000-0000-0000-000000000001",
-            "username": config.ZETTNAS_USERNAME or "admin",
+            "username": config.ADMIN_USERNAME or "admin",
             "display_name": "Administrator",
             "role": "superadmin",
             "role_name": "SuperAdmin",
             "scopes": ["*"],
-            "email": config.ZETTNAS_EMAIL,
+            "email": config.ADMIN_EMAIL,
             "status": "active",
             "mfa_enabled": False,
             "idp_type": "local",
@@ -1544,8 +1544,8 @@ def get_security_audit_logs(request: Request, page: PageParams = Depends()):
 )
 def get_security():
     return {
-        "username": config.ZETTNAS_USERNAME,
-        "email": config.ZETTNAS_EMAIL,
+        "username": config.ADMIN_USERNAME,
+        "email": config.ADMIN_EMAIL,
         "is_default_password": is_using_default_password(),
         "min_password_length": config.MIN_PASSWORD_LENGTH,
     }
@@ -1563,7 +1563,7 @@ async def post_security(data: SecurityUpdateRequest, request: Request):
 
     caller = _get_authenticated_user(request)
     if caller and caller.get("is_system"):
-        admin_row = get_user_by_id(ADMIN_USER_ID) or get_user_by_username(config.ZETTNAS_USERNAME) or {}
+        admin_row = get_user_by_id(ADMIN_USER_ID) or get_user_by_username(config.ADMIN_USERNAME) or {}
         current_ok = await run_in_threadpool(
             verify_password, data.current_password or "", admin_row.get("password_hash") or ""
         )
@@ -1583,7 +1583,7 @@ async def post_security(data: SecurityUpdateRequest, request: Request):
         invalidate_all_sessions()
 
         # Also update in users.db for the admin user
-        admin = get_user_by_id(ADMIN_USER_ID) or get_user_by_username(config.ZETTNAS_USERNAME)
+        admin = get_user_by_id(ADMIN_USER_ID) or get_user_by_username(config.ADMIN_USERNAME)
         if admin:
             update_user_password(admin["id"], new_pwd)
             config.STORED_PASSWORD_HASH = (get_user_by_id(admin["id"]) or {}).get(
@@ -1591,9 +1591,9 @@ async def post_security(data: SecurityUpdateRequest, request: Request):
             ) or config.STORED_PASSWORD_HASH
 
     if data.username:
-        config.ZETTNAS_USERNAME = data.username.strip()[:64]
+        config.ADMIN_USERNAME = data.username.strip()[:64]
     if data.email is not None:
-        config.ZETTNAS_EMAIL = data.email.strip()[:254]
+        config.ADMIN_EMAIL = data.email.strip()[:254]
 
     try:
         _persist_security()

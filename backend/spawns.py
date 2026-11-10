@@ -4,7 +4,7 @@ Most of the backend's idle CPU has been the tools it runs (smartctl, zpool, dock
 20-200 ms that an outside sampler, listing processes once a second, never sees. Counting inside
 the app sees every one: subprocess.run, Popen and asyncio's subprocesses all go through
 subprocess.Popen, which install() wraps. The counts, by the backend module that asked, are in
-/api/metrics as zettnas_process_spawns_total, which the hardware budget check reads when it can.
+/api/metrics as kiboto_process_spawns_total, which the hardware budget check reads when it can.
 """
 
 from __future__ import annotations
@@ -63,9 +63,9 @@ def total() -> int:
 def prometheus() -> str:
     """The counts in Prometheus' text format."""
     lines = [
-        "# HELP zettnas_process_spawns_total Processes the backend started, by the module that started them",
-        "# TYPE zettnas_process_spawns_total counter",
+        "# HELP kiboto_process_spawns_total Processes the backend started, by the module that started them",
+        "# TYPE kiboto_process_spawns_total counter",
     ]
     for who, n in sorted(counts().items()):
-        lines.append(f'zettnas_process_spawns_total{{caller="{who}"}} {n}')
+        lines.append(f'kiboto_process_spawns_total{{caller="{who}"}} {n}')
     return "\n".join(lines) + "\n"

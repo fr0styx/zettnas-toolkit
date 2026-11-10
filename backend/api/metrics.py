@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
+from backend import legacy_names
 from backend.auth import require_scope
 from backend.state import Z_STATE
 
@@ -24,7 +25,9 @@ def prometheus_metrics():
     from backend.request_metrics import REQUEST_METRICS
 
     if not Z_STATE.cached_stats:
-        return "# Kiboto metrics not ready yet\n" + REQUEST_METRICS.prometheus() + spawns.prometheus()
+        return legacy_names.with_old_metric_names(
+            "# Kiboto metrics not ready yet\n" + REQUEST_METRICS.prometheus() + spawns.prometheus()
+        )
 
     stats = Z_STATE.cached_stats
     lines = []
@@ -45,9 +48,9 @@ def prometheus_metrics():
 
     # CPU
     cpu = stats.get("cpu", {})
-    add_gauge("zettnas_cpu_temp_celsius", "CPU Temperature", cpu.get("temp"))
-    add_gauge("zettnas_cpu_usage_percent", "CPU Usage", cpu.get("util") if "util" in cpu else cpu.get("usage"))
-    add_gauge("zettnas_cpu_power_watts", "CPU Power Consumption", cpu.get("power_w"))
+    add_gauge("kiboto_cpu_temp_celsius", "CPU Temperature", cpu.get("temp"))
+    add_gauge("kiboto_cpu_usage_percent", "CPU Usage", cpu.get("util") if "util" in cpu else cpu.get("usage"))
+    add_gauge("kiboto_cpu_power_watts", "CPU Power Consumption", cpu.get("power_w"))
 
     # RAM
     mem = stats.get("mem", {})
@@ -56,42 +59,42 @@ def prometheus_metrics():
     free_b = (total_b - used_b) if (total_b is not None and used_b is not None) else mem.get("free")
     pct = mem.get("pct") if "pct" in mem else mem.get("percent")
 
-    add_gauge("zettnas_memory_total_bytes", "Total RAM", total_b)
-    add_gauge("zettnas_memory_used_bytes", "Used RAM", used_b)
-    add_gauge("zettnas_memory_free_bytes", "Free RAM", free_b)
-    add_gauge("zettnas_memory_usage_percent", "RAM Usage", pct)
+    add_gauge("kiboto_memory_total_bytes", "Total RAM", total_b)
+    add_gauge("kiboto_memory_used_bytes", "Used RAM", used_b)
+    add_gauge("kiboto_memory_free_bytes", "Free RAM", free_b)
+    add_gauge("kiboto_memory_usage_percent", "RAM Usage", pct)
     from backend.services import memory_watch
 
     own = memory_watch.current()
-    add_gauge("zettnas_backend_resident_bytes", "Resident memory of the Kiboto backend process", own["rss_kb"] * 1024)
-    add_gauge("zettnas_backend_uptime_seconds", "Seconds since the backend process started", own["uptime_s"])
+    add_gauge("kiboto_backend_resident_bytes", "Resident memory of the Kiboto backend process", own["rss_kb"] * 1024)
+    add_gauge("kiboto_backend_uptime_seconds", "Seconds since the backend process started", own["uptime_s"])
 
     # Network
     net = stats.get("net", {})
-    add_gauge("zettnas_network_rx_bytes", "Network Bytes Received", net.get("rx_bytes"))
-    add_gauge("zettnas_network_tx_bytes", "Network Bytes Transmitted", net.get("tx_bytes"))
+    add_gauge("kiboto_network_rx_bytes", "Network Bytes Received", net.get("rx_bytes"))
+    add_gauge("kiboto_network_tx_bytes", "Network Bytes Transmitted", net.get("tx_bytes"))
     add_gauge(
-        "zettnas_network_combined_rx_bytes_sec",
+        "kiboto_network_combined_rx_bytes_sec",
         "Network Combined Rx Rate (Bytes/sec)",
         net.get("rx_bytes_sec") or net.get("rx_rate"),
     )
     add_gauge(
-        "zettnas_network_combined_tx_bytes_sec",
+        "kiboto_network_combined_tx_bytes_sec",
         "Network Combined Tx Rate (Bytes/sec)",
         net.get("tx_bytes_sec") or net.get("tx_rate"),
     )
     for if_name, if_data in net.get("interfaces", {}).items():
         if_labels = {"interface": if_name}
-        add_gauge("zettnas_network_interface_rx_bytes", "Interface Rx Bytes", if_data.get("rx_bytes"), if_labels)
-        add_gauge("zettnas_network_interface_tx_bytes", "Interface Tx Bytes", if_data.get("tx_bytes"), if_labels)
+        add_gauge("kiboto_network_interface_rx_bytes", "Interface Rx Bytes", if_data.get("rx_bytes"), if_labels)
+        add_gauge("kiboto_network_interface_tx_bytes", "Interface Tx Bytes", if_data.get("tx_bytes"), if_labels)
         add_gauge(
-            "zettnas_network_interface_rx_bytes_sec",
+            "kiboto_network_interface_rx_bytes_sec",
             "Interface Rx Rate",
             if_data.get("rx_bytes_sec") or if_data.get("rx_rate"),
             if_labels,
         )
         add_gauge(
-            "zettnas_network_interface_tx_bytes_sec",
+            "kiboto_network_interface_tx_bytes_sec",
             "Interface Tx Rate",
             if_data.get("tx_bytes_sec") or if_data.get("tx_rate"),
             if_labels,
@@ -100,30 +103,30 @@ def prometheus_metrics():
     # Disks
     for d in stats.get("disks", []):
         labels = {"device": d.get("name"), "role": d.get("role", "data")}
-        add_gauge("zettnas_disk_temp_celsius", "Disk Temperature", d.get("temp"), labels)
-        add_gauge("zettnas_disk_io_ticks", "Disk IO Ticks", d.get("io_ticks"), labels)
+        add_gauge("kiboto_disk_temp_celsius", "Disk Temperature", d.get("temp"), labels)
+        add_gauge("kiboto_disk_io_ticks", "Disk IO Ticks", d.get("io_ticks"), labels)
 
     # Fans
     fans = stats.get("fans", [])
     for i, f in enumerate(fans):
         labels = {"fan_id": str(i)}
-        add_gauge("zettnas_fan_rpm", "Fan RPM", f, labels)
+        add_gauge("kiboto_fan_rpm", "Fan RPM", f, labels)
 
     # UPS
     ups = stats.get("ups", {})
     if ups.get("available"):
-        add_gauge("zettnas_ups_charge_percent", "UPS Battery Charge", ups.get("battery_charge_pct"))
-        add_gauge("zettnas_ups_time_left_minutes", "UPS Time Left", ups.get("time_left_min"))
-        add_gauge("zettnas_ups_load_percent", "UPS Load", ups.get("load_pct"))
-        add_gauge("zettnas_ups_line_volts", "UPS Line Voltage", ups.get("line_volts"))
-        add_gauge("zettnas_ups_battery_volts", "UPS Battery Voltage", ups.get("battery_volts"))
+        add_gauge("kiboto_ups_charge_percent", "UPS Battery Charge", ups.get("battery_charge_pct"))
+        add_gauge("kiboto_ups_time_left_minutes", "UPS Time Left", ups.get("time_left_min"))
+        add_gauge("kiboto_ups_load_percent", "UPS Load", ups.get("load_pct"))
+        add_gauge("kiboto_ups_line_volts", "UPS Line Voltage", ups.get("line_volts"))
+        add_gauge("kiboto_ups_battery_volts", "UPS Battery Voltage", ups.get("battery_volts"))
 
     # Unraid
     unraid = stats.get("unraid", {})
     if unraid.get("available"):
-        add_gauge("zettnas_unraid_disk_count", "Unraid Disk Count", unraid.get("disk_count"))
+        add_gauge("kiboto_unraid_disk_count", "Unraid Disk Count", unraid.get("disk_count"))
         add_gauge(
-            "zettnas_unraid_parity_status",
+            "kiboto_unraid_parity_status",
             "Unraid Parity Checks (0=Idle, 1=Checking)",
             1 if unraid.get("parity_check_running") else 0,
         )
@@ -132,7 +135,9 @@ def prometheus_metrics():
     for _metric_name, metric_lines in lines_by_metric.items():
         out.extend(metric_lines)
 
-    return "\n".join(out) + "\n" + REQUEST_METRICS.prometheus() + spawns.prometheus()
+    return legacy_names.with_old_metric_names(
+        "\n".join(out) + "\n" + REQUEST_METRICS.prometheus() + spawns.prometheus()
+    )
 
 
 @router.get("/metrics/network-topology", dependencies=[Depends(require_scope("system:view"))])

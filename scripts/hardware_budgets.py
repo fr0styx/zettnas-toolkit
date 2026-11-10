@@ -12,7 +12,7 @@ Reads the host's /proc (mounted read-only at HOST_PROC, default /host/proc) and 
 
 CPU counts the measured processes and the children they have reaped (cutime and cstime), so a
 smartctl that ran for 50 ms between two samples is in it. Spawns are read from the backend's own
-counter (zettnas_process_spawns_total in /api/metrics, NPERF-1) when HW_METRICS_URL and
+counter (kiboto_process_spawns_total in /api/metrics, NPERF-1) when HW_METRICS_URL and
 HW_METRICS_TOKEN (a token with system:view) are set; otherwise processes are listed every
 --interval (0.25 s), which misses the shortest ones, and the results say so ("spawns_counted").
 "wakeups" are voluntary context switches (timers, but also I/O and locks), not timer wakeups
@@ -114,12 +114,14 @@ def counted_spawns(url=None, token=None, fetch=None):
             text = fetch(url, token)
     except (OSError, ValueError):
         return None
-    total, found = 0, False
-    for line in text.splitlines():
-        if line.startswith("zettnas_process_spawns_total{"):
-            total += int(float(line.rsplit(" ", 1)[1]))
-            found = True
-    return total if found else None
+    for name in (
+        "kiboto_process_spawns_total{",
+        "zettnas_process_spawns_total{",
+    ):  # zettnas_: a version before the rebrand
+        values = [line.rsplit(" ", 1)[1] for line in text.splitlines() if line.startswith(name)]
+        if values:
+            return sum(int(float(v)) for v in values)
+    return None
 
 
 def started(pid, proc=HOST_PROC):

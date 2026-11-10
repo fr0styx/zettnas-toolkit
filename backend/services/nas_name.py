@@ -20,7 +20,7 @@ import socket
 import threading
 from typing import Any
 
-from backend import legacy_names
+from backend import legacy_names, product
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
 
@@ -102,7 +102,7 @@ def _docker(method: str, path: str, body: dict | None = None, headers: dict | No
 
 
 def _self() -> dict[str, Any]:
-    for ref in (socket.gethostname(), "zettnas-toolkit"):
+    for ref in (socket.gethostname(), *legacy_names.app_container_names()[:2]):
         code, info = _docker("GET", f"/containers/{ref}/json")
         if code == 200 and isinstance(info, dict):
             return info
@@ -141,7 +141,7 @@ def desired(me: dict[str, Any], cfg: dict[str, Any]) -> dict[str, Any]:
     cmd = [RESPONDER, "--names", ",".join(names), "--label", label(cfg["name"]), "--http-port", str(web_port(me))]
     for share in timemachine_shares():
         cmd += ["--timemachine", share]
-    image = (me.get("Config") or {}).get("Image") or "ghcr.io/fr0styx/zettnas-toolkit:latest"
+    image = (me.get("Config") or {}).get("Image") or product.IMAGE + ":latest"
     want: dict[str, Any] = {
         "Image": image,
         "Entrypoint": ["python3"],
@@ -150,7 +150,7 @@ def desired(me: dict[str, Any], cfg: dict[str, Any]) -> dict[str, Any]:
         "HostConfig": {"NetworkMode": "host", "RestartPolicy": {"Name": "unless-stopped"}, "ReadonlyRootfs": True},
     }
     fingerprint = hashlib.sha256(json.dumps(want, sort_keys=True).encode()).hexdigest()[:16]
-    want["Labels"] = {"app": CONTAINER, "managed-by": "zettnas-toolkit", "kiboto.config": fingerprint}
+    want["Labels"] = {"app": CONTAINER, "managed-by": product.CONTAINER, "kiboto.config": fingerprint}
     return want
 
 

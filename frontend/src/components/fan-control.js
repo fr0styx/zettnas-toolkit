@@ -791,7 +791,7 @@ export function initFanControl() {
   window.closeDeletePresetModal = closeDeletePresetModal;
 
   loadFanPresets();
-  window.addEventListener('zettnas:lang-changed', () => {
+  window.addEventListener('kiboto:lang-changed', () => {
     loadFanPresets();
   });
   initAcousticCalibration();

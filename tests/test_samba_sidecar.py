@@ -19,13 +19,13 @@ def test_sidecar_uses_a_maintained_pinned_image():
     assert "image: dperson" not in (ROOT / "docker-compose.linux.yml").read_text()
 
 
-def test_start_script_runs_zettnas_config_and_survives_restarts():
+def test_start_script_runs_kibotos_config_and_survives_restarts():
     svc = _service()
     assert svc["entrypoint"] == ["/bin/sh", "-c"]
     script = svc["command"][0]
     # compose would expand single $ itself; the shell's own variables must be written $$
     assert not re.search(r"(?<!\$)\$(?!\$)", script)
-    assert '--configfile="$$CONF"' in script and "CONF=/etc/samba/zettnas/smb.conf" in script
+    assert '--configfile="$$CONF"' in script and "CONF=/etc/samba/kiboto/smb.conf" in script
     assert "Standby mode" in script  # Unraid/TrueNAS already serve SMB on 445
     assert "pdbedit -L" in script and "adduser" in script  # Unix accounts come back after a restart
     assert "/var/lib/samba/private" in " ".join(svc["volumes"])

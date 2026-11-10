@@ -678,7 +678,7 @@ export function renderStructuredPoolsTopology(container, data) {
         ` : `
           <div class="topo-observer-banner" style="background:rgba(99,102,241,0.12); border-color:rgba(99,102,241,0.25);">
             <span class="observer-icon">⚡</span>
-            <span>${escapeHtml(t('storage.mode_zettnas_desc', 'Kiboto manages the storage pools, RAID protection against bit rot, and snapshots on this machine.'))}</span>
+            <span>${escapeHtml(t('storage.mode_kiboto_desc', 'Kiboto manages the storage pools, RAID protection against bit rot, and snapshots on this machine.'))}</span>
           </div>
         `}
         <div class="topo-pools-container"></div>
@@ -1208,8 +1208,8 @@ export async function fetchAndRenderNetworkShares(container) {
         badge.style.background = 'rgba(59,245,139,0.12)';
         badge.style.color = '#3bf58b';
       } else {
-        badge.textContent = t('storage.mode_zettnas', 'Managed by Kiboto');
-        badge.title = t('storage.mode_zettnas_desc', 'Kiboto manages the storage pools, RAID protection against bit rot, and snapshots on this machine.');
+        badge.textContent = t('storage.mode_kiboto', 'Managed by Kiboto');
+        badge.title = t('storage.mode_kiboto_desc', 'Kiboto manages the storage pools, RAID protection against bit rot, and snapshots on this machine.');
         badge.style.background = 'rgba(99,102,241,0.15)';
         badge.style.color = 'var(--lt-t-818cf8ff, #818cf8)';
       }

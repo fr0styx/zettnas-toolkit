@@ -40,9 +40,9 @@ curl -fsSLO https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/docke
 docker compose -f docker-compose.linux.yml up -d
 ```
 
-Open `http://<server-ip>:8082` and sign in as `admin`. There is no default password: Kiboto creates a first-time password, prints it in the container log (`docker logs zettnas-toolkit`) and saves it as `initial-admin-password` in the data folder, unless you set `WEB_PASSWORD`. You pick your own at first sign-in.
+Open `http://<server-ip>:8082` and sign in as `admin`. There is no default password: Kiboto creates a first-time password, prints it in the container log (`docker logs kiboto`) and saves it as `initial-admin-password` in the data folder, unless you set `WEB_PASSWORD`. You pick your own at first sign-in.
 
-On Unraid, use the template in [`unraid/zettnas-toolkit.xml`](unraid/zettnas-toolkit.xml). Every platform, the device mappings and all settings are in the **[installation guide](docs/INSTALLATION.md)**.
+On Unraid, use the template in [`unraid/kiboto.xml`](unraid/kiboto.xml). Every platform, the device mappings and all settings are in the **[installation guide](docs/INSTALLATION.md)**.
 
 ## Images and updates
 

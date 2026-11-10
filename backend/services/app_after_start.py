@@ -4,7 +4,7 @@ A template lists them under "after_start", each {"cmd": [...], "label": "...", "
 "tries": n, "every": secs, "expect": "text", "timeout": secs}. A step is retried until it exits 0
 (and prints `expect`, when given), so the first one can wait for the app to finish installing.
 Values may use {{secret:name}} (the app's generated secrets), {{host}} and {{port}} (where the
-browser reaches the app), {{zettnas}} (Kiboto's name on its Docker network) and {{arch}}
+browser reaches the app), {{kiboto}} (Kiboto's name on its Docker network; {{zettnas}} too, until 2.2) and {{arch}}
 ("" on x86, "_arm64" on ARM). Only built-in templates may have such steps.
 """
 
@@ -18,6 +18,7 @@ import time
 from collections.abc import Iterator
 from typing import Any
 
+from backend import product
 from backend.config import logger
 
 HOST_RE = re.compile(r"^[A-Za-z0-9.-]{1,253}$|^\[[0-9A-Fa-f:]{2,45}\]$")
@@ -57,7 +58,7 @@ def exec_in(container: str, cmd: list[str], user: str = "", timeout: float = 300
     return code, demux(raw if isinstance(raw, bytes) else str(raw or "").encode())
 
 
-def zettnas_name() -> str:
+def own_name() -> str:
     """Kiboto's own container name, which other containers on its network resolve."""
     from backend.services import docker_client
 
@@ -65,9 +66,9 @@ def zettnas_name() -> str:
         status, me = docker_client.request("GET", f"/containers/{socket.gethostname()}/json")
     except (OSError, ValueError, RuntimeError, docker_client.DockerUnavailable):
         logger.debug("app_after_start: own container unknown", exc_info=True)
-        return "zettnas-toolkit"
+        return product.CONTAINER
     name = str(me.get("Name") or "").lstrip("/") if status == 200 and isinstance(me, dict) else ""
-    return name or "zettnas-toolkit"
+    return name or product.CONTAINER
 
 
 def fill(value: str, ctx: dict[str, str], secrets: dict[str, str]) -> str:
@@ -85,7 +86,8 @@ def context(host: str, port: int) -> dict[str, str]:
     return {
         "host": valid_host(host) or "localhost",
         "port": str(port),
-        "zettnas": zettnas_name(),
+        "kiboto": own_name(),
+        "zettnas": own_name(),  # a template saved before the rebrand (legacy_names)
         "arch": "_arm64" if arm else "",
     }
 

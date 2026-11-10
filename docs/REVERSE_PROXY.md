@@ -126,7 +126,7 @@ If routing through Traefik v2/v3, add these labels to `docker-compose.yml`:
 
 ```yaml
 services:
-  zettnas-toolkit:
+  kiboto:
     # ... other configuration ...
     labels:
       - "traefik.enable=true"

@@ -323,13 +323,13 @@ def migrate_legacy_data(db_path: str | None = None) -> None:
         user_count = conn.execute("SELECT COUNT(*) AS c FROM users").fetchone()["c"]
 
         admin_id = "admin-00000000-0000-0000-0000-000000000001"
-        admin_username = getattr(config, "ZETTNAS_USERNAME", "admin") or "admin"
+        admin_username = getattr(config, "ADMIN_USERNAME", "admin") or "admin"
 
         if user_count == 0:
             logger.info("Migrating legacy single-user configuration into SQLite users.db...")
 
             password_hash = getattr(config, "STORED_PASSWORD_HASH", "")
-            email = getattr(config, "ZETTNAS_EMAIL", "") or ""
+            email = getattr(config, "ADMIN_EMAIL", "") or ""
 
             # Check if security.json exists on disk for freshest values
             sec_file = getattr(config, "SECURITY_FILE", os.path.join(DATA_DIR, "security.json"))

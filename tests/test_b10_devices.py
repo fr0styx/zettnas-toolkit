@@ -24,7 +24,7 @@ def test_the_recreate_plan_applies_it():
 
 
 def test_templates_ship_only_the_narrow_rules():
-    for name in ("docker-compose.yml", "docker-compose.linux.yml", "unraid/zettnas-toolkit.xml"):
+    for name in ("docker-compose.yml", "docker-compose.linux.yml", "unraid/kiboto.xml"):
         with open(os.path.join(ROOT, name), encoding="utf-8") as f:
             text = f.read()
         assert "c 1:* rwm" not in text and "c 10:* rwm" not in text, name

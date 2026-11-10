@@ -983,7 +983,7 @@ export function initSettings() {
     }
   });
 
-  window.addEventListener('zettnas:lang-changed', () => {
+  window.addEventListener('kiboto:lang-changed', () => {
     updateDrawerDynamicHeader();
     _cardReorderUpdaters.forEach((fn) => fn());
     const copySaveBtn = $('btn-copy-save');
@@ -1860,7 +1860,7 @@ export function initSystemTab() {
       const file = e.target.files[0];
       if (!file) return;
       if (!file.name.endsWith('.zip') && !file.name.endsWith('.zettbak')) {
-        showToast(t('toast.please_choose_a_zettnas_backup_zip', 'Please choose a Kiboto backup (.zip or .zettbak).'), 'error');
+        showToast(t('toast.please_choose_a_kiboto_backup_zip', 'Please choose a Kiboto backup (.zip or .zettbak).'), 'error');
         uploadInput.value = '';
         return;
       }
@@ -2008,18 +2008,18 @@ export function mcpSnippets(origin, token) {
     {
       id: 'claude-code',
       label: t('tokens.snippet_claude_code', 'Claude Code (terminal)'),
-      text: `claude mcp add --transport http zettnas ${url} --header "${header}"`,
+      text: `claude mcp add --transport http kiboto ${url} --header "${header}"`,
     },
     {
       id: 'cursor',
       label: t('tokens.snippet_cursor', 'Cursor (~/.cursor/mcp.json)'),
-      text: JSON.stringify({ mcpServers: { zettnas: { url, headers: { Authorization: `Bearer ${token}` } } } }, null, 2),
+      text: JSON.stringify({ mcpServers: { kiboto: { url, headers: { Authorization: `Bearer ${token}` } } } }, null, 2),
     },
     {
       id: 'desktop',
       label: t('tokens.snippet_desktop', 'Claude Desktop and other local-only clients (mcp-remote)'),
       text: JSON.stringify(
-        { mcpServers: { zettnas: { command: 'npx', args: ['mcp-remote', url, '--header', header] } } },
+        { mcpServers: { kiboto: { command: 'npx', args: ['mcp-remote', url, '--header', header] } } },
         null,
         2
       ),

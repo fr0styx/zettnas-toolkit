@@ -256,7 +256,7 @@ export function initClientLogger() {
   });
 
   // Attach global accessor for debug / diagnostic packaging
-  window.__zettnasClientLogger = {
+  window.__kibotoClientLogger = {
     getLogs: getClientLogs,
     clearLogs: clearClientLogs,
     getEnvironment: collectClientEnvironment,

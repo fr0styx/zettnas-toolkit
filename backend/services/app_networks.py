@@ -50,7 +50,10 @@ def _join(me: dict[str, Any], name: str) -> bool:
     if name in _joined(me):
         return True
     status, _ = docker_client.request(
-        "POST", f"/networks/{urllib.parse.quote(name)}/connect", body={"Container": me.get("Id")}
+        "POST",
+        f"/networks/{urllib.parse.quote(name)}/connect",
+        # apps set up before the rebrand were given Kiboto's old container name (legacy_names)
+        body={"Container": me.get("Id"), "EndpointConfig": {"Aliases": [legacy_names.OLD_APP_CONTAINER]}},
     )
     return status == 200
 

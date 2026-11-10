@@ -32,10 +32,10 @@ describe('API tokens: folders, use and client settings (COMP-06)', () => {
   it('fills the client settings with this server and the new token', () => {
     const parts = mcpSnippets('https://nas.example', 'zat_TOKEN');
     expect(parts.map((p) => p.id)).toEqual(['claude-code', 'cursor', 'desktop']);
-    expect(parts[0].text).toBe('claude mcp add --transport http zettnas https://nas.example/api/mcp --header "Authorization: Bearer zat_TOKEN"');
+    expect(parts[0].text).toBe('claude mcp add --transport http kiboto https://nas.example/api/mcp --header "Authorization: Bearer zat_TOKEN"');
     const cursor = JSON.parse(parts[1].text);
-    expect(cursor.mcpServers.zettnas).toEqual({ url: 'https://nas.example/api/mcp', headers: { Authorization: 'Bearer zat_TOKEN' } });
+    expect(cursor.mcpServers.kiboto).toEqual({ url: 'https://nas.example/api/mcp', headers: { Authorization: 'Bearer zat_TOKEN' } });
     const desktop = JSON.parse(parts[2].text);
-    expect(desktop.mcpServers.zettnas.args).toEqual(['mcp-remote', 'https://nas.example/api/mcp', '--header', 'Authorization: Bearer zat_TOKEN']);
+    expect(desktop.mcpServers.kiboto.args).toEqual(['mcp-remote', 'https://nas.example/api/mcp', '--header', 'Authorization: Bearer zat_TOKEN']);
   });
 });

@@ -21,7 +21,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response, StreamingRes
 from pydantic import BaseModel, Field
 
 import backend.config as config
-from backend import __version__
+from backend import __version__, legacy_names
 from backend import settings as _settings
 from backend.api_tokens import load_tokens, revoke_token
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
@@ -1017,7 +1017,11 @@ def _get_current_build_info_impl() -> dict[str, Any]:
             from backend.services.container_mutator import _docker_request
 
             cid = socket.gethostname()
-            data = fetch_container_raw_inspect(cid) or fetch_container_raw_inspect("zettnas-toolkit")
+            data = (
+                fetch_container_raw_inspect(cid)
+                or fetch_container_raw_inspect(product.CONTAINER)
+                or fetch_container_raw_inspect(legacy_names.OLD_APP_CONTAINER)
+            )
             if data and isinstance(data, dict):
                 # 1. Authoritative check on underlying image metadata
                 img_id = data.get("Image")
@@ -1261,7 +1265,12 @@ def _running_repo_digests() -> list[str]:
     from backend.services.compose_synthesizer import fetch_container_raw_inspect
     from backend.services.container_mutator import _docker_request
 
-    info = fetch_container_raw_inspect(socket.gethostname()) or fetch_container_raw_inspect("zettnas-toolkit") or {}
+    info = (
+        fetch_container_raw_inspect(socket.gethostname())
+        or fetch_container_raw_inspect(product.CONTAINER)
+        or fetch_container_raw_inspect(legacy_names.OLD_APP_CONTAINER)
+        or {}
+    )
     image_id = info.get("Image")
     if not image_id:
         return []
@@ -1668,12 +1677,14 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     # 2. Check if running inside container with docker socket access
     sock_path = docker_sock()
     if os.path.exists(sock_path):
-        target_container = "zettnas-toolkit"
+        target_container = product.CONTAINER
         try:
             from backend.services.compose_synthesizer import fetch_container_raw_inspect
 
-            self_info = fetch_container_raw_inspect(socket.gethostname()) or fetch_container_raw_inspect(
-                "zettnas-toolkit"
+            self_info = (
+                fetch_container_raw_inspect(socket.gethostname())
+                or fetch_container_raw_inspect(product.CONTAINER)
+                or fetch_container_raw_inspect(legacy_names.OLD_APP_CONTAINER)
             )
             if self_info and self_info.get("Name"):
                 target_container = self_info["Name"].lstrip("/")
@@ -1774,11 +1785,15 @@ async def post_revert_system_update(
     if not match["image_available"]:
         raise HTTPException(status_code=409, detail="The previous image is no longer on this host.")
 
-    target_container = "zettnas-toolkit"
+    target_container = product.CONTAINER
     try:
         from backend.services.compose_synthesizer import fetch_container_raw_inspect
 
-        self_info = fetch_container_raw_inspect(socket.gethostname()) or fetch_container_raw_inspect("zettnas-toolkit")
+        self_info = (
+            fetch_container_raw_inspect(socket.gethostname())
+            or fetch_container_raw_inspect(product.CONTAINER)
+            or fetch_container_raw_inspect(legacy_names.OLD_APP_CONTAINER)
+        )
         if self_info and self_info.get("Name"):
             target_container = self_info["Name"].lstrip("/")
     except Exception:

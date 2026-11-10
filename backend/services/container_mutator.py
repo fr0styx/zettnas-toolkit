@@ -14,6 +14,7 @@ import time
 import urllib.parse
 from typing import Any, Optional
 
+from backend import legacy_names
 from backend.config import docker_sock, logger
 from backend.ignored_errors import ignored
 from backend.services.compose_synthesizer import fetch_container_raw_inspect
@@ -362,7 +363,7 @@ def recreate_container(
         raise ValueError(f"Could not determine container name for '{cid}'.")
 
     self_hostname = socket.gethostname()
-    if (self_hostname and cid.startswith(self_hostname)) or orig_name in ("zettnas-toolkit", "zettnas"):
+    if (self_hostname and cid.startswith(self_hostname)) or legacy_names.is_app_container(orig_name):
         raise ValueError(
             "Cannot recreate the active Kiboto container from within the app. "
             "Container modifications must be configured in Docker Compose or your host template."

@@ -35,6 +35,9 @@ OLD_SAMBA = "zettnas-samba"  # sidecars made before are found (Samba) or replace
 OLD_SFTP = "zettnas-sftp"
 OLD_SELF_UPDATER = "zettnas-self-updater"
 OLD_APP_CONTAINER = "zettnas-toolkit"  # the app's own container on installs made before
+OLD_APP_CONTAINER_NAMES = ("zettnas-toolkit", "zettnas", "zettnas_toolkit")
+OLD_ROLLBACK_REPO = "zettnas-toolkit-rollback"  # rollback images tagged before keep their tag
+OLD_HOST_APPDATA = "/mnt/user/appdata/zettnas-toolkit"  # Unraid's appdata folder on installs made before
 OLD_MODEL_SERVERS = ("zettnas-ollama", "zettnas-ovms")
 OLD_SESSION_COOKIE = "zettnas_session"  # browsers signed in before the rebrand still send it
 OLD_CANARY_NAME = "!ZettNAS-guard-file.docx"  # the ransomware guard's file before the rebrand
@@ -42,6 +45,7 @@ OLD_NAS_NAME = "zettnas"  # zettnas.local keeps answering beside kiboto.local (D
 OLD_NAME_CONTAINER = "zettnas-name"  # the name responder's container before the rebrand: replaced
 OLD_PART_SUFFIX = ".zettnas-part"  # a half-copied file left by a transfer before the rebrand: swept
 OLD_STAGE_INFIX = ".zettnas-stage-"  # a move's staging folder from before the rebrand: swept
+OLD_METRIC_PREFIX = "zettnas_"  # /api/metrics repeats every kiboto_ series under this prefix
 OLD_LOG_FILE = "zettnas.log"  # the log file and its rotations carry on under the new name
 
 
@@ -70,6 +74,29 @@ def follows_tag(labels: dict | None) -> bool:
 
     labels = labels or {}
     return labels.get(product.FOLLOW_TAG_LABEL) == "1" or labels.get(OLD_FOLLOW_TAG_LABEL) == "1"
+
+
+def app_container_names() -> tuple[str, ...]:
+    """Kiboto's own container: kiboto, or a name from before the rebrand."""
+    from backend import product
+
+    return (product.CONTAINER, *OLD_APP_CONTAINER_NAMES)
+
+
+def is_app_container(name: str | None) -> bool:
+    return str(name or "").lstrip("/").lower() in app_container_names()
+
+
+def with_old_metric_names(text: str) -> str:
+    """Prometheus text with every kiboto_ series (and its HELP/TYPE) repeated under zettnas_, so
+    dashboards and alerts made before the rebrand keep working until 2.2."""
+    old = []
+    for line in text.splitlines():
+        for head in ("kiboto_", "# HELP kiboto_", "# TYPE kiboto_"):
+            if line.startswith(head):
+                old.append(line.replace("kiboto_", OLD_METRIC_PREFIX, 1))
+                break
+    return text + ("\n".join(old) + "\n" if old else "")
 
 
 def old_env_name(name: str) -> str | None:

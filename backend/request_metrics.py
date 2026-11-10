@@ -71,25 +71,25 @@ class RequestMetrics:
         """Counter and histogram in the Prometheus text format."""
         with self._lock:
             out = [
-                "# HELP zettnas_http_requests_total API requests by route and status class",
-                "# TYPE zettnas_http_requests_total counter",
+                "# HELP kiboto_http_requests_total API requests by route and status class",
+                "# TYPE kiboto_http_requests_total counter",
             ]
             for (m, r, s), c in sorted(self._count.items()):
-                out.append(f'zettnas_http_requests_total{{method="{m}",route="{_esc(r)}",status="{s}"}} {c}')
+                out.append(f'kiboto_http_requests_total{{method="{m}",route="{_esc(r)}",status="{s}"}} {c}')
             out += [
-                "# HELP zettnas_http_request_duration_seconds API request duration",
-                "# TYPE zettnas_http_request_duration_seconds histogram",
+                "# HELP kiboto_http_request_duration_seconds API request duration",
+                "# TYPE kiboto_http_request_duration_seconds histogram",
             ]
             for (m, r), hist in sorted(self._hist.items()):
                 labels = f'method="{m}",route="{_esc(r)}"'
                 cum = 0
                 for i, b in enumerate(BUCKETS):
                     cum += hist[i]
-                    out.append(f'zettnas_http_request_duration_seconds_bucket{{{labels},le="{b}"}} {cum}')
+                    out.append(f'kiboto_http_request_duration_seconds_bucket{{{labels},le="{b}"}} {cum}')
                 cum += hist[-1]
-                out.append(f'zettnas_http_request_duration_seconds_bucket{{{labels},le="+Inf"}} {cum}')
-                out.append(f"zettnas_http_request_duration_seconds_sum{{{labels}}} {self._sum[(m, r)]:.6f}")
-                out.append(f"zettnas_http_request_duration_seconds_count{{{labels}}} {cum}")
+                out.append(f'kiboto_http_request_duration_seconds_bucket{{{labels},le="+Inf"}} {cum}')
+                out.append(f"kiboto_http_request_duration_seconds_sum{{{labels}}} {self._sum[(m, r)]:.6f}")
+                out.append(f"kiboto_http_request_duration_seconds_count{{{labels}}} {cum}")
         return "\n".join(out) + "\n"
 
 

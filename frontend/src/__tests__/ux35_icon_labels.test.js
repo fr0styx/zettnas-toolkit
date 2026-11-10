@@ -54,7 +54,7 @@ describe('icons apart from the words', () => {
     await vi.waitFor(() => expect(iconAndWords(rescan)).toEqual(['🔄', '🔄 Scan']), { timeout: 3000 });
     await vi.waitFor(() => expect(iconAndWords(save)).toEqual(['💾', '💾 Save Configuration']), { timeout: 3500 });
     save.textContent = 'x';
-    window.dispatchEvent(new Event('zettnas:lang-changed'));
+    window.dispatchEvent(new Event('kiboto:lang-changed'));
     expect(iconAndWords(save)).toEqual(['💾', '💾 Save Configuration']);
   });
 

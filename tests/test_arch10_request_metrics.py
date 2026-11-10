@@ -14,7 +14,7 @@ def test_counts_latency_and_errors():
     assert row["requests"] == 4 and row["server_errors"] == 1
     assert row["p50_ms_max"] == 25.0 and row["p95_ms_max"] == 250.0
     text = m.prometheus()
-    assert 'zettnas_http_requests_total{method="GET",route="/api/storage/shares/{name}",status="5xx"} 1' in text
+    assert 'kiboto_http_requests_total{method="GET",route="/api/storage/shares/{name}",status="5xx"} 1' in text
     assert 'le="+Inf"} 4' in text
 
 

@@ -15,6 +15,15 @@ installs made before keep working through it.
   guard's file in each share is renamed to `!Kiboto-guard-file.docx` the next time it is checked.
   The README and every doc say Kiboto too, with kiboto.net as the website. Zettlab and ZettOS, the
   hardware maker's names, stay.
+- **The container is called kiboto**: a new install uses `unraid/kiboto.xml` (appdata in
+  `/mnt/user/appdata/kiboto`) or the compose files, which now name the container `kiboto` and pull
+  `ghcr.io/fr0styx/kiboto`. An existing `zettnas-toolkit` container keeps its name and keeps updating: Kiboto finds
+  itself under either name, the old Unraid templates stay until 2.2, and apps set up before still reach
+  Kiboto by its old name on their networks.
+- **Metrics, MIB and API names**: Prometheus metrics are `kiboto_*` and, until Kiboto 2.2, also under their
+  `zettnas_*` names, so dashboards and alerts keep working. The SNMP MIB's objects are `kiboto*` (same
+  OIDs). API responses carry `kiboto_app` and `addresses.kiboto` beside the old fields until 2.2. The MCP
+  setup snippets name the server `kiboto`.
 - **Files Kiboto writes get Kiboto names**: the log file is `logs/kiboto.log` (the old `zettnas.log` and
   its rotations are renamed to it once, so nothing earlier is lost), half-copied files are `.kiboto-part`
   (ones a transfer left before the update are still cleaned up), and downloads are named kiboto-…: the

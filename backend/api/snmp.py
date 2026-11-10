@@ -119,37 +119,37 @@ def get_evaluated_oids():
 
     return {
         f"{ZETTLAB_ENTERPRISE_OID}.1.0": {
-            "name": "zettnasSysModel",
+            "name": "kibotoSysModel",
             "type": "OctetString",
             "value": stats.get("chassis", "d4").upper(),
         },
         f"{ZETTLAB_ENTERPRISE_OID}.2.0": {
-            "name": "zettnasCpuTemp",
+            "name": "kibotoCpuTemp",
             "type": "Gauge32",
             "value": int(cpu.get("temp", 0) or 0),
         },
         f"{ZETTLAB_ENTERPRISE_OID}.3.0": {
-            "name": "zettnasCpuUsagePct",
+            "name": "kibotoCpuUsagePct",
             "type": "Gauge32",
             "value": int(cpu.get("util", 0) or 0),
         },
         f"{ZETTLAB_ENTERPRISE_OID}.4.0": {
-            "name": "zettnasMemUsagePct",
+            "name": "kibotoMemUsagePct",
             "type": "Gauge32",
             "value": int(mem.get("pct", 0) or 0),
         },
         f"{ZETTLAB_ENTERPRISE_OID}.5.0": {
-            "name": "zettnasDiskCount",
+            "name": "kibotoDiskCount",
             "type": "Integer32",
             "value": len(disks),
         },
         f"{ZETTLAB_ENTERPRISE_OID}.6.0": {
-            "name": "zettnasFan1Rpm",
+            "name": "kibotoFan1Rpm",
             "type": "Gauge32",
             "value": int(fans[0]) if len(fans) > 0 else 0,
         },
         f"{ZETTLAB_ENTERPRISE_OID}.7.0": {
-            "name": "zettnasFan2Rpm",
+            "name": "kibotoFan2Rpm",
             "type": "Gauge32",
             "value": int(fans[1]) if len(fans) > 1 else 0,
         },
@@ -177,56 +177,56 @@ zettlab MODULE-IDENTITY
     DESCRIPTION  "Management MIB for Kiboto & NAS Appliances"
     ::= { enterprises 58925 }
 
-zettnasObjects OBJECT IDENTIFIER ::= { zettlab 1 }
+kibotoObjects OBJECT IDENTIFIER ::= { zettlab 1 }
 
-zettnasSysModel OBJECT-TYPE
+kibotoSysModel OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION "Hardware appliance model (e.g. D4, D6U, D8U)"
-    ::= { zettnasObjects 1 }
+    ::= { kibotoObjects 1 }
 
-zettnasCpuTemp OBJECT-TYPE
+kibotoCpuTemp OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION "Current CPU temperature in degrees Celsius"
-    ::= { zettnasObjects 2 }
+    ::= { kibotoObjects 2 }
 
-zettnasCpuUsagePct OBJECT-TYPE
+kibotoCpuUsagePct OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION "Current CPU utilization percentage"
-    ::= { zettnasObjects 3 }
+    ::= { kibotoObjects 3 }
 
-zettnasMemUsagePct OBJECT-TYPE
+kibotoMemUsagePct OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION "Current host memory utilization percentage"
-    ::= { zettnasObjects 4 }
+    ::= { kibotoObjects 4 }
 
-zettnasDiskCount OBJECT-TYPE
+kibotoDiskCount OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION "Total number of physical drives detected"
-    ::= { zettnasObjects 5 }
+    ::= { kibotoObjects 5 }
 
-zettnasFan1Rpm OBJECT-TYPE
+kibotoFan1Rpm OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION "Current speed of Fan 1 in RPM"
-    ::= { zettnasObjects 6 }
+    ::= { kibotoObjects 6 }
 
-zettnasFan2Rpm OBJECT-TYPE
+kibotoFan2Rpm OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION "Current speed of Fan 2 in RPM"
-    ::= { zettnasObjects 7 }
+    ::= { kibotoObjects 7 }
 
 END
 """

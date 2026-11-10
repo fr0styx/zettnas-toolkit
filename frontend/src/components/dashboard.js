@@ -1293,16 +1293,16 @@ export function updateHardwareTelemetry(s) {
       (hardware.is_custom_appliance && !vendor.includes('aoostar'))
   );
 
-  const showZettnasIcon = isZettlabs || hasFb;
+  const showKibotoIcon = isZettlabs || hasFb;
 
   if (chassisDesktopIcon) {
-    if (showZettnasIcon) {
+    if (showKibotoIcon) {
       chassisDesktopIcon.style.removeProperty('display');
       chassisDesktopIcon.classList.remove('hidden');
 
       const res = hardware.lcd_resolution || { width: 640, height: 172, spec: '640 × 172 IPS' };
       const specText = res.spec || `${res.width} × ${res.height} IPS`;
-      chassisDesktopIcon.setAttribute('title', `${t('dock.zettnas', 'Kiboto')} (${specText})`);
+      chassisDesktopIcon.setAttribute('title', `${t('dock.kiboto', 'Kiboto')} (${specText})`);
     } else {
       chassisDesktopIcon.style.display = 'none';
       chassisDesktopIcon.classList.add('hidden');
@@ -2035,7 +2035,7 @@ export function initDashboardClicks() {
   syncScreenLayoutStyle();
 }
 
-window.addEventListener('zettnas:lang-changed', () => {
+window.addEventListener('kiboto:lang-changed', () => {
   applyTheme(state.currentTheme);
   if (state.latestStats && state.latestStats.disks) {
     renderDisks(state.latestStats.disks);

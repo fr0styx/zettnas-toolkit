@@ -54,14 +54,14 @@ export function initDockSystem() {
 
   const consoleOverlay = document.getElementById('console-modal-overlay');
   if (consoleOverlay && DockManager.isPinned('console')) {
-    DockManager.register('console', consoleOverlay, '#i-screen', t('dock.zettnas', 'Kiboto'), true);
+    DockManager.register('console', consoleOverlay, '#i-screen', t('dock.kiboto', 'Kiboto'), true);
   } else {
     DockManager.render();
   }
 
-  window.addEventListener('zettnas:lang-changed', () => {
+  window.addEventListener('kiboto:lang-changed', () => {
     if (DockManager.windows['console']) {
-      DockManager.windows['console'].title = t('dock.zettnas', 'Kiboto');
+      DockManager.windows['console'].title = t('dock.kiboto', 'Kiboto');
     }
     if (DockManager.windows['management']) {
       DockManager.windows['management'].title = t('dock.management', 'Settings');
@@ -227,9 +227,9 @@ export function initDockSystem() {
   }
 
   // Update dock window titles on language change
-  window.addEventListener('zettnas:lang-changed', () => {
+  window.addEventListener('kiboto:lang-changed', () => {
     if (DockManager.windows['console']) {
-      DockManager.windows['console'].title = t('dock.zettnas', 'Kiboto');
+      DockManager.windows['console'].title = t('dock.kiboto', 'Kiboto');
     }
     if (DockManager.windows['management']) {
       DockManager.windows['management'].title = t('dock.management', 'Settings');

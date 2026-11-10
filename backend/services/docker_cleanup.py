@@ -2,7 +2,7 @@
 Kiboto - Docker Container Destruction & System Cleanup Subsystem
 Supports:
 1. Deletion / Destruction of containers with optional volume & image removal.
-2. Self-deletion protection (blocks destroying zettnas-toolkit itself).
+2. Self-deletion protection (blocks destroying Kiboto's own container).
 3. Docker system df disk usage analysis.
 4. Docker system prune: unused images, dangling volumes, stopped containers, build cache, networks.
 100% OS-agnostic and hardware-agnostic via official Docker Engine API.
@@ -17,6 +17,7 @@ import urllib.parse
 import uuid
 from typing import Any
 
+from backend import legacy_names
 from backend.config import logger
 from backend.hardware import docker_stats
 from backend.services.container_mutator import _docker_request
@@ -42,7 +43,7 @@ def is_self_container(cid: str, name: str = "") -> bool:
     """
     self_hostname = socket.gethostname()
     clean_name = (name or "").lstrip("/").lower()
-    if clean_name in ("kiboto", "zettnas-toolkit", "zettnas", "zettnas_toolkit"):
+    if legacy_names.is_app_container(clean_name):
         return True
     return bool(self_hostname and cid and (cid.startswith(self_hostname) or self_hostname.startswith(cid)))
 
@@ -61,7 +62,7 @@ def destroy_container(
 
     Optionally archives app data & synthesized compose config before deletion (Feature 21a).
     Optionally removes the container's associated image after deletion.
-    Guarantees self-deletion protection for zettnas-toolkit.
+    Guarantees self-deletion protection for Kiboto's own container.
     """
     # Sanitize container ID
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
@@ -80,7 +81,7 @@ def destroy_container(
 
     # 2. Check self-protection
     if is_self_container(full_id, cname):
-        raise ValueError("Safety lock: Cannot destroy the zettnas-toolkit container itself.")
+        raise ValueError("Safety lock: Cannot destroy Kiboto's own container.")
 
     # 2b. Auto-archive app data & config on uninstall (Feature 21a: never delete without archive)
     archive_record = None

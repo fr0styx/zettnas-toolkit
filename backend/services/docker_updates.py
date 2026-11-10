@@ -16,6 +16,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Optional
 
+from backend import legacy_names
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json
 from backend.services.container_mutator import _docker_request, pull_container_image, recreate_container
@@ -240,7 +241,6 @@ def _check_container_image_update(c: dict) -> dict[str, Any]:
         res["status"] = "policy_off"
         return res
 
-    from backend import legacy_names
     from backend.services.image_ref import name_and_tag, split_ref
 
     pinned_digest = ""
@@ -339,7 +339,7 @@ def check_all_container_updates(force: bool = False) -> dict[str, Any]:
         for r in results:
             if r.get("has_update") and r.get("update_policy") == "auto":
                 cname = r.get("name")
-                if cname and cname not in ("zettnas-toolkit", "zettnas"):
+                if cname and not legacy_names.is_app_container(cname):
                     try:
                         update_single_container(cname)
                         r["has_update"] = False
@@ -408,7 +408,7 @@ def update_single_container(cid: str) -> dict[str, Any]:
 
     orig_name = inspect_data.get("Name", "").lstrip("/")
     self_hostname = socket.gethostname()
-    if (self_hostname and cid.startswith(self_hostname)) or orig_name in ("zettnas-toolkit", "zettnas"):
+    if (self_hostname and cid.startswith(self_hostname)) or legacy_names.is_app_container(orig_name):
         raise ValueError(
             "Cannot update the active Kiboto container from within the app. "
             "Please update via Docker Compose or host CLI."
@@ -417,8 +417,6 @@ def update_single_container(cid: str) -> dict[str, Any]:
     img = inspect_data.get("Config", {}).get("Image", "")
     if not img:
         raise ValueError(f"No image configured for container '{orig_name}'.")
-
-    from backend import legacy_names
 
     was_pinned = "@" in img and legacy_names.follows_tag(inspect_data.get("Config", {}).get("Labels"))
     if was_pinned:
@@ -464,7 +462,7 @@ def update_all_containers() -> dict[str, Any]:
     skipped = []
 
     for name, _cinfo in unique_candidates.items():
-        if name in ("zettnas-toolkit", "zettnas"):
+        if legacy_names.is_app_container(name):
             skipped.append({"name": name, "reason": "Self-recreation protected"})
             continue
 

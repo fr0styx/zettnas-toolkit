@@ -577,7 +577,7 @@ ZettEventBus.addEventListener('modal:event-detail:open', (e) => {
 
 ZettEventBus.addEventListener('modal:event-detail:close', () => closeEventDetailModal());
 
-window.addEventListener('zettnas:lang-changed', () => {
+window.addEventListener('kiboto:lang-changed', () => {
     if (_eventDetailOverlay && _eventDetailOverlay.classList.contains('open') && _currentEventDetailData) {
         openEventDetailModal(_currentEventDetailData);
     }

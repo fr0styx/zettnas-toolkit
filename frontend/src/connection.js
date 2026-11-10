@@ -56,7 +56,7 @@ export function reportOnline() {
   }
   const el = document.getElementById(BANNER_ID);
   if (el) el.hidden = true;
-  window.dispatchEvent(new CustomEvent('zettnas:online'));
+  window.dispatchEvent(new CustomEvent('kiboto:online'));
 }
 
 if (typeof window !== 'undefined') {

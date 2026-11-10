@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   budgets:
-    if: github.repository == 'fr0styx/zettnas-toolkit' && github.ref == 'refs/heads/main'
+    if: (github.repository == 'fr0styx/kiboto' || github.repository == 'fr0styx/zettnas-toolkit') && github.ref == 'refs/heads/main'
     runs-on: [zettnas-hardware]  # the runner carries only this label (no default labels)
     timeout-minutes: 20
     steps:
@@ -32,7 +32,7 @@ jobs:
   spindown:
     # Read-only: kernel counters only, never a command to a drive (PERF-2)
     needs: budgets
-    if: always() && github.repository == 'fr0styx/zettnas-toolkit' && github.ref == 'refs/heads/main'
+    if: always() && (github.repository == 'fr0styx/kiboto' || github.repository == 'fr0styx/zettnas-toolkit') && github.ref == 'refs/heads/main'
     runs-on: [zettnas-hardware]
     timeout-minutes: 45
     steps:
@@ -45,7 +45,7 @@ jobs:
     # The vector index at 100,000 and 1,000,000 synthetic chunks: p95 search time and recall of
     # int8 search with float rescoring (AI-18). A temporary database; no model, no array disk.
     needs: spindown
-    if: always() && github.repository == 'fr0styx/zettnas-toolkit' && github.ref == 'refs/heads/main'
+    if: always() && (github.repository == 'fr0styx/kiboto' || github.repository == 'fr0styx/zettnas-toolkit') && github.ref == 'refs/heads/main'
     runs-on: [zettnas-hardware]
     timeout-minutes: 40
     steps:
@@ -58,7 +58,7 @@ jobs:
   ai-eval:
     # Search and answers on the model servers this install uses, read-only (AI-16)
     needs: [spindown, vector-bench]
-    if: always() && github.repository == 'fr0styx/zettnas-toolkit' && github.ref == 'refs/heads/main'
+    if: always() && (github.repository == 'fr0styx/kiboto' || github.repository == 'fr0styx/zettnas-toolkit') && github.ref == 'refs/heads/main'
     runs-on: [zettnas-hardware]
     timeout-minutes: 60
     steps:

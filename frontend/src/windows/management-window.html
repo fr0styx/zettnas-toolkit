@@ -1799,7 +1799,7 @@
                         <div class="wgd-grid">
                           <div>
                             <label class="wgd-xs-bold-muted" for="ts-hostname-input" data-i18n="mw.custom_hostname">Custom Hostname</label>
-                            <input type="text" id="ts-hostname-input" class="tz-select-input wgd-xs-strong-box-2" placeholder="e.g. zettnas" />
+                            <input type="text" id="ts-hostname-input" class="tz-select-input wgd-xs-strong-box-2" placeholder="e.g. kiboto" />
                           </div>
                           <div class="wgd-row-8">
                             <label class="wgd-row-xs">
@@ -3322,7 +3322,7 @@
                 </div>
                 <div>
                   <label class="sec-xs-bold-muted" for="sec-email" data-i18n="mgmt.sec_email">Email for notifications</label>
-                  <input type="email" id="sec-email" class="tz-select-input sec-strong-box" placeholder="admin@zettnas.local">
+                  <input type="email" id="sec-email" class="tz-select-input sec-strong-box" placeholder="admin@kiboto.local">
                 </div>
               </div>
 
@@ -4565,7 +4565,7 @@
                   <!-- 6. Optional reranker (AI-13) -->
                   <form id="ai-rerank-form" class="zn-form zn-box">
                     <span class="aix-xs-semi-soft" data-i18n="ai.rerank_label">Reranker (optional, OVMS / TEI / Infinity)</span>
-                    <input id="ai-rerank-endpoint" class="tz-select-input" type="url" placeholder="http://zettnas-ovms:8000/v3/rerank" data-i18n-aria-label="ai.rerank_endpoint" aria-label="Reranker URL" />
+                    <input id="ai-rerank-endpoint" class="tz-select-input" type="url" placeholder="http://kiboto-ovms:8000/v3/rerank" data-i18n-aria-label="ai.rerank_endpoint" aria-label="Reranker URL" />
                     <input id="ai-rerank-model" class="tz-select-input" type="text" placeholder="bge-reranker-v2-m3" data-i18n-aria-label="ai.rerank_model" aria-label="Reranker model" />
                     <button type="submit" class="btn-pill-toggle" data-i18n="sso.save">Save</button>
                   </form>
@@ -4579,7 +4579,7 @@
                   <!-- 7. Optional speech to text for voice memos and videos (COMP-03) -->
                   <form id="ai-transcribe-form" class="zn-form zn-box">
                     <span class="ai-form-label" data-i18n="ai.transcribe_label">Speech to text (optional, a Whisper server with the OpenAI audio API)</span>
-                    <input id="ai-transcribe-endpoint" class="tz-select-input" type="url" placeholder="http://zettnas-ovms:8000/v3" data-i18n-aria-label="ai.transcribe_endpoint" aria-label="Speech server URL" />
+                    <input id="ai-transcribe-endpoint" class="tz-select-input" type="url" placeholder="http://kiboto-ovms:8000/v3" data-i18n-aria-label="ai.transcribe_endpoint" aria-label="Speech server URL" />
                     <input id="ai-transcribe-model" class="tz-select-input" type="text" placeholder="whisper-base" data-i18n-aria-label="ai.transcribe_model" aria-label="Speech model" />
                     <label class="ai-form-check"><input id="ai-transcribe-video" type="checkbox" /> <span data-i18n="ai.transcribe_video">Videos too, not only voice memos and other audio</span></label>
                     <button type="submit" class="btn-pill-toggle" data-i18n="sso.save">Save</button>
@@ -5542,7 +5542,7 @@
       <div class="nshare-grid">
         <div>
           <label class="nshare-xs-bold-muted" for="create-share-comment" data-i18n="mw.description_comment">DESCRIPTION / COMMENT</label>
-          <input type="text" id="create-share-comment" class="tz-select-input nshare-xs-strong-box" placeholder="Kiboto Managed Share" data-i18n-placeholder="ui.zettnas_managed_share" />
+          <input type="text" id="create-share-comment" class="tz-select-input nshare-xs-strong-box" placeholder="Kiboto Managed Share" data-i18n-placeholder="ui.kiboto_managed_share" />
         </div>
         <div>
           <label class="nshare-row-xs-bold-muted" for="create-share-quota-gb">
@@ -5716,7 +5716,7 @@
       </div>
       <div id="backup-local-fields" hidden>
         <label class="bjob-xs-bold-muted" for="backup-job-local-path" data-i18n="backup.f_local_path">Folder in the pool</label>
-        <input type="text" id="backup-job-local-path" placeholder="e.g. /mnt/user/backups/zettnas" class="tz-select-input bjob-xs-strong-box">
+        <input type="text" id="backup-job-local-path" placeholder="e.g. /mnt/user/backups/kiboto" class="tz-select-input bjob-xs-strong-box">
       </div>
 
       <div class="bjob-col-3" id="backup-remote-fields">

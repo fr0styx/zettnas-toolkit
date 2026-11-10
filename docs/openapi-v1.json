@@ -12496,6 +12496,39 @@
    "GetClientPreferencesResponsePreferences": {
     "additionalProperties": true,
     "properties": {
+     "kiboto_desktop_widgets_config": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kiboto Desktop Widgets Config"
+     },
+     "kiboto_language": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kiboto Language"
+     },
+     "kiboto_win_bounds": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kiboto Win Bounds"
+     },
      "lcd_theme": {
       "anyOf": [
        {
@@ -12506,39 +12539,6 @@
        }
       ],
       "title": "Lcd Theme"
-     },
-     "zettnas_desktop_widgets_config": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Zettnas Desktop Widgets Config"
-     },
-     "zettnas_language": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Zettnas Language"
-     },
-     "zettnas_win_bounds": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Zettnas Win Bounds"
      }
     },
     "title": "GetClientPreferencesResponsePreferences",
@@ -35770,6 +35770,39 @@
    "SaveClientPreferencesResponsePreferences": {
     "additionalProperties": true,
     "properties": {
+     "kiboto_desktop_widgets_config": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kiboto Desktop Widgets Config"
+     },
+     "kiboto_language": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kiboto Language"
+     },
+     "kiboto_win_bounds": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kiboto Win Bounds"
+     },
      "lcd_theme": {
       "anyOf": [
        {
@@ -35780,39 +35813,6 @@
        }
       ],
       "title": "Lcd Theme"
-     },
-     "zettnas_desktop_widgets_config": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Zettnas Desktop Widgets Config"
-     },
-     "zettnas_language": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Zettnas Language"
-     },
-     "zettnas_win_bounds": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Zettnas Win Bounds"
      }
     },
     "title": "SaveClientPreferencesResponsePreferences",

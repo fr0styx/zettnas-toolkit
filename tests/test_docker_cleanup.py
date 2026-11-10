@@ -22,6 +22,7 @@ def test_is_self_container():
     assert is_self_container("abc123456789", "zettnas-toolkit") is True
     assert is_self_container("abc123456789", "/zettnas-toolkit") is True
     assert is_self_container("abc123456789", "zettnas") is True
+    assert is_self_container("abc123456789", "/kiboto") is True
     assert is_self_container("112233445566", "uptime-kuma") is False
     assert is_self_container("112233445566", "jellyfin") is False
 
@@ -35,7 +36,7 @@ def test_destroy_container_self_protection():
             destroy_container("self999")
             raise AssertionError("Should have raised ValueError on self-deletion")
         except ValueError as exc:
-            assert "Cannot destroy the zettnas-toolkit container itself" in str(exc)
+            assert "Cannot destroy Kiboto's own container" in str(exc)
 
 
 def test_destroy_container_success():

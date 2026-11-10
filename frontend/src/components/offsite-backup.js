@@ -48,7 +48,7 @@ export function reposHtml(data) {
 export function formHtml(shares) {
   return `<form class="offsite-form" data-off-form>
     <label>${escapeHtml(t('offsite.name', 'Name'))}<input name="name" required maxlength="80" placeholder="${escapeHtml(t('offsite.name_ph', 'USB disk at the office'))}"></label>
-    <label>${escapeHtml(t('offsite.destination', 'Destination'))}<input name="location" required placeholder="/mnt/disks/usb/zettnas · rclone:mycloud:zettnas · rest:http://friend-nas:8000/backup/"></label>
+    <label>${escapeHtml(t('offsite.destination', 'Destination'))}<input name="location" required placeholder="/mnt/disks/usb/kiboto · rclone:mycloud:kiboto · rest:http://friend-nas:8000/backup/"></label>
     <div class="offsite-rest" data-off-rest hidden>
       <label>${escapeHtml(t('offsite.rest_user', 'User name on the backup server'))}<input name="rest_user" maxlength="64" autocomplete="off"></label>
       <label>${escapeHtml(t('offsite.rest_password', 'Password on the backup server'))}<input name="rest_password" type="password" maxlength="256" autocomplete="new-password"></label>

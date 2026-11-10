@@ -28,8 +28,8 @@ describe('B12b (FEAT-01): Protect this NAS', () => {
   });
 
   it('puts the backup in its own folder of the chosen place', () => {
-    expect(guide.locationFor('cloud', 'b2')).toBe('rclone:b2:zettnas-backup');
-    expect(guide.locationFor('usb', '/mnt/disks/usb1/')).toBe('/mnt/disks/usb1/zettnas-backup');
+    expect(guide.locationFor('cloud', 'b2')).toBe('rclone:b2:kiboto-backup');
+    expect(guide.locationFor('usb', '/mnt/disks/usb1/')).toBe('/mnt/disks/usb1/kiboto-backup');
   });
 
   it('offers what is there, says what is missing, and protects every share by default', async () => {
@@ -50,7 +50,7 @@ describe('B12b (FEAT-01): Protect this NAS', () => {
     dlg.querySelector('[data-protect-form]').dispatchEvent(new Event('submit', { cancelable: true }));
     await vi.waitFor(() => expect(offsite.offerRecoveryKit).toHaveBeenCalled());
     const body = api.put.mock.calls[0][1];
-    expect(body.location).toBe('rclone:b2:zettnas-backup');
+    expect(body.location).toBe('rclone:b2:kiboto-backup');
     expect(body.paths).toEqual(['/mnt/user/photos', '/mnt/user/docs', '/mnt/user/appdata']);
     expect(body.hour).toBe(2);
     const id = body.id;

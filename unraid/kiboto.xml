@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>kiboto</Name>
+  <Repository>ghcr.io/fr0styx/kiboto:latest</Repository>
+  <Registry>https://ghcr.io/v2/fr0styx/kiboto</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/fr0styx/kiboto/issues</Support>
+  <Project>https://github.com/fr0styx/kiboto</Project>
+  <Overview>Kiboto: a web desktop for your NAS. Files and shares, Docker apps from a catalog, virtual machines, scheduled backups, private AI search and chat over your own files, disk health and a ransomware guard. On ZettLab and Aoostar hardware it also drives the front LCD, the fan curves and the lightbar.</Overview>
+  <Category>Tools:Utilities Tools:System Productivity: Status:Information</Category>
+  <WebUI>http://[IP]:[PORT:8082]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/fr0styx/kiboto/main/unraid/kiboto.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/fr0styx/kiboto/main/static/img/icon.png</Icon>
+  <ExtraParams>--restart=unless-stopped --cap-add=SYS_RAWIO --cap-add=SYS_ADMIN --device-cgroup-rule="c 1:1 rwm" --device-cgroup-rule="c 29:* rwm" --device-cgroup-rule="c 226:* rwm" --device-cgroup-rule="c 188:* rwm" --device-cgroup-rule="c 166:* rwm" --device-cgroup-rule="c 189:* rwm" --device-cgroup-rule="c 180:* rwm" --device-cgroup-rule="c 240:* rwm" --device-cgroup-rule="c 241:* rwm" --device-cgroup-rule="c 242:* rwm" --device-cgroup-rule="c 243:* rwm" --device-cgroup-rule="c 244:* rwm" --device-cgroup-rule="c 245:* rwm" --device-cgroup-rule="c 10:232 rwm" --device-cgroup-rule="c 10:238 rwm" --device-cgroup-rule="c 10:200 rwm" --device-cgroup-rule="c 10:196 rwm" --device-cgroup-rule="c 10:229 rwm" --device-cgroup-rule="b 8:* rwm" --device-cgroup-rule="b 259:* rwm"</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <Config Name="WebUI Port" Target="8082" Default="8082" Mode="tcp" Description="Web interface &amp; telemetry API port" Type="Port" Display="always" Required="true" Mask="false">8082</Config>
+  <Config Name="Persistent State &amp; Data" Target="/app/data" Default="/mnt/user/appdata/kiboto/data" Mode="rw" Description="Persistent state, sqlite database, configurations, and wallpapers" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/kiboto/data</Config>
+  <Config Name="Host Proc" Target="/host/proc" Default="/proc" Mode="ro" Description="Host process metrics" Type="Path" Display="advanced" Required="true" Mask="false">/proc</Config>
+  <Config Name="Host Sys" Target="/host/sys" Default="/sys" Mode="rw" Description="Host sysfs hwmon &amp; thermal paths" Type="Path" Display="advanced" Required="true" Mask="false">/sys</Config>
+  <Config Name="Host Dev" Target="/host/dev" Default="/dev" Mode="rw" Description="Host devices (disks &amp; serial RGB controller)" Type="Path" Display="advanced" Required="true" Mask="false">/dev</Config>
+  <Config Name="Storage Pool" Target="/mnt/user" Default="/mnt/user" Mode="rw" Description="Target user array pool for disk usage calculation and file ingest" Type="Path" Display="always" Required="true" Mask="false">/mnt/user</Config>
+  <Config Name="Unraid emhttp Telemetry" Target="/var/local/emhttp" Default="/var/local/emhttp" Mode="ro" Description="Unraid real-time array, parity check and mover state" Type="Path" Display="always" Required="false" Mask="false">/var/local/emhttp</Config>
+  <Config Name="Host Timezone" Target="/etc/localtime" Default="/etc/localtime" Mode="ro" Description="Host local time for synchronous clock and LCD display" Type="Path" Display="advanced" Required="false" Mask="false">/etc/localtime</Config>
+  <Config Name="Unraid Network Config" Target="/boot/config/network.cfg" Default="/boot/config/network.cfg" Mode="ro" Description="Unraid network configuration for interface and gateway resolution" Type="Path" Display="advanced" Required="false" Mask="false">/boot/config/network.cfg</Config>
+  <Config Name="LCD Refresh FPS" Target="LCD_FPS" Default="10" Mode="" Description="Target LCD display frame rate" Type="Variable" Display="always" Required="false" Mask="false">10</Config>
+  <Config Name="NAS Name" Target="NAS_NAME" Default="NAS" Mode="" Description="Server display name on LCD" Type="Variable" Display="always" Required="false" Mask="false">NAS</Config>
+  <Config Name="Docker Socket" Target="/var/run/docker.sock" Default="/var/run/docker.sock" Mode="ro" Description="Host Docker socket for container telemetry and management" Type="Path" Display="advanced" Required="false" Mask="false">/var/run/docker.sock</Config>
+  <Config Name="WebUI Password" Target="WEB_PASSWORD" Default="" Mode="" Description="Optional first-time admin password. Leave empty and one is generated: it is shown in the container log and saved as initial-admin-password in the app data folder. You choose your own at first sign-in." Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="AI Data Encryption Key" Target="KIBOTO_DATA_KEY" Default="" Mode="" Description="Optional. Encrypts the AI search index and chat history at rest (16+ characters, e.g. openssl rand -base64 32). Keep a copy in your password manager: without it the chat history cannot be read. Kept here, outside the appdata folder, so copies of appdata stay unreadable." Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+</Container>

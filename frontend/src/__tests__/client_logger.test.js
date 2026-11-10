@@ -81,10 +81,10 @@ describe('client-logger.js Observability Engine', () => {
   });
 
   describe('initClientLogger', () => {
-    it('initializes window.__zettnasClientLogger and intercepts logs', () => {
+    it('initializes window.__kibotoClientLogger and intercepts logs', () => {
       initClientLogger();
-      expect(window.__zettnasClientLogger).toBeDefined();
-      expect(typeof window.__zettnasClientLogger.getLogs).toBe('function');
+      expect(window.__kibotoClientLogger).toBeDefined();
+      expect(typeof window.__kibotoClientLogger.getLogs).toBe('function');
 
       console.error('Test error message for diagnostics');
       const logs = getClientLogs();

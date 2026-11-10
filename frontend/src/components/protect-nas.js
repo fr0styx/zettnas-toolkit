@@ -37,7 +37,7 @@ export const UNTICKED_SHARES = new Set(['system', 'isos']);
 
 /** Where the backup goes inside the chosen destination. */
 export function locationFor(kind, target) {
-  return kind === 'cloud' ? `rclone:${target}:zettnas-backup` : `${String(target).replace(/\/+$/, '')}/zettnas-backup`;
+  return kind === 'cloud' ? `rclone:${target}:kiboto-backup` : `${String(target).replace(/\/+$/, '')}/kiboto-backup`;
 }
 
 export function guideHtml(dest, shares) {

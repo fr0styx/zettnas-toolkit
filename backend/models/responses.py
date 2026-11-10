@@ -1912,9 +1912,9 @@ class GetSystemAboutResponse(_Doc):
 
 class GetClientPreferencesResponsePreferences(_Doc):
     lcd_theme: str | None = None
-    zettnas_desktop_widgets_config: str | None = None
-    zettnas_language: str | None = None
-    zettnas_win_bounds: str | None = None
+    kiboto_desktop_widgets_config: str | None = None
+    kiboto_language: str | None = None
+    kiboto_win_bounds: str | None = None
 
 
 class GetClientPreferencesResponse(_Doc):
@@ -4497,9 +4497,9 @@ class PostStateResponse(_Doc):
 
 class SaveClientPreferencesResponsePreferences(_Doc):
     lcd_theme: str | None = None
-    zettnas_desktop_widgets_config: str | None = None
-    zettnas_language: str | None = None
-    zettnas_win_bounds: str | None = None
+    kiboto_desktop_widgets_config: str | None = None
+    kiboto_language: str | None = None
+    kiboto_win_bounds: str | None = None
 
 
 class SaveClientPreferencesResponse(_Doc):

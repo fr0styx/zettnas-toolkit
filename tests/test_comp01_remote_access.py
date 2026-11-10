@@ -115,7 +115,7 @@ def cli(tmp_path, monkeypatch):
     return Cli(folder)
 
 
-def test_tailscale_sign_in_then_https_for_zettnas_and_immich(cli, monkeypatch):
+def test_tailscale_sign_in_then_https_for_kiboto_and_immich(cli, monkeypatch):
     assert remote_access.status()["state"] == "NoState"
     s = remote_access.connect()
     assert s["state"] == "NeedsLogin" and s["auth_url"] == "https://login.tailscale.com/a/abc123"
@@ -129,7 +129,10 @@ def test_tailscale_sign_in_then_https_for_zettnas_and_immich(cli, monkeypatch):
         True,
         True,
     )
-    assert s["addresses"] == {"zettnas": f"http://{NAME}:8082/"}  # until HTTPS is turned on
+    assert s["addresses"] == {
+        "kiboto": f"http://{NAME}:8082/",
+        "zettnas": f"http://{NAME}:8082/",
+    }  # until HTTPS is turned on
     monkeypatch.setattr(remote_access, "immich_port", lambda: 2283)
     s = remote_access.publish(app_port=8443 + 1)
     serves = [c for c in cli.calls() if c[:2] == ["serve", "--bg"]]
@@ -137,7 +140,11 @@ def test_tailscale_sign_in_then_https_for_zettnas_and_immich(cli, monkeypatch):
         ["serve", "--bg", "--yes", "--https=443", "http://127.0.0.1:8444"],
         ["serve", "--bg", "--yes", "--https=8443", "http://127.0.0.1:2283"],
     ]
-    assert s["addresses"] == {"zettnas": f"https://{NAME}/", "immich": f"https://{NAME}:8443/"}
+    assert s["addresses"] == {
+        "kiboto": f"https://{NAME}/",
+        "zettnas": f"https://{NAME}/",
+        "immich": f"https://{NAME}:8443/",
+    }
     assert s["approval_url"] == ""
     assert tailscale.settings()["app_port"] == 8444  # remembered for the next status
 
@@ -152,7 +159,10 @@ def test_headscale_is_kept_on_every_sign_in_and_has_no_https(cli):
     assert "--login-server=https://headscale.example.com" in cli.calls()[-1]
     cli.sign_in()
     s = remote_access.publish()
-    assert s["https"] is False and s["addresses"] == {"zettnas": f"http://{NAME}:8082/"}
+    assert s["https"] is False and s["addresses"] == {
+        "kiboto": f"http://{NAME}:8082/",
+        "zettnas": f"http://{NAME}:8082/",
+    }
     assert not [c for c in cli.calls() if c[:2] == ["serve", "--bg"]]
 
 
@@ -177,7 +187,7 @@ def test_https_not_allowed_yet_gives_the_page_to_allow_it(cli):
     cli.set(serve_off=True)
     s = remote_access.publish()
     assert s["approval_url"] == "https://login.tailscale.com/f/serve?node=abc123"
-    assert s["addresses"]["zettnas"].startswith("http://")
+    assert s["addresses"]["kiboto"].startswith("http://")
 
 
 def test_a_failed_serve_is_an_error(cli):

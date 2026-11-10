@@ -164,8 +164,8 @@ def initial_password_hash(password: str) -> str:
 
 
 STORED_PASSWORD_HASH = initial_password_hash(WEB_PASSWORD)
-ZETTNAS_USERNAME = "admin"
-ZETTNAS_EMAIL = ""
+ADMIN_USERNAME = "admin"
+ADMIN_EMAIL = ""
 SESSION_TTL = 7 * 86400  # a sign-in without "remember me" lasts a week (SEC-12)
 SESSION_IDLE_SECS = 3 * 86400  # ... and ends after three days unused
 REMEMBERED_SESSION_IDLE_SECS = 14 * 86400  # "remember me": 30 days, ends after two weeks unused
@@ -359,7 +359,7 @@ def is_using_default_password() -> bool:
 
 
 def _load_security():
-    global STORED_PASSWORD_HASH, ZETTNAS_USERNAME, ZETTNAS_EMAIL
+    global STORED_PASSWORD_HASH, ADMIN_USERNAME, ADMIN_EMAIL
     if os.path.exists(SECURITY_FILE):
         try:
             with open(SECURITY_FILE) as f:
@@ -367,9 +367,9 @@ def _load_security():
                 if "password_hash" in sec:
                     STORED_PASSWORD_HASH = sec["password_hash"]
                 if "username" in sec:
-                    ZETTNAS_USERNAME = sec["username"]
+                    ADMIN_USERNAME = sec["username"]
                 if "email" in sec:
-                    ZETTNAS_EMAIL = sec["email"]
+                    ADMIN_EMAIL = sec["email"]
         except (json.JSONDecodeError, OSError) as e:
             logger.error(f"Failed to load security.json: {e}")
 

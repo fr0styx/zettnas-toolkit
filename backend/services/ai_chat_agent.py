@@ -191,7 +191,7 @@ AVAILABLE_NAS_TOOLS: list[dict[str, Any]] = [
     {
         "name": "control_docker_container",
         "label": "⚙️ Control Docker Container",
-        "description": "Starts, stops, or restarts a specific Docker container on the NAS (protects zettnas-toolkit from self-stop).",
+        "description": "Starts, stops, or restarts a specific Docker container on the NAS (protects Kiboto's own container from self-stop).",
         "mutating": True,
     },
     {
@@ -382,7 +382,7 @@ OPENAI_TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "control_docker_container",
-            "description": "Starts, stops, or restarts a specific Docker container on the NAS (protects zettnas-toolkit from self-stop).",
+            "description": "Starts, stops, or restarts a specific Docker container on the NAS (protects Kiboto's own container from self-stop).",
             "parameters": {
                 "type": "object",
                 "properties": {

@@ -183,7 +183,6 @@ describe('System About & Software Updates Frontend Component', () => {
 
     expect(postSpy).toHaveBeenCalledWith('/api/system/updates/apply', {
       channel: 'edge',
-      target_image: 'ghcr.io/fr0styx/zettnas-toolkit:edge',
     }, { confirmed: true });
     expect(document.getElementById('update-progress-overlay').style.display).toBe('block');
   });

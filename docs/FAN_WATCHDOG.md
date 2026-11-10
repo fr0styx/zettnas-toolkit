@@ -17,7 +17,7 @@ the app.
 
 ## Unraid
 
-Add a second container from the template `unraid/zettnas-fan-watchdog.xml` (Docker → Add Container
+Add a second container from the template `unraid/kiboto-fan-watchdog.xml` (Docker → Add Container
 → the template), or by hand:
 
 ```bash

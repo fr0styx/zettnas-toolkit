@@ -2083,7 +2083,7 @@ export function initManagement() {
   }
 
   // Language switch update
-  window.addEventListener('zettnas:lang-changed', () => {
+  window.addEventListener('kiboto:lang-changed', () => {
     const activeSection = Array.from(document.querySelectorAll('.mgmt-detail-card')).find((c) => c.style.display !== 'none');
     if (activeSection) {
       showSection(activeSection.id);

@@ -35,7 +35,7 @@ export async function initSsoLogin(win = window) {
 }
 
 const FIELDS = [
-  ['issuer', 'sso.issuer', 'Issuer URL', 'https://auth.example.com/application/o/zettnas'],
+  ['issuer', 'sso.issuer', 'Issuer URL', 'https://auth.example.com/application/o/kiboto'],
   ['client_id', 'sso.client_id', 'Client ID', ''],
   ['client_secret', 'sso.client_secret', 'Client secret', ''],
   ['label', 'sso.label', 'Button label', 'Authentik'],
@@ -140,7 +140,7 @@ function immichBlock() {
 const LDAP_FIELDS = [
   ['server_url', 'ldap.server', 'Server', 'ldaps://dc.home.lan'],
   ['base_dn', 'ldap.base_dn', 'Base DN', 'dc=home,dc=lan'],
-  ['bind_dn', 'ldap.bind_dn', 'Service account DN', 'cn=zettnas,ou=service,dc=home,dc=lan'],
+  ['bind_dn', 'ldap.bind_dn', 'Service account DN', 'cn=kiboto,ou=service,dc=home,dc=lan'],
   ['bind_password', 'ldap.bind_password', 'Service account password', ''],
   ['user_filter', 'ldap.user_filter', 'User filter', '(sAMAccountName={username})'],
   ['admin_groups', 'ldap.admin_groups', 'Admin groups (comma-separated)', 'NAS Admins'],

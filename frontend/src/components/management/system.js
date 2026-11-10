@@ -23,8 +23,9 @@ let _lastUpdateData = null;
 
 /** Starts the update; when work is still running (a backup, a restore, a sync), asks first and
  *  only then updates anyway (NREL-14). */
-async function postUpdate(channel, targetImage) {
-  const body = { channel, target_image: targetImage };
+async function postUpdate(channel) {
+  // the server picks the image: the new name once it has the tag, the old one until then
+  const body = { channel };
   try {
     return await api.post('/api/system/updates/apply', body, { confirmed: true });
   } catch (err) {
@@ -338,10 +339,7 @@ export async function applySystemUpdate() {
       if (progressDesc) progressDesc.textContent = t('ui.pulling_container_image_layers_from', 'Pulling container image layers from GHCR...');
 
       try {
-        const targetImage = channel === 'edge'
-          ? 'ghcr.io/fr0styx/zettnas-toolkit:edge'
-          : 'ghcr.io/fr0styx/zettnas-toolkit:latest';
-        const res = await postUpdate(channel, targetImage);
+        const res = await postUpdate(channel);
         showToast(res?.message || 'Update initiated. Reconnecting...', 'info');
 
         if (res && res.auto_restarting === false) {
@@ -367,7 +365,7 @@ export async function applySystemUpdate() {
             if (h.ok && (hasGoneDown || attempts >= 8)) {
               clearInterval(interval);
               setIconLabel(progressTitle, '🎉', t('ui.update_complete', 'Update Complete!'));
-              if (progressDesc) progressDesc.textContent = t('ui.reloading_zettnas_workbench', 'Reloading Kiboto…');
+              if (progressDesc) progressDesc.textContent = t('ui.reloading_kiboto_workbench', 'Reloading Kiboto…');
               showToast(t('updates.updated_success', 'Kiboto updated successfully!'), 'success');
               setTimeout(() => window.location.reload(), 1200);
             }

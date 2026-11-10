@@ -252,8 +252,8 @@ def tool_list_docker_containers(limit: int = 40) -> dict[str, Any]:
             },
             "containers": [
                 {
-                    "name": "zettnas-toolkit",
-                    "image": "ghcr.io/fr0styx/zettnas-toolkit:latest",
+                    "name": "kiboto",
+                    "image": "ghcr.io/fr0styx/kiboto:latest",
                     "state": "running",
                     "status": "Up 4 hours",
                     "created": 1729000000,

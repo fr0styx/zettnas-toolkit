@@ -106,13 +106,13 @@ function httpsHint(s) {
 }
 
 async function connectedView(s) {
-  const zettnas = (s.addresses || {}).zettnas || '';
+  const kiboto = (s.addresses || {}).kiboto || (s.addresses || {}).zettnas || '';
   const immich = (s.addresses || {}).immich || '';
   const apps = (s.addresses || {}).apps || [];
   const list = el(
     'ul',
     { class: 'zn-list remote-addresses' },
-    zettnas ? el('li', {}, `${t('remote.addr_zettnas', 'Kiboto')}: `, el('code', { text: zettnas })) : null,
+    kiboto ? el('li', {}, `${t('remote.addr_kiboto', 'Kiboto')}: `, el('code', { text: kiboto })) : null,
     immich ? el('li', {}, `${t('remote.addr_immich', 'Immich (photo backup)')}: `, el('code', { text: immich })) : null,
     ...apps.map((a) => el('li', {}, `${a.name}: `, el('code', { text: a.url }))),
   );
@@ -121,7 +121,7 @@ async function connectedView(s) {
   const actions = el(
     'div',
     { class: 'zn-row remote-actions' },
-    !zettnas.startsWith('https://') ? button(t('remote.publish', 'Turn on HTTPS'), 'publish', true)
+    !kiboto.startsWith('https://') ? button(t('remote.publish', 'Turn on HTTPS'), 'publish', true)
       : newApps ? button(t('remote.publish_apps', 'Turn on HTTPS for new apps'), 'publish', true) : null,
     button(t('remote.disconnect', 'Disconnect'), 'disconnect'),
   );
@@ -129,7 +129,7 @@ async function connectedView(s) {
     'div',
     { class: 'remote-step' },
     el('p', { text: t('remote.connected', 'Connected as {name}. On a phone with the Tailscale app signed in to the same network, scan the code to open Kiboto.', { name: s.name || (s.ips || [])[0] || '' }) }),
-    el('div', { class: 'zn-row' }, zettnas ? await qrBox(zettnas, t('remote.addr_qr', 'Kiboto address as a QR code')) : null, list),
+    el('div', { class: 'zn-row' }, kiboto ? await qrBox(kiboto, t('remote.addr_qr', 'Kiboto address as a QR code')) : null, list),
     httpsHint(s),
     actions,
   );

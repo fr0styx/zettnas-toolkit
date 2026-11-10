@@ -405,7 +405,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
                     "0",
                     "arguments",
                     "0",
-                    "--value=http://{{zettnas}}:8084/",
+                    "--value=http://{{kiboto}}:8084/",
                 ],
                 "user": "www-data",
             },

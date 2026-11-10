@@ -181,7 +181,7 @@ export async function setLanguage(lang) {
   syncLanguageSelectors();
 
   // Dispatch custom event for components that dynamically generate content
-  window.dispatchEvent(new CustomEvent('zettnas:lang-changed', { detail: { lang } }));
+  window.dispatchEvent(new CustomEvent('kiboto:lang-changed', { detail: { lang } }));
 }
 
 export function applyTranslations() {

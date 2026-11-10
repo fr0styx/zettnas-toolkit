@@ -98,7 +98,7 @@ addresses clients use stay the same (SEC-34). SFTP sign-ins are counted per acco
 is locked after repeated failures (shared with WebDAV), not per address. Loopback and the networks in `KIBOTO_TRUSTED_IPS`
 (comma-separated, for example `192.168.1.10,10.0.0.0/24`) are never blocked. If you
 lock yourself out, run
-`docker exec zettnas-toolkit python3 -m backend.services.ip_block --unblock <address>`.
+`docker exec kiboto python3 -m backend.services.ip_block --unblock <address>`.
 
 ## Privileges and root-equivalent roles
 
@@ -120,7 +120,7 @@ with it, needs a superadmin and a confirmation. Each one is logged to
 
 **Kiboto's own data folder** (`users.db`, `secret.key`, backup settings) can't be
 opened, listed, copied, shared or served over WebDAV and SFTP by anyone, even when the
-host shows it inside a shared folder (on Unraid, `/mnt/user/appdata/zettnas-toolkit`).
+host shows it inside a shared folder (on Unraid, `/mnt/user/appdata/kiboto`, or `/mnt/user/appdata/zettnas-toolkit` on an install made before the rebrand).
 
 The proxy narrows what a bug in the web app can do through Docker. It is not a
 sandbox: the web process itself still runs as root.
@@ -166,6 +166,6 @@ updater checks this signature before it installs an update (`UPDATE_SIGNATURES`,
 
 ```
 cosign verify ghcr.io/fr0styx/zettnas-toolkit:<tag> \
-  --certificate-identity-regexp '^https://github\.com/fr0styx/zettnas-toolkit/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9].*)$' \
+  --certificate-identity-regexp '^https://github\.com/fr0styx/(kiboto|zettnas-toolkit)/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9].*)$' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```

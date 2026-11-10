@@ -122,7 +122,7 @@ def test_apply_system_update_endpoint(client, auth_headers):
         assert data["auto_restarting"] is True
         assert data["target_image"] == "ghcr.io/fr0styx/zettnas-toolkit:edge"
         mock_pull.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:edge", 300.0)
-        mock_spawn.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:edge", "zettnas-toolkit", 2.5)
+        mock_spawn.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:edge", "kiboto", 2.5)
 
 
 def test_apply_system_update_edge_channel_defaults_to_edge_tag(client, auth_headers):
@@ -141,7 +141,7 @@ def test_apply_system_update_edge_channel_defaults_to_edge_tag(client, auth_head
         data = resp.json()
         assert data["target_image"] == "ghcr.io/fr0styx/zettnas-toolkit:edge"
         mock_pull.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:edge", 300.0)
-        mock_spawn.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:edge", "zettnas-toolkit", 2.5)
+        mock_spawn.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:edge", "kiboto", 2.5)
 
 
 def test_apply_system_update_stable_channel_defaults_to_latest_tag(client, auth_headers):
@@ -160,7 +160,7 @@ def test_apply_system_update_stable_channel_defaults_to_latest_tag(client, auth_
         data = resp.json()
         assert data["target_image"] == "ghcr.io/fr0styx/zettnas-toolkit:latest"
         mock_pull.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:latest", 300.0)
-        mock_spawn.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:latest", "zettnas-toolkit", 2.5)
+        mock_spawn.assert_called_once_with("ghcr.io/fr0styx/zettnas-toolkit:latest", "kiboto", 2.5)
 
 
 def test_get_current_build_info_authoritative_image_inspect(monkeypatch):

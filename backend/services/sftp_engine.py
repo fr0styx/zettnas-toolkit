@@ -17,7 +17,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
-from backend import legacy_names
+from backend import legacy_names, product
 from backend.config import DATA_DIR, POOL_PATH, docker_sock, logger
 from backend.fsutil import atomic_write_json, protected_rclone_excludes, read_json
 from backend.ignored_errors import ignored
@@ -289,8 +289,12 @@ Match Group sftpusers
                 _docker_request("DELETE", "/containers/kiboto-sftp?force=true")
 
             # 2. Inspect parent container for image and host volume bindings
-            code_tk, tk_info = _docker_request("GET", "/containers/zettnas-toolkit/json")
-            image = "ghcr.io/fr0styx/zettnas-toolkit:latest"
+            code_tk, tk_info = 0, {}
+            for ref in (socket.gethostname(), *legacy_names.app_container_names()[:2]):
+                code_tk, tk_info = _docker_request("GET", f"/containers/{ref}/json")
+                if code_tk == 200:
+                    break
+            image = product.IMAGE + ":latest"
             tk_binds = []
             if code_tk == 200:
                 image = tk_info.get("Config", {}).get("Image") or image
@@ -305,8 +309,10 @@ Match Group sftpusers
                     break
 
             if not host_data_dir:
-                if os.path.exists("/mnt/user/appdata/zettnas-toolkit/data"):
-                    host_data_dir = "/mnt/user/appdata/zettnas-toolkit/data"
+                for appdata in (product.HOST_APPDATA, legacy_names.OLD_HOST_APPDATA):
+                    if os.path.exists(appdata + "/data"):
+                        host_data_dir = appdata + "/data"
+                        break
                 else:
                     host_data_dir = DATA_DIR
 
@@ -324,7 +330,9 @@ Match Group sftpusers
             if not any(":/mnt/storage" in b for b in binds) and os.path.exists("/mnt/storage"):
                 binds.append("/mnt/storage:/mnt/storage:rw")
 
-            if host_repo and os.path.exists("/mnt/user/appdata/zettnas-toolkit/backend"):
+            if host_repo and any(
+                os.path.exists(a + "/backend") for a in (product.HOST_APPDATA, legacy_names.OLD_HOST_APPDATA)
+            ):
                 binds.append(f"{host_repo}/backend:/app/backend:ro")
 
             payload = {
@@ -338,7 +346,7 @@ Match Group sftpusers
                 },
                 "Labels": {
                     "app": "kiboto-sftp",
-                    "managed-by": "zettnas-toolkit",
+                    "managed-by": product.CONTAINER,
                 },
             }
 

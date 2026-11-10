@@ -96,7 +96,7 @@ your compose file or Unraid template and recreate the container.
 
 - **Web Desktop URL**: `http://<server-ip>:8082`
 - **Username**: `admin`
-- **First-time password**: if you leave `WEB_PASSWORD` empty, Kiboto generates one on first start. It is written to the container log (`docker logs zettnas-toolkit`) and saved as `initial-admin-password` in the app data folder (readable by root only). It works once: you choose your own password at first sign-in, and the file is then deleted.
+- **First-time password**: if you leave `WEB_PASSWORD` empty, Kiboto generates one on first start. It is written to the container log (`docker logs kiboto`) and saved as `initial-admin-password` in the app data folder (readable by root only). It works once: you choose your own password at first sign-in, and the file is then deleted.
 
 > [!WARNING]  
 > Upon your first login, immediately navigate to **Mission Control** → **Settings** → **Security** (or press `Cmd+K` and type `>password`) to set a strong master password or provision a new user account.
@@ -110,15 +110,15 @@ your compose file or Unraid template and recreate the container.
 Kiboto integrates directly with Unraid's DockerMan subsystem and device assignment.
 
 1. **Install the Template**:
-   Copy the pre-configured [`unraid/zettnas-toolkit.xml`](../unraid/zettnas-toolkit.xml) template into your Unraid flash drive:
+   Copy the pre-configured [`unraid/kiboto.xml`](../unraid/kiboto.xml) template into your Unraid flash drive:
    ```bash
    mkdir -p /boot/config/plugins/dockerMan/templates-user
-   cp unraid/zettnas-toolkit.xml /boot/config/plugins/dockerMan/templates-user/my-zettnas-toolkit.xml
+   cp unraid/kiboto.xml /boot/config/plugins/dockerMan/templates-user/my-kiboto.xml
    ```
 
 2. **Add Container via WebUI**:
    - In the Unraid WebUI, navigate to **Docker** → **Add Container**.
-   - Select **zettnas-toolkit** from the template dropdown.
+   - Select **kiboto** from the template dropdown.
    - Verify hardware paths (e.g. `/dev/fb0` for physical LCD, `/dev/dri` for GPU telemetry, `/dev/ttyACM0` for ARGB lighting). If running on a server without front LCD hardware, leave these fields empty.
    - Click **Apply**.
 
@@ -140,16 +140,16 @@ Recommended for custom DIY homelab builds (Jonsbo N1/N2/N3/N4, Fractal Node 804,
 
 2. **Create Project Directory & Compose File**:
    ```bash
-   mkdir -p ~/zettnas-toolkit/data
-   cd ~/zettnas-toolkit
+   mkdir -p ~/kiboto/data
+   cd ~/kiboto
    ```
 
 3. **Save `docker-compose.yml`**:
    ```yaml
    services:
-     zettnas-toolkit:
+     kiboto:
        image: ghcr.io/fr0styx/zettnas-toolkit:latest
-       container_name: zettnas-toolkit
+       container_name: kiboto
        restart: unless-stopped
        network_mode: bridge
        ports:
@@ -221,18 +221,18 @@ FygoOS provides a modern, turnkey private cloud OS with native Docker support.
 1. **Create Directory**:
    On your main storage pool (e.g. `/vol1`), create an application folder:
    ```bash
-   mkdir -p /vol1/appdata/zettnas-toolkit/data
+   mkdir -p /vol1/appdata/kiboto/data
    ```
 
 2. **Deploy via App Center / Compose**:
    - In FygoOS WebUI, go to **Docker** → **Compose / Projects** → **Add Project**.
-   - Project Name: `zettnas-toolkit`.
+   - Project Name: `kiboto`.
    - Paste the following configuration:
    ```yaml
    services:
-     zettnas-toolkit:
+     kiboto:
        image: ghcr.io/fr0styx/zettnas-toolkit:latest
-       container_name: zettnas-toolkit
+       container_name: kiboto
        restart: unless-stopped
        ports:
          - "8082:8082"
@@ -243,7 +243,7 @@ FygoOS provides a modern, turnkey private cloud OS with native Docker support.
          - /dev:/host/dev:rw
          - /etc/localtime:/etc/localtime:ro
          - /vol1:/mnt/storage:rw
-         - /vol1/appdata/zettnas-toolkit/data:/app/data:rw
+         - /vol1/appdata/kiboto/data:/app/data:rw
          - /var/run/docker.sock:/var/run/docker.sock:ro
        environment:
          - PORT=8082
@@ -286,11 +286,11 @@ FygoOS provides a modern, turnkey private cloud OS with native Docker support.
 TrueNAS SCALE (Dragonfish & Electric Eel) supports custom Docker Compose applications directly.
 
 1. In the TrueNAS WebUI, navigate to **Apps** → **Discover Apps** → **Custom App** (or Docker Compose).
-2. Configure App Name: `zettnas-toolkit`.
+2. Configure App Name: `kiboto`.
 3. Image Repository: `ghcr.io/fr0styx/zettnas-toolkit`, Tag: `latest`.
 4. Add Host Paths:
    - `/mnt/tank` → `/mnt/storage`
-   - `/mnt/tank/appdata/zettnas-toolkit/data` → `/app/data`
+   - `/mnt/tank/appdata/kiboto/data` → `/app/data`
    - `/var/run/docker.sock` → `/var/run/docker.sock`
    - `/proc` → `/host/proc` (Read-only)
    - `/sys` → `/host/sys` (Read-write)
@@ -309,9 +309,9 @@ For **UGOS (Ugreen NAS OS)**, **FygoOS**, **ZettOS**, or **Proxmox VE**, Kiboto 
    In UGOS Docker Manager or via SSH:
    ```yaml
    services:
-     zettnas-toolkit:
+     kiboto:
        image: ghcr.io/fr0styx/zettnas-toolkit:latest
-       container_name: zettnas-toolkit
+       container_name: kiboto
        restart: unless-stopped
        ports:
          - "8082:8082"
@@ -353,7 +353,7 @@ For rapid testing on any Linux host without Docker Compose:
 
 ```bash
 docker run -d \
-  --name zettnas-toolkit \
+  --name kiboto \
   --restart unless-stopped \
   -p 8082:8082 \
   -p 8084:8084 \
@@ -401,7 +401,7 @@ For developers, homelab maintainers, and air-gapped homelabs building custom ima
 1. **Clone the Repository**:
    ```bash
    git clone https://github.com/fr0styx/zettnas-toolkit.git
-   cd zettnas-toolkit
+   cd kiboto
    mkdir -p data
    ```
 
@@ -411,7 +411,7 @@ For developers, homelab maintainers, and air-gapped homelabs building custom ima
    - **Stage 2 (`runtime`)**: Prepares `python:3.12-slim` with Linux system utilities (`smartmontools`, `nvme-cli`, `ovmf`, `qemu-system-x86`, `rclone`, `fuse3`), installs pip requirements, and overlays the built desktop assets.
 
    ```bash
-   docker build -t zettnas-toolkit:local .
+   docker build -t kiboto:local .
    ```
 
 3. **Run with Docker Compose (Local Build)**:
@@ -551,7 +551,7 @@ services:
 networks:
   zettnas:
     external: true
-    name: zettnas-toolkit_default   # the network your Kiboto container is on
+    name: kiboto_default   # the network your Kiboto container is on
 ```
 
 The Security Advisor warns when an AI container publishes a port on all interfaces. Web search and weather are off in chat unless you turn on **Web**, and answers that used outside services say so.
@@ -571,17 +571,17 @@ Administrators can check for updates and trigger 1-click container self-updates 
 
 ### Upgrading via Docker Compose
 ```bash
-cd ~/zettnas-toolkit
+cd ~/kiboto
 docker compose pull
 docker compose up -d
 ```
 
 ### Upgrading via Unraid
-In the Unraid WebUI, navigate to **Docker**, click **Check for Updates**, and click **Update** next to `zettnas-toolkit`.
+In the Unraid WebUI, navigate to **Docker**, click **Check for Updates**, and click **Update** next to `kiboto` (`zettnas-toolkit` on an install made before the rebrand: it keeps its name and updates the same way).
 
 ### Snapshots, pinning a version and going back by hand
 - **Every update is snapshotted.** Before the data is touched, Kiboto copies its settings and databases (not the AI index) to `data/backups/pre-update/<date>-from-<version+commit>/`. The in-app updater does this when it stops the old version; an update from the Unraid Docker tab or `docker compose pull` gets one when the new version first starts. The newest three are kept, plus the newest one taken from a Stable build.
-- **The previous image is kept.** After an in-app update the old image is tagged `zettnas-toolkit-rollback:<version+commit>`, so `docker image prune` doesn't remove it. **Mission Control → Settings → About & Updates → Revert to previous version** uses it.
+- **The previous image is kept.** After an in-app update the old image is tagged `kiboto-rollback:<version+commit>`, so `docker image prune` doesn't remove it. **Mission Control → Settings → About & Updates → Revert to previous version** uses it.
 - **Pin a version** by using a version tag instead of `latest`, e.g. `ghcr.io/fr0styx/zettnas-toolkit:1.10.1` (Compose `image:` line, or the Unraid template's Repository field). It changes only when you change the tag.
 - **Go back by hand:** stop the container, copy the files of the snapshot you want from `data/backups/pre-update/<snapshot>/` back into `data/` (overwrite), set the image to the version that snapshot came from (its folder name and `manifest.json` say which), and start it again. Don't start an older version on data a newer one has migrated without restoring its snapshot first: Kiboto refuses to open newer databases.
 

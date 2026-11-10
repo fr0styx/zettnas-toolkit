@@ -93,7 +93,7 @@ describe('detail windows (modals.js)', () => {
     expect(byId('smart-meta-health').textContent).toBe('Connected');
     byId('smart-modal-refresh').click();
     expect(byId('smart-lbl-4').textContent).toBe('IP address');
-    window.dispatchEvent(new Event('zettnas:lang-changed'));
+    window.dispatchEvent(new Event('kiboto:lang-changed'));
     expect(byId('smart-lbl-1').textContent).toBe('Sending now');
   });
 
@@ -198,7 +198,7 @@ describe('detail windows (modals.js)', () => {
     expect(byId('event-detail-reltime').textContent).toBe('3d ago');
     expect(byId('event-detail-raw').textContent).toBe('# Report');
     modals.openEventDetailModal(null);
-    window.dispatchEvent(new Event('zettnas:lang-changed'));
+    window.dispatchEvent(new Event('kiboto:lang-changed'));
     expect(byId('event-detail-raw').textContent).toBe('# Report');
   });
 

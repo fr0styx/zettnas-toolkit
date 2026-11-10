@@ -143,7 +143,7 @@ def test_snmp_api_suite(client, auth_headers):
     text = res.text
     assert "ZETTLAB-KIBOTO-MIB DEFINITIONS ::= BEGIN" in text
     assert "enterprises 58925" in text
-    assert "zettnasCpuTemp" in text
+    assert "kibotoCpuTemp" in text
 
     # 5. Evaluated Live OIDs
     res = client.get("/api/snmp/oids", headers=auth_headers)
@@ -151,4 +151,4 @@ def test_snmp_api_suite(client, auth_headers):
     oids = res.json()
     assert "1.3.6.1.4.1.58925.1.0" in oids
     assert "1.3.6.1.4.1.58925.2.0" in oids
-    assert oids["1.3.6.1.4.1.58925.2.0"]["name"] == "zettnasCpuTemp"
+    assert oids["1.3.6.1.4.1.58925.2.0"]["name"] == "kibotoCpuTemp"

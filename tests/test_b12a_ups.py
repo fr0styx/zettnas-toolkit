@@ -22,7 +22,7 @@ def _containers():
 
 def test_only_zettnas_apps_are_stopped(monkeypatch):
     monkeypatch.setattr(uw, "_catalog_ids", lambda: {"jellyfin", "immich"})
-    assert [c["name"] for c in uw.zettnas_containers(_containers())] == ["immich", "jellyfin"]
+    assert [c["name"] for c in uw.kiboto_containers(_containers())] == ["immich", "jellyfin"]
 
 
 def test_they_stop_in_parallel_and_the_wait_is_bounded(monkeypatch):

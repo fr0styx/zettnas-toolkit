@@ -89,7 +89,7 @@ def _catalog_ids() -> set[str]:
         return set()
 
 
-def zettnas_containers(containers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def kiboto_containers(containers: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """The running apps Kiboto installed (labelled, or a catalog app's stack). Kiboto itself and
     its helpers (fan watchdog, sidecars) keep running to the end; other people's containers are
     left to the host's own shutdown."""
@@ -101,7 +101,7 @@ def zettnas_containers(containers: list[dict[str, Any]]) -> list[dict[str, Any]]
         name = (c.get("name") or "").lower().lstrip("/")
         if name.startswith("zettnas"):
             continue
-        if c.get("zettnas_app") or (c.get("stack") and c["stack"] in ids):
+        if c.get("kiboto_app") or c.get("zettnas_app") or (c.get("stack") and c["stack"] in ids):
             out.append(c)
     return out
 
@@ -113,7 +113,7 @@ def graceful_docker_teardown(timeout_sec: int = 30) -> dict[str, list[str]]:
     try:
         from backend.hardware.docker_stats import container_action, read_docker_containers
 
-        mine = zettnas_containers(read_docker_containers())
+        mine = kiboto_containers(read_docker_containers())
     except Exception as e:
         logger.error("[UPS FAILSAFE] Could not list the apps: %s", e)
         return result

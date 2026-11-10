@@ -7,7 +7,7 @@
   <Privileged>false</Privileged>
   <Support>https://github.com/fr0styx/zettnas-toolkit/blob/main/docs/FAN_WATCHDOG.md</Support>
   <Project>https://github.com/fr0styx/zettnas-toolkit</Project>
-  <Overview>Puts the chassis fans in a safe state if the Kiboto app is killed while it controls them. Runs next to the app; needs no ports.</Overview>
+  <Overview>Kept for installs made before the rebrand (until Kiboto 2.2); a new install uses unraid/kiboto-fan-watchdog.xml. Puts the chassis fans in a safe state if the Kiboto app is killed while it controls them. Runs next to the app; needs no ports.</Overview>
   <Category>Tools:</Category>
   <Icon>https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png</Icon>
   <ExtraParams>--restart unless-stopped --memory 128m --no-healthcheck --cap-add SYS_RAWIO --device-cgroup-rule='c 1:1 rwm'</ExtraParams>

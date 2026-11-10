@@ -48,7 +48,7 @@ def _data_mount_source(container_name: str) -> str | None:
 
 def spawn_self_updater(
     target_image: str = "ghcr.io/fr0styx/kiboto:latest",
-    container_name: str = "zettnas-toolkit",
+    container_name: str = "kiboto",
     delay_seconds: float = 2.5,
     restore_snapshot_id: str | None = None,
 ) -> bool:
@@ -183,7 +183,8 @@ def _app_status(cid: str) -> str | None:
     return str(out.get("status") or "")
 
 
-ROLLBACK_REPO = "zettnas-toolkit-rollback"
+ROLLBACK_REPO = "kiboto-rollback"
+OLD_ROLLBACK_REPO = "zettnas-toolkit-rollback"  # tags made before the rebrand (legacy_names): still pruned
 
 
 def _container_build(inspect_data: dict[str, Any], version: str) -> str:
@@ -206,11 +207,12 @@ def _protect_rollback_image(image_id: str, build: str, data_dir: str) -> None:
     tag = _tag_name(build)
     _docker_request("POST", f"/images/{image_id}/tag?repo={ROLLBACK_REPO}&tag={tag}")
     keep = {_tag_name(str(s.get("from_build"))) for s in list_snapshots(data_dir) if s.get("from_build")} | {tag}
-    st, images = _docker_request("GET", f"/images/json?filters={json.dumps({'reference': [ROLLBACK_REPO]})}")
-    for img in images if st == 200 and isinstance(images, list) else []:
-        for ref in img.get("RepoTags") or []:
-            if ref.startswith(ROLLBACK_REPO + ":") and ref.split(":", 1)[1] not in keep:
-                _docker_request("DELETE", f"/images/{ref}?noprune=1")
+    for repo in (ROLLBACK_REPO, OLD_ROLLBACK_REPO):
+        st, images = _docker_request("GET", f"/images/json?filters={json.dumps({'reference': [repo]})}")
+        for img in images if st == 200 and isinstance(images, list) else []:
+            for ref in img.get("RepoTags") or []:
+                if ref.startswith(repo + ":") and (repo != ROLLBACK_REPO or ref.split(":", 1)[1] not in keep):
+                    _docker_request("DELETE", f"/images/{ref}?noprune=1")
 
 
 def write_update_result(data_dir: str | None, result: str, reason: str = "", **extra: Any) -> None:
@@ -493,7 +495,7 @@ def apply_update_from_helper(
 def main():
     parser = argparse.ArgumentParser(description="Kiboto Ephemeral Self-Updater Helper")
     parser.add_argument("--apply", action="store_true", help="Execute container recreate sequence")
-    parser.add_argument("--target", default="zettnas-toolkit", help="Target container name")
+    parser.add_argument("--target", default="kiboto", help="Target container name")
     parser.add_argument("--image", default="ghcr.io/fr0styx/kiboto:latest", help="Target Docker image")
     parser.add_argument("--delay", type=float, default=2.5, help="Delay seconds before stopping caller")
     parser.add_argument("--data-dir", default=None, help="Target's data folder mounted into the helper")

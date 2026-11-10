@@ -514,7 +514,7 @@ export function initMetricsChart() {
   });
 
   // Re-render chart on language switch to update localized labels
-  window.addEventListener('zettnas:lang-changed', () => {
+  window.addEventListener('kiboto:lang-changed', () => {
     if (_metricsChart) {
       fetchAndRenderMetrics(true);
     }

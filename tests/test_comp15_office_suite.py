@@ -53,7 +53,7 @@ def test_the_template():
     cmds = [" ".join(s["cmd"]) for s in app["after_start"]]
     assert "status --output=json" in cmds[0] and app["after_start"][0]["tries"] > 10
     assert any("user_external" in c for c in cmds)
-    assert any("--value=http://{{zettnas}}:8084/" in c for c in cmds)
+    assert any("--value=http://{{kiboto}}:8084/" in c for c in cmds)
     assert any("richdocumentscode{{arch}}" in c for c in cmds)
     assert all(s["user"] == "www-data" for s in app["after_start"])
 
@@ -61,7 +61,13 @@ def test_the_template():
 def test_placeholders_and_hosts(docker):
     docker()
     ctx = aas.context("nas.local", 8093)
-    assert ctx == {"host": "nas.local", "port": "8093", "zettnas": "zettnas-toolkit", "arch": ctx["arch"]}
+    assert ctx == {
+        "host": "nas.local",
+        "port": "8093",
+        "kiboto": "zettnas-toolkit",
+        "zettnas": "zettnas-toolkit",
+        "arch": ctx["arch"],
+    }
     assert aas.fill("{{host}}:{{port}} {{secret:admin_password}} {{nope}}", ctx, {"admin_password": "pw"}) == (
         "nas.local:8093 pw {{nope}}"
     )
@@ -119,9 +125,9 @@ def test_own_name_falls_back(monkeypatch):
         raise OSError("no socket")
 
     monkeypatch.setattr("backend.services.docker_client.request", down)
-    assert aas.zettnas_name() == "zettnas-toolkit"
+    assert aas.own_name() == "kiboto"
     monkeypatch.setattr("backend.services.docker_client.request", lambda *a, **k: (404, {}))
-    assert aas.zettnas_name() == "zettnas-toolkit"
+    assert aas.own_name() == "kiboto"
 
 
 def test_demux_plain_text():

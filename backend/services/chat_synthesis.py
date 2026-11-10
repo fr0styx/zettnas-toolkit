@@ -236,15 +236,15 @@ def _synthesize_self_identity_answer(
 ) -> str:
     """Who Kib is, in facts this NAS can back up: no invented dates, numbers or guarantees (AI-02, AI-16)."""
     try:
-        from backend import __version__ as zettnas_version
+        from backend import __version__ as kiboto_version
     except Exception:
-        zettnas_version = ""
+        kiboto_version = ""
     attr = _get_model_creator_attribution(active_model, model_info)
     model_display = (model_info or {}).get("name") or active_model
     device = accel.get("device_label") if accel else None
     lines = [
         "I'm **Kib**, the assistant built into **Kiboto**"
-        + (f" {zettnas_version}" if zettnas_version else "")
+        + (f" {kiboto_version}" if kiboto_version else "")
         + ". I run on this NAS, not in the cloud.",
         "",
         f"- **Language model:** {model_display}. {attr['description']}",

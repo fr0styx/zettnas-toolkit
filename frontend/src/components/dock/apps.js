@@ -45,7 +45,7 @@ export const KNOWN_APPS = {
   console: {
     id: 'console',
     icon: '#i-screen',
-    getTitle: () => t('dock.zettnas', 'Kiboto'),
+    getTitle: () => t('dock.kiboto', 'Kiboto'),
     launch: () => {
       openConsoleWindow();
     }

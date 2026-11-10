@@ -23,8 +23,8 @@ def test_runs_popen_and_asyncio_are_all_counted(monkeypatch):
     assert spawns.counts()[__name__] - before == 4
     assert spawns.total() >= 4
     text = spawns.prometheus()
-    assert "# TYPE zettnas_process_spawns_total counter" in text
-    assert f'zettnas_process_spawns_total{{caller="{__name__}"}}' in text
+    assert "# TYPE kiboto_process_spawns_total counter" in text
+    assert f'kiboto_process_spawns_total{{caller="{__name__}"}}' in text
 
 
 def test_install_wraps_popen(monkeypatch):
@@ -38,7 +38,8 @@ def test_install_wraps_popen(monkeypatch):
 def test_metrics_show_them(client, auth_headers):
     spawns.note("backend.hardware.example")
     r = client.get("/api/metrics", headers=auth_headers)
-    assert 'zettnas_process_spawns_total{caller="backend.hardware.example"}' in r.text
+    assert 'kiboto_process_spawns_total{caller="backend.hardware.example"}' in r.text
+    assert 'zettnas_process_spawns_total{caller="backend.hardware.example"}' in r.text  # until 2.2
 
 
 def test_the_app_installs_it():
@@ -58,7 +59,8 @@ import hardware_budgets as hb  # noqa: E402
 
 
 def test_the_counter_is_read_from_metrics():
-    text = 'zettnas_process_spawns_total{caller="a"} 3\nzettnas_process_spawns_total{caller="b"} 4.0\nother 9\n'
+    text = 'kiboto_process_spawns_total{caller="a"} 3\nkiboto_process_spawns_total{caller="b"} 4.0\nother 9\n'
+    text += text.replace("kiboto_", "zettnas_")  # the copy under the old name isn't counted twice
     assert hb.counted_spawns("http://x/api/metrics", "t", fetch=lambda u, t: text) == 7
     assert hb.counted_spawns("http://x", "t", fetch=lambda u, t: "nothing\n") is None
     assert hb.counted_spawns("", "t") is None

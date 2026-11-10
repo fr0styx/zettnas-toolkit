@@ -25,7 +25,7 @@ Kiboto install runs three every night (`.github/workflows/hardware.yml`), in thi
 - The workflow runs only on its schedule or by hand, from `main`. It has no `pull_request`
   trigger, so code from a fork never reaches the machine. No other workflow uses the runner's
   label (`zettnas-hardware`), and the runner has no default labels.
-- The runner joins the app's private Docker network (`zettnas-toolkit_default`) so the AI eval
+- The runner joins the app's private Docker network (`kiboto_default`) so the AI eval
   can reach the model servers, which have no published ports and no sign-in; that is also why
   only code from `main` may run there.
 - The runner container sees the host's `/proc` read-only and a results folder. It has no Docker
@@ -48,7 +48,7 @@ docker run -d --name zettnas-hw-runner --restart unless-stopped --hostname zettn
   -v /mnt/user/appdata/zettnas-hw-runner/state:/home/runner/state \
   -v /mnt/user/appdata/zettnas-hw-runner/results:/results \
   --memory 1g --cap-drop ALL --security-opt no-new-privileges \
-  --network zettnas-toolkit_default zettnas-hw-runner
+  --network kiboto_default zettnas-hw-runner
 ```
 
 When `requirements.lock` changes, rebuild the image and re-create the container the same way

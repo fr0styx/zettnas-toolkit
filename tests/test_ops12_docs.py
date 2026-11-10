@@ -18,7 +18,7 @@ def test_readme_has_no_hard_coded_test_counts_or_in_image_test_runs():
 
 
 def test_unraid_template_describes_the_nas_desktop():
-    xml = _read("unraid/zettnas-toolkit.xml")
+    xml = _read("unraid/kiboto.xml")
     overview = re.search(r"<Overview>(.*?)</Overview>", xml, re.S).group(1)
     assert "web desktop" in overview and "backups" in overview
 

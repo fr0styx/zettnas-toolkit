@@ -73,7 +73,7 @@ async def fs_inbox_upload(
     while os.path.lexists(target):
         n += 1
         target = os.path.join(inbox, f"{stem} ({n}){ext}")
-    staging = os.path.join(inbox, f".zettnas_tmp_{secrets.token_hex(8)}")
+    staging = os.path.join(inbox, f".kiboto_tmp_{secrets.token_hex(8)}")
     try:
         async with aiofiles.open(staging, "wb") as f_out:
             async for chunk in request.stream():
@@ -125,7 +125,7 @@ async def fs_upload(
     except QuotaExceeded as e:
         raise HTTPException(status_code=507, detail=str(e)) from None
 
-    staging_file = os.path.join(target_canonical, f".zettnas_tmp_{secrets.token_hex(8)}_{filename}")
+    staging_file = os.path.join(target_canonical, f".kiboto_tmp_{secrets.token_hex(8)}_{filename}")
     try:
         written = 0
         async with aiofiles.open(staging_file, "wb") as f_out:
@@ -246,7 +246,7 @@ async def fs_upload_init(
     from backend.services import upload_staging
 
     # noted in the data folder, so a restart or a crash can't leave it in the share (NARC-9)
-    temp_name = os.path.join(target_canonical, f".zettnas_tmp_{upload_id}_{filename}")
+    temp_name = os.path.join(target_canonical, f".kiboto_tmp_{upload_id}_{filename}")
     await asyncio.to_thread(upload_staging.note, upload_id, [staging_dir, temp_name])
 
     async with _CHUNKED_UPLOADS_LOCK:
@@ -362,7 +362,7 @@ async def fs_upload_complete(
 
     final_target = os.path.join(target_dir, filename)
     await asyncio.to_thread(check_user_path_access, final_target, principal, write=True)
-    temp_assembly = os.path.join(target_dir, f".zettnas_tmp_{req.upload_id}_{filename}")
+    temp_assembly = os.path.join(target_dir, f".kiboto_tmp_{req.upload_id}_{filename}")
 
     try:
         # joining and hashing every byte happens in a thread, not on the event loop (NPERF-3)
