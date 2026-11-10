@@ -1,5 +1,6 @@
 {
-  "_note": "Ollama models the nightly eval pulls, pinned by manifest digest (NAI-10). A new digest means the model changed upstream: run the nightly, re-record the baselines from its results, then update the digest here. qwen3:4b-q4_K_M is the original Qwen3-4B, the model ZettNAS ships on OpenVINO with thinking off; Ollama's plain qwen3:4b tag is now the always-thinking 2507 model.",
+  "_note": "Ollama models the nightly eval pulls, pinned by manifest digest (NAI-10). A new digest means the model changed upstream: run the nightly, re-record the baselines from its results, then update the digest here. qwen3:4b-q4_K_M is the original Qwen3-4B, the model ZettNAS ships on OpenVINO with thinking off; Ollama's plain qwen3:4b tag is now the always-thinking 2507 model. phi4-mini:3.8b-q4_K_M (MIT) runs beside it in the nightly for decision D4, the default chat model: recorded, not gated.",
   "embeddinggemma:latest": "sha256:85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
-  "qwen3:4b-q4_K_M": "sha256:2bfd38a7daaf4b1037efe517ccb73d1a3bbd4822cf89f1a82be1569050a114e0"
+  "qwen3:4b-q4_K_M": "sha256:2bfd38a7daaf4b1037efe517ccb73d1a3bbd4822cf89f1a82be1569050a114e0",
+  "phi4-mini:3.8b-q4_K_M": "sha256:78fad5d182a7c33065e153a5f8ba210754207ba9d91973f57dffa7f487363753"
 }

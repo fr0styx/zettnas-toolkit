@@ -71,8 +71,11 @@ def test_the_nightly_runs_the_shipped_model_and_the_documents_set():
     with open(".github/workflows/ai-eval-nightly.yml", encoding="utf-8") as f:
         wf = yaml.safe_load(f)
     jobs = wf["jobs"]
-    assert set(jobs) == {"retrieval", "documents", "answers"}
+    assert set(jobs) == {"retrieval", "documents", "answers", "answers-phi4"}
     steps = {name: " ".join(str(s.get("run", "")) for s in job["steps"]) for name, job in jobs.items()}
+    # D4: Phi-4-mini answers the same questions, pinned, recorded and not gated
+    assert "--answers phi4-mini:3.8b-q4_K_M" in steps["answers-phi4"] and "compare" not in steps["answers-phi4"]
+    assert "pull_models embeddinggemma phi4-mini:3.8b-q4_K_M" in steps["answers-phi4"]
     assert "--answers qwen3:4b" in steps["answers"] and "--first-token-p95-ms" in steps["answers"]
     assert "qwen3:1.7b" not in json.dumps(wf)
     assert "--set documents" in steps["documents"] and "baseline_nightly_documents.json" in steps["documents"]

@@ -63,6 +63,10 @@
 
 #### Private AI
 
+- **Phi-4-mini measured beside Qwen3-4B**: the nightly answer test now also runs Phi-4-mini (MIT
+  licence) on the same 108 questions in five languages, recorded for choosing the default chat model
+  (the catalog still falls back to Qwen2.5-3B, whose licence allows research use only).
+
 - **The search checks hold tighter**: the nightly's hard set (files with names that say nothing,
   beside near-topic files) now fails the run when it gets worse; it had only been recorded. The
   nightly baselines carry their held-out figures, and the nightly's search sets allow a 0.01 drop

@@ -5,7 +5,8 @@ name: AI eval (nightly)
 # vectors; this one uses EmbeddingGemma served by Ollama, and for answers Qwen3-4B, the chat
 # model ZettNAS ships with (AI-16; it ran Qwen3-1.7B before). Three jobs side by side: on
 # GitHub's CPUs the 108 answers take hours, so they have a job of their own. The answers'
-# first-token time is gated too.
+# first-token time is gated too. Phi-4-mini (MIT) answers the same questions beside it for
+# decision D4, the default chat model: recorded for comparison, not gated.
 on:
   schedule:
     - cron: "17 3 * * *"
@@ -156,4 +157,48 @@ jobs:
           path: |
             eval-answers.json
             eval-answer-rows.json
+          retention-days: 30
+
+  answers-phi4:
+    # D4: Phi-4-mini on the same 108 questions, in five languages, to compare with Qwen3-4B
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    services:
+      ollama:
+        image: ollama/ollama@sha256:5c6707fcf2e1a30cffe2ecb7e315584fc87747c389327e4bc711c4959aa1eecc
+        ports:
+          - 11434:11434
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+      - name: Install the hash-locked dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --require-hashes -r requirements.lock
+          pip install --require-hashes -r requirements-dev.lock
+      - name: Pull the pinned models
+        run: |
+          python -m tests.rag_eval.pull_models embeddinggemma phi4-mini:3.8b-q4_K_M
+      - name: Answers with Phi-4-mini (recorded, not gated)
+        env:
+          TESTING: "1"
+        run: |
+          python -m tests.rag_eval.run_eval --model embeddinggemma --dim 768 --host http://127.0.0.1:11434 \
+            --answers phi4-mini:3.8b-q4_K_M --misses --out eval-answers-phi4.json \
+            --answers-out eval-answer-rows-phi4.json > /dev/null
+      - name: Summary
+        if: always()
+        run: python -m tests.rag_eval.summary eval-answers-phi4.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ai-eval-answers-phi4
+          path: |
+            eval-answers-phi4.json
+            eval-answer-rows-phi4.json
           retention-days: 30
