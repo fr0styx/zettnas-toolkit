@@ -4777,6 +4777,8 @@ export default {
   "phone.done_note": "Sie haben angegeben, dass Ihr Handy hierher gesichert wird.",
   "gs.phone_backup": "Ihr Handy sichern",
   "gs.phone_backup_desc": "Fotos von Ihrem Handy werden mit Immich automatisch hierher kopiert.",
+  "ai.filters": "Filter",
+  "ai.filters_n": "Filter · {n}",
   "tags.title": "Dokumente filtern:",
   "tags.group": "Dokumentfilter",
   "tags.clear": "Zurücksetzen",

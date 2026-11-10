@@ -4777,6 +4777,8 @@ export default {
   "phone.done_note": "Indicaste que tu móvil hace copia aquí.",
   "gs.phone_backup": "Haz copia de tu móvil",
   "gs.phone_backup_desc": "Las fotos de tu móvil se copian aquí automáticamente, con Immich.",
+  "ai.filters": "Filtros",
+  "ai.filters_n": "Filtros · {n}",
   "tags.title": "Filtrar documentos:",
   "tags.group": "Filtros de documentos",
   "tags.clear": "Quitar",

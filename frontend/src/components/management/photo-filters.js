@@ -4,6 +4,7 @@
 import { api } from '../../api.js';
 import { t } from '../../i18n.js';
 import { html } from '../../html.js';
+import { placeFilter, reportActive } from './search-filters-fold.js';
 
 const BOX_ID = 'ai-photo-filters';
 const chosen = { taken: null, place: null };
@@ -34,7 +35,7 @@ export async function installPhotoFilters(root = document, onChange = () => {}) 
     box = Object.assign(document.createElement('div'), { id: BOX_ID, className: 'zn-row' });
     box.setAttribute('role', 'group');
     box.setAttribute('aria-label', t('photo_filters.group', 'Photo filters'));
-    anchor.insertAdjacentElement('afterend', box);
+    placeFilter(box, anchor, root);
     box.addEventListener('click', (e) => {
       const b = e.target.closest('[data-photo-taken], [data-photo-place], [data-photo-clear]');
       if (!b) return;
@@ -47,6 +48,7 @@ export async function installPhotoFilters(root = document, onChange = () => {}) 
         chosen[kind] = chosen[kind] === value ? null : value;
       }
       box.innerHTML = photoFiltersHtml(box._data);
+      reportActive('photos', (chosen.taken ? 1 : 0) + (chosen.place ? 1 : 0), root);
       onChange(selectedPhotoFilters());
     });
   }

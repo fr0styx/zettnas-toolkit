@@ -4777,6 +4777,8 @@ export default {
   "phone.done_note": "你已确认手机会备份到这里。",
   "gs.phone_backup": "备份你的手机",
   "gs.phone_backup_desc": "用 Immich 自动把手机照片复制到这里。",
+  "ai.filters": "筛选",
+  "ai.filters_n": "筛选 · {n}",
   "tags.title": "筛选文档：",
   "tags.group": "文档筛选",
   "tags.clear": "清除",

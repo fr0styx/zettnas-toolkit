@@ -3,6 +3,7 @@
 // window lists each set with its thumbnails and where each copy is; a copy can go to its share's
 // recycle bin (restorable for 30 days). The last copy of a set never offers it.
 import { api } from '../../api.js';
+import { placeFilter } from './search-filters-fold.js';
 import { t } from '../../i18n.js';
 import { html } from '../../html.js';
 import { formatBytes } from '../../format.js';
@@ -151,7 +152,7 @@ export async function installDuplicatesButton(root = document) {
   if (!anchor || root.getElementById(BTN_ID)) return;
   const btn = Object.assign(document.createElement('button'), { id: BTN_ID, type: 'button', className: 'btn-pill-toggle is-small' });
   btn.addEventListener('click', () => openDuplicates());
-  anchor.insertAdjacentElement('afterend', btn);
+  placeFilter(btn, anchor, root);
   btn.innerHTML = buttonLabel(null);
   btn.innerHTML = buttonLabel(await loadDuplicates());
 }

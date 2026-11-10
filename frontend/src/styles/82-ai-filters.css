@@ -1,0 +1,9 @@
+/* The AI search's extra filters folded into one line (search-filters-fold.js) */
+#ai-more-filters { margin-top: var(--zn-space-2); }
+#ai-more-filters > summary { list-style: none; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+#ai-more-filters > summary::-webkit-details-marker { display: none; }
+#ai-more-filters > summary::before { content: '\25B8'; transition: transform 0.15s ease; }
+#ai-more-filters[open] > summary::before { transform: rotate(90deg); }
+#ai-more-filters .ai-more-body { display: grid; gap: var(--zn-space-2); margin-top: var(--zn-space-2); }
+#ai-more-filters .ai-more-body > .zn-row { flex-wrap: wrap; gap: 6px; align-items: center; }
+#ai-more-filters .ai-more-body > button { justify-self: start; }

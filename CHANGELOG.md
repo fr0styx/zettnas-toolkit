@@ -114,6 +114,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   remove someone's passkeys from their edit dialog when they lose their devices. How it works:
   docs/PASSKEYS.md.
 
+#### AI search
+
+- **A tidier AI search**: the document kinds and years, the photo years and places and the Duplicates
+  button fold into one "Filters" line under the search row, closed until you open it, which says how
+  many filters are on ("Filters · 2") and stays open or closed as you left it in this browser. History
+  shows your five newest searches.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

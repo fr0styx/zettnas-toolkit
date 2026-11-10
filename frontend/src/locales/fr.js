@@ -4777,6 +4777,8 @@ export default {
   "phone.done_note": "Vous avez indiqué que votre téléphone est sauvegardé ici.",
   "gs.phone_backup": "Sauvegardez votre téléphone",
   "gs.phone_backup_desc": "Les photos de votre téléphone copiées ici automatiquement, avec Immich.",
+  "ai.filters": "Filtres",
+  "ai.filters_n": "Filtres · {n}",
   "tags.title": "Filtrer les documents :",
   "tags.group": "Filtres de documents",
   "tags.clear": "Effacer",

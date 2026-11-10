@@ -4,6 +4,7 @@
 import { api } from '../../api.js';
 import { t } from '../../i18n.js';
 import { html } from '../../html.js';
+import { placeFilter, reportActive } from './search-filters-fold.js';
 
 const BOX_ID = 'ai-doc-filters';
 const selected = new Set();
@@ -53,7 +54,7 @@ export async function installDocFilters(root = document, onChange = () => {}) {
     box = Object.assign(document.createElement('div'), { id: BOX_ID, className: 'zn-row' });
     box.setAttribute('role', 'group');
     box.setAttribute('aria-label', t('tags.group', 'Document filters'));
-    anchor.insertAdjacentElement('afterend', box);
+    placeFilter(box, anchor, root);
     box.addEventListener('click', (e) => {
       const b = e.target.closest('[data-doc-tag], [data-doc-tag-clear]');
       if (!b) return;
@@ -61,6 +62,7 @@ export async function installDocFilters(root = document, onChange = () => {}) {
       else if (selected.has(b.dataset.docTag)) selected.delete(b.dataset.docTag);
       else selected.add(b.dataset.docTag);
       box.innerHTML = filtersHtml(box._data);
+      reportActive('documents', selected.size, root);
       onChange(selectedTags());
     });
   }

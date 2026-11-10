@@ -67,7 +67,8 @@ export function renderAiSearchHistory() {
     return;
   }
   bar.style.display = 'flex';
-  chipsContainer.innerHTML = _aiSearchHistory.map((q) => `
+  // the newest five: older ones are still offered as the search box fills in
+  chipsContainer.innerHTML = _aiSearchHistory.slice(0, 5).map((q) => `
     <button type="button" class="btn-pill-toggle ai-history-chip is-small aik-soft-box" data-query="${escapeHtml(q)}">
       ${escapeHtml(q)}
     </button>
