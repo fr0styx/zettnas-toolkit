@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Media Organizer & Renamer Engine
+Kiboto - Media Organizer & Renamer Engine
 Lightweight, deterministic regex heuristic parser and media file reorganizer (FileBot alternative).
 Standardizes arbitrary media downloads into clean Plex, Jellyfin, and Emby folder structures.
 Executes with < 15MB RAM and zero deep-learning overhead on low-power NAS appliances.

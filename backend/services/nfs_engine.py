@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - NFS Engine
+Kiboto - NFS Engine
 Manages production-grade Network File System (NFSv3 / NFSv4) exports for Generic Linux.
 Supports granular root squash control (no_root_squash, root_squash, all_squash),
 custom anonuid / anongid mapping for Kubernetes PersistentVolumeClaims (PostgreSQL / MySQL pods),
@@ -229,8 +229,8 @@ class NfsEngine:
         """Generates full /etc/exports.d/zettnas.exports content."""
         lines = [
             "# ==============================================================================",
-            "# ZettNAS Toolkit - Auto-Generated NFS Export Rules",
-            "# DO NOT EDIT DIRECTLY - Managed via ZettNAS PAL Storage Subsystem",
+            "# Kiboto - Auto-Generated NFS Export Rules",
+            "# DO NOT EDIT DIRECTLY - Managed via Kiboto PAL Storage Subsystem",
             f"# Last Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}",
             "# ==============================================================================",
             "",
@@ -268,7 +268,7 @@ class NfsEngine:
             try:
                 with open(SYSTEM_EXPORTS_FILE, "a+", encoding="utf-8") as f:
                     # Append or write if writable
-                    f.write(f"\n# ZettNAS NFS\n{content}\n")
+                    f.write(f"\n# Kiboto NFS\n{content}\n")
                 written = True
             except Exception as e:
                 logger.debug("[NFS] Could not write to %s: %s", SYSTEM_EXPORTS_FILE, e)

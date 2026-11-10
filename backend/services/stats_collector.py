@@ -71,7 +71,7 @@ from backend.services.rag_reindex_status import get_reindex_status as get_ai_rei
 from backend.services.stats_delta import StatsDeltaEncoder
 from backend.state import Z_STATE, add_event, event_text, events_snapshot
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 _notify_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix="zett_notify")
 
@@ -164,7 +164,7 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=No
             },
         )
         _async_notify(
-            title="ZettNAS Alert: Fan Stall Detected",
+            title="Kiboto Alert: Fan Stall Detected",
             message=f"Cooling fan stall detected on channels {stalled_names}.",
             level="critical",
             event_type="fan",
@@ -181,7 +181,7 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=No
             details={"cpu_temp": cpu_temp, **_text("cpu_hot.crit", temp=cpu_temp)},
         )
         _async_notify(
-            title="ZettNAS Alert: CPU Thermal Critical",
+            title="Kiboto Alert: CPU Thermal Critical",
             message=f"CPU temperature reached critical level: {cpu_temp}°C!",
             level="critical",
             event_type="temp",
@@ -196,7 +196,7 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=No
             details={"cpu_temp": cpu_temp, **_text("cpu_hot.warn", temp=cpu_temp)},
         )
         _async_notify(
-            title="ZettNAS Warning: CPU Thermal Elevated",
+            title="Kiboto Warning: CPU Thermal Elevated",
             message=f"CPU temperature is elevated at {cpu_temp}°C.",
             level="warning",
             event_type="temp",
@@ -510,7 +510,7 @@ def _publish(data, disks, fans, net, now):
                 disk_write_bytes_sec=disk_rates.get("write_bytes_sec", 0.0) if isinstance(disk_rates, dict) else 0.0,
             )
         except Exception as db_e:
-            logger.info(f"[ZettNAS] DB Log Error: {db_e}")
+            logger.info(f"[Kiboto] DB Log Error: {db_e}")
 
 
 def stats_collector_daemon():

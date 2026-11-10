@@ -285,7 +285,7 @@ def _clock(layout: dict | None, now: datetime | None) -> str:
 
 
 def _header(draw, stats, page, c, now):
-    name = str(stats.get("name") or "ZettNAS")
+    name = str(stats.get("name") or "Kiboto")
     f_name = font("bold", 21)
     _text(draw, (12, 17), name, f_name, c["fg"], max_w=180, anchor="lm")
     x = 12 + min(180, _w(draw, name, f_name)) + 10

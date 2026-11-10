@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Docker Container Destruction & System Cleanup Subsystem
+Kiboto - Docker Container Destruction & System Cleanup Subsystem
 Supports:
 1. Deletion / Destruction of containers with optional volume & image removal.
 2. Self-deletion protection (blocks destroying zettnas-toolkit itself).

@@ -1,4 +1,4 @@
-// "Help improve ZettNAS": the opt-in anonymous weekly report (docs/HEALTH_SIGNAL.md).
+// "Help improve Kiboto": the opt-in anonymous weekly report (docs/HEALTH_SIGNAL.md).
 // Off by default; the card shows exactly what would be sent before you turn it on.
 import { api } from '../../api.js';
 import { t } from '../../i18n.js';
@@ -22,7 +22,7 @@ export function renderHealthSignal(card, status) {
     <details class="hs-details"><summary>${t('health.preview', 'See exactly what is sent')}</summary>
     <pre class="hs-preview">${JSON.stringify(status.preview, null, 2)}</pre></details>
     <p class="zn-muted" id="health-signal-last">${status.enabled ? lastSentText(status.last_sent) : ''}</p>`;
-  card.innerHTML = uiCard({ title: t('health.title', 'Help improve ZettNAS'), body: String(body), variant: 'boxed' });
+  card.innerHTML = uiCard({ title: t('health.title', 'Help improve Kiboto'), body: String(body), variant: 'boxed' });
   const sw = card.querySelector('#health-signal-switch');
   sw?.addEventListener('change', async () => {
     sw.disabled = true;

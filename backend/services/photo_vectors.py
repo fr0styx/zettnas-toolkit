@@ -45,7 +45,7 @@ def settings(cfg: dict[str, Any]) -> tuple[str, str]:
 
 
 def _headers() -> dict[str, str]:
-    h = {"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"}
+    h = {"Content-Type": "application/json", "User-Agent": "Kiboto-RAG-Engine/2.0"}
     token = os.environ.get("PHOTO_VECTOR_TOKEN", "").strip()
     if token:
         h["Authorization"] = f"Bearer {token}"

@@ -60,7 +60,7 @@ def test_recreate_container_ports_self_protection():
     }
 
     with patch("backend.services.container_mutator.fetch_container_raw_inspect", return_value=mock_inspect):
-        with pytest.raises(ValueError, match="Cannot recreate the active ZettNAS Toolkit container"):
+        with pytest.raises(ValueError, match="Cannot recreate the active Kiboto container"):
             recreate_container_ports("c12345678901", [{"container_port": 8082, "host_port": 8083}])
 
 

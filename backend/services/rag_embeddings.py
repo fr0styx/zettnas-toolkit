@@ -399,7 +399,7 @@ def _detected_host_ip() -> str | None:
 def embed_headers() -> dict[str, str]:
     """Headers for an embedding request. EMBEDDING_TOKEN (environment) is sent as a bearer token,
     for an embedding server that asks for one, such as contrib/openvino-embed with TOKEN (AI-39)."""
-    headers = {"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"}
+    headers = {"Content-Type": "application/json", "User-Agent": "Kiboto-RAG-Engine/2.0"}
     token = os.environ.get("EMBEDDING_TOKEN", "").strip()
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -436,7 +436,7 @@ def _resolve_ollama_host(explicit_host: str | None = None) -> str:
 
     for cand in candidates:
         try:
-            req = urllib.request.Request(f"http://{cand}:11434/api/tags", headers={"User-Agent": "ZettNAS/1.0"})
+            req = urllib.request.Request(f"http://{cand}:11434/api/tags", headers={"User-Agent": "Kiboto/1.0"})
             with urllib.request.urlopen(req, timeout=0.35) as resp:
                 if resp.status == 200:
                     _CACHED_OLLAMA_HOST = f"http://{cand}:11434"

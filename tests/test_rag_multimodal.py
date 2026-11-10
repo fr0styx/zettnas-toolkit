@@ -1,5 +1,5 @@
 """
-Unit & Integration Tests for ZettNAS Multi-Modal Local RAG & Visual Search Engine (ZettAI).
+Unit & Integration Tests for Kiboto Multi-Modal Local RAG & Visual Search Engine (Kib).
 Covers:
   1. Strict NPU -> GPU -> CPU hardware acceleration priority cascade
   2. Recipe & Document RAG (Markdown, DOCX, PDF, Secret Redaction, Structured Recipe Cards)
@@ -153,7 +153,7 @@ def test_recipe_and_document_rag_with_secret_redaction(tmp_path):
     # 2. Technical documentation with embedded secret token that MUST be redacted
     tech_file = docs_dir / "nas_network_setup.md"
     tech_file.write_text(
-        "# ZettNAS VLAN & WireGuard Guide\n\n"
+        "# Kiboto VLAN & WireGuard Guide\n\n"
         "Configure the 10GbE bond0 interface with MTU 9000 jumbo frames.\n"
         "Admin token: zat_secret_99887766554433221100 should never appear in plaintext.\n",
         encoding="utf-8",
@@ -553,7 +553,7 @@ def test_hardware_aware_npu_gpu_llm_recommendations(tmp_path):
 
 def test_zettai_learning_lifecycle_favorites_and_multimode_search(tmp_path):
     """
-    Verifies ZettAI official learning & search features:
+    Verifies Kib official learning & search features:
       1. Master Switch (`enabled: False` pauses learning and sets zettai_status to 'Disabled')
       2. Learning Results (`get_learning_results`) and `relearn_failed_files`
       3. Multi-mode search (`match_tab='keyword'`, `sort_by='mtime'`, `category_groups`)
@@ -567,7 +567,7 @@ def test_zettai_learning_lifecycle_favorites_and_multimode_search(tmp_path):
         docs_dir = tmp_path / "docs"
         docs_dir.mkdir(parents=True)
         doc_a = docs_dir / "architecture_spec.md"
-        doc_a.write_text("# ZettAI NPU Architecture\nIntel AI Boost NPU acceleration with OpenVINO INT4.\n")
+        doc_a.write_text("# Kib NPU Architecture\nIntel AI Boost NPU acceleration with OpenVINO INT4.\n")
 
         engine.index_directory(str(docs_dir), respect_standby=False)
 
@@ -588,7 +588,7 @@ def test_zettai_learning_lifecycle_favorites_and_multimode_search(tmp_path):
         assert len(search_res["category_groups"]["documents"]) >= 1
         assert search_res["items"][0]["is_favorite"] is True
 
-        # Disable ZettAI globally -> status becomes Disabled and indexing skips
+        # Disable Kib globally -> status becomes Disabled and indexing skips
         engine.update_config({"enabled": False})
         assert engine.get_learning_results()["zettai_status"] == "Disabled"
         disabled_idx = engine.index_directory(str(docs_dir), respect_standby=False)
@@ -822,7 +822,7 @@ def test_agentic_chat_self_identity_no_internet_search():
             tool_names = [t["tool"] for t in res["tools_called"]]
             assert "browse_internet" not in tool_names
             reply = res["reply"]
-            assert "ZettAI" in reply and "ZettNAS" in reply
+            assert "Kib" in reply and "Kiboto" in reply
             assert creator in reply
             assert "Isaiah" not in reply
             assert "0 hard drive wakeups" not in reply.lower()
@@ -883,7 +883,7 @@ def test_agentic_chat_local_autonomous_reasoning_and_coding_with_tools_disabled(
         res = run_agentic_chat(message=question, allow_web_search=False, allow_nas_tools=False)
         assert res["status"] == "ok"
         reply = res["reply"]
-        assert "ZettAI" in reply
+        assert "Kib" in reply
         assert "2.0" not in reply.replace(__version__, "")
         assert "0 hard drive wakeups" not in reply.lower() and "sovereign" not in reply.lower()
 
@@ -1034,7 +1034,7 @@ def test_ai_chat_streaming_sse_endpoint(client, auth_headers):
 
 def test_remove_llm_model_and_endpoint(client, auth_headers, tmp_path):
     """
-    Verifies that users can remove/delete any model from the ZettAI catalog:
+    Verifies that users can remove/delete any model from the Kib catalog:
       1. remove_llm_model() excludes the model from recommendations.
       2. If active model is removed, safely falls back to a remaining model.
       3. /api/media/models/remove and /api/ai/models/remove return updated catalog.
@@ -1240,7 +1240,7 @@ def test_rag_flush_index_resets_database_cleanly(tmp_path):
         # 1. Create files and index them
         test_dir = tmp_path / "test_docs"
         test_dir.mkdir(parents=True)
-        (test_dir / "note.md").write_text("# ZettNAS Documentation\nGuide for RAG knowledge base.\n")
+        (test_dir / "note.md").write_text("# Kiboto Documentation\nGuide for RAG knowledge base.\n")
         (test_dir / "recipe.md").write_text("# Tomato Soup\nIngredients:\n- 4 tomatoes\n- 1 onion\n")
 
         idx_res = engine.index_directory(str(test_dir), respect_standby=False)

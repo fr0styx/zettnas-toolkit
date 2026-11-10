@@ -1,4 +1,4 @@
-"""Image and text vectors from SigLIP 2 on OpenVINO, for photo search by meaning (ZettNAS B14).
+"""Image and text vectors from SigLIP 2 on OpenVINO, for photo search by meaning (Kiboto B14).
 
 Both kinds of vectors live in one space: a photo's vector and the vector of "dog on the beach"
 (in any language SigLIP 2 learned) are close when the photo shows it.

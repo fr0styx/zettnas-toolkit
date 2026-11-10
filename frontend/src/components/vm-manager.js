@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Virtual Machines (VM) Desktop Application & Manager
+ * Kiboto - Virtual Machines (VM) Desktop Application & Manager
  * Features dynamic elastic headroom budgeting, vCPU overcommit soft warnings,
  * KVM hypervisor telemetry, and VM creation wizard.
  *

@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - SOTA File Explorer Auxiliary Engines
+ * Kiboto - SOTA File Explorer Auxiliary Engines
  * Handles 2D Canvas Marquee Selection, 3-Pane Sidebar Tree, Metadata Inspector,
  * Popover Context Menu with Viewport Boundary Clamping, and Transfer Queue Cockpit.
  */
@@ -1080,7 +1080,7 @@ export class FmContextMenu {
         isSingle && it('share', '🔗', t('fm.ctx_share', 'Share a link…')),
         isSingle && !isDir && it('checksum', '🛡️', t('fm.ctx_checksum', 'Show its SHA-256 checksum')),
         isSingle && !isDir && it('versions', '🕘', t('fm.versions_menu', 'Previous versions…')),
-        isSingle && it('ask-zetty', '✨', t('fm.ask_zetty', 'Ask Zetty about this')),
+        isSingle && it('ask-zetty', '✨', t('fm.ask_zetty', 'Ask Kib about this')),
         isSingle && isDir && fav(false),
         !fileItem && fav(true),
       ]),

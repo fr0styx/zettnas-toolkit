@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit Reactive State Store
+ * Kiboto Reactive State Store
  * Centralizes UI configuration, hardware telemetry caches, and layout preferences.
  */
 import { ZettEventBus } from './event-bus.js';

@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit Visual Wallpaper Gallery: thumbnail grid, 1-click live preview, drag-and-drop
+ * Kiboto Visual Wallpaper Gallery: thumbnail grid, 1-click live preview, drag-and-drop
  * upload, rename and delete, and the readability and glass sliders. Loaded when Mission Control's
  * wallpaper pane opens or an image is dropped on the desktop (NUX-15); wallpapers.js keeps what
  * the first paint needs.

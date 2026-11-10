@@ -4,7 +4,7 @@ import os
 from backend.config import HOST_PROC
 from backend.ignored_errors import ignored
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 
 def read_mem():

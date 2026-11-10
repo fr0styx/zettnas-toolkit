@@ -1,6 +1,6 @@
 """
-ZettNAS Toolkit - Universal WebDAV Engine
-Runs rclone's WebDAV server on a loopback port; clients reach it through ZettNAS, on the
+Kiboto - Universal WebDAV Engine
+Runs rclone's WebDAV server on a loopback port; clients reach it through Kiboto, on the
 WebDAV port (8084) and on the web app's /webdav path, so IP blocks apply there (SEC-34).
 """
 
@@ -16,7 +16,7 @@ from typing import Any, Optional
 import backend.config as config
 from backend.fsutil import atomic_write_json, json_locked, protected_rclone_excludes, read_json, resolve_within
 
-logger = logging.getLogger("ZettNAS.WebDAV")
+logger = logging.getLogger("Kiboto.WebDAV")
 
 
 def ensure_fuse_device() -> bool:
@@ -36,7 +36,7 @@ def ensure_fuse_device() -> bool:
 
 
 def gate() -> Any:
-    """How the WebDAV front reaches the rest of ZettNAS (backend.services.webdav_front.Gate):
+    """How the WebDAV front reaches the rest of Kiboto (backend.services.webdav_front.Gate):
     looked up on each call, so a test can stand in for any of them."""
     from backend import auth
     from backend.services import ip_block, ransomware_guard
@@ -269,7 +269,7 @@ class WebdavEngine:
             return self.get_status()
 
     def _start_front(self, port: int, internal: int) -> None:
-        """ZettNAS answers on the WebDAV port; without it rclone can't be reached, so it stops."""
+        """Kiboto answers on the WebDAV port; without it rclone can't be reached, so it stops."""
         try:
             self._front.start(port, internal, gate())
             logger.info("[WEBDAV] Running on port %s (rclone PID %s)", port, self._proc.pid if self._proc else None)
@@ -282,7 +282,7 @@ class WebdavEngine:
                 self._started_at = None
 
     def internal_port(self) -> int:
-        """Where rclone listens: a loopback port only ZettNAS forwards to."""
+        """Where rclone listens: a loopback port only Kiboto forwards to."""
         from backend.services.webdav_front import internal_port
 
         return internal_port(int(self.load_config().get("port", config.WEBDAV_PORT)))

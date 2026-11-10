@@ -1,6 +1,6 @@
 # Configuration
 
-Environment variables ZettNAS reads at startup. Generated from `backend/settings.py`
+Environment variables Kiboto reads at startup. Generated from `backend/settings.py`
 (`python -m backend.settings --markdown > docs/CONFIGURATION.md`); a value that can't be
 used keeps its default, and the log says which variable and why. Before Kiboto 2.0 the
 `KIBOTO_*` variables were named `ZETTNAS_*`; the old names still work until 2.2, and a new
@@ -21,11 +21,11 @@ name set beside an old one wins.
 | `KIBOTO_OBSERVER_MODE` | `off` | Only watch the host on an unknown system: read-only telemetry, no changes. |
 | `SQLITE_VEC_PATH` | `(empty)` | Extra place to look for the sqlite-vec library (vec0.so) for AI search. |
 | `HOST_NET_IFACE` | `(empty)` | Network interface whose traffic the dashboard shows; empty = all physical ones. |
-| `CONTAINERIZED` | `off` | Say ZettNAS runs in a container when it can't tell by itself. |
+| `CONTAINERIZED` | `off` | Say Kiboto runs in a container when it can't tell by itself. |
 | `KIBOTO_THUMB_CACHE_MB` | `1024` | Size of the preview thumbnail cache, in MB (at least 16). (0–1.04858e+06) |
 | `KIBOTO_VIDEO_CACHE_MB` | `4096` | Size of the cache of videos converted for browsers that can't play the original, in MB (at least 64). (0–1.04858e+06) |
 | `SYNC_ROUTE_THREADS` | `40` | Threads for API requests that wait on files, disks or Docker; more serve more people at once and use more memory. (8–256) |
-| `APP_MEMORY_WARN_MB` | `1536` | Warn when ZettNAS itself uses more memory than this, in MB (virtual machines not counted); 0 = off. (0–1.04858e+06) |
+| `APP_MEMORY_WARN_MB` | `1536` | Warn when Kiboto itself uses more memory than this, in MB (virtual machines not counted); 0 = off. (0–1.04858e+06) |
 
 ## Web
 

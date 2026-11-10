@@ -4,7 +4,7 @@ A template lists them under "after_start", each {"cmd": [...], "label": "...", "
 "tries": n, "every": secs, "expect": "text", "timeout": secs}. A step is retried until it exits 0
 (and prints `expect`, when given), so the first one can wait for the app to finish installing.
 Values may use {{secret:name}} (the app's generated secrets), {{host}} and {{port}} (where the
-browser reaches the app), {{zettnas}} (ZettNAS's name on its Docker network) and {{arch}}
+browser reaches the app), {{zettnas}} (Kiboto's name on its Docker network) and {{arch}}
 ("" on x86, "_arm64" on ARM). Only built-in templates may have such steps.
 """
 
@@ -58,7 +58,7 @@ def exec_in(container: str, cmd: list[str], user: str = "", timeout: float = 300
 
 
 def zettnas_name() -> str:
-    """ZettNAS's own container name, which other containers on its network resolve."""
+    """Kiboto's own container name, which other containers on its network resolve."""
     from backend.services import docker_client
 
     try:

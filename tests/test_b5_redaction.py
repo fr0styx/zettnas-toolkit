@@ -21,7 +21,7 @@ SECRETS = [
         "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4In0.c2lnbmF0dXJlMTIz",
     ),
     (
-        "ZettNAS API token",
+        "Kiboto API token",
         "zat_Q2xhdWRlU2VjcmV0VG9rZW4xMjM0NTY3",
         "used zat_Q2xhdWRlU2VjcmV0VG9rZW4xMjM0NTY3 from cron",
     ),

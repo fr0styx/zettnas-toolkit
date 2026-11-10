@@ -1379,7 +1379,7 @@
      },
      "kind": {
       "default": "data",
-      "description": "'data' (a pool folder) or 'config' (ZettNAS settings, encrypted)",
+      "description": "'data' (a pool folder) or 'config' (Kiboto settings, encrypted)",
       "title": "Kind",
       "type": "string"
      },
@@ -33983,7 +33983,7 @@
         "type": "null"
        }
       ],
-      "description": "The port ZettNAS is opened on here",
+      "description": "The port Kiboto is opened on here",
       "title": "App Port"
      }
     },
@@ -35429,7 +35429,7 @@
       "type": "boolean"
      },
      "banner": {
-      "default": "Welcome to ZettNAS Secure SFTP Storage",
+      "default": "Welcome to Kiboto Secure SFTP Storage",
       "title": "Banner",
       "type": "string"
      },
@@ -41829,8 +41829,8 @@
   }
  },
  "info": {
-  "description": "The documented ZettNAS API. Every error has the Error body. Operations list the scopes they need in x-required-scopes; a public operation has an empty security list. See docs/API.md.",
-  "title": "ZettNAS Toolkit"
+  "description": "The documented Kiboto API. Every error has the Error body. Operations list the scopes they need in x-required-scopes; a public operation has an empty security list. See docs/API.md.",
+  "title": "Kiboto"
  },
  "openapi": "3.1.0",
  "paths": {
@@ -41853,7 +41853,7 @@
   },
   "/api/v1/ai/access": {
    "get": {
-    "description": "Who may ask Zetty, per role (B8).",
+    "description": "Who may ask Kib, per role (B8).",
     "operationId": "get_ai_access_api_v1_ai_access_get",
     "responses": {
      "200": {
@@ -42003,7 +42003,7 @@
   },
   "/api/v1/ai/actions/{action_id}/confirm": {
    "post": {
-    "description": "Runs an action ZettAI proposed, after the user clicked Confirm (AI-01).",
+    "description": "Runs an action Kib proposed, after the user clicked Confirm (AI-01).",
     "operationId": "confirm_ai_action_api_v1_ai_actions__action_id__confirm_post",
     "parameters": [
      {
@@ -42259,7 +42259,7 @@
   },
   "/api/v1/ai/chat": {
    "post": {
-    "description": "Ask Zetty: answers about your files and your server, with web search and the server tools.",
+    "description": "Ask Kib: answers about your files and your server, with web search and the server tools.",
     "operationId": "chat_with_zettai_agent_api_v1_ai_chat_post",
     "requestBody": {
      "content": {
@@ -42314,7 +42314,7 @@
   },
   "/api/v1/ai/chat/stream": {
    "post": {
-    "description": "Streams real-time Server-Sent Events (SSE) tokens, tool activity traces, and thought chains from ZettAI.",
+    "description": "Streams real-time Server-Sent Events (SSE) tokens, tool activity traces, and thought chains from Kib.",
     "operationId": "chat_with_zettai_agent_stream_api_v1_ai_chat_stream_post",
     "requestBody": {
      "content": {
@@ -42365,7 +42365,7 @@
   },
   "/api/v1/ai/chat/tools": {
    "get": {
-    "description": "The server and web search tools Ask Zetty can use.",
+    "description": "The server and web search tools Ask Kib can use.",
     "operationId": "get_ai_chat_tools_api_v1_ai_chat_tools_get",
     "responses": {
      "200": {
@@ -42902,7 +42902,7 @@
   },
   "/api/v1/ai/favorites": {
    "post": {
-    "description": "Adds or removes a file path from ZettAI favorites.",
+    "description": "Adds or removes a file path from Kib favorites.",
     "operationId": "toggle_favorite_item_api_v1_ai_favorites_post",
     "requestBody": {
      "content": {
@@ -43080,7 +43080,7 @@
     ]
    },
    "post": {
-    "description": "Adds, removes, or sets watched or excluded folders/shares for ZettAI RAG.",
+    "description": "Adds, removes, or sets watched or excluded folders/shares for Kib RAG.",
     "operationId": "update_watched_folders_api_v1_ai_folders_post",
     "requestBody": {
      "content": {
@@ -43387,7 +43387,7 @@
   },
   "/api/v1/ai/learning/results": {
    "get": {
-    "description": "Returns ZettAI 6-state learning status, succeeded/failed counts, and failed file list.",
+    "description": "Returns Kib 6-state learning status, succeeded/failed counts, and failed file list.",
     "operationId": "get_zettai_learning_results_api_v1_ai_learning_results_get",
     "responses": {
      "200": {
@@ -43540,7 +43540,7 @@
   },
   "/api/v1/ai/models/benchmark/apply": {
    "post": {
-    "description": "Makes the recommended model of a tier Ask Zetty's chat model.",
+    "description": "Makes the recommended model of a tier Ask Kib's chat model.",
     "operationId": "apply_model_tier_api_v1_ai_models_benchmark_apply_post",
     "requestBody": {
      "content": {
@@ -43973,7 +43973,7 @@
   },
   "/api/v1/ai/models/remove": {
    "delete": {
-    "description": "Removes a model from the ZettAI catalog and local storage via DELETE /remove.",
+    "description": "Removes a model from the Kib catalog and local storage via DELETE /remove.",
     "operationId": "remove_model_delete_explicit_endpoint_api_v1_ai_models_remove_delete",
     "parameters": [
      {
@@ -44059,7 +44059,7 @@
     ]
    },
    "post": {
-    "description": "Removes a model from the ZettAI catalog and local storage.",
+    "description": "Removes a model from the Kib catalog and local storage.",
     "operationId": "remove_model_post_endpoint_api_v1_ai_models_remove_post",
     "requestBody": {
      "content": {
@@ -44106,7 +44106,7 @@
   },
   "/api/v1/ai/models/select": {
    "post": {
-    "description": "Selects and applies an LLM / multi-modal model for ZettAI, returning any hardware fit warnings.",
+    "description": "Selects and applies an LLM / multi-modal model for Kib, returning any hardware fit warnings.",
     "operationId": "select_recommended_model_api_v1_ai_models_select_post",
     "requestBody": {
      "content": {
@@ -44153,7 +44153,7 @@
   },
   "/api/v1/ai/models/{model_id}": {
    "delete": {
-    "description": "Removes a model from the ZettAI catalog and local storage.",
+    "description": "Removes a model from the Kib catalog and local storage.",
     "operationId": "delete_model_endpoint_api_v1_ai_models__model_id__delete",
     "parameters": [
      {
@@ -45642,7 +45642,7 @@
   },
   "/api/v1/auth/oidc/apps/immich": {
    "post": {
-    "description": "Turns on sign-in with ZettNAS's provider in a freshly installed Immich (M3).",
+    "description": "Turns on sign-in with Kiboto's provider in a freshly installed Immich (M3).",
     "operationId": "connect_immich_api_v1_auth_oidc_apps_immich_post",
     "requestBody": {
      "content": {
@@ -48129,7 +48129,7 @@
   },
   "/api/v1/docker/catalog/logo": {
    "get": {
-    "description": "An app's logo, fetched once by ZettNAS so the browser doesn't ask a third party (SEC-38).",
+    "description": "An app's logo, fetched once by Kiboto so the browser doesn't ask a third party (SEC-38).",
     "operationId": "get_catalog_logo_api_v1_docker_catalog_logo_get",
     "parameters": [
      {
@@ -50855,7 +50855,7 @@
   },
   "/api/v1/encrypted-folders/{name}": {
    "delete": {
-    "description": "Takes a locked folder off ZettNAS; its encrypted files stay in the share.",
+    "description": "Takes a locked folder off Kiboto; its encrypted files stay in the share.",
     "operationId": "delete_encrypted_folder_api_v1_encrypted_folders__name__delete",
     "parameters": [
      {
@@ -55428,7 +55428,7 @@
   },
   "/api/v1/media/chat": {
    "post": {
-    "description": "Ask Zetty: answers about your files and your server, with web search and the server tools.",
+    "description": "Ask Kib: answers about your files and your server, with web search and the server tools.",
     "operationId": "chat_with_zettai_agent_api_v1_media_chat_post",
     "requestBody": {
      "content": {
@@ -55483,7 +55483,7 @@
   },
   "/api/v1/media/chat/stream": {
    "post": {
-    "description": "Streams real-time Server-Sent Events (SSE) tokens, tool activity traces, and thought chains from ZettAI.",
+    "description": "Streams real-time Server-Sent Events (SSE) tokens, tool activity traces, and thought chains from Kib.",
     "operationId": "chat_with_zettai_agent_stream_api_v1_media_chat_stream_post",
     "requestBody": {
      "content": {
@@ -55534,7 +55534,7 @@
   },
   "/api/v1/media/chat/tools": {
    "get": {
-    "description": "The server and web search tools Ask Zetty can use.",
+    "description": "The server and web search tools Ask Kib can use.",
     "operationId": "get_ai_chat_tools_api_v1_media_chat_tools_get",
     "responses": {
      "200": {
@@ -56017,7 +56017,7 @@
   },
   "/api/v1/media/favorites": {
    "post": {
-    "description": "Adds or removes a file path from ZettAI favorites.",
+    "description": "Adds or removes a file path from Kib favorites.",
     "operationId": "toggle_favorite_item_api_v1_media_favorites_post",
     "requestBody": {
      "content": {
@@ -56195,7 +56195,7 @@
     ]
    },
    "post": {
-    "description": "Adds, removes, or sets watched or excluded folders/shares for ZettAI RAG.",
+    "description": "Adds, removes, or sets watched or excluded folders/shares for Kib RAG.",
     "operationId": "update_watched_folders_api_v1_media_folders_post",
     "requestBody": {
      "content": {
@@ -56608,7 +56608,7 @@
   },
   "/api/v1/media/learning/results": {
    "get": {
-    "description": "Returns ZettAI 6-state learning status, succeeded/failed counts, and failed file list.",
+    "description": "Returns Kib 6-state learning status, succeeded/failed counts, and failed file list.",
     "operationId": "get_zettai_learning_results_api_v1_media_learning_results_get",
     "responses": {
      "200": {
@@ -56899,7 +56899,7 @@
   },
   "/api/v1/media/models/remove": {
    "delete": {
-    "description": "Removes a model from the ZettAI catalog and local storage via DELETE /remove.",
+    "description": "Removes a model from the Kib catalog and local storage via DELETE /remove.",
     "operationId": "remove_model_delete_explicit_endpoint_api_v1_media_models_remove_delete",
     "parameters": [
      {
@@ -56985,7 +56985,7 @@
     ]
    },
    "post": {
-    "description": "Removes a model from the ZettAI catalog and local storage.",
+    "description": "Removes a model from the Kib catalog and local storage.",
     "operationId": "remove_model_post_endpoint_api_v1_media_models_remove_post",
     "requestBody": {
      "content": {
@@ -57032,7 +57032,7 @@
   },
   "/api/v1/media/models/select": {
    "post": {
-    "description": "Selects and applies an LLM / multi-modal model for ZettAI, returning any hardware fit warnings.",
+    "description": "Selects and applies an LLM / multi-modal model for Kib, returning any hardware fit warnings.",
     "operationId": "select_recommended_model_api_v1_media_models_select_post",
     "requestBody": {
      "content": {
@@ -57079,7 +57079,7 @@
   },
   "/api/v1/media/models/{model_id}": {
    "delete": {
-    "description": "Removes a model from the ZettAI catalog and local storage.",
+    "description": "Removes a model from the Kib catalog and local storage.",
     "operationId": "delete_model_endpoint_api_v1_media_models__model_id__delete",
     "parameters": [
      {
@@ -57753,7 +57753,7 @@
   },
   "/api/v1/metrics": {
    "get": {
-    "description": "Prometheus exposition format for ZettNAS telemetry.",
+    "description": "Prometheus exposition format for Kiboto telemetry.",
     "operationId": "prometheus_metrics_api_v1_metrics_get",
     "responses": {
      "200": {
@@ -59495,7 +59495,7 @@
   },
   "/api/v1/network/remote-access/publish": {
    "post": {
-    "description": "HTTPS addresses in the tailnet for ZettNAS and Immich.",
+    "description": "HTTPS addresses in the tailnet for Kiboto and Immich.",
     "operationId": "post_remote_access_publish_api_v1_network_remote_access_publish_post",
     "requestBody": {
      "content": {
@@ -63521,7 +63521,7 @@
   },
   "/api/v1/snmp/mib": {
    "get": {
-    "description": "Returns downloadable SMIv2 ZETTLAB-ZETTNAS-MIB file.",
+    "description": "Returns downloadable SMIv2 ZETTLAB-KIBOTO-MIB file.",
     "operationId": "download_mib_file_api_v1_snmp_mib_get",
     "responses": {
      "200": {
@@ -66416,7 +66416,7 @@
   },
   "/api/v1/system/updates/apply": {
    "post": {
-    "description": "Pulls the latest ZettNAS image and initiates a graceful self-update.",
+    "description": "Pulls the latest Kiboto image and initiates a graceful self-update.",
     "operationId": "post_apply_system_update_api_v1_system_updates_apply_post",
     "requestBody": {
      "content": {

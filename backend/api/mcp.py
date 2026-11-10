@@ -1,12 +1,12 @@
 """
 Model Context Protocol server (D1): lets AI clients such as Claude Desktop, Cursor or
-Open WebUI use Ask Zetty's tools.
+Open WebUI use Ask Kib's tools.
 
 Streamable HTTP transport, JSON responses: POST /api/mcp with JSON-RPC 2.0. It
 authenticates like the REST API (an API token as `Authorization: Bearer …`), offers
 only the tools that account may run (the same registry and policy as the chat), and
 never web tools. Tools that change the system are not run: the call returns a link to
-confirm the action in ZettNAS, so a person always decides. Every call is written to the
+confirm the action in Kiboto, so a person always decides. Every call is written to the
 security audit log.
 """
 
@@ -56,7 +56,7 @@ def _mcp_tools(principal: Any) -> list[dict[str, Any]]:
                 "name": fn["name"],
                 "description": fn.get("description", "")
                 + (
-                    " Changes the system: returns a link for the user to confirm in ZettNAS."
+                    " Changes the system: returns a link for the user to confirm in Kiboto."
                     if tool and tool.mutating
                     else ""
                 ),
@@ -91,7 +91,7 @@ def _call_tool(name: str, args: dict[str, Any], principal: Any, base_url: str) -
     from backend.services.ai_chat_agent import execute_nas_tool
 
     # the AI switches per role hold over MCP too: file search under "AI search", the rest under
-    # "Ask Zetty" (NAI-12)
+    # "Ask Kib" (NAI-12)
     if not ai_access.allowed(principal, feature="search" if name in KNOWLEDGE_TOOLS else "ask"):
         ai_access.log_request(principal, "mcp", name, False, "off_for_role")
         return {"content": [{"type": "text", "text": "AI is turned off for this account."}], "isError": True}
@@ -147,8 +147,8 @@ def handle_message(msg: Any, principal: Any, base_url: str) -> dict[str, Any] | 
             {
                 "protocolVersion": asked if asked in PROTOCOL_VERSIONS else PROTOCOL_VERSIONS[0],
                 "capabilities": {"tools": {"listChanged": False}},
-                "serverInfo": {"name": "zettnas", "title": "ZettNAS", "version": __version__},
-                "instructions": "Tools that change the NAS return a link; the user confirms them in ZettNAS.",
+                "serverInfo": {"name": "zettnas", "title": "Kiboto", "version": __version__},
+                "instructions": "Tools that change the NAS return a link; the user confirms them in Kiboto.",
             },
         )
     if method == "ping":

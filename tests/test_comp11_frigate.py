@@ -155,14 +155,14 @@ def test_deploy_options(monkeypatch):
     monkeypatch.setattr("backend.services.app_networks.private_network", lambda app_id: f"zettnas-app-{app_id}")
     joined = {"HostConfig": {}}
     app_catalog._apply_runtime_options(joined, {"id": "frigate", "join_zettnas_network": True})
-    assert joined["HostConfig"]["NetworkMode"] == "zettnas-app-frigate"  # its own network with ZettNAS (NSEC-10)
+    assert joined["HostConfig"]["NetworkMode"] == "zettnas-app-frigate"  # its own network with Kiboto (NSEC-10)
     kept = {"HostConfig": {"NetworkMode": "immich_net"}}
     app_catalog._apply_runtime_options(kept, {"join_zettnas_network": True})
     assert kept["HostConfig"]["NetworkMode"] == "immich_net"  # a stack's own network stays
     monkeypatch.setattr("backend.services.app_networks.private_network", lambda app_id: None)
     alone = {"HostConfig": {}}
     app_catalog._apply_runtime_options(alone, {"id": "frigate", "join_zettnas_network": True})
-    assert "NetworkMode" not in alone["HostConfig"]  # ZettNAS outside a container: Docker's default
+    assert "NetworkMode" not in alone["HostConfig"]  # Kiboto outside a container: Docker's default
 
 
 def test_frigate_deploys_on_its_own_network(tmp_path, monkeypatch):

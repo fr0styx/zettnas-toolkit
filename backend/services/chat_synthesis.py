@@ -234,7 +234,7 @@ def _synthesize_self_identity_answer(
     ram_gb: float,
     telemetry: dict[str, Any] | None = None,
 ) -> str:
-    """Who ZettAI is, in facts this NAS can back up: no invented dates, numbers or guarantees (AI-02, AI-16)."""
+    """Who Kib is, in facts this NAS can back up: no invented dates, numbers or guarantees (AI-02, AI-16)."""
     try:
         from backend import __version__ as zettnas_version
     except Exception:
@@ -243,7 +243,7 @@ def _synthesize_self_identity_answer(
     model_display = (model_info or {}).get("name") or active_model
     device = accel.get("device_label") if accel else None
     lines = [
-        "I'm **ZettAI**, the assistant built into **ZettNAS Toolkit**"
+        "I'm **Kib**, the assistant built into **Kiboto**"
         + (f" {zettnas_version}" if zettnas_version else "")
         + ". I run on this NAS, not in the cloud.",
         "",
@@ -614,7 +614,7 @@ def _generate_local_code_response(clean_msg: str, active_model: str) -> str | No
         )
     ):
         return (
-            "Here is a production-ready, standby-safe Python script designed specifically for ZettNAS and Linux storage appliances.\n\n"
+            "Here is a production-ready, standby-safe Python script designed specifically for Kiboto and Linux storage appliances.\n\n"
             "### 💽 Invariant: 0 Hard Drive Wakeups\n"
             "This script strictly enforces the **Standby Safety Invariant**: it passes `-n standby` to `smartctl` "
             "so sleeping drive platters are **never spun up** just to query temperatures. If a drive is sleeping, "
@@ -622,7 +622,7 @@ def _generate_local_code_response(clean_msg: str, active_model: str) -> str | No
             "```python\n"
             "#!/usr/bin/env python3\n"
             '"""\n'
-            "Standby-Safe Disk Temperature & Health Monitor for ZettNAS\n"
+            "Standby-Safe Disk Temperature & Health Monitor for Kiboto\n"
             "Enforces 0 hard drive wakeups by respecting ATA sleep/standby mode.\n"
             '"""\n\n'
             "import glob\n"
@@ -693,7 +693,7 @@ def _generate_local_code_response(clean_msg: str, active_model: str) -> str | No
             "    }\n\n\n"
             "def main():\n"
             '    print("==================================================")\n'
-            '    print("   ZettNAS Standby-Safe Disk Temperature Monitor   ")\n'
+            '    print("   Kiboto Standby-Safe Disk Temperature Monitor   ")\n'
             '    print("==================================================")\n\n'
             '    sata_devs = sorted(glob.glob("/dev/sd[a-z]"))\n'
             '    nvme_devs = sorted(glob.glob("/dev/nvme[0-9]n1"))\n'
@@ -730,7 +730,7 @@ def _generate_local_code_response(clean_msg: str, active_model: str) -> str | No
             "```bash\n"
             "#!/usr/bin/env bash\n"
             "# =============================================================================\n"
-            "# ZettNAS Automated Storage Snapshot & Backup Script\n"
+            "# Kiboto Automated Storage Snapshot & Backup Script\n"
             "# Invariant: atomic execution, error trapping, and automatic rotation\n"
             "# =============================================================================\n"
             "set -euo pipefail\n\n"
@@ -868,7 +868,7 @@ def _generate_local_code_response(clean_msg: str, active_model: str) -> str | No
         f"```python\n"
         f"#!/usr/bin/env python3\n"
         f'"""\n'
-        f"ZettNAS Local Automation & System Script\n"
+        f"Kiboto Local Automation & System Script\n"
         f'"""\n\n'
         f"import os\n"
         f"import sys\n"
@@ -878,7 +878,7 @@ def _generate_local_code_response(clean_msg: str, active_model: str) -> str | No
         f"def execute_task():\n"
         f'    logging.info("Executing local task: {clean_msg[:60]}...")\n'
         f"    # Implementation details\n"
-        f'    result = {{"status": "ok", "message": "Task processed locally on ZettNAS"}}\n'
+        f'    result = {{"status": "ok", "message": "Task processed locally on Kiboto"}}\n'
         f"    return result\n\n\n"
         f'if __name__ == "__main__":\n'
         f"    res = execute_task()\n"
@@ -891,19 +891,19 @@ def _generate_local_code_response(clean_msg: str, active_model: str) -> str | No
 
 
 def _no_model_reply(active_model: str) -> str:
-    """What ZettAI says when no language model answered (AI-02): the truth, not a canned answer."""
+    """What Kib says when no language model answered (AI-02): the truth, not a canned answer."""
     problem = _core()._LAST_MODEL_PROBLEM.get("text") or ""
     _core()._LAST_MODEL_PROBLEM["text"] = ""
     return (
         "### No AI model answered\n\n"
-        f"ZettAI couldn't get a reply from a language model (selected: `{active_model}`), so it can't answer "
+        f"Kib couldn't get a reply from a language model (selected: `{active_model}`), so it can't answer "
         "this on its own. "
         + (
             problem + " Install it from AI settings or pick an installed model.\n\n"
             if problem
             else "Check that Ollama or OpenVINO Model Server is running and that a chat model is selected in AI settings.\n\n"
         )
-        + "Without a model, ZettAI can still show system, disk, fan, storage and network status, list "
+        + "Without a model, Kib can still show system, disk, fan, storage and network status, list "
         "containers, search your indexed files, and do calculations."
     )
 

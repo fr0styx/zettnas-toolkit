@@ -20,7 +20,7 @@ def test_get_system_about_endpoint(client, auth_headers):
     resp = client.get("/api/system/about", headers=auth_headers)
     assert resp.status_code == 200
     data = resp.json()
-    assert data["name"] == "ZettNAS Workbench"
+    assert data["name"] == "Kiboto Workbench"
     assert data["version"] == __version__
     assert data["tag"] == f"v{__version__}"
     assert data["release_channel"] == "stable"

@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Batch 2 Test Suite: Storage PAL, Hardware Orchestration & Thermal Safety
+Kiboto - Batch 2 Test Suite: Storage PAL, Hardware Orchestration & Thermal Safety
 Verifies eMMC flash isolation, ZFS/Btrfs member and chunk parsing, TrueNAS/Proxmox observer
 adapters, PAL busy interlock, LED speed fix, 16bpp LCD mode, and UPS container preservation.
 """
@@ -248,7 +248,7 @@ def test_lcd_16bpp_framebuffer_support():
 
 
 def test_ups_watchdog_preserves_orchestrator():
-    """graceful_docker_teardown stops the apps ZettNAS installed, never ZettNAS itself or its helpers,
+    """graceful_docker_teardown stops the apps Kiboto installed, never Kiboto itself or its helpers,
     and leaves other people's containers to the host (REL-10)."""
     mock_containers = [
         {"id": "c1", "name": "plex", "state": "running", "zettnas_app": True},

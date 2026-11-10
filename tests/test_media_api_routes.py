@@ -1,4 +1,4 @@
-"""The Smart Media / Ask Zetty API routes (backend/api/media.py) against a fake knowledge engine:
+"""The Smart Media / Ask Kib API routes (backend/api/media.py) against a fake knowledge engine:
 path checks, indexing, watched folders, model choice, settings and re-indexing."""
 
 import asyncio

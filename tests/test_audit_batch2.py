@@ -88,7 +88,7 @@ def test_main_serve_index_and_lcd_mode(tmp_path, monkeypatch):
     static_dir = tmp_path / "static"
     static_dir.mkdir()
     index_html = static_dir / "index.html"
-    index_html.write_text('<html lang="en"><body class="studio-workbench"><h1>ZettNAS</h1></body></html>')
+    index_html.write_text('<html lang="en"><body class="studio-workbench"><h1>Kiboto</h1></body></html>')
 
     monkeypatch.setattr("backend.main.STATIC_DIR", str(static_dir))
 

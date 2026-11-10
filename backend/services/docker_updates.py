@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Docker Container Update Detection & Management Subsystem
+Kiboto - Docker Container Update Detection & Management Subsystem
 Provides zero-bandwidth remote image update checks via Docker distribution API,
 individual container updates, and batch 'Update All' functionality with automated rollback.
 100% OS-agnostic and hardware-agnostic.
@@ -409,7 +409,7 @@ def update_single_container(cid: str) -> dict[str, Any]:
     self_hostname = socket.gethostname()
     if (self_hostname and cid.startswith(self_hostname)) or orig_name in ("zettnas-toolkit", "zettnas"):
         raise ValueError(
-            "Cannot update the active ZettNAS Toolkit container from within the app. "
+            "Cannot update the active Kiboto container from within the app. "
             "Please update via Docker Compose or host CLI."
         )
 

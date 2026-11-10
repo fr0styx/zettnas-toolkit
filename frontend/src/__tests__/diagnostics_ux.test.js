@@ -68,7 +68,7 @@ describe('Diagnostics UX & Observability Frontend Suite', () => {
 
   it('copySupportMarkdown fetches diagnostics-summary and copies markdown', async () => {
     vi.spyOn(api, 'get').mockResolvedValue({
-      support_markdown: '### ZettNAS Diagnostics Markdown',
+      support_markdown: '### Kiboto Diagnostics Markdown',
     });
 
     // Mock document.execCommand

@@ -11,7 +11,7 @@ import logging
 import time
 from typing import Any
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 CHECK_EVERY_SECS = 3600
 _LAST_CHECK = {"at": 0.0}

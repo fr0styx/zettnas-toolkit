@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit Dashboard Layout & Mini-Preview Canvas
+ * Kiboto Dashboard Layout & Mini-Preview Canvas
  * Handles dynamic modular tile reordering, visibility toggling, scaling, and presets.
  */
 import { api } from '../api.js';

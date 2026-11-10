@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - SFTP Engine Service
+Kiboto - SFTP Engine Service
 Provides production-grade inbound SFTP (SSH File Transfer Protocol) file sharing.
 Operates with strict ChrootDirectory isolation, key/password authentication,
 and zero interactive host shell access to protect NAS security.
@@ -49,7 +49,7 @@ class SFTPConfig(BaseModel):
     port: int = Field(2222, ge=1024, le=65535)
     allow_password_auth: bool = True
     allow_pubkey_auth: bool = True
-    banner: str = "Welcome to ZettNAS Secure SFTP Storage"
+    banner: str = "Welcome to Kiboto Secure SFTP Storage"
     chroot_enabled: bool = True
 
 
@@ -77,7 +77,7 @@ class SFTPEngine:
         "port": 2222,
         "allow_password_auth": True,
         "allow_pubkey_auth": True,
-        "banner": "Welcome to ZettNAS Secure SFTP Storage",
+        "banner": "Welcome to Kiboto Secure SFTP Storage",
         "chroot_enabled": True,
     }
 
@@ -109,7 +109,7 @@ class SFTPEngine:
         pw_auth = "yes" if cfg.get("allow_password_auth", True) else "no"
         pk_auth = "yes" if cfg.get("allow_pubkey_auth", True) else "no"
 
-        content = f"""# ZettNAS Secure Inbound SFTP Configuration
+        content = f"""# Kiboto Secure Inbound SFTP Configuration
 Port {port}
 Protocol 2
 HostKey {os.path.join(SFTP_DIR, "ssh_host_ed25519_key")}
@@ -226,7 +226,7 @@ Match Group sftpusers
         for s in user_data.get("shares", []) or []:
             if safe_serve_root(s if os.path.isabs(str(s)) else os.path.join(pool, str(s)), pool) is None:
                 raise ValueError(
-                    f"'{s}' cannot be shared over SFTP: it is outside the shares or holds ZettNAS's own data."
+                    f"'{s}' cannot be shared over SFTP: it is outside the shares or holds Kiboto's own data."
                 )
 
         user_entry = {

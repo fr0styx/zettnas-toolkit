@@ -1,13 +1,13 @@
-"""Everything ZettNAS keeps about one person, to hand over or to forget (B8).
+"""Everything Kiboto keeps about one person, to hand over or to forget (B8).
 
 Export (one JSON file): the account (no password or secrets), its API tokens (names, scopes,
-dates; never the token), every chat with its messages, the log of their questions to Zetty
+dates; never the token), every chat with its messages, the log of their questions to Kib
 (when and how, not what), the files search learned from their own folder, and their entries in
 the security log.
 
 Erase, each part on its own:
 - chats: every conversation and message;
-- ai_log: their rows in Zetty's request log;
+- ai_log: their rows in Kib's request log;
 - index: what search learned from their own folder, which is then not learned again
   (rag forget_folder). Their files themselves are not touched.
 

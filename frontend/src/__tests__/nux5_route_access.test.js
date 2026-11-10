@@ -53,6 +53,6 @@ describe('places by role (NUX-5)', () => {
   });
 
   it('an item someone cannot fix says who can', () => {
-    expect(itemText({ kind: 'storage_full', subject: '91%', tell_admin: true })).toBe('Storage is 91% full. Tell the person who manages ZettNAS.');
+    expect(itemText({ kind: 'storage_full', subject: '91%', tell_admin: true })).toBe('Storage is 91% full. Tell the person who manages Kiboto.');
   });
 });

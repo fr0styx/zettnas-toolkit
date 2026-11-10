@@ -1,4 +1,4 @@
-# Releasing ZettNAS Toolkit
+# Releasing Kiboto
 
 Every release spends three days on the **beta** channel before it reaches **stable**
 (OPS-07). Stable users get exactly the image beta users ran: promotion moves tags to the

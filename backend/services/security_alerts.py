@@ -14,7 +14,7 @@ from typing import Any, Optional
 
 from backend.ignored_errors import ignored
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 # event_type -> (title, level)
 ALERT_EVENTS: dict[str, tuple] = {
@@ -31,7 +31,7 @@ ALERT_EVENTS: dict[str, tuple] = {
     "confirm.storage.pool.create": ("Storage pool created (disks erased)", "warning"),
     "confirm.storage.pool.delete": ("Storage pool deleted", "critical"),
     "confirm.system.restore": ("Settings restored from a backup", "warning"),
-    "confirm.updates.revert": ("ZettNAS reverted to a previous version", "warning"),
+    "confirm.updates.revert": ("Kiboto reverted to a previous version", "warning"),
     "confirm.users.delete": ("User account deleted", "warning"),
 }
 
@@ -71,7 +71,7 @@ def maybe_alert(
             slug = event_type.replace("auth.", "signin.").replace(".", "_")
             label = i18n.ref(f"alert.security.{slug}", title)
             send_notification(
-                f"ZettNAS security: {title}",
+                f"Kiboto security: {title}",
                 message,
                 text={"title_key": "alert.security.title", "params": {"what": label}},
                 level=level,

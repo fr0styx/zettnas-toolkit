@@ -1,9 +1,9 @@
 """
-ZettNAS Toolkit - Snapshot Replication Engine (REL-5)
+Kiboto - Snapshot Replication Engine (REL-5)
 
 Copies a ZFS dataset or a btrfs subvolume to another pool, here or on another machine over SSH,
 as snapshots: the first run sends everything, later runs only what changed since the last
-snapshot both sides have. It runs where ZettNAS manages the pools (ZettOS, plain Linux) with the
+snapshot both sides have. It runs where Kiboto manages the pools (ZettOS, plain Linux) with the
 tools in the image; TrueNAS and Unraid replicate their own pools.
 
 Safe by design:
@@ -31,7 +31,7 @@ from backend.fsutil import atomic_write_json, json_locked, read_json
 REPLICATION_JOBS_FILE = os.path.join(DATA_DIR, "replication_jobs.json")
 REPLICATION_HISTORY_FILE = os.path.join(DATA_DIR, "replication_history.json")
 INTERVALS = {"hourly": 3600, "daily": 86400, "weekly": 7 * 86400}
-OWNED = ("zettos", "generic_linux")  # where ZettNAS manages the pools itself
+OWNED = ("zettos", "generic_linux")  # where Kiboto manages the pools itself
 _NAME = re.compile(r"^[A-Za-z0-9_\-./]{1,256}$")
 _HOST = re.compile(r"^[A-Za-z0-9_\-.:]{1,256}$")
 _USER = re.compile(r"^[A-Za-z_][A-Za-z0-9_.-]{0,31}$")
@@ -85,7 +85,7 @@ def availability(adapter: Any = None) -> tuple[bool, str]:
     if platform == "unraid":
         return False, "Unraid's pools are replicated with an off-site backup to another NAS."
     if platform not in OWNED:
-        return False, "Replication runs only where ZettNAS manages the pools."
+        return False, "Replication runs only where Kiboto manages the pools."
     tools = base.storage_tools()
     if not (tools.get("zfs") or tools.get("btrfs")):
         return False, base.storage_tools_problem() or "This image has neither the ZFS nor the btrfs tools."

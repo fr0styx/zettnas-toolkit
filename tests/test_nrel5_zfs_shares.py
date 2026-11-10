@@ -1,5 +1,5 @@
 """NREL-5: on a ZFS pool a new share is a dataset of its own, and its snapshots are ZFS snapshots
-under the names ZettNAS gave them, held while they are locked."""
+under the names Kiboto gave them, held while they are locked."""
 
 import json
 import os

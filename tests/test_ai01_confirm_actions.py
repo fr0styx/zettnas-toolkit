@@ -1,4 +1,4 @@
-"""AI-01 / AI-19: ZettAI never changes the system without a click."""
+"""AI-01 / AI-19: Kib never changes the system without a click."""
 
 from types import SimpleNamespace
 

@@ -1,4 +1,4 @@
-"""ZettNAS's own searches see every file, and the Overview asks for the server's time zone."""
+"""Kiboto's own searches see every file, and the Overview asks for the server's time zone."""
 
 from backend.services import status_summary
 from backend.services.rag_engine_search import SYSTEM_PRINCIPAL, RagSearchMixin

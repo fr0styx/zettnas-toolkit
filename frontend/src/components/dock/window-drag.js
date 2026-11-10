@@ -7,7 +7,7 @@ import { applySavedBounds, saveOpenWindowsState, saveWindowBounds } from './wind
 import { COMPACT_MAX, isCompact } from '../../device.js';
 
 /**
- * ZettNAS Toolkit Dock & Window Manager
+ * Kiboto Dock & Window Manager
  * Handles floating modal registration, minimize/restore, dragging, and z-index depth stacking.
  */
 

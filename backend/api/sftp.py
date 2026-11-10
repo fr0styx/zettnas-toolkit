@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - SFTP Management REST API
+Kiboto - SFTP Management REST API
 Exposes status, toggles, configuration, and user permissions for inbound SFTP file sharing.
 """
 
@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from backend.auth import require_scope
 from backend.services.sftp_engine import SFTPConfig, SFTPStatus, SFTPUser, get_sftp_engine
 
-logger = logging.getLogger("ZettNAS.SFTPApi")
+logger = logging.getLogger("Kiboto.SFTPApi")
 
 router = APIRouter(tags=["SFTP File Sharing"])
 

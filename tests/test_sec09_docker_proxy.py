@@ -148,7 +148,7 @@ def test_proxy_forwards_allowed_and_refuses_the_rest(monkeypatch):
                 await c.post(
                     "/containers/create?name=x",
                     json={"Image": "a", "HostConfig": {"Privileged": True}},
-                    headers={"X-ZettNAS-Elevated": "1"},
+                    headers={"X-Kiboto-Elevated": "1"},
                 )
             ).status_code
             results["import"] = (await c.post("/images/create?fromSrc=-")).status_code
@@ -166,7 +166,7 @@ def test_proxy_forwards_allowed_and_refuses_the_rest(monkeypatch):
     assert not any("swarm" in s or "fromSrc" in s for s in seen)
     assert len(seen) == 3
     assert all(r[1].get("connection") == "close" for r in fake.requests)
-    assert all("x-zettnas-elevated" not in r[1] for r in fake.requests)
+    assert all("x-kiboto-elevated" not in r[1] for r in fake.requests)
     with open(os.path.join(tmp, "docker-proxy-audit.log")) as f:
         audit = [json.loads(ln) for ln in f]
     assert audit[0]["reasons"] == ["privileged"] and audit[0]["image"] == "a"

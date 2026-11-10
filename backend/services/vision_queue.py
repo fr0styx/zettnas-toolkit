@@ -30,7 +30,7 @@ from typing import Any
 
 from backend.services import gpu_queue, rag_schema
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 VISION_FAMILIES = (
     "llava",
@@ -85,7 +85,7 @@ SCHEMA = rag_schema.VISION
 def _http_json(url: str, body: dict | None = None, timeout: float = 10.0) -> Any:
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(
-        url, data=data, headers={"Content-Type": "application/json", "User-Agent": "ZettNAS/1.0"}
+        url, data=data, headers={"Content-Type": "application/json", "User-Agent": "Kiboto/1.0"}
     )
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8", errors="replace") or "{}")

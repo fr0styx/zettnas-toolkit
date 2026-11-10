@@ -11,7 +11,7 @@ const STATUS = {
   preview: { schema: 1, id: '(a random id)', version: '1.10.3', platform: '<b>unraid</b>', features: [] },
 };
 
-describe('Help improve ZettNAS card', () => {
+describe('Help improve Kiboto card', () => {
   beforeEach(() => {
     document.body.innerHTML =
       '<div class="drawer-card"><div id="update-status-box"></div></div><div id="after"></div>';

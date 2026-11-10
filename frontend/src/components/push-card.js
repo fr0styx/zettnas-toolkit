@@ -52,11 +52,11 @@ export async function renderPushCard() {
   host.replaceChildren(title, desc);
   if (!support.ok) {
     desc.textContent = support.reason === 'ios-install'
-      ? t('push.ios', 'On iPhone and iPad, add ZettNAS to the home screen first (Share → Add to Home Screen), open it from there, then turn this on.')
+      ? t('push.ios', 'On iPhone and iPad, add Kiboto to the home screen first (Share → Add to Home Screen), open it from there, then turn this on.')
       : t('push.unsupported', 'This browser cannot receive notifications.');
     return;
   }
-  desc.textContent = t('push.desc', 'Disk failures, ransomware alerts and other critical events appear on this phone or computer, even when ZettNAS is closed.');
+  desc.textContent = t('push.desc', 'Disk failures, ransomware alerts and other critical events appear on this phone or computer, even when Kiboto is closed.');
   const sub = await currentSubscription().catch(() => null);
   const row = Object.assign(document.createElement('div'), { className: 'zn-row' });
   const toggle = Object.assign(document.createElement('button'), {

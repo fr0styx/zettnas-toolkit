@@ -5,12 +5,12 @@ An admin starts a benchmark; it runs one fixed prompt on every installed chat mo
 Ollama, one at a time, and records generation speed (tokens/s), time to the first
 token, load time and where the model ran (GPU, split, CPU) from Ollama's /api/ps. It then
 asks each model a 6,000-token document question and records how long the model takes to
-read it (doc_first_token_s): that is the wait before Ask Zetty starts answering from files.
+read it (doc_first_token_s): that is the wait before Ask Kib starts answering from files.
 From that it recommends two tiers:
 
 - fast: the quickest model, for short jobs;
 - balanced: the largest model that still writes at least 12 tokens/s, so answers
-  appear at reading speed. Ask Zetty uses it when you choose "Pick for me".
+  appear at reading speed. Ask Kib uses it when you choose "Pick for me".
 
 Results are kept in data/model_benchmarks.json. Embedding-only models and duplicate
 names of the same model are skipped. Benchmarks load each model, so they run only
@@ -32,7 +32,7 @@ from backend.services.doc_prompt import build_document_prompt
 RESULTS_FILE = os.path.join(DATA_DIR, "model_benchmarks.json")
 PROMPT = "In two sentences, explain why a backup should also be kept somewhere other than the NAS itself."
 READING_SPEED_TPS = 12.0
-DOC_CONTEXT = 8192  # Ask Zetty's context window (AI-7)
+DOC_CONTEXT = 8192  # Ask Kib's context window (AI-7)
 _lock = threading.Lock()
 _job: dict[str, Any] = {"state": "idle"}
 

@@ -201,7 +201,7 @@ describe('Sprint 4: Remote & Cloud Storage Subsystem (Frontend)', () => {
         username: 'admin',
       })
     );
-    // WebDAV always asks for a ZettNAS account: the form can't turn sign-in off (SEC-1)
+    // WebDAV always asks for a Kiboto account: the form can't turn sign-in off (SEC-1)
     expect(postSpy.mock.calls[0][1]).not.toHaveProperty('auth_enabled');
     expect(successCb).toHaveBeenCalled();
     expect(modal.style.display).toBe('none');

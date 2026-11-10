@@ -1,6 +1,6 @@
 """Quotas the filesystem itself enforces (FEAT-10, REL-19).
 
-A limit ZettNAS only checks on its own uploads doesn't stop SMB, NFS or WebDAV. Where the
+A limit Kiboto only checks on its own uploads doesn't stop SMB, NFS or WebDAV. Where the
 filesystem can hold it, the limit is set there:
 
     btrfs   a subvolume's quota group (btrfs qgroup limit)
@@ -11,7 +11,7 @@ filesystem can hold it, the limit is set there:
             (the standalone OS image; the container image leaves them out for its size budget)
 
 Anything else (ext4 without project quotas, Unraid's /mnt/user, network mounts) stays advisory:
-ZettNAS checks its own uploads and says so. Each answer says which it is and why.
+Kiboto checks its own uploads and says so. Each answer says which it is and why.
 """
 
 from __future__ import annotations
@@ -122,7 +122,7 @@ def apply(
         "cifs": "a network mount",
     }
     where = label.get(fs, fs or "this filesystem")
-    return _result(False, None, f"{where} can't enforce a folder limit; ZettNAS checks its own uploads.")
+    return _result(False, None, f"{where} can't enforce a folder limit; Kiboto checks its own uploads.")
 
 
 def zfs_child_dataset(

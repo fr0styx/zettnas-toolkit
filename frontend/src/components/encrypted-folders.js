@@ -98,7 +98,7 @@ function folderRow(f, canManage) {
   }
   if (canManage) {
     const keep = el('input', { type: 'checkbox', name: 'keep', checked: !!f.unlock_at_start });
-    actions.append(el('label', { className: 'ef-keep' }, keep, ' ', t('ef.keep', 'Open when ZettNAS starts')));
+    actions.append(el('label', { className: 'ef-keep' }, keep, ' ', t('ef.keep', 'Open when Kiboto starts')));
     actions.append(button(t('ef.who_change', 'Who may open it'), 'people'));
     if (!f.unlocked) actions.append(button(t('ef.remove', 'Remove from the list'), 'forget'));
   }
@@ -115,7 +115,7 @@ function createForm(shares) {
     field(t('ef.name', 'Name'), el('input', { type: 'text', name: 'name', maxLength: 48, placeholder: t('ef.name_hint', 'Letters, digits and spaces, in any language') })),
     field(t('ef.password', 'Password'), passwordInput('new', t('ef.password', 'Password'))),
     field(t('ef.again', 'Password again'), passwordInput('again', t('ef.again', 'Password again'))),
-    el('label', { className: 'ef-keep' }, el('input', { type: 'checkbox', name: 'start' }), ' ', t('ef.keep', 'Open when ZettNAS starts')),
+    el('label', { className: 'ef-keep' }, el('input', { type: 'checkbox', name: 'start' }), ' ', t('ef.keep', 'Open when Kiboto starts')),
     el('p', { className: 'muted ef-hint', textContent: t('ef.keep_hint', 'Kept open, the password is stored sealed with this server\'s key: anyone who gets the whole server can read the folder. Without it, someone must open it after each restart.') }),
     el('div', { className: 'ef-actions' }, button(t('ef.make', 'Make it'), 'create', { className: 'btn-pill-toggle is-small is-primary' })),
   );
@@ -139,7 +139,7 @@ function recoveryBox(key, name = '') {
   box.dataset.folder = name;
   box.append(
     el('strong', { textContent: t('ef.recovery_title', 'Save this recovery key now') }),
-    el('p', { textContent: t('ef.recovery_desc', 'With it the files can be read even if the password is forgotten. ZettNAS shows it only this once and does not keep it.') }),
+    el('p', { textContent: t('ef.recovery_desc', 'With it the files can be read even if the password is forgotten. Kiboto shows it only this once and does not keep it.') }),
     code,
   );
   const done = button(t('ef.saved', 'I have saved it'), 'saved');
@@ -161,7 +161,7 @@ export function holdKey(on) {
 function downloadKey(mount) {
   const box = mount.querySelector('.ef-recovery');
   const key = mount.querySelector('.ef-key').textContent;
-  const text = `${t('ef.file_head', 'ZettNAS encrypted folder recovery key')}: ${box?.dataset.folder || ''}\n\n${key}\n`;
+  const text = `${t('ef.file_head', 'Kiboto encrypted folder recovery key')}: ${box?.dataset.folder || ''}\n\n${key}\n`;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
   a.download = `zettnas-recovery-key-${(box?.dataset.folder || 'folder').replace(/[^\p{L}\p{N}_-]+/gu, '-')}.txt`;
@@ -173,7 +173,7 @@ function downloadKey(mount) {
 export function encryptedFoldersBody(info) {
   const box = el('div', { className: 'ef-body' });
   if (!info.available) {
-    box.append(el('p', { className: 'muted', title: 'gocryptfs, /dev/fuse', textContent: t('ef.unavailable_plain', 'This server can\'t open encrypted folders: the tool that encrypts them isn\'t available here. The person who manages ZettNAS can find the details in its documentation.') }));
+    box.append(el('p', { className: 'muted', title: 'gocryptfs, /dev/fuse', textContent: t('ef.unavailable_plain', 'This server can\'t open encrypted folders: the tool that encrypts them isn\'t available here. The person who manages Kiboto can find the details in its documentation.') }));
     return box;
   }
   const list = el('div', { className: 'ef-list' });
@@ -214,8 +214,8 @@ function onClick(mount, e) {
   else if (action === 'forget') {
     showConfirmToast(
       t('ef.remove_title', 'Remove {name} from the list', { name }),
-      t('ef.remove_msg', 'ZettNAS stops showing {name}. Its encrypted files stay in the share, and you can add it back later with its password.', { name }),
-      () => act(mount, () => api.delete(path(name)), t('ef.forgotten', 'Taken off ZettNAS. Its encrypted files are still in the share.')),
+      t('ef.remove_msg', 'Kiboto stops showing {name}. Its encrypted files stay in the share, and you can add it back later with its password.', { name }),
+      () => act(mount, () => api.delete(path(name)), t('ef.forgotten', 'Taken off Kiboto. Its encrypted files are still in the share.')),
       null,
       { allowHtml: false },
     );
@@ -232,7 +232,7 @@ function onClick(mount, e) {
   else if (action === 'saved') {
     showConfirmToast(
       t('ef.saved_title', 'Is the recovery key saved?'),
-      t('ef.saved_msg', 'ZettNAS won\'t show it again. Without it and the password, nobody can read this folder.'),
+      t('ef.saved_msg', 'Kiboto won\'t show it again. Without it and the password, nobody can read this folder.'),
       () => {
         holdKey(false);
         renderEncryptedFolders(mount);
@@ -286,7 +286,7 @@ async function onKeep(mount, e) {
     showToast(t('ef.keep_needs', 'Type its password first, then tick the box again.'), 'info');
     return;
   }
-  await act(mount, () => api.put(url, { password: pw.value }), t('ef.keep_on', 'It will open when ZettNAS starts.'));
+  await act(mount, () => api.put(url, { password: pw.value }), t('ef.keep_on', 'It will open when Kiboto starts.'));
 }
 
 export async function renderEncryptedFolders(mount) {

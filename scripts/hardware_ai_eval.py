@@ -1,6 +1,6 @@
 """The AI check on real hardware (AI-16, PERF-10), for the self-hosted runner.
 
-Runs the search and answer eval (tests/rag_eval) against the model servers a ZettNAS install
+Runs the search and answer eval (tests/rag_eval) against the model servers a Kiboto install
 actually uses (the embedder and the chat server, read-only: nothing is installed, pulled or
 changed on them) and compares with the last recorded result of this machine.
 

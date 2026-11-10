@@ -108,7 +108,7 @@ def safe_open(
         path = parts.path or "/"
         if parts.query:
             path += "?" + parts.query
-        conn.request(method, path, headers={"User-Agent": "ZettNAS-Toolkit", **(headers or {})})
+        conn.request(method, path, headers={"User-Agent": "Kiboto", **(headers or {})})
         resp = conn.getresponse()
         if resp.status in (301, 302, 303, 307, 308) and resp.getheader("Location"):
             location = urljoin(current, resp.getheader("Location"))

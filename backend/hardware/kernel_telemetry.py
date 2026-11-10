@@ -1,5 +1,5 @@
 """
-Kernel, Hardware Buses & Sysfs Telemetry for ZettNAS Toolkit.
+Kernel, Hardware Buses & Sysfs Telemetry for Kiboto.
 Collects categorized kernel dmesg, CPU throttling counters, PCI/USB buses,
 and sysfs hwmon attributes safely and quickly.
 """

@@ -1,9 +1,9 @@
-/* ZettNAS service worker (M1): makes the app installable, shows an offline notice,
+/* Kiboto service worker (M1): makes the app installable, shows an offline notice,
  * and receives files from the phone's share sheet into the user's Inbox folder.
  * It never caches API responses or files. */
 const OFFLINE_HTML =
   '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width">' +
-  '<title>ZettNAS offline</title><body><h1>ZettNAS is not reachable</h1>' +
+  '<title>Kiboto offline</title><body><h1>Kiboto is not reachable</h1>' +
   '<p>Check that you are on your home network or connected through Tailscale, then reload.</p></body>';
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -64,10 +64,10 @@ self.addEventListener('push', (event) => {
   try {
     msg = event.data ? event.data.json() : {};
   } catch (e) {
-    msg = { title: 'ZettNAS', body: event.data ? event.data.text() : '' };
+    msg = { title: 'Kiboto', body: event.data ? event.data.text() : '' };
   }
   event.waitUntil(
-    self.registration.showNotification(msg.title || 'ZettNAS', {
+    self.registration.showNotification(msg.title || 'Kiboto', {
       body: msg.body || '',
       icon: '/img/icon-192.png',
       badge: '/img/icon-192.png',

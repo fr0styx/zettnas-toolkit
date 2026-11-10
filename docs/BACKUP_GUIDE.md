@@ -1,17 +1,17 @@
-# Backing up your computers to ZettNAS
+# Backing up your computers to Kiboto
 
-ZettNAS is a good target for backups of your Macs and PCs. Keep at least one more copy
+Kiboto is a good target for backups of your Macs and PCs. Keep at least one more copy
 somewhere else, for example an off-site backup (Backup → Off-site) to a USB disk, another
 NAS or a cloud remote: a NAS is one copy, not a backup of itself.
 
 ## Mac: Time Machine
 
-**On generic Linux (ZettNAS manages Samba):**
+**On generic Linux (Kiboto manages Samba):**
 
-1. In ZettNAS, open **Storage → Shares → New share** and turn on **Enable Apple Time
+1. In Kiboto, open **Storage → Shares → New share** and turn on **Enable Apple Time
    Machine Backup**. Set a size limit so backups don't fill the pool (for example
    twice the Mac's disk).
-2. Give the Mac's user an account in ZettNAS and access to that share.
+2. Give the Mac's user an account in Kiboto and access to that share.
 3. On the Mac, open Finder → **Go → Connect to Server** and enter
    `smb://<nas-address>/<share>`. Sign in and tick **Remember this password**.
 4. Open **System Settings → General → Time Machine → Add Backup Disk** and choose the
@@ -25,7 +25,7 @@ directly.
 
 **File History** (built in, copies your user folders):
 
-1. Create a share for backups in ZettNAS and give your Windows account access.
+1. Create a share for backups in Kiboto and give your Windows account access.
 2. Open **Control Panel → File History → Select drive → Add network location** and
    enter `\\<nas-address>\<share>`.
 3. Turn it on and set **Save copies of files** to every hour.
@@ -35,7 +35,7 @@ full PC):
 
 1. Install it and choose **Entire computer** (or volume level).
 2. As destination pick **Shared folder** and enter `\\<nas-address>\<share>` with your
-   ZettNAS account.
+   Kiboto account.
 3. Schedule daily backups and keep at least 14 restore points. Create the recovery
    media it offers, so you can restore a PC that no longer boots.
 
@@ -46,7 +46,7 @@ computer. With several PCs, **UrBackup** keeps them all in one place: you see on
 which PC was last backed up, and the schedule, the retention and the restores are managed
 there too.
 
-1. In ZettNAS, open **Apps → App Catalog**, find **UrBackup (PC backups)** and install it.
+1. In Kiboto, open **Apps → App Catalog**, find **UrBackup (PC backups)** and install it.
    Its backups go to `appdata/urbackup/backups`; move that folder to a share with room if
    your appdata disk is small.
 2. Open its web page (port 55414). **First** go to **Settings → Users** and create the
@@ -82,13 +82,13 @@ so ransomware or a mistake there can't wipe the copies. Each account sees only i
 The deploy dialog shows the first account (user `backup` and a generated password); add one per
 person with `docker exec -it rest-server create_user <name>`.
 
-On the sending ZettNAS, add an off-site backup (Backup → Off-site) with the destination
+On the sending Kiboto, add an off-site backup (Backup → Off-site) with the destination
 `rest:http://<target-address>:8000/backup/` and that user name and password. restic encrypts
 everything before it leaves, so the target's owner can't read your files. Over the internet,
 reach the target through a VPN such as Tailscale or WireGuard rather than opening port 8000:
 the address uses plain HTTP, so the password would otherwise cross the internet unencrypted.
 
-The sender can't prune an append-only target, so ZettNAS notices the refusal after the first
+The sender can't prune an append-only target, so Kiboto notices the refusal after the first
 backup, stops asking, and shows that old versions stay there. The target's owner decides how
 long to keep them: `--max-size` in the app's `OPTIONS` caps a folder's size.
 
@@ -111,11 +111,11 @@ until the period ends. It works with Backblaze B2, Wasabi, Amazon S3 and other S
 4. Add the bucket in Cloud Drives (an `s3` remote, or `b2` for Backblaze) with a key limited to
    that bucket, and add an off-site backup to `rclone:<remote>:<bucket>/zettnas` with the same
    number of days under **Days the bucket locks each copy**.
-5. Press **Check the lock**. ZettNAS reads the bucket's settings from the provider and shows
+5. Press **Check the lock**. Kiboto reads the bucket's settings from the provider and shows
    whether it is locked, in which mode and for how long; the list then shows **Cloud copy
    locked until** the date the newest copy's lock ends.
 
-ZettNAS keeps every version younger than the lock period (pruning them would only hide them)
+Kiboto keeps every version younger than the lock period (pruning them would only hide them)
 and prunes the rest as usual. Each backup's new data is locked from the moment it is uploaded,
 so the protection covers the last *n* days of backups at any time.
 
@@ -161,7 +161,7 @@ to every device.
 
 ## Protecting the backups themselves
 
-- Use a separate ZettNAS account for backups, not your admin account, and give it
+- Use a separate Kiboto account for backups, not your admin account, and give it
   access to the backup share only.
 - Don't map the backup share as a drive letter on Windows: ransomware encrypts mapped
   drives. File History and Veeam connect only while they run.
@@ -169,21 +169,21 @@ to every device.
   freezes writes before it reaches the rest.
 - Send a copy off the box: an **off-site backup** (Backup → Off-site) to another NAS or a
   cloud remote, and save its recovery key outside the NAS.
-- Where ZettNAS manages the pools itself (ZettOS, plain Linux), **replication** (Storage →
+- Where Kiboto manages the pools itself (ZettOS, plain Linux), **replication** (Storage →
   Replication) copies a ZFS dataset or btrfs subvolume as snapshots to another pool or over
   SSH, sending only what changed. The copy is read-only and keeps the job's last snapshots.
   On TrueNAS use its own Replication Tasks; on Unraid use an off-site backup.
 
 
-## Disaster recovery: getting ZettNAS itself back
+## Disaster recovery: getting Kiboto itself back
 
-Your files live on the pool; ZettNAS's own settings (users and their passwords and two-factor, shares and their permissions, NFS/SFTP/rclone settings, app stacks, VM definitions) live in its data folder. Keep a copy of those somewhere else:
+Your files live on the pool; Kiboto's own settings (users and their passwords and two-factor, shares and their permissions, NFS/SFTP/rclone settings, app stacks, VM definitions) live in its data folder. Keep a copy of those somewhere else:
 
-1. **Schedule a settings backup.** Settings → System → Backups & Recovery → *Backup jobs* → new task → *What to back up: ZettNAS settings*. Pick a folder in the pool (ideally one that is itself copied offsite) or an rclone remote, a frequency, and how many copies to keep. Every copy is encrypted with the passphrase you set.
+1. **Schedule a settings backup.** Settings → System → Backups & Recovery → *Backup jobs* → new task → *What to back up: Kiboto settings*. Pick a folder in the pool (ideally one that is itself copied offsite) or an rclone remote, a frequency, and how many copies to keep. Every copy is encrypted with the passphrase you set.
 2. **Keep the passphrase off the server**, in a password manager. Without it a settings backup can't be opened.
 3. **If you set an AI data key** (`KIBOTO_DATA_KEY`), keep a copy with the passphrase. A settings backup holds the encrypted AI chat history as it is; it needs the same key to be read.
 
-To recover on a new install: install ZettNAS with the same `KIBOTO_DATA_KEY` (if you used one), open Settings → System → Backups & Recovery → *System Configuration Backup & Restore* → *Upload & Restore Archive*, choose the newest `zettnas_backup_*.zettbak` and enter the passphrase. Users, shares and settings come back; the AI index is rebuilt from your files in the background.
+To recover on a new install: install Kiboto with the same `KIBOTO_DATA_KEY` (if you used one), open Settings → System → Backups & Recovery → *System Configuration Backup & Restore* → *Upload & Restore Archive*, choose the newest `zettnas_backup_*.zettbak` and enter the passphrase. Users, shares and settings come back; the AI index is rebuilt from your files in the background.
 
 ## Recover on new hardware
 
@@ -201,7 +201,7 @@ somewhere else: the **recovery kit** of your off-site backup and, if you made on
    ```
    For a cloud location, save the kit's `rclone.conf` part to a file, install
    [rclone](https://rclone.org) and run `export RCLONE_CONFIG=./rclone.conf` first.
-2. **Install ZettNAS on the new hardware** and create the pool and shares.
+2. **Install Kiboto on the new hardware** and create the pool and shares.
 3. **Bring the settings back** with *Upload & Restore Archive* (above), using the newest
    settings backup and its passphrase: people, shares and permissions return.
 4. **Copy the restored files into the shares**, or point the off-site backup at the same

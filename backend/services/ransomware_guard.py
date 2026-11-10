@@ -1,7 +1,7 @@
 """
 Ransomware guard (M4).
 
-Watches file changes made through ZettNAS (file manager, uploads, WebDAV) and,
+Watches file changes made through Kiboto (file manager, uploads, WebDAV) and,
 optionally, guard files placed in each share. It reacts when it sees:
 
 - many renames or deletes in a short time from one user or address
@@ -11,9 +11,9 @@ optionally, guard files placed in each share. It reacts when it sees:
 - a guard file changed or deleted (any protocol, including SMB and NFS).
 
 Then it, in order:
-1. freezes writes: the file manager, uploads and WebDAV refuse changes, ZettNAS's
+1. freezes writes: the file manager, uploads and WebDAV refuse changes, Kiboto's
    own Samba shares become read-only, and the SFTP service stops;
-2. snapshots every pool where ZettNAS manages snapshots (Btrfs, ZFS on generic
+2. snapshots every pool where Kiboto manages snapshots (Btrfs, ZFS on generic
    Linux; on Unraid, snapshots stay Unraid's job and the alert says so);
 3. blocks the address the changes came from for 24 hours (M5);
 4. raises a critical alert through every notification channel.
@@ -35,7 +35,23 @@ from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json
 
 STATE_FILE = os.path.join(DATA_DIR, "ransomware_guard.json")
-CANARY_NAME = "!ZettNAS-guard-file.docx"
+CANARY_NAME = "!Kiboto-guard-file.docx"
+
+
+def _rename_old_canary(root: str, new: str) -> None:
+    """The guard file placed before the rebrand takes the new name (or goes, when both are there),
+    so a share never holds two."""
+    from backend import legacy_names
+
+    old = os.path.join(root, legacy_names.OLD_CANARY_NAME)
+    if not os.path.exists(old):
+        return
+    if os.path.exists(new):
+        os.remove(old)
+    else:
+        os.replace(old, new)
+
+
 RANSOM_EXTENSIONS = {
     ".encrypted",
     ".enc",
@@ -222,7 +238,7 @@ class RansomwareGuard:
             )
             z.writestr(
                 "word/document.xml",
-                '<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>ZettNAS ransomware guard file. Please leave it here: if it changes, ZettNAS stops all writes to protect your files.</w:t></w:r></w:p></w:body></w:document>',
+                '<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Kiboto ransomware guard file. Please leave it here: if it changes, Kiboto stops all writes to protect your files.</w:t></w:r></w:p></w:body></w:document>',
             )
         return buf.getvalue()
 
@@ -253,6 +269,7 @@ class RansomwareGuard:
         for root in roots if roots is not None else self.protected_roots():
             p = os.path.join(root, CANARY_NAME)
             try:
+                _rename_old_canary(root, p)
                 if not os.path.exists(p):
                     with open(p, "wb") as f:
                         f.write(data)
@@ -312,9 +329,9 @@ class RansomwareGuard:
             from backend.services import ip_block
 
             ip_block.block(source["ip"], f"ransomware guard: {reason}", seconds=24 * 3600)
-        snap_txt = ", ".join(s["name"] for s in snaps if s.get("ok")) or "no pool here supports ZettNAS snapshots"
+        snap_txt = ", ".join(s["name"] for s in snaps if s.get("ok")) or "no pool here supports Kiboto snapshots"
         msg = (
-            f"{reason}. Writes are frozen on ZettNAS shares, the file manager and WebDAV. "
+            f"{reason}. Writes are frozen on Kiboto shares, the file manager and WebDAV. "
             f"Source: {source.get('user') or '-'} from {source.get('ip') or '-'}. Example: {source.get('example', '-')}. "
             f"Snapshots: {snap_txt}. Check the source computer, then lift the freeze under Security."
         )
@@ -328,7 +345,7 @@ class RansomwareGuard:
             from backend.services.notifications import send_notification
 
             send_notification(
-                "ZettNAS stopped a possible ransomware attack",
+                "Kiboto stopped a possible ransomware attack",
                 msg,
                 level="critical",
                 event_type="security",

@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Main Frontend Entrypoint (v0.8.0)
+ * Kiboto - Main Frontend Entrypoint (v0.8.0)
  * Modular architecture orchestrating telemetry streaming, layout management, and desktop widgets.
  */
 import { installHiddenPause, pageHidden } from './hidden-pause.js';
@@ -76,7 +76,7 @@ function loadSettings() {
         applyDashboardLayout();
         fitMiniPreviewScale();
       } catch (err) {
-        console.warn('[ZettNAS] drawer preview', err);
+        console.warn('[Kiboto] drawer preview', err);
       }
       return m;
     });

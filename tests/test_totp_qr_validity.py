@@ -21,11 +21,11 @@ def test_totp_secret_and_uri():
     assert len(secret) == 32
     assert secret.isalnum()
 
-    uri = get_otpauth_uri("testuser", secret, issuer="ZettNAS")
+    uri = get_otpauth_uri("testuser", secret, issuer="Kiboto")
     assert uri.startswith("otpauth://totp/")
     assert "testuser" in uri
     assert f"secret={secret}" in uri
-    assert "issuer=ZettNAS" in uri
+    assert "issuer=Kiboto" in uri
 
 
 def test_totp_code_verification():
@@ -52,7 +52,7 @@ def test_recovery_codes_generation_and_hashing():
 
 
 def test_generate_qr_svg_structure():
-    uri = get_otpauth_uri("admin", generate_totp_secret(), issuer="ZettNAS")
+    uri = get_otpauth_uri("admin", generate_totp_secret(), issuer="Kiboto")
     svg_str = generate_qr_svg(uri)
 
     assert isinstance(svg_str, str)

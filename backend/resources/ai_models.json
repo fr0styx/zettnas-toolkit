@@ -1,5 +1,5 @@
 {
- "_about": "Models ZettNAS suggests, with their licences (AI-29). runtime: ollama or ovms (OpenVINO Model Server). classes: the hardware each one is a sensible choice for (cpu, igpu, npu, dgpu). Speeds are not listed: ZettNAS shows what it measures on this box.",
+ "_about": "Models Kiboto suggests, with their licences (AI-29). runtime: ollama or ovms (OpenVINO Model Server). classes: the hardware each one is a sensible choice for (cpu, igpu, npu, dgpu). Speeds are not listed: Kiboto shows what it measures on this box.",
  "models": [
   {
    "id": "qwen2.5-3b-npu",

@@ -281,7 +281,7 @@ def test_webdav_portal_desktop_sso_and_unauth_fallback(setup_phase4_env):
     assert "Sign In" in resp_unauth.text
     assert "www-authenticate" not in resp_unauth.headers
 
-    # 2. Login to ZettNAS Workbench Desktop (sets kiboto_session cookie)
+    # 2. Login to Kiboto Workbench Desktop (sets kiboto_session cookie)
     resp_login = client.post(
         "/api/auth/login",
         json={"username": "admin_user", "password": "AdminPass123!"},
@@ -292,5 +292,5 @@ def test_webdav_portal_desktop_sso_and_unauth_fallback(setup_phase4_env):
     # 3. Access WebDAV portal with desktop cookie -> SSO automatically authenticates!
     resp_sso = client.get("/webdav/", cookies={"kiboto_session": desktop_token})
     assert resp_sso.status_code == 200
-    assert "ZettNAS WebDAV" in resp_sso.text
+    assert "Kiboto WebDAV" in resp_sso.text
     assert "admin_user" in resp_sso.text

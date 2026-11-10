@@ -10,7 +10,7 @@ import { showToast, showConfirmToast } from '../toast.js';
 const PRESET_NAMES = { small: 'Small', standard: 'Standard', large: 'Large' };
 
 export function stateText(s) {
-  if (s.state === 'ready') return s.in_use ? t('aipack.in_use', 'ZettNAS uses the AI pack.') : t('aipack.state_ready', 'Ready.');
+  if (s.state === 'ready') return s.in_use ? t('aipack.in_use', 'Kiboto uses the AI pack.') : t('aipack.state_ready', 'Ready.');
   if (s.state === 'warming') return t('aipack.state_warming', 'Warming up: {phase}. The first start downloads a few GB.', { phase: s.phase || '…' });
   if (s.state === 'stopped') return t('aipack.state_stopped', 'Stopped while idle; it starts again on the next question.');
   if (s.state === 'not-ours') return t('aipack.state_not_ours', "A container named zettnas-ai exists that the AI pack didn't make; it is left alone.");
@@ -83,7 +83,7 @@ export async function renderAiPack(mount, isAdmin = false) {
         try {
           const r = await api.post('/api/ai/pack/use', {});
           if (r.reindex) await api.post('/api/ai/reindex', r.reindex);
-          showToast(t('aipack.in_use', 'ZettNAS uses the AI pack.'), 'success');
+          showToast(t('aipack.in_use', 'Kiboto uses the AI pack.'), 'success');
         } catch (err) {
           showToast(err.message || String(err), 'error');
         }

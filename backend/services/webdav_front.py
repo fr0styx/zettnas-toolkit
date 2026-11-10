@@ -1,11 +1,11 @@
-"""WebDAV through ZettNAS (SEC-34).
+"""WebDAV through Kiboto (SEC-34).
 
 rclone serves WebDAV on a loopback port only. Clients keep the address they know, the
-WebDAV port (8084), but it is ZettNAS that answers there: blocked addresses get 403, a
+WebDAV port (8084), but it is Kiboto that answers there: blocked addresses get 403, a
 failed sign-in counts towards blocking the address, and writes feed the ransomware guard,
 as they do on the web app's /webdav path. Both paths forward with `forward`.
 
-This module imports nothing from the rest of ZettNAS: what it checks and reports goes
+This module imports nothing from the rest of Kiboto: what it checks and reports goes
 through a Gate the WebDAV engine hands it (backend.services.webdav_engine.gate).
 """
 
@@ -27,7 +27,7 @@ from starlette.requests import Request
 from starlette.responses import PlainTextResponse, Response, StreamingResponse
 from starlette.routing import Route
 
-logger = logging.getLogger("ZettNAS.WebDAV")
+logger = logging.getLogger("Kiboto.WebDAV")
 
 METHODS = [
     "GET",
@@ -58,7 +58,7 @@ HOP_BY_HOP = {
 
 @dataclass
 class Gate:
-    """What the front asks ZettNAS: the client's address, whether it is blocked; and what it
+    """What the front asks Kiboto: the client's address, whether it is blocked; and what it
     tells it: a failed sign-in, a write for the ransomware guard."""
 
     client_ip: Callable[[Request], str]

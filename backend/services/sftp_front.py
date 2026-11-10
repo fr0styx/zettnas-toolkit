@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SFTP through ZettNAS (SEC-34).
+"""SFTP through Kiboto (SEC-34).
 
     python3 sftp_front.py <port> <cache dir>
 

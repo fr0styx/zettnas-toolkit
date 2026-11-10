@@ -1,4 +1,4 @@
-"""Built-in App Catalog templates ("ZettNAS Curated Suite").
+"""Built-in App Catalog templates ("Kiboto Curated Suite").
 
 Each template is deployed by backend/services/app_catalog.py through the Docker API:
 
@@ -30,7 +30,7 @@ CADDYFILE = """\
 # Caddy reverse proxy (https://caddyserver.com/docs/caddyfile)
 # Edit this file in appdata/caddy/etc, then restart the container.
 #
-# HTTPS for ZettNAS with your own domain pointing at this server (ports 80 and 443
+# HTTPS for Kiboto with your own domain pointing at this server (ports 80 and 443
 # forwarded to it); Caddy gets and renews the Let's Encrypt certificate by itself:
 #
 # nas.example.com {
@@ -43,9 +43,9 @@ CADDYFILE = """\
 """
 
 FRIGATE_YML = """\
-# Frigate for ZettNAS (COMP-11): objects are found on the Intel iGPU with OpenVINO.
+# Frigate for Kiboto (COMP-11): objects are found on the Intel iGPU with OpenVINO.
 # Add your cameras below (copy the example, set its address, enabled: true) and restart Frigate.
-# ZettNAS reads Frigate's detections and sends them as camera alerts: Notifications -> Camera alerts.
+# Kiboto reads Frigate's detections and sends them as camera alerts: Notifications -> Camera alerts.
 mqtt:
   enabled: false
 
@@ -327,14 +327,14 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "share_folders": {"data": "Files"},  # FEAT-06: may live on a share
         "logo": "nextcloud",
     },
-    # COMP-15: documents, spreadsheets and slides in the browser, signed in with ZettNAS accounts
+    # COMP-15: documents, spreadsheets and slides in the browser, signed in with Kiboto accounts
     {
         "id": "office-suite",
         "name": "Office suite (Nextcloud + Collabora)",
         "category": "cloud",
         "description": (
             "Write documents, spreadsheets and presentations in the browser, together. Nextcloud with "
-            "Collabora's built-in office server; the family signs in with their ZettNAS accounts."
+            "Collabora's built-in office server; the family signs in with their Kiboto accounts."
         ),
         "image": "nextcloud:apache",
         "default_port": 8093,
@@ -347,7 +347,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
             "NEXTCLOUD_TRUSTED_DOMAINS": "localhost",
         },
         "volumes": {"html": "/var/www/html"},
-        # its sign-in asks ZettNAS's WebDAV by name, on ZettNAS's own network
+        # its sign-in asks Kiboto's WebDAV by name, on Kiboto's own network
         "join_zettnas_network": True,
         "after_start": [
             {
@@ -375,7 +375,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
                 "user": "www-data",
             },
             {
-                "label": "Signing in with ZettNAS accounts",
+                "label": "Signing in with Kiboto accounts",
                 "cmd": ["php", "/var/www/html/occ", "app:install", "user_external"],
                 "user": "www-data",
                 "tries": 3,
@@ -383,7 +383,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
                 "timeout": 300,
             },
             {
-                "label": "Asking ZettNAS to check passwords",
+                "label": "Asking Kiboto to check passwords",
                 "cmd": [
                     "php",
                     "/var/www/html/occ",
@@ -396,7 +396,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
                 "user": "www-data",
             },
             {
-                "label": "Pointing it at ZettNAS",
+                "label": "Pointing it at Kiboto",
                 "cmd": [
                     "php",
                     "/var/www/html/occ",
@@ -561,7 +561,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
             "user": "backup",
             "password": "{{secret:password}}",
             "note": (
-                "On the other ZettNAS: Backup → Off-site, destination rest:http://<this NAS>:8000/backup/ "
+                "On the other Kiboto: Backup → Off-site, destination rest:http://<this NAS>:8000/backup/ "
                 "with this user and password. Use that address only on your own network or over Tailscale: "
                 "across the internet the password would travel in the clear. Each account sees only its own "
                 "folder. Add one per person with: docker exec -it rest-server create_user <name>"
@@ -802,7 +802,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "id": "frigate",
         "name": "Frigate NVR",
         "category": "automation",
-        "description": "Records your cameras and finds people, cars and pets on the Intel iGPU (OpenVINO); ZettNAS can send what it sees as camera alerts. The admin password is in Frigate's log on first start.",
+        "description": "Records your cameras and finds people, cars and pets on the Intel iGPU (OpenVINO); Kiboto can send what it sees as camera alerts. The admin password is in Frigate's log on first start.",
         "image": "ghcr.io/blakeblackshear/frigate:stable",
         "default_port": 8971,
         "ports": ["8971:8971"],
@@ -813,7 +813,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "shm_size": 268435456,
         "volumes": {"config": "/config", "media": "/media/frigate"},
         "seed_files": {"config": {"config.yml": FRIGATE_YML}},
-        # on ZettNAS's own network, so ZettNAS reads http://frigate:5000 and that port stays unpublished
+        # on Kiboto's own network, so Kiboto reads http://frigate:5000 and that port stays unpublished
         "join_zettnas_network": True,
         "logo": "frigate",
     },
@@ -902,7 +902,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "webui_path": "/",
         "env": {},
         "volumes": {"conf": "/opt/adguardhome/conf", "work": "/opt/adguardhome/work"},
-        # on ZettNAS's own network, so the kids' filter (COMP-13) reaches http://adguardhome:3000
+        # on Kiboto's own network, so the kids' filter (COMP-13) reaches http://adguardhome:3000
         "join_zettnas_network": True,
         "logo": "adguard-home",
     },
@@ -1499,11 +1499,11 @@ MORE_APPS: list[dict[str, Any]] = [
         "logo": "forgejo",
     },
     {
-        # AI-40: installed by backend/services/ai_pack.py (no published port, ZettNAS's network)
+        # AI-40: installed by backend/services/ai_pack.py (no published port, Kiboto's network)
         "id": "ai-pack",
         "name": "Private AI pack",
         "category": "ai",
-        "description": "Chat and search on the Intel GPU in one OpenVINO Model Server, set up for ZettNAS. Models follow your memory; no port is opened.",
+        "description": "Chat and search on the Intel GPU in one OpenVINO Model Server, set up for Kiboto. Models follow your memory; no port is opened.",
         "image": "openvino/model_server:latest-gpu",
         "default_port": 8000,
         "webui_path": None,

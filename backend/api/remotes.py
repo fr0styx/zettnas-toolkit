@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Remote & Cloud Storage API
+Kiboto - Remote & Cloud Storage API
 REST endpoints for multi-cloud integration, FUSE mounts, and backup sync.
 """
 
@@ -28,7 +28,7 @@ from backend.ignored_errors import ignored
 from backend.logging_config import in_this_request
 from backend.services.rclone_engine import get_rclone_engine
 
-logger = logging.getLogger("ZettNAS.RemotesApi")
+logger = logging.getLogger("Kiboto.RemotesApi")
 
 router = APIRouter(tags=["Remote Storage"])
 
@@ -616,7 +616,7 @@ async def get_mobile_oauth_page(sid: str):
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZettNAS - Session Expired</title>
+    <title>Kiboto - Session Expired</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #090d16; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
         .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 28px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
@@ -649,7 +649,7 @@ async def get_mobile_oauth_page(sid: str):
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZettNAS - Connect {provider_name}</title>
+    <title>Kiboto - Connect {provider_name}</title>
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
         body {{
@@ -795,7 +795,7 @@ async def get_mobile_oauth_page(sid: str):
 <body>
     <div class="card">
         <div class="brand">
-            <span class="brand-badge">ZETTNAS</span>
+            <span class="brand-badge">KIBOTO</span>
             <span style="font-size: 12px; color: #64748b; font-weight: 600;">Mobile Remote Auth</span>
         </div>
         <h1>Connect {provider_name}</h1>
@@ -881,7 +881,7 @@ async def get_mobile_oauth_page(sid: str):
                     statusBox.style.background = 'rgba(34, 197, 94, 0.2)';
                     statusBox.style.border = '1px solid rgba(34, 197, 94, 0.4)';
                     statusBox.style.color = '#4ade80';
-                    statusBox.innerHTML = '✅ <strong>Successfully Connected!</strong><br>Credentials sent to your ZettNAS desktop. You can now close this tab.';
+                    statusBox.innerHTML = '✅ <strong>Successfully Connected!</strong><br>Credentials sent to your Kiboto desktop. You can now close this tab.';
                     submitBtn.style.display = 'none';
                 }} else {{
                     throw new Error(data.detail || data.error || 'Exchange failed');

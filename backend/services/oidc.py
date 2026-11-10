@@ -7,7 +7,7 @@ from the provider's token endpoint, so its claims are checked (issuer, audience,
 nonce) without verifying the signature, as OpenID Connect Core 3.1.3.7 allows for that
 channel. Use HTTPS for the provider.
 
-Accounts: the provider's `sub` is stored on the ZettNAS user (idp_type "oidc"), so a
+Accounts: the provider's `sub` is stored on the Kiboto user (idp_type "oidc"), so a
 renamed IdP user keeps their account. A provider login never takes over an existing
 local account, unless "link by verified email" is turned on and the provider says the
 email is verified. Roles come from groups: admin_groups -> SuperAdmin, role_map for the
@@ -247,7 +247,7 @@ def _clean_username(raw: str) -> str:
 
 
 def user_for_claims(claims: dict[str, Any]) -> dict[str, Any]:
-    """Finds or creates the ZettNAS user for these claims."""
+    """Finds or creates the Kiboto user for these claims."""
     from backend.users_db import create_user, get_user_by_idp, get_user_by_username, list_users, update_user_profile
 
     cfg = load_config()
@@ -265,7 +265,7 @@ def user_for_claims(claims: dict[str, Any]) -> dict[str, Any]:
                 set_user_idp(user["id"], "oidc", str(claims["sub"]))
     if not user:
         if not cfg.get("auto_create", True):
-            raise OidcError("No ZettNAS account is linked to this sign-in. Ask an admin to create one.")
+            raise OidcError("No Kiboto account is linked to this sign-in. Ask an admin to create one.")
         name = _clean_username(claims.get(cfg["username_claim"]) or claims.get("email") or claims["sub"])
         if get_user_by_username(name):
             name = f"{name[:24]}-sso"

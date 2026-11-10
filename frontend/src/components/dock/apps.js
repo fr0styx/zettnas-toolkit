@@ -45,7 +45,7 @@ export const KNOWN_APPS = {
   console: {
     id: 'console',
     icon: '#i-screen',
-    getTitle: () => t('dock.zettnas', 'ZettNAS'),
+    getTitle: () => t('dock.zettnas', 'Kiboto'),
     launch: () => {
       openConsoleWindow();
     }
@@ -164,7 +164,7 @@ export const KNOWN_APPS = {
   zettai: {
     id: 'zettai',
     icon: '#i-search',
-    getTitle: () => t('dock.zettai', 'Ask Zetty'),
+    getTitle: () => t('dock.zettai', 'Ask Kib'),
     launch: () => {
       if (typeof window.openManagementWindow === 'function') {
         window.openManagementWindow('mgmt-sec-ai-rag', 'mgmt-pane-ai-rag');

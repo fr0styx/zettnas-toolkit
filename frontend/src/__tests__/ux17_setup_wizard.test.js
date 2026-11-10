@@ -78,7 +78,7 @@ describe('six-step setup (UX-17)', () => {
     expect(api.post).toHaveBeenCalledWith('/api/storage/shares', { name: 'Family', security: 'private' });
     expect(api.post).toHaveBeenCalledWith('/api/users', { username: 'mia', password: 'long-enough-1', role_id: 'kid' });
     expect(showToast).toHaveBeenCalledWith(expect.stringContaining('taken'), 'warning');
-    expect(document.title).toBe('Home · ZettNAS');
+    expect(document.title).toBe('Home · Kiboto');
   });
 
   it('a failed name save or share is reported, the rest carries on', async () => {
@@ -88,6 +88,6 @@ describe('six-step setup (UX-17)', () => {
     await wiz.saveSetupExtras();
     expect(showToast).toHaveBeenCalledTimes(2);
     wiz.applyServerName('');
-    expect(document.title).toBe('ZettNAS');
+    expect(document.title).toBe('Kiboto');
   });
 });

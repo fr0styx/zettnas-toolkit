@@ -18,7 +18,7 @@ describe('Network Manager - Listening Ports Inspector', () => {
 
   it('renders listening ports and formats protocol and container badges correctly', () => {
     const mockPorts = [
-      { port: 8082, protocol: 'tcp', bind_address: '0.0.0.0', service: 'ZettNAS Web Desktop', container: 'zettnas-toolkit', state: 'LISTEN' },
+      { port: 8082, protocol: 'tcp', bind_address: '0.0.0.0', service: 'Kiboto Web Desktop', container: 'zettnas-toolkit', state: 'LISTEN' },
       { port: 5353, protocol: 'udp', bind_address: '0.0.0.0', service: 'mDNS / Bonjour', container: '', state: 'ACTIVE' },
     ];
 
@@ -30,7 +30,7 @@ describe('Network Manager - Listening Ports Inspector', () => {
 
     expect(rows[0].textContent).toContain(':8082');
     expect(rows[0].textContent).toContain('TCP');
-    expect(rows[0].textContent).toContain('ZettNAS Web Desktop');
+    expect(rows[0].textContent).toContain('Kiboto Web Desktop');
     expect(rows[0].textContent).toContain('zettnas-toolkit');
 
     expect(rows[1].textContent).toContain(':5353');

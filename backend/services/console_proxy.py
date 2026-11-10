@@ -1,5 +1,5 @@
 """
-ZettNAS VM Console Proxy Service
+Kiboto VM Console Proxy Service
 Provides multiplexed bidirectional streaming between WebSockets and QEMU VNC / serial sockets.
 Supports RFB binary frames for graphical consoles and ANSI text for serial PTY consoles.
 """
@@ -96,7 +96,7 @@ async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeo
                 await asyncio.sleep(0.5)
                 continue
             banner = (
-                f"\r\n\x1b[33m[ZettNAS Serial Console]\x1b[0m Waiting for serial socket at '{socket_path}'...\r\n"
+                f"\r\n\x1b[33m[Kiboto Serial Console]\x1b[0m Waiting for serial socket at '{socket_path}'...\r\n"
                 f"\x1b[90mEnsure VM is running and serial socket is initialized.\x1b[0m\r\n"
             )
             try:

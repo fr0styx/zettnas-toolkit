@@ -1,6 +1,6 @@
 """A small Ollama-compatible embedding server for OpenVINO models (EmbeddingGemma 2 on an Intel GPU).
 
-ZettNAS (or anything that speaks Ollama's embed API) points its embedding host here. It serves:
+Kiboto (or anything that speaks Ollama's embed API) points its embedding host here. It serves:
   POST /api/embed       {"model", "input": str | [str], "truncate"} -> {"model", "embeddings"}
   POST /api/embeddings  {"model", "prompt"} -> {"embedding"}   (older Ollama API)
   GET  /api/tags        the one model this server runs
@@ -9,7 +9,7 @@ ZettNAS (or anything that speaks Ollama's embed API) points its embedding host h
 Settings (environment): MODEL_DIR (model.xml, model.bin), TOKENIZER_DIR, MODEL_NAME,
 DEVICE (GPU, CPU), PRECISION (f32; f16 gives broken EmbeddingGemma vectors on Arc),
 BATCH (2), MAX_TOKENS (2048), PORT (11434), TOKEN (optional: when set, the embed endpoints
-need "Authorization: Bearer <TOKEN>"; ZettNAS sends its EMBEDDING_TOKEN).
+need "Authorization: Bearer <TOKEN>"; Kiboto sends its EMBEDDING_TOKEN).
 
 Run it on the app's Docker network with no published port: only containers on that network can
 reach it, and the token keeps the others out too.
@@ -103,7 +103,7 @@ def embed(texts: list[str]) -> list[list[float]]:
 
 
 class Handler(BaseHTTPRequestHandler):
-    def log_message(self, fmt, *args):  # quiet: ZettNAS calls this many times a second while indexing
+    def log_message(self, fmt, *args):  # quiet: Kiboto calls this many times a second while indexing
         pass
 
     def _send(self, code: int, body: dict) -> None:

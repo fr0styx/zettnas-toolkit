@@ -1,11 +1,11 @@
 """
 Sign in with LDAP or Active Directory (M6).
 
-A service account looks the user up (sAMAccountName, uid or mail), then ZettNAS binds
-as that user with the password they typed. The directory never sees ZettNAS's own
-passwords, and ZettNAS never stores the directory password.
+A service account looks the user up (sAMAccountName, uid or mail), then Kiboto binds
+as that user with the password they typed. The directory never sees Kiboto's own
+passwords, and Kiboto never stores the directory password.
 
-Accounts: the user's DN is stored on the ZettNAS account (idp_type "ldap"). A local
+Accounts: the user's DN is stored on the Kiboto account (idp_type "ldap"). A local
 account with the same name keeps signing in with its local password; an LDAP login never
 takes it over. Roles come from groups (memberOf): admin_groups -> SuperAdmin, role_map
 for others, default_role otherwise, re-applied at each sign-in when sync_roles is on.
@@ -203,7 +203,7 @@ def role_for(groups: list[str], cfg: dict[str, Any]) -> str:
 
 
 def login(username: str, password: str) -> dict[str, Any] | None:
-    """The ZettNAS user for these directory credentials, or None."""
+    """The Kiboto user for these directory credentials, or None."""
     from backend.users_db import create_user, get_user_by_idp, get_user_by_username, update_user_profile
 
     if not enabled() or not username or not password:

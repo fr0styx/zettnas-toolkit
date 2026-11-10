@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Universal Multi-Tier Drive Locator
+Kiboto - Universal Multi-Tier Drive Locator
 Tier 1: SCSI Enclosure Services (SES / ledmon)
 Tier 2: Microcontroller ARGB (/dev/ttyACM0)
 Tier 3: Universal Software-Triggered Rhythmic Block Read Strobe

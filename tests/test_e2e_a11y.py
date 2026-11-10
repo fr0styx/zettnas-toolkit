@@ -39,7 +39,7 @@ IMPACTS = os.environ.get("KIBOTO_A11Y_IMPACTS", "moderate,serious,critical").spl
 
 pytestmark = pytest.mark.skipif(
     not is_server_reachable(BASE) and os.environ.get("KIBOTO_E2E_REQUIRED") != "1",
-    reason="Live ZettNAS Toolkit test server not reachable at http://127.0.0.1:8082",
+    reason="Live Kiboto test server not reachable at http://127.0.0.1:8082",
 )
 
 VIEWS = [

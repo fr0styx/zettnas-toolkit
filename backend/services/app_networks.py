@@ -1,12 +1,12 @@
-"""Each app ZettNAS talks to by name gets a Docker network of its own with ZettNAS (NSEC-10).
+"""Each app Kiboto talks to by name gets a Docker network of its own with Kiboto (NSEC-10).
 
-The office suite, Frigate and AdGuard Home used to join ZettNAS's own network so ZettNAS could
-reach them by name without publishing a port. That network also holds ZettNAS's model servers,
+The office suite, Frigate and AdGuard Home used to join Kiboto's own network so Kiboto could
+reach them by name without publishing a port. That network also holds Kiboto's model servers,
 which answer without a sign-in, so a compromised app could reach them. Now each such app gets
-"zettnas-app-<id>": a bridge with only that app and ZettNAS on it. Names still resolve, the
+"zettnas-app-<id>": a bridge with only that app and Kiboto on it. Names still resolve, the
 apps still reach the internet, and an app sees neither the model servers nor the other apps.
 
-An update recreates ZettNAS's container on its main network only, so ZettNAS rejoins every app
+An update recreates Kiboto's container on its main network only, so Kiboto rejoins every app
 network when it starts. Apps installed before this keep the network they were installed on.
 """
 
@@ -32,7 +32,7 @@ def network_name(app_id: str) -> str:
 
 
 def _me() -> dict[str, Any] | None:
-    """ZettNAS's own container, or None when it doesn't run in one (or Docker is out of reach)."""
+    """Kiboto's own container, or None when it doesn't run in one (or Docker is out of reach)."""
     try:
         status, me = docker_client.request("GET", f"/containers/{socket.gethostname()}/json")
     except docker_client.DockerUnavailable:
@@ -54,7 +54,7 @@ def _join(me: dict[str, Any], name: str) -> bool:
 
 
 def private_network(app_id: str) -> str | None:
-    """The app's own network with ZettNAS on it, made when missing; None when ZettNAS isn't in a
+    """The app's own network with Kiboto on it, made when missing; None when Kiboto isn't in a
     container or Docker refuses (the app then installs on Docker's default network)."""
     me = _me()
     if not me:
@@ -76,7 +76,7 @@ def private_network(app_id: str) -> str | None:
 
 
 def rejoin() -> int:
-    """Puts ZettNAS back on every app network it left (after an update); how many it joined.
+    """Puts Kiboto back on every app network it left (after an update); how many it joined.
     Never raises: it runs in the background at start."""
     me = _me()
     if not me:

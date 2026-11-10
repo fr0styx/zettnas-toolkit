@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Storage Subsystem API Routes
+Kiboto - Storage Subsystem API Routes
 Platform Abstraction Layer (PAL) endpoints for storage pools, array topology,
 and network shares (Samba/NFS/WebDAV).
 """
@@ -41,7 +41,7 @@ POOL_NAME_PATTERN = r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}$"
 
 
 def _mount_point(value: str | None) -> str | None:
-    """Where an imported pool may be mounted: under /mnt, /srv or /media and not ZettNAS's own
+    """Where an imported pool may be mounted: under /mnt, /srv or /media and not Kiboto's own
     folders (a filesystem mounted over /etc or the data folder would hide it)."""
     v = (value or "").strip()
     if not v:

@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Smart Media, Multi-Modal Local RAG & Visual Search API Router
+Kiboto - Smart Media, Multi-Modal Local RAG & Visual Search API Router
 Exposes hardware-accelerated (NPU -> GPU -> CPU) document/recipe RAG,
 12-color perceptual + scene photo search, spindown-safe incremental indexing,
 cached NVMe WebP thumbnails, and FileBot-style automated media organizing.
@@ -204,7 +204,7 @@ class AiChatRequest(BaseModel):
     allow_nas_tools: bool = True
     model: str | None = Field(default=None, max_length=256)
     conversation_id: str | None = Field(default=None, max_length=64)
-    # "Ask Zetty about this" in File Explorer: answer from this file or folder (missing feature 6)
+    # "Ask Kib about this" in File Explorer: answer from this file or folder (missing feature 6)
     focus_path: str | None = Field(default=None, max_length=4096)
 
 
@@ -461,7 +461,7 @@ def update_watched_folders(
     req: RagWatchedFoldersRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
-    """Adds, removes, or sets watched or excluded folders/shares for ZettAI RAG."""
+    """Adds, removes, or sets watched or excluded folders/shares for Kib RAG."""
     rag = get_rag_engine()
     cfg = rag.get_config()
     list_key = "excluded_paths" if req.target == "excluded" else "watched_paths"
@@ -592,7 +592,7 @@ async def get_model_recommendations(
     dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 def select_recommended_model(req: ModelSelectRequest) -> dict[str, Any]:
-    """Selects and applies an LLM / multi-modal model for ZettAI, returning any hardware fit warnings."""
+    """Selects and applies an LLM / multi-modal model for Kib, returning any hardware fit warnings."""
     rag = get_rag_engine()
     model_tag = str(req.model or req.model_id or "").strip()
     if not model_tag:
@@ -708,7 +708,7 @@ def start_model_benchmark() -> dict[str, Any]:
 
 @router.post("/ai/models/benchmark/apply", dependencies=[Depends(require_scope("system:config", "ai:manage"))])
 def apply_model_tier(req: BenchmarkApplyRequest) -> dict[str, Any]:
-    """Makes the recommended model of a tier Ask Zetty's chat model."""
+    """Makes the recommended model of a tier Ask Kib's chat model."""
     from backend.services import model_benchmark
 
     name = (model_benchmark.load_results().get("recommended") or {}).get(req.tier)
@@ -759,7 +759,7 @@ def cancel_install_job(job_id: str) -> dict[str, Any]:
     dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 def remove_model_post_endpoint(req: ModelRemoveRequest) -> dict[str, Any]:
-    """Removes a model from the ZettAI catalog and local storage."""
+    """Removes a model from the Kib catalog and local storage."""
     from backend.services.media_engine import remove_llm_model
 
     model_tag = str(req.model or req.model_id or "").strip()
@@ -784,7 +784,7 @@ def remove_model_delete_explicit_endpoint(
     model_id: str | None = Query(default=None),
     req: ModelRemoveRequest | None = None,
 ) -> dict[str, Any]:
-    """Removes a model from the ZettAI catalog and local storage via DELETE /remove."""
+    """Removes a model from the Kib catalog and local storage via DELETE /remove."""
     from backend.services.media_engine import remove_llm_model
 
     model_tag = str((req.model if req else None) or (req.model_id if req else None) or model or model_id or "").strip()
@@ -805,7 +805,7 @@ def remove_model_delete_explicit_endpoint(
     dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 def delete_model_endpoint(model_id: str) -> dict[str, Any]:
-    """Removes a model from the ZettAI catalog and local storage."""
+    """Removes a model from the Kib catalog and local storage."""
     from backend.services.media_engine import remove_llm_model
 
     clean_id = str(model_id or "").strip()
@@ -828,7 +828,7 @@ def delete_model_endpoint(model_id: str) -> dict[str, Any]:
 def get_zettai_learning_results(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
-    """Returns ZettAI 6-state learning status, succeeded/failed counts, and failed file list."""
+    """Returns Kib 6-state learning status, succeeded/failed counts, and failed file list."""
     return {"status": "ok", **get_rag_engine().get_learning_results(principal=principal)}
 
 
@@ -859,7 +859,7 @@ def toggle_favorite_item(
     req: FavoriteToggleRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
-    """Adds or removes a file path from ZettAI favorites."""
+    """Adds or removes a file path from Kib favorites."""
     vp = _validate_media_path(req.path, principal, must_exist=False)
     return get_rag_engine().toggle_favorite(vp)
 
@@ -1182,7 +1182,7 @@ async def audit_folder_endpoint(
     dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))],
 )
 def get_ai_chat_tools() -> dict[str, Any]:
-    """The server and web search tools Ask Zetty can use."""
+    """The server and web search tools Ask Kib can use."""
     rag_cfg = get_rag_engine().get_config()
     return {
         "status": "ok",
@@ -1211,7 +1211,7 @@ async def chat_with_zettai_agent(
     req: AiChatRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
-    """Ask Zetty: answers about your files and your server, with web search and the server tools."""
+    """Ask Kib: answers about your files and your server, with web search and the server tools."""
     history = req.history
     uid = (principal.user_id or principal.username or "admin").strip().lower()
     focus = _checked_focus(req, principal)
@@ -1296,7 +1296,7 @@ async def chat_with_zettai_agent_stream(
     req: AiChatRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> Response:
-    """Streams real-time Server-Sent Events (SSE) tokens, tool activity traces, and thought chains from ZettAI."""
+    """Streams real-time Server-Sent Events (SSE) tokens, tool activity traces, and thought chains from Kib."""
     from fastapi.responses import StreamingResponse
 
     history = req.history
@@ -1354,7 +1354,7 @@ async def confirm_ai_action(
     action_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
-    """Runs an action ZettAI proposed, after the user clicked Confirm (AI-01)."""
+    """Runs an action Kib proposed, after the user clicked Confirm (AI-01)."""
     from backend.services.ai_actions import confirm_action
 
     res = await asyncio.to_thread(confirm_action, action_id, principal)
@@ -1403,13 +1403,13 @@ def get_rag_config() -> dict[str, Any]:
 
 
 class AiAccessUpdate(BaseModel):
-    roles: dict[str, bool] = Field(default_factory=dict)  # Ask Zetty
+    roles: dict[str, bool] = Field(default_factory=dict)  # Ask Kib
     search_roles: dict[str, bool] = Field(default_factory=dict)  # AI search (B11, AI-26)
 
 
 @router.get("/ai/access", dependencies=[Depends(require_scope("system:config", "users:read"))])
 def get_ai_access() -> dict[str, Any]:
-    """Who may ask Zetty, per role (B8)."""
+    """Who may ask Kib, per role (B8)."""
     return {"roles": ai_access.roles_with_access(), "log_days": ai_access.LOG_DAYS}
 
 
@@ -1544,7 +1544,7 @@ async def run_ai_benchmark() -> dict[str, Any]:
     target_dim = cfg.get("embedding_dim") or 768
 
     test_strings = [
-        "ZettNAS zero-spindown storage architecture with Btrfs RAID and ZFS topology.",
+        "Kiboto zero-spindown storage architecture with Btrfs RAID and ZFS topology.",
         "Container mutator performs atomic image recreation with automatic health check rollback.",
         "High performance hardware telemetry and acoustic fan curve management on Intel N100.",
     ]

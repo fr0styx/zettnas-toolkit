@@ -55,7 +55,7 @@ describe('Sprint 5: Generic Linux Active Provisioner & Samba Engine (Frontend)',
 
     renderStructuredPoolsTopology(container, mockData);
 
-    expect(container.textContent).toContain("ZettNAS manages the storage pools");
+    expect(container.textContent).toContain("Kiboto manages the storage pools");
     expect(container.textContent).toContain('Vault Storage Pool');
     expect(container.textContent).toContain('BTRFS · RAID1');
     expect(container.textContent).toContain('Parity protected');
@@ -163,7 +163,7 @@ describe('Sprint 5: Generic Linux Active Provisioner & Samba Engine (Frontend)',
     await fetchAndRenderNetworkShares(container);
 
     expect(btnCreateShare.style.display).toBe('inline-flex');
-    expect(badge.textContent).toContain("Managed by ZettNAS");
+    expect(badge.textContent).toContain("Managed by Kiboto");
 
     const delBtn = container.querySelector('.btn-share-delete');
     expect(delBtn).not.toBeNull();

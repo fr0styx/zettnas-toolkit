@@ -23,7 +23,7 @@ POOL = os.environ.get("KIBOTO_E2E_MEDIA_DIR") or os.environ.get("POOL_PATH", "")
 
 pytestmark = pytest.mark.skipif(
     not is_server_reachable(BASE) and os.environ.get("KIBOTO_E2E_REQUIRED") != "1",
-    reason="Live ZettNAS Toolkit test server not reachable",
+    reason="Live Kiboto test server not reachable",
 )
 
 FOCUS_ID = "() => document.activeElement && document.activeElement.id"

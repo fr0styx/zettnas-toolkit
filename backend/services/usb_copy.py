@@ -1,6 +1,6 @@
 """USB disks: one-touch photo import and "back up the NAS to this disk" (FEAT-07).
 
-When a USB disk appears under /mnt/disks, ZettNAS offers what fits it: run the off-site
+When a USB disk appears under /mnt/disks, Kiboto offers what fits it: run the off-site
 backups that live on it (or start them by itself when that is turned on), and import the
 photos and videos of a camera or phone disk (its DCIM folder) into dated folders with the same
 verified copy the card reader uses. New disks are noticed from the mount table alone, so a
@@ -126,7 +126,7 @@ def _offer(disk: dict[str, Any], z_state: Any, notify: Any) -> None:
         {
             "type": "media",
             "title": "USB disk connected",
-            "message": f"{disk['name']}: {' or '.join(what)}? Open ZettNAS to choose.",
+            "message": f"{disk['name']}: {' or '.join(what)}? Open Kiboto to choose.",
             "level": "info",
         }
     )

@@ -117,9 +117,7 @@ def _multipart(fields: dict[str, str], wav: bytes) -> tuple[bytes, str]:
 
 def send_piece(url: str, model: str, wav: bytes) -> str:
     body, ctype = _multipart({"model": model, "response_format": "json"}, wav)
-    req = urllib.request.Request(
-        url, data=body, headers={"Content-Type": ctype, "User-Agent": "ZettNAS-RAG-Engine/2.0"}
-    )
+    req = urllib.request.Request(url, data=body, headers={"Content-Type": ctype, "User-Agent": "Kiboto-RAG-Engine/2.0"})
     with urllib.request.urlopen(req, timeout=TIMEOUT_SECS) as resp:  # noqa: S310 (the configured server only)
         raw = resp.read().decode("utf-8", "replace")
     try:

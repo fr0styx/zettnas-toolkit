@@ -37,7 +37,7 @@ def _wait(manager, task_id):
 
 
 def _crashed(root, tmp_path, action="copy", existed=None, **extra):
-    """A saved transfer that was running when ZettNAS stopped, loaded by a new manager."""
+    """A saved transfer that was running when Kiboto stopped, loaded by a new manager."""
     rec = {
         "id": "t1",
         "action": action,
@@ -71,7 +71,7 @@ def test_a_running_transfer_is_saved_and_comes_back_interrupted(root, tmp_path, 
     saved = json.loads((tmp_path / "transfers.json").read_text())["tasks"]
     assert saved[0]["id"] == task.id and saved[0]["status"] in ("pending", "running") and saved[0]["existed"] == [False]
 
-    after_restart = ft.TransferTaskManager()  # ZettNAS started again while it ran
+    after_restart = ft.TransferTaskManager()  # Kiboto started again while it ran
     assert after_restart.load_interrupted() == 1
     back = after_restart.get_task(task.id)
     assert back["status"] == "interrupted" and back["owner"] == "admin" and back["can_undo"] is True

@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Platform Abstraction Layer (PAL)
+Kiboto - Platform Abstraction Layer (PAL)
 Universal Storage Subsystem Interface for Appliance & Generic Linux Hosts.
 Provides hardware- and OS-agnostic disk, pool, and network share abstractions.
 

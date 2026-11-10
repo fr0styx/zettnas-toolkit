@@ -237,7 +237,7 @@ def measure(
     procs = processes(proc)
     pid = pid or backend_pid(procs, proc)
     if not pid:
-        raise SystemExit("the ZettNAS backend is not running on this machine")
+        raise SystemExit("the Kiboto backend is not running on this machine")
     hz = os.sysconf("SC_CLK_TCK") if hasattr(os, "sysconf") else 100
     members = Members(pid, scope, proc)
     root_start = started(pid, proc)

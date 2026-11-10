@@ -206,7 +206,7 @@ def finish_schema(schema: dict[str, Any], app: Any) -> dict[str, Any]:
     components["securitySchemes"] = SECURITY_SCHEMES
     schema["security"] = SECURITY
     schema.setdefault("info", {})["description"] = (
-        "The documented ZettNAS API. Every error has the Error body. Operations list the scopes they need"
+        "The documented Kiboto API. Every error has the Error body. Operations list the scopes they need"
         " in x-required-scopes; a public operation has an empty security list. See docs/API.md."
     )
     facts = route_facts(app)

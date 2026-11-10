@@ -1,5 +1,5 @@
 """
-End-to-End (E2E) Integration Tests for ZettNAS Toolkit
+End-to-End (E2E) Integration Tests for Kiboto
 Tests full frontend-backend integration using Playwright and live FastAPI environment.
 """
 
@@ -102,7 +102,7 @@ def get_live_server_auth_token(base_url="http://127.0.0.1:8082"):
 
 @pytest.mark.skipif(
     not is_server_reachable(),
-    reason="Live ZettNAS Toolkit test server not reachable at http://127.0.0.1:8082",
+    reason="Live Kiboto test server not reachable at http://127.0.0.1:8082",
 )
 def test_e2e_live_ui_and_lcd_geometry():
     executable_path = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH")
@@ -136,7 +136,7 @@ def test_e2e_live_ui_and_lcd_geometry():
 
 @pytest.mark.skipif(
     not is_server_reachable(),
-    reason="Live ZettNAS Toolkit test server not reachable at http://127.0.0.1:8082",
+    reason="Live Kiboto test server not reachable at http://127.0.0.1:8082",
 )
 def _page_diagnostics(page, sel=None):
     """What the page looks like when the desktop didn't appear, for CI annotations."""

@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Samba Management API Routes
+Kiboto - Samba Management API Routes
 Provides REST endpoints to query and manage Samba (SMB/CIFS) service,
 shares, configuration, and macOS Time Machine integration.
 """

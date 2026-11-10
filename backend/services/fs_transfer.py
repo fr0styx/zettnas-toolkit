@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Resilient Filesystem Transfer & Directory Merge Engine
+Kiboto - Resilient Filesystem Transfer & Directory Merge Engine
 Handles recursive directory merging, unified collision resolution (Merge, Overwrite, Skip, Keep Both),
 and cross-filesystem EXDEV (Invalid cross-device link) boundary fallbacks.
 """
@@ -631,7 +631,7 @@ class TransferTaskStatus(StrEnum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
-    INTERRUPTED = "interrupted"  # ZettNAS stopped while it ran: resume, undo or dismiss (REL-25)
+    INTERRUPTED = "interrupted"  # Kiboto stopped while it ran: resume, undo or dismiss (REL-25)
 
 
 class SpeedTracker:
@@ -858,7 +858,7 @@ class TransferTaskManager:
                     continue
                 if task.status in (TransferTaskStatus.PENDING, TransferTaskStatus.RUNNING, TransferTaskStatus.PAUSED):
                     task.status = TransferTaskStatus.INTERRUPTED
-                    task.error = "ZettNAS restarted during this transfer"
+                    task.error = "Kiboto restarted during this transfer"
                     task.completed_at = time.time()
                     count += 1
                 self._history.append(task)

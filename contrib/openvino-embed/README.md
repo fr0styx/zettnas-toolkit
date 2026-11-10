@@ -2,7 +2,7 @@
 
 A small server that speaks Ollama's embed API (`/api/embed`, `/api/embeddings`, `/api/tags`) and runs an
 OpenVINO model, for embedding models Ollama can't run well, such as EmbeddingGemma 2 on an Intel Arc iGPU.
-ZettNAS uses it through the AI config's `embedding_host`. Chat and other models stay on Ollama.
+Kiboto uses it through the AI config's `embedding_host`. Chat and other models stay on Ollama.
 
 ## Model
 
@@ -27,7 +27,7 @@ docker run -d --name zettnas-eg2 --restart unless-stopped --device /dev/dri \
   --network <the app's network> -e TOKEN=<a long random string> -v <dir>:/models:ro zettnas-eg2
 ```
 
-Give the ZettNAS container the same value as `EMBEDDING_TOKEN`; it is sent only with embedding
+Give the Kiboto container the same value as `EMBEDDING_TOKEN`; it is sent only with embedding
 requests. Then re-embed the index onto it (AI settings, or `POST /api/ai/reindex` with
 `{"embedding_model": "embeddinggemma-2-ov", "embedding_dim": 768, "embedding_host": "http://zettnas-eg2:11434"}`).
 Search keeps using the old vectors until every chunk is done.

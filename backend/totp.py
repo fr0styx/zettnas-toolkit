@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - RFC 6238 TOTP (Time-Based One-Time Password) & Emergency Recovery Codes.
+Kiboto - RFC 6238 TOTP (Time-Based One-Time Password) & Emergency Recovery Codes.
 
 Zero-dependency standard library implementation:
 - RFC 6238 (TOTP) / RFC 4226 (HOTP)
@@ -175,11 +175,11 @@ def verify_and_consume_recovery_code(
     return False, stored_hashes
 
 
-def get_otpauth_uri(username: str, secret: str, issuer: str = "ZettNAS") -> str:
+def get_otpauth_uri(username: str, secret: str, issuer: str = "Kiboto") -> str:
     """Generate standardized RFC 6238 key URI for authenticator applications.
     Uses clean minimal format (omitting default algorithm/digits/period) to fit compact QR matrix.
     """
-    encoded_issuer = urllib.parse.quote(issuer.strip() or "ZettNAS")
+    encoded_issuer = urllib.parse.quote(issuer.strip() or "Kiboto")
     encoded_user = urllib.parse.quote(username.strip())
     clean_secret = secret.strip().replace(" ", "").upper()
     return f"otpauth://totp/{encoded_user}?secret={clean_secret}&issuer={encoded_issuer}"

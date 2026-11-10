@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Docker Stack Inspector & Setup Editor Subsystem
+ * Kiboto - Docker Stack Inspector & Setup Editor Subsystem
  * Allows users to inspect, modify, save, and redeploy Docker Compose stacks.
  * Hardware & OS agnostic.
  */
@@ -330,7 +330,7 @@ export function deployComposeStackSnippet(yamlCode) {
     }
   }
   openStackModal(deducedName, yamlCode);
-  showToast(t('toast.copilot_compose_stack_loaded_ready_to', 'The stack from Zetty\'s answer is loaded. Check it, then deploy.'), 'success');
+  showToast(t('toast.copilot_compose_stack_loaded_ready_to', 'The stack from Kib\'s answer is loaded. Check it, then deploy.'), 'success');
 }
 
 if (typeof window !== 'undefined') {

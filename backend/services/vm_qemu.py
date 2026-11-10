@@ -305,7 +305,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
     qemu_bin = shutil.which("qemu-system-x86_64") or "/usr/bin/qemu-system-x86_64"
     if not os.path.exists(qemu_bin) and not shutil.which(qemu_bin):
         err_msg = (
-            "This is the core ZettNAS image, which has no virtual machine support. Switch to the full image (:latest)."
+            "This is the core Kiboto image, which has no virtual machine support. Switch to the full image (:latest)."
             if vm_host._image_variant() == "core"
             else "qemu-system-x86_64 binary not found on host. Ensure qemu-system-x86 is installed."
         )

@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit — ZettAI Local Agentic Chatbot, NAS Hardware Copilot & Live Web Search Engine.
+Kiboto — Kib Local Agentic Chatbot, NAS Hardware Copilot & Live Web Search Engine.
 
 Combines:
   1. Multi-Turn Conversational LLM Execution (Ollama / OpenAI-compatible local runtime +
@@ -1036,7 +1036,7 @@ def _turn_run_requested_tools(
 
         focus = FOCUS_PATH.get()
         if focus:
-            folder_detected = focus  # "Ask Zetty about this": answer from that file
+            folder_detected = focus  # "Ask Kib about this": answer from that file
         # A question no tool above claimed is a question about the files, whatever its language
         open_question = (
             not tools_called
@@ -1233,7 +1233,7 @@ def _turn_classify(
     return citations, is_meta_diagnostic, is_pure_conversational, is_self_identity, photos, web_sources
 
 
-# What Zetty says when none of the found documents answers the question (AI-28)
+# What Kib says when none of the found documents answers the question (AI-28)
 NOT_FOUND_REPLY = {
     "en": "I couldn't find that in the indexed files: none of the files the search found is about it.",
     "de": "Das habe ich in den indexierten Dateien nicht gefunden: keine der gefundenen Dateien handelt davon.",
@@ -1293,16 +1293,16 @@ def _turn_build_prompt(*, accel, active_model, clean_msg, history, is_self_ident
     if is_self_identity:
         model_creator_info = _get_model_creator_attribution(active_model, model_info)
         system_prompt = (
-            f"You are ZettAI Copilot, the local AI assistant and hardware orchestration engine of ZettNAS Toolkit. "
+            f"You are Kib Copilot, the local AI assistant and hardware orchestration engine of Kiboto. "
             f"You run 100% locally on the user's NAS hardware ({model_hw_dev}). "
             f"Your active language model is {active_model} ({model_creator_info['model_family']}), "
             f"which was developed and trained by {model_creator_info['creator']} "
-            f"State clearly that you are ZettAI Copilot running on ZettNAS, powered by {active_model} created by {model_creator_info['creator']}. "
+            f"State clearly that you are Kib Copilot running on Kiboto, powered by {active_model} created by {model_creator_info['creator']}. "
             f"Never quote religious scriptures or external web sources for questions about your creator."
         )
     elif web_sources:
         system_prompt = (
-            f"You are ZettAI, the local AI assistant and hardware copilot running on ZettNAS Toolkit "
+            f"You are Kib, the local AI assistant and hardware copilot running on Kiboto "
             f"(Active Model: {active_model}, Hardware: {model_hw_dev}). "
             f"Answer the user's question directly, accurately, and conversationally. "
             f"Ground your response in the verified web search sources and live NAS tool outputs provided below. "
@@ -1310,7 +1310,7 @@ def _turn_build_prompt(*, accel, active_model, clean_msg, history, is_self_ident
         )
     elif any(tr.get("tool") == "search_nas_knowledge" for tr in tool_results):
         system_prompt = (
-            f"You are ZettAI, the local AI assistant and hardware copilot of ZettNAS Toolkit "
+            f"You are Kib, the local AI assistant and hardware copilot of Kiboto "
             f"(Active Model: {active_model}, Hardware: {model_hw_dev}).\n\n"
             f"The user's own files that best match the question are in <retrieved_documents>, best match "
             f"first; the answer is usually in document 1. Documents may be in another language than the question.\n\n"
@@ -1329,7 +1329,7 @@ def _turn_build_prompt(*, accel, active_model, clean_msg, history, is_self_ident
         )
     elif tool_results:
         system_prompt = (
-            f"You are ZettAI, the local AI assistant and hardware copilot running on ZettNAS Toolkit "
+            f"You are Kib, the local AI assistant and hardware copilot running on Kiboto "
             f"(Active Model: {active_model}, Hardware: {model_hw_dev}). "
             f"Answer the user's question directly, accurately, and conversationally. "
             f"Ground your response in the live NAS tool outputs provided below. "
@@ -1337,7 +1337,7 @@ def _turn_build_prompt(*, accel, active_model, clean_msg, history, is_self_ident
         )
     else:
         system_prompt = (
-            f"You are ZettAI, an intelligent, articulate, conversational AI assistant running 100% locally on ZettNAS Toolkit "
+            f"You are Kib, an intelligent, articulate, conversational AI assistant running 100% locally on Kiboto "
             f"(Active Model: {active_model}, Hardware: {model_hw_dev}). "
             f"Think step-by-step and answer the user's question directly, conversationally, and thoroughly using your "
             f"own internal knowledge and reasoning. Do not invent citations or mention search engines since you are reasoning directly. "
@@ -1420,7 +1420,7 @@ def _turn_call_model(
         sink = _TOKEN_SINK.get()
         if sink:
             sink("token", reply)
-        return 0, reply, 0.0, None, "ZettNAS"
+        return 0, reply, 0.0, None, "Kiboto"
     try:
         MAX_TOOL_RECURSIONS = 3
         tool_recursions = 0
@@ -1452,9 +1452,7 @@ def _turn_call_model(
         read_text = False
         while raw_tool_calls and tool_recursions < MAX_TOOL_RECURSIONS:
             tool_recursions += 1
-            logger.info(
-                "[ZettAI] ReAct loop iteration %s executing %s tool call(s)", tool_recursions, len(raw_tool_calls)
-            )
+            logger.info("[Kib] ReAct loop iteration %s executing %s tool call(s)", tool_recursions, len(raw_tool_calls))
 
             llm_messages.append(
                 {
@@ -1964,7 +1962,7 @@ def _run_agentic_chat_turn(
     principal: Any = None,
 ) -> dict[str, Any]:
     """
-    Executes a conversational turn with the ZettAI Local Chatbot & NAS Copilot:
+    Executes a conversational turn with the Kib Local Chatbot & NAS Copilot:
       1. Detects required NAS Hardware Tools (telemetry, standby-safe disks, fan control,
          Docker containers, local RAG search, AI sync) and executes them safely.
       2. Browses the live internet (`browse_internet`) whenever web verification is requested
@@ -2319,13 +2317,13 @@ async def stream_agentic_chat(
                     res["conversation_title"] = new_t
                     yield f"event: conversation_title\ndata: {json.dumps({'conversation_id': conversation_id, 'title': new_t})}\n\n"
             except Exception as _pers_ex:
-                logger.warning(f"[ZettAI] Assistant message auto-persistence error: {_pers_ex}")
+                logger.warning(f"[Kib] Assistant message auto-persistence error: {_pers_ex}")
 
         yield f"event: done\ndata: {json.dumps(res)}\n\n"
 
     except (asyncio.CancelledError, GeneratorExit):
         cancel_event.set()  # stops the model at its next chunk (AI-12)
-        logger.info("[ZettAI] Client cancelled or disconnected mid-stream; generation stopped")
+        logger.info("[Kib] Client cancelled or disconnected mid-stream; generation stopped")
         if conversation_id:
             try:
                 from backend.services.ai_conversations_db import append_message
@@ -2345,7 +2343,7 @@ async def stream_agentic_chat(
                 ignored("backend.services.ai_chat_agent.stream_agentic_chat")
         raise
     except Exception as ex:
-        logger.error(f"[ZettAI] Streaming exception: {ex}")
+        logger.error(f"[Kib] Streaming exception: {ex}")
         yield f"event: error\ndata: {json.dumps({'error': str(ex)})}\n\n"
     finally:
         cancel_event.set()

@@ -1,5 +1,5 @@
 """FEAT-11: a NUT server for the family's PCs. upsmon on a PC logs in as a secondary, polls
-ups.status, and sees FSD when ZettNAS starts its own low-battery shutdown."""
+ups.status, and sees FSD when Kiboto starts its own low-battery shutdown."""
 
 import socket
 import threading
@@ -87,14 +87,14 @@ def test_the_protocol(cfg):
     assert s.handle("HELP")[0][0].startswith("Commands:")
     assert s.handle("")[0] == []
     assert s.handle("STARTTLS")[0] == ["ERR FEATURE-NOT-CONFIGURED"]
-    assert s.handle("LIST UPS")[0] == ["BEGIN LIST UPS", 'UPS ups "ZettNAS UPS"', "END LIST UPS"]
+    assert s.handle("LIST UPS")[0] == ["BEGIN LIST UPS", 'UPS ups "Kiboto UPS"', "END LIST UPS"]
     listing = s.handle("LIST VAR ups")[0]
     assert listing[0] == "BEGIN LIST VAR ups" and 'VAR ups ups.status "OL CHRG"' in listing
     assert s.handle("LIST VAR other")[0] == ["ERR UNKNOWN-UPS"]
     assert s.handle("GET VAR ups battery.charge")[0] == ['VAR ups battery.charge "88"']
     assert s.handle("GET VAR ups nothing.here")[0] == ["ERR VAR-NOT-SUPPORTED"]
     assert s.handle("GET VAR other ups.status")[0] == ["ERR UNKNOWN-UPS"]
-    assert s.handle("GET UPSDESC ups")[0] == ['UPSDESC ups "ZettNAS UPS"']
+    assert s.handle("GET UPSDESC ups")[0] == ['UPSDESC ups "Kiboto UPS"']
     assert s.handle("GET SOMETHING ups")[0] == ["ERR INVALID-ARGUMENT"]
     assert s.handle("LOGIN ups")[0] == ["ERR USERNAME-REQUIRED"]
     assert s.handle("USERNAME")[0] == ["ERR INVALID-ARGUMENT"]

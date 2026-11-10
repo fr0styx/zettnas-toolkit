@@ -29,7 +29,7 @@ ENV MALLOC_ARENA_MAX=2
 ENV ZFS_MODULE_TIMEOUT=0
 
 LABEL org.opencontainers.image.source="https://github.com/fr0styx/zettnas-toolkit"
-LABEL org.opencontainers.image.description="ZettNAS Toolkit: Hardware telemetry, custom fan curves, ARGB lightbar, and LCD dashboard"
+LABEL org.opencontainers.image.description="Kiboto: Hardware telemetry, custom fan curves, ARGB lightbar, and LCD dashboard"
 # No net.unraid.docker.managed label here: Unraid adds it to containers it creates from a template,
 # and stops every container that carries it with an explicit `docker stop` on shutdown and array
 # stop, which defeats --restart unless-stopped. The fan watchdog and other containers run from this
@@ -134,9 +134,9 @@ RUN if [ "$VARIANT" = "full" ]; then \
     && rm -rf /var/lib/apt/lists/*; \
     elif [ "$VARIANT" != "core" ]; then echo "VARIANT must be full or core" >&2; exit 1; fi
 
-# ZFS (REL-4, D2): the full image only, for hosts where ZettNAS runs the pools (ZettOS, plain Linux,
+# ZFS (REL-4, D2): the full image only, for hosts where Kiboto runs the pools (ZettOS, plain Linux,
 # the appliance image). Debian's own package from trixie-backports, the same 2.4 line the
-# appliance OS will use; ZettNAS runs it only when it matches the host's ZFS module (pal/base.py).
+# appliance OS will use; Kiboto runs it only when it matches the host's ZFS module (pal/base.py).
 # The core image is for Unraid, TrueNAS and Proxmox, which run their own ZFS.
 RUN if [ "$VARIANT" = "full" ]; then \
     printf "Types: deb\nURIs: http://deb.debian.org/debian\nSuites: trixie-backports\nComponents: main contrib\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n" \

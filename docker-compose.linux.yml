@@ -1,7 +1,7 @@
 version: "3.8"
 
 # ==============================================================================
-# ZettNAS Toolkit - Turnkey Generic Linux Deployment
+# Kiboto - Turnkey Generic Linux Deployment
 # Supports Ubuntu, Debian, Alpine, Fedora, Arch, and Raspberry Pi OS (ARM64 & x86_64).
 # Features Active Provisioner Mode (Btrfs RAID1/10) and line-rate Samba sidecar.
 # ==============================================================================
@@ -17,7 +17,7 @@ services:
         max-size: "10m"
         max-file: "3"
     ports:
-      - "8082:8082"   # ZettNAS Workbench WebUI & REST API
+      - "8082:8082"   # Kiboto Workbench WebUI & REST API
       - "8084:8084"   # Universal WebDAV Engine (Direct Line-Rate Access)
     volumes:
       # Host telemetry and sysfs mounts
@@ -87,7 +87,7 @@ services:
 
   zettnas-samba:
     # Maintained Samba on Alpine (github.com/crazy-max/docker-samba); dperson/samba stopped at 2021.
-    # ZettNAS writes the whole smb.conf; this container only runs it.
+    # Kiboto writes the whole smb.conf; this container only runs it.
     image: crazymax/samba:4.23.8
     container_name: zettnas-samba
     restart: unless-stopped
@@ -106,11 +106,11 @@ services:
       - |
         CONF=/etc/samba/zettnas/smb.conf
         if [ -f /etc/samba/zettnas/disable_sidecar ] || nc -z 127.0.0.1 445 2>/dev/null; then
-          echo "[ZettNAS Samba] The host already serves SMB on port 445. Standby mode."
+          echo "[Kiboto Samba] The host already serves SMB on port 445. Standby mode."
           while true; do sleep 86400; done
         fi
         until [ -f "$$CONF" ]; do
-          echo "[ZettNAS Samba] Waiting for ZettNAS to write $$CONF..."
+          echo "[Kiboto Samba] Waiting for Kiboto to write $$CONF..."
           sleep 5
         done
         mkdir -p /var/lib/samba/private /var/log/samba /run/samba
@@ -118,8 +118,8 @@ services:
         pdbedit -L 2>/dev/null | while IFS=: read -r user uid _; do
           [ -n "$$user" ] && ! id -u "$$user" >/dev/null 2>&1 && { adduser -D -H -u "$$uid" "$$user" 2>/dev/null || adduser -D -H "$$user"; }
         done
-        nmbd --daemon --configfile="$$CONF" || echo "[ZettNAS Samba] nmbd did not start (NetBIOS names only)"
-        wsdd2 -d -w || echo "[ZettNAS Samba] wsdd2 did not start (Windows network discovery only)"
+        nmbd --daemon --configfile="$$CONF" || echo "[Kiboto Samba] nmbd did not start (NetBIOS names only)"
+        wsdd2 -d -w || echo "[Kiboto Samba] wsdd2 did not start (Windows network discovery only)"
         exec smbd --foreground --no-process-group --debug-stdout --configfile="$$CONF"
     depends_on:
       - zettnas-toolkit

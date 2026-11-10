@@ -1,6 +1,6 @@
 """The app's side of the host fan watchdog: a heartbeat in the host's /dev/shm.
 
-While ZettNAS controls the fans it rewrites a tiny file every few seconds. If the app is killed
+While Kiboto controls the fans it rewrites a tiny file every few seconds. If the app is killed
 (SIGKILL, out of memory, a crash) the beats stop with "released": false, and the watchdog,
 running in its own container, puts the fans in their safe state. A clean shutdown writes a last
 beat with "released": true. /dev/shm is memory: the beats never wake a disk."""

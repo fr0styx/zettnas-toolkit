@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Dedicated Docker Containers & Services Window Manager
+ * Kiboto - Dedicated Docker Containers & Services Window Manager
  * Provides a dedicated desktop window for Docker containers with live telemetry,
  * filtering, search, compose stacks, container controls, and app catalog access.
  */

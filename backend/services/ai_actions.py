@@ -1,5 +1,5 @@
 """
-Click-to-confirm for ZettAI actions that change the system (AI-01).
+Click-to-confirm for Kib actions that change the system (AI-01).
 
 The chat agent never runs a mutating tool on its own, whether a regex,
 a "yes, do it" follow-up or the model picked it. It returns a proposal
@@ -76,8 +76,8 @@ def confirm_action(action_id: str, principal: Any) -> dict[str, Any]:
         or raw.get("is_stream_ticket")
         or raw.get("is_console_ticket")
     ):
-        # A person confirms in ZettNAS; the token or ticket that proposed it cannot.
-        return {"status": "not_found", "error": "Confirm this action in ZettNAS while signed in."}
+        # A person confirms in Kiboto; the token or ticket that proposed it cannot.
+        return {"status": "not_found", "error": "Confirm this action in Kiboto while signed in."}
     with _lock:
         entry = _pending.get(action_id)
         if not entry or not owner or entry["owner"] != owner:

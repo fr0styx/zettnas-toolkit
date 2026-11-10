@@ -22,7 +22,7 @@ PASSWORD = os.environ.get("KIBOTO_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD
 
 pytestmark = pytest.mark.skipif(
     not is_server_reachable(BASE) and os.environ.get("KIBOTO_E2E_REQUIRED") != "1",
-    reason="Live ZettNAS Toolkit test server not reachable",
+    reason="Live Kiboto test server not reachable",
 )
 
 CUT_OFF = """(root) => {

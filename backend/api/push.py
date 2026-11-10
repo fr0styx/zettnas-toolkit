@@ -54,7 +54,7 @@ def devices(principal: AuthenticatedPrincipal = Depends(get_current_principal)) 
 
 @router.post("/test", dependencies=[Depends(require_scope("system:config", "users:read", "system:view"))])
 def test_push(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> dict[str, Any]:
-    res = web_push.notify("ZettNAS test", "Notifications reach this device.", users=[principal.username])
+    res = web_push.notify("Kiboto test", "Notifications reach this device.", users=[principal.username])
     if not res:
         raise HTTPException(status_code=404, detail="No device of yours has notifications turned on.")
     return {"sent": res}

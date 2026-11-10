@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Expanded UPS & Power Infrastructure Tests
+Kiboto - Expanded UPS & Power Infrastructure Tests
 Tests for multi-protocol HAL, persistent config management, auto-discovery,
 connection testing, battery self-test, outage simulation, and event logs.
 """

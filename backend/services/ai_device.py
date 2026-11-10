@@ -41,7 +41,7 @@ def _base(endpoint: str) -> str:
 
 
 def _get_json(url: str, timeout: float = 1.0) -> Any:
-    req = urllib.request.Request(url, headers={"User-Agent": "ZettNAS-Toolkit/2.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "Kiboto/2.0"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 (a configured local AI server)
         return json.loads(resp.read().decode("utf-8", errors="replace"))
 

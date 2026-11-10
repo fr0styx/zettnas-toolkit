@@ -11,7 +11,7 @@ const when = (ts) => (ts ? formatDateTime(ts * 1000) : t('offsite.never', 'never
 
 export function reposHtml(data) {
   if (!data.available) {
-    return `<p class="offsite-note">${escapeHtml(t('offsite.unavailable', 'This image has no restic; update ZettNAS to use offsite backups.'))}</p>`;
+    return `<p class="offsite-note">${escapeHtml(t('offsite.unavailable', 'This image has no restic; update Kiboto to use offsite backups.'))}</p>`;
   }
   const rows = (data.repos || [])
     .map(
@@ -165,7 +165,7 @@ export async function offerRecoveryKit(repo, onSaved = null) {
 
 export function recoveryKitText(repo, key) {
   return [
-    'ZettNAS off-site backup: recovery kit',
+    'Kiboto off-site backup: recovery kit',
     `Name: ${repo.name || repo.id}`,
     `Location: ${repo.location}`,
     `Recovery key: ${key}`,
@@ -174,7 +174,7 @@ export function recoveryKitText(repo, key) {
     `  export RESTIC_PASSWORD='${key}'`,
     `  restic -r '${repo.location}' snapshots`,
     `  restic -r '${repo.location}' restore latest --target ./restored`,
-    'A cloud location also needs its access keys (the same ones set up in ZettNAS).',
+    'A cloud location also needs its access keys (the same ones set up in Kiboto).',
     'Keep this file somewhere other than the NAS.',
     '',
   ].join('\n');
@@ -221,7 +221,7 @@ export async function renderOffsite(mount) {
   const restBox = /** @type {HTMLElement | null} */ (form?.querySelector('[data-off-rest]') || null);
   const lockBox = /** @type {HTMLElement | null} */ (form?.querySelector('[data-off-lock]') || null);
   if (location && restBox && lockBox) {
-    // FEAT-08: a restic REST server (another ZettNAS's backup-target app) takes a sign-in;
+    // FEAT-08: a restic REST server (another Kiboto's backup-target app) takes a sign-in;
     // FEAT-03: a cloud remote can be a locked bucket
     location.addEventListener('input', () => {
       restBox.hidden = !isRestLocation(location.value);
@@ -272,7 +272,7 @@ export async function renderOffsite(mount) {
         await offerRecoveryKit({ id: b.dataset.id }, () => renderOffsite(mount));
         return;
       } else if (act === 'forget') {
-        showConfirmToast(t('offsite.forget_confirm', 'Forget this backup in ZettNAS? The backup itself stays where it is.'), async () => {
+        showConfirmToast(t('offsite.forget_confirm', 'Forget this backup in Kiboto? The backup itself stays where it is.'), async () => {
           await api.delete(`/api/offsite/repos/${id}`);
           renderOffsite(mount);
         });

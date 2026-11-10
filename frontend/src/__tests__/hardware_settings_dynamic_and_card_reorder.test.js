@@ -166,7 +166,7 @@ describe('Yak Wallpaper Switch, Card Reordering, and Dynamic Hardware Settings S
         <div id="mcu-status-pill" class="suite-pill hidden"><span class="pulse-dot"></span> MCU: <strong id="mcu-status-text">/dev/ttyACM0</strong></div>
         <div id="fb-status-pill" class="suite-pill hidden"><span class="pulse-dot"></span> FB: <strong id="fb-status-text">/dev/fb0 (640x172)</strong></div>
         <button id="drawer-toggle-btn" class="suite-toolkit-btn hidden">⚙ HARDWARE SETTINGS</button>
-        <div id="chassis-desktop-icon" class="chassis-hero-box chassis-desktop-icon" title="ZettNAS"></div>
+        <div id="chassis-desktop-icon" class="chassis-hero-box chassis-desktop-icon" title="Kiboto"></div>
         <div class="chassis-front-panel" id="console-window">
           <span class="chassis-screen-spec">640 × 172 IPS</span>
           <div id="screen" class="hardware-screen-canvas" style="width: 640px; height: 172px;"></div>
@@ -174,7 +174,7 @@ describe('Yak Wallpaper Switch, Card Reordering, and Dynamic Hardware Settings S
       `;
     });
 
-    it('shows MCU pill, FB pill, Hardware Settings button, and ZettNAS desktop icon on ZETTLABS D6U / custom hardware equipment', () => {
+    it('shows MCU pill, FB pill, Hardware Settings button, and Kiboto desktop icon on ZETTLABS D6U / custom hardware equipment', () => {
       const stats = {
         hardware: {
           sys_vendor: 'Zettlab',
@@ -217,13 +217,13 @@ describe('Yak Wallpaper Switch, Card Reordering, and Dynamic Hardware Settings S
       expect(drawerBtn.classList.contains('hidden')).toBe(false);
       expect(drawerBtn.style.display).not.toBe('none');
 
-      // ZettNAS icon visible on Zettlabs D6U
+      // Kiboto icon visible on Zettlabs D6U
       expect(chassisIcon.style.display).not.toBe('none');
       expect(chassisIcon.classList.contains('hidden')).toBe(false);
       expect(chassisIcon.getAttribute('title')).toContain('640 × 172 IPS');
     });
 
-    it('hides MCU pill, FB pill, Hardware Settings button, and ZettNAS desktop icon on generic PC, Dell/HP servers, or VMs', () => {
+    it('hides MCU pill, FB pill, Hardware Settings button, and Kiboto desktop icon on generic PC, Dell/HP servers, or VMs', () => {
       const stats = {
         hardware: {
           sys_vendor: 'Dell Inc.',
@@ -259,12 +259,12 @@ describe('Yak Wallpaper Switch, Card Reordering, and Dynamic Hardware Settings S
       expect(drawerBtn.classList.contains('hidden')).toBe(true);
       expect(drawerBtn.style.display).toBe('none');
 
-      // ZettNAS icon hidden on generic hardware without physical LCD
+      // Kiboto icon hidden on generic hardware without physical LCD
       expect(chassisIcon.style.display).toBe('none');
       expect(chassisIcon.classList.contains('hidden')).toBe(true);
     });
 
-    it('shows ZettNAS desktop icon and adapts display resolution when non-Zettlabs hardware has a physical LCD', () => {
+    it('shows Kiboto desktop icon and adapts display resolution when non-Zettlabs hardware has a physical LCD', () => {
       const stats = {
         hardware: {
           sys_vendor: 'Supermicro',

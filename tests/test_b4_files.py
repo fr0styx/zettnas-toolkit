@@ -1,4 +1,4 @@
-"""Missing features 6 and 7: Previous versions from snapshots, and Ask Zetty about a file."""
+"""Missing features 6 and 7: Previous versions from snapshots, and Ask Kib about a file."""
 
 import os
 import uuid

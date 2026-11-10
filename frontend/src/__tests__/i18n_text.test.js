@@ -35,7 +35,7 @@ describe('i18n text nodes (UX-21)', () => {
   });
 
   it('does not count names, acronyms, units, ids and paths', () => {
-    for (const same of ['ZettNAS', 'SMART', 'CPU', '2FA', '12 GB', 'eth0', '/mnt/user', 'https://x.y', '°C', 'e.g. 8080']) {
+    for (const same of ['Kiboto', 'SMART', 'CPU', '2FA', '12 GB', 'eth0', '/mnt/user', 'https://x.y', '°C', 'e.g. 8080']) {
       expect(readable(same), same).toBe(false);
     }
     for (const text of ['Save changes', 'SAVE CHANGES', 'Keep \u0000', 'Revoke', 'TWO-FACTOR AUTH']) {

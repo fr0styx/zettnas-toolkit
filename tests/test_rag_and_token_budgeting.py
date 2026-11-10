@@ -142,7 +142,7 @@ def test_compute_neural_embedding_embeddinggemma_modern_api_embed():
 
     with mock.patch("urllib.request.urlopen", return_value=mock_resp):
         res = compute_neural_embedding_via_ollama(
-            text="ZettNAS zero-spindown storage architecture",
+            text="Kiboto zero-spindown storage architecture",
             model="google/embeddinggemma-2",
             host="http://127.0.0.1:11434",
         )
@@ -507,7 +507,7 @@ def test_token_budgeting_8k_character_cap():
         resp.__enter__.return_value = resp
         return resp
 
-    long_english = "ZettNAS enterprise storage architecture. " * 800  # ~32,800 chars
+    long_english = "Kiboto enterprise storage architecture. " * 800  # ~32,800 chars
     long_cjk = "存储架构与容器管理。 " * 1500  # ~16,500 CJK chars
 
     with mock.patch("urllib.request.urlopen", side_effect=mock_urlopen):

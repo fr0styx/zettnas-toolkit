@@ -23,11 +23,11 @@ CATALOG_CACHE_DIR = os.path.join(DATA_DIR, "catalog_cache")
 DEFAULT_SOURCES: list[dict[str, Any]] = [
     {
         "id": "builtin",
-        "name": "ZettNAS Curated Suite",
+        "name": "Kiboto Curated Suite",
         "url": "builtin",
         "enabled": True,
         "type": "builtin",
-        "description": "Hand-crafted, tested homelab stacks built directly into ZettNAS.",
+        "description": "Hand-crafted, tested homelab stacks built directly into Kiboto.",
         "item_count": len(CURATED_APP_CATALOG),
         "last_synced": int(time.time()),
         "status": "ok",
@@ -36,7 +36,7 @@ DEFAULT_SOURCES: list[dict[str, Any]] = [
 ]
 
 # Community catalogs in Portainer template format, off until the user turns them on.
-# Their apps are labelled "community": not reviewed by ZettNAS, and still go through the
+# Their apps are labelled "community": not reviewed by Kiboto, and still go through the
 # security review and the Docker proxy before they install.
 COMMUNITY_SOURCES: list[dict[str, Any]] = [
     {
@@ -45,7 +45,7 @@ COMMUNITY_SOURCES: list[dict[str, Any]] = [
         "url": "https://raw.githubusercontent.com/Lissy93/portainer-templates/main/templates.json",
         "enabled": False,
         "type": "portainer",
-        "description": "About 800 community-maintained apps in Portainer template format, not reviewed by ZettNAS.",
+        "description": "About 800 community-maintained apps in Portainer template format, not reviewed by Kiboto.",
         "item_count": 0,
         "last_synced": 0,
         "status": "not_synced",
@@ -96,7 +96,7 @@ _CATEGORY_RES = [(cat, [_category_word_re(w) for w in words]) for cat, words in 
 
 
 def normalize_category(cats: Any) -> str:
-    """Normalizes arbitrary template categories to ZettNAS standard categories."""
+    """Normalizes arbitrary template categories to Kiboto standard categories."""
     if isinstance(cats, str):
         cats = [cats]
     elif not isinstance(cats, list):
@@ -286,7 +286,7 @@ def sync_catalog_source(source_id: str) -> dict[str, Any]:
         status, _hdrs, body = safe_fetch(
             url,
             context="lan",
-            headers={"User-Agent": "ZettNAS-Toolkit/1.5 (+https://github.com/fr0styx/zettnas-toolkit)"},
+            headers={"User-Agent": "Kiboto/1.5 (+https://github.com/fr0styx/zettnas-toolkit)"},
             timeout=15,
             max_bytes=20 * 1024 * 1024,
         )
@@ -474,7 +474,7 @@ def sideload_app_manifest(
             raise ValueError("URL must start with http:// or https://")
         from backend.services.safe_fetch import safe_fetch
 
-        status, _hdrs, body = safe_fetch(u, context="lan", headers={"User-Agent": "ZettNAS-Toolkit/1.0"}, timeout=15)
+        status, _hdrs, body = safe_fetch(u, context="lan", headers={"User-Agent": "Kiboto/1.0"}, timeout=15)
         if status != 200:
             raise ValueError(f"Could not download the manifest (HTTP {status})")
         raw_text = body.decode("utf-8", errors="replace")
@@ -798,7 +798,7 @@ def _companion_services(
     }
 
     yaml_lines = [
-        f"# ZettNAS 1-Click Homelab Stack: {app['name']}",
+        f"# Kiboto 1-Click Homelab Stack: {app['name']}",
         "version: '3.8'",
         "services:",
         f"  {service_name}:",
@@ -914,7 +914,7 @@ def generate_compose_for_app(
                 try:
                     req = urllib.request.Request(
                         raw_url,
-                        headers={"User-Agent": "ZettNAS-Toolkit/1.5"},
+                        headers={"User-Agent": "Kiboto/1.5"},
                     )
                     with urllib.request.urlopen(req, timeout=5) as r:
                         raw_stack = r.read().decode("utf-8", errors="replace")
@@ -1123,7 +1123,7 @@ def share_mounts() -> dict[str, str]:
             continue
         real = os.path.realpath(mp)
         if any(d == real or d.startswith(real.rstrip("/") + "/") for d in app_folders):
-            continue  # it holds ZettNAS's own data (NSEC-9)
+            continue  # it holds Kiboto's own data (NSEC-9)
         out[name] = mp
     return out
 
@@ -1150,7 +1150,7 @@ def share_folder_paths(app: dict[str, Any], picks: dict[str, str] | None) -> tup
 def app_dir_for(storage_root: str, slug: str) -> tuple[str, str]:
     """The folder an app keeps its data in, under the folder asked for, or why it can't be
     (CodeQL path injection): an absolute folder outside the system folders and outside
-    ZettNAS's own data and install folders, since it is mounted into the app read-write.
+    Kiboto's own data and install folders, since it is mounted into the app read-write.
     There is no fallback: a folder that can't be made is an error."""
     from backend.fsutil import is_protected
     from backend.services.samba_engine import FORBIDDEN_PREFIXES
@@ -1162,7 +1162,7 @@ def app_dir_for(storage_root: str, slug: str) -> tuple[str, str]:
     app_dir = os.path.realpath(os.path.join(root, slug))
     system = root == "/" or any(root == p or root.startswith(p + "/") for p in FORBIDDEN_PREFIXES)
     if system or is_protected(root) or is_protected(app_dir) or not app_dir.startswith(root.rstrip("/") + "/"):
-        return "", f"Apps can't keep their data in {raw}: it is a system folder or ZettNAS's own."
+        return "", f"Apps can't keep their data in {raw}: it is a system folder or Kiboto's own."
     try:
         os.makedirs(app_dir, exist_ok=True)
     except OSError as e:
@@ -1254,7 +1254,7 @@ _STORAGE_ROOT: dict[str, str] = {}
 
 
 def default_storage_root() -> str:
-    """Where this host keeps apps' data: the folder that holds ZettNAS's own data folder on the
+    """Where this host keeps apps' data: the folder that holds Kiboto's own data folder on the
     host (from its container's mounts), so it fits TrueNAS or a plain Linux box too; Unraid's
     /mnt/user/appdata when that can't be told (NUX-12)."""
     if "root" in _STORAGE_ROOT:
@@ -1291,7 +1291,7 @@ def _apply_runtime_options(create_body: dict[str, Any], app: dict[str, Any]) -> 
     if app.get("join_zettnas_network") and not host.get("NetworkMode"):
         from backend.services.app_networks import private_network
 
-        net = private_network(str(app.get("id") or "app"))  # ZettNAS reaches it by name; nothing else does (NSEC-10)
+        net = private_network(str(app.get("id") or "app"))  # Kiboto reaches it by name; nothing else does (NSEC-10)
         if net:
             host["NetworkMode"] = net
     devices = [
@@ -1756,7 +1756,7 @@ def stream_deploy_catalog_app(
         "Labels": {
             "com.docker.compose.project": service_name,
             "com.docker.compose.service": service_name,
-            "com.zettnas.managed": "1",  # ZettNAS stops only its own apps on a power cut (REL-10)
+            "com.zettnas.managed": "1",  # Kiboto stops only its own apps on a power cut (REL-10)
             "net.unraid.docker.managed": "dockerman",
             "net.unraid.docker.webui": f"{app.get('webui_scheme', 'http')}://[IP]:[PORT:{port}]{(app.get('webui_path') or '/')}",
             "net.unraid.docker.icon": app.get("logo")
@@ -1777,7 +1777,7 @@ def stream_deploy_catalog_app(
         "POST",
         f"/containers/create?name={service_name}",
         body=create_body,
-        headers={"X-ZettNAS-Elevated": "1"} if reasons else {},
+        headers={"X-Kiboto-Elevated": "1"} if reasons else {},
     )
     if st != 201:
         yield {

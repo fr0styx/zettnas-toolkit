@@ -12,7 +12,7 @@ import stat
 
 from backend import config
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 SECRET_FILES = (
     "secret.key",

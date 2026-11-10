@@ -119,7 +119,7 @@ def test_a_digest_without_a_tag_stays_pinned(monkeypatch):
         {"Names": ["/jf"], "Id": "x", "Image": "jellyfin/jellyfin@" + A, "Labels": FOLLOW}
     )
     assert res["status"] == "pinned"
-    # a digest its owner pinned (no ZettNAS label) is left alone, tag or not
+    # a digest its owner pinned (no Kiboto label) is left alone, tag or not
     res = docker_updates._check_container_image_update({"Names": ["/v"], "Id": "x", "Image": "valkey/valkey:9@" + A})
     assert res["status"] == "pinned"
     with pytest.raises(ValueError, match="pinned"):

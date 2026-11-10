@@ -1,4 +1,4 @@
-"""One way to open ZettNAS's SQLite databases (ARC-30).
+"""One way to open Kiboto's SQLite databases (ARC-30).
 
 Each database has a profile: the pragmas every connection to it gets, and whether it goes
 through db_crypto (the AI databases can be encrypted with the AI data key). The helpers in
@@ -21,7 +21,7 @@ PROFILES: dict[str, dict[str, Any]] = {
         "crypto": False,
         "pragmas": (*_COMMON, "mmap_size=268435456", "cache_size=-64000", "temp_store=MEMORY"),
     },
-    # Ask Zetty's conversations (may be encrypted)
+    # Ask Kib's conversations (may be encrypted)
     "ai_conversations": {"crypto": True, "wal": True, "pragmas": (*_COMMON, "foreign_keys=ON")},
     # the AI search index (may be encrypted; rag_engine also loads sqlite-vec and caps the WAL)
     "rag_index": {"crypto": True, "wal": True, "pragmas": (*_COMMON, "foreign_keys=ON", "temp_store=MEMORY")},

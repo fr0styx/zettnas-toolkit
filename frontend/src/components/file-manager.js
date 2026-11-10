@@ -791,7 +791,7 @@ export class FileManagerWindow {
     // Refresh button
     this.refreshBtn?.addEventListener('click', () => this.loadPath(this.currentPath));
 
-    // Search input & ZettAI Semantic Toggle
+    // Search input & Kib Semantic Toggle
     if (this.aiSearchToggle) {
       this.aiSearchToggle.addEventListener('click', () => {
         this.aiSearchMode = !this.aiSearchMode;
@@ -1546,7 +1546,7 @@ export class FileManagerWindow {
     const cleanQ = q.replace(/^(\?|ai:\s*)/i, '').trim() || q;
     try {
       if (useAi) {
-        showToast(t('toast.zettai_searching', 'ZettAI searching "{cleanQ}"...', { cleanQ: cleanQ }), 'info');
+        showToast(t('toast.zettai_searching', 'Kib searching "{cleanQ}"...', { cleanQ: cleanQ }), 'info');
         const aiRes = await api.post('/api/media/search', {
           query: cleanQ,
           path_prefix: this.currentPath && this.currentPath !== '/' ? this.currentPath : null,

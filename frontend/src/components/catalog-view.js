@@ -78,7 +78,7 @@ function badge(cls, text, title = '') {
   return `<span class="cat-badge ${cls}"${title ? ` title="${escapeHtml(title)}"` : ''}>${escapeHtml(text)}</span>`;
 }
 
-/** A logo from the web goes through ZettNAS, so the browser never asks a third party (SEC-38). */
+/** A logo from the web goes through Kiboto, so the browser never asks a third party (SEC-38). */
 export function logoSrc(url) {
   return /^https?:\/\//i.test(url || '') ? `/api/docker/catalog/logo?url=${encodeURIComponent(url)}` : url || '';
 }
@@ -93,7 +93,7 @@ export function catalogCardHtml(app, { installed = false } = {}) {
   const badges = [badge('cat-badge-category', categoryLabel(app.category))];
   if (app.type === 'stack') badges.push(badge('cat-badge-stack', t('catalog.stack', 'Stack'), t('catalog.stack_hint', 'Installs several containers that work together')));
   if (builtin) {
-    badges.push(badge('cat-badge-builtin', 'Built-in', t('catalog.builtin_hint', 'Tested ZettNAS template')));
+    badges.push(badge('cat-badge-builtin', 'Built-in', t('catalog.builtin_hint', 'Tested Kiboto template')));
   } else {
     badges.push(badge('cat-badge-source', app.source_name));
     if (app.security_rating === 'verified') badges.push(badge('cat-badge-ok', '🛡️ Safe', 'Verified Safe Sandbox'));

@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Touch Haptics Engine
+ * Kiboto - Touch Haptics Engine
  * Provides subtle tactile feedback on mobile devices using navigator.vibrate()
  */
 

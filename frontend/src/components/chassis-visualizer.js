@@ -55,7 +55,7 @@ function noteIn(el, text, css) {
   el.replaceChildren(d);
 }
 /**
- * ZettNAS Physical Chassis Twin & Storage Topology Visualizer
+ * Kiboto Physical Chassis Twin & Storage Topology Visualizer
  * - Parametric SVG chassis twin (Compact Dual, Desktop Tower, Enterprise Rackmount)
  * - Multi-zone thermal heatmaps (<35C cool, 35-45C green, 46-52C yellow, >=53C red)
  * - Quad-action Locate Drive / Blink Bay strobe
@@ -673,12 +673,12 @@ export function renderStructuredPoolsTopology(container, data) {
         ${isObserver ? `
           <div class="topo-observer-banner">
             <span class="observer-icon">ℹ️</span>
-            <span>${escapeHtml(t('storage.mode_host_desc', '{platform} manages the storage pools, array and parity checks here. ZettNAS shows them and never changes them.', { platform: platformName(platform) }))}</span>
+            <span>${escapeHtml(t('storage.mode_host_desc', '{platform} manages the storage pools, array and parity checks here. Kiboto shows them and never changes them.', { platform: platformName(platform) }))}</span>
           </div>
         ` : `
           <div class="topo-observer-banner" style="background:rgba(99,102,241,0.12); border-color:rgba(99,102,241,0.25);">
             <span class="observer-icon">⚡</span>
-            <span>${escapeHtml(t('storage.mode_zettnas_desc', 'ZettNAS manages the storage pools, RAID protection against bit rot, and snapshots on this machine.'))}</span>
+            <span>${escapeHtml(t('storage.mode_zettnas_desc', 'Kiboto manages the storage pools, RAID protection against bit rot, and snapshots on this machine.'))}</span>
           </div>
         `}
         <div class="topo-pools-container"></div>
@@ -1007,7 +1007,7 @@ export async function fetchAndRenderStorageTopology(container) {
       }
     }
   } catch (err) {
-    console.warn('[ZettNAS] Failed to load /api/storage/pools, falling back to local disks:', err);
+    console.warn('[Kiboto] Failed to load /api/storage/pools, falling back to local disks:', err);
     renderStorageTopologyTree(container, state.latestStats?.disks, state.latestStats?.unraid || {});
   }
 }
@@ -1204,12 +1204,12 @@ export async function fetchAndRenderNetworkShares(container) {
     if (badge) {
       if (isObserver) {
         badge.textContent = t('storage.mode_host', 'Managed by {platform}', { platform: platformName(platform) });
-        badge.title = t('storage.mode_host_desc', '{platform} manages the storage pools, array and parity checks here. ZettNAS shows them and never changes them.', { platform: platformName(platform) });
+        badge.title = t('storage.mode_host_desc', '{platform} manages the storage pools, array and parity checks here. Kiboto shows them and never changes them.', { platform: platformName(platform) });
         badge.style.background = 'rgba(59,245,139,0.12)';
         badge.style.color = '#3bf58b';
       } else {
-        badge.textContent = t('storage.mode_zettnas', 'Managed by ZettNAS');
-        badge.title = t('storage.mode_zettnas_desc', 'ZettNAS manages the storage pools, RAID protection against bit rot, and snapshots on this machine.');
+        badge.textContent = t('storage.mode_zettnas', 'Managed by Kiboto');
+        badge.title = t('storage.mode_zettnas_desc', 'Kiboto manages the storage pools, RAID protection against bit rot, and snapshots on this machine.');
         badge.style.background = 'rgba(99,102,241,0.15)';
         badge.style.color = 'var(--lt-t-818cf8ff, #818cf8)';
       }
@@ -1269,7 +1269,7 @@ export async function fetchAndRenderNetworkShares(container) {
       }
     );
   } catch (err) {
-    console.error('[ZettNAS] Failed to fetch network shares:', err);
+    console.error('[Kiboto] Failed to fetch network shares:', err);
     container.innerHTML = `
       <div style="text-align:center; padding:30px; color:var(--alert, var(--lt-t-ef4444ff, #ef4444));">
         ${escapeHtml(t('chassis.shares_failed', 'Could not read network shares: {error}', { error: err.message || t('toast.unknown_error', 'Unknown error') }))}
@@ -1795,7 +1795,7 @@ export async function fetchAndRenderRemoteStorage(container) {
             <span>${t('chassis.port', 'Port:')} <strong class="cv-strong">${webdavStatus.port}</strong></span>
             <span>${t('chassis.root_path', 'Root folder:')} <code class="cv-accent">${escapeHtml(webdavStatus.root_path)}</code></span>
             <span>${t('chassis.mode', 'Mode:')} <strong class="cv-strong">${webdavStatus.read_only ? 'Read-Only' : 'Read/Write'}</strong></span>
-            <span>${t('chassis.auth', 'Sign-in:')} <strong class="cv-strong">${escapeHtml(t('webdav.auth_accounts', 'ZettNAS accounts'))}</strong></span>
+            <span>${t('chassis.auth', 'Sign-in:')} <strong class="cv-strong">${escapeHtml(t('webdav.auth_accounts', 'Kiboto accounts'))}</strong></span>
           </div>
 
           <!-- Quick Connect Grid -->
@@ -1832,7 +1832,7 @@ export async function fetchAndRenderRemoteStorage(container) {
 
             <div class="webdav-qc-item">
               <div class="webdav-qc-label">
-                <span>${ico('🌐')} ${t('chassis.qc_proxy', 'Through ZettNAS (reverse proxy)')}</span>
+                <span>${ico('🌐')} ${t('chassis.qc_proxy', 'Through Kiboto (reverse proxy)')}</span>
                 <button class="btn-qc-copy" data-copy="${escapeHtml(proxyUrl)}" title="${t('ui.copy_proxy_url', 'Copy Proxy URL')}">${ico('📋')} ${t('chassis.copy', 'Copy')}</button>
               </div>
               <div class="webdav-qc-code">
@@ -2001,7 +2001,7 @@ export async function fetchAndRenderRemoteStorage(container) {
     });
 
   } catch (err) {
-    console.error('[ZettNAS] Failed to fetch remote storage:', err);
+    console.error('[Kiboto] Failed to fetch remote storage:', err);
     container.innerHTML = `
       <div style="text-align:center; padding:30px; color:var(--alert, var(--lt-t-ef4444ff, #ef4444));">
         ${escapeHtml(t('chassis.remotes_failed', 'Could not load cloud drives: {error}', { error: err.message || t('toast.unknown_error', 'Unknown error') }))}
@@ -2997,7 +2997,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
       if (typed === null) return;
       const password = await askPoolPrompt(
         t('chassis.confirm_pwd_title', 'Confirm with your password'),
-        t('chassis.confirm_pwd_msg', 'Enter your ZettNAS password to create the pool.'),
+        t('chassis.confirm_pwd_msg', 'Enter your Kiboto password to create the pool.'),
         'password'
       );
       if (password === null) return;

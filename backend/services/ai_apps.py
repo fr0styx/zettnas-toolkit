@@ -207,7 +207,7 @@ def _open(url: str, payload: dict[str, Any], timeout: float):
     req = urllib.request.Request(
         url,
         data=json.dumps(payload).encode(),
-        headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-AI-for-apps/1.0"},
+        headers={"Content-Type": "application/json", "User-Agent": "Kiboto-AI-for-apps/1.0"},
     )
     return urllib.request.urlopen(req, timeout=timeout)  # noqa: S310 (configured AI servers only)
 

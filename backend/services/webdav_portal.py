@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Modern WebDAV Cloud Portal
+Kiboto - Modern WebDAV Cloud Portal
 Provides a responsive, dark glassmorphic web interface for WebDAV file browsing and login.
 """
 
@@ -67,7 +67,7 @@ def render_webdav_login(error_msg: str | None = None) -> str:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In • ZettNAS WebDAV Portal</title>
+    <title>Sign In • Kiboto WebDAV Portal</title>
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
         body {{
@@ -182,7 +182,7 @@ def render_webdav_login(error_msg: str | None = None) -> str:
     <div class="login-card">
         <div class="brand-header">
             <div class="brand-icon">☁️</div>
-            <h1 class="brand-title">ZettNAS WebDAV Portal</h1>
+            <h1 class="brand-title">Kiboto WebDAV Portal</h1>
             <p class="brand-subtitle">Sign in with your storage credentials</p>
         </div>
         {err_html}
@@ -198,7 +198,7 @@ def render_webdav_login(error_msg: str | None = None) -> str:
             <button class="btn-submit" type="submit">Sign In to WebDAV</button>
         </form>
         <div class="footer-links">
-            <a href="/">← Return to ZettNAS Workbench</a>
+            <a href="/">← Return to Kiboto Workbench</a>
         </div>
     </div>
 </body>
@@ -209,7 +209,7 @@ import logging
 
 from backend.fsutil import resolve_within
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 
 def render_webdav_portal(current_subpath: str, root_path: str, username: str) -> str:
@@ -318,7 +318,7 @@ def render_webdav_portal(current_subpath: str, root_path: str, username: str) ->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZettNAS WebDAV • /{html.escape(clean_sub)}</title>
+    <title>Kiboto WebDAV • /{html.escape(clean_sub)}</title>
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
         body {{
@@ -562,7 +562,7 @@ def render_webdav_portal(current_subpath: str, root_path: str, username: str) ->
     <header class="top-navbar">
         <a href="/webdav/" class="brand">
             <span>☁️</span>
-            <span>ZettNAS WebDAV Portal</span>
+            <span>Kiboto WebDAV Portal</span>
             <span class="brand-badge">LINE-RATE</span>
         </a>
         <div class="nav-actions">

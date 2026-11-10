@@ -1,5 +1,5 @@
 """
-One registry for Ask Zetty's tools: definition, permission and handler together (AI-21).
+One registry for Ask Kib's tools: definition, permission and handler together (AI-21).
 
 Each tool states the scopes a user needs (the same ones its REST endpoint asks for),
 whether it reaches the internet (only offered when the chat has Web on) and whether it

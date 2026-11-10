@@ -1,5 +1,5 @@
 /**
- * Confirm links (D1): an MCP client asks for an action that changes the NAS, ZettNAS
+ * Confirm links (D1): an MCP client asks for an action that changes the NAS, Kiboto
  * returns /?confirm-action=<id>, and the user decides here.
  */
 import { api } from './api.js';

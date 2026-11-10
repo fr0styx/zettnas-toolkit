@@ -43,7 +43,7 @@ else:
 
         HAVE_SQLCIPHER = False
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 KEY_ENV = "KIBOTO_DATA_KEY"
 KEY_FILE_ENV = "KIBOTO_DATA_KEY_FILE"  # a file holding the key, e.g. a Docker secret

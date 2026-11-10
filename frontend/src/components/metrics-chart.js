@@ -1,7 +1,7 @@
 import { znZoomPlugin } from './chart-zoom.js'; // replaces chartjs-plugin-zoom and hammerjs (ARC-15)
 import { escapeHtml } from '../utils.js';
 /**
- * ZettNAS Toolkit Historical Metrics Chart
+ * Kiboto Historical Metrics Chart
  * Multi-device time-series telemetry for CPU, RAM, individual Disks, and Fans.
  */
 import { api } from '../api.js';

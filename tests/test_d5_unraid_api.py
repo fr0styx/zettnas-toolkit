@@ -20,7 +20,7 @@ def api(monkeypatch):
         body = json.loads(req.content)
         seen.append((req.url.path, req.headers.get("x-api-key"), body))
         if "createNotification" in body["query"]:
-            return httpx.Response(200, json={"data": {"createNotification": {"title": "ZettNAS"}}})
+            return httpx.Response(200, json={"data": {"createNotification": {"title": "Kiboto"}}})
         return httpx.Response(
             200,
             json={

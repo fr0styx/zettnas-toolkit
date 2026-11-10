@@ -1,9 +1,9 @@
 """
-Schema versions for ZettNAS SQLite databases (OPS-03).
+Schema versions for Kiboto SQLite databases (OPS-03).
 
 Each database records its schema version in `PRAGMA user_version`. On start:
 
-- a database written by a NEWER ZettNAS (higher version than this code knows)
+- a database written by a NEWER Kiboto (higher version than this code knows)
   stops startup, because older code could corrupt it. The fix is to run the
   newer version again, or restore the pre-update snapshot in
   data/backups/pre-update/ (the updater does this automatically on rollback);
@@ -32,7 +32,7 @@ from collections.abc import Callable
 from backend import config, db_crypto
 from backend.db_crypto import DataKeyError, sqlite3
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 Migration = Callable[[sqlite3.Connection], None]
 
@@ -152,7 +152,7 @@ def check_versions(data_dir: str = "") -> list[str]:
             moved.append(aside)
             continue
         raise NewerDatabaseError(
-            f"{name} was written by a newer ZettNAS (schema v{found}, this version supports v{known}). "
+            f"{name} was written by a newer Kiboto (schema v{found}, this version supports v{known}). "
             "Start the newer version again, or restore the matching snapshot from data/backups/pre-update/."
         )
     return moved
@@ -202,7 +202,7 @@ def stamp_versions(data_dir: str = "") -> None:
             # ARC-30: never run on a half-migrated database; the migration rolled back, so
             # starting the previous version (or restoring the pre-update snapshot) is safe
             raise RuntimeError(
-                f"The {name} database could not be updated to this version ({e}). ZettNAS stops "
+                f"The {name} database could not be updated to this version ({e}). Kiboto stops "
                 "instead of running on an old layout: revert the update in the container settings, "
                 "or restore the data folder from the snapshot taken before it."
             ) from e

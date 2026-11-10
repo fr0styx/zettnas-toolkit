@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Multi-Modal Local RAG & Visual Search Engine (ZettAI)
+Kiboto - Multi-Modal Local RAG & Visual Search Engine (Kib)
 Provides hardware-accelerated (NPU -> GPU -> CPU) document/recipe RAG,
 12-color perceptual + spatial scene photo search, spindown-safe incremental indexing,
 and multi-user RBAC path isolation backed by SQLite WAL (/app/data/rag_index.db).
@@ -995,7 +995,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             "photo_vector_model": "",
             "rerank_model": "",
             "rerank_top_n": 30,
-            "ai_role_access": {"kid": False, "guest": False},  # who may ask Zetty (B8, ai_access)
+            "ai_role_access": {"kid": False, "guest": False},  # who may ask Kib (B8, ai_access)
             "ai_search_role_access": {"kid": False, "guest": False},  # who may use AI search (B11, AI-26)
         }
         saved = read_json(RAG_CONFIG_PATH, {})
@@ -1074,7 +1074,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                 cfg[k] = updates[k]
         for key in ("ai_role_access", "ai_search_role_access"):
             if isinstance(updates.get(key), dict):
-                # who may ask Zetty / use AI search; the API checks the values first (ai_access.clean_switches)
+                # who may ask Kib / use AI search; the API checks the values first (ai_access.clean_switches)
                 switches = {str(k): bool(v) for k, v in updates[key].items()}
                 cfg[key] = {**(cfg.get(key) or {}), **switches}
         if str(cfg.get("vision_captions", "auto")).lower() not in ("auto", "off"):
@@ -1097,7 +1097,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         elif "llm_model" in updates and updates["llm_model"]:
             cfg["active_model"] = updates["llm_model"]
 
-        # Validate schedule window (start and end cannot be identical per ZettAI Wiki)
+        # Validate schedule window (start and end cannot be identical per Kib Wiki)
         if cfg.get("schedule_enabled") and cfg.get("schedule_start") == cfg.get("schedule_end"):
             cfg["schedule_end"] = "06:00" if cfg.get("schedule_start") != "06:00" else "07:00"
 
@@ -1110,7 +1110,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                         dedup.append(cp)
                 cfg[list_key] = dedup
 
-        # When ZettAI is disabled, pause any unfinished learning task so it can resume when re-enabled
+        # When Kib is disabled, pause any unfinished learning task so it can resume when re-enabled
         if updates.get("enabled") is False and self._is_indexing:
             self.pause_sync()
         elif updates.get("enabled") is True and self._is_indexing and self._sync_state == "paused":

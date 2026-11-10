@@ -1,4 +1,4 @@
-"""Conversation context for ZettAI: follow-ups, history and token budgets, citations and grounding labels (split out of ai_chat_agent.py, ARCH-1)."""
+"""Conversation context for Kib: follow-ups, history and token budgets, citations and grounding labels (split out of ai_chat_agent.py, ARCH-1)."""
 
 import json
 import os

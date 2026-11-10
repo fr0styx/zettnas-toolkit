@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Network Management API Router
+Kiboto - Network Management API Router
 Provides REST endpoints for network topology, port tuning (MTU, WOL, speed/duplex),
 friendly interface aliases, and Docker network management.
 """
@@ -275,7 +275,7 @@ class RemoteAccessConnectRequest(BaseModel):
 
 
 class RemoteAccessPublishRequest(BaseModel):
-    app_port: int | None = Field(default=None, ge=1, le=65535, description="The port ZettNAS is opened on here")
+    app_port: int | None = Field(default=None, ge=1, le=65535, description="The port Kiboto is opened on here")
 
 
 def _remote(fn, *args):
@@ -307,7 +307,7 @@ async def post_remote_access_connect(req: RemoteAccessConnectRequest):
 
 @router.post("/network/remote-access/publish", dependencies=[Depends(require_scope("system:config"))])
 async def post_remote_access_publish(req: RemoteAccessPublishRequest):
-    """HTTPS addresses in the tailnet for ZettNAS and Immich."""
+    """HTTPS addresses in the tailnet for Kiboto and Immich."""
     from backend.services import remote_access
 
     return await asyncio.to_thread(_remote, remote_access.publish, req.app_port)

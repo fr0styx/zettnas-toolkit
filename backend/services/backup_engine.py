@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Backup Engine Service
+Kiboto - Backup Engine Service
 Handles generation and safe restoration of configuration archives,
 plus backup 3-2-1 automated pipelines (snapshots + Rclone offsite sync)
 and background scheduling.
@@ -141,7 +141,7 @@ def decrypt_backup(blob: bytes, passphrase: str) -> bytes:
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
     if not blob.startswith(ENCRYPTED_MAGIC):
-        raise ValueError("Not an encrypted ZettNAS backup")
+        raise ValueError("Not an encrypted Kiboto backup")
     if not passphrase:
         raise ValueError("This backup is encrypted: enter its passphrase")
     head = len(ENCRYPTED_MAGIC)
@@ -223,7 +223,7 @@ def generate_backup_zip_stream(passphrase: str = "") -> Any:
 
 
 def _check_archive_schema(z: "zipfile.ZipFile", names: set) -> None:
-    """Refuses a backup whose databases come from a newer ZettNAS than this one."""
+    """Refuses a backup whose databases come from a newer Kiboto than this one."""
     try:
         from backend.db_schema import SCHEMA_VERSIONS
     except Exception:
@@ -252,7 +252,7 @@ def _check_archive_schema(z: "zipfile.ZipFile", names: set) -> None:
                     f"{name} in the backup is not a valid database, or was encrypted with another key"
                 ) from None
         if found > known:
-            raise ValueError(f"The backup's {name} comes from a newer ZettNAS (schema v{found}); update first")
+            raise ValueError(f"The backup's {name} comes from a newer Kiboto (schema v{found}); update first")
 
 
 STAGED_RESTORE_DIR = ".restore-staged"
@@ -425,7 +425,7 @@ MIN_PASSPHRASE = 8
 
 
 def _settings_job_checks(job_data: dict[str, Any], password: str) -> None:
-    """A ZettNAS-settings backup is always encrypted and goes to a pool folder or an rclone remote (OPS-8)."""
+    """A Kiboto-settings backup is always encrypted and goes to a pool folder or an rclone remote (OPS-8)."""
     from backend import config
 
     if len(password) < MIN_PASSPHRASE:
@@ -561,7 +561,7 @@ def save_backup_job(job_data: dict[str, Any]) -> dict[str, Any]:
         "remote_path": job_data.get("remote_path", "").strip(),
         "schedule": job_data.get("schedule", "daily"),  # "hourly", "daily", "weekly", "manual"
         "retention_count": max(1, int(job_data.get("retention_count", 7))),
-        "kind": kind,  # "data" (a pool folder) or "config" (ZettNAS settings, OPS-8)
+        "kind": kind,  # "data" (a pool folder) or "config" (Kiboto settings, OPS-8)
         "local_path": str(job_data.get("local_path") or "").strip(),
         "encrypted": bool(job_data.get("encrypted", False)) or kind == "config",
         "encryption_password": _seal_passphrase(password),
@@ -649,7 +649,7 @@ def prune_job_snapshots(pool_id: str, subvol_name: str, retention_count: int) ->
 
 
 def _export_settings(job: dict[str, Any], retention: int) -> str:
-    """Writes an encrypted ZettNAS settings backup to the job's folder or remote; returns where (OPS-8)."""
+    """Writes an encrypted Kiboto settings backup to the job's folder or remote; returns where (OPS-8)."""
     from backend import config
 
     password = job_passphrase(job)
@@ -1030,7 +1030,7 @@ def mark_interrupted_jobs() -> list[str]:
     for j in jobs:
         if j.get("last_status") == "running":
             j["last_status"] = "interrupted"
-            j["last_error"] = "ZettNAS restarted while this backup was running; it runs again at its next time."
+            j["last_error"] = "Kiboto restarted while this backup was running; it runs again at its next time."
             cut.append(str(j.get("id")))
     if cut:
         atomic_write_json(BACKUP_JOBS_FILE, jobs)

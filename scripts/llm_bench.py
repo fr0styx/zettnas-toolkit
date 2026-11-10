@@ -1,6 +1,6 @@
 """How fast a chat model starts answering a document question, per runtime (AI-7).
 
-Ask Zetty answers from up to ~6,000 tokens of your files, so what people wait for is the
+Ask Kib answers from up to ~6,000 tokens of your files, so what people wait for is the
 time to the first token of a long prompt, then the writing speed. This measures both for
 the same model on:
 

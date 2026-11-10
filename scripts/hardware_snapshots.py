@@ -1,12 +1,12 @@
 """Snapshot round trips on real pools (REL-4, FEAT-02, NREL-5, NREL-7), from the released image.
 
-ZettNAS's own storage code (the generic Linux adapter and snapshot_service) runs against a scratch
+Kiboto's own storage code (the generic Linux adapter and snapshot_service) runs against a scratch
 folder on a btrfs pool and a scratch ZFS dataset, never against shares that are in use:
 
 - btrfs: a new share is a subvolume; a snapshot is taken, listed and deleted; the share is changed
   and rolled back by a swap (NREL-7), with the safety snapshot kept; a plain folder share becomes a
   subvolume ("Make it snapshot-ready") with its files intact and can then be snapshotted.
-- ZFS: a new share is a dataset; a snapshot is taken (its ZettNAS name kept in a user property),
+- ZFS: a new share is a dataset; a snapshot is taken (its Kiboto name kept in a user property),
   listed and deleted; the share is rolled back by copying back; a plain folder share becomes a
   dataset.
 

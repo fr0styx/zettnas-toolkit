@@ -1,4 +1,4 @@
-"""AI-12/AI-28: the reranker reads whole chunks, and tells Zetty when no found document answers."""
+"""AI-12/AI-28: the reranker reads whole chunks, and tells Kib when no found document answers."""
 
 import json
 

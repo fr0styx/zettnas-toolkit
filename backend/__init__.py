@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit Backend Package
+Kiboto Backend Package
 Modularized architecture for chassis management, telemetry, and LCD dashboard.
 """
 

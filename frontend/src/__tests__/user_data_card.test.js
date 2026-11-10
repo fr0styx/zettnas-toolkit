@@ -21,7 +21,7 @@ describe('Your data', () => {
     api.get.mockImplementation(async (url) => (url === '/api/auth/me' ? { id: 'u-me', username: 'me' } : { format: 1 }));
     await installMyData(document);
     const card = document.getElementById('user-data-card');
-    expect(card.textContent).toContain('Download what ZettNAS keeps about you');
+    expect(card.textContent).toContain('Download what Kiboto keeps about you');
     card.querySelector('[data-udata="export"]').click();
     await flush();
     expect(api.get).toHaveBeenCalledWith('/api/users/u-me/export');

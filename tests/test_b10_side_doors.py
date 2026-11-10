@@ -1,4 +1,4 @@
-"""B10 / SEC-20, SEC-28: SFTP accounts and SMB shares can never reach ZettNAS's own data folder."""
+"""B10 / SEC-20, SEC-28: SFTP accounts and SMB shares can never reach Kiboto's own data folder."""
 
 import io
 import json

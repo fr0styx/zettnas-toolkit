@@ -33,9 +33,9 @@ def test_samba_and_nfs_merge(tmp_path, monkeypatch):
     assert set(shares) == {"media", "private", "vmstore"}
     assert shares["media"].export_smb and shares["media"].export_nfs and shares["media"].security == "public"
     assert shares["media"].comment == "Films" and shares["media"].total_bytes > 0
-    assert shares["private"].security == "private" and shares["private"].comment == "ZettNAS Managed Share"
+    assert shares["private"].security == "private" and shares["private"].comment == "Kiboto Managed Share"
     assert shares["vmstore"].export_nfs and not shares["vmstore"].export_smb
-    assert shares["vmstore"].security == "private" and shares["vmstore"].comment == "ZettNAS Managed NFS Export"
+    assert shares["vmstore"].security == "private" and shares["vmstore"].comment == "Kiboto Managed NFS Export"
 
 
 def test_without_engines_the_pool_folders_are_the_shares(tmp_path, monkeypatch):

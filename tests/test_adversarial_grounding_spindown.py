@@ -1,7 +1,7 @@
 """
 tests/test_adversarial_grounding_spindown.py — Adversarial Verification Suite
 Stress-testing contextual grounding, snippet cleaning, thought token handling,
-and zero-disk-spindown safety for ZettNAS RAG & AI Chatbot subsystems.
+and zero-disk-spindown safety for Kiboto RAG & AI Chatbot subsystems.
 
 Targets:
 1. extract_and_strip_reasoning (thought tokens, unclosed tags, nested tags, whitespace, empty)
@@ -312,7 +312,7 @@ class TestSnippetCleaningStress:
     def test_single_line_prose_fragments_and_dangling_prepositions(self):
         """Verifies that prose fragments do not end in dangling prepositions/conjunctions."""
         # Sentence ending in 'to' should be stripped
-        frag1 = "The ZettNAS hardware controller sends commands to"
+        frag1 = "The Kiboto hardware controller sends commands to"
         cleaned1 = _clean_complete_snippet(frag1, max_chars=800)
         assert not cleaned1.endswith("to"), f"Expected dangling 'to' to be stripped, got: {cleaned1}"
 
@@ -322,17 +322,17 @@ class TestSnippetCleaningStress:
         assert not cleaned2.endswith("with"), f"Expected dangling 'with' to be stripped, got: {cleaned2}"
 
         # Valid complete prose sentence without trailing period
-        frag3 = "The ZettNAS Toolkit operates smoothly in headless low-RAM homelab environments"
+        frag3 = "The Kiboto operates smoothly in headless low-RAM homelab environments"
         cleaned3 = _clean_complete_snippet(frag3, max_chars=800)
         assert cleaned3.endswith("."), f"Expected trailing period to be appended, got: {cleaned3}"
 
     def test_citation_bracket_removal(self):
         """Verifies that Wikipedia-style [1], [2], [citation needed] brackets are cleaned from snippets."""
-        raw = "ZettNAS is an enterprise NAS operating system [1] that supports ZFS and Btrfs [citation needed]."
+        raw = "Kiboto is an enterprise NAS operating system [1] that supports ZFS and Btrfs [citation needed]."
         cleaned = _clean_complete_snippet(raw, max_chars=800)
         assert "[1]" not in cleaned
         assert "[citation needed]" not in cleaned
-        assert "ZettNAS is an enterprise NAS operating system" in cleaned
+        assert "Kiboto is an enterprise NAS operating system" in cleaned
 
     def test_extremely_large_input_performance(self):
         """
@@ -340,7 +340,7 @@ class TestSnippetCleaningStress:
         Note: Because it guarantees complete, unbroken sentences, the returned snippet terminates
         at the end of the sentence that crosses max_chars, never mid-sentence.
         """
-        large_blob = "ZettNAS automates container management, hardware telemetry, and thermal safety curves. " * 500
+        large_blob = "Kiboto automates container management, hardware telemetry, and thermal safety curves. " * 500
         t0 = time.perf_counter()
         res = _clean_complete_snippet(large_blob, max_chars=850)
         elapsed_ms = (time.perf_counter() - t0) * 1000
@@ -367,7 +367,7 @@ class TestSnippetCleaningStress:
     def test_abbreviations_preserved_at_sentence_boundaries(self):
         """Verifies that common abbreviations (e.g., i.e., vs.) do not cause premature splits."""
         prose = (
-            "The ZettNAS platform supports diverse storage engines, e.g. ZFS and Btrfs on Linux. "
+            "The Kiboto platform supports diverse storage engines, e.g. ZFS and Btrfs on Linux. "
             "It provides high fault tolerance against bitrot and disk dropouts."
         )
         res = _clean_complete_snippet(prose, max_chars=800)
@@ -755,7 +755,7 @@ class TestZeroDiskSpindownSafety:
                 """
                 INSERT INTO document_chunks
                 (chunk_id, file_id, chunk_index, heading_context, chunk_text, raw_chunk_text, line_start, line_end, token_count, embedding_f32, parent_chunk_id)
-                VALUES (1, 1, 0, 'Thermal Architecture', 'ZettNAS uses intelligent fan curves with emergency clamp at 80C.', 'ZettNAS uses intelligent fan curves with emergency clamp at 80C.', 1, 5, 20, ?, NULL);
+                VALUES (1, 1, 0, 'Thermal Architecture', 'Kiboto uses intelligent fan curves with emergency clamp at 80C.', 'Kiboto uses intelligent fan curves with emergency clamp at 80C.', 1, 5, 20, ?, NULL);
                 """,
                 (blob384,),
             )
@@ -849,7 +849,7 @@ class TestZeroDiskSpindownSafety:
             ]
             llm_context = _build_structured_llm_context(tool_res)
             assert '<retrieved_documents count="1">' in llm_context
-            assert "ZettNAS uses intelligent fan curves" in llm_context
+            assert "Kiboto uses intelligent fan curves" in llm_context
 
         # Verify no spinning disk paths were opened
         spinning_opens = [p for p in opened_paths if p.startswith(("/mnt/disk", "/dev/sd"))]

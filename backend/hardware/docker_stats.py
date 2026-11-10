@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Docker Introspection Subsystem
+Kiboto - Docker Introspection Subsystem
 Queries local Docker daemon Unix socket (/var/run/docker.sock) for container
 health, status, image tags, and uptime.
 """
@@ -594,7 +594,7 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
                     "stack": stack,
                     "service": service,
                     "managed_by": managed_by,
-                    "zettnas_app": labels.get("com.zettnas.managed") == "1",  # installed by ZettNAS (REL-10)
+                    "zettnas_app": labels.get("com.zettnas.managed") == "1",  # installed by Kiboto (REL-10)
                     "network_mode": net_mode,
                     "ports": ports,
                     "primary_port": primary_port,

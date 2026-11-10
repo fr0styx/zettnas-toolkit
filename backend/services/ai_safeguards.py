@@ -1,4 +1,4 @@
-"""Safeguards for what ZettAI sends out and what it suggests running (AI-12).
+"""Safeguards for what Kib sends out and what it suggests running (AI-12).
 
 - safe_web_query: a web search carries a short question, not the person's data. Addresses,
   e-mail addresses, file paths, long numbers and keys are removed, and a search the model asks

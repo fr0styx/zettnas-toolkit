@@ -1,5 +1,5 @@
 /**
- * ZettNAS Client-Side Observability & Diagnostics Logger
+ * Kiboto Client-Side Observability & Diagnostics Logger
  * 
  * Captures browser console warnings/errors, unhandled exceptions, and runtime
  * environment metrics into an in-memory circular ring buffer for inclusion in the

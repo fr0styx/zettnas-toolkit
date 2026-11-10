@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Virtual Machine (VM) Management & Dynamic Elastic Budgeting API
+Kiboto - Virtual Machine (VM) Management & Dynamic Elastic Budgeting API
 Provides KVM hypervisor telemetry, adaptive headroom calculations, ISO scanning,
 and VM lifecycle orchestration.
 """
@@ -211,7 +211,7 @@ def _download_iso_worker(task_id: str, catalog_item: dict[str, Any], target_dir:
         from backend.services.safe_fetch import safe_open
 
         with (
-            safe_open(url, context="public", headers={"User-Agent": "ZettNAS-Hypervisor/2.0"}, timeout=30) as resp,
+            safe_open(url, context="public", headers={"User-Agent": "Kiboto-Hypervisor/2.0"}, timeout=30) as resp,
             open(tmp_path, "wb") as f,
         ):
             if resp.status != 200:

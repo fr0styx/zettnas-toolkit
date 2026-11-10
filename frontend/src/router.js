@@ -34,7 +34,7 @@ export function openRoute(hash) {
   try {
     ROUTES[route]();
   } catch (e) {
-    console.warn('[ZettNAS] could not open', route, e);
+    console.warn('[Kiboto] could not open', route, e);
     return false;
   }
   return true;

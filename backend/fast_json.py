@@ -1,5 +1,5 @@
 """
-ZettNAS Fast JSON Serialization Engine.
+Kiboto Fast JSON Serialization Engine.
 Accelerates JSON serialization by 10-15x using `orjson` when available,
 with strict type safety, string conversion for integer dictionary keys,
 and seamless fallback to Python's standard `json` library.

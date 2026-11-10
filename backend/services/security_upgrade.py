@@ -22,7 +22,7 @@ import time
 from backend import config
 from backend.fsutil import atomic_write_json
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 MARKER_NAME = ".security-upgrade-1.9.2"
 ADMIN_ROLES = ("superadmin", "admin")
@@ -127,7 +127,7 @@ KNOWLEDGE_ROLES = ("storage_admin", "app_operator", "backup_operator", "share_us
 
 
 def _grant_knowledge_scope() -> int:
-    """System roles that use Ask Zetty get ai:knowledge:read, now needed to read files over MCP."""
+    """System roles that use Ask Kib get ai:knowledge:read, now needed to read files over MCP."""
     from backend.users_db import users_db_session
 
     changed = 0

@@ -38,7 +38,7 @@ function dispatch(records) {
     try {
       s.onRecords(mine);
     } catch (err) {
-      console.warn('[ZettNAS] page watcher', err);
+      console.warn('[Kiboto] page watcher', err);
     }
   }
 }

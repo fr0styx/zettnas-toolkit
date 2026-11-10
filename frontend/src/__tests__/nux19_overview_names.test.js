@@ -9,7 +9,7 @@ const { itemText, statusHtml } = await import('../components/management/overview
 describe('Overview items (NUX-19)', () => {
   it('names a stalled service by what it does', () => {
     expect(itemText({ kind: 'service_stalled', subject: 'SmartPoller' })).toBe(
-      'The drive health check service has stopped responding. Restart ZettNAS if it does not recover.',
+      'The drive health check service has stopped responding. Restart Kiboto if it does not recover.',
     );
     expect(itemText({ kind: 'service_stalled', subject: 'NewThing' })).toContain('The NewThing service');
   });

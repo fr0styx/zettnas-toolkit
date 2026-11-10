@@ -1,7 +1,7 @@
 """B12b (REL-5): replication sends what changed since the last snapshot both sides have, never
 overwrites a target that isn't its replica, drains both programs' error output, keeps to the
 bandwidth limit, prunes on both sides, runs on its schedule, and is watched like a backup. It is
-offered only where ZettNAS manages the pools with their tools.
+offered only where Kiboto manages the pools with their tools.
 
 zfs, btrfs and ssh are stand-ins (tests/ runs anywhere): datasets and snapshots are folders and
 files, a stream is a JSON line plus padding, and ssh runs the command here."""
@@ -345,7 +345,7 @@ def test_the_routes(client, auth_headers, fakes, monkeypatch):
     from backend.api import replication as api
 
     monkeypatch.setattr(re_, "_REPLICATION_ENGINE", re_.ReplicationEngine())
-    monkeypatch.setattr(api, "availability", lambda: (False, "Replication runs only where ZettNAS manages the pools."))
+    monkeypatch.setattr(api, "availability", lambda: (False, "Replication runs only where Kiboto manages the pools."))
     listed = client.get("/api/storage/replication/jobs", headers=auth_headers).json()
     assert listed["available"] is False and "manages the pools" in listed["reason"]
     body = {k: v for k, v in _job().items() if k not in ("id",)}

@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - PAL Storage & Shares Unit & Integration Tests
+Kiboto - PAL Storage & Shares Unit & Integration Tests
 Verifies Platform Abstraction Layer (PAL), Unraid/Generic Linux adapters,
 safe read-only share auditing, and observer mode invariants.
 """

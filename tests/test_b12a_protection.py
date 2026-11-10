@@ -1,5 +1,5 @@
 """B12a (REL-12): backups, snapshots and scrubs as protection jobs, with overdue and failed
-alerts; a monthly scrub where ZettNAS owns the pools, a clear skip where the host does, and no
+alerts; a monthly scrub where Kiboto owns the pools, a clear skip where the host does, and no
 scrub of spinning disks unless a person switched it on and confirmed it."""
 
 import time

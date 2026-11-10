@@ -1,4 +1,4 @@
-"""Host fan watchdog: keeps the fans safe when the ZettNAS app can't.
+"""Host fan watchdog: keeps the fans safe when the Kiboto app can't.
 
 Runs in its own small container next to the app (see docs/FAN_WATCHDOG.md):
 

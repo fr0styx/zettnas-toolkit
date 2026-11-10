@@ -285,4 +285,4 @@ def test_diagnostics_summary_endpoint(client, auth_headers):
     assert "docker" in data
     assert "vms" in data
     assert "support_markdown" in data
-    assert "### ZettNAS Toolkit Support Diagnostics" in data["support_markdown"]
+    assert "### Kiboto Support Diagnostics" in data["support_markdown"]

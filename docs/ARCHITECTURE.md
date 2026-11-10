@@ -1,6 +1,6 @@
-# ZettNAS Toolkit — System Architecture
+# Kiboto — System Architecture
 
-This document describes the high-level architecture, threading model, data flow, and hardware integration of the ZettNAS Toolkit.
+This document describes the high-level architecture, threading model, data flow, and hardware integration of the Kiboto.
 
 ---
 
@@ -170,7 +170,7 @@ bodies for host-level settings. See SECURITY.md for the policy.
 | `rag_grounding.py` | Context ordering, retrieval grading, grounding score |
 | `rag_standby.py` | Standby guard (which disks hold a path, are they asleep) |
 | `vision_queue.py` | Idle-time photo captions and OCR |
-| `ai_chat_agent.py` | Ask Zetty orchestration, LLM runtime, answer synthesis |
+| `ai_chat_agent.py` | Ask Kib orchestration, LLM runtime, answer synthesis |
 | `chat_tools.py` | Tool registry: definition, handler and permission policy per tool |
 | `chat_web_tools.py` | Web search and weather tools |
 | `api/vms.py` | VM HTTP routes and console WebSockets |
@@ -200,7 +200,7 @@ proxy, WebDAV, SFTP, rclone mounts) are `Popen` and watched by their supervisors
 
 Every SQLite database opens through `backend.sqlite_conn.connect`, which applies that
 database's profile (`users`, `history`, `ai_conversations`, `rag_index`: the pragmas, and
-whether it goes through the SQLCipher driver). A migration that fails at startup stops ZettNAS
+whether it goes through the SQLCipher driver). A migration that fails at startup stops Kiboto
 with a message instead of letting it run on a half-updated layout; an AI database whose key is
 missing only waits for the key (ARC-30).
 

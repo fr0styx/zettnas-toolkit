@@ -1,4 +1,4 @@
-"""The NAS tools ZettAI can run: status, disks, fans, Docker, file search, sync, calculations, storage and network (split out of ai_chat_agent.py, ARCH-1)."""
+"""The NAS tools Kib can run: status, disks, fans, Docker, file search, sync, calculations, storage and network (split out of ai_chat_agent.py, ARCH-1)."""
 
 import ast
 import contextvars
@@ -399,11 +399,11 @@ def tool_control_docker_container(
         "status": "error",
         "container": clean_name,
         "action": clean_action,
-        "error": "The container could not be changed through ZettNAS's Docker connection.",
+        "error": "The container could not be changed through Kiboto's Docker connection.",
     }
 
 
-# The file or folder a question is about ("Ask Zetty about this"); set per chat turn
+# The file or folder a question is about ("Ask Kib about this"); set per chat turn
 FOCUS_PATH: contextvars.ContextVar[str | None] = contextvars.ContextVar("zettnas_chat_focus", default=None)
 
 

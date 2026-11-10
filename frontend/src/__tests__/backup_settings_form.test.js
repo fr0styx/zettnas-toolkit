@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { syncBackupJobForm } from '../components/management.js';
 
-describe('Backup job form: ZettNAS settings backups (OPS-8)', () => {
+describe('Backup job form: Kiboto settings backups (OPS-8)', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <select id="backup-job-kind"><option value="data" selected>data</option><option value="config">config</option></select>

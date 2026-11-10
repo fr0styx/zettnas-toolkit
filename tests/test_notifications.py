@@ -84,7 +84,7 @@ def test_dispatch_unraid_arguments():
         assert ok is True
         mock_run.assert_called_once()
         args = mock_run.call_args[0][0]
-        assert args == ["/mock/notify", "-e", "ZettNAS", "-s", "Drive Alert", "-d", "sdb failed", "-i", "alert"]
+        assert args == ["/mock/notify", "-e", "Kiboto", "-s", "Drive Alert", "-d", "sdb failed", "-i", "alert"]
 
 
 def test_dispatch_ntfy():
@@ -119,7 +119,7 @@ def test_dispatch_webhook_discord():
         args, kwargs = mock_client.post.call_args
         assert args[0] == "https://discord.com/api/webhooks/123/token"
         payload = kwargs["json"]
-        assert payload["username"] == "ZettNAS"
+        assert payload["username"] == "Kiboto"
         assert payload["embeds"][0]["title"] == "System Alert"
         assert payload["embeds"][0]["color"] == 0xEF4444
 

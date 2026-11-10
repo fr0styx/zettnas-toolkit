@@ -177,7 +177,7 @@ from backend.api.fs import (
 )
 from backend.hardware.docker_stats import container_action, read_docker_containers
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 
 async def _confirm_wake(request: Request, principal: AuthenticatedPrincipal, dev: str) -> None:
@@ -1175,7 +1175,7 @@ def get_system_about():
     binfo = _get_current_build_info()
 
     return {
-        "name": "ZettNAS Workbench",
+        "name": "Kiboto Workbench",
         "version": __version__,
         "tag": f"v{__version__}",
         "commit": binfo["commit"],
@@ -1349,7 +1349,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
 
     headers = {
         "Accept": "application/vnd.github.v3+json",
-        "User-Agent": f"ZettNAS-Workbench/{__version__}",
+        "User-Agent": f"Kiboto-Workbench/{__version__}",
     }
 
     if channel_key == "edge":
@@ -1488,7 +1488,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
         "latest_version": __version__,
         "latest_tag": f"v{__version__}",
         "update_available": False,
-        "release_name": f"ZettNAS v{__version__}",
+        "release_name": f"Kiboto v{__version__}",
         "release_url": "https://github.com/fr0styx/zettnas-toolkit/releases",
         "published_at": None,
         "release_notes": "",
@@ -1551,7 +1551,7 @@ def _image_version_label(image_ref: str) -> str:
 )
 async def post_apply_system_update(req: ApplySystemUpdateRequest):
     """
-    Pulls the latest ZettNAS image and initiates a graceful self-update.
+    Pulls the latest Kiboto image and initiates a graceful self-update.
     """
     from backend.services.container_mutator import pull_container_image
     from backend.services.self_updater import spawn_self_updater
@@ -1657,7 +1657,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
                 "target_image": target_img,
                 "auto_restarting": True,
                 "signature": signature,
-                "message": "Update downloaded. ZettNAS is recreating the container now and will reconnect shortly.",
+                "message": "Update downloaded. Kiboto is recreating the container now and will reconnect shortly.",
             }
 
     return {
@@ -1767,7 +1767,7 @@ async def post_revert_system_update(
         "status": "restarting",
         "version": match["version"],
         "auto_restarting": True,
-        "message": "Reverting. ZettNAS is restoring the previous version and its data and will reconnect shortly.",
+        "message": "Reverting. Kiboto is restoring the previous version and its data and will reconnect shortly.",
     }
 
 

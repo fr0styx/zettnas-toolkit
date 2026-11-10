@@ -1,6 +1,6 @@
 # OpenVINO image-text server (SigLIP 2)
 
-Photo search by meaning without Immich: ZettNAS sends each photo's stored thumbnail here and gets
+Photo search by meaning without Immich: Kiboto sends each photo's stored thumbnail here and gets
 a vector back, and does the same for a search question; photos close to the question are found
 even when no caption or file name says what they show. SigLIP 2 learned many languages, so
 "Sonnenuntergang am Meer" finds the same photos as "sunset at the sea".
@@ -26,7 +26,7 @@ docker run -d --name zettnas-clip --restart unless-stopped --device /dev/dri \
   --network <the app's network> -e TOKEN=<a long random string> -v <dir>:/models:ro zettnas-clip
 ```
 
-Give ZettNAS the same value as `PHOTO_VECTOR_TOKEN`, and set the address in AI settings,
+Give Kiboto the same value as `PHOTO_VECTOR_TOKEN`, and set the address in AI settings,
 "Photo search by meaning": `http://zettnas-clip:11436`. Vectors are then made in the background
 while the machine is idle; AI settings shows how many photos have one.
 

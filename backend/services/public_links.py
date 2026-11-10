@@ -2,7 +2,7 @@
 
 Funnel publishes one path of the NAS to the internet on its own port, FUNNEL_PORT (one of the three
 Funnel allows), with Tailscale's HTTPS certificate: only /api/fs/shared, where share links live
-(the downloads, their password page and the "send me files" page). Nothing else of ZettNAS is
+(the downloads, their password page and the "send me files" page). Nothing else of Kiboto is
 reachable that way; the web interface stays on the home network and the tailnet. No router change
 is needed and it works behind the internet provider's shared address (CGNAT).
 

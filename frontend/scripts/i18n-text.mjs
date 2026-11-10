@@ -8,7 +8,7 @@ import { parse as parseHtml } from 'parse5';
 
 // Names that read the same in every language
 const SAME_EVERYWHERE = new Set([
-  'ZettNAS', 'Unraid', 'Docker', 'Immich', 'Ollama', 'OpenVINO', 'WebDAV', 'Tailscale', 'Jellyfin',
+  'Kiboto', 'Kib', 'Unraid', 'Docker', 'Immich', 'Ollama', 'OpenVINO', 'WebDAV', 'Tailscale', 'Jellyfin',
   'Plex', 'Nextcloud', 'Syncthing', 'Samba', 'iSCSI', 'Btrfs', 'NVMe', 'SMART', 'Linux', 'Windows',
   'macOS', 'iOS', 'Android', 'GitHub', 'Apprise', 'Telegram', 'Discord', 'Gotify', 'ntfy', 'Pushover',
   'Wi-Fi', 'Ethernet', 'Bluetooth', 'QEMU', 'OK', 'Spotlight', 'Restic', 'Borg', 'rclone', 'rsync',

@@ -1,7 +1,7 @@
 {
  "tools": {
   "browse_internet": {
-   "error": "Web access is off for this chat. Turn on Web to let ZettAI search the internet or get the weather.",
+   "error": "Web access is off for this chat. Turn on Web to let Kib search the internet or get the weather.",
    "sources": [],
    "status": "blocked",
    "tool": "browse_internet"
@@ -83,7 +83,7 @@
    "uptime_seconds": 1
   },
   "get_weather": {
-   "error": "Web access is off for this chat. Turn on Web to let ZettAI search the internet or get the weather.",
+   "error": "Web access is off for this chat. Turn on Web to let Kib search the internet or get the weather.",
    "location": "Oslo",
    "status": "blocked",
    "tool": "get_weather"
@@ -2900,7 +2900,7 @@
     ],
     "tool_results": [
      {
-      "error": "Web access is off for this chat. Turn on Web to let ZettAI search the internet or get the weather.",
+      "error": "Web access is off for this chat. Turn on Web to let Kib search the internet or get the weather.",
       "location": "Oslo",
       "status": "blocked",
       "tool": "get_weather"
@@ -6179,7 +6179,7 @@
     ],
     "tool_results": [
      {
-      "error": "Web access is off for this chat. Turn on Web to let ZettAI search the internet or get the weather.",
+      "error": "Web access is off for this chat. Turn on Web to let Kib search the internet or get the weather.",
       "location": "Oslo",
       "status": "blocked",
       "tool": "get_weather"
@@ -9419,7 +9419,7 @@
     ],
     "tool_results": [
      {
-      "error": "Web access is off for this chat. Turn on Web to let ZettAI search the internet or get the weather.",
+      "error": "Web access is off for this chat. Turn on Web to let Kib search the internet or get the weather.",
       "location": "Oslo",
       "status": "blocked",
       "tool": "get_weather"
@@ -9904,8 +9904,8 @@
     },
     "message": "who are you",
     "photos": [],
-    "reply": "I'm **ZettAI**, the assistant built into **ZettNAS Toolkit** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen2.5 3B Instruct. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Qwen Research License (non-commercial)\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
-    "reply_markdown": "I'm **ZettAI**, the assistant built into **ZettNAS Toolkit** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen2.5 3B Instruct. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Qwen Research License (non-commercial)\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
+    "reply": "I'm **Kib**, the assistant built into **Kiboto** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen2.5 3B Instruct. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Qwen Research License (non-commercial)\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
+    "reply_markdown": "I'm **Kib**, the assistant built into **Kiboto** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen2.5 3B Instruct. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Qwen Research License (non-commercial)\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
     "status": "ok",
     "tool_names": [
      "get_system_telemetry"
@@ -12659,7 +12659,7 @@
     ],
     "tool_results": [
      {
-      "error": "Web access is off for this chat. Turn on Web to let ZettAI search the internet or get the weather.",
+      "error": "Web access is off for this chat. Turn on Web to let Kib search the internet or get the weather.",
       "location": "Oslo",
       "status": "blocked",
       "tool": "get_weather"
@@ -13144,8 +13144,8 @@
     },
     "message": "who are you",
     "photos": [],
-    "reply": "I'm **ZettAI**, the assistant built into **ZettNAS Toolkit** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen2.5 3B Instruct. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Qwen Research License (non-commercial)\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
-    "reply_markdown": "I'm **ZettAI**, the assistant built into **ZettNAS Toolkit** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen2.5 3B Instruct. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Qwen Research License (non-commercial)\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
+    "reply": "I'm **Kib**, the assistant built into **Kiboto** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen2.5 3B Instruct. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Qwen Research License (non-commercial)\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
+    "reply_markdown": "I'm **Kib**, the assistant built into **Kiboto** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen2.5 3B Instruct. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Qwen Research License (non-commercial)\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
     "status": "ok",
     "tool_names": [
      "get_system_telemetry"

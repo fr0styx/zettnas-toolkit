@@ -1,12 +1,12 @@
 """A filter for the kids' devices through AdGuard Home (COMP-13).
 
 AdGuard Home (App Catalog) answers the home network's DNS. For each family account an admin
-lists that person's devices (IP addresses, MAC addresses or AdGuard client IDs); ZettNAS then
-keeps one AdGuard client per person, named "ZettNAS: <account>", with parental control, safe
+lists that person's devices (IP addresses, MAC addresses or AdGuard client IDs); Kiboto then
+keeps one AdGuard client per person, named "Kiboto: <account>", with parental control, safe
 browsing and safe search on, and the services the admin picked (TikTok, games, ...) blocked.
 Everyone else keeps AdGuard's own settings.
 
-ZettNAS signs in to AdGuard's API with the admin's AdGuard user and password, kept sealed
+Kiboto signs in to AdGuard's API with the admin's AdGuard user and password, kept sealed
 (secret_box) and never sent back to the browser.
 """
 
@@ -26,7 +26,7 @@ from backend.fsutil import atomic_write_json, json_locked, read_json
 
 SETTINGS_FILE = f"{DATA_DIR}/adguard_kids.json"
 DEFAULT_URL = "http://adguardhome:3000"
-PREFIX = "ZettNAS: "
+PREFIX = "Kiboto: "
 # AdGuard Home's own ids for services it can block
 SERVICES = (
     "tiktok",

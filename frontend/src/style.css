@@ -1,4 +1,4 @@
-/* ZettNAS styles, split per area (FE-18). The order below is the cascade order: keep it.
+/* Kiboto styles, split per area (FE-18). The order below is the cascade order: keep it.
  * New shared building blocks (buttons, pills, cards, fields) live in components.css. */
 @import './styles/00-tokens.css';
 @import './styles/01-themes.css';

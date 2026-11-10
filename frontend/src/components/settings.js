@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit Settings & Preferences Controller
+ * Kiboto Settings & Preferences Controller
  * Handles settings drawer, tabs, screen backlight, timezone, hardware buttons, card layout locks, and security credentials.
  */
 import { onManagementDom } from '../management-dom.js';
@@ -1703,7 +1703,7 @@ export function gatherClientPreferences() {
     if (key === 'kiboto_token' || key === 'kiboto_signed_in' || key.startsWith('kiboto_weather_cache_') || key.startsWith('kiboto_holiday_cache_')) {
       continue;
     }
-    // Capture all ZettNAS desktop configurations, window positions, widgets, dock pinned apps, themes, and layout locks
+    // Capture all Kiboto desktop configurations, window positions, widgets, dock pinned apps, themes, and layout locks
     if (key.startsWith('kiboto_') || key.startsWith('lcd_') || key === 'screen_layout_style') {
       prefs[key] = localStorage.getItem(key);
     }
@@ -1860,7 +1860,7 @@ export function initSystemTab() {
       const file = e.target.files[0];
       if (!file) return;
       if (!file.name.endsWith('.zip') && !file.name.endsWith('.zettbak')) {
-        showToast(t('toast.please_choose_a_zettnas_backup_zip', 'Please choose a ZettNAS backup (.zip or .zettbak).'), 'error');
+        showToast(t('toast.please_choose_a_zettnas_backup_zip', 'Please choose a Kiboto backup (.zip or .zettbak).'), 'error');
         uploadInput.value = '';
         return;
       }

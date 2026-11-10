@@ -1,4 +1,4 @@
-"""AI-21: Ask Zetty's tools come from one registry with one permission policy."""
+"""AI-21: Ask Kib's tools come from one registry with one permission policy."""
 
 from types import SimpleNamespace
 

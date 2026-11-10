@@ -222,7 +222,7 @@ tr.docker-row-selected {
   background: var(--zn-glaze-5) !important;
 }
 
-/* "Can't reach ZettNAS" banner (FE-16) */
+/* "Can't reach Kiboto" banner (FE-16) */
 .zn-offline-banner {
   position: fixed;
   top: 10px;

@@ -6,7 +6,7 @@ multicast), started by nas_name.py with the app's image. Standard library only.
 It answers "<name>.local" with the NAS's address, so http://<name>.local:<port> works in a
 browser on macOS, iOS, Windows 10+, Android and Linux, and \\\\<name>.local in Windows Explorer.
 It advertises the web page (_http._tcp) and, when the host shares files over SMB, the file
-server (_smb._tcp, with a server icon in Finder's sidebar), and ZettNAS's own Time Machine
+server (_smb._tcp, with a server icon in Finder's sidebar), and Kiboto's own Time Machine
 shares as backup disks (_adisk._tcp) so a Mac offers them in Time Machine. Older names (after a rename or the
 rebrand) answer too, so bookmarks keep working. It shares port 5353 with a responder the host
 may already run (Unraid's avahi).
@@ -313,7 +313,7 @@ def probe(sock: Any, r: Responder) -> bool:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Answers <name>.local on the home network.")
     ap.add_argument("--names", default="zettnas", help="the name, then older names that still answer")
-    ap.add_argument("--label", default="ZettNAS", help="how Finder lists the NAS")
+    ap.add_argument("--label", default="Kiboto", help="how Finder lists the NAS")
     ap.add_argument("--http-port", type=int, default=80)
     ap.add_argument("--ip", default="")
     ap.add_argument("--timemachine", action="append", default=[], help="a Time Machine share (repeat for more)")

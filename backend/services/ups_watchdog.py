@@ -1,12 +1,12 @@
 """
-ZettNAS Toolkit - UPS Power Integrity & Automated Disaster Recovery Watchdog
+Kiboto - UPS Power Integrity & Automated Disaster Recovery Watchdog
 Executes the atomic 4-phase safe shutdown sequence, debounces transient power loss,
 logs power events in SQLite, and provides homelab outage drills.
 
-The one UPS engine (REL-10, D10). When the battery runs low ZettNAS pauses copies, stops the
+The one UPS engine (REL-10, D10). When the battery runs low Kiboto pauses copies, stops the
 apps it installed (in parallel, within the timeout) and flushes the disks. On Unraid and TrueNAS
-the host's own UPS service then shuts the server down: ZettNAS never powers those hosts off and
-never cuts the UPS outlets there. Elsewhere ZettNAS shuts the host down itself, and tells the UPS
+the host's own UPS service then shuts the server down: Kiboto never powers those hosts off and
+never cuts the UPS outlets there. Elsewhere Kiboto shuts the host down itself, and tells the UPS
 to cut its outlets only after that shutdown command succeeded. The drill reports which path will
 shut the server down, or that there is none.
 """
@@ -90,7 +90,7 @@ def _catalog_ids() -> set[str]:
 
 
 def zettnas_containers(containers: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """The running apps ZettNAS installed (labelled, or a catalog app's stack). ZettNAS itself and
+    """The running apps Kiboto installed (labelled, or a catalog app's stack). Kiboto itself and
     its helpers (fan watchdog, sidecars) keep running to the end; other people's containers are
     left to the host's own shutdown."""
     ids = _catalog_ids()
@@ -107,7 +107,7 @@ def zettnas_containers(containers: list[dict[str, Any]]) -> list[dict[str, Any]]
 
 
 def graceful_docker_teardown(timeout_sec: int = 30) -> dict[str, list[str]]:
-    """Stops the apps ZettNAS installed, all at once, so databases flush before the power goes;
+    """Stops the apps Kiboto installed, all at once, so databases flush before the power goes;
     gives up waiting after timeout_sec (REL-10)."""
     result: dict[str, list[str]] = {"stopped": [], "failed": [], "timed_out": []}
     try:
@@ -118,9 +118,9 @@ def graceful_docker_teardown(timeout_sec: int = 30) -> dict[str, list[str]]:
         logger.error("[UPS FAILSAFE] Could not list the apps: %s", e)
         return result
     if not mine:
-        logger.info("[UPS FAILSAFE] No ZettNAS apps to stop.")
+        logger.info("[UPS FAILSAFE] No Kiboto apps to stop.")
         return result
-    logger.warning("[UPS FAILSAFE] Stopping %s ZettNAS app container(s) before the power goes...", len(mine))
+    logger.warning("[UPS FAILSAFE] Stopping %s Kiboto app container(s) before the power goes...", len(mine))
     pool = ThreadPoolExecutor(max_workers=min(8, len(mine)), thread_name_prefix="UpsStop")
     futures = {
         pool.submit(container_action, str(c.get("id") or c.get("name") or ""), "stop"): c.get("name") or c.get("id")
@@ -161,7 +161,7 @@ def _remember_stopped(names: list[str]) -> None:
 
 
 def restart_stopped_apps() -> list[str]:
-    """Starts the apps ZettNAS stopped for a power event: when mains is back, or at the next
+    """Starts the apps Kiboto stopped for a power event: when mains is back, or at the next
     start after a real shutdown. Docker won't, for a container stopped before (NREL-10)."""
     from backend.fsutil import read_json
 
@@ -266,15 +266,15 @@ def shutdown_path_report() -> dict[str, Any]:
             "by": owner,
             "ok": True,
             "detail": f"{host}'s UPS service ({svc['kind']}) shuts the server down{when}. "
-            "Before that ZettNAS stops its apps and saves what is in memory.",
+            "Before that Kiboto stops its apps and saves what is in memory.",
         }
     paths = host_shutdown_paths()
     if paths:
-        return {"by": "zettnas", "ok": True, "detail": f"ZettNAS shuts the server down with {paths[0]}."}
+        return {"by": "zettnas", "ok": True, "detail": f"Kiboto shuts the server down with {paths[0]}."}
     return {
         "by": "zettnas",
         "ok": False,
-        "detail": "ZettNAS has no way to shut this server down (no host shutdown command is mounted). "
+        "detail": "Kiboto has no way to shut this server down (no host shutdown command is mounted). "
         "Set up the host's own UPS shutdown, or mount a powerdown command at /host/powerdown.",
     }
 
@@ -311,7 +311,7 @@ def send_ups_cut_power():
 
 def host_shutdown_paths() -> list[str]:
     """Commands that shut down the HOST (REL-10). Inside a container /sbin/poweroff only stops the
-    container, so it counts only when ZettNAS runs directly on the host."""
+    container, so it counts only when Kiboto runs directly on the host."""
     paths = ["/host/powerdown", "/usr/local/sbin/powerdown"]
     if not os.path.exists("/.dockerenv"):
         paths.append("/sbin/poweroff")
@@ -396,7 +396,7 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
     if owner in HOST_OWNED:
         host = HOST_OWNED[owner]
         msg = (
-            f"The UPS battery is low. ZettNAS stopped its apps and saved what was in memory; "
+            f"The UPS battery is low. Kiboto stopped its apps and saved what was in memory; "
             f"{host}'s own UPS settings shut the server down."
         )
         logger.critical("[UPS FAILSAFE] %s", msg)
@@ -419,7 +419,7 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
             send_ups_cut_power()
         return
     msg = (
-        "ZettNAS could not shut down this server on its own (no working host shutdown command). "
+        "Kiboto could not shut down this server on its own (no working host shutdown command). "
         "The UPS outlets were NOT switched off. Shut the NAS down by hand now to avoid a hard power loss."
     )
     logger.critical("[UPS FAILSAFE] %s", msg)

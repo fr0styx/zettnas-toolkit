@@ -4,7 +4,7 @@
 Usage (on a Docker host, from the repo root):
     python3 scripts/verify_catalog.py [app_id ...] [--keep-images] [--root /tmp/zt-verify]
 
-Each app runs through ZettNAS's own deploy code (stream_deploy_catalog_app) under a temporary
+Each app runs through Kiboto's own deploy code (stream_deploy_catalog_app) under a temporary
 name, "zt-verify-<id>", with every host port moved to a free one so nothing on the host is
 disturbed. The check passes when the web UI answers with any status below 500 within the time
 limit. Afterwards the container, its companions and network, its folders and any image the

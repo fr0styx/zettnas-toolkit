@@ -1,11 +1,11 @@
 /**
  * @file ai_conversation_history.test.js
- * Comprehensive Vitest suite for ZettAI Multi-Turn Conversation History & Persistence UI.
+ * Comprehensive Vitest suite for Kib Multi-Turn Conversation History & Persistence UI.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-describe('ZettAI Conversation History & Dual-Pane UI Suite', () => {
+describe('Kib Conversation History & Dual-Pane UI Suite', () => {
   let managementModule;
   let apiModule;
 
@@ -37,7 +37,7 @@ describe('ZettAI Conversation History & Dual-Pane UI Suite', () => {
             <button id="btn-ai-chat-clear">Clear Chat</button>
             <div id="ai-chat-messages-list"></div>
             <input id="ai-chat-input" value="" />
-            <button id="btn-ai-chat-send">Ask Zetty</button>
+            <button id="btn-ai-chat-send">Ask Kib</button>
           </main>
         </div>
       </div>

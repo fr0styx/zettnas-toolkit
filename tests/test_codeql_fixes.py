@@ -79,7 +79,7 @@ def test_log_values_stay_on_one_line():
     """py/log-injection: a pool name with a line break could fake a log entry."""
     from backend.logging_config import one_line
 
-    assert one_line("pool\n2026-10-29 - ZettNAS - INFO - fake\r") == "pool\\n2026-10-29 - ZettNAS - INFO - fake\\r"
+    assert one_line("pool\n2026-10-29 - Kiboto - INFO - fake\r") == "pool\\n2026-10-29 - Kiboto - INFO - fake\\r"
     assert one_line(ValueError("x")) == "x"
 
 

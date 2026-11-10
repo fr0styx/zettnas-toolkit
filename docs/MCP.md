@@ -1,6 +1,6 @@
-# Using ZettNAS from AI clients (MCP)
+# Using Kiboto from AI clients (MCP)
 
-ZettNAS is a [Model Context Protocol](https://modelcontextprotocol.io) server. AI clients
+Kiboto is a [Model Context Protocol](https://modelcontextprotocol.io) server. AI clients
 such as Claude Code, Claude Desktop, Cursor or Open WebUI can then read your NAS's
 status, search your indexed files and propose changes.
 
@@ -20,18 +20,18 @@ status, search your indexed files and propose changes.
 - **What is connected.** Security → API Tokens shows, for each token, when it was last used,
   from which address and, for MCP clients, which client (for example "Cursor 1.4", as the
   client names itself). **Revoke** cuts a client off at once.
-- **Settings to paste.** When a token is made, ZettNAS shows it once together with ready
+- **Settings to paste.** When a token is made, Kiboto shows it once together with ready
   settings for Claude Code, Cursor and Claude Desktop, filled in with this server's address.
 
 ## What a client can do
 
-The client sees the same tools as Ask Zetty, minus web search and weather:
+The client sees the same tools as Ask Kib, minus web search and weather:
 system status, disks (without waking sleeping ones), fans, storage, network,
 containers, a calculator, and search over your indexed documents and photos.
 
 Tools that change something (fan profile, starting or stopping a container, indexing)
 never run directly. The client gets a link such as
-`http://<nas>:8082/?confirm-action=…`. You open it in ZettNAS, read what will happen, and
+`http://<nas>:8082/?confirm-action=…`. You open it in Kiboto, read what will happen, and
 click **Confirm**. Links expire after 10 minutes and only work for the same account.
 
 Every call, from the chat or MCP, is written to the security audit log

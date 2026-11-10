@@ -1,11 +1,11 @@
-"""Frigate's detections as ZettNAS notifications (COMP-11).
+"""Frigate's detections as Kiboto notifications (COMP-11).
 
 Frigate (App Catalog) records the cameras and finds people, cars and pets with the Intel iGPU
-(OpenVINO). Once a minute ZettNAS asks its events API what it found since the last look and
+(OpenVINO). Once a minute Kiboto asks its events API what it found since the last look and
 sends the chosen ones as "camera" alerts, so they reach the same phone, e-mail and push
 channels as every other alert, and people can route them to themselves under My alerts.
 
-The catalog puts Frigate on ZettNAS's own Docker network, so the API is reached by name
+The catalog puts Frigate on Kiboto's own Docker network, so the API is reached by name
 (http://frigate:5000) and its unauthenticated port is never published. A camera and object
 seen again within the cooldown is one alert, not a burst.
 """

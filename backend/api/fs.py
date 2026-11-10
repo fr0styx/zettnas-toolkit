@@ -1,4 +1,4 @@
-"""ZettNAS Toolkit - File System & Storage Browsing API.
+"""Kiboto - File System & Storage Browsing API.
 
 The routes live in backend/api/files/ (one module per area, ARC-5); this module keeps every
 name importers and tests use. tests/test_arc5_fs_characterization.py pins the API."""

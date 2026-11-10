@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit Centralized API Client
+ * Kiboto Centralized API Client
  * Handles session tokens, HTTP requests, 401 handling, and response parsing.
  */
 import { ZettEventBus } from './event-bus.js';

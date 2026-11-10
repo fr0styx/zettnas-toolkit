@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-ZettNAS Toolkit - rclone WebDAV & SFTP Auth Proxy.
+Kiboto - rclone WebDAV & SFTP Auth Proxy.
 Authenticates incoming WebDAV/SFTP requests dynamically using:
 1. Dedicated SFTP User Store (data/sftp/users.json)
-2. ZettNAS SQLite User Store (users.db)
+2. Kiboto SQLite User Store (users.db)
 No default or legacy admin password is ever accepted (SEC-02). Accounts that
 still have to change their password, and usernames locked out after repeated
 failures, are refused.
@@ -32,7 +32,7 @@ from backend.passwords import verify_password
 from backend.services import login_lockout
 from backend.users_db import get_user_by_username
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 
 def _is_hash(stored: str) -> bool:
@@ -156,7 +156,7 @@ def main():
         db_path = os.environ.get("USERS_DB_PATH") or getattr(config, "USERS_DB_PATH", None)
         user = get_user_by_username(username, db_path=db_path)
         # WebDAV and SFTP have no second-factor step, so accounts with two-factor sign-in
-        # use a dedicated SFTP/WebDAV account instead of their ZettNAS password.
+        # use a dedicated SFTP/WebDAV account instead of their Kiboto password.
         if (
             user
             and user.get("status") == "active"

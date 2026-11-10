@@ -61,3 +61,19 @@ def test_the_session_cookie_from_before_still_signs_in():
     assert session_cookie({"zettnas_session": "old"}) == "old"
     assert session_cookie({"zettnas_session": "old", "kiboto_session": "new"}) == "new"
     assert session_cookie({}) == ""
+
+
+def test_the_guard_file_from_before_takes_the_new_name(tmp_path):
+    from backend.services import ransomware_guard as rg
+
+    one, both = tmp_path / "one", tmp_path / "both"
+    one.mkdir()
+    both.mkdir()
+    (one / "!ZettNAS-guard-file.docx").write_bytes(b"old")
+    (both / "!ZettNAS-guard-file.docx").write_bytes(b"old")
+    (both / rg.CANARY_NAME).write_bytes(b"new")
+    rg._rename_old_canary(str(one), str(one / rg.CANARY_NAME))
+    rg._rename_old_canary(str(both), str(both / rg.CANARY_NAME))
+    assert sorted(p.name for p in one.iterdir()) == [rg.CANARY_NAME] and (one / rg.CANARY_NAME).read_bytes() == b"old"
+    assert sorted(p.name for p in both.iterdir()) == [rg.CANARY_NAME] and (both / rg.CANARY_NAME).read_bytes() == b"new"
+    rg._rename_old_canary(str(tmp_path), str(tmp_path / rg.CANARY_NAME))  # nothing there: nothing happens

@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Container Mutation & Zero-Downtime Resource Tuning Subsystem
+Kiboto - Container Mutation & Zero-Downtime Resource Tuning Subsystem
 Supports:
 1. Live zero-downtime CPU and Memory limit tuning via POST /containers/{id}/update.
 2. Atomic Clone-and-Recreate port reconfiguration with automatic rollback.
@@ -21,7 +21,7 @@ from backend.services.docker_client import UnixHTTPConnection  # noqa: F401
 
 # Sent with container creates the user confirmed; the Docker proxy refuses
 # privileged settings without it (SEC-09).
-ELEVATED = {"X-ZettNAS-Elevated": "1"}
+ELEVATED = {"X-Kiboto-Elevated": "1"}
 
 
 def _docker_request(
@@ -364,7 +364,7 @@ def recreate_container(
     self_hostname = socket.gethostname()
     if (self_hostname and cid.startswith(self_hostname)) or orig_name in ("zettnas-toolkit", "zettnas"):
         raise ValueError(
-            "Cannot recreate the active ZettNAS Toolkit container from within the app. "
+            "Cannot recreate the active Kiboto container from within the app. "
             "Container modifications must be configured in Docker Compose or your host template."
         )
 

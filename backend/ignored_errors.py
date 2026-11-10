@@ -16,7 +16,7 @@ import sys
 import threading
 import time
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 REPEAT_WARNING_SECS = 24 * 3600.0
 _LOCK = threading.Lock()

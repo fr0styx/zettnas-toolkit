@@ -1,7 +1,7 @@
 # Hardware runner
 
 Some checks only mean something on a real server. A self-hosted GitHub Actions runner next to a
-ZettNAS install runs three every night (`.github/workflows/hardware.yml`), in this order:
+Kiboto install runs three every night (`.github/workflows/hardware.yml`), in this order:
 
 1. **Budgets** (PERF-10, `scripts/hardware_budgets.py`): idle CPU, wakeups and processes started,
    for the whole app container (every process in its cgroup, sampled each second), the backend's
@@ -10,7 +10,7 @@ ZettNAS install runs three every night (`.github/workflows/hardware.yml`), in th
    a shorter version in CI: one idle minute of a freshly started backend, where starting more
    than 10 processes a minute fails the run.
 2. **Spin-down** (PERF-2, `scripts/hardware_spindown.py`): for 30 minutes, whether a spinning disk
-   that has been idle long enough to sleep sees I/O while the ZettNAS backend does storage I/O.
+   that has been idle long enough to sleep sees I/O while the Kiboto backend does storage I/O.
    It only reads kernel counters (`/proc/diskstats`, `/sys/block/*/queue/rotational`, the
    backend's `/proc/<pid>/io`); it never sends a command to a drive, so it can't wake one or put
    one to sleep. "No I/O" stands in for "asleep", since the spin state can't be read without

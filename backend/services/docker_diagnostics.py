@@ -1,5 +1,5 @@
 """
-Docker Subsystem & Daemon Diagnostics for ZettNAS Toolkit.
+Docker Subsystem & Daemon Diagnostics for Kiboto.
 Collects Docker daemon health, disk usage (docker system df), port conflict detection,
 cgroup limits, and targeted error logs for crashed/restarting containers via /var/run/docker.sock.
 """

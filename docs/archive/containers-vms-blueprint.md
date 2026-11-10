@@ -1,8 +1,8 @@
-# ZettNAS Toolkit — Containers & Virtual Machines Subsystems
+# Kiboto — Containers & Virtual Machines Subsystems
 ## 360° Architectural Review, Competitive Benchmark, and Modernization Blueprint
 
 **Document Version:** 1.0.0-PROD  
-**Target Architecture:** ZettNAS Toolkit (NAS WORKBENCH) — Universal Hardware Appliance & Homelab OS  
+**Target Architecture:** Kiboto (NAS WORKBENCH) — Universal Hardware Appliance & Homelab OS  
 **Status:** Authoritative Architectural Specification & Modernization Blueprint  
 **Date:** October 2026  
 **Scope:** Containers Subsystem (R1), Virtual Machines Subsystem (R2), Competitive Benchmark & Parity Matrix (R3), Performance & Reliability Blueprint (R4), AGENTS.md Invariants Compliance, and Phased Implementation Roadmap.
@@ -22,7 +22,7 @@
    - [2.3 High-Reliability Hypervisor Modernization Specifications & Concrete Code Designs](#23-high-reliability-hypervisor-modernization-specifications--concrete-code-designs)
 4. [Section 3: Competitive Benchmark & Feature Parity Matrix (Requirement R3)](#4-section-3-competitive-benchmark--feature-parity-matrix-requirement-r3)
    - [3.1 6-Platform Competitive Matrix across 25+ Architectural Dimensions](#31-6-platform-competitive-matrix-across-25-architectural-dimensions)
-   - [3.2 Parity Features Already Achieved in ZettNAS Toolkit](#32-parity-features-already-achieved-in-zettnas-toolkit)
+   - [3.2 Parity Features Already Achieved in Kiboto](#32-parity-features-already-achieved-in-zettnas-toolkit)
    - [3.3 Six Unique Architectural Differentiators](#33-six-unique-architectural-differentiators)
    - [3.4 Structured High-Impact Feature Gap Catalog (P0, P1, P2)](#34-structured-high-impact-feature-gap-catalog-p0-p1-p2)
 5. [Section 4: Performance & Reliability Optimization Blueprint (Requirement R4)](#5-section-4-performance--reliability-optimization-blueprint-requirement-r4)
@@ -39,11 +39,11 @@
 
 ## 1. Executive Summary & Architectural Vision
 
-ZettNAS Toolkit (**NAS WORKBENCH**) has transitioned from an appliance hardware controller into a comprehensive, glassmorphic Web Desktop Operating System. It provides host orchestration, storage lifecycle management, Docker container administration, and KVM virtual machine supervision on universal hardware (ZettLab appliances, Aoostar hybrid systems, and generic homelab servers) across Unraid, Ubuntu, Debian, TrueNAS SCALE, Proxmox VE, and Alpine hosts.
+Kiboto (**NAS WORKBENCH**) has transitioned from an appliance hardware controller into a comprehensive, glassmorphic Web Desktop Operating System. It provides host orchestration, storage lifecycle management, Docker container administration, and KVM virtual machine supervision on universal hardware (ZettLab appliances, Aoostar hybrid systems, and generic homelab servers) across Unraid, Ubuntu, Debian, TrueNAS SCALE, Proxmox VE, and Alpine hosts.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                        ZETTNAS TOOLKIT WEB DESKTOP OS WORKSPACE                         │
+│                        KIBOTO TOOLKIT WEB DESKTOP OS WORKSPACE                         │
 ├─────────────────────────────────────────────────────────────────────────────────────────┤
 │  ┌─────────────────────────────┐  ┌─────────────────────────────┐  ┌──────────────────┐ │
 │  │   CONTAINERS MANAGER        │  │   VIRTUAL MACHINES MANAGER  │  │ CHASSIS 2.5D     │ │
@@ -69,12 +69,12 @@ ZettNAS Toolkit (**NAS WORKBENCH**) has transitioned from an appliance hardware 
 ```
 
 ### Core Thesis
-ZettNAS Toolkit already outperforms industry rivals in visual ergonomics, desktop window multi-tasking, hardware detection, zero-spindown storage safety, and atomic container mutation. However, its day-to-day scalability and hypervisor readiness are bottlenecked by:
+Kiboto already outperforms industry rivals in visual ergonomics, desktop window multi-tasking, hardware detection, zero-spindown storage safety, and atomic container mutation. However, its day-to-day scalability and hypervisor readiness are bottlenecked by:
 1. **Telemetry & Network Contention**: A hard-coded 16-container worker cap, coupled with an SSE broadcast pipeline that drops container metrics when states are static, forcing unnecessary 3.5s REST HTTP polling.
 2. **Hypervisor Architectural Gaps**: A direct-QEMU implementation lacking a persistent QMP event engine, zero live snapshot support, hyper-backup exclusion of virtual disks, unkeyed DOM grid destruction, and a non-functional vTPM 2.0 configuration.
 3. **Terminal & Console Bottlenecks**: A pseudo-terminal container shell based on HTML `<span>` tags, a 100 KB string-regex parsing freeze in VM serial consoles, and unoptimized noVNC streaming.
 
-By addressing these bottlenecks through this Modernization Blueprint, ZettNAS will match and exceed Tier-1 hypervisors (**Proxmox VE 8.x**, **Synology DSM 7.2**, **TrueNAS SCALE 24.10**, **Unraid 7.x**, and **Portainer Business 2.x**) while preserving its unique strengths: glassmorphic desktop ergonomics, universal hardware agnosticism, and zero-spindown thermal safety.
+By addressing these bottlenecks through this Modernization Blueprint, Kiboto will match and exceed Tier-1 hypervisors (**Proxmox VE 8.x**, **Synology DSM 7.2**, **TrueNAS SCALE 24.10**, **Unraid 7.x**, and **Portainer Business 2.x**) while preserving its unique strengths: glassmorphic desktop ergonomics, universal hardware agnosticism, and zero-spindown thermal safety.
 
 ### High-Level Subsystem Scorecard
 
@@ -311,7 +311,7 @@ export function mountContainerTerminal(containerEl, cid) {
 
 ### 2.1 Architectural & Direct-QEMU Hypervisor Engine Deep-Dive
 
-ZettNAS Toolkit runs KVM virtual machines directly via `subprocess.Popen` without `libvirtd`, managing processes through QMP (QEMU Machine Protocol) UNIX sockets (`/tmp/{vm_id}-qmp.sock`) and storing metadata in `/app/data/vms/vms.json`.
+Kiboto runs KVM virtual machines directly via `subprocess.Popen` without `libvirtd`, managing processes through QMP (QEMU Machine Protocol) UNIX sockets (`/tmp/{vm_id}-qmp.sock`) and storing metadata in `/app/data/vms/vms.json`.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -356,7 +356,7 @@ if target_vm.get("iso_path"):
 elif not target_vm.get("ip_address"):
     target_vm["ip_address"] = f"192.168.1.{100 + (hash(vm_id) % 150)}"
 ```
-- **Forensic Finding**: Rather than discovering real DHCP leases via QEMU Guest Agent or host ARP cache parsing, ZettNAS fabricates a synthetic IP in the `192.168.1.0/24` subnet. On networks with different subnets (e.g. `10.0.0.0/24`), 1-click SSH copy (`ssh root@192.168.1.142`) and web launchers fail.
+- **Forensic Finding**: Rather than discovering real DHCP leases via QEMU Guest Agent or host ARP cache parsing, Kiboto fabricates a synthetic IP in the `192.168.1.0/24` subnet. On networks with different subnets (e.g. `10.0.0.0/24`), 1-click SSH copy (`ssh root@192.168.1.142`) and web launchers fail.
 
 #### 4. Total Snapshot Absence & Hyper-Backup Exclusion
 - **Location**: `backend/services/backup_engine.py:35–45`
@@ -521,9 +521,9 @@ async def create_vm_snapshot(vm_id: str, req: VmSnapshotRequest):
 
 ### 3.1 6-Platform Competitive Matrix across 25+ Architectural Dimensions
 
-The following matrix benchmarks **ZettNAS Toolkit** against the top 5 commercial and homelab hypervisor/container platforms:
+The following matrix benchmarks **Kiboto** against the top 5 commercial and homelab hypervisor/container platforms:
 
-| Capability / Dimension | ZettNAS Toolkit (Current) | Proxmox VE 8.x | Synology DSM 7.2 | TrueNAS SCALE 24.10 | Unraid 7.x | Portainer Business 2.x |
+| Capability / Dimension | Kiboto (Current) | Proxmox VE 8.x | Synology DSM 7.2 | TrueNAS SCALE 24.10 | Unraid 7.x | Portainer Business 2.x |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Containers Subsystem** | | | | | | |
 | Container Runtime | Docker Engine CE | LXC (System) | Docker Engine CE | Docker Engine CE | Docker Engine CE | Docker / Swarm / K8s |
@@ -560,7 +560,7 @@ The following matrix benchmarks **ZettNAS Toolkit** against the top 5 commercial
 
 ---
 
-### 3.2 Parity Features Already Achieved in ZettNAS Toolkit
+### 3.2 Parity Features Already Achieved in Kiboto
 
 1. **Full Container Lifecycle Management**: Start, stop, restart, destroy, recreate, and prune containers directly from the Web Desktop.
 2. **Reverse Compose Synthesizer**: Reconstruct clean `docker-compose.yml` specs from live running containers with sensitive secret masking.
@@ -575,7 +575,7 @@ The following matrix benchmarks **ZettNAS Toolkit** against the top 5 commercial
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        ZETTNAS UNIQUE ADVANTAGES                       │
+│                        KIBOTO UNIQUE ADVANTAGES                       │
 ├────────────────────────────────┬───────────────────────────────────────┤
 │ 1. Glassmorphic Desktop OS     │ Concurrent draggable windows, docking,│
 │    Workspace                   │ bring-to-front, zero full-page reloads│
@@ -602,7 +602,7 @@ The following matrix benchmarks **ZettNAS Toolkit** against the top 5 commercial
 3. **Dynamic Elastic Headroom RAM Reserve**: A mathematical clamp prevents VM over-allocation:
    $$\text{Host Reserve} = \max(2.0\text{ GB}, 0.10 \times \text{Total RAM GB})$$
    $$\text{Safe Max VM RAM} = \text{Total RAM} - \text{Host Reserve}$$
-4. **Instant Appdata Deep-Linking**: Bind mounts are parsed to provide 1-click navigation directly to host application directories inside the ZettNAS File Explorer.
+4. **Instant Appdata Deep-Linking**: Bind mounts are parsed to provide 1-click navigation directly to host application directories inside the Kiboto File Explorer.
 5. **Host-Network Direct WebUI Resolution**: Automatic discovery of container web portals using Traefik rules, Unraid XML templates, and port heuristics.
 6. **Universal HAL/PAL Hardware Agnosticism**: Seamless support for Intel QuickSync, NVIDIA CUDA, AMD ROCm, Google Coral TPU, and serial adapters across Unraid, Ubuntu, Debian, Proxmox VE, and Alpine.
 

@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Application & Appdata Backup Engine
+Kiboto - Application & Appdata Backup Engine
 Handles:
 1. Auto-archiving of container config + appdata on uninstall (Feature 21a).
 2. On-demand backup of any installed container (Feature 21b).
@@ -173,7 +173,7 @@ def is_safe_tar_member(member: tarfile.TarInfo, target_dir: str) -> bool:
     return True
 
 
-# What ZettNAS paused for a backup: a restart in the middle must not leave the family's app or
+# What Kiboto paused for a backup: a restart in the middle must not leave the family's app or
 # VM frozen (NREL-17)
 def _paused_file() -> str:
     from backend.config import DATA_DIR
@@ -213,7 +213,7 @@ def _unpause_container(cid: str) -> None:
 
 
 def resume_left_paused() -> list[str]:
-    """At start: unpauses the containers and resumes the VMs a backup paused when ZettNAS stopped
+    """At start: unpauses the containers and resumes the VMs a backup paused when Kiboto stopped
     in the middle of it (NREL-17)."""
     from backend.fsutil import read_json
 
@@ -268,7 +268,7 @@ def create_app_backup(
     except Exception as e:
         logger.warning(f"[App Backup] Could not synthesize compose spec for '{cname}': {e}")
         compose_yaml = (
-            f"# ZettNAS Compose Export for {cname}\nversion: '3.8'\nservices:\n  {cname}:\n    image: {image}\n"
+            f"# Kiboto Compose Export for {cname}\nversion: '3.8'\nservices:\n  {cname}:\n    image: {image}\n"
         )
 
     # 2. Identify bind mounts to back up

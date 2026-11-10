@@ -58,7 +58,7 @@ export async function renderModelBench() {
       row.append(cell('td', r.name));
       row.append(cell('td', r.ok ? String(r.tokens_per_s) : t('bench.failed', 'failed')));
       row.append(cell('td', r.ok ? `${r.first_token_s} s` : '—'));
-      // time to start answering a 6,000-token question from documents, as Ask Zetty does
+      // time to start answering a 6,000-token question from documents, as Ask Kib does
       row.append(cell('td', r.ok && r.doc_first_token_s != null ? `${r.doc_first_token_s} s` : '—'));
       row.append(cell('td', r.ok ? placementLabel(r.placement) : (r.error || '').slice(0, 60)));
       table.append(row);
@@ -74,7 +74,7 @@ export async function renderModelBench() {
       b.type = 'button';
       b.addEventListener('click', async () => {
         const res = await api.post('/api/ai/models/benchmark/apply', { tier });
-        showToast(t('bench.applied', 'Ask Zetty now uses {model}', { model: res.active_model }), 'success');
+        showToast(t('bench.applied', 'Ask Kib now uses {model}', { model: res.active_model }), 'success');
       });
       actions.append(b);
     }

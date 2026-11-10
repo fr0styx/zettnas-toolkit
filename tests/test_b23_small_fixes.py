@@ -76,7 +76,7 @@ def test_a_stalled_service_is_alerted_once_a_day(monkeypatch):
 
 
 def test_apps_stopped_for_a_power_cut_come_back(tmp_path, monkeypatch):
-    """NREL-10: what ZettNAS stopped for the UPS is started again, once."""
+    """NREL-10: what Kiboto stopped for the UPS is started again, once."""
     from backend.services import ups_watchdog
 
     monkeypatch.setattr(ups_watchdog, "_stopped_file", lambda: str(tmp_path / "ups_stopped_apps.json"))

@@ -19,12 +19,12 @@ def _safe_float(val):
 
 @router.get("/metrics", response_class=PlainTextResponse, dependencies=[Depends(require_scope("system:view"))])
 def prometheus_metrics():
-    """Prometheus exposition format for ZettNAS telemetry."""
+    """Prometheus exposition format for Kiboto telemetry."""
     from backend import spawns
     from backend.request_metrics import REQUEST_METRICS
 
     if not Z_STATE.cached_stats:
-        return "# ZettNAS metrics not ready yet\n" + REQUEST_METRICS.prometheus() + spawns.prometheus()
+        return "# Kiboto metrics not ready yet\n" + REQUEST_METRICS.prometheus() + spawns.prometheus()
 
     stats = Z_STATE.cached_stats
     lines = []
@@ -63,7 +63,7 @@ def prometheus_metrics():
     from backend.services import memory_watch
 
     own = memory_watch.current()
-    add_gauge("zettnas_backend_resident_bytes", "Resident memory of the ZettNAS backend process", own["rss_kb"] * 1024)
+    add_gauge("zettnas_backend_resident_bytes", "Resident memory of the Kiboto backend process", own["rss_kb"] * 1024)
     add_gauge("zettnas_backend_uptime_seconds", "Seconds since the backend process started", own["uptime_s"])
 
     # Network

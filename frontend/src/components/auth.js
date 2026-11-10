@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit Authentication & Lock Screen Component
+ * Kiboto Authentication & Lock Screen Component
  * Handles Dual-Mode Login, MFA/TOTP Challenge Interception, and Inactivity Auto-Lock.
  */
 import { auth } from '../api.js';
@@ -441,7 +441,7 @@ async function doLogin() {
       if (loginBtn) loginBtn.textContent = t('login.btn', 'Sign in');
     }
   } catch (e) {
-    _showLoginError(t('login.error_network', "Couldn't reach ZettNAS. Check the connection and try again."));
+    _showLoginError(t('login.error_network', "Couldn't reach Kiboto. Check the connection and try again."));
     if (loginBtn) loginBtn.textContent = t('login.btn', 'Sign in');
   }
 }

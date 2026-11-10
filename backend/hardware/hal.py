@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Unified Hardware Abstraction Layer (HAL)
+Kiboto - Unified Hardware Abstraction Layer (HAL)
 Hardware-Agnostic Physical Disk & Controller Discovery Pipeline.
 Eliminates device-name drift and supports SATA, SAS (HBAs), NVMe, and USB UAS bridges.
 """

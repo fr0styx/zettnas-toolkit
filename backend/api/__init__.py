@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit API Package
+Kiboto API Package
 Aggregates all modular sub-routers into api_router.
 """
 

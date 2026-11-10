@@ -1,5 +1,5 @@
 """
-ai_conversations.py — REST API router for ZettAI conversation history management.
+ai_conversations.py — REST API router for Kib conversation history management.
 
 Provides multi-user conversation management:
 - GET /api/ai/conversations: list threads with search & pinning

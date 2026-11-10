@@ -1,9 +1,9 @@
-"""App catalog logos through ZettNAS (SEC-38).
+"""App catalog logos through Kiboto (SEC-38).
 
 The catalog's logos live on cdn.jsdelivr.net (the dashboard-icons set) and, for some catalog
 sources, on raw.githubusercontent.com. The browser used to load them from there, so opening
 the catalog told those services which apps someone was looking at. Now the browser asks
-ZettNAS (/api/docker/catalog/logo), which fetches each logo once, keeps it in DATA_DIR, and
+Kiboto (/api/docker/catalog/logo), which fetches each logo once, keeps it in DATA_DIR, and
 serves the copy. Only those two hosts, https, and raster images up to 512 KB; anything else
 gets no logo and the card shows the category's icon instead.
 """
@@ -61,7 +61,7 @@ class _SameHostRedirects(urllib.request.HTTPRedirectHandler):
 def fetch(url: str) -> tuple[bytes, str]:
     """The logo's bytes and media type, from one of the logo hosts only."""
     opener = urllib.request.build_opener(_SameHostRedirects)
-    req = urllib.request.Request(url, headers={"User-Agent": "ZettNAS-catalog/1.0", "Accept": "image/*"})
+    req = urllib.request.Request(url, headers={"User-Agent": "Kiboto-catalog/1.0", "Accept": "image/*"})
     with opener.open(req, timeout=TIMEOUT) as r:  # noqa: S310 (https to LOGO_HOSTS only, checked above)
         ctype = (r.headers.get("Content-Type") or "").split(";")[0].strip().lower()
         data = r.read(MAX_BYTES + 1)

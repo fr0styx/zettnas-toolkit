@@ -1,6 +1,6 @@
 # Safe AI
 
-What Ask Zetty, and AI clients connected over MCP, can and cannot do on your NAS. Each point
+What Ask Kib, and AI clients connected over MCP, can and cannot do on your NAS. Each point
 names the test or the page that holds it, so you can check it yourself.
 
 ## It runs here
@@ -9,7 +9,7 @@ names the test or the page that holds it, so you can check it yourself.
   (`rag_index.db`) and your conversations stay on it, encrypted with the install's data key.
   Search works without any AI model (see [Search quality](SEARCH_QUALITY.md)).
 - **Answers come from a model on the NAS** (Ollama or OpenVINO Model Server), unless you set
-  another address in **AI settings**. ZettNAS never looks for AI servers on your network.
+  another address in **AI settings**. Kiboto never looks for AI servers on your network.
 - **No account, no subscription.** Nothing needs signing up, and no feature is behind a plan.
 - **Web search is off** in every chat until you turn on **Web** for it. A web search carries
   the question without addresses, e-mail addresses, file paths, long numbers or keys, and a
@@ -33,7 +33,7 @@ names the test or the page that holds it, so you can check it yourself.
 
 - **Anything that changes the system waits for you.** Changing a fan profile, starting or
   stopping an app or indexing a folder shows what will happen and runs only after you click
-  **Confirm**. For an MCP client, that is a link you open in ZettNAS; it expires after 10
+  **Confirm**. For an MCP client, that is a link you open in Kiboto; it expires after 10
   minutes and works only for the same account.
 - **Every tool call is in the security audit log** (`ai.tool.call`, `ai.tool.confirmed`).
 - **Risky Compose files are flagged.** When an answer contains a Compose file with privileged

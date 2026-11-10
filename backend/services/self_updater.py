@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Self-Update Orchestrator Subsystem
+Kiboto - Self-Update Orchestrator Subsystem
 Enables automated, zero-terminal in-app system updates for both
 Stable (GitHub Releases) and Edge / Rolling (Latest main commits) channels.
 Safely clones and mutates container configurations across Docker Engine socket.
@@ -20,7 +20,7 @@ logger = logging.getLogger("zettnas.self_updater")
 
 # The updater only creates containers it fully controls (its helper and the app
 # itself), so its creates carry the Docker proxy's elevated header (SEC-09).
-ELEVATED = {"X-ZettNAS-Elevated": "1"}
+ELEVATED = {"X-Kiboto-Elevated": "1"}
 
 
 def _docker_request(method: str, path: str, body: dict | None = None, timeout: float = 30.0) -> tuple[int, Any]:
@@ -488,7 +488,7 @@ def apply_update_from_helper(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="ZettNAS Ephemeral Self-Updater Helper")
+    parser = argparse.ArgumentParser(description="Kiboto Ephemeral Self-Updater Helper")
     parser.add_argument("--apply", action="store_true", help="Execute container recreate sequence")
     parser.add_argument("--target", default="zettnas-toolkit", help="Target container name")
     parser.add_argument("--image", default="ghcr.io/fr0styx/zettnas-toolkit:latest", help="Target Docker image")

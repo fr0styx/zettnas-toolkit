@@ -31,7 +31,7 @@ describe('App Catalog Sources (Portainer v2/v3 & Custom Sources)', () => {
 
   it('fetches catalog sources and updates source badge count', async () => {
     const mockSources = [
-      { id: 'builtin', name: 'ZettNAS Curated Suite', enabled: true, item_count: 25 },
+      { id: 'builtin', name: 'Kiboto Curated Suite', enabled: true, item_count: 25 },
       { id: 'lissy93', name: 'Lissy93 Templates', enabled: true, item_count: 796 },
     ];
     vi.spyOn(api, 'get').mockResolvedValue(mockSources);
@@ -102,7 +102,7 @@ describe('App Catalog Sources (Portainer v2/v3 & Custom Sources)', () => {
     expect(grid.textContent).toContain('Stack');
 
     // Verify image/logo
-    // logos come through ZettNAS, not straight from the web (SEC-38)
+    // logos come through Kiboto, not straight from the web (SEC-38)
     const imgEl = grid.querySelector(`img[src="/api/docker/catalog/logo?url=${encodeURIComponent('https://example.com/adguard.png')}"]`);
     expect(imgEl).toBeTruthy();
 

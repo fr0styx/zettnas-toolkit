@@ -1,5 +1,5 @@
 # =========================================================================
-# ZettNAS Toolkit - Local Development Docker Compose Override
+# Kiboto - Local Development Docker Compose Override
 # Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 # =========================================================================
 services:
@@ -15,7 +15,7 @@ services:
       - ./data:/app/data:rw
 
   # Test runner (OPS-14): same image with the dev tools, the working tree mounted
-  # read-only, nothing shared with a running ZettNAS. Run with:
+  # read-only, nothing shared with a running Kiboto. Run with:
   #   docker compose -f docker-compose.dev.yml --profile test run --rm zettnas-test
   zettnas-test:
     profiles: ["test"]

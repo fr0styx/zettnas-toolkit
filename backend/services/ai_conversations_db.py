@@ -1,7 +1,7 @@
 """
 ai_conversations_db.py — High-Concurrency SQLite WAL Multi-Turn Conversation History Store.
 
-Implements thread-safe persistence for ZettAI Local Chatbot threads and messages with:
+Implements thread-safe persistence for Kib Local Chatbot threads and messages with:
 - NVMe-resident SQLite WAL database (/app/data/ai_conversations.db, 0 disk wakeups).
 - Strict multi-user tenancy and RBAC scoping per principal.
 - Full-text search (FTS5) for instant conversation thread filtering.

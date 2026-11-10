@@ -84,14 +84,14 @@ def test_a_person_filtered_changed_and_cleared(store):
     ak.save_connection(user="admin", password="pw")
     fake = FakeAdGuard()
     ak.set_person("mia", ["192.168.1.20", "AA:BB:CC:DD:EE:FF", "192.168.1.20"], ["tiktok"], opener=fake)
-    c = fake.clients["ZettNAS: mia"]
+    c = fake.clients["Kiboto: mia"]
     assert c["ids"] == ["192.168.1.20", "aa:bb:cc:dd:ee:ff"]
     assert c["parental_enabled"] and c["safebrowsing_enabled"] and c["safe_search"]["youtube"]
     assert c["blocked_services"] == ["tiktok"] and c["use_global_blocked_services"] is False
     assert ak.public()["people"]["mia"] == {"devices": ["192.168.1.20", "aa:bb:cc:dd:ee:ff"], "blocked": ["tiktok"]}
     ak.set_person("mia", ["192.168.1.21"], [], opener=fake)
     assert ("POST", "/control/clients/update") in fake.calls
-    assert fake.clients["ZettNAS: mia"]["use_global_blocked_services"] is True
+    assert fake.clients["Kiboto: mia"]["use_global_blocked_services"] is True
     ak.set_person("mia", [], [], opener=fake)
     assert fake.clients == {} and ak.public()["people"] == {}
     with pytest.raises(ValueError, match="can't block"):

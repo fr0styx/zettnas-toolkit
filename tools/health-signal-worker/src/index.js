@@ -1,4 +1,4 @@
-// ZettNAS health signal receiver (docs/HEALTH_SIGNAL.md). A Cloudflare Worker with a D1
+// Kiboto health signal receiver (docs/HEALTH_SIGNAL.md). A Cloudflare Worker with a D1
 // database; the free plan covers it.
 //
 //   POST /v1/report  one anonymous report per install per week (installs opt in)

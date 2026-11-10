@@ -609,7 +609,7 @@ async def _do_copy(cfg):
                 if not await copy_one_file(src_f, dst_f, verify_checksum):
                     break  # aborted
             except Exception as e:
-                logger.info(f"[ZettNAS] Error copying {src_f}: {e}")
+                logger.info(f"[Kiboto] Error copying {src_f}: {e}")
                 raise
             Z_STATE.copy.add("files_done", 1)
 
@@ -624,7 +624,7 @@ async def _do_copy(cfg):
             done_cnt = Z_STATE.copy.snapshot().get("files_done", 0)
             _note_copy_done(done_cnt, verify_checksum)
             send_notification(
-                title="ZettNAS: Media Ingest Complete",
+                title="Kiboto: Media Ingest Complete",
                 message=f"Successfully copied {done_cnt} files to array storage.",
                 level="normal",
                 event_type="copy",
@@ -634,12 +634,12 @@ async def _do_copy(cfg):
 
     except Exception as e:
         err_msg = str(e)
-        logger.info(f"[ZettNAS] Copy failed: {e}")
+        logger.info(f"[Kiboto] Copy failed: {e}")
         Z_STATE.copy_status = "error"
         Z_STATE.copy.update(file=f"Error: {e}")
         add_event("error", "Copy Failed", str(e), event_text("copy_failed", error=str(e)))
         send_notification(
-            title="ZettNAS Alert: Media Ingest Failed",
+            title="Kiboto Alert: Media Ingest Failed",
             message=f"Media copy operation failed: {e}",
             level="warning",
             event_type="copy",
@@ -666,7 +666,7 @@ async def _do_copy(cfg):
                 error=err_msg,
             )
         except Exception as log_e:
-            logger.info(f"[ZettNAS] Failed to log copy history: {log_e}")
+            logger.info(f"[Kiboto] Failed to log copy history: {log_e}")
 
         Z_STATE.pending_ingest = None
         Z_STATE.copy_active = False

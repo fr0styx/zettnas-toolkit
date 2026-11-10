@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Universal UPS & Power Integrity Telemetry Subsystem
+Kiboto - Universal UPS & Power Integrity Telemetry Subsystem
 Multi-protocol Hardware Abstraction Layer (HAL) supporting Network UPS Tools (NUT),
 APCUPSD NIS protocol, direct USB HID discovery, and enterprise SNMP monitoring.
 """

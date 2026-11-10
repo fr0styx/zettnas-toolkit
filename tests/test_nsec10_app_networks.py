@@ -1,4 +1,4 @@
-"""NSEC-10: an app ZettNAS talks to by name gets a network of its own with ZettNAS, not ZettNAS's."""
+"""NSEC-10: an app Kiboto talks to by name gets a network of its own with Kiboto, not Kiboto's."""
 
 import ipaddress
 import json

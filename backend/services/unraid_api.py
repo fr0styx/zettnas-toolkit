@@ -1,6 +1,6 @@
 """
 Unraid companion mode (D5): read the array through the Unraid API (Unraid 7, GraphQL)
-and post ZettNAS alerts into Unraid's notification centre.
+and post Kiboto alerts into Unraid's notification centre.
 
 Set UNRAID_API_URL and UNRAID_API_KEY. With HTTPS on (Unraid's default), the URL is
 Unraid's own HTTPS address, for example https://10-0-0-5.<hash>.myunraid.net (shown under
@@ -10,7 +10,7 @@ shares and info and read and create access to notifications. (On unraid-api 4.37
 --permissions option fails with "Invalid data structure"; the web page and the GraphQL
 apiKey.create mutation work.) UNRAID_API_CA can name an extra CA file.
 
-Without them ZettNAS keeps reading Unraid's status files directly, as before. It never
+Without them Kiboto keeps reading Unraid's status files directly, as before. It never
 starts, stops or changes the array through the API.
 """
 
@@ -125,7 +125,7 @@ def status(transport=None) -> dict[str, Any]:
 def notify(title: str, message: str, level: str = "normal", link: str = "", transport=None) -> bool:
     """Posts an alert to Unraid's notification centre (bell icon and its email/agents)."""
     data = {
-        "title": "ZettNAS",
+        "title": "Kiboto",
         "subject": str(title)[:120],
         "description": str(message)[:1000],
         "importance": IMPORTANCE.get(str(level).lower(), "INFO"),

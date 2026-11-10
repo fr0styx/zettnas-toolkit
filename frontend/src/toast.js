@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit Notification & Confirmation Toast System
+ * Kiboto Notification & Confirmation Toast System
  * Displays top-centered notifications below the top navbar (z-index 100000).
  */
 import { ZettEventBus } from './event-bus.js';

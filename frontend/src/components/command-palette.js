@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Unified Command Palette & Spotlight Subsystem
+ * Kiboto - Unified Command Palette & Spotlight Subsystem
  * Consolidates global fuzzy search, container commands, apps, and hardware quick-actions.
  */
 

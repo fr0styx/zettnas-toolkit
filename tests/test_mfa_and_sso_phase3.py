@@ -106,7 +106,7 @@ def test_recovery_codes_hashing_and_single_use():
 
 
 def test_qr_svg_generation():
-    uri = get_otpauth_uri("testuser", "JBSWY3DPEHPK3PXP", issuer="ZettNAS")
+    uri = get_otpauth_uri("testuser", "JBSWY3DPEHPK3PXP", issuer="Kiboto")
     svg = generate_qr_svg(uri)
     assert "<svg" in svg
     assert "</svg>" in svg

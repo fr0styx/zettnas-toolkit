@@ -72,16 +72,16 @@ def button_listener_daemon():
                 raise last_err
             fd = os.open(os.path.join(HOST_DEV, "mem"), os.O_RDWR | os.O_SYNC)
         mem = mmap.mmap(fd, 4096, offset=MMIO_BASE)
-        logger.info(f"[ZettNAS] Successfully initialized MMIO hardware copy button listener on chassis {model}")
+        logger.info(f"[Kiboto] Successfully initialized MMIO hardware copy button listener on chassis {model}")
     except PermissionError as pe:
         logger.warning(
-            f"[ZettNAS] Hardware button mapping failed: {pe}. "
+            f"[Kiboto] Hardware button mapping failed: {pe}. "
             "Docker container lacks cgroup access to /dev/mem. "
             "Add --device-cgroup-rule='c 1:1 rwm' to container Extra Parameters in Unraid."
         )
         return
     except Exception as e:
-        logger.info(f"[ZettNAS] Hardware button mapping failed: {e}")
+        logger.info(f"[Kiboto] Hardware button mapping failed: {e}")
         return
 
     last_state = 1

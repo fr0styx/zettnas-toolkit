@@ -1,6 +1,6 @@
 """Anonymous health report, off unless the owner turns it on (docs/HEALTH_SIGNAL.md).
 
-Once a week, when enabled, ZettNAS sends one small JSON object to the project's receiver:
+Once a week, when enabled, Kiboto sends one small JSON object to the project's receiver:
 the app version, storage platform, CPU architecture, image variant, a range for the number
 of drives and which features are in use, under a random install id. Nothing else: no
 hostname, IP address, user or share names, paths or hardware serials. Turning it off
@@ -20,7 +20,7 @@ from typing import Any
 
 from backend import __version__
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 # The project's receiver (tools/health-signal-worker). Empty until it is deployed; an install
 # can point elsewhere with HEALTH_SIGNAL_URL. With no address the switch stays unavailable.
@@ -136,7 +136,7 @@ def send(state: dict[str, Any]) -> bool:
         endpoint(),
         data=body,
         method="POST",
-        headers={"Content-Type": "application/json", "User-Agent": f"ZettNAS/{__version__}"},
+        headers={"Content-Type": "application/json", "User-Agent": f"Kiboto/{__version__}"},
     )
     with urllib.request.urlopen(req, timeout=TIMEOUT_SECS) as resp:
         return 200 <= resp.status < 300

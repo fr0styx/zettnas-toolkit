@@ -337,7 +337,7 @@ def log_metrics(
                 conn.execute("DELETE FROM metrics WHERE ts < ?", (ts - 2592000,))
                 _LAST_PRUNE_TS = ts
     except Exception as db_e:
-        logger.info(f"[ZettNAS] DB Log Error: {db_e}")
+        logger.info(f"[Kiboto] DB Log Error: {db_e}")
 
 
 def query_history(range_str: str = "24h"):
@@ -482,7 +482,7 @@ def log_copy_event(
                 """
             )
     except Exception as db_e:
-        logger.info(f"[ZettNAS] DB Copy Log Error: {db_e}")
+        logger.info(f"[Kiboto] DB Copy Log Error: {db_e}")
 
 
 def query_copy_history(limit: int = 50):
@@ -514,7 +514,7 @@ def query_copy_history(limit: int = 50):
                 for r in rows
             ]
     except Exception as db_e:
-        logger.info(f"[ZettNAS] DB Query Copy History Error: {db_e}")
+        logger.info(f"[Kiboto] DB Query Copy History Error: {db_e}")
         return []
 
 
@@ -677,7 +677,7 @@ def log_smart_metrics(ts: int, dev: str, temp: float | None, metrics: dict, powe
                 conn.execute("DELETE FROM smart_history WHERE ts < ?", (ts - 7776000,))
                 _SMART_PRUNED[DB_PATH] = ts
     except Exception as db_e:
-        logger.info(f"[ZettNAS] DB Log SMART History Error: {db_e}")
+        logger.info(f"[Kiboto] DB Log SMART History Error: {db_e}")
 
 
 def log_smart_test_result(
@@ -731,7 +731,7 @@ def log_smart_test_result(
             )
             return cur.lastrowid or 0
     except Exception as e:
-        logger.error(f"[ZettNAS] Failed to log smart test result for {dev}: {e}")
+        logger.error(f"[Kiboto] Failed to log smart test result for {dev}: {e}")
         return 0
 
 
@@ -757,7 +757,7 @@ def get_latest_smart_test_result(dev: str, conn: sqlite3.Connection | None = Non
         with db_session() as c:
             return _query(c)
     except Exception as e:
-        logger.error("[ZettNAS] Failed to get latest smart test result for %s: %s", dev, e)
+        logger.error("[Kiboto] Failed to get latest smart test result for %s: %s", dev, e)
         return None
 
 
@@ -784,7 +784,7 @@ def get_smart_test_history(dev: str | None = None, limit: int = 20) -> list[dict
                 out.append(item)
             return out
     except Exception as e:
-        logger.error(f"[ZettNAS] Failed to query smart test history: {e}")
+        logger.error(f"[Kiboto] Failed to query smart test history: {e}")
         return []
 
 
@@ -1169,7 +1169,7 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection | None = None) -> di
         with db_read_session() as new_conn:
             return _cached(new_conn)
     except Exception as db_e:
-        logger.info("[ZettNAS] DB Query SMART Velocity Error: %s", db_e)
+        logger.info("[Kiboto] DB Query SMART Velocity Error: %s", db_e)
         return {
             "dev": dev,
             "status": "unknown",
@@ -1210,7 +1210,7 @@ def query_all_smart_velocities() -> dict:
             for d in devs:
                 out[d] = query_smart_velocity(d, conn=conn)
     except Exception as e:
-        logger.debug(f"[ZettNAS] Failed to query all velocities: {e}")
+        logger.debug(f"[Kiboto] Failed to query all velocities: {e}")
     return out
 
 

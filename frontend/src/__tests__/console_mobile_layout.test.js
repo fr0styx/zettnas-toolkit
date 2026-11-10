@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { openConsoleWindow } from '../components/dock.js';
 
-describe('ZettNAS System Console Mobile Layout & Screen Adaptation Suite', () => {
+describe('Kiboto System Console Mobile Layout & Screen Adaptation Suite', () => {
   const cssContent = readStyleCss();
 
   beforeEach(() => {
@@ -12,7 +12,7 @@ describe('ZettNAS System Console Mobile Layout & Screen Adaptation Suite', () =>
       <div id="console-modal-overlay" class="smart-modal-backdrop window-minimized" style="display: none;">
         <div class="chassis-front-panel" id="console-window" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
           <div class="chassis-panel-header">
-            <span class="chassis-engraved-text" id="chassis-panel-engraved">ZETTNAS • SYSTEM CONSOLE</span>
+            <span class="chassis-engraved-text" id="chassis-panel-engraved">KIBOTO • SYSTEM CONSOLE</span>
             <div style="display:flex; gap:12px; align-items:center;">
               <span class="chassis-screen-spec">640 × 172 IPS</span>
               <div class="os-window-controls">

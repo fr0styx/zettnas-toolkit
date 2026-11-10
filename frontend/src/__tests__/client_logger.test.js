@@ -16,7 +16,7 @@ describe('client-logger.js Observability Engine', () => {
   });
 
   describe('scrubClientString', () => {
-    it('redacts ZettNAS session tokens zat_...', () => {
+    it('redacts Kiboto session tokens zat_...', () => {
       const input = 'Request failed with auth header zat_abcdef1234567890abcdef123456';
       const output = scrubClientString(input);
       expect(output).not.toContain('zat_abcdef1234567890abcdef123456');

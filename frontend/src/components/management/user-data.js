@@ -1,4 +1,4 @@
-// "Your data": download everything ZettNAS keeps about an account, or have its chats, Zetty log
+// "Your data": download everything Kiboto keeps about an account, or have its chats, Kib log
 // and search data forgotten (B8, backend/services/user_data.py). In Security for your own account;
 // in the Edit user dialog for an administrator (a kid's account, for example).
 import { api } from '../../api.js';
@@ -11,12 +11,12 @@ const CARD_ID = 'user-data-card';
 
 export function userDataHtml(user, own) {
   const desc = own
-    ? t('udata.desc_own', 'Download what ZettNAS keeps about you: your account, chats with Zetty, when you asked it, and which of your files search learned. Or have your chats, that log and the search data forgotten; your files stay.')
-    : t('udata.desc_other', "Download or erase what ZettNAS keeps about {name}: chats with Zetty, when they asked it, and which of their files search learned. Erasing leaves their files and account in place.", { name: user.display_name || user.username });
+    ? t('udata.desc_own', 'Download what Kiboto keeps about you: your account, chats with Kib, when you asked it, and which of your files search learned. Or have your chats, that log and the search data forgotten; your files stay.')
+    : t('udata.desc_other', "Download or erase what Kiboto keeps about {name}: chats with Kib, when they asked it, and which of their files search learned. Erasing leaves their files and account in place.", { name: user.display_name || user.username });
   return html`<p class="zn-muted">${desc}</p>
     <div class="zn-row">
       <button type="button" class="btn-pill-toggle" data-udata="export">${t('udata.export', 'Download data')}</button>
-      <button type="button" class="btn-pill-toggle" data-udata="erase">${t('udata.erase', 'Erase chats, Zetty log and search data')}</button>
+      <button type="button" class="btn-pill-toggle" data-udata="erase">${t('udata.erase', 'Erase chats, Kib log and search data')}</button>
     </div>`;
 }
 
@@ -48,7 +48,7 @@ export function renderUserData(card, user, own) {
     try {
       // the server asks for confirmation first (428), which api.js turns into the confirm dialog
       await api.post(`/api/users/${encodeURIComponent(user.id)}/erase-data`, { parts: ['chats', 'ai_log', 'index'] });
-      showToast(t('udata.erased', 'Chats, Zetty log and search data erased.'), 'success');
+      showToast(t('udata.erased', 'Chats, Kib log and search data erased.'), 'success');
     } catch (err) {
       if (err?.error !== 'cancelled') showToast(t('udata.erase_failed', 'Could not erase: {error}', { error: err.message }), 'error');
     } finally {

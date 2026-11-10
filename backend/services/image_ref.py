@@ -1,6 +1,6 @@
 """Docker image references: "registry:port/org/repo:tag@sha256:digest" and every shorter form.
 
-Built-in catalog apps install pinned to the digest that shipped with this ZettNAS version
+Built-in catalog apps install pinned to the digest that shipped with this Kiboto version
 (catalog_digests.json, refreshed at release time by scripts/pin_catalog_images.py)."""
 
 import json
@@ -8,7 +8,7 @@ import os
 import re
 from functools import lru_cache
 
-# set on containers ZettNAS pinned at install: their updates follow the tag and re-pin
+# set on containers Kiboto pinned at install: their updates follow the tag and re-pin
 FOLLOW_TAG_LABEL = "zettnas.image.follow-tag"
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _LOCK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "catalog_digests.json")

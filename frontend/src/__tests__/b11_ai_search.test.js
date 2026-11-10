@@ -12,7 +12,7 @@ const ACCESS = {
   log_days: 90,
 };
 
-describe('B11 (AI-26): Ask Zetty and AI search per role', () => {
+describe('B11 (AI-26): Ask Kib and AI search per role', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('shows both switches for each role', () => {

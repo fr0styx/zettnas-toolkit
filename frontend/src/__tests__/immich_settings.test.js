@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { immichResultsHtml, settingsHtml } from "../components/immich-settings.js";
 
-describe("Immich in ZettNAS (Batch 6)", () => {
-  it("shows Immich photos with thumbnails that go through ZettNAS", () => {
+describe("Immich in Kiboto (Batch 6)", () => {
+  it("shows Immich photos with thumbnails that go through Kiboto", () => {
     document.body.innerHTML = immichResultsHtml([{ id: "a1", name: "beach.jpg", thumbnail_url: "/api/immich/thumbnail/a1", immich_url: "http://immich/photos/a1" }]);
     expect(document.querySelector("img").getAttribute("src")).toBe("/api/immich/thumbnail/a1");
     expect(immichResultsHtml([])).toBe("");

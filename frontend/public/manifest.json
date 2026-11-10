@@ -1,6 +1,6 @@
 {
-  "name": "ZettNAS Toolkit",
-  "short_name": "ZettNAS",
+  "name": "Kiboto",
+  "short_name": "Kiboto",
   "description": "Your NAS: files, photos, apps and hardware",
   "start_url": "/",
   "display": "standalone",

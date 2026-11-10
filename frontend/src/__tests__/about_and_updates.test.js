@@ -47,7 +47,7 @@ describe('System About & Software Updates Frontend Component', () => {
     vi.spyOn(api, 'get').mockImplementation(async (url) => {
       if (url === '/api/system/about') {
         return {
-          name: 'ZettNAS Workbench',
+          name: 'Kiboto Workbench',
           version: '1.8.0',
           tag: 'v1.8.0',
           commit: '5c0639d',
@@ -82,7 +82,7 @@ describe('System About & Software Updates Frontend Component', () => {
     expect(document.getElementById('about-system-uptime').textContent).toBe('1d 1h 1m');
 
     expect(document.getElementById('update-status-icon').textContent).toBe('✅');
-    expect(document.getElementById('update-status-title').textContent).toBe('ZettNAS is up to date');
+    expect(document.getElementById('update-status-title').textContent).toBe('Kiboto is up to date');
     expect(document.getElementById('update-details-box').style.display).toBe('none');
     expect(document.getElementById('btn-check-updates-text').textContent).toBe('Check for Updates');
   });
@@ -91,7 +91,7 @@ describe('System About & Software Updates Frontend Component', () => {
     vi.spyOn(api, 'get').mockImplementation(async (url) => {
       if (url === '/api/system/about') {
         return {
-          name: 'ZettNAS Workbench',
+          name: 'Kiboto Workbench',
           version: '1.7.0',
           tag: 'v1.7.0',
           release_channel: 'Stable',
@@ -106,7 +106,7 @@ describe('System About & Software Updates Frontend Component', () => {
           latest_version: '1.8.0',
           latest_tag: 'v1.8.0',
           update_available: true,
-          release_name: 'ZettNAS v1.8.0 7-Pillar Architecture',
+          release_name: 'Kiboto v1.8.0 7-Pillar Architecture',
           release_url: 'https://github.com/fr0styx/zettnas-toolkit/releases/tag/v1.8.0',
           release_notes: '## Improvements\n- 7-Pillar Mission Control\n- Containers Dedicated Window',
           checked_at: 1775685600,
@@ -120,7 +120,7 @@ describe('System About & Software Updates Frontend Component', () => {
     expect(document.getElementById('update-status-icon').textContent).toBe('🚀');
     expect(document.getElementById('update-status-title').textContent).toContain('Update Available: v1.8.0');
     expect(document.getElementById('update-details-box').style.display).toBe('block');
-    expect(document.getElementById('update-release-title').textContent).toBe('ZettNAS v1.8.0 7-Pillar Architecture');
+    expect(document.getElementById('update-release-title').textContent).toBe('Kiboto v1.8.0 7-Pillar Architecture');
     expect(document.getElementById('update-release-link').href).toBe('https://github.com/fr0styx/zettnas-toolkit/releases/tag/v1.8.0');
     expect(document.getElementById('update-release-notes').textContent).toContain('7-Pillar Mission Control');
     expect(document.getElementById('btn-apply-system-update').style.display).toBe('flex');
@@ -131,7 +131,7 @@ describe('System About & Software Updates Frontend Component', () => {
     const apiGetSpy = vi.spyOn(api, 'get').mockImplementation(async (url) => {
       if (url === '/api/system/about') {
         return {
-          name: 'ZettNAS Workbench',
+          name: 'Kiboto Workbench',
           version: '1.8.0',
           tag: 'v1.8.0',
           commit: 'ed8b87e',

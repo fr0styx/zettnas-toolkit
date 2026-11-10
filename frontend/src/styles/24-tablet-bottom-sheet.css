@@ -697,7 +697,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     font-size: 13px !important;
   }
 
-  /* 2. ZettNAS System Console (LCD Preview) on Mobile */
+  /* 2. Kiboto System Console (LCD Preview) on Mobile */
   body.mobile-mode #console-modal-overlay #console-window,
   body.mobile-mode #console-window.chassis-front-panel {
     position: fixed !important;

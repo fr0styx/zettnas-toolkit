@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Observer Mode PAL Adapters Unit & Integration Tests.
+Kiboto - Observer Mode PAL Adapters Unit & Integration Tests.
 Verifies dedicated observer adapters for FygoOS, ZettOS, UGOS, and Generic Observer Mode.
 Ensures zero-risk non-intrusive telemetry, disarmed mutations, and platform detection.
 """

@@ -3,7 +3,7 @@
 Two sources, whichever the file lives on:
   - ZFS: every dataset shows its snapshots under <mountpoint>/.zfs/snapshot/<name>/ (TrueNAS,
     Unraid ZFS pools, any Linux ZFS), found by walking up from the file;
-  - btrfs: the share snapshots ZettNAS takes itself (snapshot_service, "<share>@auto-...").
+  - btrfs: the share snapshots Kiboto takes itself (snapshot_service, "<share>@auto-...").
 
 Only versions that differ from the file today (and from each other) are listed."""
 

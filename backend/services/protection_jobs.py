@@ -5,10 +5,10 @@ Backups (Hyper-Backup jobs and off-site repositories), snapshot schedules and po
 overdue, owned by the host, or unavailable. Failed and overdue ones are alerted once a day
 (backup_watch) and listed on the Overview.
 
-Scrubs run once a month on the hosts where ZettNAS owns the pools (ZettOS and plain Linux).
+Scrubs run once a month on the hosts where Kiboto owns the pools (ZettOS and plain Linux).
 A scrub reads every disk, so it is on by default only for pools of SSDs; for a pool with
 spinning disks a person switches it on and confirms that the disks will spin up once a month.
-Unraid, TrueNAS and the other appliances run their own parity checks and scrubs: ZettNAS says
+Unraid, TrueNAS and the other appliances run their own parity checks and scrubs: Kiboto says
 so and does not add a second one.
 """
 
@@ -334,9 +334,9 @@ def alert_stalled(now: float | None = None, send=None) -> list[str]:
     day = time.strftime("%Y-%m-%d", time.gmtime(now or time.time()))
     for name in names:
         send(
-            f"ZettNAS: the {label(name)} service stopped responding",
+            f"Kiboto: the {label(name)} service stopped responding",
             f"The {label(name)} service hasn't checked in for a while, so the work it does "
-            "(snapshots, checks, backups) may not be running. Restart ZettNAS if it doesn't recover.",
+            "(snapshots, checks, backups) may not be running. Restart Kiboto if it doesn't recover.",
             level="warning",
             event_type="system",
             dedup_key=f"stalled-{name}-{day}",

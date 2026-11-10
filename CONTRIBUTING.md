@@ -1,6 +1,6 @@
-# Contributing to ZettNAS Toolkit
+# Contributing to Kiboto
 
-Thanks for helping. This page covers the setup, the checks every pull request must pass, and the rules that keep ZettNAS safe on real hardware.
+Thanks for helping. This page covers the setup, the checks every pull request must pass, and the rules that keep Kiboto safe on real hardware.
 
 ## Setup
 

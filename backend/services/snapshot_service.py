@@ -519,7 +519,7 @@ def convert(share: str, pal: Any = None, owner: str | None = None) -> dict[str, 
 
 
 def _set_previous_versions(share: str, on: bool) -> None:
-    """Windows' Previous Versions for this share, when ZettNAS manages its Samba config."""
+    """Windows' Previous Versions for this share, when Kiboto manages its Samba config."""
     try:
         from backend.services.samba_engine import get_samba_engine
 

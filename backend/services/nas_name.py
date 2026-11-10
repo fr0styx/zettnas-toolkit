@@ -31,7 +31,7 @@ KEEP_OLD = 3  # names the family used before that still answer
 CONTAINER = "kiboto-name"
 RESPONDER = "/app/backend/services/mdns_responder.py"
 STATE_FILE = os.path.join(DATA_DIR, "nas_name.json")
-ELEVATED = {"X-ZettNAS-Elevated": "1"}
+ELEVATED = {"X-Kiboto-Elevated": "1"}
 _NAME = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
 _lock = threading.Lock()
 NO_DOCKER = "Docker is not reachable, so the name can't be announced."
@@ -125,7 +125,7 @@ def web_port(me: dict[str, Any]) -> int:
 
 
 def timemachine_shares() -> list[str]:
-    """ZettNAS's own Time Machine shares, while its own Samba serves them. A host's Samba (Unraid's,
+    """Kiboto's own Time Machine shares, while its own Samba serves them. A host's Samba (Unraid's,
     TrueNAS's) announces its Time Machine shares itself."""
     from backend.services.samba_engine import get_samba_engine
 

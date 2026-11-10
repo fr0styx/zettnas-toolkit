@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Glassmorphic Time Picker Component
+ * Kiboto - Glassmorphic Time Picker Component
  * Provides a responsive, accessible, theme-aware time picker dropdown in the OS design language.
  * Replaces native browser OS time picker popups with a frosted glass wheel/column popover.
  * Complies with Modern Web Guidance (resilient-context-menus-and-nested-dropdowns).

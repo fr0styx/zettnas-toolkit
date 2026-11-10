@@ -214,11 +214,11 @@ def check_and_alert(now: float | None = None, send=None) -> dict[str, list[str]]
 
             lang = _lang()
             send(
-                title=i18n.t("alert.pool.unreadable.title", "ZettNAS can't read the storage health", None, lang),
+                title=i18n.t("alert.pool.unreadable.title", "Kiboto can't read the storage health", None, lang),
                 message=i18n.t(
                     "alert.pool.unreadable.msg",
                     "Checking the pools failed several times in a row, so problems may go unnoticed. "
-                    "Restart ZettNAS; if this stays, look at the storage page.",
+                    "Restart Kiboto; if this stays, look at the storage page.",
                     None,
                     lang,
                 ),
@@ -240,7 +240,7 @@ def check_and_alert(now: float | None = None, send=None) -> dict[str, list[str]]
             title, message = _text(item, lang)
             if prev is None or (item["level"] == "critical" and prev.get("level") != "critical"):
                 send(
-                    title=i18n.t("alert.pool.new", "ZettNAS: {title}", {"title": title}, lang),
+                    title=i18n.t("alert.pool.new", "Kiboto: {title}", {"title": title}, lang),
                     message=message,
                     level=item["level"],
                     event_type="storage",
@@ -250,7 +250,7 @@ def check_and_alert(now: float | None = None, send=None) -> dict[str, list[str]]
                 sent["new"].append(pid)
             elif item["level"] == "critical" and now - float(prev.get("last_sent") or 0) >= REMIND_CRITICAL_S:
                 send(
-                    title=i18n.t("alert.pool.still", "ZettNAS: still — {title}", {"title": title}, lang),
+                    title=i18n.t("alert.pool.still", "Kiboto: still — {title}", {"title": title}, lang),
                     message=message,
                     level="critical",
                     event_type="storage",
@@ -264,7 +264,7 @@ def check_and_alert(now: float | None = None, send=None) -> dict[str, list[str]]
             gone = state.pop(pid)
             was = _text(gone["item"], lang)[0] if isinstance(gone.get("item"), dict) else gone.get("title") or pid
             send(
-                title=i18n.t("alert.pool.fixed.title", "ZettNAS: fixed — {title}", {"title": was}, lang),
+                title=i18n.t("alert.pool.fixed.title", "Kiboto: fixed — {title}", {"title": was}, lang),
                 message=i18n.t("alert.pool.fixed.msg", "This storage problem is gone.", None, lang),
                 level="info",
                 event_type="storage",
@@ -347,7 +347,7 @@ def weekly_report(now: float | None = None, lang: str | None = None) -> tuple[st
     )
     for i in issues:
         lines.append(f"! {_text(i, lang)[0]}")
-    return i18n.t("alert.weekly.title", "ZettNAS weekly health report", None, lang), head + "\n\n" + "\n".join(lines)
+    return i18n.t("alert.weekly.title", "Kiboto weekly health report", None, lang), head + "\n\n" + "\n".join(lines)
 
 
 def send_weekly_if_due(now: float | None = None, send=None) -> bool:

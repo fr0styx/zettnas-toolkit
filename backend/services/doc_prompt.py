@@ -1,6 +1,6 @@
 """A document question of a chosen size, for measuring how long a model takes to start answering.
 
-Ask Zetty answers from up to ~6,000 tokens of a person's files, so that is the wait that
+Ask Kib answers from up to ~6,000 tokens of a person's files, so that is the wait that
 matters, not the first token of a one-line prompt. Used by the model benchmark
 (backend/services/model_benchmark.py) and scripts/llm_bench.py. No imports from the app,
 so the script can use it on its own.

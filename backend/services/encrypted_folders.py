@@ -2,12 +2,12 @@
 
 The encrypted files live in the share, in a hidden folder (".zettnas-encrypted/<name>"), so
 snapshots, backups and SMB from the host only ever see encrypted names and contents. When the
-folder is unlocked with its password, its readable files appear in ZettNAS at
+folder is unlocked with its password, its readable files appear in Kiboto at
 /mnt/encrypted/<name>: in Files, WebDAV and SFTP, for the people who may use the share it is in.
-Locking it, or restarting ZettNAS, takes them away again. Deleting a file there puts it in the
+Locking it, or restarting Kiboto, takes them away again. Deleting a file there puts it in the
 folder's own Recycle Bin, which is inside the encryption.
 
-The password is never stored, unless "unlock when ZettNAS starts" is on: then it is kept sealed
+The password is never stored, unless "unlock when Kiboto starts" is on: then it is kept sealed
 with the data key (secret_box), which is convenient and weaker, and said so. Creating a folder
 shows its recovery key once; with it the files can be read even if the password is lost.
 """
@@ -111,7 +111,7 @@ def _run(args: list[str], password: str) -> tuple[int, str]:
 
     exe = tool()
     if not exe:
-        raise EncryptedFolderError("This ZettNAS image has no gocryptfs, so it can't open encrypted folders.")
+        raise EncryptedFolderError("This Kiboto image has no gocryptfs, so it can't open encrypted folders.")
     # the password goes in on stdin, never on the command line or on disk
     r = run_bounded([exe, *args], timeout=TOOL_SECS, input=password + "\n", capture_output=True, text=True)
     return r.returncode, (r.stdout or "") + (r.stderr or "")
@@ -268,7 +268,7 @@ def _drop_mount_point(name: str) -> None:
 
 @json_locked(lambda *a, **k: ei.SETTINGS_FILE)
 def set_unlock_at_start(name: str, password: str | None) -> dict[str, Any]:
-    """With a password: keep it sealed and open the folder when ZettNAS starts. None: forget it."""
+    """With a password: keep it sealed and open the folder when Kiboto starts. None: forget it."""
     from backend import secret_box
 
     s = _settings()
@@ -328,7 +328,7 @@ def lock_path(path: str) -> None:
 
 @json_locked(lambda *a, **k: ei.SETTINGS_FILE)
 def forget(name: str) -> dict[str, Any]:
-    """Takes a locked folder off ZettNAS. Its encrypted files stay in the share; adding it back
+    """Takes a locked folder off Kiboto. Its encrypted files stay in the share; adding it back
     with its password opens them again."""
     s = _settings()
     if name not in s["folders"]:

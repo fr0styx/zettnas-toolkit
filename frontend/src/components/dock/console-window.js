@@ -10,7 +10,7 @@ export function openConsoleWindow() {
   const consoleModal = document.getElementById('console-window');
   if (consoleOverlay) {
     if (window.DockManager && !window.DockManager.windows['console']) {
-      window.DockManager.register('console', consoleOverlay, '#i-screen', t('dock.zettnas', 'ZettNAS'), false);
+      window.DockManager.register('console', consoleOverlay, '#i-screen', t('dock.zettnas', 'Kiboto'), false);
     }
     if (window.DockManager) {
       window.DockManager.restore('console');

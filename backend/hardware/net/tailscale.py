@@ -20,7 +20,7 @@ LOGIN_SERVER = re.compile(r"^https://[A-Za-z0-9.-]+(:\d{1,5})?/?$")
 
 
 def settings() -> dict[str, Any]:
-    """Remote access settings (COMP-01): the login server and the port ZettNAS is served from."""
+    """Remote access settings (COMP-01): the login server and the port Kiboto is served from."""
     data = read_json(SETTINGS_FILE, {})
     return data if isinstance(data, dict) else {}
 
@@ -355,7 +355,7 @@ def execute_tailscale_set_ssh(enabled: bool) -> dict[str, Any]:
 
 
 def execute_tailscale_set_serve(serve: bool, funnel: bool = False, port: int = 8082) -> dict[str, Any]:
-    """Configures Tailscale Serve and Funnel proxy for ZettNAS Web Desktop."""
+    """Configures Tailscale Serve and Funnel proxy for Kiboto Web Desktop."""
     import json
     import re
 

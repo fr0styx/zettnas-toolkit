@@ -98,7 +98,7 @@ background:#0b0f14;color:#fff}}small{{color:#9ca3af}}ul{{padding-left:18px;word-
 
 def safe_name(raw: str) -> str:
     """The sender's file name as a plain name in the folder: no path, no control characters, not
-    hidden, not one of ZettNAS's own part files."""
+    hidden, not one of Kiboto's own part files."""
     name = unquote(raw or "").replace("\\", "/").rsplit("/", 1)[-1]
     name = re.sub(r"[\x00-\x1f\x7f]", "", name).strip()
     if name.startswith((".", "~")):

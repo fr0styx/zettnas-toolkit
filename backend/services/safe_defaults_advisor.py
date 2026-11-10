@@ -193,7 +193,7 @@ def _fix_ai_search_family() -> str:
 
 
 # --- sign-in (B11, SEC-29): warned in 1.11, refused since 1.12 (D11) ------------------------------
-NEXT = "Since 1.12 ZettNAS refuses this, so this sign-in doesn't work until it is changed."
+NEXT = "Since 1.12 Kiboto refuses this, so this sign-in doesn't work until it is changed."
 
 
 def _oidc_finding() -> dict[str, Any] | None:

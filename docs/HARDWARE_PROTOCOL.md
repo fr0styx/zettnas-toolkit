@@ -1,6 +1,6 @@
-# ZettNAS Toolkit — Hardware Protocol & Interface Reference
+# Kiboto — Hardware Protocol & Interface Reference
 
-This document provides a low-level specification of the hardware interfaces, serial packet protocols, sysfs thermal paths, direct framebuffer bindings, and input mechanisms used by ZettNAS Toolkit.
+This document provides a low-level specification of the hardware interfaces, serial packet protocols, sysfs thermal paths, direct framebuffer bindings, and input mechanisms used by Kiboto.
 
 ---
 
@@ -81,7 +81,7 @@ The daemon traverses `/host/sys/class/hwmon/hwmon*` searching for compatible dri
 
 ### 3.3 Direct Userspace MMIO Fallback (`0xFE0B0456`)
 
-To ensure seamless fan control on modern Linux kernels (e.g. Unraid 7.3.3+, custom homelab kernels, or Alpine) where out-of-tree kernel modules (`zettlab_d8_fans.ko`) may not be compiled or loaded, ZettNAS Toolkit features a built-in **Direct Userspace MMIO Fallback Engine**:
+To ensure seamless fan control on modern Linux kernels (e.g. Unraid 7.3.3+, custom homelab kernels, or Alpine) where out-of-tree kernel modules (`zettlab_d8_fans.ko`) may not be compiled or loaded, Kiboto features a built-in **Direct Userspace MMIO Fallback Engine**:
 
 - **Physical Base Address**: `0xFE0B0456`
 - **Device Access**: `/dev/mem` (or container mount `/host/dev/mem`) with `cgroup2fs` rule `'c 1:1 rwm'` and `cap_add: [SYS_RAWIO]`.

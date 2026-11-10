@@ -1,7 +1,7 @@
 import { onManagementDom } from '../management-dom.js';
 import { state } from '../state.js';
 /**
- * ZettNAS Toolkit wallpaper: the active wallpaper and the readability and glass settings, which
+ * Kiboto wallpaper: the active wallpaper and the readability and glass settings, which
  * the desktop needs from the first paint. The gallery, upload, rename, delete and the sliders are
  * in wallpaper-pane.js, loaded when Mission Control's pane opens or an image is dropped (NUX-15).
  */

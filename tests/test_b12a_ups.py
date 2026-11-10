@@ -1,5 +1,5 @@
 """B12a (REL-10, D10): one UPS engine; on Unraid and TrueNAS the host's own UPS service shuts the
-server down; only ZettNAS's apps are stopped, in parallel, within the timeout; the drill says
+server down; only Kiboto's apps are stopped, in parallel, within the timeout; the drill says
 what will shut the server down, or that nothing will."""
 
 import time
@@ -88,7 +88,7 @@ def test_the_drill_reports_zettnas_s_own_shutdown_command(monkeypatch):
     assert uw.shutdown_path_report() == {
         "by": "zettnas",
         "ok": True,
-        "detail": "ZettNAS shuts the server down with /host/powerdown.",
+        "detail": "Kiboto shuts the server down with /host/powerdown.",
     }
     monkeypatch.setattr(uw, "host_shutdown_paths", lambda: [])
     assert uw.shutdown_path_report()["ok"] is False

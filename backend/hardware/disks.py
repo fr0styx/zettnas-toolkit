@@ -40,7 +40,7 @@ from backend.ignored_errors import ignored
 from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event, event_text
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 TRENDS_FILE = os.path.join(DATA_DIR, "smart_trends.json")
 _smart_trends = None

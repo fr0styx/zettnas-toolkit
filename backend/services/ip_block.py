@@ -3,7 +3,7 @@ IP block-list (M5).
 
 An address is blocked for a while when it keeps failing to sign in (web or WebDAV),
 or at once when the ransomware guard sees an attack from it. Blocked addresses get
-403 on the web app and WebDAV, and are listed under `hosts deny` in ZettNAS's own
+403 on the web app and WebDAV, and are listed under `hosts deny` in Kiboto's own
 Samba config, and the WebDAV and SFTP ports refuse them (SEC-34). Loopback and the
 addresses in KIBOTO_TRUSTED_IPS are never blocked,
 so the admin can't lock themselves out of the console.
@@ -139,7 +139,7 @@ _app_net: dict[str, Any] = {"at": -1e9, "net": ()}
 
 
 def _app_networks() -> tuple[Any, ...]:
-    """The subnets of the Docker networks ZettNAS shares with apps it installs (its own network,
+    """The subnets of the Docker networks Kiboto shares with apps it installs (its own network,
     and each app's own since NSEC-10), where the office suite relays its users' sign-ins; none on
     the default bridge or host networking. Cached."""
     now = time.monotonic()
@@ -163,7 +163,7 @@ def _app_networks() -> tuple[Any, ...]:
 
 
 def _relay(ip: str) -> bool:
-    """An app on ZettNAS's own network checking a person's password for them: its address is
+    """An app on Kiboto's own network checking a person's password for them: its address is
     shared by the whole family, so it isn't blocked; each account's own lockout still holds (NSEC-6)."""
     try:
         addr = ipaddress.ip_address(ip)

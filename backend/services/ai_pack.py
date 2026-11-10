@@ -1,16 +1,16 @@
 """The AI pack (AI-40, PERF-1): chat and search embeddings on the Intel GPU in one OpenVINO
-Model Server, installed from the app catalog and set up for ZettNAS.
+Model Server, installed from the app catalog and set up for Kiboto.
 
-- One container, "zettnas-ai", on ZettNAS's own Docker network with no published port (OVMS has
+- One container, "zettnas-ai", on Kiboto's own Docker network with no published port (OVMS has
   no sign-in), with a memory limit, the GPU (/dev/dri) and the NPU when there is one.
-- The image is pinned by digest (catalog_digests.json, inside the signed ZettNAS image).
+- The image is pinned by digest (catalog_digests.json, inside the signed Kiboto image).
 - On first start it downloads the preset's two models from Hugging Face (OpenVINO's own
   int4/int8 builds), writes one OVMS config serving them as zettnas-chat and zettnas-embed,
   and serves them; later starts reuse the downloads.
 - No reranker: OVMS 2026.4's rerank put an invoice above the roof repair a question was about
   (bge-reranker-base) or failed outright (Qwen3-Reranker), so the pack leaves reranking alone.
 - Presets follow the box: recommend() reads its memory, GPU and NPU.
-- Installing never touches AI containers someone built by hand, and ZettNAS uses the pack only
+- Installing never touches AI containers someone built by hand, and Kiboto uses the pack only
   after use_pack() (the "Use it" button), which leaves anything it doesn't set alone.
 """
 
@@ -122,7 +122,7 @@ def recommend(b: dict[str, Any]) -> dict[str, Any]:
 
 
 def own_network() -> str | None:
-    """The Docker network ZettNAS itself is on (its container's first user network)."""
+    """The Docker network Kiboto itself is on (its container's first user network)."""
     st, me = _docker("GET", f"/containers/{socket.gethostname()}/json")
     if st != 200 or not isinstance(me, dict):
         return None
@@ -194,7 +194,7 @@ def stream_install(preset: str | None = None, storage_root: str = "/mnt/user/app
         return
     network = own_network()
     if not network:
-        yield {"step": "error", "percent": 0, "message": "ZettNAS couldn't find its own Docker network.", "done": True}
+        yield {"step": "error", "percent": 0, "message": "Kiboto couldn't find its own Docker network.", "done": True}
         return
     image = pinned(IMAGE)
     yield {"step": "pull", "percent": 10, "message": f"Downloading the model server ({IMAGE})...", "done": False}
@@ -204,7 +204,7 @@ def stream_install(preset: str | None = None, storage_root: str = "/mnt/user/app
         return
     from backend.services.app_catalog import app_dir_for
 
-    app_dir, problem = app_dir_for(storage_root, CONTAINER)  # not a system or ZettNAS folder
+    app_dir, problem = app_dir_for(storage_root, CONTAINER)  # not a system or Kiboto folder
     if problem:
         yield {"step": "error", "percent": 0, "message": problem, "done": True}
         return
@@ -222,7 +222,7 @@ def stream_install(preset: str | None = None, storage_root: str = "/mnt/user/app
         "POST",
         f"/containers/create?name={CONTAINER}",
         body=create_body(preset, models_dir, network, image),
-        headers={"X-ZettNAS-Elevated": "1"},  # the GPU: a built-in app's device, like Jellyfin's
+        headers={"X-Kiboto-Elevated": "1"},  # the GPU: a built-in app's device, like Jellyfin's
     )
     if st != 201:
         yield {"step": "error", "percent": 0, "message": f"Could not create {CONTAINER}: {resp}", "done": True}
@@ -315,7 +315,7 @@ def use_pack(engine: Any) -> dict[str, Any]:
 
 # --- idle stop, and back on the first question --------------------------------------------------
 # The pack's models hold several GB. After idle_unload_minutes (AI settings, default 15) without
-# a question, a search or indexing, ZettNAS stops the container; the next request that needs it
+# a question, a search or indexing, Kiboto stops the container; the next request that needs it
 # starts it again and waits while it warms up (B14 gate: under 300 MB held while idle).
 
 WARM_TIMEOUT_SECS = 180.0
@@ -380,7 +380,7 @@ def wake_for(url: str | None, sleep=time.sleep, clock=time.monotonic, wait: floa
 
 
 def idle_tick(cfg: dict[str, Any], indexing: bool = False, clock=time.monotonic) -> bool:
-    """Stops the pack's container when ZettNAS uses it and nothing asked for it for the idle
+    """Stops the pack's container when Kiboto uses it and nothing asked for it for the idle
     time. True when it stopped it."""
     try:
         idle_secs = max(1, int(cfg.get("idle_unload_minutes") or 15)) * 60

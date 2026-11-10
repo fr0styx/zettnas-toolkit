@@ -173,7 +173,7 @@ export const SUBPANE_MAP = {
   'language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
   'region': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
 
-  // --- Pillar 8: AI Knowledge & Visual Search (ZettAI) ---
+  // --- Pillar 8: AI Knowledge & Visual Search (Kib) ---
   'ai': { section: 'mgmt-sec-ai', pane: 'mgmt-pane-ai-chat' },
   'chatbot': { section: 'mgmt-sec-ai', pane: 'mgmt-pane-ai-chat' },
   'chat': { section: 'mgmt-sec-ai', pane: 'mgmt-pane-ai-chat' },
@@ -258,7 +258,7 @@ export function updateManagementTelemetry(stats) {
 
     const distroName = stats.os?.distro || stats.system?.os || stats.system?.distro || 'Linux';
     if (osNameEl) osNameEl.textContent = distroName;
-    if (hostEl) hostEl.textContent = stats.system?.hostname || stats.name || t('mgx.host', 'ZettNAS Host');
+    if (hostEl) hostEl.textContent = stats.system?.hostname || stats.name || t('mgx.host', 'Kiboto Host');
     if (uptimeEl) uptimeEl.textContent = stats.system?.uptime_str || stats.os?.uptime || t('mgx.active', 'Active');
     if (cpuEl) {
       const cpuName = stats.cpu?.model ? stats.cpu.model.replace(/\(R\)|\(TM\)/g, '').trim() : 'x86_64 / ARM64';
@@ -2097,7 +2097,7 @@ export function initManagement() {
     fetchAndRenderMgmtVms();
   });
 
-  // ZettAI Multi-Modal RAG & Visual Search Engine
+  // Kib Multi-Modal RAG & Visual Search Engine
   initAiKnowledgeEngine();
   if (typeof restoreHardwareTabsToManagement === "function") restoreHardwareTabsToManagement();
 }

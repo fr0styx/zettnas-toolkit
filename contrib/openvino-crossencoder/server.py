@@ -1,6 +1,6 @@
 """Cross-encoder server for OpenVINO: a reranker and an NLI (entailment) model, both multilingual.
 
-ZettNAS uses the reranker through the AI config's rerank_endpoint (search and Ask Zetty, AI-12,
+Kiboto uses the reranker through the AI config's rerank_endpoint (search and Ask Kib, AI-12,
 AI-28); the NLI model is optional and for experiments. Run it on the app's Docker network with no
 published port.
 

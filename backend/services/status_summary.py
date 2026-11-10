@@ -208,13 +208,13 @@ ACT_SCOPES = {
     "power": ("system:power", "system:config"),
     "time": ("system:config",),
 }
-# Things only the person who manages ZettNAS can do anything about: nobody else is told
+# Things only the person who manages Kiboto can do anything about: nobody else is told
 ADMIN_ONLY = {"default_password", "timezone_unset", "kit_not_saved", "service_stalled"}
 
 
 def for_viewer(items: list[dict[str, Any]], can: Any) -> list[dict[str, Any]]:
     """The items as one person should see them: those they can't act on lose their Open button
-    and say to tell the person who manages ZettNAS; admin-only chores are left out (NUX-5)."""
+    and say to tell the person who manages Kiboto; admin-only chores are left out (NUX-5)."""
     out = []
     for i in items:
         need = ACT_SCOPES.get(str(i.get("open") or ""), ())

@@ -9,7 +9,7 @@ from backend.ignored_errors import ignored
 from backend.settings import test_mode
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 from backend import legacy_names
 from backend.settings import load_settings  # noqa: E402
@@ -214,7 +214,7 @@ def _get_or_create_secret_key() -> str:
             # It seals the two-factor secrets and backup passphrases: replacing it would lose them.
             raise RuntimeError(
                 f"Cannot read {SECRET_KEY_FILE} ({e}). It was not replaced. Fix its permissions or "
-                "restore it from a backup, then start ZettNAS again."
+                "restore it from a backup, then start Kiboto again."
             ) from e
         if k:
             return k
@@ -231,7 +231,7 @@ def _get_or_create_secret_key() -> str:
         else:
             raise RuntimeError(
                 f"Cannot save the secret key to {SECRET_KEY_FILE} ({e}). Make the data folder writable "
-                "and start ZettNAS again."
+                "and start Kiboto again."
             ) from e
     return new_key
 
@@ -404,7 +404,7 @@ def get_server_hostname() -> str:
     4. Docker daemon engine info via /var/run/docker.sock
     5. Local socket.gethostname() if not a container hex ID
     6. Explicit NAS_NAME if 'NAS'
-    7. Fallback: 'ZettNAS'
+    7. Fallback: 'Kiboto'
     """
     global _cached_server_hostname, _cached_server_hostname_ts
 
@@ -483,8 +483,8 @@ def get_server_hostname() -> str:
     except Exception:
         ignored("backend.config.get_server_hostname")
 
-    # 6. Fallback to env_name if set to "NAS", otherwise "ZettNAS"
-    fallback = env_name if env_name and not _is_container_id(env_name) else "ZettNAS"
+    # 6. Fallback to env_name if set to "NAS", otherwise "Kiboto"
+    fallback = env_name if env_name and not _is_container_id(env_name) else "Kiboto"
     _cached_server_hostname = fallback
     _cached_server_hostname_ts = now
     return fallback

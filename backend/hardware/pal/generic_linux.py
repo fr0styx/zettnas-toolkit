@@ -804,7 +804,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
                 shares_map[s.name] = NetworkShare(
                     name=s.name,
-                    comment=s.comment or "ZettNAS Managed Share",
+                    comment=s.comment or "Kiboto Managed Share",
                     security="public" if s.guest_ok else "private",
                     export_smb=True,
                     export_nfs=False,
@@ -838,7 +838,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
                     shares_map[n.name] = NetworkShare(
                         name=n.name,
-                        comment=n.comment or "ZettNAS Managed NFS Export",
+                        comment=n.comment or "Kiboto Managed NFS Export",
                         security="public" if n.clients == "*" else "private",
                         export_smb=False,
                         export_nfs=True,
@@ -1338,7 +1338,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             if code == 0 and worm_mode in ("compliance", "governance"):
                 hold, _, herr = self._run_cmd(["zfs", "hold", ZFS_HOLD_TAG, full])
                 if hold:
-                    logger.warning("[PAL] %s: no hold (%s); the lock is ZettNAS's own only", full, herr)
+                    logger.warning("[PAL] %s: no hold (%s); the lock is Kiboto's own only", full, herr)
             dest_path = os.path.join(src_path, ".zfs", "snapshot", zfs_snapshot_part(snapshot_name))
             readonly = True
         elif fs_of(src_path) == "zfs":

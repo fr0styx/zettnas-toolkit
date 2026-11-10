@@ -1,5 +1,5 @@
 """
-Structured JSON Logging & Diagnostics Utilities for ZettNAS.
+Structured JSON Logging & Diagnostics Utilities for Kiboto.
 Provides correlation ID propagation across HTTP requests, single-line JSON formatting,
 thread-safe in-memory log buffer, and credential redaction for diagnostic bundles.
 """
@@ -206,7 +206,7 @@ def _add_file_handler(root_logger: logging.Logger, formatter: logging.Formatter)
         os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
         handler = RotatingFileHandler(path, maxBytes=LOG_FILE_BYTES, backupCount=LOG_FILE_BACKUPS, encoding="utf-8")
     except OSError as e:
-        logging.getLogger("ZettNAS").warning(f"[Logging] no log file: {e}")
+        logging.getLogger("Kiboto").warning(f"[Logging] no log file: {e}")
         return None
     handler.setFormatter(formatter)
     handler.setLevel(logging.INFO)

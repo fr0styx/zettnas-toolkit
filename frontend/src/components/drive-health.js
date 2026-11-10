@@ -9,7 +9,7 @@
  * temperature and error counters from the stored readings (no drive is woken for them), the
  * self-test schedule, and a report to save (Drive Health revamp).
  *
- * Reports are saved into a NAS folder from ZettNAS's own dialog, and each drive can carry when it
+ * Reports are saved into a NAS folder from Kiboto's own dialog, and each drive can carry when it
  * was bought, its warranty and a note (drive-health-report.js).
  */
 import { api } from '../api.js';
@@ -115,7 +115,7 @@ export function findingHtml(f, canAck = false) {
 }
 
 function testRowsHtml(history) {
-  if (!history || !history.length) return `<li class="dh-empty">${escapeHtml(t('dh.no_tests', 'No self-test has been run from ZettNAS yet.'))}</li>`;
+  if (!history || !history.length) return `<li class="dh-empty">${escapeHtml(t('dh.no_tests', 'No self-test has been run from Kiboto yet.'))}</li>`;
   return history
     .slice(0, 6)
     .map((h) => {

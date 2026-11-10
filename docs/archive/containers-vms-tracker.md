@@ -1,8 +1,8 @@
-# ZettNAS Toolkit — Project Tracker: Containers & Virtual Machines Modernization
+# Kiboto — Project Tracker: Containers & Virtual Machines Modernization
 
 ## Architecture Overview
 
-ZettNAS Toolkit (**NAS WORKBENCH**) provides an enterprise-grade glassmorphic Web Desktop Operating System and hardware orchestration platform running across appliance hardware (ZettLab D4/D6/D8, Aoostar WTR Pro/R1) and generic homelab servers.
+Kiboto (**NAS WORKBENCH**) provides an enterprise-grade glassmorphic Web Desktop Operating System and hardware orchestration platform running across appliance hardware (ZettLab D4/D6/D8, Aoostar WTR Pro/R1) and generic homelab servers.
 
 ### Audited Subsystems & File Layout
 - **Containers Subsystem**:

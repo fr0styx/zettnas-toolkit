@@ -1,4 +1,4 @@
-"""SEC-38: the browser gets catalog logos from ZettNAS, and every outside host the code can
+"""SEC-38: the browser gets catalog logos from Kiboto, and every outside host the code can
 contact is listed in docs/PRIVACY.md (or is only a link, an example or a namespace)."""
 
 import glob
@@ -93,7 +93,7 @@ def test_the_route(cache, monkeypatch, client, auth_headers):
     )
 
 
-# Hosts in the code that ZettNAS never contacts by itself: links people may click, documentation,
+# Hosts in the code that Kiboto never contacts by itself: links people may click, documentation,
 # XML namespaces, examples and placeholders, and addresses on the person's own network.
 NOT_CONTACTED = {
     "in-toto.io",  # identifiers in signed statements, not addresses

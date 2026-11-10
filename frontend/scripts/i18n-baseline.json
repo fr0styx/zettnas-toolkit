@@ -1,13 +1,13 @@
 {
   "raw_toasts": 0,
   "raw_dialogs": 0,
-  "hardcoded_ui": 65,
+  "hardcoded_ui": 63,
   "missing_plurals": 0,
   "to_fixed": 37,
   "emoji_strings": 0,
   "per_file": {
-    "frontend/index.html": 2,
-    "frontend/src/components/dashboard.js": 33,
+    "frontend/index.html": 1,
+    "frontend/src/components/dashboard.js": 32,
     "frontend/src/components/dock/user-flyout.js": 1,
     "frontend/src/components/encrypted-folders.js": 1,
     "frontend/src/components/fan-control.js": 1,

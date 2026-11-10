@@ -1,5 +1,5 @@
 """
-Answer grounding for Ask Zetty: context ordering, retrieval grading and the
+Answer grounding for Ask Kib: context ordering, retrieval grading and the
 grounding confidence score.
 
 Split out of rag_engine.py (AI-21), which re-exports these names.

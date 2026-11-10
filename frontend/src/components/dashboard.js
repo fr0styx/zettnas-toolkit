@@ -1,6 +1,6 @@
 import { escapeHtml } from '../utils.js';
 /**
- * ZettNAS Toolkit Telemetry Dashboard
+ * Kiboto Telemetry Dashboard
  * Renders hardware gauges, disk trays, fan tachometers, and live telemetry badges.
  */
 import { state } from '../state.js';
@@ -544,7 +544,7 @@ export function applyDesktopTheme(themeName, customAccent = null) {
   const drawerSub = $('drawer-sub-badge');
   const icon = $('suite-brand-icon');
 
-  if (title) title.textContent = isYak ? 'YAK EXPRESS' : 'ZETTNAS';
+  if (title) title.textContent = isYak ? 'YAK EXPRESS' : 'KIBOTO';
   if (badge) badge.textContent = isYak ? 'RELIABILITY CULT' : t('nav.toolkit', 'Toolkit');
   if (drawerSub) drawerSub.textContent = isYak ? 'LOGISTICS LAB' : t('settings.drawer_badge', 'Toolkit');
   if (icon) icon.innerHTML = isYak ? '<use href="#i-yak"/>' : '<use href="#i-chip"/>';
@@ -675,7 +675,7 @@ export function applyLcdTheme(themeName, customAccent = null, textClarity = null
 
   const isYak = (themeName === 'yak');
   const engraved = $('chassis-panel-engraved');
-  if (engraved) engraved.textContent = isYak ? 'YAK EXPRESS • TOASTIE LOGISTICS LAB' : t('console.engraved_title', 'ZETTNAS • SYSTEM CONSOLE');
+  if (engraved) engraved.textContent = isYak ? 'YAK EXPRESS • TOASTIE LOGISTICS LAB' : t('console.engraved_title', 'KIBOTO • SYSTEM CONSOLE');
 
   // Update module card titles inside #screen and #mini-lcd-canvas
   document.querySelectorAll('.card-storage .card-title-txt').forEach((el) => {
@@ -1278,8 +1278,8 @@ export function updateHardwareTelemetry(s) {
     }
   }
 
-  // ZettNAS Desktop Icon & Hardware LCD Invariant:
-  // The ZettNAS desktop icon should ONLY be visible if the hardware is a Zettlabs D4/D6/D6U/D8U NAS appliance
+  // Kiboto Desktop Icon & Hardware LCD Invariant:
+  // The Kiboto desktop icon should ONLY be visible if the hardware is a Zettlabs D4/D6/D6U/D8U NAS appliance
   // OR another system with a similar physical LCD, taking display resolution into account for perfect data display.
   const vendor = String(hardware.sys_vendor || s?.motherboard?.vendor || '').toLowerCase();
   const product = String(
@@ -1302,7 +1302,7 @@ export function updateHardwareTelemetry(s) {
 
       const res = hardware.lcd_resolution || { width: 640, height: 172, spec: '640 × 172 IPS' };
       const specText = res.spec || `${res.width} × ${res.height} IPS`;
-      chassisDesktopIcon.setAttribute('title', `${t('dock.zettnas', 'ZettNAS')} (${specText})`);
+      chassisDesktopIcon.setAttribute('title', `${t('dock.zettnas', 'Kiboto')} (${specText})`);
     } else {
       chassisDesktopIcon.style.display = 'none';
       chassisDesktopIcon.classList.add('hidden');

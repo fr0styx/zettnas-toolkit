@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ZettNAS Toolkit - Comprehensive CI Pre-Commit / Release Verifier
+# Kiboto - Comprehensive CI Pre-Commit / Release Verifier
 # Run this script before committing or releasing to ensure 100% GitHub Actions parity.
 
 set -euo pipefail

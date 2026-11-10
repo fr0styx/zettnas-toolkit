@@ -18,7 +18,7 @@ import traceback
 from collections.abc import Callable
 from typing import Any
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 _lock = threading.Lock()
 _daemons: dict[str, dict[str, Any]] = {}

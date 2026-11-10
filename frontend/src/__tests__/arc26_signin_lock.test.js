@@ -153,7 +153,7 @@ describe('sign-in and lock screen (auth.js)', () => {
     await vi.waitFor(() => expect(byId('login-error').textContent).toBe('Account turned off'));
     fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
     byId('login-btn').click();
-    await vi.waitFor(() => expect(byId('login-error').textContent).toContain("Couldn't reach ZettNAS"));
+    await vi.waitFor(() => expect(byId('login-error').textContent).toContain("Couldn't reach Kiboto"));
   });
 
   it('asks for the second step, with a code or a recovery code', async () => {

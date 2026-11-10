@@ -1,7 +1,7 @@
 /**
  * "Use from anywhere" (COMP-01): join Tailscale, or a Headscale server of your own, scan the
- * sign-in link with the phone, turn on HTTPS addresses for ZettNAS, Immich and the other apps, and scan the
- * address to open ZettNAS on the phone. No port is opened on the router.
+ * sign-in link with the phone, turn on HTTPS addresses for Kiboto, Immich and the other apps, and scan the
+ * address to open Kiboto on the phone. No port is opened on the router.
  */
 import { api } from '../api.js';
 import { t } from '../i18n.js';
@@ -59,7 +59,7 @@ function connectForm() {
   const form = el(
     'form',
     { class: 'remote-form', 'data-remote-form': '' },
-    el('p', { class: 'zn-muted', text: t('remote.intro', 'Open ZettNAS and your photos on your phone away from home, through a private network between your devices. Nothing is opened on your router.') }),
+    el('p', { class: 'zn-muted', text: t('remote.intro', 'Open Kiboto and your photos on your phone away from home, through a private network between your devices. Nothing is opened on your router.') }),
     el(
       'fieldset',
       {},
@@ -112,7 +112,7 @@ async function connectedView(s) {
   const list = el(
     'ul',
     { class: 'zn-list remote-addresses' },
-    zettnas ? el('li', {}, `${t('remote.addr_zettnas', 'ZettNAS')}: `, el('code', { text: zettnas })) : null,
+    zettnas ? el('li', {}, `${t('remote.addr_zettnas', 'Kiboto')}: `, el('code', { text: zettnas })) : null,
     immich ? el('li', {}, `${t('remote.addr_immich', 'Immich (photo backup)')}: `, el('code', { text: immich })) : null,
     ...apps.map((a) => el('li', {}, `${a.name}: `, el('code', { text: a.url }))),
   );
@@ -128,8 +128,8 @@ async function connectedView(s) {
   return el(
     'div',
     { class: 'remote-step' },
-    el('p', { text: t('remote.connected', 'Connected as {name}. On a phone with the Tailscale app signed in to the same network, scan the code to open ZettNAS.', { name: s.name || (s.ips || [])[0] || '' }) }),
-    el('div', { class: 'zn-row' }, zettnas ? await qrBox(zettnas, t('remote.addr_qr', 'ZettNAS address as a QR code')) : null, list),
+    el('p', { text: t('remote.connected', 'Connected as {name}. On a phone with the Tailscale app signed in to the same network, scan the code to open Kiboto.', { name: s.name || (s.ips || [])[0] || '' }) }),
+    el('div', { class: 'zn-row' }, zettnas ? await qrBox(zettnas, t('remote.addr_qr', 'Kiboto address as a QR code')) : null, list),
     httpsHint(s),
     actions,
   );

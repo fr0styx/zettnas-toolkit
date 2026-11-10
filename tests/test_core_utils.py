@@ -145,7 +145,7 @@ def test_is_container_id():
     assert _is_container_id("") is True
     assert _is_container_id(None) is True
     assert _is_container_id("HomeNAS") is False
-    assert _is_container_id("ZettNAS") is False
+    assert _is_container_id("Kiboto") is False
     assert _is_container_id("my-homelab-server") is False
 
 
@@ -189,8 +189,8 @@ def test_get_server_hostname_suppresses_container_id(monkeypatch, tmp_path):
 
     monkeypatch.setattr(os.path, "exists", mock_exists)
 
-    # Should NOT return 425DAE47B7B9, should fallback cleanly to ZettNAS
-    assert get_server_hostname() == "ZettNAS"
+    # Should NOT return 425DAE47B7B9, should fallback cleanly to Kiboto
+    assert get_server_hostname() == "Kiboto"
 
 
 def test_get_server_hostname_unraid_ident(monkeypatch, tmp_path):

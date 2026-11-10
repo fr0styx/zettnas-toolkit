@@ -16,6 +16,7 @@ REMOVE_IN = "2.2.0"
 ENV_PREFIX = "KIBOTO_"
 OLD_ENV_PREFIX = "ZETTNAS_"
 OLD_SESSION_COOKIE = "zettnas_session"  # browsers signed in before the rebrand still send it
+OLD_CANARY_NAME = "!ZettNAS-guard-file.docx"  # the ransomware guard's file before the rebrand
 OLD_NAS_NAME = "zettnas"  # zettnas.local keeps answering beside kiboto.local (D17)
 OLD_NAME_CONTAINER = "zettnas-name"  # the name responder's container before the rebrand: replaced
 

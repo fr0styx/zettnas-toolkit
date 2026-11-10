@@ -152,7 +152,7 @@ def test_fs_checksum_streaming(client, auth_headers, tmp_path):
     root = tmp_path / "user"
     root.mkdir(parents=True, exist_ok=True)
     sample_file = root / "hash_target.bin"
-    raw_bytes = b"ZettNAS SOTA File Explorer Checksum Verification 2026" * 50
+    raw_bytes = b"Kiboto SOTA File Explorer Checksum Verification 2026" * 50
     sample_file.write_bytes(raw_bytes)
     expected_sha256 = hashlib.sha256(raw_bytes).hexdigest()
     expected_md5 = hashlib.md5(raw_bytes).hexdigest()

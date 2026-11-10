@@ -1,5 +1,5 @@
 """ARC-30: every database opens through backend.sqlite_conn.connect with its profile, and a
-migration that fails stops startup instead of leaving ZettNAS on a half-updated layout."""
+migration that fails stops startup instead of leaving Kiboto on a half-updated layout."""
 
 import pathlib
 import sqlite3

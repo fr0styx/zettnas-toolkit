@@ -68,7 +68,7 @@ def test_the_glossary_lists_what_the_test_enforces():
     assert "Hyper-Backup" in glossary and "test_glossary.py" in glossary
     for name in (
         "Chatbot",
-        "ZettAI Studio",
+        "Kib Studio",
         "NAS Copilot",
         "digital twin",
         "System Trash",

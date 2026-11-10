@@ -42,7 +42,7 @@ class BackupJobModel(BaseModel):
     name: str = Field(..., description="Human-readable job name")
     source_pool: str = Field("default", description="Storage pool ID")
     source_subvolume: str = Field("", description="Subvolume or share name to backup (data jobs)")
-    kind: str = Field("data", description="'data' (a pool folder) or 'config' (ZettNAS settings, encrypted)")
+    kind: str = Field("data", description="'data' (a pool folder) or 'config' (Kiboto settings, encrypted)")
     local_path: str | None = Field("", description="Folder in the pool for settings backups")
     destination_type: str = Field("remote", description="'remote', 'local_snapshot' or (settings) 'local_folder'")
     remote_name: str | None = Field("", description="Configured Rclone remote name")
@@ -177,7 +177,7 @@ async def restore_backup(request: Request):
 
         return {
             "status": "ok",
-            "message": "The backup is checked and ready. Restart ZettNAS to apply it; you will need to sign in again.",
+            "message": "The backup is checked and ready. Restart Kiboto to apply it; you will need to sign in again.",
             "restored_files": (result or {}).get("restored"),
             "client_preferences": client_prefs,
         }

@@ -133,7 +133,7 @@ def test_session_cache_synchronization(tmp_path):
 def test_totp_minimal_uri_and_qr():
     secret = generate_totp_secret()
     assert len(secret) >= 32
-    uri = get_otpauth_uri("testuser", secret, issuer="ZettNAS")
+    uri = get_otpauth_uri("testuser", secret, issuer="Kiboto")
     assert uri.startswith("otpauth://totp/testuser?secret=")
     assert f"secret={secret}" in uri
 

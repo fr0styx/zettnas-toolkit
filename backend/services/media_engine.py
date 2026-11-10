@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Gated Smart Media & NPU/GPU/CPU Acceleration Engine
+Kiboto - Gated Smart Media & NPU/GPU/CPU Acceleration Engine
 Hardware-gated local photo indexing, Multi-Modal RAG, and AI vision service (CLIP / Color / Scene / Document).
 Strictly gated on hosts with < 8GB RAM for heavy background scans to prevent memory pressure from compromising core NAS operations,
 while supporting lightweight 384-d deterministic RAG and Standby-Safe indexing.
@@ -502,7 +502,7 @@ _CATALOG: dict[str, Any] | None = None
 
 
 def model_catalog() -> dict[str, Any]:
-    """The models ZettNAS suggests, with licences and the hardware they suit (AI-29)."""
+    """The models Kiboto suggests, with licences and the hardware they suit (AI-29)."""
     global _CATALOG
     data = _CATALOG
     if data is None:
@@ -800,7 +800,7 @@ def _format_hf_api_item(
     eff_ram: float,
     active_norm: str,
 ) -> dict[str, Any]:
-    """Converts a raw Hugging Face Hub `/api/models` item into a ZettAI hardware-evaluated model dict."""
+    """Converts a raw Hugging Face Hub `/api/models` item into a Kib hardware-evaluated model dict."""
     repo_id = str(item.get("id") or item.get("modelId") or "").strip()
     tags = item.get("tags") if isinstance(item.get("tags"), list) else []
     safetensors_info: dict[str, Any] = item.get("safetensors") if isinstance(item.get("safetensors"), dict) else {}  # type: ignore[assignment]
@@ -895,7 +895,7 @@ def search_huggingface_models(
 ) -> dict[str, Any]:
     """
     Searches the live https://huggingface.co/api/models database of release models
-    (with offline fallback to the expanded ZettAI Hugging Face catalog) and flags
+    (with offline fallback to the expanded Kib Hugging Face catalog) and flags
     every model that does not fit the user's NAS hardware. Filters out models released
     before 2026 when min_release_year is active.
     """
@@ -921,7 +921,7 @@ def search_huggingface_models(
                 exact_url = f"https://huggingface.co/api/models/{urllib.parse.quote(clean_q, safe='/')}"
                 req_exact = urllib.request.Request(
                     exact_url,
-                    headers={"User-Agent": "ZettNAS-Toolkit/1.0 (https://huggingface.co)"},
+                    headers={"User-Agent": "Kiboto/1.0 (https://huggingface.co)"},
                 )
                 try:
                     with urllib.request.urlopen(req_exact, timeout=4.0) as resp:
@@ -944,7 +944,7 @@ def search_huggingface_models(
             api_url = f"https://huggingface.co/api/models?{urllib.parse.urlencode(params)}"
             req = urllib.request.Request(
                 api_url,
-                headers={"User-Agent": "ZettNAS-Toolkit/1.0 (https://huggingface.co)"},
+                headers={"User-Agent": "Kiboto/1.0 (https://huggingface.co)"},
             )
             with urllib.request.urlopen(req, timeout=5.0) as resp:
                 raw_items = json.loads(resp.read().decode("utf-8"))
@@ -1085,7 +1085,7 @@ def search_huggingface_models(
 def pull_huggingface_model(repo_id: str, activate: bool = True) -> dict[str, Any]:
     """
     Pulls/registers a release model from https://huggingface.co into the user's
-    ZettAI model catalog, evaluates whether it fits the user's hardware, and
+    Kib model catalog, evaluates whether it fits the user's hardware, and
     returns a prominent hardware warning if the model exceeds NAS limits.
     """
     clean_repo = _normalize_hf_repo_input(repo_id)
@@ -1105,7 +1105,7 @@ def pull_huggingface_model(repo_id: str, activate: bool = True) -> dict[str, Any
             exact_url = f"https://huggingface.co/api/models/{urllib.parse.quote(clean_repo, safe='/')}"
             req = urllib.request.Request(
                 exact_url,
-                headers={"User-Agent": "ZettNAS-Toolkit/1.0 (https://huggingface.co)"},
+                headers={"User-Agent": "Kiboto/1.0 (https://huggingface.co)"},
             )
             with urllib.request.urlopen(req, timeout=5.0) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
@@ -1190,7 +1190,7 @@ def pull_huggingface_model(repo_id: str, activate: bool = True) -> dict[str, Any
 
 def remove_llm_model(model_id: str) -> dict[str, Any]:
     """
-    Removes/deletes a model from the ZettAI catalog:
+    Removes/deletes a model from the Kib catalog:
     1. Removes it from custom_hf_models (if user-pulled).
     2. Adds its normalized tags to removed_models in rag_config so it no longer appears in recommendations.
     3. Deletes it from local Ollama if present (via DELETE /api/delete).
@@ -1226,7 +1226,7 @@ def remove_llm_model(model_id: str) -> dict[str, Any]:
     if "/" in tag_norm:
         new_removed.add(f"hf.co/{tag_norm}")
 
-    # 3. Delete from the Ollama runtime ZettNAS actually talks to (AI-17)
+    # 3. Delete from the Ollama runtime Kiboto actually talks to (AI-17)
     deleted_from_runtime = False
     try:
         from backend.services.rag_engine import _resolve_ollama_host
@@ -1242,7 +1242,7 @@ def remove_llm_model(model_id: str) -> dict[str, Any]:
                 d_req = urllib.request.Request(
                     del_url,
                     data=d_payload,
-                    headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-Toolkit/2.0"},
+                    headers={"Content-Type": "application/json", "User-Agent": "Kiboto/2.0"},
                     method="DELETE",
                 )
                 try:

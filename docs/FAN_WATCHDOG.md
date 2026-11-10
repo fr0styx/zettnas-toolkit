@@ -1,6 +1,6 @@
 # Fan watchdog
 
-ZettNAS drives the chassis fans itself. If the app stops cleanly it hands them back (firmware
+Kiboto drives the chassis fans itself. If the app stops cleanly it hands them back (firmware
 control where the hardware has it, a safe fixed speed where it doesn't). If it is killed outright
 (out of memory, `docker kill`, a crash) it can't, and the fans would stay at their last speed.
 

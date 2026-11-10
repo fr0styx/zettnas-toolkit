@@ -571,7 +571,7 @@ async def auth_middleware(request: Request, call_next):
                 or request.headers.get("X-Forwarded-User")
                 or request.headers.get("X-Forwarded-Preferred-Username")
             )
-            # A ZettNAS API token sent through the proxy authenticates as that token.
+            # A Kiboto API token sent through the proxy authenticates as that token.
             if proxy_user and not request.headers.get("Authorization", "").startswith("Bearer "):
                 proxy_user = proxy_user.strip()
                 user = await asyncio.to_thread(get_user_by_username, proxy_user)

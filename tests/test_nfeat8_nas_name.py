@@ -34,7 +34,7 @@ def records(packet):
 
 
 def responder(smb=True):
-    return m.Responder(["zettnas", "oldname"], IP, 8082, "ZettNAS", smb=smb)
+    return m.Responder(["zettnas", "oldname"], IP, 8082, "Kiboto", smb=smb)
 
 
 def test_names_round_trip_and_compression_is_followed():
@@ -81,7 +81,7 @@ def test_the_web_page_and_file_server_are_advertised():
     srv = next(x for x in out if x[1] == m.SRV)
     assert struct.unpack("!HHH", srv[4][:6])[2] == 8082 and m.read_name(srv[4], 6)[0] == "zettnas.local"
     assert any(x[1] == m.A for x in out)  # the address comes along
-    out = records(r.reply(query(("ZettNAS._smb._tcp.local", m.SRV)), m.PORT))
+    out = records(r.reply(query(("Kiboto._smb._tcp.local", m.SRV)), m.PORT))
     assert struct.unpack("!HHH", out[0][4][:6])[2] == 445
     assert (
         m.read_name(records(responder(smb=False).reply(query((m.SERVICES, m.PTR)), m.PORT))[0][4], 0)[0]
@@ -154,7 +154,7 @@ def test_off_until_turned_on_then_with_the_products_name(docker):
     off = nas_name.ensure()
     assert off["enabled"] is False and off["running"] is False and docker.box is None
     st = nas_name.save(enabled=True)
-    assert docker.created_with == {"X-ZettNAS-Elevated": "1"}  # the Docker guard's yes
+    assert docker.created_with == {"X-Kiboto-Elevated": "1"}  # the Docker guard's yes
     assert st == {
         "enabled": True,
         "name": "kiboto",
@@ -262,9 +262,9 @@ def test_broken_packets_are_ignored():
 
 def test_txt_and_srv_by_name_and_an_any_question():
     r = responder()
-    out = records(r.reply(query(("ZettNAS._http._tcp.local", m.ANY)), m.PORT))
+    out = records(r.reply(query(("Kiboto._http._tcp.local", m.ANY)), m.PORT))
     assert {x[1] for x in out} >= {m.SRV, m.TXT}
-    assert r.reply(query(("ZettNAS._http._tcp.local", m.A)), m.PORT) is None  # nothing of that type
+    assert r.reply(query(("Kiboto._http._tcp.local", m.A)), m.PORT) is None  # nothing of that type
 
 
 def test_the_file_server_check_and_the_address():
@@ -413,15 +413,15 @@ def test_the_link_listens_on_the_group_and_sends_from_the_nas_address(monkeypatc
 
 
 def test_time_machine_shares_are_announced_as_backup_disks():
-    r = m.Responder(["zettnas"], IP, 8082, "ZettNAS", smb=True, timemachine=["Backups", "Mac", ""])
+    r = m.Responder(["zettnas"], IP, 8082, "Kiboto", smb=True, timemachine=["Backups", "Mac", ""])
     inst, port, text = r.services()["_adisk._tcp.local"]
-    assert inst == "ZettNAS._adisk._tcp.local" and port == 9
+    assert inst == "Kiboto._adisk._tcp.local" and port == 9
     assert b"sys=waMa=0,adVF=0x100" in text
     assert b"dk0=adVN=Backups,adVF=0x82" in text and b"dk1=adVN=Mac,adVF=0x82" in text and b"dk2" not in text
     out = records(r.reply(query(("_adisk._tcp.local", m.PTR)), 5353))
     assert any(name == "_adisk._tcp.local" and rtype == m.PTR for name, rtype, *_ in out)
     assert any(rtype == m.SRV and name == inst for name, rtype, *_ in out)
-    no_smb = m.Responder(["zettnas"], IP, 8082, "ZettNAS", smb=False, timemachine=["Backups"])
+    no_smb = m.Responder(["zettnas"], IP, 8082, "Kiboto", smb=False, timemachine=["Backups"])
     assert "_adisk._tcp.local" not in no_smb.services()
     assert "_adisk._tcp.local" not in responder().services()
 

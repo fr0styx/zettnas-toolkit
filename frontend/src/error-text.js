@@ -92,7 +92,7 @@ function byStatus(body) {
 /** "What happened. What to do." */
 export function explain(detail, error, body = null) {
   // whole messages the interface knows in every language
-  if (error === 'ai_off_for_role') return t('err.ai_off_for_role', 'Zetty is turned off for your account. An administrator can turn it on in AI settings.');
+  if (error === 'ai_off_for_role') return t('err.ai_off_for_role', 'Kib is turned off for your account. An administrator can turn it on in AI settings.');
   const what = String(detail || '').trim();
   const step = nextStep(error, body);
   if (getLanguage() !== 'en') {

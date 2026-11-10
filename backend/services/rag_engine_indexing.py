@@ -285,7 +285,7 @@ class RagIndexingMixin:
             try:
                 add_event(
                     "info",
-                    f"ZettAI Auto-Learning Started ({dev_label})",
+                    f"Kib Auto-Learning Started ({dev_label})",
                     f"Disk spin-up detected on {dev_label}. Syncing {len(paths)} watched folder(s)...",
                     event_text("ai_sync_started", disk=dev_label, count=len(paths)),
                 )
@@ -439,7 +439,7 @@ class RagIndexingMixin:
                 try:
                     add_event(
                         "info",
-                        f"ZettAI Auto-Learning Completed ({dev_label})",
+                        f"Kib Auto-Learning Completed ({dev_label})",
                         f"Indexed {total_indexed} files ({total_skipped} unchanged, {total_deferred} deferred) on {dev_label}.",
                         event_text(
                             "ai_sync_done",
@@ -493,7 +493,7 @@ class RagIndexingMixin:
                 "skipped_unchanged": 0,
                 "deferred_standby": 0,
                 "errors": 0,
-                "message": "ZettAI service is disabled — learning paused.",
+                "message": "Kib service is disabled — learning paused.",
             }
 
         if _reset_control_flags:

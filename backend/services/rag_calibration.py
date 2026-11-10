@@ -7,7 +7,7 @@ away good matches of another or lets noise through. So instead of one number for
 model, each exact model (id and vector size) is measured once, the first time search uses it:
 
 - the questions and passages below are embedded the way search and indexing do it (query and
-  document prompts), in five languages and across languages, as the household files ZettNAS
+  document prompts), in five languages and across languages, as the household files Kiboto
   indexes;
 - for each question, the similarity to its own passage and to every other one;
 - the model's noise level is what a question reaches with passages about something else (the

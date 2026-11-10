@@ -1,11 +1,11 @@
-"""Does ZettNAS keep spinning disks awake? A read-only measurement for the self-hosted runner (PERF-2).
+"""Does Kiboto keep spinning disks awake? A read-only measurement for the self-hosted runner (PERF-2).
 
 Nothing here talks to a drive: no hdparm, no smartctl, no reads of the disks themselves. It
 samples what the kernel already counts, every --interval seconds for --minutes:
 
 - /proc/diskstats: sectors read and written per disk; a disk with no I/O is idle.
 - /sys/block/<disk>/queue/rotational: which disks spin (SSDs and NVMe are left out).
-- /proc/<backend pid>/io: bytes the ZettNAS backend read from and wrote to storage.
+- /proc/<backend pid>/io: bytes the Kiboto backend read from and wrote to storage.
 
 A disk that has been idle for --sleep-after minutes would be asleep with a typical spin-down
 timer. Its spin state can't be read without asking the drive, so "no I/O" stands in for it.
@@ -144,14 +144,14 @@ def main(argv=None):
         print("SKIP spindown (no spinning disks visible)")
         return 0
     if not pid:
-        print("SKIP spindown (the ZettNAS backend is not running)")
+        print("SKIP spindown (the Kiboto backend is not running)")
         return 0
     report = analyse(samples, disks, args.interval, args.sleep_after * 60)
     wakes = sum(r["wakes"] for r in report.values())
     print(f"{'PASS' if wakes == 0 else 'FAIL'} spindown")
     if wakes:
         print(
-            "::warning title=Spin-down::a spinning disk saw I/O after a long idle stretch while ZettNAS did storage I/O"
+            "::warning title=Spin-down::a spinning disk saw I/O after a long idle stretch while Kiboto did storage I/O"
         )
     try:
         out = os.path.join(args.results, "spindown")

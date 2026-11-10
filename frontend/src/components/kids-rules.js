@@ -1,6 +1,6 @@
 /**
  * Kids' rules in one place (NUX-18): for each kid and guest account, when they may sign in and
- * whether their devices are filtered, plus whether kids may ask Zetty or use AI search. Each
+ * whether their devices are filtered, plus whether kids may ask Kib or use AI search. Each
  * rule is still stored where it was (the person, the family filter, AI access); this card shows
  * them together and changes them from here.
  */
@@ -29,10 +29,10 @@ const roleName = (roleId) => formatRole(roleId);
 export function aiSwitchesHtml(access) {
   const roles = (access?.roles || []).filter((r) => KID_ROLES.includes(r.id));
   if (!roles.length) return null;
-  return html`<div class="kids-ai" role="group" aria-label="${t('kids.ai', 'Zetty, the AI helper')}">
+  return html`<div class="kids-ai" role="group" aria-label="${t('kids.ai', 'Kib, the AI helper')}">
     ${roles.map(
       (r) => html`<div class="kids-ai-row"><span class="kids-ai-role">${roleName(r.id)}</span>
-        <label class="zn-toggle"><input type="checkbox" role="switch" data-kids-ai="roles" data-role="${r.id}" ${r.on ? 'checked' : ''}><span>${t('ai.access_ask', 'Ask Zetty')}</span></label>
+        <label class="zn-toggle"><input type="checkbox" role="switch" data-kids-ai="roles" data-role="${r.id}" ${r.on ? 'checked' : ''}><span>${t('ai.access_ask', 'Ask Kib')}</span></label>
         <label class="zn-toggle"><input type="checkbox" role="switch" data-kids-ai="search_roles" data-role="${r.id}" ${r.search !== false ? 'checked' : ''}><span>${t('ai.access_search', 'AI search')}</span></label></div>`,
     )}</div>`;
 }
@@ -60,7 +60,7 @@ export function kidsRulesHtml(users, access, filter) {
     : html`<p class="zn-muted">${t('kids.none', 'No kid or guest accounts yet. Add a person with the Kid role to set their rules here.')}</p>`;
   const ai = aiSwitchesHtml(access);
   return html`${rows}
-    ${ai ? html`<h5 class="kids-sub">${t('kids.ai', 'Zetty, the AI helper')}</h5>${ai}` : ''}
+    ${ai ? html`<h5 class="kids-sub">${t('kids.ai', 'Kib, the AI helper')}</h5>${ai}` : ''}
     <p class="kids-more"><button type="button" class="btn-pill-toggle is-small" data-kids-shares>${t('kids.shares', 'Which shared folders they can open')}</button></p>`;
 }
 

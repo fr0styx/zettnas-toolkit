@@ -1,6 +1,6 @@
-# Document search and Ask Zetty
+# Document search and Ask Kib
 
-How ZettNAS indexes your files, searches them, and uses them in chat. Everything here
+How Kiboto indexes your files, searches them, and uses them in chat. Everything here
 describes what the code does today; the numbers come from `tests/rag_eval`, which CI runs.
 
 ## What gets indexed
@@ -13,7 +13,7 @@ describes what the code does today; the numbers come from `tests/rag_eval`, whic
   gigabytes.
   Photos get colour and scene tags plus any text found in them.
 - **Photo captions.** When a vision model is installed in Ollama (for example
-  `gemma3:4b` or `qwen2.5vl:3b`), ZettNAS describes each photo in one sentence and copies
+  `gemma3:4b` or `qwen2.5vl:3b`), Kiboto describes each photo in one sentence and copies
   any readable text (receipts, signs, screenshots). Both go into photo search. It works
   one photo at a time and only while the NAS is idle: load under half the CPU cores, CPU
   under 75 °C, inside the learning schedule if you set one, and never on a sleeping disk.
@@ -35,7 +35,7 @@ describes what the code does today; the numbers come from `tests/rag_eval`, whic
 - The index lives in `rag_index.db` in the data folder, normally on the SSD cache. Search
   reads only this database, not your array disks.
 - With **Standby-safe learning** on, files on a sleeping disk are queued and indexed when
-  the disk spins up, instead of waking it. ZettNAS finds the real disks under a folder on
+  the disk spins up, instead of waking it. Kiboto finds the real disks under a folder on
   Unraid, ZFS, Btrfs, mdadm, LVM/LUKS and plain partitions, checks each with the
   non-waking `smartctl -n standby`, and ignores SSDs. Network and cloud mounts are never
   treated as sleeping. If it can't tell which disk holds a folder, it assumes the disk may
@@ -47,15 +47,15 @@ Two kinds, and a file never mixes them:
 
 | | Built-in lexical | Neural (Ollama) |
 |---|---|---|
-| Model | `zett_lexical_384d`, a hashed word/character vector computed in ZettNAS | an embedding model you install, e.g. `embeddinggemma` or `nomic-embed-text` |
+| Model | `zett_lexical_384d`, a hashed word/character vector computed in Kiboto | an embedding model you install, e.g. `embeddinggemma` or `nomic-embed-text` |
 | Needs | nothing | Ollama running and the model installed |
 | Good at | exact words, names, numbers | paraphrases and synonyms |
 | Weak at | wording that doesn't appear in the file | short exact codes |
 
 **EmbeddingGemma** is Google's 300M-parameter text embedding model. It reads at most
-2,048 tokens, so ZettNAS sends at most 6,000 characters per chunk (2,500 for mostly
+2,048 tokens, so Kiboto sends at most 6,000 characters per chunk (2,500 for mostly
 Chinese/Japanese text). Its vectors can be shortened to 768, 512, 256 or 128 numbers
-(Matryoshka); ZettNAS re-normalises them after shortening.
+(Matryoshka); Kiboto re-normalises them after shortening.
 
 Chunks are embedded in batches of 32. If the model fails partway through a file, the
 whole file falls back to lexical vectors and is labelled that way, and the embedder is
@@ -73,7 +73,7 @@ re-ordered; if the reranker is down, search keeps its usual order. The reranker 
 result's whole chunk (up to 2,000 characters) and has `rerank_weight` of the say (default 0.2).
 `contrib/openvino-crossencoder` serves `bge-reranker-v2-m3` on an Intel iGPU.
 
-With a reranker set up, Ask Zetty also scores the documents it found against the question before
+With a reranker set up, Ask Kib also scores the documents it found against the question before
 it answers. When none of them looks like an answer (best score under `NOT_ANSWERED_BELOW` in
 `rag_rerank.py`), it says the answer isn't in the indexed files without asking the model.
 Otherwise, asked for a TV's warranty, the model gave the washing machine's date, and asked when
@@ -248,8 +248,8 @@ model is told not to follow instructions inside it.
 
 ## Chat models
 
-Ask Zetty uses a chat model served by Ollama or OpenVINO Model Server on this NAS. The
+Ask Kib uses a chat model served by Ollama or OpenVINO Model Server on this NAS. The
 built-in catalog lists mainstream models with their licences; **Install** downloads one
 into Ollama and checks it's there. If the selected model isn't installed, the answer says
-so instead of using another model. Without a model, Ask Zetty can still show system
+so instead of using another model. Without a model, Ask Kib can still show system
 status, search your files and do calculations, and it says that no model answered.

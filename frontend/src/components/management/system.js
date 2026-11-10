@@ -122,7 +122,7 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
       }
     }
   } catch (err) {
-    console.warn('[ZettNAS] Failed to fetch system about info:', err);
+    console.warn('[Kiboto] Failed to fetch system about info:', err);
   }
 
   // 2. How the last update ended: a rollback is shown until the next successful update (OPS-7)
@@ -149,7 +149,7 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
         if (statusDesc) {
           statusDesc.textContent = isEdge
             ? t('sysu.newer_commit', 'Newer commit features are available on the main branch.')
-            : t('sysu.newer_release', 'A newer release of ZettNAS is available on GitHub.');
+            : t('sysu.newer_release', 'A newer release of Kiboto is available on GitHub.');
         }
         if (detailsBox) detailsBox.style.display = 'block';
         if (releaseTitle) releaseTitle.textContent = data.release_name || t('sysu.release', 'Release {tag}', { tag: data.latest_tag });
@@ -166,8 +166,8 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
         if (statusIcon) statusIcon.textContent = '✅';
         if (statusTitle) {
           statusTitle.textContent = isEdge
-            ? t('sysu.uptodate_main', 'ZettNAS is up to date with main')
-            : t('sysu.uptodate', 'ZettNAS is up to date');
+            ? t('sysu.uptodate_main', 'Kiboto is up to date with main')
+            : t('sysu.uptodate', 'Kiboto is up to date');
           statusTitle.style.color = 'var(--ok2, #25c2a0)';
         }
         if (statusDesc) {
@@ -303,7 +303,7 @@ export async function revertSystemUpdate() {
             wentDown = true;
             if (attempts >= 80) {
               clearInterval(timer);
-              if (desc) desc.textContent = t('ui.please_refresh_the_page_once', 'Please refresh the page once ZettNAS has restarted.');
+              if (desc) desc.textContent = t('ui.please_refresh_the_page_once', 'Please refresh the page once Kiboto has restarted.');
             }
           }
         }, 1500);
@@ -329,7 +329,7 @@ export async function applySystemUpdate() {
     t('updates.confirm_title', 'Apply System Update'),
     t(
       'updates.confirm_msg',
-      `Update ZettNAS to ${targetTag} now? The container will pull the updated image and restart. Your data and settings are safely preserved.`
+      `Update Kiboto to ${targetTag} now? The container will pull the updated image and restart. Your data and settings are safely preserved.`
     ),
     async () => {
       if (applyBtn) applyBtn.disabled = true;
@@ -367,8 +367,8 @@ export async function applySystemUpdate() {
             if (h.ok && (hasGoneDown || attempts >= 8)) {
               clearInterval(interval);
               setIconLabel(progressTitle, '🎉', t('ui.update_complete', 'Update Complete!'));
-              if (progressDesc) progressDesc.textContent = t('ui.reloading_zettnas_workbench', 'Reloading ZettNAS…');
-              showToast(t('updates.updated_success', 'ZettNAS updated successfully!'), 'success');
+              if (progressDesc) progressDesc.textContent = t('ui.reloading_zettnas_workbench', 'Reloading Kiboto…');
+              showToast(t('updates.updated_success', 'Kiboto updated successfully!'), 'success');
               setTimeout(() => window.location.reload(), 1200);
             }
           } catch (e) {

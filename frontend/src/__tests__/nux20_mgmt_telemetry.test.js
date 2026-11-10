@@ -81,7 +81,7 @@ describe('Mission Control telemetry words (NUX-20)', () => {
 
   it('names a generic host without details', () => {
     updateManagementTelemetry({ system: {} });
-    expect(text('mgmt-generic-host')).toBe('ZettNAS Host');
+    expect(text('mgmt-generic-host')).toBe('Kiboto Host');
     expect(text('mgmt-generic-uptime')).toBe('Active');
     updateManagementTelemetry({ name: 'nas1', os: { uptime: '3d' } });
     expect(text('mgmt-generic-host')).toBe('nas1');

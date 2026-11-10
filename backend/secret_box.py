@@ -18,7 +18,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from backend import config
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 PREFIX = "enc1:"
 _AAD = b"zettnas:mfa_secret:v1"

@@ -23,7 +23,7 @@ from backend.hardware.cpu import _find_hwmon
 from backend.ignored_errors import ignored
 from backend.state import Z_STATE
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 
 _APPLIANCE_CACHE: dict[str, tuple[bool, float]] = {}

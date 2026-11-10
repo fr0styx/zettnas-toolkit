@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { setAiChatFocus, aiChatFocus, askZettyAbout } from '../components/management/ai.js';
 
-describe('Ask Zetty about this (missing feature 6)', () => {
+describe('Ask Kib about this (missing feature 6)', () => {
   it('shows what the questions are about and can drop it', () => {
     document.body.innerHTML = '<div><input id="ai-chat-input" /></div>';
     setAiChatFocus('/mnt/user/docs/plan.txt');

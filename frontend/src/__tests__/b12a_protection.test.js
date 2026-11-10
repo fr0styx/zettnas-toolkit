@@ -16,7 +16,7 @@ describe('B12a (REL-12): what protects your data', () => {
     document.body.innerHTML = '<div id="m"></div>';
   });
 
-  it('lists every job with its state, and a switch only where ZettNAS runs the check', () => {
+  it('lists every job with its state, and a switch only where Kiboto runs the check', () => {
     const div = document.createElement('div');
     div.innerHTML = String(jobsHtml(JOBS));
     expect(div.textContent).toContain('Photos to USB');

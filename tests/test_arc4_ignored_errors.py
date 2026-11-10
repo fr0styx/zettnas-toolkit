@@ -21,7 +21,7 @@ def _raise_and_ignore(where, now):
 
 def test_first_error_warns_repeats_are_counted_then_summarised_daily(caplog):
     ie.reset()
-    caplog.set_level(logging.DEBUG, logger="ZettNAS")
+    caplog.set_level(logging.DEBUG, logger="Kiboto")
     _raise_and_ignore("backend.x.read", now=1000.0)
     warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
     assert [r.getMessage() for r in warnings] == ["[ignored] backend.x.read: ValueError: disk went away"]

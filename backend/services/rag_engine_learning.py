@@ -804,7 +804,7 @@ class RagLearningMixin:
             }
 
     def is_within_learning_schedule(self) -> tuple[bool, str]:
-        """Checks whether current local time is within the configured ZettAI learning window."""
+        """Checks whether current local time is within the configured Kib learning window."""
         cfg = self.get_config()
         if not cfg.get("schedule_enabled"):
             return (True, "")
@@ -827,7 +827,7 @@ class RagLearningMixin:
 
     def get_learning_results(self, principal: Any = None) -> dict[str, Any]:
         """
-        Returns ZettAI 6-state status (Initializing | Learning | Idle | Paused | Disabled | Error),
+        Returns Kib 6-state status (Initializing | Learning | Idle | Paused | Disabled | Error),
         succeeded/failed file counts, and failed file paths for the Learning Results dialog.
         """
         self._ensure_schema()
@@ -882,7 +882,7 @@ class RagLearningMixin:
 
         if not cfg.get("enabled", True):
             z_status = "Disabled"
-            reason = "ZettAI service is turned off in Settings."
+            reason = "Kib service is turned off in Settings."
         elif self._is_indexing and self._sync_state == "running":
             z_status = "Learning"
             reason = self._sync_progress.get("message") or "Analyzing and indexing files..."
@@ -947,7 +947,7 @@ class RagLearningMixin:
         return updated
 
     def toggle_favorite(self, path: str) -> dict[str, Any]:
-        """Adds or removes a file path from ZettAI favorites."""
+        """Adds or removes a file path from Kib favorites."""
         norm_p = os.path.normpath(str(path or "").strip())
         cfg = self.get_config()
         favs: list[str] = list(cfg.get("favorites") or [])

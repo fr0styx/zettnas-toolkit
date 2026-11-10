@@ -74,7 +74,7 @@ def test_readme_leads_with_private_search():
     first = readme[: readme.index("## What you get")]
     assert "privately" in first and "No\naccount, no subscription" in first.replace("No account", "No\naccount")
     assert "docs/SEARCH_QUALITY.md" in first and "docs/SAFE_AI.md" in first
-    assert readme.split("## What you get")[1].lstrip().startswith("- **Ask Zetty**")
+    assert readme.split("## What you get")[1].lstrip().startswith("- **Ask Kib**")
 
 
 def test_the_wizard_welcome_leads_with_search_in_every_language():
@@ -82,5 +82,5 @@ def test_the_wizard_welcome_leads_with_search_in_every_language():
     for lang, phrase in words.items():
         text = _read(f"frontend/src/locales/{lang}.js")
         line = next(ln for ln in text.splitlines() if '"setup.welcome_desc"' in ln)
-        assert "Zetty" in line and phrase in line, lang
+        assert "Kib" in line and phrase in line, lang
     assert "Find any file by what is in it" in _read("frontend/index.html")

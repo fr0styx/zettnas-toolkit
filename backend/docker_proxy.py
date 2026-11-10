@@ -7,7 +7,7 @@ uses. Everything else (swarm, plugins, secrets, image build/load/import, commit,
 export, …) is refused with 403.
 
 Creating a container (or an exec) that could take over the host needs the request
-header `X-ZettNAS-Elevated: 1`. Only flows the user confirms send it (installing an
+header `X-Kiboto-Elevated: 1`. Only flows the user confirms send it (installing an
 app after its security review, recreating an existing container, the self-updater).
 Every elevated request is written to data/docker-proxy-audit.log.
 
@@ -30,10 +30,10 @@ from typing import Any
 
 from backend import legacy_names
 
-logger = logging.getLogger("ZettNAS.docker_proxy")
+logger = logging.getLogger("Kiboto.docker_proxy")
 UPSTREAM = legacy_names.getenv("KIBOTO_DOCKER_UPSTREAM", "/var/run/docker.sock")
 LISTEN = legacy_names.getenv("KIBOTO_DOCKER_PROXY_SOCK", "/run/zettnas/docker.sock")
-ELEVATED_HEADER = "x-zettnas-elevated"
+ELEVATED_HEADER = "x-kiboto-elevated"
 MAX_HEAD = 64 * 1024
 MAX_POLICY_BODY = 4 * 1024 * 1024
 
@@ -143,7 +143,7 @@ def _bind_source(bind: str) -> str:
 
 
 def _app_folders() -> list[str]:
-    """ZettNAS's own data and install folders (users.db, secret.key): never mounted into apps."""
+    """Kiboto's own data and install folders (users.db, secret.key): never mounted into apps."""
     try:
         from backend.fsutil import protected_dirs
 
@@ -164,7 +164,7 @@ def _risky_host_path(src: str) -> str | None:
     if any(src == d or src.startswith(d.rstrip("/") + "/") for d in _app_folders()):
         return src
     if any(d.startswith(src.rstrip("/") + "/") for d in _app_folders()):
-        return src  # a folder that contains ZettNAS's data (NSEC-9)
+        return src  # a folder that contains Kiboto's data (NSEC-9)
     if any(src == s or src.startswith(s + "/") for s in SAFE_HOST_PATHS):
         return None
     for p in HOST_PATHS:
@@ -207,7 +207,7 @@ def elevated_reasons(path: str, body: dict[str, Any]) -> list[str]:
     if str(hc.get("CgroupnsMode") or "").lower() == "host":
         reasons.append("CgroupnsMode=host")
     if hc.get("VolumesFrom"):
-        # SEC-25: every mount of another container, e.g. ZettNAS's own docker.sock and data folder
+        # SEC-25: every mount of another container, e.g. Kiboto's own docker.sock and data folder
         reasons.append("volumes-from " + ", ".join(str(v) for v in hc.get("VolumesFrom") or []))
     caps = {str(c).upper().removeprefix("CAP_") for c in hc.get("CapAdd") or []}
     for c in sorted(caps & DANGEROUS_CAPS):
@@ -247,7 +247,7 @@ def check_request(method: str, target: str, headers: dict[str, str], body: bytes
         return False, "path not allowed", []
     path, _ = norm
     if not endpoint_allowed(method, path):
-        return False, f"{method} {path} is not allowed by the ZettNAS Docker proxy", []
+        return False, f"{method} {path} is not allowed by the Kiboto Docker proxy", []
     if method.upper() == "POST" and (path == "/containers/create" or path.endswith("/exec")):
         try:
             parsed = json.loads(body or b"{}")
@@ -260,7 +260,7 @@ def check_request(method: str, target: str, headers: dict[str, str], body: bytes
             return False, "elevated container settings need confirmation: " + ", ".join(reasons), reasons
         return True, "", reasons
     if method.upper() == "PUT" and path.startswith("/containers/") and path.endswith("/archive"):
-        # SEC-25: writing files into a container (ZettNAS's own included) is never needed by the app
+        # SEC-25: writing files into a container (Kiboto's own included) is never needed by the app
         if headers.get(ELEVATED_HEADER) != "1":
             return False, "writing files into a container needs confirmation", ["archive write"]
         return True, "", ["archive write"]

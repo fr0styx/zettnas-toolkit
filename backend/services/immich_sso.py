@@ -1,12 +1,12 @@
 """
-Connect Immich to the same sign-in provider as ZettNAS (M3).
+Connect Immich to the same sign-in provider as Kiboto (M3).
 
 Steps, through Immich's own API:
-1. If Immich has no admin yet, create one with the ZettNAS user's email and a generated
+1. If Immich has no admin yet, create one with the Kiboto user's email and a generated
    password (kept in appdata/immich/.zettnas-secrets.json as immich_admin_password).
 2. Sign in as that admin.
-3. Read the system config, turn on OAuth with ZettNAS's OpenID Connect issuer and the
-   client ID/secret (ZettNAS's own client unless others are given), and write it back.
+3. Read the system config, turn on OAuth with Kiboto's OpenID Connect issuer and the
+   client ID/secret (Kiboto's own client unless others are given), and write it back.
    Every other Immich setting is left as it is, and stays editable in Immich.
 
 The provider must allow Immich's redirect URIs: app.immich:///oauth-callback,
@@ -55,9 +55,9 @@ def connect(
     transport: httpx.BaseTransport | None = None,
 ) -> dict[str, Any]:
     if not oidc_cfg.get("issuer"):
-        raise ImmichSsoError("Set up single sign-on for ZettNAS first (Security → Single sign-on).")
+        raise ImmichSsoError("Set up single sign-on for Kiboto first (Security → Single sign-on).")
     if not admin_email or "@" not in admin_email:
-        raise ImmichSsoError("Your ZettNAS account needs an email address; Immich uses it for the admin account.")
+        raise ImmichSsoError("Your Kiboto account needs an email address; Immich uses it for the admin account.")
     base = immich_url.rstrip("/")
     steps = []
     with httpx.Client(base_url=f"{base}/api", timeout=20, transport=transport) as c:
@@ -73,7 +73,7 @@ def connect(
         r = c.post("/auth/login", json={"email": admin_email, "password": password})
         if r.status_code not in (200, 201):
             raise ImmichSsoError(
-                "Immich already has an admin that ZettNAS didn't create. Turn on OAuth in Immich "
+                "Immich already has an admin that Kiboto didn't create. Turn on OAuth in Immich "
                 "(Administration → Settings → Authentication) by hand, see docs/SSO.md."
             )
         auth = {"Authorization": f"Bearer {r.json()['accessToken']}"}

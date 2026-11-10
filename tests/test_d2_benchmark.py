@@ -69,7 +69,7 @@ def test_api_applies_the_balanced_tier(client, auth_headers, tmp_path, monkeypat
 
 def test_document_question_is_measured(tmp_path, monkeypatch):
     """Each model also reads a 6,000-token document question; its reading time is the wait
-    before Ask Zetty starts answering from files."""
+    before Ask Kib starts answering from files."""
     monkeypatch.setattr(mb, "RESULTS_FILE", str(tmp_path / "bench.json"))
     prompts = []
     base = _fake_ollama({"qwen2.5:3b": 45.0, "gemma3:12b": 18.0, "big:70b": 4.0})

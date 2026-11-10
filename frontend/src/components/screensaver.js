@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Consumer-Grade Screensaver & OLED Protection Engine
+ * Kiboto - Consumer-Grade Screensaver & OLED Protection Engine
  * Provides animated screensavers (Matrix Digital Rain, Retro Nixie Clock, Hyperspace Starfield),
  * idle inactivity timers, OLED burn-in drift protection, and wake-to-lock capabilities.
  */

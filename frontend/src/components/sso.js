@@ -40,7 +40,7 @@ const FIELDS = [
   ['client_secret', 'sso.client_secret', 'Client secret', ''],
   ['label', 'sso.label', 'Button label', 'Authentik'],
   ['admin_groups', 'sso.admin_groups', 'Admin groups (comma-separated)', 'nas-admins'],
-  ['public_url', 'sso.public_url', 'Public URL of ZettNAS (optional)', 'https://nas.example.com'],
+  ['public_url', 'sso.public_url', 'Public URL of Kiboto (optional)', 'https://nas.example.com'],
 ];
 
 export async function renderSsoPanel() {
@@ -59,7 +59,7 @@ export async function renderSsoPanel() {
   setIconLabel(title, '🔑', t('sso.title', 'Single sign-on (OpenID Connect)'));
   const desc = document.createElement('div');
   desc.className = 'zn-muted';
-  desc.textContent = t('sso.desc', 'Let people sign in with Authentik, Keycloak, Authelia or another OpenID Connect provider. Register ZettNAS there with this redirect URI: {uri}', { uri: cfg.redirect_uri });
+  desc.textContent = t('sso.desc', 'Let people sign in with Authentik, Keycloak, Authelia or another OpenID Connect provider. Register Kiboto there with this redirect URI: {uri}', { uri: cfg.redirect_uri });
   const form = document.createElement('form');
   form.className = 'zn-form';
   const enabled = document.createElement('label');

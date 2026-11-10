@@ -43,8 +43,8 @@ afterEach(async () => {
 describe('known apps', () => {
   it('every app has a title in the reader\'s language', async () => {
     expect(Object.values(KNOWN_APPS).map((a) => a.getTitle())).toEqual([
-      'File Explorer', 'Settings', 'ZettNAS', 'Drive Health', 'Container Inspector', 'Apps', 'Virtual Machines',
-      'App Deployment', 'Notification Center', 'Cloud Remotes', 'Desktop & Personalization', 'Ask Zetty',
+      'File Explorer', 'Settings', 'Kiboto', 'Drive Health', 'Container Inspector', 'Apps', 'Virtual Machines',
+      'App Deployment', 'Notification Center', 'Cloud Remotes', 'Desktop & Personalization', 'Ask Kib',
     ]);
     await setLanguage('de');
     expect(KNOWN_APPS['container-inspector'].getTitle()).toBe('Container-Inspektor');

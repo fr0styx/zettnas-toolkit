@@ -1,4 +1,4 @@
-"""Who may ask Zetty (B8): a switch per role, kids and guests off until turned on, and a request log
+"""Who may ask Kib (B8): a switch per role, kids and guests off until turned on, and a request log
 that keeps who asked when, never what."""
 
 import time

@@ -28,9 +28,9 @@ describe('family calendar QR code and iPhone profile (NFEAT-7)', () => {
     const box = familyCalendarBody(info, () => {});
     expect(box.querySelector('.fc-qr').getAttribute('role')).toBe('img');
     const btn = [...box.querySelectorAll('button')].find((b) => b.textContent === 'Set up an iPhone or iPad');
-    api.downloadBlob.mockResolvedValue('ZettNAS family.mobileconfig');
+    api.downloadBlob.mockResolvedValue('Kiboto family.mobileconfig');
     btn.click();
-    expect(api.downloadBlob).toHaveBeenCalledWith('/api/docker/catalog/office-suite/family/profile', 'ZettNAS family.mobileconfig');
+    expect(api.downloadBlob).toHaveBeenCalledWith('/api/docker/catalog/office-suite/family/profile', 'Kiboto family.mobileconfig');
     api.downloadBlob.mockRejectedValue(new Error('nope'));
     btn.click();
     await flush();

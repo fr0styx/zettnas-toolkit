@@ -213,7 +213,7 @@ jobs:
           DATA_DIR: "${{ github.workspace }}/data"
           # A browsable folder for the explorer and viewer accessibility checks (sample photos go here)
           # outside the checkout: the folder that holds the data folder and a compose file is the
-          # install folder, which ZettNAS hides from every file feature
+          # install folder, which Kiboto hides from every file feature
           POOL_PATH: "${{ runner.temp }}/e2e-pool"
           BROWSE_ROOTS: "${{ runner.temp }}/e2e-pool"
           KIBOTO_E2E_MEDIA_DIR: "${{ runner.temp }}/e2e-pool"
@@ -234,7 +234,7 @@ jobs:
               try:
                   with urllib.request.urlopen('http://127.0.0.1:8082/api/health', timeout=1) as r:
                       if r.status == 200:
-                          print('ZettNAS test server is ready and responding on port 8082.')
+                          print('Kiboto test server is ready and responding on port 8082.')
                           break
               except Exception:
                   time.sleep(0.5)

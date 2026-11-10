@@ -7,8 +7,8 @@ from backend.logging_config import JSONLogFormatter
 
 
 def _line(**extra):
-    record = logging.getLogger("ZettNAS").makeRecord(
-        "ZettNAS", logging.INFO, __file__, 1, "backup %s finished", ("nightly",), None, extra=extra or None
+    record = logging.getLogger("Kiboto").makeRecord(
+        "Kiboto", logging.INFO, __file__, 1, "backup %s finished", ("nightly",), None, extra=extra or None
     )
     return json.loads(JSONLogFormatter().format(record))
 

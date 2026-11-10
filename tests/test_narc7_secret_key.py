@@ -1,4 +1,4 @@
-"""NARC-7: the secret key is saved durably, never over another, and ZettNAS won't run without it."""
+"""NARC-7: the secret key is saved durably, never over another, and Kiboto won't run without it."""
 
 import os
 

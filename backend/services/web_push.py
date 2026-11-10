@@ -1,7 +1,7 @@
 """
 Web Push to the installed phone app (M1).
 
-Each browser that turns on notifications sends its push subscription; ZettNAS keeps
+Each browser that turns on notifications sends its push subscription; Kiboto keeps
 them in data/push_subscriptions.json, per user. Alerts are encrypted for that browser
 (RFC 8291, aes128gcm, via http_ece) and signed with this NAS's VAPID key (RFC 8292),
 then posted to the browser vendor's push service (Google, Mozilla, Apple, Microsoft).

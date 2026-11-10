@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Dedicated Desktop & Personalization Application
+ * Kiboto - Dedicated Desktop & Personalization Application
  * Manages Wallpaper gallery, Desktop Themes, Glassmorphism, Dock & Taskbar,
  * Screensavers, Desktop Widgets, and Console Display Customization.
  */

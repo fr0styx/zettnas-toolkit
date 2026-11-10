@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit ARGB Lighting Controller
+ * Kiboto ARGB Lighting Controller
  * Manages physical and virtual lightbar effects, color hex palettes, speed, and schedule.
  */
 import { api } from '../api.js';

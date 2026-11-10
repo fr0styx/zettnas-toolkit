@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - WebDAV API & Streaming Reverse Proxy
+Kiboto - WebDAV API & Streaming Reverse Proxy
 Provides WebDAV daemon controls, modern WebDAV Portal UI, and transparent HTTP proxying on /webdav.
 """
 
@@ -27,7 +27,7 @@ from backend.passwords import verify_password
 from backend.services.webdav_engine import get_webdav_engine
 from backend.services.webdav_portal import render_webdav_login, render_webdav_portal
 
-logger = logging.getLogger("ZettNAS.WebDAVApi")
+logger = logging.getLogger("Kiboto.WebDAVApi")
 
 router = APIRouter(tags=["WebDAV Storage"])
 proxy_router = APIRouter(tags=["WebDAV Proxy"], include_in_schema=False)
@@ -126,7 +126,7 @@ async def update_webdav_config(req: WebdavConfigRequest):
     updates = req.model_dump(exclude_unset=True)
     if updates.pop("auth_enabled", True) is False:
         raise HTTPException(
-            status_code=400, detail="WebDAV always asks for a ZettNAS account; sign-in can't be turned off."
+            status_code=400, detail="WebDAV always asks for a Kiboto account; sign-in can't be turned off."
         )
     try:
         engine.save_config(updates)
@@ -179,7 +179,7 @@ async def webdav_portal_login(request: Request):
             status_code=429,
         )
 
-    # Only real ZettNAS accounts; no default, legacy or copied master password (SEC-02).
+    # Only real Kiboto accounts; no default, legacy or copied master password (SEC-02).
     authenticated = False
     is_admin = False
     user = get_user_by_username(username)
@@ -187,14 +187,14 @@ async def webdav_portal_login(request: Request):
         if await asyncio.to_thread(verify_password, password, user.get("password_hash", "")):
             if user.get("must_change_password"):
                 return HTMLResponse(
-                    render_webdav_login(error_msg="Change your ZettNAS password before using WebDAV."),
+                    render_webdav_login(error_msg="Change your Kiboto password before using WebDAV."),
                     status_code=403,
                 )
             if user.get("mfa_enabled"):
                 # The portal has no second-factor step; a password alone must not open the files.
                 return HTMLResponse(
                     render_webdav_login(
-                        error_msg="Accounts with two-factor sign-in open WebDAV files from inside ZettNAS."
+                        error_msg="Accounts with two-factor sign-in open WebDAV files from inside Kiboto."
                     ),
                     status_code=403,
                 )
@@ -311,7 +311,7 @@ def _get_webdav_portal_user(request: Request, cfg: dict[str, Any]) -> dict[str, 
                 }
             # Unknown, disabled or deleted users get nothing (no admin-name fallback).
 
-    # 2. Check active ZettNAS desktop session (session cookie, bearer token, or state)
+    # 2. Check active Kiboto desktop session (session cookie, bearer token, or state)
     try:
         sess = getattr(request.state, "session", None)
         if not sess:
@@ -417,7 +417,7 @@ async def webdav_proxy_subpath(request: Request, path: str):
         logger.warning(f"[WEBDAV] Directory traversal attempt rejected: {one_line(path)} -> {one_line(abs_target)}")
         raise HTTPException(status_code=403, detail="Access denied: path traversal detected.")
 
-    # Target directory -> Render ZettNAS WebDAV Cloud Portal UI
+    # Target directory -> Render Kiboto WebDAV Cloud Portal UI
     if os.path.isdir(abs_target):
         return HTMLResponse(render_webdav_portal(clean_path, root_path, user_info["username"]), status_code=200)
 

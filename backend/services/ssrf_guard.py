@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Outbound Server-Side Request Forgery (SSRF) Guard
+Kiboto - Outbound Server-Side Request Forgery (SSRF) Guard
 Provides context-aware validation for outbound HTTP/HTTPS and webhook calls.
 Adheres strictly to AGENTS.md §1.4 Cryptographic Security and Homelab Architecture Invariants.
 """

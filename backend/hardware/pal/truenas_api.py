@@ -3,7 +3,7 @@ TrueNAS companion mode (D5): talk to the TrueNAS middleware with an API key inst
 only reading `zpool`.
 
 Set TRUENAS_URL (for example https://truenas.local) and TRUENAS_API_KEY (TrueNAS:
-your user menu → API Keys). ZettNAS then lists pools, datasets and SMB/NFS shares
+your user menu → API Keys). Kiboto then lists pools, datasets and SMB/NFS shares
 through the API, and can take ZFS snapshots, which the ransomware guard uses. It
 never changes pools or shares. TRUENAS_VERIFY_TLS=0 accepts the self-signed
 certificate TrueNAS ships with.

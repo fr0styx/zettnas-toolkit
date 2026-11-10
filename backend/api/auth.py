@@ -658,7 +658,7 @@ def mfa_challenge(req: MfaChallengeRequest, request: Request):
     return _build_session_response(user, token_data.get("rm", False), request, method=method)
 
 
-_MFA_SESSION_ONLY = "Two-factor settings can only be changed while signed in to ZettNAS."
+_MFA_SESSION_ONLY = "Two-factor settings can only be changed while signed in to Kiboto."
 
 
 @router.post("/auth/mfa/setup")
@@ -671,7 +671,7 @@ def setup_mfa(request: Request):
 
     secret = generate_totp_secret()
     recovery_codes = generate_recovery_codes()
-    issuer_name = getattr(config, "NAS_NAME", "ZettNAS") or "ZettNAS"
+    issuer_name = getattr(config, "NAS_NAME", "Kiboto") or "Kiboto"
     otpauth_uri = get_otpauth_uri(user["username"], secret, issuer=issuer_name)
     qr_svg = generate_qr_svg(otpauth_uri)
 
@@ -758,9 +758,7 @@ async def new_smb_password(data: SmbPasswordRequest, request: Request):
     if not user:
         return error_response(401, "Not authenticated.")
     if not _is_person_session(user):
-        return error_response(
-            403, "Make a network share password while signed in to ZettNAS.", error="session_required"
-        )
+        return error_response(403, "Make a network share password while signed in to Kiboto.", error="session_required")
     lock_key = f"smbpw:{user['id']}"
     wait = _lockout_remaining(lock_key)
     if wait > 0:
@@ -1284,7 +1282,7 @@ async def change_user_password(user_id: str, data: UserPasswordChangeRequest, re
         if not _is_person_session(current):
             return error_response(
                 403,
-                "Another person's password can only be changed while signed in to ZettNAS.",
+                "Another person's password can only be changed while signed in to Kiboto.",
                 error="person_session_required",
             )
         sess = getattr(request.state, "session", None) or {}

@@ -2,7 +2,7 @@
 
 Every operator setting is declared once here with its type, default, limits and a line of
 help. A value that can't be used (a port of "abc", an LCD rate of 500) falls back to the
-default with a warning that names the variable, instead of stopping ZettNAS at startup with a
+default with a warning that names the variable, instead of stopping Kiboto at startup with a
 traceback. backend.config reads its constants from here; docs/CONFIGURATION.md is generated
 from these declarations (python -m backend.settings --markdown) and a test keeps it in sync.
 """
@@ -99,7 +99,7 @@ class Settings:
         group="Host",
     )
     containerized: bool = _s(
-        "CONTAINERIZED", False, "Say ZettNAS runs in a container when it can't tell by itself.", group="Host"
+        "CONTAINERIZED", False, "Say Kiboto runs in a container when it can't tell by itself.", group="Host"
     )
     thumb_cache_mb: int = _s(
         "KIBOTO_THUMB_CACHE_MB",
@@ -128,7 +128,7 @@ class Settings:
     app_memory_warn_mb: int = _s(
         "APP_MEMORY_WARN_MB",
         1536,
-        "Warn when ZettNAS itself uses more memory than this, in MB (virtual machines not counted); 0 = off.",
+        "Warn when Kiboto itself uses more memory than this, in MB (virtual machines not counted); 0 = off.",
         lo=0,
         hi=1048576,
         group="Host",
@@ -532,7 +532,7 @@ def _env_names(meta) -> tuple[str, ...]:
 
 
 def current(name: str) -> Any:
-    """One setting as the environment holds it now, for the few read while ZettNAS runs (and changed
+    """One setting as the environment holds it now, for the few read while Kiboto runs (and changed
     by tests while it does); declared, converted and checked like the others."""
     if not _FIELD_CACHE:
         import typing
@@ -577,7 +577,7 @@ def markdown() -> str:
     out = [
         "# Configuration",
         "",
-        "Environment variables ZettNAS reads at startup. Generated from `backend/settings.py`",
+        "Environment variables Kiboto reads at startup. Generated from `backend/settings.py`",
         "(`python -m backend.settings --markdown > docs/CONFIGURATION.md`); a value that can't be",
         "used keeps its default, and the log says which variable and why. Before Kiboto 2.0 the",
         "`KIBOTO_*` variables were named `ZETTNAS_*`; the old names still work until 2.2, and a new",

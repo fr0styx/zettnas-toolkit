@@ -1,4 +1,4 @@
-"""Every drive ZettNAS has seen, by serial number: so a drive that was taken out still has a
+"""Every drive Kiboto has seen, by serial number: so a drive that was taken out still has a
 record (model, size, its last verdict, when it was last seen) next to its warranty details, and
 an owner can see what left the box and when. A drive put back in is simply present again.
 

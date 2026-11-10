@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Chassis Visualizer & Layout API Routes
+Kiboto - Chassis Visualizer & Layout API Routes
 """
 
 from fastapi import APIRouter, Depends

@@ -141,7 +141,7 @@ def test_snmp_api_suite(client, auth_headers):
     res = client.get("/api/snmp/mib")
     assert res.status_code == 200
     text = res.text
-    assert "ZETTLAB-ZETTNAS-MIB DEFINITIONS ::= BEGIN" in text
+    assert "ZETTLAB-KIBOTO-MIB DEFINITIONS ::= BEGIN" in text
     assert "enterprises 58925" in text
     assert "zettnasCpuTemp" in text
 

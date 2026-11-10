@@ -17,7 +17,7 @@ function el(tag, props = {}, ...children) {
 export function nutServerBody(info) {
   const box = el('div', { className: 'nut-server-body' });
   box.append(el('div', { className: 'nut-server-title', textContent: t('nut.title', 'UPS for your other computers (NUT server)') }));
-  box.append(el('p', { className: 'muted', textContent: t('nut.help', 'PCs with NUT (upsmon, WinNUT or another NUT client) watch this UPS through ZettNAS and shut down when the battery runs low, before the NAS does.') }));
+  box.append(el('p', { className: 'muted', textContent: t('nut.help', 'PCs with NUT (upsmon, WinNUT or another NUT client) watch this UPS through Kiboto and shut down when the battery runs low, before the NAS does.') }));
   const toggle = el('input', { type: 'checkbox', name: 'enabled', checked: Boolean(info.enabled) });
   box.append(el('label', { className: 'nut-server-row' }, toggle, ' ', t('nut.enabled', 'Serve the UPS on the home network')));
   const port = el('input', { type: 'number', name: 'port', min: 1, max: 65535, value: String(info.port || 3493) });

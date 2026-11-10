@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Universal Command Palette (Spotlight / Raycast)
+ * Kiboto - Universal Command Palette (Spotlight / Raycast)
  * Global shortcut Cmd+K / Ctrl+K with fuzzy search across applications,
  * containers, file paths, and hardware quick-actions.
  */
@@ -66,7 +66,7 @@ export function initSpotlight() {
             <span><kbd class="spotlight-kbd-badge">↑</kbd> <kbd class="spotlight-kbd-badge">↓</kbd> ${t('sp.nav', 'Navigate')}</span>
             <span><kbd class="spotlight-kbd-badge">↵</kbd> ${t('sp.select', 'Select')}</span>
           </div>
-          <span>${t('sp.brand', 'ZettNAS Spotlight')}</span>
+          <span>${t('sp.brand', 'Kiboto Spotlight')}</span>
         </div>
       </div>
     </div>
@@ -194,7 +194,7 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'app-zettai',
-      title: t('sp.ai', 'Ask Zetty and photo search'),
+      title: t('sp.ai', 'Ask Kib and photo search'),
       subtitle: t('sp.ai_sub', 'Ask about your recipes and documents, or find photos by scene or colour'),
       icon: '🧠',
       category: 'app',
@@ -384,7 +384,7 @@ export function parseNaturalLanguageAction(rawQuery) {
           const snapName = res?.snapshot_name || res?.name || `snap_${Date.now()}`;
           showToast(t('toast.snapshot_created_for_pool', 'Snapshot \'{snapName}\' created for pool \'{targetPool}\'', { snapName: snapName, targetPool: targetPool }), 'success', 3500);
         } catch (e) {
-          const errMsg = e?.detail || e?.message || t('storage.snapshots_by_host', 'The host system makes snapshots here, not ZettNAS');
+          const errMsg = e?.detail || e?.message || t('storage.snapshots_by_host', 'The host system makes snapshots here, not Kiboto');
           showToast(t('toast.snapshot_failed_for', 'Snapshot failed for \'{targetPool}\': {errMsg}', { targetPool: targetPool, errMsg: errMsg }), 'error', 4500);
         }
       }
@@ -556,7 +556,7 @@ export function filterSpotlightResults(query = '') {
     if (cleanPrompt) {
       const aiDynamicItem = {
         id: `dyn-zettai-${isPhoto ? 'photo' : 'ask'}`,
-        title: isPhoto ? t('sp.photo_dyn', 'Photo search: “{q}”', { q: cleanPrompt }) : t('sp.ask_dyn', 'Ask Zetty: “{q}”', { q: cleanPrompt }),
+        title: isPhoto ? t('sp.photo_dyn', 'Photo search: “{q}”', { q: cleanPrompt }) : t('sp.ask_dyn', 'Ask Kib: “{q}”', { q: cleanPrompt }),
         subtitle: isPhoto
           ? t('sp.photo_dyn_sub', 'Find photos by scene, object or colour, without waking drives')
           : t('sp.ask_dyn_sub', 'An answer from your files, with its sources'),

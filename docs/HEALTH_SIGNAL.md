@@ -2,7 +2,7 @@
 
 An opt-in, once-a-week report that tells the project which versions, platforms and features
 are in use, so fixes and testing go where people are. **It is off by default.** Turn it on in
-Mission Control, under Software Updates: **Help improve ZettNAS**. The card shows the exact
+Mission Control, under Software Updates: **Help improve Kiboto**. The card shows the exact
 report before you do.
 
 ## What is sent
@@ -25,7 +25,7 @@ One small JSON object a week, for example:
 | Field | Meaning |
 |---|---|
 | `id` | random, made when you turn the report on; not derived from the machine; forgotten when you turn it off |
-| `version` | the ZettNAS version |
+| `version` | the Kiboto version |
 | `platform` | the storage platform: `unraid`, `truenas`, `proxmox`, `generic_linux`, … |
 | `arch` | the processor type, e.g. `x86_64`, `aarch64` |
 | `variant` | `full` or `core` image |

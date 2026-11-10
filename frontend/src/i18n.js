@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Lightweight Internationalization (i18n) Engine
+ * Kiboto - Lightweight Internationalization (i18n) Engine
  * Supported Languages: English (en), Deutsch (de), 简体中文 (zh), Français (fr), Español (es).
  */
 

@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Desktop Right-Click Context Menu Engine
+ * Kiboto - Desktop Right-Click Context Menu Engine
  * Provides consumer-grade macOS / Windows 11 style glassmorphic desktop context menu
  * with quick shortcuts to wallpaper styling, themes, widgets, dock, fullscreen, and lock.
  */

@@ -1,4 +1,4 @@
-# ADR 0001: ZettNAS as an installable operating system
+# ADR 0001: Kiboto as an installable operating system
 
 - **Status:** Proposed
 - **Date:** 2026-10-23
@@ -6,16 +6,16 @@
 
 ## Context
 
-Today ZettNAS runs as a container on a host OS that someone else maintains. That host
+Today Kiboto runs as a container on a host OS that someone else maintains. That host
 provides the kernel, ZFS, Docker, boot and updates. People who want a NAS without a host OS
-to look after need ZettNAS to install directly on the hardware, like TrueNAS, Unraid or
+to look after need Kiboto to install directly on the hardware, like TrueNAS, Unraid or
 OpenMediaVault.
 
 An appliance OS has to:
 
 1. update safely: a failed update must never leave the box unbootable;
 2. never put data disks at risk by accident;
-3. keep the current container product working, since that is how most people run ZettNAS;
+3. keep the current container product working, since that is how most people run Kiboto;
 4. be something a small team can maintain.
 
 ## Decision (proposed)
@@ -27,7 +27,7 @@ An appliance OS has to:
 - x86_64 with UEFI first. ARM64 comes later, once a reference board is chosen.
 - The root filesystem is read-only (EROFS) and checked with dm-verity. Settings and app
   state live in a separate writable partition.
-- The ZettNAS backend runs on the host as a systemd service. User apps keep running in
+- The Kiboto backend runs on the host as a systemd service. User apps keep running in
   Docker, so the existing app catalog and compose stacks work unchanged.
 
 Why Debian: it has the longest support window of the community distros, it is the base the
@@ -71,7 +71,7 @@ These are rules the installer and the storage code must both follow:
 2. **The installer writes only to the disk the user picks**, confirmed by model and serial
    number, not by device name.
 3. **Disks are identified by `/dev/disk/by-id`**, and pools are imported by GUID, so a change
-   in device order never points ZettNAS at the wrong disk.
+   in device order never points Kiboto at the wrong disk.
 4. **A disk with anything on it is not touched without a typed confirmation.** That includes
    partitions, a pool label, a filesystem or RAID metadata. The confirmation screen says what
    was found.

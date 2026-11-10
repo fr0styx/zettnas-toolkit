@@ -5,7 +5,7 @@ The file manager used to let any signed-in user act anywhere under the browse
 roots except a short deny-list. Now a non-admin user can reach only:
 
 - their home folder (read and write);
-- shares the platform knows about (host shares on Unraid/TrueNAS, ZettNAS Samba
+- shares the platform knows about (host shares on Unraid/TrueNAS, Kiboto Samba
   shares), at the level set for them: "none", "read" or "write";
 - the folders above those, to list them (nothing else is shown in them).
 
@@ -31,7 +31,7 @@ from backend import config
 from backend.fsutil import atomic_write_json, read_json
 from backend.ignored_errors import ignored
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 LEVELS = ("none", "read", "write")
 _CACHE_TTL = 30.0
@@ -83,7 +83,7 @@ def save_config(cfg: dict[str, Any]) -> dict[str, Any]:
 
 def share_level(cfg: dict[str, Any], share: str, username: str, role_id: str) -> str:
     """The level share access gives this person on this share, Samba's own lists left out
-    (the lists ZettNAS writes into smb.conf come from this: B11, SEC-28)."""
+    (the lists Kiboto writes into smb.conf come from this: B11, SEC-28)."""
     entry = cfg["shares"].get(share, {})
     return (
         (entry.get("users") or {}).get(username.lower())

@@ -1,5 +1,5 @@
 """
-Where ZettNAS looks for a local AI runtime (AI-05).
+Where Kiboto looks for a local AI runtime (AI-05).
 
 Prompts and file excerpts go to whatever answers on the Ollama / OpenAI ports,
 so only places that are this NAS are tried:

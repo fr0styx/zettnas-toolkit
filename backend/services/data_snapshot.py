@@ -1,5 +1,5 @@
 """
-Pre-update snapshots of the ZettNAS data folder (OPS-03).
+Pre-update snapshots of the Kiboto data folder (OPS-03).
 
 The updater takes one right after stopping the old container and restores it
 when it rolls back, so the previous version never runs against databases the
@@ -45,7 +45,7 @@ def _copy_db(src: str, dst: str) -> None:
     from backend import db_crypto
 
     if db_crypto.applies_to(src) and db_crypto.is_encrypted(src) and not db_crypto.enabled():
-        # The updater's helper has no data key (AI-20). ZettNAS is stopped while it snapshots, so the
+        # The updater's helper has no data key (AI-20). Kiboto is stopped while it snapshots, so the
         # encrypted file is copied as it is; unsaved changes in its WAL would be lost, so refuse then.
         wal = src + "-wal"
         if os.path.exists(wal) and os.path.getsize(wal) > 0:
@@ -202,7 +202,7 @@ def list_snapshots(data_dir: str) -> list[dict[str, Any]]:
 
 
 def restore_snapshot(snapshot_dir: str, data_dir: str) -> list[str]:
-    """Copies a snapshot back over data_dir. Run only while ZettNAS is stopped."""
+    """Copies a snapshot back over data_dir. Run only while Kiboto is stopped."""
     with open(os.path.join(snapshot_dir, MANIFEST), encoding="utf-8") as f:
         files = json.load(f).get("files") or []
     restored = []

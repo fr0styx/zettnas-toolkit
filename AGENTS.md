@@ -1,6 +1,6 @@
-# AGENTS.md — Developer & AI Agent Guidelines for ZettNAS Toolkit
+# AGENTS.md — Developer & AI Agent Guidelines for Kiboto
 
-Welcome, Agent! This repository contains **ZettNAS Toolkit** (**NAS WORKBENCH**), an enterprise-grade hardware orchestration suite, glassmorphic Web Desktop OS, and Docker management platform.
+Welcome, Agent! This repository contains **Kiboto** (**NAS WORKBENCH**), an enterprise-grade hardware orchestration suite, glassmorphic Web Desktop OS, and Docker management platform.
 
 This document serves as your operational blueprint, covering the architecture, development invariants, testing protocols, and core philosophies necessary to build, debug, and maintain this codebase with zero regressions.
 

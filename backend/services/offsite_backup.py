@@ -1,8 +1,8 @@
 """Versioned, deduplicated, encrypted offsite backup with restic (Batch 6).
 
 A repository is a folder (a USB disk, another NAS), an rclone remote ("rclone:name:path",
-using ZettNAS's rclone config, so every cloud rclone supports works) or a restic REST server
-("rest:http://host:8000/name/", for example another ZettNAS running the backup-target app,
+using Kiboto's rclone config, so every cloud rclone supports works) or a restic REST server
+("rest:http://host:8000/name/", for example another Kiboto running the backup-target app,
 FEAT-08). restic encrypts
 everything with the repository key, stores each file once however many versions exist, and
 keeps the versions the retention rules ask for. The key lives in the data folder; without it
@@ -241,7 +241,7 @@ def reseal_rest_passwords() -> int:
 
 
 def delete_repo(repo_id: str) -> bool:
-    """Forgets the backup in ZettNAS. The repository and its key file stay where they are."""
+    """Forgets the backup in Kiboto. The repository and its key file stay where they are."""
     with _LOCK:
         repos = _repos()
         found = repos.pop(repo_id, None) is not None
@@ -448,7 +448,7 @@ def recovery_kit(repo_id: str) -> str:
     key = recovery_key(repo_id)
     loc = repo["location"]
     lines = [
-        "ZettNAS off-site backup: recovery kit",
+        "Kiboto off-site backup: recovery kit",
         "Keep this outside the NAS (a password manager, a USB stick in a drawer, or printed).",
         "Anyone with this kit can read the backup.",
         "",
@@ -951,7 +951,7 @@ def _safe(fn: Any, repo_or_id: Any, *args: Any, **kwargs: Any) -> None:
             from backend.services.notifications import send_notification
 
             send_notification(
-                "ZettNAS offsite backup failed",
+                "Kiboto offsite backup failed",
                 f"{repo_id}: {e}",
                 level="warning",
                 event_type="backup",

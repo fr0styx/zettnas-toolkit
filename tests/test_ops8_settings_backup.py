@@ -1,4 +1,4 @@
-"""Scheduled, encrypted ZettNAS settings backups to a pool folder or a remote (OPS-8)."""
+"""Scheduled, encrypted Kiboto settings backups to a pool folder or a remote (OPS-8)."""
 
 import io
 import zipfile

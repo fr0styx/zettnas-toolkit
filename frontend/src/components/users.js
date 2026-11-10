@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Multi-User Identity, RBAC & Two-Factor Authentication Component
+ * Kiboto - Multi-User Identity, RBAC & Two-Factor Authentication Component
  * Handles User inventory, Role assignment, Session revocation, and TOTP 2FA setup.
  */
 

@@ -1,4 +1,4 @@
-"""Who may use Zetty, and a log of who did (B8: AI access per role; B11, AI-26).
+"""Who may use Kib, and a log of who did (B8: AI access per role; B11, AI-26).
 
 Each role has two switches: "ask" (chat, grounded answers and their file tools) and "search"
 (AI search over files and photos). Kids and guests start with both off on a new install;
@@ -69,11 +69,11 @@ def allowed(principal: Any, cfg: dict[str, Any] | None = None, feature: str = "a
 
 
 def require_ai_access(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> AuthenticatedPrincipal:
-    """FastAPI dependency for asking Zetty (chat and grounded answers)."""
+    """FastAPI dependency for asking Kib (chat and grounded answers)."""
     if not allowed(principal):
         log_request(principal, "chat", "", False, "refused")
         raise ShownServerError(
-            "Zetty is turned off for your account. An administrator can turn it on in AI settings.",
+            "Kib is turned off for your account. An administrator can turn it on in AI settings.",
             status_code=403,
             error="ai_off_for_role",
         )

@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Calendar, Reminders & External Provider Sync API
+Kiboto - Calendar, Reminders & External Provider Sync API
 Provides storage for user notes/reminders, tasks, and Google Calendar / iCal feed synchronization.
 Adheres strictly to AGENTS.md §1.2 Spindown-Safe and §1.4 Cryptographic Security & SSRF Invariants.
 """
@@ -211,7 +211,7 @@ async def _sync_single_feed(feed: dict[str, Any]) -> list[dict[str, Any]]:
             raw_url,
             context=where,
             headers={
-                "User-Agent": "ZettNAS-Calendar/1.0 (Home Cloud OS; +https://zettnas.local)",
+                "User-Agent": "Kiboto-Calendar/1.0 (Home Cloud OS; +https://zettnas.local)",
                 "Accept": "text/calendar, text/plain, */*",
             },
             timeout=12,
@@ -538,10 +538,10 @@ async def export_calendar_ics(principal: AuthenticatedPrincipal = Depends(get_cu
     lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//ZettNAS Toolkit//Desktop Calendar 1.0//EN",
+        "PRODID:-//Kiboto//Desktop Calendar 1.0//EN",
         "CALSCALE:GREGORIAN",
         "METHOD:PUBLISH",
-        "X-WR-CALNAME:ZettNAS Reminders & Notes",
+        "X-WR-CALNAME:Kiboto Reminders & Notes",
     ]
 
     for n in notes:

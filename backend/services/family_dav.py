@@ -3,7 +3,7 @@ office suite, so the phones sync a shared calendar and contacts kept at home.
 
 New installs of the office suite add them as part of their set-up (catalog_templates, its
 "after_start"); an office suite installed before can add them with one click (add_apps). The
-phones reach them at Nextcloud's DAV address, signing in with their ZettNAS account.
+phones reach them at Nextcloud's DAV address, signing in with their Kiboto account.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ STEPS = [
 
 
 def office_container() -> dict[str, Any] | None:
-    """The office suite ZettNAS installed: its container name, whether it runs, its web port."""
+    """The office suite Kiboto installed: its container name, whether it runs, its web port."""
     from backend.services import docker_client
 
     query = urllib.parse.quote(json.dumps({"label": ["com.zettnas.managed=1"]}))
@@ -68,7 +68,7 @@ _SHARED_CALENDAR = re.compile(r"/remote\.php/dav/public-calendars/([A-Za-z0-9]{8
 
 
 def family_calendar_url(url: str) -> str | None:
-    """The address ZettNAS reads a family calendar from, for the office suite's own subscription link.
+    """The address Kiboto reads a family calendar from, for the office suite's own subscription link.
 
     In the office suite's Calendar, Share → Copy subscription link gives
     webcal://<this NAS>:<its port>/remote.php/dav/public-calendars/<token>?export. That is a
@@ -112,7 +112,7 @@ def status(host: str) -> dict[str, Any]:
 def ios_profile(host: str, port: int | None) -> bytes:
     """A configuration profile that adds the family calendar and contacts to an iPhone or iPad
     (NFEAT-7): a CalDAV and a CardDAV account at the office suite. It holds no name or password;
-    the phone asks for the person's ZettNAS name and password, so one profile serves everyone."""
+    the phone asks for the person's Kiboto name and password, so one profile serves everyone."""
     import plistlib
     import uuid
 
@@ -138,8 +138,8 @@ def ios_profile(host: str, port: int | None) -> bytes:
             "PayloadVersion": 1,
             "PayloadIdentifier": ident,
             "PayloadUUID": str(uuid.uuid5(uuid.NAMESPACE_URL, ident)).upper(),
-            "PayloadDisplayName": "ZettNAS family calendar and contacts",
-            "PayloadDescription": "Adds the family calendar and contacts kept on ZettNAS.",
+            "PayloadDisplayName": "Kiboto family calendar and contacts",
+            "PayloadDescription": "Adds the family calendar and contacts kept on Kiboto.",
             "PayloadContent": [
                 account("caldav", "CalDAV", "Family calendar"),
                 account("carddav", "CardDAV", "Family contacts"),

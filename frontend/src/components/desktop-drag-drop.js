@@ -1,7 +1,7 @@
 /**
- * ZettNAS Toolkit - Desktop Wallpaper Drag & Drop Ingestion
+ * Kiboto - Desktop Wallpaper Drag & Drop Ingestion
  * Allows users to drag any image file from their OS desktop / file explorer
- * and drop it anywhere on the ZettNAS desktop to immediately upload and set as wallpaper.
+ * and drop it anywhere on the Kiboto desktop to immediately upload and set as wallpaper.
  */
 import { showToast } from '../toast.js';
 

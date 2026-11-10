@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Root Application Entrypoint Shim
+Kiboto - Root Application Entrypoint Shim
 Delegates to backend.main for modular backend architecture.
 """
 

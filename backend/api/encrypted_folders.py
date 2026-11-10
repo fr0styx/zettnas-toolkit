@@ -168,7 +168,7 @@ async def put_unlock_at_start(name: str, req: StartIn) -> dict[str, Any]:
 
 @router.delete("/{name}", dependencies=[MANAGE])
 async def delete_encrypted_folder(name: str) -> dict[str, Any]:
-    """Takes a locked folder off ZettNAS; its encrypted files stay in the share."""
+    """Takes a locked folder off Kiboto; its encrypted files stay in the share."""
     from backend.services import encrypted_folders as ef
 
     return await asyncio.to_thread(_errors, ef.forget, name)

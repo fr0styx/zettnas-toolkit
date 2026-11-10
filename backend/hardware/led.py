@@ -11,7 +11,7 @@ from backend.ignored_errors import ignored
 from backend.proc import run_bounded
 from backend.state import Z_STATE
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 LED_PORT = _settings.current("led_port")
 

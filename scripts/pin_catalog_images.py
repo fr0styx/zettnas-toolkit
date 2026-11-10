@@ -1,6 +1,6 @@
 """Resolves every built-in catalog image to the digest its tag points at today and writes
 backend/services/catalog_digests.json. Run at release time: apps then install the exact image
-that shipped (and soaked) with that ZettNAS version; updates still follow the tag.
+that shipped (and soaked) with that Kiboto version; updates still follow the tag.
 
     python scripts/pin_catalog_images.py            # refresh every entry
     python scripts/pin_catalog_images.py --missing  # only images without an entry

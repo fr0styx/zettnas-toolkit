@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Dynamic Parametric Chassis Engine
+Kiboto - Dynamic Parametric Chassis Engine
 Auto-scales across Mini-PCs, Desktop Towers, and Enterprise Rackmounts (1-24 bays),
 with persistent user bay slot mapping and Motherboard NVMe twin layout.
 """

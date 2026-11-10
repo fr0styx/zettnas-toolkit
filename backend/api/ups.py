@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - UPS & Power Management API Router
+Kiboto - UPS & Power Management API Router
 Provides REST endpoints for live telemetry, configuration, USB/LAN auto-discovery,
 connection testing, battery self-test execution, outage simulation, and event logs.
 """
@@ -29,7 +29,7 @@ from backend.ignored_errors import ignored
 from backend.paging import PageParams
 from backend.services.ups_watchdog import trigger_outage_simulation
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 router = APIRouter(tags=["UPS & Power Integrity"])
 

@@ -1,11 +1,11 @@
 # ADR 0005: No default memory limit on the app
 
 - **Status:** Accepted (PERF-31, chosen 28 Oct 2026)
-- **Decides:** whether the ZettNAS container gets a memory limit by default
+- **Decides:** whether the Kiboto container gets a memory limit by default
 
 ## Context
 
-Indexing, thumbnails and AI work can make ZettNAS use a lot of memory for a while. A hard limit
+Indexing, thumbnails and AI work can make Kiboto use a lot of memory for a while. A hard limit
 protects the host, but a limit set too low gets the app killed in the middle of that work, and
 the right number depends on the box and on what else runs on it.
 

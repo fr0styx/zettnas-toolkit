@@ -67,7 +67,7 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
     // Setup simulated Console Window, LCD Screen, and Mini Canvas elements
     document.body.innerHTML = `
       <div id="console-window" class="chassis-front-panel">
-        <span class="chassis-engraved-text" id="chassis-panel-engraved">ZETTNAS • SYSTEM CONSOLE</span>
+        <span class="chassis-engraved-text" id="chassis-panel-engraved">KIBOTO • SYSTEM CONSOLE</span>
         <div id="screen" class="lcd-theme-cyber">
           <div class="card card-storage"><span class="card-title-txt">STORAGE</span></div>
           <div class="card card-cpu"><span class="card-title-txt">CPU</span></div>
@@ -84,7 +84,7 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
           <div class="clock">12:00</div>
         </div>
       </div>
-      <span id="suite-brand-title">ZETTNAS</span>
+      <span id="suite-brand-title">KIBOTO</span>
       <span id="suite-brand-badge">NAS WORKBENCH</span>
     `;
     const consoleWin = document.getElementById('console-window');
@@ -109,7 +109,7 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
     expect(screenEl.classList.contains('lcd-theme-cyber')).toBe(true);
     expect(miniCanvas.classList.contains('lcd-theme-amber')).toBe(false);
     expect(consoleWin.classList.contains('lcd-theme-amber')).toBe(false);
-    expect(engraved.textContent).toBe('ZETTNAS • SYSTEM CONSOLE');
+    expect(engraved.textContent).toBe('KIBOTO • SYSTEM CONSOLE');
     expect(storageTitle.textContent).toBe('STORAGE');
 
     // 2. Apply Yak Desktop Theme
@@ -117,7 +117,7 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
     expect(document.body.classList.contains('theme-yak')).toBe(true);
     // Console window and screen MUST NOT have Yak freight changes
     expect(consoleWin.classList.contains('lcd-theme-yak')).toBe(false);
-    expect(engraved.textContent).toBe('ZETTNAS • SYSTEM CONSOLE');
+    expect(engraved.textContent).toBe('KIBOTO • SYSTEM CONSOLE');
     expect(storageTitle.textContent).toBe('STORAGE');
     expect(lightbar.style.background).toBe('');
 
@@ -128,7 +128,7 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
   it('strictly isolates LCD Screen Theme: applyLcdTheme modifies screen/mini canvas/console window, NEVER touches body', () => {
     document.body.innerHTML = `
       <div id="console-window" class="chassis-front-panel">
-        <span class="chassis-engraved-text" id="chassis-panel-engraved">ZETTNAS • SYSTEM CONSOLE</span>
+        <span class="chassis-engraved-text" id="chassis-panel-engraved">KIBOTO • SYSTEM CONSOLE</span>
         <div id="screen" class="lcd-theme-cyber">
           <div class="card card-storage"><span class="card-title-txt">STORAGE</span></div>
           <div class="card card-cpu"><span class="card-title-txt">CPU</span></div>

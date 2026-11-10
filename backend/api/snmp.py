@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - SNMP Monitoring, Configuration & Enterprise MIB Management API (Phase 3)
+Kiboto - SNMP Monitoring, Configuration & Enterprise MIB Management API (Phase 3)
 Supports SNMP v2c/v3 configuration, live OID mapping from in-memory telemetry,
 and downloadable enterprise MIB definitions.
 """
@@ -158,11 +158,11 @@ def get_evaluated_oids():
 
 @router.get("/mib", response_class=PlainTextResponse, dependencies=[Depends(require_scope("system:view"))])
 def download_mib_file():
-    """Returns downloadable SMIv2 ZETTLAB-ZETTNAS-MIB file."""
-    return """-- ZETTLAB-ZETTNAS-MIB.txt
--- Enterprise Management Information Base for ZettNAS Appliance Suite
+    """Returns downloadable SMIv2 ZETTLAB-KIBOTO-MIB file."""
+    return """-- ZETTLAB-KIBOTO-MIB.txt
+-- Enterprise Management Information Base for Kiboto Appliance Suite
 
-ZETTLAB-ZETTNAS-MIB DEFINITIONS ::= BEGIN
+ZETTLAB-KIBOTO-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE, Integer32, Gauge32, enterprises
@@ -174,7 +174,7 @@ zettlab MODULE-IDENTITY
     LAST-UPDATED "202610120000Z"
     ORGANIZATION "Zettlab Hardware Technologies"
     CONTACT-INFO "support@zettlab.com"
-    DESCRIPTION  "Management MIB for ZettNAS Toolkit & NAS Appliances"
+    DESCRIPTION  "Management MIB for Kiboto & NAS Appliances"
     ::= { enterprises 58925 }
 
 zettnasObjects OBJECT IDENTIFIER ::= { zettlab 1 }

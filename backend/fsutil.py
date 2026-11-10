@@ -247,7 +247,7 @@ def read_json_cached(path: str, default: Any = None, max_age: float = 3.0) -> An
 # visible inside a browse root (Unraid: /mnt/user/appdata/zettnas-toolkit/data), under another
 # path than DATA_DIR. A marker file with a random id finds those aliases without guessing.
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 DATA_MARKER = ".zettnas-data-id"
 _PROTECTED: list[str] | None = None

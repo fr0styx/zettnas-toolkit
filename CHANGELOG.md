@@ -1,4 +1,6 @@
-# ZettNAS Toolkit - Release Changelog
+# Kiboto - Release Changelog
+
+Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep that name.
 
 ## Unreleased
 
@@ -7,6 +9,12 @@
 ZettNAS is becoming **Kiboto**, and its assistant Zetty becomes **Kib**. The rename lands in steps;
 installs made before keep working through it.
 
+- **Kiboto and Kib on screen**: the interface says Kiboto and the assistant is Kib ("Ask Kib") in all
+  five languages, including the desktop, Mission Control, the setup wizard, the front screen's brand
+  and the web app's name; so do alerts, notifications, emails and the activity log. The ransomware
+  guard's file in each share is renamed to `!Kiboto-guard-file.docx` the next time it is checked.
+  The README and every doc say Kiboto too, with kiboto.net as the website. Zettlab and ZettOS, the
+  hardware maker's names, stay.
 - **Settings are named KIBOTO_\***: every `ZETTNAS_*` environment variable is now `KIBOTO_*`
   (`KIBOTO_DATA_KEY`, `KIBOTO_PLATFORM`, ...). The old names still work until Kiboto 2.2, and a new
   name set beside an old one wins. The compose files fall back to a `.env` that still uses the old

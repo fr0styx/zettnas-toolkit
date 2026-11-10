@@ -607,7 +607,7 @@
     font-size: 13px !important;
   }
 
-  /* 2. ZettNAS System Console (LCD Preview) on Mobile */
+  /* 2. Kiboto System Console (LCD Preview) on Mobile */
   #console-modal-overlay #console-window,
   #console-window.chassis-front-panel {
     position: fixed !important;

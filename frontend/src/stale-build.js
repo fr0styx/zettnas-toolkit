@@ -25,7 +25,7 @@ export function offerReload(win = window) {
   if (now - _shownAt < QUIET_MS) return false; // one offer per minute, however many clicks fail
   _shownAt = now;
   showConfirmToast(
-    t("update.reload_title", "ZettNAS was updated"),
+    t("update.reload_title", "Kiboto was updated"),
     t("update.reload_body", "This page is from the previous version, so some parts cannot open. Reload to use the new version."),
     () => win.location.reload(),
     null,

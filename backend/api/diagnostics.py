@@ -1,4 +1,4 @@
-# ZettNAS Toolkit - System Diagnostics & Support Bundle Router
+# Kiboto - System Diagnostics & Support Bundle Router
 import asyncio
 import io
 import json
@@ -502,7 +502,7 @@ def _build_summary_sync() -> dict[str, Any]:
 
     # Generate Markdown
     md_lines = [
-        "### ZettNAS Toolkit Support Diagnostics",
+        "### Kiboto Support Diagnostics",
         f"- **Health Status:** `{executive_status}`",
         f"- **Toolkit Version:** `{__version__}`",
         f"- **Host OS / Kernel:** `{platform.system()} {platform.release()} ({platform.machine()})`",

@@ -15,7 +15,7 @@ from backend.main import app
 
 
 def test_replication_router_endpoints(client, auth_headers, tmp_path, monkeypatch):
-    """REL-5: replication runs only where ZettNAS manages the pools with their tools; elsewhere
+    """REL-5: replication runs only where Kiboto manages the pools with their tools; elsewhere
     listing still works and creating or running a job says why."""
     monkeypatch.setattr("backend.services.replication_engine.REPLICATION_JOBS_FILE", str(tmp_path / "jobs.json"))
     monkeypatch.setattr("backend.services.replication_engine.REPLICATION_HISTORY_FILE", str(tmp_path / "hist.json"))

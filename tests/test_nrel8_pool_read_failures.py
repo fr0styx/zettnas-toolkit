@@ -17,7 +17,7 @@ def test_a_failed_read_keeps_problems_and_warns_once(tmp_path, monkeypatch):
     monkeypatch.setattr(pa, "_read", lambda: ({}, {}))
     monkeypatch.setattr(pa, "problems", lambda pools, scrubs: [dict(ITEM)])
     pa.check_and_alert(now=1000.0, send=send)
-    assert sent == ["ZettNAS: Pool tank is degraded"]
+    assert sent == ["Kiboto: Pool tank is degraded"]
 
     def broken():
         raise OSError("emhttp ini not readable")
@@ -27,7 +27,7 @@ def test_a_failed_read_keeps_problems_and_warns_once(tmp_path, monkeypatch):
         out = pa.check_and_alert(now=1000.0 + k, send=send)
         assert out["fixed"] == []
     assert [t for t in sent if "fixed" in t] == []
-    assert sent.count("ZettNAS can't read the storage health") == 1
+    assert sent.count("Kiboto can't read the storage health") == 1
     assert pa.current(max_age=0, now=2000.0) == [ITEM]  # still known
 
     monkeypatch.setattr(pa, "_read", lambda: ({}, {}))

@@ -89,7 +89,7 @@ describe('container inspector on classes (NUX-15)', () => {
     expect(term.textContent).toContain('hello');
   });
 
-  it('builds the edit form, locked for ZettNAS itself', async () => {
+  it('builds the edit form, locked for Kiboto itself', async () => {
     for (const name of ['jellyfin', 'zettnas-toolkit']) {
       _resetContainerModalForTesting();
       const d = details();

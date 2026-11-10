@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - First-Run Setup Wizard
+ * Kiboto - First-Run Setup Wizard
  * Guides the user through initial onboarding: hardware verification,
  * setting a secure administrator password, host operating role,
  * UPS detection, and notification channels.
@@ -34,7 +34,7 @@ function setWizardError(msg, step = 2) {
 /** The server's name in the browser tab (UX-17). */
 export function applyServerName(name) {
   const clean = String(name || '').trim();
-  document.title = clean ? `${clean} · ZettNAS` : 'ZettNAS';
+  document.title = clean ? `${clean} · Kiboto` : 'Kiboto';
   const drawer = document.getElementById('drawer-nas-name');
   if (drawer && clean) drawer.textContent = clean;
 }
@@ -95,7 +95,7 @@ export function fillTimezones(select, current = '') {
   }));
 }
 
-/** Step 3 and 4: what the storage is, and whether ZettNAS or the host makes shares. */
+/** Step 3 and 4: what the storage is, and whether Kiboto or the host makes shares. */
 export async function loadStorageStep() {
   const info = document.getElementById('setup-storage-info');
   const shareHost = document.getElementById('setup-share-host');
@@ -108,14 +108,14 @@ export async function loadStorageStep() {
     if (info) {
       const names = list.map((p) => p.name || p.id).filter(Boolean).slice(0, 4).join(', ');
       info.textContent = observer
-        ? t('setup.storage_host', '{host} looks after the drives and storage; ZettNAS shows and uses what it sets up.', { host })
+        ? t('setup.storage_host', '{host} looks after the drives and storage; Kiboto shows and uses what it sets up.', { host })
         : list.length
           ? t('setup.storage_pools', 'Storage ready: {names}.', { names })
           : t('setup.storage_none', 'No storage pool yet. You can create one later in Storage.');
     }
     if (observer && shareHost && shareForm) {
       shareHost.hidden = false;
-      shareHost.textContent = t('setup.share_host', 'Shared folders are made in {host} itself; ZettNAS lists them under Shares.', { host });
+      shareHost.textContent = t('setup.share_host', 'Shared folders are made in {host} itself; Kiboto lists them under Shares.', { host });
       shareForm.hidden = true;
     }
     return { observer };
@@ -475,7 +475,7 @@ export function openSetupWizard(stats = null, forced = false) {
         currentStats.chassis === 'd4' ? 'Zettlab D4 (4-Bay)' :
         currentStats.chassis === 'd6u' ? 'Zettlab D6 Ultra (6-Bay)' :
         currentStats.chassis === 'd8u' ? 'Zettlab D8 Ultra (8-Bay)' :
-        (currentStats.chassis ? String(currentStats.chassis).toUpperCase() : (currentStats.model || currentStats.name || 'ZettNAS Hardware'))
+        (currentStats.chassis ? String(currentStats.chassis).toUpperCase() : (currentStats.model || currentStats.name || 'Kiboto Hardware'))
       );
       hwModel.textContent = friendlyName;
     }

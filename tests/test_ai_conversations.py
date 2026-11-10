@@ -1,5 +1,5 @@
 """
-tests/test_ai_conversations.py — Test suite for ZettAI multi-turn conversation persistence & REST API.
+tests/test_ai_conversations.py — Test suite for Kib multi-turn conversation persistence & REST API.
 """
 
 import os
@@ -341,7 +341,7 @@ def test_api_chat_with_conversation_id_persists_turns(client, auth_headers, temp
 
 
 # ---------------------------------------------------------------------------
-# ZettAI Tools & Fast Math Reasoning Tests
+# Kib Tools & Fast Math Reasoning Tests
 # ---------------------------------------------------------------------------
 
 

@@ -1,4 +1,4 @@
-"""One person's data, handed over or forgotten (B8): chats, Zetty's log, what search learned."""
+"""One person's data, handed over or forgotten (B8): chats, Kib's log, what search learned."""
 
 import json
 import sqlite3

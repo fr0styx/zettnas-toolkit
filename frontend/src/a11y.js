@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit Accessibility (A11y) Engine
+ * Kiboto Accessibility (A11y) Engine
  * - Attaches keyboard listeners (Enter/Space) to interactive elements
  * - Gives interactive non-semantic elements role="button" and tabindex="0"
  * - Names icon-only ones from their translated title; it never guesses from text and never

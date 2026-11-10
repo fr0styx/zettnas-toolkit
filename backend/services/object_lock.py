@@ -3,7 +3,7 @@
 With Object Lock (Backblaze B2 calls it File Lock) every write is kept for the bucket's
 retention period. A delete, by restic or by someone holding this NAS's keys, only hides the
 newest version; the locked versions stay and can be brought back until the period ends. restic
-works unchanged; ZettNAS keeps every version inside the period (forget --keep-within), shows how
+works unchanged; Kiboto keeps every version inside the period (forget --keep-within), shows how
 long the newest copy is locked, and asks the provider whether the bucket really is locked:
 Backblaze through its own API, Amazon S3, Wasabi and other S3 services with a signed
 GET ?object-lock. Only the bucket's settings are read; nothing is written.

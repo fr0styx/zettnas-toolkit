@@ -1,4 +1,4 @@
-"""B14 AI-39: ZettNAS sends EMBEDDING_TOKEN to the embedding server, and only when it is set."""
+"""B14 AI-39: Kiboto sends EMBEDDING_TOKEN to the embedding server, and only when it is set."""
 
 import json
 from unittest.mock import patch

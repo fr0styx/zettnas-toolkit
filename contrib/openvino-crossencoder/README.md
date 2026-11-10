@@ -1,11 +1,11 @@
 # OpenVINO cross-encoder server (reranker)
 
 A cross-encoder reads the question together with each text, which orders search results better
-than vectors alone. ZettNAS uses it as its **reranker** (`bge-reranker-v2-m3`, Apache-2.0, 100+
-languages; AI config `rerank_endpoint`): it re-orders the top search results, and before Ask Zetty
+than vectors alone. Kiboto uses it as its **reranker** (`bge-reranker-v2-m3`, Apache-2.0, 100+
+languages; AI config `rerank_endpoint`): it re-orders the top search results, and before Ask Kib
 answers it tells the model when none of the found documents looks like an answer (docs/RAG.md).
 
-The server can also run an NLI model (`/nli`), for experiments; ZettNAS doesn't use it.
+The server can also run an NLI model (`/nli`), for experiments; Kiboto doesn't use it.
 
 ## Models
 

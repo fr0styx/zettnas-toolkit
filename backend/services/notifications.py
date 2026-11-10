@@ -281,7 +281,7 @@ def _dispatch_unraid(script: str, title: str, message: str, level: str) -> bool:
 
     try:
         subprocess.run(
-            [script, "-e", "ZettNAS", "-s", title, "-d", message, "-i", unraid_level],
+            [script, "-e", "Kiboto", "-s", title, "-d", message, "-i", unraid_level],
             check=False,
             capture_output=True,
             timeout=5,
@@ -357,13 +357,13 @@ def _dispatch_webhook(cfg: dict[str, Any], title: str, message: str, level: str)
         }
         color = color_map.get(level, 0x25C2A0)
         payload = {
-            "username": "ZettNAS",
+            "username": "Kiboto",
             "embeds": [
                 {
                     "title": title,
                     "description": message,
                     "color": color,
-                    "footer": {"text": "ZettNAS Hardware Suite"},
+                    "footer": {"text": "Kiboto Hardware Suite"},
                     "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 }
             ],
@@ -435,7 +435,7 @@ def send_notification(
     """
     if isinstance(title, dict):
         d = title
-        title = str(d.get("title", "ZettNAS Notification"))
+        title = str(d.get("title", "Kiboto Notification"))
         message = str(d.get("message", ""))
         level = str(d.get("level", "normal"))
         event_type = str(d.get("event_type", d.get("type", "general")))
@@ -526,7 +526,7 @@ def _dispatch_shared(cfg: dict[str, Any], title: str, message: str, level: str, 
         return {"dispatched": any(results.values()), "channels": results}
 
     # 1. Unraid native notification: the local notify script, or the Unraid API when
-    #    ZettNAS runs elsewhere (companion mode, D5)
+    #    Kiboto runs elsewhere (companion mode, D5)
     if cfg.get("unraid_notify", True):
         unraid_script = _find_unraid_notify()
         if unraid_script:
@@ -565,8 +565,8 @@ def test_notification(custom_cfg: dict[str, Any] | None = None) -> dict[str, Any
     cfg = unmask_notification_config(cfg, existing)
     results = {}
 
-    title = "ZettNAS Test Notification"
-    message = "This is a test alert from your ZettNAS Toolkit. All notification routes are functioning normally!"
+    title = "Kiboto Test Notification"
+    message = "This is a test alert from your Kiboto. All notification routes are functioning normally!"
     level = "normal"
 
     if cfg.get("unraid_notify", True):
@@ -599,8 +599,8 @@ def test_single_channel(channel: str, channel_cfg: dict[str, Any]) -> dict[str, 
     full_cfg = unmask_notification_config(channel_cfg, existing)
 
     t0 = time.perf_counter()
-    title = f"ZettNAS Test: {channel.upper()}"
-    message = f"Connection to {channel.capitalize()} tested successfully from ZettNAS Toolkit!"
+    title = f"Kiboto Test: {channel.upper()}"
+    message = f"Connection to {channel.capitalize()} tested successfully from Kiboto!"
     level = "info"
 
     success = False
@@ -778,7 +778,7 @@ def digest_text(items: list[dict[str, Any]]) -> tuple[str, str]:
     summary = ", ".join(f"{n} {t}" for t, n in sorted(by_type.items(), key=lambda x: -x[1]))
     lines = [f"- {time.strftime('%H:%M', time.localtime(it['ts']))} {it['title']}" for it in items[-20:]]
     more = f"\n... and {len(items) - 20} more" if len(items) > 20 else ""
-    return f"ZettNAS daily summary: {len(items)} alerts", f"{summary}\n\n" + "\n".join(lines) + more
+    return f"Kiboto daily summary: {len(items)} alerts", f"{summary}\n\n" + "\n".join(lines) + more
 
 
 @json_locked(lambda *a, **k: DIGEST_FILE)

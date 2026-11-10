@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Application Entrypoint
+Kiboto - Application Entrypoint
 Modular Backend Architecture
 """
 
@@ -282,9 +282,9 @@ def _startup_schedulers() -> Any:
             from backend.services.rag_engine import get_rag_engine
 
             get_rag_engine()
-            logger.info("[ZettAI] Spin-up auto-learner & standby guard daemon initialized.")
+            logger.info("[Kib] Spin-up auto-learner & standby guard daemon initialized.")
         except Exception as e:
-            logger.warning("Could not auto-start ZettAI spin-up watcher: %s", e)
+            logger.warning("Could not auto-start Kib spin-up watcher: %s", e)
 
     return _start_rag
 
@@ -320,7 +320,7 @@ def startup_system():
     except Exception as e:
         logger.error(f"[Main] Could not apply the staged settings restore: {e}")
 
-    # Refuse databases written by a newer ZettNAS before touching them (OPS-03).
+    # Refuse databases written by a newer Kiboto before touching them (OPS-03).
     from backend.db_schema import NewerDatabaseError, check_versions, stamp_versions
 
     try:
@@ -434,14 +434,14 @@ def startup_system():
 
 
 def _rejoin_app_networks() -> None:
-    """ZettNAS back on the networks it shares with apps, which an update leaves behind (NSEC-10)."""
+    """Kiboto back on the networks it shares with apps, which an update leaves behind (NSEC-10)."""
     from backend.services.app_networks import rejoin
 
     rejoin()
 
 
 def _open_encrypted_folders() -> None:
-    """Encrypted folders whose password is kept open when ZettNAS starts (FEAT-13)."""
+    """Encrypted folders whose password is kept open when Kiboto starts (FEAT-13)."""
     from backend.services.encrypted_folders import unlock_at_start
 
     opened = unlock_at_start()
@@ -455,7 +455,7 @@ def _open_encrypted_folders() -> None:
     resume_left_paused()  # a backup cut off by a restart left something paused (NREL-17)
 
 
-FAN_WATCHDOG_IDLE_SECS = 60  # where ZettNAS drives no fan, it looks again a minute later (NPERF-6)
+FAN_WATCHDOG_IDLE_SECS = 60  # where Kiboto drives no fan, it looks again a minute later (NPERF-6)
 
 
 def fan_watchdog_daemon():
@@ -466,7 +466,7 @@ def fan_watchdog_daemon():
     COLLECTOR_WATCHDOG_SECS without a heartbeat we engage the failsafe. The
     collector automatically reclaims control once it recovers.
 
-    On a host where ZettNAS drives no fan (no PWM in hwmon, no fan registers) there is nothing
+    On a host where Kiboto drives no fan (no PWM in hwmon, no fan registers) there is nothing
     to hand back: after its first minute it looks once a minute instead of every 5 seconds and
     reports no release (NPERF-6).
     """
@@ -570,7 +570,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="ZettNAS Toolkit",
+    title="Kiboto",
     version=__version__,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -623,7 +623,7 @@ import logging
 
 from backend.api.redfish import router as redfish_router
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 app.include_router(redfish_router, prefix="/redfish/v1")
 app.include_router(redfish_router, prefix="/redfish")
@@ -713,7 +713,7 @@ class ZettServer(uvicorn.Server):
 def main():
     port = int(os.environ.get("PORT", "8082"))
     trusted_proxies = os.environ.get("TRUSTED_PROXIES", "127.0.0.1")
-    logger.info("ZettNAS dashboard starting on :%s (version %s)", port, __version__)
+    logger.info("Kiboto dashboard starting on :%s (version %s)", port, __version__)
     server_config = uvicorn.Config(
         app,
         host="0.0.0.0",

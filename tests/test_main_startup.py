@@ -109,7 +109,7 @@ class TestStartup:
         from backend import db_schema
 
         def newer():
-            raise db_schema.NewerDatabaseError("users.db was written by a newer ZettNAS")
+            raise db_schema.NewerDatabaseError("users.db was written by a newer Kiboto")
 
         monkeypatch.setattr(db_schema, "check_versions", newer)
         with pytest.raises(SystemExit) as exc:

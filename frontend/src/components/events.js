@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit Hardware Events Logger
+ * Kiboto Hardware Events Logger
  * Renders system alerts, diagnostic events, and handles event log clearing.
  */
 import { eventText } from '../event-text.js';

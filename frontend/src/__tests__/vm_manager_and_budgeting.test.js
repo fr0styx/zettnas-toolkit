@@ -816,10 +816,10 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
     });
 
     it('parses serial console socket waiting banner with accurate colors', () => {
-      const banner = "\r\n\x1b[33m[ZettNAS Serial Console]\x1b[0m Waiting for serial socket at '/tmp/vm-test.sock'...\r\n\x1b[90mEnsure VM is running and serial socket is initialized.\x1b[0m\r\n";
+      const banner = "\r\n\x1b[33m[Kiboto Serial Console]\x1b[0m Waiting for serial socket at '/tmp/vm-test.sock'...\r\n\x1b[90mEnsure VM is running and serial socket is initialized.\x1b[0m\r\n";
       const html = formatAnsiToHtml(banner);
       expect(html).toContain('style="color: #f59e0b"');
-      expect(html).toContain('[ZettNAS Serial Console]');
+      expect(html).toContain('[Kiboto Serial Console]');
       expect(html).toContain('style="color: #94a3b8"');
       expect(html).toContain('Ensure VM is running');
       expect(html).not.toContain('\x1b');
@@ -871,10 +871,10 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
 
   describe('Extended Terminal ANSI & 256 Colors', () => {
     it('handles stripped ESC codes [33m and 256-color sequences without corrupting bracketed text', () => {
-      const stripped = '[33m[ZettNAS Serial Console] [0mWaiting for serial socket...';
+      const stripped = '[33m[Kiboto Serial Console] [0mWaiting for serial socket...';
       const parsed = parseAnsiToHtml(stripped);
       expect(parsed).toContain('color: #f59e0b');
-      expect(parsed).toContain('[ZettNAS Serial Console]');
+      expect(parsed).toContain('[Kiboto Serial Console]');
 
       const color256 = '\x1b[38;5;208mOrange Text\x1b[0m Normal';
       const parsed256 = parseAnsiToHtml(color256);

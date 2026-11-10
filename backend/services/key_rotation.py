@@ -18,7 +18,7 @@ from typing import Any
 
 from backend import config
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 
 def previous_key_file() -> str:

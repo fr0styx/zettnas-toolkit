@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Replication API Router
+Kiboto - Replication API Router
 Exposes endpoints for managing automated snapshot replication pipelines.
 """
 
@@ -40,7 +40,7 @@ def list_replication_jobs() -> dict[str, Any]:
 
 
 def _available() -> None:
-    """REL-5: replication runs where ZettNAS manages the pools and has their tools."""
+    """REL-5: replication runs where Kiboto manages the pools and has their tools."""
     ok, reason = availability()
     if not ok:
         raise HTTPException(status_code=409, detail=reason)

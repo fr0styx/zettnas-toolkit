@@ -51,7 +51,7 @@ describe('AI settings words (NUX-20)', () => {
         { id: 'm2', name: 'Tiny', est_ram_gb: 1 },
       ],
     }, 'm1');
-    expect(byId('ai-active-llm-pill').title).toBe('Model in use: m1. It answers in Ask Zetty and AI search.');
+    expect(byId('ai-active-llm-pill').title).toBe('Model in use: m1. It answers in Ask Kib and AI search.');
     expect(document.querySelector('[data-hf-filter="all"]').textContent).toBe('2026+ Releases (2)');
     expect(document.querySelector('[data-hf-filter="compatible"]').textContent).toBe('✅ Fits Hardware (2)');
     const grid = byId('ai-llm-recommendations-grid').textContent;

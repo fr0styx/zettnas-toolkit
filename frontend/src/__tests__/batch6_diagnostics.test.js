@@ -162,7 +162,7 @@ describe('Batch 6: Observability, Structured Logging & Diagnostics Export', () =
         active_vm_count: 0,
         total_vm_count: 2,
       },
-      support_markdown: '### ZettNAS Toolkit Support Diagnostics\n- Memory Usage: 12% (7.2 GB of 58.4 GB RAM)',
+      support_markdown: '### Kiboto Support Diagnostics\n- Memory Usage: 12% (7.2 GB of 58.4 GB RAM)',
     };
 
     openDiagnosticsPreviewModal(mockData);
@@ -249,13 +249,13 @@ describe('Batch 6: Observability, Structured Logging & Diagnostics Export', () =
     const testContainer = document.createElement('div');
     testContainer.innerHTML = `
       <button id="btn-copy-support-md">Copy Support Markdown</button>
-      <pre id="diagnostics-preview-md">### ZettNAS System Report</pre>
+      <pre id="diagnostics-preview-md">### Kiboto System Report</pre>
     `;
     document.body.appendChild(testContainer);
 
     await copySupportMarkdown();
 
-    expect(copySpy).toHaveBeenCalledWith('### ZettNAS System Report');
+    expect(copySpy).toHaveBeenCalledWith('### Kiboto System Report');
     expect(toast.showToast).toHaveBeenCalledWith(expect.stringContaining('copied to clipboard'), 'success');
 
     testContainer.remove();

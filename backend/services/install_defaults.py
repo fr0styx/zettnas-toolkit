@@ -57,7 +57,7 @@ def apply_once(existing_install: bool) -> bool:
 
 
 def _keep_ai_search() -> None:
-    """Kids and guests could use AI search before AI-26 split it from Ask Zetty: keep it on."""
+    """Kids and guests could use AI search before AI-26 split it from Ask Kib: keep it on."""
     from backend.services.rag_engine import RAG_CONFIG_PATH
 
     with locked_json(RAG_CONFIG_PATH):

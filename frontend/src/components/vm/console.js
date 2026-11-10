@@ -952,7 +952,7 @@ async function initRealSerialTerminal(container, vmId, vmName) {
     if (view) view.write(chunk);
   };
   if (!(_serialBuffers.get(vmId) || []).length) {
-    appendOutput(`\x1b[36m[ZettNAS Serial Terminal - Connecting to ${vmName}...]\x1b[0m\r\n`);
+    appendOutput(`\x1b[36m[Kiboto Serial Terminal - Connecting to ${vmName}...]\x1b[0m\r\n`);
   }
 
   try {
@@ -1533,7 +1533,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
 
   if (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct')) {
     consoleWin.classList.add('vm-console-standalone');
-    document.title = `${t('vcon.title', 'VM Console: {name}', { name: vmName })} - ZettNAS`;
+    document.title = `${t('vcon.title', 'VM Console: {name}', { name: vmName })} - Kiboto`;
   }
 
   setConsoleMode(initialMode || 'gui');
@@ -1723,7 +1723,7 @@ function initConsoleSimulation(canvas, vmName) {
       if (trimmed === '') {
         // Just empty Enter
       } else if (trimmed === 'help') {
-        lines.push('ZettNAS Virtual Machine Console v1.0 (QEMU/KVM Serial TTY)');
+        lines.push('Kiboto Virtual Machine Console v1.0 (QEMU/KVM Serial TTY)');
         lines.push('Available guest commands: ls, cat, uname -a, ip a, df -h, free -h, uptime, whoami, id, pwd, ps, ping, date, echo, clear, help');
       } else if (trimmed === 'clear') {
         lines = [];

@@ -16,7 +16,7 @@ _MEMORY = {"at": 0.0}
 
 
 def app_memory_mb(proc: str = "/proc") -> float:
-    """What ZettNAS itself holds: the resident memory of the processes in its container, except
+    """What Kiboto itself holds: the resident memory of the processes in its container, except
     QEMU (a virtual machine's memory is the VM's, not the app's)."""
     total_kb = 0
     for name in os.listdir(proc):
@@ -54,8 +54,8 @@ def check_app_memory(now: float | None = None, measure=app_memory_mb) -> None:
     if mb > warn:
         _trigger_alert(
             "app_memory",
-            "ZettNAS is using a lot of memory",
-            f"ZettNAS uses {mb:.0f} MB, over the {warn} MB warning level (APP_MEMORY_WARN_MB; virtual "
+            "Kiboto is using a lot of memory",
+            f"Kiboto uses {mb:.0f} MB, over the {warn} MB warning level (APP_MEMORY_WARN_MB; virtual "
             "machines are not counted). If it keeps growing, restart the container and report it.",
             "warning",
             now,
@@ -64,7 +64,7 @@ def check_app_memory(now: float | None = None, measure=app_memory_mb) -> None:
     elif mb < warn * MEMORY_CLEAR_SHARE:
         _resolve_alert(
             "app_memory",
-            f"ZettNAS memory is back to normal ({mb:.0f} MB).",
+            f"Kiboto memory is back to normal ({mb:.0f} MB).",
             alert_text("app_memory_ok", mb=f"{mb:.0f}"),
         )
 

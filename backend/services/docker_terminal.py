@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Interactive Docker Container Terminal Service
+Kiboto - Interactive Docker Container Terminal Service
 Provides multiplexed bidirectional PTY streaming over WebSockets via Docker Engine socket.
 Supports ANSI terminal I/O, live character input, interactive shells (/bin/bash, /bin/sh),
 and dynamic terminal resize events.

@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Desktop Shortcuts & Icon Management Engine
+ * Kiboto - Desktop Shortcuts & Icon Management Engine
  * Allows users to add, manage, and remove shortcuts for core system apps
  * (Containers, Storage, Activity Monitor, Hardware Profiles, UPS, Settings, Notifications)
  * and custom Web / URL bookmarks directly on their desktop workspace.

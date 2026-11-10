@@ -1,4 +1,4 @@
-# ZettNAS Toolkit - Docker App Catalog API Router
+# Kiboto - Docker App Catalog API Router
 import asyncio
 import json
 import re
@@ -84,7 +84,7 @@ async def get_family_dav_profile(request: Request):
     return Response(
         content=data,
         media_type="application/x-apple-aspen-config",
-        headers={"Content-Disposition": 'attachment; filename="ZettNAS family.mobileconfig"'},
+        headers={"Content-Disposition": 'attachment; filename="Kiboto family.mobileconfig"'},
     )
 
 
@@ -101,7 +101,7 @@ async def post_family_dav():
 
 @router.get("/docker/catalog/logo", dependencies=[Depends(require_scope("containers:read", "containers:manage"))])
 def get_catalog_logo(url: str):
-    """An app's logo, fetched once by ZettNAS so the browser doesn't ask a third party (SEC-38)."""
+    """An app's logo, fetched once by Kiboto so the browser doesn't ask a third party (SEC-38)."""
     from fastapi import Response
 
     from backend.services.catalog_logos import logo

@@ -24,7 +24,7 @@ from fastapi import Depends, Request
 from backend.auth import AuthenticatedPrincipal, get_current_principal
 from backend.ignored_errors import ignored
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 TOKEN_TTL_SECS = 120
 _MAX_PENDING = 1000
@@ -38,16 +38,16 @@ ACTIONS: dict[str, str] = {
     "storage.snapshot.restore": "Roll the pool back to snapshot {target}; newer changes are lost",
     "share.delete": "Delete share {target}",
     "users.delete": "Delete user {target}",
-    "users.erase_data": "Erase the chats, Zetty log and search data of user {target}",
-    "users.export_data": "Download the chats, Zetty log and search data of user {target}. They are told",
+    "users.erase_data": "Erase the chats, Kib log and search data of user {target}",
+    "users.export_data": "Download the chats, Kib log and search data of user {target}. They are told",
     "docker.container.delete": "Delete container {target}",
     "vm.delete": "Delete virtual machine {target}",
     "backup.delete": "Delete backup {target}",
     "system.restore": "Restore system settings from a backup, replacing the current ones",
     "system.reboot": "Reboot the server",
     "system.shutdown": "Shut down the server",
-    "updates.apply": "Update ZettNAS and restart it",
-    "updates.revert": "Revert ZettNAS to the previous version and its data",
+    "updates.apply": "Update Kiboto and restart it",
+    "updates.revert": "Revert Kiboto to the previous version and its data",
     "ai.index.forget": "Delete what the AI index learned from a folder",
     "webdav.config": "Change who can reach files over WebDAV and which folder it shares",
     "security.rotate_key": "Replace the install's secret key; everyone signs in to WebDAV and two-factor again",

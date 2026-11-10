@@ -21,7 +21,7 @@ import { setIconLabel } from '../../ui/primitives.js';
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
 
 // ============================================================================
-// ZettAI — Multi-Modal Local RAG & Visual Search Engine Controller
+// Kib — Multi-Modal Local RAG & Visual Search Engine Controller
 // ============================================================================
 /** The sentences of an answer that the sources do not back up (AI-1), for a closer look. */
 export function unsupportedHtml(detail) {
@@ -222,7 +222,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
     activeLlmLabel.textContent = currentActive;
   }
   if (activeLlmPill) {
-    activeLlmPill.title = t('ait.model_in_use', 'Model in use: {model}. It answers in Ask Zetty and AI search.', { model: currentActive });
+    activeLlmPill.title = t('ait.model_in_use', 'Model in use: {model}. It answers in Ask Kib and AI search.', { model: currentActive });
   }
   const chatModelBadge = document.getElementById('ai-chat-active-model-badge');
   if (chatModelBadge) {
@@ -379,7 +379,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
       const confirmTitle = t('ai.remove_model_title', 'Remove Model from Catalog');
       const confirmMsg = t(
         'ai.remove_model_confirm',
-        `Are you sure you want to remove model "${mName}" from your ZettAI catalog?`
+        `Are you sure you want to remove model "${mName}" from your Kib catalog?`
       ).replace('{name}', mName);
       showConfirmToast(
         confirmTitle,
@@ -465,7 +465,7 @@ export async function selectAiRecommendedModel(modelId) {
       if (res.hardware_warning && res.warning_message) {
         showToast(t('toast.message_2', '{warning_message}', { warning_message: res.warning_message }), 'warn');
       } else {
-        showToast(t('ai.model_selected_toast', 'Active ZettAI model switched to {model}', { model: cleanId }), 'success');
+        showToast(t('ai.model_selected_toast', 'Active Kib model switched to {model}', { model: cleanId }), 'success');
       }
       await fetchAndRenderAiStatus();
     }
@@ -563,7 +563,7 @@ export async function updateAiServiceConfig(partialConfig = {}) {
     await fetchAndRenderAiStatus();
     return res;
   } catch (err) {
-    showToast(t('toast.failed_to_update_zettai_configuration', 'Failed to update ZettAI configuration: {error}', { error: err.message }), 'error');
+    showToast(t('toast.failed_to_update_zettai_configuration', 'Failed to update Kib configuration: {error}', { error: err.message }), 'error');
     return null;
   }
 }
@@ -1105,7 +1105,7 @@ export function initAiKnowledgeEngine() {
     });
   }
 
-  // ZettAI Master Switch (#ai-master-enable-toggle)
+  // Kib Master Switch (#ai-master-enable-toggle)
   const masterToggle = document.getElementById('ai-master-enable-toggle');
   if (masterToggle && !masterToggle.dataset.bound) {
     masterToggle.dataset.bound = '1';
@@ -1114,8 +1114,8 @@ export function initAiKnowledgeEngine() {
       await updateAiServiceConfig({ enabled });
       showToast(
         enabled
-          ? t('ai.service_enabled_toast', 'ZettAI service enabled — AI learning & search active.')
-          : t('ai.service_disabled_toast', 'ZettAI service disabled — unfinished learning tasks paused.'),
+          ? t('ai.service_enabled_toast', 'Kib service enabled — AI learning & search active.')
+          : t('ai.service_disabled_toast', 'Kib service disabled — unfinished learning tasks paused.'),
         enabled ? 'success' : 'warn'
       );
     });
@@ -1677,7 +1677,7 @@ export async function fetchAndRenderAiStatus() {
     const totalPhotos = stats.total_photos ?? cats.photos ?? 0;
     const totalChunks = stats.total_chunks ?? cats.chunks ?? 0;
 
-    // Sync ZettAI Master Switch & Learning Scope/Schedule inputs
+    // Sync Kib Master Switch & Learning Scope/Schedule inputs
     const masterToggle = document.getElementById('ai-master-enable-toggle');
     if (masterToggle && res.enabled !== undefined) {
       masterToggle.checked = Boolean(res.enabled);
@@ -1722,7 +1722,7 @@ export async function fetchAndRenderAiStatus() {
       }
     }
 
-    installAiAccess(document); // who can use Zetty (B8)
+    installAiAccess(document); // who can use Kib (B8)
 
     bindCheckersForm(document, cfg); // the optional reranker (AI-13)
 
@@ -1902,7 +1902,7 @@ export async function fetchAndRenderAiStatus() {
       activeLlmLabel.textContent = activeModelId || '—';
     }
     if (activeLlmPill) {
-      activeLlmPill.title = t('ait.model_in_use_on', 'Model in use: {model} on {hw}. It answers in Ask Zetty and AI search.', { model: activeModelId, hw: hwName });
+      activeLlmPill.title = t('ait.model_in_use_on', 'Model in use: {model} on {hw}. It answers in Ask Kib and AI search.', { model: activeModelId, hw: hwName });
     }
     const chatModelBadge = document.getElementById('ai-chat-active-model-badge');
     if (chatModelBadge) {
@@ -1930,7 +1930,7 @@ export async function fetchAndRenderAiStatus() {
       topDot.style.boxShadow = tierNum === 1 ? '0 0 6px #3bf58b' : tierNum === 2 ? '0 0 6px #38bdf8' : '0 0 6px #a78bfa';
     }
     if (topPill) {
-      topPill.title = t('ait.accel', 'ZettAI Active Accelerator: {hw} (NPU → GPU → CPU Priority) • {count, plural, one {# Indexed File} other {# Indexed Files}}', { hw: hwName, count: totalFiles });
+      topPill.title = t('ait.accel', 'Kib Active Accelerator: {hw} (NPU → GPU → CPU Priority) • {count, plural, one {# Indexed File} other {# Indexed Files}}', { hw: hwName, count: totalFiles });
     }
 
     // Sidebar & Hub Badges
@@ -2210,7 +2210,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
         <div class="airg-row">
           <div class="airg-row-2">
             <span class="airg-fs15">🧠</span>
-            <span class="airg-xs-bold-strong">${t('aiq.synthesis', 'ZettAI Grounded Synthesis')}</span>
+            <span class="airg-xs-bold-strong">${t('aiq.synthesis', 'Kib Grounded Synthesis')}</span>
             <span class="ai-llm-proof-badge" style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(168,85,247,0.16); border: 1px solid rgba(192,132,252,0.45); color: var(--lt-t-e9d5ffff, #e9d5ff);" title="${escapeHtml(llmTel.runtime_mode || 'No AI model (built-in tools only)')}">🤖 ${escapeHtml(activeLlmId)}</span>
           </div>
           <div class="airg-row-xs-muted">
@@ -2355,7 +2355,7 @@ export function renderAiPreviewInspector(item) {
       <div><strong class="aik-muted">${t('aiq.match_mode', 'Match Mode:')}</strong> <span style="color:var(--lt-t-6ee7b7ff, #6ee7b7);">${escapeHtml(item.match_reason || t('aiq.semantic', 'Semantic Vector'))}</span></div>
       ${item.excerpt ? `<div class="aik-xs-box">${escapeHtml(item.excerpt)}</div>` : ''}
     </div>
-    <!-- 5 Official ZettAI File Actions (#apps/zettai/search) -->
+    <!-- 5 Official Kib File Actions (#apps/zettai/search) -->
     <div class="aik-grid">
       <button type="button" id="btn-ai-inspector-open" class="btn-pill-toggle" style="background: rgba(14,165,233,0.22); border: 1px solid rgba(14,165,233,0.5); color: var(--zn-text-strong);">
         👁️ ${t('aiq.open_file', 'Open File')}
@@ -2529,7 +2529,7 @@ export function renderAiRagInitialEmptyState() {
       <div class="ai-rag-initial-placeholder" style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; color: var(--muted, #94a3b8);">
         <div class="aik-fs32">🔍</div>
         <div class="aik-fs14-semi" data-i18n="ai.search_placeholder_prompt">${escapeHtml(t('ai.search_placeholder_prompt', 'Search Your NAS Knowledge & Media'))}</div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted, #94a3b8); max-width: 480px; margin: 0 auto; line-height: 1.5;" data-i18n="ai.search_placeholder_sub">${escapeHtml(t('ai.search_placeholder_sub', 'Type a query above to search documents, recipes, photos, or audio, or ask Zetty a question. Results will appear here once you search.'))}</div>
+        <div style="font-size: var(--zn-fs-xs); color: var(--muted, #94a3b8); max-width: 480px; margin: 0 auto; line-height: 1.5;" data-i18n="ai.search_placeholder_sub">${escapeHtml(t('ai.search_placeholder_sub', 'Type a query above to search documents, recipes, photos, or audio, or ask Kib a question. Results will appear here once you search.'))}</div>
       </div>
     `;
   }
@@ -2707,7 +2707,7 @@ export async function runAiPathIndex(targetPath = null, respectStandby = true) {
 }
 
 
-// ZettAI proposes actions that change the system; they run only on this click (AI-01).
+// Kib proposes actions that change the system; they run only on this click (AI-01).
 let _aiConfirmHandlerBound = false;
 function _bindAiConfirmHandler() {
   if (_aiConfirmHandlerBound || typeof document === 'undefined') return;
@@ -3063,7 +3063,7 @@ export async function fetchAndRenderAiConversations(searchQuery = '') {
       selectAiConversation(convs[0].id);
     }
   } catch (err) {
-    console.debug('[ZettAI] Failed loading conversations:', err);
+    console.debug('[Kib] Failed loading conversations:', err);
   }
 }
 
@@ -3122,7 +3122,7 @@ export async function selectAiConversation(convId) {
 
     listEl.scrollTop = listEl.scrollHeight;
   } catch (err) {
-    console.debug('[ZettAI] Failed selecting conversation:', err);
+    console.debug('[Kib] Failed selecting conversation:', err);
   }
 }
 
@@ -3269,12 +3269,12 @@ export async function exportActiveAiThread(format = 'markdown') {
     if (format === 'markdown') {
       mimeType = 'text/markdown';
       ext = 'md';
-      content = `# ${title}\n*Exported from ZettAI on ${dateStr}*\n\n---\n\n`;
+      content = `# ${title}\n*Exported from Kib on ${dateStr}*\n\n---\n\n`;
       (conv.messages || []).forEach((m) => {
         if (m.role === 'user') {
           content += `### 🧑 User:\n${m.content}\n\n`;
         } else if (m.role === 'assistant') {
-          content += `### 🤖 ZettAI:\n${m.content}\n\n`;
+          content += `### 🤖 Kib:\n${m.content}\n\n`;
         }
       });
     } else {
@@ -3571,7 +3571,7 @@ export function stopAiChatGeneration() {
   return true;
 }
 
-// "Ask Zetty about this" (missing feature 6): the file or folder the next questions are about
+// "Ask Kib about this" (missing feature 6): the file or folder the next questions are about
 let _aiFocus = null;
 
 export function aiChatFocus() {
@@ -3592,7 +3592,7 @@ export function setAiChatFocus(path, name = '') {
   (input.closest('div') || input).insertAdjacentElement('beforebegin', chip);
 }
 
-/** Opens Ask Zetty with a file or folder in focus. */
+/** Opens Ask Kib with a file or folder in focus. */
 export function askZettyAbout(path, name = '') {
   if (typeof window.openManagementSection === 'function') window.openManagementSection('mgmt-sec-ai', 'mgmt-pane-ai-chat');
   setTimeout(() => {
@@ -3932,7 +3932,7 @@ export async function sendAiChatMessage(rawMessage = null) {
             streamBotMsgEl.innerHTML = _buildAiAssistantMessageHtml(res, activeModel);
           }
         } else {
-        console.warn('[ZettAI] Streaming fell back to standard POST:', streamErr);
+        console.warn('[Kib] Streaming fell back to standard POST:', streamErr);
         if (streamBotMsgEl) {
           streamBotMsgEl.remove();
           streamBotMsgEl = null;
@@ -3992,7 +3992,7 @@ export async function sendAiChatMessage(rawMessage = null) {
       const errEl = document.createElement('div');
       errEl.className = 'ai-chat-msg ai-chat-msg-error';
       errEl.style.cssText = 'padding: 10px 14px; border-radius: 10px; background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(248, 113, 113, 0.45); color: #fecaca; font-size: var(--zn-fs-xs);';
-      errEl.textContent = `⚠️ ${t('aiq.no_answer', 'Zetty could not answer: {error}', { error: err.message || String(err) })}`;
+      errEl.textContent = `⚠️ ${t('aiq.no_answer', 'Kib could not answer: {error}', { error: err.message || String(err) })}`;
       listEl.appendChild(errEl);
       listEl.scrollTop = listEl.scrollHeight;
     }
@@ -4000,7 +4000,7 @@ export async function sendAiChatMessage(rawMessage = null) {
   } finally {
     if (sendBtn) {
       sendBtn.disabled = false;
-      sendBtn.innerHTML = `<span aria-hidden="true">🚀</span> <span data-i18n="ai.chat_send_btn">${escapeHtml(t('ai.chat_send_btn', 'Ask Zetty'))}</span>`;
+      sendBtn.innerHTML = `<span aria-hidden="true">🚀</span> <span data-i18n="ai.chat_send_btn">${escapeHtml(t('ai.chat_send_btn', 'Ask Kib'))}</span>`;
     }
   }
 }
@@ -4170,9 +4170,9 @@ export async function showServeLink(url, funnel = false) {
   }
   const how = funnel
     ? t('ts.serve_how_funnel', 'Funnel is on: this address works from any browser on the internet, so keep strong passwords and 2FA.')
-    : t('ts.serve_how', 'On your phone, install the Tailscale app and sign in to the same tailnet. Then open this address, on Wi-Fi or mobile data. Add it to your home screen to use ZettNAS like an app.');
+    : t('ts.serve_how', 'On your phone, install the Tailscale app and sign in to the same tailnet. Then open this address, on Wi-Fi or mobile data. Add it to your home screen to use Kiboto like an app.');
   showConfirmToast(
-    t('ts.serve_ready', 'ZettNAS is reachable through Tailscale'),
+    t('ts.serve_ready', 'Kiboto is reachable through Tailscale'),
     `${qr ? `<img src="${qr}" alt="${escapeHtml(t('ts.serve_qr_alt', 'QR code for {url}', { url }))}" width="180" height="180" style="display:block;margin:0 auto 10px;border-radius:8px;background:#fff;">` : ''}<a class="aik-bold-accent" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a><br><br>${escapeHtml(how)}`,
     () => {
       copyText(url).catch(() => {});

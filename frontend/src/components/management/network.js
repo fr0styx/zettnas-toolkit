@@ -962,7 +962,7 @@ export async function fetchAndRenderWireguard() {
       if (tsFunnelToggle.checked) {
         showConfirmToast(
           t('net.tailscale_funnel_warning_title', 'Enable Public Internet Funnel'),
-          'Warning: Enabling Public Internet Funnel exposes your ZettNAS desktop port 8082 to the public internet. Ensure your superadmin password and 2FA are strong. Do you want to proceed?',
+          'Warning: Enabling Public Internet Funnel exposes your Kiboto desktop port 8082 to the public internet. Ensure your superadmin password and 2FA are strong. Do you want to proceed?',
           () => {
             triggerServeFunnelUpdate();
           },
@@ -1681,7 +1681,7 @@ export async function fetchAndRenderNetworkTopology() {
     fetchAndRenderWireguard();
     initNetworkControls();
   } catch (err) {
-    console.warn('[ZettNAS] Error fetching network topology:', err);
+    console.warn('[Kiboto] Error fetching network topology:', err);
     if (physicalTbody) {
       physicalTbody.innerHTML = `<tr><td class="nw-crit-center" colspan="10">${escapeHtml(t('net.topo_failed', 'Could not load the network layout: {error}', { error: err.message || String(err) }))}</td></tr>`;
     }

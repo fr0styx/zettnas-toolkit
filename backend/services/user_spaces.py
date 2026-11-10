@@ -3,7 +3,7 @@
 Each person gets a private folder, <pool>/homes/<username> (only they and administrators
 can open it; see path_access). On Btrfs it is a subvolume with a quota group, on ZFS (when the
 homes folder is a dataset) a child dataset with a refquota, and on XFS with project quotas a
-project: then the limit holds over SMB, NFS and WebDAV too (FEAT-10). Elsewhere ZettNAS checks
+project: then the limit holds over SMB, NFS and WebDAV too (FEAT-10). Elsewhere Kiboto checks
 it on uploads it receives, and says so.
 """
 

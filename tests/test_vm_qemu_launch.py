@@ -180,7 +180,7 @@ class TestFailures:
         monkeypatch.setattr(vm_host, "_image_variant", lambda: "core")
         target = vm(host["tmp"])
         ok, err = vm_qemu._start_qemu(target, 5907)
-        assert not ok and "core ZettNAS image" in err and target["last_error"] == err
+        assert not ok and "core Kiboto image" in err and target["last_error"] == err
 
     def test_pci_problem(self, host, monkeypatch):
         monkeypatch.setattr(vm_host, "_pci_passthrough_problem", lambda vm: "IOMMU is off")

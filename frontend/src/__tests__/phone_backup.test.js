@@ -18,7 +18,7 @@ describe('Back up my phone', () => {
     await installPhoneBackup(document.getElementById('immich-settings-mount'));
     const card = document.getElementById('phone-backup-card');
     expect(card.querySelector('svg').dataset.qr).toBe('http://nas.local:2283');
-    expect(card.textContent).toContain('Sign in with ZettNAS');
+    expect(card.textContent).toContain('Sign in with Kiboto');
     expect(card.textContent).toContain('http://nas.local:2283');
   });
 

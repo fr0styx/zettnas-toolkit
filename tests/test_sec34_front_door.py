@@ -1,4 +1,4 @@
-"""SEC-34: WebDAV and SFTP reach rclone through ZettNAS, so IP blocks, failed sign-ins and the
+"""SEC-34: WebDAV and SFTP reach rclone through Kiboto, so IP blocks, failed sign-ins and the
 ransomware guard apply on the WebDAV and SFTP ports as on the web app."""
 
 import asyncio

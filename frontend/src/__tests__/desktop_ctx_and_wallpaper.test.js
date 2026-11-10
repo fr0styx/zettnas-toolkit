@@ -28,7 +28,7 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
           <div class="icon-text">Recycle Bin</div>
         </div>
         <div id="chassis-desktop-icon" class="chassis-hero-box" style="position:absolute; left:24px; top:637px; width:100px; height:80px;">
-          <div class="icon-text">ZettNAS</div>
+          <div class="icon-text">Kiboto</div>
         </div>
       </div>
       <select id="wallpaper-select"></select>

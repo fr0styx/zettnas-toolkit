@@ -3,7 +3,7 @@ name: AI eval (nightly)
 # Retrieval and answer quality with a real neural embedder, cross-language and paraphrase
 # queries and 2,000 distractor files (AI-3). CI's per-commit eval uses the built-in lexical
 # vectors; this one uses EmbeddingGemma served by Ollama, and for answers Qwen3-4B, the chat
-# model ZettNAS ships with (AI-16; it ran Qwen3-1.7B before). Three jobs side by side: on
+# model Kiboto ships with (AI-16; it ran Qwen3-1.7B before). Three jobs side by side: on
 # GitHub's CPUs the 108 answers take hours, so they have a job of their own. The answers'
 # first-token time is gated too. Phi-4-mini (MIT) answers the same questions beside it for
 # decision D4, the default chat model: recorded for comparison, not gated.

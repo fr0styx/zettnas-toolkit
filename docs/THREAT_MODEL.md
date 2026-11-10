@@ -1,6 +1,6 @@
-# ZettNAS threat model
+# Kiboto threat model
 
-What ZettNAS protects, from whom, where the trust boundaries are, and which risks
+What Kiboto protects, from whom, where the trust boundaries are, and which risks
 remain. It describes the design as of the current main branch. Report gaps as in
 [SECURITY.md](../SECURITY.md).
 
@@ -9,14 +9,14 @@ remain. It describes the design as of the current main branch. Report gaps as in
 | Asset | Where it lives | Why it matters |
 | ----- | -------------- | -------------- |
 | Your files | Shares under the pool (`/mnt/user` on Unraid) | The reason the NAS exists |
-| The host | ZettNAS runs as root with disk, device and Docker access | Taking over ZettNAS means taking over the server |
+| The host | Kiboto runs as root with disk, device and Docker access | Taking over Kiboto means taking over the server |
 | Accounts and sessions | `data/users.db` (password hashes), session-signing key in `data/` | Lets someone act as you |
 | AI index and chats | `data/rag_index.db`, `data/ai_conversations.db` | Contains excerpts of your files and what you asked |
 | Secrets for integrations | Notification tokens, cloud remotes (rclone), API tokens | Reach other services in your name |
 
 ## Who we defend against
 
-1. **Someone on the internet.** ZettNAS is not meant to be exposed directly. Remote
+1. **Someone on the internet.** Kiboto is not meant to be exposed directly. Remote
    access goes through Tailscale or a reverse proxy with its own sign-in.
 2. **Someone on your network**, including a compromised PC or IoT device: password
    guessing, cross-site requests from a page you visit, ransomware on a PC that has
@@ -24,7 +24,7 @@ remain. It describes the design as of the current main branch. Report gaps as in
 3. **A signed-in user with fewer rights** trying to reach other users' folders or admin
    functions.
 4. **Content you index or download**: documents and web pages with instructions aimed at
-   Ask Zetty (prompt injection), malformed images and archives.
+   Ask Kib (prompt injection), malformed images and archives.
 5. **A compromised update channel or third-party image.**
 
 Out of scope: someone with physical access or root on the host, a compromised admin
@@ -36,19 +36,19 @@ or the apps you install.
 | Boundary | Defences |
 | -------- | -------- |
 | Browser → web app (port 8082) | Session cookie (HttpOnly, SameSite) or Bearer tokens; CSRF origin check on cookie writes; enforced Content-Security-Policy; must-change default password; login lockout and IP blocking (20 failures in 15 min); optional TOTP 2FA |
-| Clients → WebDAV (8084) and SFTP | WebDAV: only ZettNAS accounts and per-user share access; the portal has the account lockout and IP blocking, direct WebDAV on 8084 the account lockout only (it doesn't see the client's address). SFTP: its own accounts, made by an admin in the SFTP settings, with a password or a public key and a list of shares; they can't sign in to the web app |
+| Clients → WebDAV (8084) and SFTP | WebDAV: only Kiboto accounts and per-user share access; the portal has the account lockout and IP blocking, direct WebDAV on 8084 the account lockout only (it doesn't see the client's address). SFTP: its own accounts, made by an admin in the SFTP settings, with a password or a public key and a list of shares; they can't sign in to the web app |
 | User → files | Every path is resolved inside the allowed roots (no `..` or symlink escape); non-admins reach only their home folder and shares they were given, at the level they were given |
 | User → admin functions | Scoped permissions on every endpoint; root-equivalent permissions listed in SECURITY.md; destructive actions need confirmation |
 | Web app → Docker | Allow-list proxy: no swarm, plugins, secrets, image build/import, commit or export; containers with host-level access only from confirmed flows, each logged |
 | Web app → network (SSRF) | Outbound fetches for web search and previews only to public addresses; notification webhooks also to your own network (Home Assistant, Gotify), never to this machine or a cloud metadata address; catalog logos only from two fixed hosts, as raster images; AI runtimes only on this machine or its Docker network, never the LAN router |
-| Indexed content → Ask Zetty | File and web text is passed as quoted data, never as instructions; tools that change the system need your click on Confirm; web access only in chats where you turned it on; answers are limited to what your account may read |
+| Indexed content → Ask Kib | File and web text is passed as quoted data, never as instructions; tools that change the system need your click on Confirm; web access only in chats where you turned it on; answers are limited to what your account may read |
 | Alerts → phones (Web Push) | Encrypted per browser (RFC 8291) and signed with this NAS's VAPID key; the push service sees only ciphertext; only signed-in admins' devices subscribe |
 | Update channel → host | The updater installs only images from this project's registry; images are signed (cosign) and scanned (Trivy) in CI, and promotion to Stable verifies the signature. The in-app updater verifies the image's Sigstore signature before installing it: issued to this repository's CI workflow (main or a version tag) and naming the exact digest (`UPDATE_SIGNATURES`, default enforce); data is snapshotted before each in-app update and can be rolled back |
 | Files → shares (ransomware) | Ransomware guard: mass renames or deletes, ransomware extensions, ransom notes or a changed guard file freeze writes, snapshot where supported, block the source and alert |
 
 ## What remains
 
-- **ZettNAS is root on the host.** It needs raw disk, fan, LCD and VM access. A remote
+- **Kiboto is root on the host.** It needs raw disk, fan, LCD and VM access. A remote
   code execution bug in the web app is a host compromise. The Docker proxy narrows
   what a bug can do through Docker, but the web process is not yet separated from a
   privileged helper.
@@ -58,8 +58,8 @@ or the apps you install.
 - **The local network is trusted for discovery.** SMB, NFS and WebDAV use passwords,
   but traffic on the LAN is only as private as your network unless you use SMB
   encryption or HTTPS through a reverse proxy.
-- **Unraid's own shares are outside ZettNAS's control.** The ransomware guard can only
-  freeze ZettNAS's own services there; use guard files for early warning and Unraid
+- **Unraid's own shares are outside Kiboto's control.** The ransomware guard can only
+  freeze Kiboto's own services there; use guard files for early warning and Unraid
   snapshots or backups for recovery.
 - **Local AI models can still be misled.** Quoting and confirmation keep injected text
   from acting on its own, but a model can still give a wrong answer based on a planted

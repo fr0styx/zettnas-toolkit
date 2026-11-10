@@ -1,7 +1,7 @@
 /**
  * Drive Health: reports and the owner's details.
  *
- * A report is saved into a folder on the NAS from ZettNAS's own dialog (not the browser's
+ * A report is saved into a folder on the NAS from Kiboto's own dialog (not the browser's
  * download): through the File Explorer's upload, so the person's folder rights and space limit
  * apply. Two kinds: every drive as a spreadsheet (.csv), or one drive in full as text, with its
  * findings, self-tests, history and the raw S.M.A.R.T. output a warranty claim asks for.
@@ -179,7 +179,7 @@ export function driveReportText({ drive, detail, tests, history, notes, now = ne
   const id = health.identity || {};
   const out = [];
   const rule = '-'.repeat(60);
-  out.push(t('dh.rep_title', 'Drive Health report: {name}', { name: d.model || d.dev || '' }), t('dh.rep_made', 'Made by ZettNAS on {date}', { date: formatDateTime(now.getTime(), undefined, '') }), '');
+  out.push(t('dh.rep_title', 'Drive Health report: {name}', { name: d.model || d.dev || '' }), t('dh.rep_made', 'Made by Kiboto on {date}', { date: formatDateTime(now.getTime(), undefined, '') }), '');
   out.push(
     ...[
       line(t('dh.r_model', 'Model'), d.model || detail?.model),
@@ -206,7 +206,7 @@ export function driveReportText({ drive, detail, tests, history, notes, now = ne
   }
   out.push('', rule, t('dh.self_tests', 'Self-tests'), rule);
   const runs = (tests && tests.history) || [];
-  if (!runs.length) out.push(t('dh.no_tests', 'No self-test has been run from ZettNAS yet.'));
+  if (!runs.length) out.push(t('dh.no_tests', 'No self-test has been run from Kiboto yet.'));
   for (const r of runs) out.push(`${when(r.ts)}  ${r.test_type || ''}  ${r.status || (r.passed ? 'passed' : 'failed')}`);
   if (history && history.samples) {
     out.push('', rule, t('dh.history', 'History (30 days)'), rule);
@@ -269,7 +269,7 @@ export async function saveTextToNas(dir, name, text, type = 'text/plain') {
 }
 
 /**
- * ZettNAS's "Save a report" dialog, inside `host` (the Drive Health window). `ctx()` gives
+ * Kiboto's "Save a report" dialog, inside `host` (the Drive Health window). `ctx()` gives
  * { drives, notes, current: {drive, detail, tests, history} | null } at the moment of saving.
  */
 export function openReportDialog(host, ctx, preset = 'all') {

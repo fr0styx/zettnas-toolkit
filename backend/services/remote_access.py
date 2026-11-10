@@ -1,10 +1,10 @@
-"""Use ZettNAS from anywhere (COMP-01), without opening a port on the router.
+"""Use Kiboto from anywhere (COMP-01), without opening a port on the router.
 
 Tailscale (a free account) or a Headscale server of your own puts this NAS and your phone in
-one private network. Then `tailscale serve` gives ZettNAS, and Immich when it is installed,
+one private network. Then `tailscale serve` gives Kiboto, and Immich when it is installed,
 HTTPS addresses under the node's MagicDNS name, which the phone opens like any website:
 
-    https://<name>.<tailnet>.ts.net/          ZettNAS
+    https://<name>.<tailnet>.ts.net/          Kiboto
     https://<name>.<tailnet>.ts.net:8443/     Immich
     https://<name>.<tailnet>.ts.net:18096/    any other app with a web page, here on port 8096 (NFEAT-5)
 
@@ -63,7 +63,7 @@ def _app_port() -> int:
 def web_apps() -> list[dict[str, Any]]:
     """The other running apps with a plain-http web page on a host port, as {name, port}.
 
-    ZettNAS itself and Immich have their own HTTPS ports; an app that already speaks https,
+    Kiboto itself and Immich have their own HTTPS ports; an app that already speaks https,
     or whose port would land past 65535 once moved up, is left out.
     """
     from backend.hardware.docker_stats import read_docker_containers
@@ -93,7 +93,7 @@ def _app_addresses(name: str, host: str, https: bool, served: set[int]) -> list[
 
 
 def addresses(name: str, ips: list[str], https: bool, served: set[int]) -> dict[str, Any]:
-    """Where a phone in the tailnet opens ZettNAS, Immich and the other apps."""
+    """Where a phone in the tailnet opens Kiboto, Immich and the other apps."""
     host = name or (ips[0] if ips else "")
     if not host:
         return {}
@@ -153,7 +153,7 @@ def connect(login_server: str = "", auth_key: str = "") -> dict[str, Any]:
 
 
 def publish(app_port: int | None = None) -> dict[str, Any]:
-    """HTTPS addresses in the tailnet for ZettNAS (443), Immich (8443) and every other app
+    """HTTPS addresses in the tailnet for Kiboto (443), Immich (8443) and every other app
     with a web page (its port + 10000); an app's address goes when the app does."""
     if app_port:
         tailscale.update_settings(app_port=int(app_port))

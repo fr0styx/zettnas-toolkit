@@ -1,4 +1,4 @@
-"""B11 (AI-26): "AI search" and "Ask Zetty" are separate switches per role, both enforced;
+"""B11 (AI-26): "AI search" and "Ask Kib" are separate switches per role, both enforced;
 upgraded installs keep AI search for kids and guests, with an Advisor fix; every kind is logged."""
 
 import json
@@ -63,7 +63,7 @@ def test_both_switches_are_enforced_on_the_routes(client):
     res = client.get("/api/ai/search?q=cats", headers=kid)
     assert res.status_code == 403 and "AI search" in res.text
     res = client.post("/api/ai/ask", json={"query": "what are my bills"}, headers=kid)
-    assert res.status_code == 403 and "Zetty" in res.text
+    assert res.status_code == 403 and "Kib" in res.text
     res = client.post("/api/ai/folder/audit", json={"folder_path": "/mnt/user"}, headers=kid)
     assert res.status_code == 403
 

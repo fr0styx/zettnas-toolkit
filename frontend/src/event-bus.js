@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit Reactive Event Bus
+ * Kiboto Reactive Event Bus
  * Extends EventTarget with ergonomic on/off/emit helper methods.
  * Debounces high-frequency telemetry events via requestAnimationFrame to prevent UI thread lockup.
  */

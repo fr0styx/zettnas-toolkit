@@ -73,7 +73,7 @@ describe('updates panel words (NUX-20)', () => {
 
     serve({}, { channel: 'edge', update_available: false });
     await fetchAndRenderSystemAbout(false, 'edge');
-    expect(text('update-status-title')).toBe('ZettNAS is up to date with main');
+    expect(text('update-status-title')).toBe('Kiboto is up to date with main');
     expect(text('update-status-desc')).toBe('You are running the latest commit on the main branch (latest).');
     serve({}, { channel: 'edge', update_available: false, current_commit: 'abc1234' });
     await fetchAndRenderSystemAbout(false, 'edge');

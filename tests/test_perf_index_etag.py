@@ -8,7 +8,7 @@ from backend.main import app
 def _client(tmp_path, monkeypatch):
     static_dir = tmp_path / "static"
     static_dir.mkdir()
-    (static_dir / "index.html").write_text('<html><body class="studio-workbench">ZettNAS</body></html>')
+    (static_dir / "index.html").write_text('<html><body class="studio-workbench">Kiboto</body></html>')
     monkeypatch.setattr("backend.main.STATIC_DIR", str(static_dir))
     return TestClient(app), static_dir
 

@@ -1,6 +1,6 @@
-"""COMP-01: use ZettNAS from anywhere through Tailscale or a Headscale server, against a stand-in
+"""COMP-01: use Kiboto from anywhere through Tailscale or a Headscale server, against a stand-in
 `tailscale` program (no account, no network): sign-in link, MagicDNS name, HTTPS addresses for
-ZettNAS and Immich, and the login server kept on every `tailscale up`."""
+Kiboto and Immich, and the login server kept on every `tailscale up`."""
 
 import json
 import os

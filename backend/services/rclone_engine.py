@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Rclone Cloud & Remote Storage Engine
+Kiboto - Rclone Cloud & Remote Storage Engine
 Universal userspace cloud integration (S3, B2, Google Drive, OneDrive, SFTP, WebDAV) via FUSE.
 """
 
@@ -24,7 +24,7 @@ from backend.ignored_errors import ignored
 from backend.proc import run_bounded
 from backend.services.webdav_engine import ensure_fuse_device
 
-logger = logging.getLogger("ZettNAS.Rclone")
+logger = logging.getLogger("Kiboto.Rclone")
 
 # The first character is never a dot: a remote is mounted at <remotes>/<name>, and "." or ".." would be
 # the remotes folder itself (unmounting every cloud mount) or the folder above it.

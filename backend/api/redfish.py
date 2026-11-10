@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - DMTF Redfish Scalable Platforms Management API (Phase 3)
+Kiboto - DMTF Redfish Scalable Platforms Management API (Phase 3)
 Provides high-performance, DMTF-compliant RESTful telemetry (< 2ms response time)
 served directly from in-memory system state without blocking disk or subprocess I/O.
 """
@@ -32,10 +32,10 @@ def get_service_root():
         "@odata.id": "/redfish/v1",
         "@odata.type": "#ServiceRoot.v1_15_0.ServiceRoot",
         "Id": "RootService",
-        "Name": "ZettNAS Redfish Service Root",
+        "Name": "Kiboto Redfish Service Root",
         "RedfishVersion": "1.15.0",
         "UUID": "e7b0a701-9988-4444-a1a2-589255892500",
-        "Product": "ZettNAS Appliance Management Suite",
+        "Product": "Kiboto Appliance Management Suite",
         "Vendor": "Zettlab",
         "SoftwareVersion": __version__,
         "Systems": {"@odata.id": "/redfish/v1/Systems"},
@@ -194,7 +194,7 @@ def get_system_detail():
         "@odata.id": "/redfish/v1/Systems/1",
         "@odata.type": "#ComputerSystem.v1_20_0.ComputerSystem",
         "Id": "1",
-        "Name": "ZettNAS Host System",
+        "Name": "Kiboto Host System",
         "SystemType": "Physical",
         "Manufacturer": "Zettlab",
         "Model": stats.get("chassis", "d4").upper(),
@@ -244,7 +244,7 @@ def get_storage_detail():
         "@odata.id": "/redfish/v1/Storage/1",
         "@odata.type": "#Storage.v1_16_0.Storage",
         "Id": "1",
-        "Name": "ZettNAS Storage Array",
+        "Name": "Kiboto Storage Array",
         "Status": {"State": "Enabled", "Health": "OK"},
         "Drives@odata.count": len(drives_members),
         "Drives": drives_members,

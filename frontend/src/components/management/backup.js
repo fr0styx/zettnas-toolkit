@@ -82,7 +82,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
           <td class="is-strong">
             <div>${escapeHtml(job.name)}</div>
             <div class="zn-sub">${isSettings
-              ? escapeHtml(t('backup.kind_config_source', 'ZettNAS settings (encrypted)'))
+              ? escapeHtml(t('backup.kind_config_source', 'Kiboto settings (encrypted)'))
               : `${escapeHtml(t('backup.source_folder', 'Folder:'))} <code>${escapeHtml(job.source_subvolume || '@shares')}</code>`}</div>
           </td>
           <td>${destBadge}</td>

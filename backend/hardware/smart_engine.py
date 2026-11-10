@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Universal S.M.A.R.T. & Thermal Engine
+Kiboto - Universal S.M.A.R.T. & Thermal Engine
 Multi-Protocol Hardware Telemetry Provider with Zero-Wake Spindown Safety.
 Supports SATA, PCIe NVMe, SAS enterprise HBAs, and USB mass storage bridges.
 """

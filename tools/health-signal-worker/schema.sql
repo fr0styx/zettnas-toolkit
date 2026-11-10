@@ -1,4 +1,4 @@
--- ZettNAS health signal: one row per install per ISO week (docs/HEALTH_SIGNAL.md)
+-- Kiboto health signal: one row per install per ISO week (docs/HEALTH_SIGNAL.md)
 CREATE TABLE IF NOT EXISTS reports (
   id TEXT NOT NULL,          -- random install id (not derived from the machine)
   week TEXT NOT NULL,        -- e.g. 2026-W43

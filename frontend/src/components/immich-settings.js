@@ -26,7 +26,7 @@ export function openPhoneBackup() {
 }
 
 export function settingsHtml(s, isAdmin) {
-  return `<p class="immich-note">${escapeHtml(t('immich.desc', 'When Immich runs next to ZettNAS, photo searches also show your Immich photos. Each person connects their own Immich account.'))}</p>
+  return `<p class="immich-note">${escapeHtml(t('immich.desc', 'When Immich runs next to Kiboto, photo searches also show your Immich photos. Each person connects their own Immich account.'))}</p>
     <p class="immich-note">${escapeHtml(t('immich.phone_backup_hint', "To back up a phone's photos here, follow the steps under Backups."))}
       <button type="button" class="btn-pill-toggle is-small" data-immich-phone-backup>${escapeHtml(t('immich.phone_backup_open', 'Back up my phone'))}</button></p>
     ${

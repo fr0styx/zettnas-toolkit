@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Container Inspector & Docker Compose Viewer Modal
+ * Kiboto - Container Inspector & Docker Compose Viewer Modal
  * Provides tabbed inspection: Overview Telemetry, Ports & Web Access,
  * Mounts (with File Explorer deep-link), Masked Environment Variables,
  * Dynamic Docker Compose Synthesizer, and Live Log Console.
@@ -1532,7 +1532,7 @@ async function renderContainerEditTab(cid) {
 
       ${isToolkit ? `
         <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:6px; padding:12px; margin-bottom:14px; color:var(--lt-t-fca5a5ff, #fca5a5); font-size:var(--zn-fs-xs);">
-          ${ico('⚠️')} ${t('ci.self_note', 'ZettNAS can’t recreate its own container from here. Change its settings in Docker Compose or the host’s template, so running connections are not cut.')}
+          ${ico('⚠️')} ${t('ci.self_note', 'Kiboto can’t recreate its own container from here. Change its settings in Docker Compose or the host’s template, so running connections are not cut.')}
         </div>
       ` : ''}
 
@@ -1579,7 +1579,7 @@ async function renderContainerEditTab(cid) {
       <div class="ci-metric-card ci-box-6">
         <div class="ci-row-8">
           <div class="ci-xs-bold-strong">${t('ci.ports_title', 'Port bindings')}</div>
-          <button class="btn-pill-toggle ci-xs-10" id="cie-btn-add-port" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ ${t('ci.add_port', 'Add port')}</button>
+          <button class="btn-pill-toggle ci-xs-10" id="cie-btn-add-port" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'Kiboto cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ ${t('ci.add_port', 'Add port')}</button>
         </div>
         <div class="ci-x-10" id="cie-ports-container" style="display: flex;"></div>
       </div>
@@ -1588,7 +1588,7 @@ async function renderContainerEditTab(cid) {
       <div class="ci-metric-card ci-box-6">
         <div class="ci-row-8">
           <div class="ci-xs-bold-strong">${t('ci.mounts_title', 'Mounted folders')}</div>
-          <button class="btn-pill-toggle ci-xs-10" id="cie-btn-add-mount" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ ${t('ci.add_mount', 'Add folder')}</button>
+          <button class="btn-pill-toggle ci-xs-10" id="cie-btn-add-mount" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'Kiboto cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ ${t('ci.add_mount', 'Add folder')}</button>
         </div>
         <div class="ci-x-10" id="cie-mounts-container" style="display: flex;"></div>
       </div>
@@ -1599,7 +1599,7 @@ async function renderContainerEditTab(cid) {
           <div class="ci-xs-bold-strong">${t('ci.env_title', 'Environment variables')}</div>
           <div class="ci-row-2">
             <input type="text" id="cie-env-filter" placeholder="${t('ui.filter_variables', 'Filter variables...')}" class="tz-text-input ci-xs-11">
-            <button class="btn-pill-toggle ci-xs-10" id="cie-btn-add-env" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ ${t('ci.add_var', 'Add variable')}</button>
+            <button class="btn-pill-toggle ci-xs-10" id="cie-btn-add-env" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'Kiboto cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ ${t('ci.add_var', 'Add variable')}</button>
           </div>
         </div>
         <div class="ci-x-11" id="cie-env-container" style="display: flex;"></div>
@@ -1613,7 +1613,7 @@ async function renderContainerEditTab(cid) {
         </label>
         <div class="ci-row-11">
           <button class="btn-pill-toggle" id="cie-btn-cancel">${t('common.cancel', 'Cancel')}</button>
-          <button class="btn-pill-toggle" id="cie-btn-save" style="font-weight:700; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border:none; padding:6px 16px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>
+          <button class="btn-pill-toggle" id="cie-btn-save" style="font-weight:700; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border:none; padding:6px 16px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'Kiboto cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>
             ${ico('💾')} ${t('ci.save_recreate', 'Save and recreate the container')}
           </button>
         </div>

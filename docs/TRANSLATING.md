@@ -1,6 +1,6 @@
-# Translating ZettNAS
+# Translating Kiboto
 
-ZettNAS speaks English, German, Spanish, French and Chinese. Every text people read has a key in
+Kiboto speaks English, German, Spanish, French and Chinese. Every text people read has a key in
 all five files under `frontend/src/locales/`, and `npm run lint:i18n` checks them.
 
 ## How to write

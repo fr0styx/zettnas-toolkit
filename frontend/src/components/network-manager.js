@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Network Manager & Ports Inspector
+ * Kiboto - Network Manager & Ports Inspector
  * Modular controller for host network adapters, virtual switching, and listening socket inspection.
  */
 import { api } from '../api.js';

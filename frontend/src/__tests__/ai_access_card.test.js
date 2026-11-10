@@ -15,7 +15,7 @@ const ACCESS = {
 };
 const LOG = [{ ts: 1700000000, username: 'lea', role: 'kid', model: '', web: false, outcome: 'refused', ms: 0 }];
 
-describe('Who can use Zetty', () => {
+describe('Who can use Kib', () => {
   beforeEach(() => {
     document.body.innerHTML = '<form id="ai-rerank-form"></form>';
     vi.clearAllMocks();
@@ -28,7 +28,7 @@ describe('Who can use Zetty', () => {
     const admin = card.querySelector('[data-ai-role="superadmin"]');
     expect(kid.checked).toBe(false);
     expect(admin.checked && admin.disabled).toBe(true);
-    expect(card.textContent).toContain('Who asked Zetty');
+    expect(card.textContent).toContain('Who asked Kib');
     expect(card.textContent).toContain('lea (kid)');
     expect(card.textContent).toContain('Turned off for them');
   });
@@ -68,7 +68,7 @@ describe('Who can use Zetty', () => {
 
   it('escapes names from the log and says so when it is empty', () => {
     expect(String(logHtml([{ ...LOG[0], username: '<b>x</b>' }]))).not.toContain('<b>x</b>');
-    expect(String(logHtml([]))).toContain('Nobody has asked Zetty yet');
+    expect(String(logHtml([]))).toContain('Nobody has asked Kib yet');
   });
 
   it('tells someone whose role is off what to do', () => {

@@ -1,6 +1,6 @@
-# ZettNAS Toolkit - Installation & Deployment Guide
+# Kiboto - Installation & Deployment Guide
 
-This document provides complete, step-by-step instructions for installing and running **ZettNAS Toolkit** across all supported operating systems, container engines, and hardware configurations.
+This document provides complete, step-by-step instructions for installing and running **Kiboto** across all supported operating systems, container engines, and hardware configurations.
 
 ---
 
@@ -35,7 +35,7 @@ This document provides complete, step-by-step instructions for installing and ru
 
 ### Unraid companion mode
 
-ZettNAS reads Unraid's status files when it runs on the Unraid box itself. When it runs
+Kiboto reads Unraid's status files when it runs on the Unraid box itself. When it runs
 elsewhere (or to post alerts into Unraid's bell), point it at the Unraid API (Unraid 7):
 create a key on the Unraid box under **Settings > Management Access > API Keys** with only
 these permissions: Array, Disk, Share and Info (read), and Notifications (read and create).
@@ -44,9 +44,9 @@ structure"; the web page (or the GraphQL `apiKey.create` mutation) works.
 
 Then set `UNRAID_API_KEY` and `UNRAID_API_URL`. With HTTPS on (Unraid's default), Unraid
 only answers plain HTTP on the box itself, so use its HTTPS address from Settings >
-Management Access, for example `https://10-0-0-5.<hash>.myunraid.net`. ZettNAS verifies
+Management Access, for example `https://10-0-0-5.<hash>.myunraid.net`. Kiboto verifies
 that certificate: it ships the Let's Encrypt link these certificates need
-(`backend/certs/README.md`), and `UNRAID_API_CA` can add another CA file. ZettNAS then
+(`backend/certs/README.md`), and `UNRAID_API_CA` can add another CA file. Kiboto then
 reads the array, disks (including which are spun down), shares and parity-check progress,
 and posts its alerts to Unraid's notification centre. It never starts, stops or changes
 the array through the API.
@@ -54,11 +54,11 @@ the array through the API.
 ### TrueNAS companion mode
 
 On TrueNAS SCALE, set `TRUENAS_URL` (for example `https://truenas.local`) and
-`TRUENAS_API_KEY` (TrueNAS: user menu → API Keys) in the container environment. ZettNAS
+`TRUENAS_API_KEY` (TrueNAS: user menu → API Keys) in the container environment. Kiboto
 then reads pools, datasets and shares through the TrueNAS API and can take ZFS snapshots
 (used by the ransomware guard). It never changes pools or shares. Add
 `TRUENAS_VERIFY_TLS=0` if TrueNAS still uses its self-signed certificate. The address must
-start with `https://`: TrueNAS revokes an API key that is sent without encryption, so ZettNAS
+start with `https://`: TrueNAS revokes an API key that is sent without encryption, so Kiboto
 refuses a `http://` address before sending it. Set `TRUENAS_USER` to the TrueNAS user the key
 belongs to; TrueNAS 28 needs it to sign in, and earlier versions accept it too.
 
@@ -70,13 +70,13 @@ belongs to; TrueNAS 28 needs it to sign in, and earlier versions accept it too.
 | `latest-core`, `edge-core` | about 500 MB | Everything except virtual machines, Chromium and ZFS; the front LCD uses the built-in renderer |
 
 Both images carry the btrfs and software-RAID (mdadm) tools. The full image also carries
-Debian's ZFS 2.4 tools for servers where ZettNAS runs the pools itself (plain Linux, ZettOS).
-On Unraid, TrueNAS and Proxmox the host runs its own ZFS and ZettNAS leaves it to the host.
+Debian's ZFS 2.4 tools for servers where Kiboto runs the pools itself (plain Linux, ZettOS).
+On Unraid, TrueNAS and Proxmox the host runs its own ZFS and Kiboto leaves it to the host.
 
-**Snapshots and scrubs where ZettNAS runs the pools** need the pool's folder mounted into the
+**Snapshots and scrubs where Kiboto runs the pools** need the pool's folder mounted into the
 container at the same path (for example `-v /mnt/tank:/mnt/tank`). ZFS also needs the host's
 `/dev/zfs` passed in (`--device /dev/zfs`) and a ZFS module of the same version line as the
-image's tools (2.4): ZettNAS checks this at start and, when they differ, says so under
+image's tools (2.4): Kiboto checks this at start and, when they differ, says so under
 Backup instead of running ZFS commands.
 
 Use the core tags on servers that don't run VMs. The front LCD still works: the core
@@ -96,7 +96,7 @@ your compose file or Unraid template and recreate the container.
 
 - **Web Desktop URL**: `http://<server-ip>:8082`
 - **Username**: `admin`
-- **First-time password**: if you leave `WEB_PASSWORD` empty, ZettNAS generates one on first start. It is written to the container log (`docker logs zettnas-toolkit`) and saved as `initial-admin-password` in the app data folder (readable by root only). It works once: you choose your own password at first sign-in, and the file is then deleted.
+- **First-time password**: if you leave `WEB_PASSWORD` empty, Kiboto generates one on first start. It is written to the container log (`docker logs zettnas-toolkit`) and saved as `initial-admin-password` in the app data folder (readable by root only). It works once: you choose your own password at first sign-in, and the file is then deleted.
 
 > [!WARNING]  
 > Upon your first login, immediately navigate to **Mission Control** → **Settings** → **Security** (or press `Cmd+K` and type `>password`) to set a strong master password or provision a new user account.
@@ -107,7 +107,7 @@ your compose file or Unraid template and recreate the container.
 
 ### Option A: Unraid OS (Docker Template)
 
-ZettNAS Toolkit integrates directly with Unraid's DockerMan subsystem and device assignment.
+Kiboto integrates directly with Unraid's DockerMan subsystem and device assignment.
 
 1. **Install the Template**:
    Copy the pre-configured [`unraid/zettnas-toolkit.xml`](../unraid/zettnas-toolkit.xml) template into your Unraid flash drive:
@@ -303,7 +303,7 @@ TrueNAS SCALE (Dragonfish & Electric Eel) supports custom Docker Compose applica
 
 ### Option E: UGOS (Ugreen NAS) & Observer Platforms
 
-For **UGOS (Ugreen NAS OS)**, **FygoOS**, **ZettOS**, or **Proxmox VE**, ZettNAS Toolkit operates in **Non-Intrusive Observer Mode (`is_observer_mode = True`)**. It monitors storage pools, drive temperatures, S.M.A.R.T. health, and host metrics without modifying host configuration files or competing with native storage daemons.
+For **UGOS (Ugreen NAS OS)**, **FygoOS**, **ZettOS**, or **Proxmox VE**, Kiboto operates in **Non-Intrusive Observer Mode (`is_observer_mode = True`)**. It monitors storage pools, drive temperatures, S.M.A.R.T. health, and host metrics without modifying host configuration files or competing with native storage daemons.
 
 1. **Deploy Compose Stack**:
    In UGOS Docker Manager or via SSH:
@@ -430,9 +430,9 @@ For developers, homelab maintainers, and air-gapped homelabs building custom ima
 
 ## Memory
 
-ZettNAS sets no memory limit by default. A container that reaches its limit is killed at once,
+Kiboto sets no memory limit by default. A container that reaches its limit is killed at once,
 which can happen in the middle of a database write or a file copy; on a NAS a warning is the
-safer default. ZettNAS warns instead when it uses more than `APP_MEMORY_WARN_MB` (1536 MB by
+safer default. Kiboto warns instead when it uses more than `APP_MEMORY_WARN_MB` (1536 MB by
 default, `0` turns it off), counting its own processes and not virtual machines. The warning shows
 in the event log and goes to your notification channels.
 
@@ -441,16 +441,16 @@ If you want a hard cap anyway, set it on the container (`mem_limit:` in Compose,
 
 | What runs | Recommended limit |
 |---|---|
-| ZettNAS alone (core image, or full image without VMs) | 1 GB (it usually holds 250–450 MB) |
+| Kiboto alone (core image, or full image without VMs) | 1 GB (it usually holds 250–450 MB) |
 | With the front LCD's browser renderer | 1.5 GB |
 | With virtual machines | the memory of every VM you run at once, plus 1 GB |
 
-Virtual machines run inside the ZettNAS container, so its limit is theirs too: a VM that needs
+Virtual machines run inside the Kiboto container, so its limit is theirs too: a VM that needs
 more than the limit leaves is killed with it.
 
 ## Hardware Device & Capability Mappings
 
-ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgroup` rules:
+Kiboto accesses physical hardware through Linux device nodes and `cgroup` rules:
 
 | Device Node | Major/Minor Rule | Purpose | Required? |
 | :--- | :--- | :--- | :---: |
@@ -473,7 +473,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 
 ## Headless Server Deployments (No LCD / ARGB)
 
-**ZettNAS Toolkit is completely hardware- and OS-agnostic.**
+**Kiboto is completely hardware- and OS-agnostic.**
 - If physical front-panel hardware (`/dev/fb0` or `/dev/ttyACM0`) is not present on your system, the toolkit automatically detects the absence during boot.
 - The LCD renderer cleanly enters standby without throwing errors or consuming CPU cycles.
 - The top-bar `MCU` and `FB` status indicators, as well as appliance-only menus, are dynamically hidden.
@@ -505,7 +505,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `TAILSCALE_STATE_DIR` | `/app/data/tailscale` | State and configuration directory for embedded Tailscale mesh node |
 | `SFTP_PORT` | `2222` | Port for drop-in chrooted SFTP server |
 | `UPDATE_SIGNATURES` | `enforce` | In-app updates install only images this project's CI signed: `enforce`, `warn` (install with a warning) or `off` |
-| `KIBOTO_DOCKER_PROXY` | `on` | ZettNAS reaches Docker through an allow-list proxy that forwards only the calls it uses; `off` gives it the socket directly |
+| `KIBOTO_DOCKER_PROXY` | `on` | Kiboto reaches Docker through an allow-list proxy that forwards only the calls it uses; `off` gives it the socket directly |
 | `KIBOTO_TRUSTED_IPS` | *(empty)* | Comma-separated addresses or networks (CIDR) that are never blocked, neither after failed sign-ins nor by the ransomware guard, so you can always reach the console |
 | `LCD_RENDERER` | `auto` | What draws the front LCD: `pil` (built in, no browser), `chromium` (the web dashboard) or `auto` (Chromium when the image has it) |
 | `UPDATE_CHANNEL` | `stable` | Update channel: `stable` (releases after a 3-day beta, `:latest`), `beta` (new releases right away, `:beta`) or `edge` (every commit on main); see docs/RELEASING.md |
@@ -519,14 +519,14 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 ## Volume Mounts & Data Persistence
 
 Ensure your container preserves the following host volume:
-- **`./data:/app/data`**: Houses the SQLite WAL user store (`users.db`), API tokens, fan curves (`fan_state.json`), wallpaper library, client preferences, and system event logs. Backing up this directory backs up your entire ZettNAS configuration.
+- **`./data:/app/data`**: Houses the SQLite WAL user store (`users.db`), API tokens, fan curves (`fan_state.json`), wallpaper library, client preferences, and system event logs. Backing up this directory backs up your entire Kiboto configuration.
 - `data/cache/` holds thumbnails only. It can be deleted at any time and is not part of pre-update snapshots.
 
 ---
 
 ## Reverse Proxy & HTTPS Setup
 
-To expose ZettNAS Toolkit behind Nginx, Caddy, Traefik, or Cloudflare Tunnel:
+To expose Kiboto behind Nginx, Caddy, Traefik, or Cloudflare Tunnel:
 - Configure your reverse proxy to forward to `http://<server-ip>:8082`.
 - **Disable buffering for Server-Sent Events (SSE)** on `/api/stats/stream` and `/api/events` (e.g. `proxy_buffering off;` in Nginx).
 - For complete production reverse proxy configurations and SSL/TLS examples, see [`docs/REVERSE_PROXY.md`](REVERSE_PROXY.md).
@@ -535,9 +535,9 @@ To expose ZettNAS Toolkit behind Nginx, Caddy, Traefik, or Cloudflare Tunnel:
 
 ## Local AI runtimes
 
-ZettAI talks to an Ollama or OpenVINO Model Server (OVMS) runtime. It looks for one only on this NAS: `OLLAMA_HOST` / `LLM_HOST` if you set them, containers named `zettnas-ollama`, `ollama`, `zettnas-ovms` or `ovms` on a shared Docker network, then the Docker host itself. It never sends prompts to your router or other machines on the LAN unless you point `OLLAMA_HOST` there.
+Kib talks to an Ollama or OpenVINO Model Server (OVMS) runtime. It looks for one only on this NAS: `OLLAMA_HOST` / `LLM_HOST` if you set them, containers named `zettnas-ollama`, `ollama`, `zettnas-ovms` or `ovms` on a shared Docker network, then the Docker host itself. It never sends prompts to your router or other machines on the LAN unless you point `OLLAMA_HOST` there.
 
-Neither runtime has a password. Don't publish their ports (11434, 8000) to the LAN; attach them to the ZettNAS network instead:
+Neither runtime has a password. Don't publish their ports (11434, 8000) to the LAN; attach them to the Kiboto network instead:
 
 ```yaml
 services:
@@ -546,12 +546,12 @@ services:
     networks: [zettnas]
     volumes:
       - ./ollama:/root/.ollama
-    # no "ports:" section: only ZettNAS can reach it
+    # no "ports:" section: only Kiboto can reach it
 
 networks:
   zettnas:
     external: true
-    name: zettnas-toolkit_default   # the network your ZettNAS container is on
+    name: zettnas-toolkit_default   # the network your Kiboto container is on
 ```
 
 The Security Advisor warns when an AI container publishes a port on all interfaces. Web search and weather are off in chat unless you turn on **Web**, and answers that used outside services say so.
@@ -567,7 +567,7 @@ Administrators can check for updates and trigger 1-click container self-updates 
    - **Stable** (default): tagged releases, after 3 days on Beta, once a week.
    - **Beta**: each tagged release as soon as it passes CI.
    - **Edge**: every tested commit on the GitHub `main` branch.
-3. If an update is available, click **Install Update Now**. ZettNAS downloads the image, checks that this project's CI signed exactly that image (`UPDATE_SIGNATURES`), snapshots its data, and recreates the container. The old version keeps running until the new one has reported healthy for 60 seconds; if it doesn't, ZettNAS goes back on its own and tells you why.
+3. If an update is available, click **Install Update Now**. Kiboto downloads the image, checks that this project's CI signed exactly that image (`UPDATE_SIGNATURES`), snapshots its data, and recreates the container. The old version keeps running until the new one has reported healthy for 60 seconds; if it doesn't, Kiboto goes back on its own and tells you why.
 
 ### Upgrading via Docker Compose
 ```bash
@@ -580,10 +580,10 @@ docker compose up -d
 In the Unraid WebUI, navigate to **Docker**, click **Check for Updates**, and click **Update** next to `zettnas-toolkit`.
 
 ### Snapshots, pinning a version and going back by hand
-- **Every update is snapshotted.** Before the data is touched, ZettNAS copies its settings and databases (not the AI index) to `data/backups/pre-update/<date>-from-<version+commit>/`. The in-app updater does this when it stops the old version; an update from the Unraid Docker tab or `docker compose pull` gets one when the new version first starts. The newest three are kept, plus the newest one taken from a Stable build.
+- **Every update is snapshotted.** Before the data is touched, Kiboto copies its settings and databases (not the AI index) to `data/backups/pre-update/<date>-from-<version+commit>/`. The in-app updater does this when it stops the old version; an update from the Unraid Docker tab or `docker compose pull` gets one when the new version first starts. The newest three are kept, plus the newest one taken from a Stable build.
 - **The previous image is kept.** After an in-app update the old image is tagged `zettnas-toolkit-rollback:<version+commit>`, so `docker image prune` doesn't remove it. **Mission Control → Settings → About & Updates → Revert to previous version** uses it.
 - **Pin a version** by using a version tag instead of `latest`, e.g. `ghcr.io/fr0styx/zettnas-toolkit:1.10.1` (Compose `image:` line, or the Unraid template's Repository field). It changes only when you change the tag.
-- **Go back by hand:** stop the container, copy the files of the snapshot you want from `data/backups/pre-update/<snapshot>/` back into `data/` (overwrite), set the image to the version that snapshot came from (its folder name and `manifest.json` say which), and start it again. Don't start an older version on data a newer one has migrated without restoring its snapshot first: ZettNAS refuses to open newer databases.
+- **Go back by hand:** stop the container, copy the files of the snapshot you want from `data/backups/pre-update/<snapshot>/` back into `data/` (overwrite), set the image to the version that snapshot came from (its folder name and `manifest.json` say which), and start it again. Don't start an older version on data a newer one has migrated without restoring its snapshot first: Kiboto refuses to open newer databases.
 
 ---
 
@@ -598,14 +598,14 @@ getent group docker             # the group id to pass with --group-add
 Do **not** run `chmod 666` on the socket: that gives every local user and every other container full root control of the host.
 
 #### Q: Hard drive temperatures are not showing or reading `--`
-**A**: Ensure `/dev` and `/sys` are mounted as specified in the compose file and that `cap_add: [SYS_RAWIO, SYS_ADMIN]` is present. ZettNAS uses `smartctl` with the `-n standby` flag to read drive temperatures safely without waking sleeping platters.
+**A**: Ensure `/dev` and `/sys` are mounted as specified in the compose file and that `cap_add: [SYS_RAWIO, SYS_ADMIN]` is present. Kiboto uses `smartctl` with the `-n standby` flag to read drive temperatures safely without waking sleeping platters.
 
 #### Q: How do my other computers shut down when the UPS battery runs low?
-**A**: Turn on **UPS for your other computers (NUT server)** in the UPS settings. ZettNAS then
+**A**: Turn on **UPS for your other computers (NUT server)** in the UPS settings. Kiboto then
 offers the UPS it reads over the Network UPS Tools protocol on port 3493 to the home network.
 **Setup for a PC** shows the line for the PC's `upsmon.conf`
 (`MONITOR ups@NAS-ADDRESS:3493 1 monuser PASSWORD secondary`); WinNUT and other NUT clients take the
-same address, user and password. The PCs shut down when the battery runs low, and when ZettNAS
+same address, user and password. The PCs shut down when the battery runs low, and when Kiboto
 starts its own low-battery shutdown it raises the forced-shutdown flag and waits up to 15
 seconds for them first. The port must reach the container: add `-p 3493:3493` (or
 `- "3493:3493"` under `ports:`), or pick another port if the host already runs a NUT server
@@ -613,7 +613,7 @@ there (on Unraid, its own NUT settings can serve the PCs instead).
 
 #### Q: Can a USB disk back up the NAS, or bring photos in, when I plug it in?
 **A**: Yes. When a USB disk appears under `/mnt/disks` (Unraid's Unassigned Devices, or your
-own mount there), ZettNAS offers to bring the off-site backups that live on it up to date, and
+own mount there), Kiboto offers to bring the off-site backups that live on it up to date, and
 to import the photos and videos of a camera or phone disk (its `DCIM` folder) into dated
 folders, each file checked after copying. In Backup → Off-site you can have it back up to such
 a disk by itself as soon as it is plugged in. New disks are noticed from the mount table, so a
@@ -623,4 +623,4 @@ sleeping disk is never woken.
 **A**: Port `8084` provides zero-conflict WebDAV access:
 - **Windows**: File Explorer → Map Network Drive → `http://<server-ip>:8084`.
 - **macOS**: Finder → Connect to Server (`Cmd+K`) → `http://<server-ip>:8084`.
-- **iOS / Android**: Connect via the Files app or Owlfiles using your ZettNAS user credentials.
+- **iOS / Android**: Connect via the Files app or Owlfiles using your Kiboto user credentials.

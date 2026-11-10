@@ -64,7 +64,7 @@ class FakeDocker:
             if self.existing is None:
                 return 404, {}
             return 200, {"Config": {"Labels": self.existing}, "State": {"Running": self.running}}
-        if path.startswith("/containers/") and path.endswith("/json"):  # ZettNAS itself
+        if path.startswith("/containers/") and path.endswith("/json"):  # Kiboto itself
             return 200, {"NetworkSettings": {"Networks": {"zettnas_default": {}}}}
         if path.startswith("/containers/create"):
             return 201, {"Id": "new"}

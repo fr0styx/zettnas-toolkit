@@ -1,5 +1,5 @@
 """
-Storage Diagnostics Engine for ZettNAS Toolkit.
+Storage Diagnostics Engine for Kiboto.
 Collects non-blocking filesystem, disk topology, PAL pools, mounts with ro/rw audit,
 I/O diskstats, FreeDesktop RecycleBin audit, Btrfs chunk allocations, ZFS status,
 and zero-wake S.M.A.R.T. telemetry with SQLite degradation velocity and executive reports.

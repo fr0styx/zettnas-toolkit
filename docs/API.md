@@ -1,4 +1,4 @@
-# ZettNAS Toolkit REST API Reference
+# Kiboto REST API Reference
 
 All routes are mounted at `/api` (with the versioned alias `/api/v1`). The daemon exposes a comprehensive RESTful interface, Server-Sent Events (SSE) live streaming, and interactive WebSocket endpoints for hardware orchestration, storage topology, multi-user identity, Docker stacks, and remote cloud storage.
 
@@ -174,7 +174,7 @@ request and response schemas.
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/docker/catalog` | any of `containers:read`, `containers:manage` | Get Docker Catalog |
 | `GET` | `/api/v1/docker/catalog/defaults` | any of `containers:read`, `containers:manage` | What the install dialog starts with on this host: where apps keep their data (NUX-12) |
-| `GET` | `/api/v1/docker/catalog/logo` | any of `containers:read`, `containers:manage` | An app's logo, fetched once by ZettNAS so the browser doesn't ask a third party (SEC-38) |
+| `GET` | `/api/v1/docker/catalog/logo` | any of `containers:read`, `containers:manage` | An app's logo, fetched once by Kiboto so the browser doesn't ask a third party (SEC-38) |
 | `GET` | `/api/v1/docker/catalog/office-suite/family` | any of `users:read`, `containers:read` | The family calendar and address book (NFEAT-7): whether the office suite is installed and the address phones use, with this server's name… |
 | `POST` | `/api/v1/docker/catalog/office-suite/family` | `containers:manage` | Adds Calendar and Contacts to an office suite installed before they were part of it |
 | `GET` | `/api/v1/docker/catalog/office-suite/family/profile` | any of `users:read`, `containers:read` | The family calendar and contacts as a profile an iPhone or iPad installs (NFEAT-7) |
@@ -369,7 +369,7 @@ request and response schemas.
 
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/metrics` | `system:view` | Prometheus exposition format for ZettNAS telemetry |
+| `GET` | `/api/v1/metrics` | `system:view` | Prometheus exposition format for Kiboto telemetry |
 | `GET` | `/api/v1/metrics/memory` | `system:view` | The backend's resident memory every 10 minutes, and its growth per run between restarts |
 | `GET` | `/api/v1/metrics/memory/breakdown` | `system:config` | What the backend holds now: Python objects by type and, while tracing, the lines that allocated most |
 | `POST` | `/api/v1/metrics/memory/tracing` | `system:config` | Turns allocation tracing on or off (it costs memory and time while on) |
@@ -420,7 +420,7 @@ request and response schemas.
 | `GET` | `/api/v1/network/remote-access` | `system:view` | Use from anywhere (COMP-01): tailnet state, sign-in link, and the addresses to open |
 | `POST` | `/api/v1/network/remote-access/connect` | `system:config` | Joins Tailscale, or a Headscale server; answers with the sign-in link when one is needed |
 | `POST` | `/api/v1/network/remote-access/disconnect` | `system:config` | Post Remote Access Disconnect |
-| `POST` | `/api/v1/network/remote-access/publish` | `system:config` | HTTPS addresses in the tailnet for ZettNAS and Immich |
+| `POST` | `/api/v1/network/remote-access/publish` | `system:config` | HTTPS addresses in the tailnet for Kiboto and Immich |
 | `GET` | `/api/v1/network/topology` | any of `system:view`, `system:config` | Retrieve full host network topology, physical NICs, bridges, bonds, and Docker networks |
 | `POST` | `/api/v1/network/vlan/create` | `system:config` | Create a new 802.1Q VLAN tagged sub-interface (e.g |
 | `DELETE` | `/api/v1/network/vlan/{vlan_iface}` | `system:config` | Delete an existing 802.1Q VLAN tagged sub-interface |
@@ -555,7 +555,7 @@ request and response schemas.
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/snmp/config` | any of `system:view`, `system:config` | Returns current SNMP configuration with masked credentials |
 | `POST` | `/api/v1/snmp/config` | `system:config` | Updates SNMP daemon configuration |
-| `GET` | `/api/v1/snmp/mib` | `system:view` | Returns downloadable SMIv2 ZETTLAB-ZETTNAS-MIB file |
+| `GET` | `/api/v1/snmp/mib` | `system:view` | Returns downloadable SMIv2 ZETTLAB-KIBOTO-MIB file |
 | `GET` | `/api/v1/snmp/oids` | `system:view` | Evaluates live enterprise OIDs directly from in-memory state |
 | `GET` | `/api/v1/snmp/status` | any of `system:view`, `storage:read` | Returns SNMP daemon running status and protocol capabilities |
 
@@ -592,7 +592,7 @@ request and response schemas.
 
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/auth/oidc/apps/immich` | any of `users:write`, `system:config` | Turns on sign-in with ZettNAS's provider in a freshly installed Immich (M3) |
+| `POST` | `/api/v1/auth/oidc/apps/immich` | any of `users:write`, `system:config` | Turns on sign-in with Kiboto's provider in a freshly installed Immich (M3) |
 | `GET` | `/api/v1/auth/oidc/callback` | signed in | Sso Callback |
 | `GET` | `/api/v1/auth/oidc/config` | signed in | Whether to show the single sign-on button, and its label (public) |
 | `GET` | `/api/v1/auth/oidc/login` | signed in | Sso Login |
@@ -603,35 +603,35 @@ request and response schemas.
 
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/ai/access` | any of `system:config`, `users:read` | Who may ask Zetty, per role (B8) |
+| `GET` | `/api/v1/ai/access` | any of `system:config`, `users:read` | Who may ask Kib, per role (B8) |
 | `PUT` | `/api/v1/ai/access` | `system:config` | Put Ai Access |
 | `GET` | `/api/v1/ai/access/me` | signed in | Get My Ai Access |
 | `GET` | `/api/v1/ai/actions/{action_id}` | signed in | Get Pending Ai Action |
-| `POST` | `/api/v1/ai/actions/{action_id}/confirm` | any of `shares:read`, `storage:read`, `system:read` | Runs an action ZettAI proposed, after the user clicked Confirm (AI-01) |
+| `POST` | `/api/v1/ai/actions/{action_id}/confirm` | any of `shares:read`, `storage:read`, `system:read` | Runs an action Kib proposed, after the user clicked Confirm (AI-01) |
 | `POST` | `/api/v1/ai/ask` | any of `shares:read`, `storage:read`, `system:read` | Grounded Conversational RAG & Structured Recipe/Document Synthesis |
 | `POST` | `/api/v1/ai/benchmark` | any of `system:config`, `storage:admin` | Executes a zero-disk synthetic embedding benchmark over 3 in-memory reference strings |
-| `POST` | `/api/v1/ai/chat` | any of `shares:read`, `storage:read`, `system:read` ⏱ | Ask Zetty: answers about your files and your server, with web search and the server tools |
-| `POST` | `/api/v1/ai/chat/stream` | any of `shares:read`, `storage:read`, `system:read` ⏱ | Streams real-time Server-Sent Events (SSE) tokens, tool activity traces, and thought chains from ZettAI |
-| `GET` | `/api/v1/ai/chat/tools` | any of `system:read`, `shares:read`, `storage:read` | The server and web search tools Ask Zetty can use |
+| `POST` | `/api/v1/ai/chat` | any of `shares:read`, `storage:read`, `system:read` ⏱ | Ask Kib: answers about your files and your server, with web search and the server tools |
+| `POST` | `/api/v1/ai/chat/stream` | any of `shares:read`, `storage:read`, `system:read` ⏱ | Streams real-time Server-Sent Events (SSE) tokens, tool activity traces, and thought chains from Kib |
+| `GET` | `/api/v1/ai/chat/tools` | any of `system:read`, `shares:read`, `storage:read` | The server and web search tools Ask Kib can use |
 | `GET` | `/api/v1/ai/config` | any of `system:read`, `storage:read` | Get Rag Config |
 | `POST` | `/api/v1/ai/config` | any of `system:config`, `storage:admin` | Update Rag Config |
 | `PUT` | `/api/v1/ai/config` | any of `system:config`, `storage:admin` | Update Rag Config |
-| `POST` | `/api/v1/ai/favorites` | any of `shares:read`, `storage:read`, `system:read` | Adds or removes a file path from ZettAI favorites |
+| `POST` | `/api/v1/ai/favorites` | any of `shares:read`, `storage:read`, `system:read` | Adds or removes a file path from Kib favorites |
 | `POST` | `/api/v1/ai/folder/audit` | any of `shares:read`, `storage:read`, `system:read` | Executes hierarchical folder context aggregation (Mode A: targeted fact retrieval; Mode B: comprehensive folder audit with MMR diversific… |
 | `GET` | `/api/v1/ai/folder/manifest` | any of `shares:read`, `storage:read`, `system:read` | Retrieves the recursive structure outline and topic inventory for a folder from NVMe SQLite WAL |
 | `GET` | `/api/v1/ai/folders` | any of `system:config`, `ai:manage` | Returns configured watched/excluded RAG folders and discovered NAS shares with live disk standby state |
-| `POST` | `/api/v1/ai/folders` | any of `system:config`, `ai:manage` | Adds, removes, or sets watched or excluded folders/shares for ZettAI RAG |
+| `POST` | `/api/v1/ai/folders` | any of `system:config`, `ai:manage` | Adds, removes, or sets watched or excluded folders/shares for Kib RAG |
 | `POST` | `/api/v1/ai/index` | any of `shares:user_write`, `storage:write`, `storage:admin`, `system:config` | Runs incremental, spindown-safe multi-modal indexing on the requested directory or watched folders |
 | `POST` | `/api/v1/ai/index/control` | any of `system:config`, `ai:manage` | Pause, resume, stop, query, or flush the active RAG & Visual Search indexing sync job |
 | `POST` | `/api/v1/ai/index/flush` | any of `system:config`, `ai:manage` | Flushes all indexed files, vector embeddings, chunks, and manifests from rag_index.db to start fresh |
 | `POST` | `/api/v1/ai/index/forget` | any of `system:config`, `ai:manage` | Deletes what the index learned from a folder and stops learning it (AI-20) |
 | `POST` | `/api/v1/ai/index/sync` | any of `shares:user_write`, `storage:write`, `storage:admin`, `system:config` | Runs incremental, spindown-safe multi-modal indexing on the requested directory or watched folders |
 | `POST` | `/api/v1/ai/learning/relearn-failed` | any of `system:config`, `ai:manage` | Retries indexing failed files without waking sleeping drives |
-| `GET` | `/api/v1/ai/learning/results` | any of `system:read`, `shares:read`, `storage:read` | Returns ZettAI 6-state learning status, succeeded/failed counts, and failed file list |
+| `GET` | `/api/v1/ai/learning/results` | any of `system:read`, `shares:read`, `storage:read` | Returns Kib 6-state learning status, succeeded/failed counts, and failed file list |
 | `GET` | `/api/v1/ai/manifests` | any of `shares:read`, `storage:read`, `system:read` | Lists all indexed folder manifests and tree summaries across watched storage shares |
 | `GET` | `/api/v1/ai/models/benchmark` | any of `system:read`, `ai:manage`, `system:config` | Last benchmark results, the recommended tiers and a running job (D2) |
 | `POST` | `/api/v1/ai/models/benchmark` | any of `system:config`, `ai:manage` | Start Model Benchmark |
-| `POST` | `/api/v1/ai/models/benchmark/apply` | any of `system:config`, `ai:manage` | Makes the recommended model of a tier Ask Zetty's chat model |
+| `POST` | `/api/v1/ai/models/benchmark/apply` | any of `system:config`, `ai:manage` | Makes the recommended model of a tier Ask Kib's chat model |
 | `POST` | `/api/v1/ai/models/huggingface/pull` | any of `system:config`, `ai:manage` | Pulls/registers a release model from https://huggingface.co and flags hardware fit warnings |
 | `GET` | `/api/v1/ai/models/huggingface/search` | any of `system:read`, `shares:read`, `storage:read` | Searches https://huggingface.co release models and evaluates hardware fit against NAS NPU/GPU/RAM |
 | `POST` | `/api/v1/ai/models/install` | any of `system:config`, `ai:manage` | Downloads a model into Ollama in the background; poll the job for progress (AI-03) |
@@ -639,10 +639,10 @@ request and response schemas.
 | `POST` | `/api/v1/ai/models/install/{job_id}/cancel` | any of `system:config`, `ai:manage` | Cancel Install Job |
 | `GET` | `/api/v1/ai/models/installed` | any of `system:read`, `ai:manage`, `system:config` | Models the Ollama runtime has installed, and copies of one model under another name (AI-16) |
 | `GET` | `/api/v1/ai/models/recommendations` | any of `system:read`, `shares:read`, `storage:read` | Returns hardware-aware LLM & Multi-Modal model recommendations based on onboard NPU, GPU, and RAM |
-| `DELETE` | `/api/v1/ai/models/remove` | any of `system:config`, `ai:manage` | Removes a model from the ZettAI catalog and local storage via DELETE /remove |
-| `POST` | `/api/v1/ai/models/remove` | any of `system:config`, `ai:manage` | Removes a model from the ZettAI catalog and local storage |
-| `POST` | `/api/v1/ai/models/select` | any of `system:config`, `ai:manage` | Selects and applies an LLM / multi-modal model for ZettAI, returning any hardware fit warnings |
-| `DELETE` | `/api/v1/ai/models/{model_id}` | signed in | Removes a model from the ZettAI catalog and local storage |
+| `DELETE` | `/api/v1/ai/models/remove` | any of `system:config`, `ai:manage` | Removes a model from the Kib catalog and local storage via DELETE /remove |
+| `POST` | `/api/v1/ai/models/remove` | any of `system:config`, `ai:manage` | Removes a model from the Kib catalog and local storage |
+| `POST` | `/api/v1/ai/models/select` | any of `system:config`, `ai:manage` | Selects and applies an LLM / multi-modal model for Kib, returning any hardware fit warnings |
+| `DELETE` | `/api/v1/ai/models/{model_id}` | signed in | Removes a model from the Kib catalog and local storage |
 | `GET` | `/api/v1/ai/photo-facets` | any of `shares:read`, `storage:read`, `system:read` | The photo filters: the years and places of the photos this person may see (AI-24) |
 | `GET` | `/api/v1/ai/photo-vectors/status` | any of `system:read`, `storage:read` | How many photos can be found by meaning (B14) |
 | `POST` | `/api/v1/ai/reindex` | any of `system:config`, `storage:admin` | Triggers background in-place re-embedding without waking sleeping hard drives |
@@ -658,30 +658,30 @@ request and response schemas.
 | `POST` | `/api/v1/media/ai/reindex` | any of `system:config`, `storage:admin` | Triggers background in-place re-embedding without waking sleeping hard drives |
 | `GET` | `/api/v1/media/ai/reindex/status` | any of `system:read`, `storage:read` | Get Ai Reindex Status |
 | `POST` | `/api/v1/media/ask` | any of `shares:read`, `storage:read`, `system:read` | Grounded Conversational RAG & Structured Recipe/Document Synthesis |
-| `POST` | `/api/v1/media/chat` | any of `shares:read`, `storage:read`, `system:read` ⏱ | Ask Zetty: answers about your files and your server, with web search and the server tools |
-| `POST` | `/api/v1/media/chat/stream` | any of `shares:read`, `storage:read`, `system:read` ⏱ | Streams real-time Server-Sent Events (SSE) tokens, tool activity traces, and thought chains from ZettAI |
-| `GET` | `/api/v1/media/chat/tools` | any of `system:read`, `shares:read`, `storage:read` | The server and web search tools Ask Zetty can use |
+| `POST` | `/api/v1/media/chat` | any of `shares:read`, `storage:read`, `system:read` ⏱ | Ask Kib: answers about your files and your server, with web search and the server tools |
+| `POST` | `/api/v1/media/chat/stream` | any of `shares:read`, `storage:read`, `system:read` ⏱ | Streams real-time Server-Sent Events (SSE) tokens, tool activity traces, and thought chains from Kib |
+| `GET` | `/api/v1/media/chat/tools` | any of `system:read`, `shares:read`, `storage:read` | The server and web search tools Ask Kib can use |
 | `GET` | `/api/v1/media/config` | any of `system:read`, `storage:read` | Get Rag Config |
 | `PUT` | `/api/v1/media/config` | any of `system:config`, `storage:admin` | Update Rag Config |
 | `GET` | `/api/v1/media/duplicates` | any of `shares:read`, `storage:read`, `system:read` | Files kept more than once, photos that look the same included, that this person may open (AI-35) |
-| `POST` | `/api/v1/media/favorites` | any of `shares:read`, `storage:read`, `system:read` | Adds or removes a file path from ZettAI favorites |
+| `POST` | `/api/v1/media/favorites` | any of `shares:read`, `storage:read`, `system:read` | Adds or removes a file path from Kib favorites |
 | `POST` | `/api/v1/media/folder/audit` | any of `shares:read`, `storage:read`, `system:read` | Executes hierarchical folder context aggregation (Mode A: targeted fact retrieval; Mode B: comprehensive folder audit with MMR diversific… |
 | `GET` | `/api/v1/media/folder/manifest` | any of `shares:read`, `storage:read`, `system:read` | Retrieves the recursive structure outline and topic inventory for a folder from NVMe SQLite WAL |
 | `GET` | `/api/v1/media/folders` | any of `system:config`, `ai:manage` | Returns configured watched/excluded RAG folders and discovered NAS shares with live disk standby state |
-| `POST` | `/api/v1/media/folders` | any of `system:config`, `ai:manage` | Adds, removes, or sets watched or excluded folders/shares for ZettAI RAG |
+| `POST` | `/api/v1/media/folders` | any of `system:config`, `ai:manage` | Adds, removes, or sets watched or excluded folders/shares for Kib RAG |
 | `POST` | `/api/v1/media/index` | any of `shares:user_write`, `storage:write`, `storage:admin`, `system:config` | Runs incremental, spindown-safe multi-modal indexing on the requested directory or watched folders |
 | `POST` | `/api/v1/media/index/control` | any of `system:config`, `ai:manage` | Pause, resume, stop, query, or flush the active RAG & Visual Search indexing sync job |
 | `POST` | `/api/v1/media/index/flush` | any of `system:config`, `ai:manage` | Flushes all indexed files, vector embeddings, chunks, and manifests from rag_index.db to start fresh |
 | `POST` | `/api/v1/media/learning/relearn-failed` | any of `system:config`, `ai:manage` | Retries indexing failed files without waking sleeping drives |
-| `GET` | `/api/v1/media/learning/results` | any of `system:read`, `shares:read`, `storage:read` | Returns ZettAI 6-state learning status, succeeded/failed counts, and failed file list |
+| `GET` | `/api/v1/media/learning/results` | any of `system:read`, `shares:read`, `storage:read` | Returns Kib 6-state learning status, succeeded/failed counts, and failed file list |
 | `GET` | `/api/v1/media/manifests` | any of `shares:read`, `storage:read`, `system:read` | Lists all indexed folder manifests and tree summaries across watched storage shares |
 | `POST` | `/api/v1/media/models/huggingface/pull` | any of `system:config`, `ai:manage` | Pulls/registers a release model from https://huggingface.co and flags hardware fit warnings |
 | `GET` | `/api/v1/media/models/huggingface/search` | any of `system:read`, `shares:read`, `storage:read` | Searches https://huggingface.co release models and evaluates hardware fit against NAS NPU/GPU/RAM |
 | `GET` | `/api/v1/media/models/recommendations` | any of `system:read`, `shares:read`, `storage:read` | Returns hardware-aware LLM & Multi-Modal model recommendations based on onboard NPU, GPU, and RAM |
-| `DELETE` | `/api/v1/media/models/remove` | any of `system:config`, `ai:manage` | Removes a model from the ZettAI catalog and local storage via DELETE /remove |
-| `POST` | `/api/v1/media/models/remove` | any of `system:config`, `ai:manage` | Removes a model from the ZettAI catalog and local storage |
-| `POST` | `/api/v1/media/models/select` | any of `system:config`, `ai:manage` | Selects and applies an LLM / multi-modal model for ZettAI, returning any hardware fit warnings |
-| `DELETE` | `/api/v1/media/models/{model_id}` | signed in | Removes a model from the ZettAI catalog and local storage |
+| `DELETE` | `/api/v1/media/models/remove` | any of `system:config`, `ai:manage` | Removes a model from the Kib catalog and local storage via DELETE /remove |
+| `POST` | `/api/v1/media/models/remove` | any of `system:config`, `ai:manage` | Removes a model from the Kib catalog and local storage |
+| `POST` | `/api/v1/media/models/select` | any of `system:config`, `ai:manage` | Selects and applies an LLM / multi-modal model for Kib, returning any hardware fit warnings |
+| `DELETE` | `/api/v1/media/models/{model_id}` | signed in | Removes a model from the Kib catalog and local storage |
 | `POST` | `/api/v1/media/organize/apply` | any of `storage:write`, `storage:admin` | Applies media renames and folder restructuring (move, copy, or hardlink) |
 | `POST` | `/api/v1/media/organize/preview` | any of `storage:read`, `storage:admin` | Analyzes source media files and calculates dry-run proposed Plex/Jellyfin renames |
 | `POST` | `/api/v1/media/scan` | `system:config` | Trigger Media Scan |
@@ -710,7 +710,7 @@ request and response schemas.
 | `GET` | `/api/v1/encrypted-folders` | any of `files:read`, `shares:read`, `shares:user_write`, `storage:read`, `storage:admin` | The encrypted folders in the shares this person can open, and whether this server can |
 | `POST` | `/api/v1/encrypted-folders` | `shares:manage` | Makes one and opens it; the answer carries its recovery key, shown this once |
 | `POST` | `/api/v1/encrypted-folders/adopt` | `shares:manage` | Adds back one whose encrypted files are already in the share |
-| `DELETE` | `/api/v1/encrypted-folders/{name}` | `shares:manage` | Takes a locked folder off ZettNAS; its encrypted files stay in the share |
+| `DELETE` | `/api/v1/encrypted-folders/{name}` | `shares:manage` | Takes a locked folder off Kiboto; its encrypted files stay in the share |
 | `POST` | `/api/v1/encrypted-folders/{name}/lock` | any of `files:write`, `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Post Lock |
 | `PUT` | `/api/v1/encrypted-folders/{name}/people` | `shares:manage` | Who may open and lock it: these accounts, or (null) everyone who may use its share |
 | `POST` | `/api/v1/encrypted-folders/{name}/unlock` | any of `files:write`, `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` ⏱ | Post Unlock |
@@ -808,7 +808,7 @@ request and response schemas.
 | `POST` | `/api/v1/system/shutdown` | `system:power` | Trigger system poweroff (requires system:power scope) |
 | `GET` | `/api/v1/system/status-summary` | `system:view` | What needs attention, for the Overview (UX-1), as this person can act on it (NUX-5) |
 | `GET` | `/api/v1/system/updates` | `system:view` | Release/commit check, then a registry digest check (OPS-18) |
-| `POST` | `/api/v1/system/updates/apply` | any of `system:power`, `system:manage` | Pulls the latest ZettNAS image and initiates a graceful self-update |
+| `POST` | `/api/v1/system/updates/apply` | any of `system:power`, `system:manage` | Pulls the latest Kiboto image and initiates a graceful self-update |
 | `GET` | `/api/v1/system/updates/last-result` | any of `system:view`, `system:manage` | How the last in-app update or revert ended (OPS-7) |
 | `GET` | `/api/v1/system/updates/previous` | any of `system:power`, `system:manage` | Versions this install can go back to: a pre-update snapshot whose image is still on the host |
 | `POST` | `/api/v1/system/updates/revert` | any of `system:power`, `system:manage` | Goes back to the version before the last update and restores the data as it was then (OPS-01) |

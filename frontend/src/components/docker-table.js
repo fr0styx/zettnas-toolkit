@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit - Docker Container Table Component & Keyed Reconciler
+ * Kiboto - Docker Container Table Component & Keyed Reconciler
  * Unified container table row renderer and event binder for Containers Manager & Mission Control.
  * Conforms to AGENTS.md §1.3 (Keyed DOM Reconciliation & Row Dataset Invariant).
  */

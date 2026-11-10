@@ -194,7 +194,7 @@ def _run_pool_checks(now: float) -> None:
     try:
         from backend.services import protection_jobs
 
-        protection_jobs.run_scrubs_due(now)  # monthly scrubs where ZettNAS owns the pools (REL-12)
+        protection_jobs.run_scrubs_due(now)  # monthly scrubs where Kiboto owns the pools (REL-12)
     except Exception as e:
         logger.warning("[Scheduler] Monthly scrub failed: %s", e)
 

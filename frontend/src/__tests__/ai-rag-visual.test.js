@@ -30,7 +30,7 @@ import { ALL_TRANSLATIONS as TRANSLATIONS } from '../locales/all.js';
 import { api } from '../api.js';
 import * as toast from '../toast.js';
 
-describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () => {
+describe('Kib — Multi-Modal Local RAG & Visual Search Frontend Suite', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <div id="topbar-ai-accel-pill">
@@ -332,7 +332,7 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     initSpotlight();
     filterSpotlightResults('? garlic pasta recipe');
     const resultsEl = document.getElementById('spotlight-results');
-    expect(resultsEl.textContent).toContain('Ask Zetty: “garlic pasta recipe”');
+    expect(resultsEl.textContent).toContain('Ask Kib: “garlic pasta recipe”');
 
     filterSpotlightResults('photo: red car in pool');
     expect(resultsEl.textContent).toContain('Photo search: “red car in pool”');
@@ -470,7 +470,7 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
 
     expect(confirmSpy).toHaveBeenCalledWith(
       expect.stringContaining('Remove Model'),
-      expect.stringContaining('from your ZettAI catalog'),
+      expect.stringContaining('from your Kib catalog'),
       expect.any(Function)
     );
     expect(api.post).toHaveBeenCalledWith('/api/media/models/remove', { model: 'qwen2.5vl:7b', model_id: 'qwen2.5vl:7b' });
@@ -598,7 +598,7 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
       <input id="ai-chat-input" value="" />
       <input type="checkbox" id="ai-chat-web-toggle" checked />
       <input type="checkbox" id="ai-chat-tools-toggle" checked />
-      <button id="btn-ai-chat-send">Ask Zetty</button>
+      <button id="btn-ai-chat-send">Ask Kib</button>
       <button id="btn-ai-chat-clear">Clear Chat</button>
     `);
 
@@ -693,14 +693,14 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     document.body.innerHTML = `
       <div id="ai-chat-messages-list"></div>
       <input id="ai-chat-input" value="" />
-      <button id="btn-ai-chat-send">Ask Zetty</button>
+      <button id="btn-ai-chat-send">Ask Kib</button>
       <button id="btn-ai-chat-clear">Clear Chat</button>
     `;
 
     // 3. Test sending message with thinking tags and code blocks
     vi.spyOn(api, 'post').mockResolvedValueOnce({
       status: 'ok',
-      reply: '<think>\nAnalyzing request and computing solution...\n</think>\nHere is the implementation:\n```rust\nfn main() {\n    println!("Hello ZettNAS!");\n}\n```\nSources:\n[1] Rust Documentation\n',
+      reply: '<think>\nAnalyzing request and computing solution...\n</think>\nHere is the implementation:\n```rust\nfn main() {\n    println!("Hello Kiboto!");\n}\n```\nSources:\n[1] Rust Documentation\n',
       active_model: 'DeepSeek-R1-Distill-Qwen-1.5B',
       elapsed_ms: 35.2,
       tools_called: [],
@@ -725,7 +725,7 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     // Verify code block formatted with language and copy button
     expect(chatList.innerHTML).toContain('ai-chat-code-block');
     expect(chatList.innerHTML).toContain('btn-copy-code');
-    expect(chatList.innerHTML).toContain('println!("Hello ZettNAS!");');
+    expect(chatList.innerHTML).toContain('println!("Hello Kiboto!");');
     expect(chatList.innerHTML).toContain('rust');
 
     // Verify text list of Sources was stripped from answer body in favor of web pills
@@ -733,13 +733,13 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     expect(chatList.innerHTML).toContain('Rust Docs');
   });
 
-  it('suppresses initial RAG image/document previews until user performs a search, and labels button Ask Zetty', async () => {
-    // 1. Verify i18n label is Ask Zetty across all 5 languages
-    expect(TRANSLATIONS.en['ai.chat_send_btn']).toBe('Ask Zetty');
-    expect(TRANSLATIONS.de['ai.chat_send_btn']).toBe('Zetty fragen');
-    expect(TRANSLATIONS.zh['ai.chat_send_btn']).toBe('询问 Zetty');
-    expect(TRANSLATIONS.fr['ai.chat_send_btn']).toBe('Demander à Zetty');
-    expect(TRANSLATIONS.es['ai.chat_send_btn']).toBe('Preguntar a Zetty');
+  it('suppresses initial RAG image/document previews until user performs a search, and labels button Ask Kib', async () => {
+    // 1. Verify i18n label is Ask Kib across all 5 languages
+    expect(TRANSLATIONS.en['ai.chat_send_btn']).toBe('Ask Kib');
+    expect(TRANSLATIONS.de['ai.chat_send_btn']).toBe('Kib fragen');
+    expect(TRANSLATIONS.zh['ai.chat_send_btn']).toBe('询问 Kib');
+    expect(TRANSLATIONS.fr['ai.chat_send_btn']).toBe('Demander à Kib');
+    expect(TRANSLATIONS.es['ai.chat_send_btn']).toBe('Preguntar a Kib');
 
     // 2. Set up RAG DOM
     document.body.innerHTML = `
@@ -749,7 +749,7 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
       <div id="ai-rag-answer-card" style="display:block;">Previous Answer</div>
       <div id="ai-preview-inspector-pane" style="display:block;">Inspector</div>
       <div id="ai-search-split-layout" style="display:grid; grid-template-columns: minmax(0, 1fr) 360px;"></div>
-      <button id="btn-ai-chat-send">Ask Zetty</button>
+      <button id="btn-ai-chat-send">Ask Kib</button>
       <div id="ai-chat-messages-list"></div>
     `;
 
@@ -768,10 +768,10 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     expect(emptyRes.results).toEqual([]);
     expect(grid.innerHTML).toContain('ai-rag-initial-placeholder');
 
-    // 5. Verify sendAiChatMessage resets button label to Ask Zetty
-    postSpy.mockResolvedValueOnce({ status: 'ok', reply: 'Hello from Zetty!' });
-    await sendAiChatMessage('Hi Zetty');
-    expect(document.getElementById('btn-ai-chat-send').innerHTML).toContain('Ask Zetty');
+    // 5. Verify sendAiChatMessage resets button label to Ask Kib
+    postSpy.mockResolvedValueOnce({ status: 'ok', reply: 'Hello from Kib!' });
+    await sendAiChatMessage('Hi Kib');
+    expect(document.getElementById('btn-ai-chat-send').innerHTML).toContain('Ask Kib');
   });
 
   it('flushAiIndex requests confirmation and flushes RAG database via /api/ai/index/flush with 5-language localization', async () => {

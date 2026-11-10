@@ -185,7 +185,7 @@ def _immich_app_dir() -> str:
 
 @router.post("/apps/immich", dependencies=[Depends(require_scope("users:write", "system:config"))])
 def connect_immich(req: ImmichConnect, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
-    """Turns on sign-in with ZettNAS's provider in a freshly installed Immich (M3)."""
+    """Turns on sign-in with Kiboto's provider in a freshly installed Immich (M3)."""
     from backend.services import immich_sso
     from backend.users_db import get_user_by_username
 
@@ -201,7 +201,7 @@ def connect_immich(req: ImmichConnect, principal: AuthenticatedPrincipal = Depen
         )
         from backend.services import immich_photos
 
-        immich_photos.set_sso(True)  # the Back up my phone card says "Sign in with ZettNAS"
+        immich_photos.set_sso(True)  # the Back up my phone card says "Sign in with Kiboto"
         return res
     except immich_sso.ImmichSsoError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

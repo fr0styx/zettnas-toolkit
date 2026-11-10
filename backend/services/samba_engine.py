@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Samba Engine
+Kiboto - Samba Engine
 Manages production-grade Samba (SMB/CIFS) file sharing for Generic Linux & Turnkey Sidecars.
 Features Apple vfs_fruit extensions for native macOS Finder & Time Machine support,
 10GbE Multi-Channel performance tuning, and cross-platform permissions mapping.
@@ -103,7 +103,7 @@ def validate_share_path(path: str) -> str:
             else:
                 continue
             if is_protected(found):
-                raise ValueError("Share path is ZettNAS's own data folder; choose another folder")
+                raise ValueError("Share path is Kiboto's own data folder; choose another folder")
             return found
     raise ValueError(f"Share path must be inside {', '.join(roots) or 'the storage pool'}")
 
@@ -170,7 +170,7 @@ class SambaEngine:
 
     _DEFAULT_GLOBAL_CONFIG = """[global]
    workgroup = WORKGROUP
-   server string = ZettNAS Storage Server
+   server string = Kiboto Storage Server
    server role = standalone server
    security = user
    map to guest = Bad User
@@ -276,7 +276,7 @@ class SambaEngine:
             default_share = SambaShareConfig(
                 name="storage",
                 path=default_path,
-                comment="ZettNAS Primary Storage Pool",
+                comment="Kiboto Primary Storage Pool",
                 read_only=False,
                 guest_ok=False,
                 browseable=True,
@@ -724,7 +724,7 @@ def access_lines(share: "SambaShareConfig") -> list[str]:
 
 def refresh_access() -> None:
     """Rewrites smb.conf and reloads Samba after share access or the people change (SEC-28).
-    Nothing to do where ZettNAS manages no shares (Unraid, TrueNAS)."""
+    Nothing to do where Kiboto manages no shares (Unraid, TrueNAS)."""
     try:
         engine = get_samba_engine()
         if engine.list_shares():

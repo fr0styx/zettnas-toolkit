@@ -11,7 +11,7 @@ back in text people read.
 | **Previous versions** | — | Earlier copies of one file, taken from its snapshots |
 | **Recycle Bin** | Trash, System Trash | Where deleted files wait until the bin is emptied |
 | **Apps** | Containers, Docker (in everyday text) | Programs installed from the app catalog |
-| **Ask Zetty** | Chatbot, ZettAI Studio, NAS Copilot | The chat that answers questions about your files and your server |
+| **Ask Kib** | Chatbot, Kib Studio, NAS Copilot | The chat that answers questions about your files and your server |
 | **AI search** | RAG, knowledge engine (in everyday text) | Finding files by what is in them |
 | **Settings** | Mission Control | The window where the server is set up |
 | **Drives** | disks, devices (in everyday text) |
@@ -22,8 +22,8 @@ back in text people read.
 Technical words (SMB, NFS, RAID, Docker, ports) belong in help text and Advanced sections, not in
 titles, buttons or the first sentence of a message.
 
-Retired names that the test enforces today: `Hyper-Backup`, `Chatbot`, `ZettAI Studio`, `NAS Copilot`,
-`digital twin`, `System Trash`, `Mission Control`, `Workbench` (the product is ZettNAS) and the old role
+Retired names that the test enforces today: `Hyper-Backup`, `Chatbot`, `Kib Studio`, `NAS Copilot`,
+`digital twin`, `System Trash`, `Mission Control`, `Workbench` (the product is Kiboto) and the old role
 names (`SuperAdmin` and the like: roles get their names from one map, `formatRole` in session.js), in every
 language. The others in the "Not" column move to the
 enforced list as the copy pass reaches them.

@@ -1,5 +1,5 @@
 """
-Ask Zetty's web tools: web search with fact extraction, and weather (split out of
+Ask Kib's web tools: web search with fact extraction, and weather (split out of
 ai_chat_agent, AI-21).
 
 Both run only in chats where the user turned on Web (_WEB_ALLOWED), and only fetch
@@ -356,7 +356,7 @@ def _normalize_web_query_and_topic(raw_query: str) -> tuple[str, str]:
 # Web access for the current chat turn (AI-06). Tools that leave the NAS check it,
 # whichever path calls them (keyword routing or the model's own tool calls).
 _WEB_ALLOWED: contextvars.ContextVar = contextvars.ContextVar("zettnas_ai_web_allowed", default=False)
-_WEB_BLOCKED_MSG = "Web access is off for this chat. Turn on Web to let ZettAI search the internet or get the weather."
+_WEB_BLOCKED_MSG = "Web access is off for this chat. Turn on Web to let Kib search the internet or get the weather."
 
 
 def _browse_wikipedia(
@@ -541,12 +541,12 @@ def tool_browse_internet(query: str, max_results: int = 5, allow_fetch: bool = T
             "status": "ok",
             "query": clean_q,
             "extracted_facts": {},
-            "direct_answer": f"Verified online reference result for '{clean_q}' via ZettAI Web Search.",
+            "direct_answer": f"Verified online reference result for '{clean_q}' via Kib Web Search.",
             "sources": [
                 {
                     "title": f"Web Verification: {clean_q}",
                     "url": f"https://en.wikipedia.org/wiki/Special:Search?search={urllib.parse.quote(clean_q)}",
-                    "snippet": f"Verified online reference result for '{clean_q}' via ZettAI Web Search.",
+                    "snippet": f"Verified online reference result for '{clean_q}' via Kib Web Search.",
                     "source": "wikipedia",
                 }
             ],
@@ -558,7 +558,7 @@ def tool_browse_internet(query: str, max_results: int = 5, allow_fetch: bool = T
     extracted_facts: dict[str, str] = {}
     direct_answer = ""
 
-    wiki_headers = {"User-Agent": "ZettNAS-Toolkit-ZettAI/2.0 (+https://github.com/fr0styx/zettnas-toolkit)"}
+    wiki_headers = {"User-Agent": "Kiboto/2.0 (+https://github.com/fr0styx/zettnas-toolkit)"}
     browser_headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     }
@@ -966,14 +966,14 @@ def _fetch_wttr_in(query: str, timeout: float = 4.0) -> dict[str, Any] | None:
         url = f"https://wttr.in/{encoded}?format=j1"
         req = urllib.request.Request(
             url,
-            headers={"User-Agent": "ZettNAS-Toolkit-Weather/2.0 (+https://github.com/fr0styx/zettnas-toolkit)"},
+            headers={"User-Agent": "Kiboto-Weather/2.0 (+https://github.com/fr0styx/zettnas-toolkit)"},
         )
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             if resp.status == 200:
                 raw_bytes = resp.read(120_000)
                 return json.loads(raw_bytes.decode("utf-8", errors="replace"))
     except Exception as e:
-        logger.debug("[ZettAI Weather] wttr.in query for '%s' failed: %s", query, e)
+        logger.debug("[Kib Weather] wttr.in query for '%s' failed: %s", query, e)
     return None
 
 

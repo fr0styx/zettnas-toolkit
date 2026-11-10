@@ -124,7 +124,7 @@ def test_restore_drops_sessions_and_refuses_newer_schema(data, tmp_path):
     with zipfile.ZipFile(buf, "w") as z:
         z.write(tmp_path / "newer.db", "users.db")
     buf.seek(0)
-    with pytest.raises(ValueError, match="newer ZettNAS"):
+    with pytest.raises(ValueError, match="newer Kiboto"):
         backup_engine.restore_backup_archive(buf, snapshot=False)
 
 

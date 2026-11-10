@@ -27,10 +27,10 @@ def test_pool_alerts_are_sent_in_the_households_language(german, tmp_path, monke
     monkeypatch.setitem(pool_alerts._cache, "ok", True)
     sent = []
     pool_alerts.check_and_alert(now=1000, send=lambda **k: sent.append(k))
-    assert sent[0]["title"] == "ZettNAS: Speicherpool tank ist beeinträchtigt"
+    assert sent[0]["title"] == "Kiboto: Speicherpool tank ist beeinträchtigt"
     items.clear()
     pool_alerts.check_and_alert(now=2000, send=lambda **k: sent.append(k))
-    assert sent[-1]["title"] == "ZettNAS: behoben — Speicherpool tank ist beeinträchtigt"
+    assert sent[-1]["title"] == "Kiboto: behoben — Speicherpool tank ist beeinträchtigt"
     assert sent[-1]["message"] == "Dieses Speicherproblem ist behoben."
 
 
@@ -41,7 +41,7 @@ def test_the_weekly_report_in_german(german, monkeypatch):
     )
     monkeypatch.setattr("backend.services.backup_watch.overdue_backups", lambda now: [{"name": "Fotos"}])
     title, body = pool_alerts.weekly_report(now=1000)
-    assert title == "ZettNAS-Wochenbericht"
+    assert title == "Kiboto-Wochenbericht"
     assert "überfällig: Fotos" in body
 
 
@@ -59,8 +59,8 @@ def test_security_alert_titles_follow_the_language(monkeypatch):
     monkeypatch.setattr(security_alerts.threading, "Thread", Now)
     assert security_alerts.maybe_alert("auth.lockout", "blocked", "mia", "203.0.113.5")
     (args, kw) = sent[0]
-    assert args[0] == "ZettNAS security: Sign-in locked after repeated failures"
+    assert args[0] == "Kiboto security: Sign-in locked after repeated failures"
     assert kw["text"]["title_key"] == "alert.security.title"
     monkeypatch.setattr(notifications, "load_notification_config", lambda: {"language": "fr"})
     title, _ = notifications.in_household_language(args[0], args[1], kw["text"])
-    assert title == "Sécurité ZettNAS : Connexion bloquée après plusieurs échecs"
+    assert title == "Sécurité Kiboto : Connexion bloquée après plusieurs échecs"

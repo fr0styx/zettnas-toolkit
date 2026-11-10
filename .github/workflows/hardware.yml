@@ -1,6 +1,6 @@
 name: Hardware budgets
 
-# Runs on the self-hosted runner next to a real ZettNAS server (docs/HARDWARE_RUNNER.md).
+# Runs on the self-hosted runner next to a real Kiboto server (docs/HARDWARE_RUNNER.md).
 # Only on a schedule or by hand from main: never for pull requests, so code from a fork can
 # never reach that machine. The log says PASS/FAIL/SKIP only; the numbers stay on the machine.
 # Order: the idle budgets and the spin-down watch first (they need a quiet machine), the AI

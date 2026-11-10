@@ -43,7 +43,7 @@ export async function fillQr(box, text) {
 function profileButton() {
   const btn = el('button', { type: 'button', className: 'btn-pill-toggle is-small', textContent: t('fc.iphone_profile', 'Set up an iPhone or iPad') });
   btn.addEventListener('click', () => {
-    api.downloadBlob('/api/docker/catalog/office-suite/family/profile', 'ZettNAS family.mobileconfig').catch((err) => showToast(err?.message || '', 'error'));
+    api.downloadBlob('/api/docker/catalog/office-suite/family/profile', 'Kiboto family.mobileconfig').catch((err) => showToast(err?.message || '', 'error'));
   });
   return btn;
 }
@@ -61,13 +61,13 @@ export function familyCalendarBody(info, onAdd) {
   }
   box.append(
     copyRow(t('fc.address', 'Address'), info.caldav),
-    el('p', { className: 'invite-meta', textContent: t('fc.iphone', 'iPhone and iPad: Settings → Apps → Calendar → Calendar Accounts → Add Account → Other → Add CalDAV Account, server {server}; do the same under Contacts with Add CardDAV Account. Sign in with your ZettNAS name and password.', { server: info.server }) }),
-    el('p', { className: 'invite-meta', textContent: t('fc.iphone_profile_hint', 'Or open this page on the iPhone and tap the button below (or send the file to it), then open Settings → Profile Downloaded → Install. The phone asks for the ZettNAS name and password.') }),
+    el('p', { className: 'invite-meta', textContent: t('fc.iphone', 'iPhone and iPad: Settings → Apps → Calendar → Calendar Accounts → Add Account → Other → Add CalDAV Account, server {server}; do the same under Contacts with Add CardDAV Account. Sign in with your Kiboto name and password.', { server: info.server }) }),
+    el('p', { className: 'invite-meta', textContent: t('fc.iphone_profile_hint', 'Or open this page on the iPhone and tap the button below (or send the file to it), then open Settings → Profile Downloaded → Install. The phone asks for the Kiboto name and password.') }),
     profileButton(),
-    el('p', { className: 'invite-meta', textContent: t('fc.android', 'Android: install DAVx⁵, choose "Log in with URL and user name" and enter the address above with your ZettNAS name and password.') }),
+    el('p', { className: 'invite-meta', textContent: t('fc.android', 'Android: install DAVx⁵, choose "Log in with URL and user name" and enter the address above with your Kiboto name and password.') }),
     el('p', { className: 'invite-meta', textContent: t('fc.android_qr', 'Or scan this code with the phone once DAVx⁵ is installed: it opens with the address filled in.') }),
     el('div', { className: 'remote-qr fc-qr', role: 'img', ariaLabel: t('fc.qr_label', 'QR code with the calendar address for DAVx⁵') }),
-    el('p', { className: 'invite-meta', textContent: t('fc.desktop', 'On the ZettNAS desktop: in the office suite, open Calendar, choose Share in the family calendar’s menu, copy the subscription link and paste it under Calendar Feeds with + Add Feed.') }),
+    el('p', { className: 'invite-meta', textContent: t('fc.desktop', 'On the Kiboto desktop: in the office suite, open Calendar, choose Share in the family calendar’s menu, copy the subscription link and paste it under Calendar Feeds with + Add Feed.') }),
   );
   const add = el('button', { type: 'button', className: 'btn-pill-toggle is-small', textContent: t('fc.add', 'Add calendar and contacts to the office suite') });
   add.addEventListener('click', () => onAdd(add));

@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit Dock & Window Manager
+ * Kiboto Dock & Window Manager
  * Handles floating modal registration, minimize/restore, dragging, and z-index depth stacking.
  *
  * This module starts the dock (initDockSystem) and registers the window globals; the pieces
@@ -54,14 +54,14 @@ export function initDockSystem() {
 
   const consoleOverlay = document.getElementById('console-modal-overlay');
   if (consoleOverlay && DockManager.isPinned('console')) {
-    DockManager.register('console', consoleOverlay, '#i-screen', t('dock.zettnas', 'ZettNAS'), true);
+    DockManager.register('console', consoleOverlay, '#i-screen', t('dock.zettnas', 'Kiboto'), true);
   } else {
     DockManager.render();
   }
 
   window.addEventListener('zettnas:lang-changed', () => {
     if (DockManager.windows['console']) {
-      DockManager.windows['console'].title = t('dock.zettnas', 'ZettNAS');
+      DockManager.windows['console'].title = t('dock.zettnas', 'Kiboto');
     }
     if (DockManager.windows['management']) {
       DockManager.windows['management'].title = t('dock.management', 'Settings');
@@ -229,7 +229,7 @@ export function initDockSystem() {
   // Update dock window titles on language change
   window.addEventListener('zettnas:lang-changed', () => {
     if (DockManager.windows['console']) {
-      DockManager.windows['console'].title = t('dock.zettnas', 'ZettNAS');
+      DockManager.windows['console'].title = t('dock.zettnas', 'Kiboto');
     }
     if (DockManager.windows['management']) {
       DockManager.windows['management'].title = t('dock.management', 'Settings');

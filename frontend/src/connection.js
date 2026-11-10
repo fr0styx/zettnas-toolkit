@@ -1,5 +1,5 @@
 /**
- * "Can't reach ZettNAS" banner (FE-16). Shown when a request can't reach the server or
+ * "Can't reach Kiboto" banner (FE-16). Shown when a request can't reach the server or
  * the browser goes offline; it checks /api/health every 5 s and hides itself once the
  * server answers again.
  */
@@ -32,7 +32,7 @@ export function reportOffline() {
   _offline = true;
   const el = banner();
   if (el) {
-    el.textContent = t('net.offline_banner', "Can't reach ZettNAS. Reconnecting…");
+    el.textContent = t('net.offline_banner', "Can't reach Kiboto. Reconnecting…");
     el.hidden = false;
   }
   if (!_probe) {

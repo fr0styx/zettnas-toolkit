@@ -34,7 +34,7 @@ describe('drive titles (NUX-20)', () => {
       filterSpotlightResults('>isolate container web');
       expect(results()).toContain('Container isolieren: web');
       filterSpotlightResults('? Nudelrezept');
-      expect(results()).toContain('Zetty fragen: „Nudelrezept“');
+      expect(results()).toContain('Kib fragen: „Nudelrezept“');
       filterSpotlightResults('qqqqzzzz-nothing');
       expect(results()).toBe('Nichts gefunden.');
       closeSpotlight();

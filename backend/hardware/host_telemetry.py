@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Host Platform & Hardware Telemetry (HAL)
+Kiboto - Host Platform & Hardware Telemetry (HAL)
 Provides real-time DMI BIOS inspection, CPU architecture and governor status,
 OS distribution and kernel identification, and GPU hardware transcode acceleration engine detection.
 """

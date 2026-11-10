@@ -1620,7 +1620,7 @@
       "ipv6": false,
       "port": 8082,
       "protocol": "tcp",
-      "service": "ZettNAS Web Desktop",
+      "service": "Kiboto Web Desktop",
       "state": "LISTEN"
      },
      {
@@ -4045,7 +4045,7 @@
      "ipv6": false,
      "port": 8082,
      "protocol": "tcp",
-     "service": "ZettNAS Web Desktop",
+     "service": "Kiboto Web Desktop",
      "state": "LISTEN"
     },
     {

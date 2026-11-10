@@ -1,9 +1,9 @@
 """A NUT server for the family's PCs (FEAT-11).
 
-The UPS ZettNAS reads (USB, apcupsd or another NUT server) is offered over the Network UPS
+The UPS Kiboto reads (USB, apcupsd or another NUT server) is offered over the Network UPS
 Tools protocol, so a Windows, Mac or Linux PC with NUT's upsmon (or WinNUT, or any NUT client)
 watches it as a secondary: MONITOR ups@NAS-ADDRESS:3493 1 <user> <password> secondary. The PCs shut
-down when the battery runs low, and when ZettNAS starts its own low-battery shutdown it raises
+down when the battery runs low, and when Kiboto starts its own low-battery shutdown it raises
 the forced-shutdown flag (FSD) and gives the PCs up to 15 seconds to go first.
 
 Only the read side of upsd is offered (LIST, GET, LOGIN, LOGOUT); instant commands, setting
@@ -41,7 +41,7 @@ HOME_NETWORKS = (
     "::1/128",
 )
 FSD_WAIT_SECS = 15.0
-VERSION = "Network UPS Tools upsd 2.8.1 - ZettNAS"
+VERSION = "Network UPS Tools upsd 2.8.1 - Kiboto"
 
 _FSD = threading.Event()
 _LOGINS: set[int] = set()
@@ -120,7 +120,7 @@ def _num(value: Any) -> str | None:
 
 
 def ups_vars(status: dict[str, Any], fsd: bool = False) -> dict[str, str]:
-    """NUT variables from ZettNAS's UPS reading (hardware/ups.read_ups_status)."""
+    """NUT variables from Kiboto's UPS reading (hardware/ups.read_ups_status)."""
     if not status.get("available"):
         return {}
     flags = ["OB" if status.get("on_battery") else "OL"]
@@ -216,7 +216,7 @@ class Session:
         if cmd[0] in ("FSD", "PRIMARY", "MASTER", "INSTCMD", "SET"):
             return ["ERR ACCESS-DENIED"], False
         if cmd == ["LIST", "UPS"]:
-            return ["BEGIN LIST UPS", f'UPS {UPS_NAME} "ZettNAS UPS"', "END LIST UPS"], False
+            return ["BEGIN LIST UPS", f'UPS {UPS_NAME} "Kiboto UPS"', "END LIST UPS"], False
         if cmd[0] == "LIST" and len(args) >= 2 and cmd[1] == "VAR":
             if args[1] != UPS_NAME:
                 return ["ERR UNKNOWN-UPS"], False
@@ -251,7 +251,7 @@ class Session:
         if what == "NUMLOGINS":
             return [f"NUMLOGINS {UPS_NAME} {logins()}"]
         if what == "UPSDESC":
-            return [f'UPSDESC {UPS_NAME} "ZettNAS UPS"']
+            return [f'UPSDESC {UPS_NAME} "Kiboto UPS"']
         if what == "VAR" and len(rest) >= 2:
             values = self._vars()
             if not values:

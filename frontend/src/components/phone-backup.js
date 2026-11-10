@@ -1,6 +1,6 @@
 // "Back up my phone" (B8): the Immich app backs up a phone's photos to this server. The card
 // shows Immich's address as a QR code to scan in the app, and the four steps; with sign-in passed
-// through (Immich connected to ZettNAS's sign-in, M3) the app's "Sign in with ZettNAS" button
+// through (Immich connected to Kiboto's sign-in, M3) the app's "Sign in with Kiboto" button
 // does the rest. Without Immich it points to the app catalog.
 import { api } from '../api.js';
 import { t } from '../i18n.js';
@@ -16,7 +16,7 @@ export function phoneBackupHtml(s, qrSvg = '') {
       <button type="button" class="btn-pill-toggle is-primary" data-phone-open="catalog">${t('phone.open_catalog', 'Open the app catalog')}</button>`;
   }
   const signIn = s.sso
-    ? t('phone.step3_sso', 'Tap "Sign in with ZettNAS" and use your ZettNAS account.')
+    ? t('phone.step3_sso', 'Tap "Sign in with Kiboto" and use your Kiboto account.')
     : t('phone.step3', 'Sign in with your Immich account.');
   return html`<div class="zn-row phone-backup">
       <div class="phone-qr" aria-hidden="true">${raw(qrSvg)}</div>

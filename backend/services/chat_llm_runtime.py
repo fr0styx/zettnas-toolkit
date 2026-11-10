@@ -454,7 +454,7 @@ def _try_local_llm_completion(
                 # Fast model discovery on Ollama /api/tags
                 tags_url = url.replace("/api/chat", "/api/tags")
                 try:
-                    t_req = urllib.request.Request(tags_url, headers={"User-Agent": "ZettNAS-Toolkit/2.0"})
+                    t_req = urllib.request.Request(tags_url, headers={"User-Agent": "Kiboto/2.0"})
                     with urllib.request.urlopen(t_req, timeout=1.2) as t_resp:
                         t_data = json.loads(t_resp.read().decode("utf-8", errors="replace"))
                         avail = [m.get("name", "") for m in t_data.get("models", []) if m.get("name")]
@@ -520,7 +520,7 @@ def _try_local_llm_completion(
                 is_ovms = ":8000" in url
                 models_url = url.replace("/chat/completions", "/models")
                 try:
-                    m_req = urllib.request.Request(models_url, headers={"User-Agent": "ZettNAS-Toolkit/2.0"})
+                    m_req = urllib.request.Request(models_url, headers={"User-Agent": "Kiboto/2.0"})
                     with urllib.request.urlopen(m_req, timeout=1.0) as m_resp:
                         m_data = json.loads(m_resp.read().decode("utf-8", errors="replace"))
                         m_list = m_data.get("data", [])
@@ -556,7 +556,7 @@ def _try_local_llm_completion(
                 if tools:
                     openai_req_body["tools"] = tools
                 if is_ovms:
-                    # Qwen3 and other reasoning models would think before answering; Ask Zetty
+                    # Qwen3 and other reasoning models would think before answering; Ask Kib
                     # answers from the files it found, so it asks for the answer straight away.
                     openai_req_body["chat_template_kwargs"] = {"enable_thinking": False}
                 if streaming:
@@ -567,7 +567,7 @@ def _try_local_llm_completion(
             req = urllib.request.Request(
                 url,
                 data=payload,
-                headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-Toolkit/2.0"},
+                headers={"Content-Type": "application/json", "User-Agent": "Kiboto/2.0"},
                 method="POST",
             )
             # Streaming: at most 45 s between pieces. Without streaming nothing arrives until the
@@ -595,7 +595,7 @@ def _try_local_llm_completion(
                     req = urllib.request.Request(
                         url,
                         data=json.dumps(openai_req_body).encode("utf-8"),
-                        headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-Toolkit/2.0"},
+                        headers={"Content-Type": "application/json", "User-Agent": "Kiboto/2.0"},
                         method="POST",
                     )
                     resp = urllib.request.urlopen(req, timeout=wait)
@@ -605,7 +605,7 @@ def _try_local_llm_completion(
                     req = urllib.request.Request(
                         url,
                         data=json.dumps(ollama_req_body).encode("utf-8"),
-                        headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-Toolkit/2.0"},
+                        headers={"Content-Type": "application/json", "User-Agent": "Kiboto/2.0"},
                         method="POST",
                     )
                     resp = urllib.request.urlopen(req, timeout=wait)

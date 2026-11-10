@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Docker Stacks Manager & Setup Editor Subsystem
+Kiboto - Docker Stacks Manager & Setup Editor Subsystem
 Provides stack discovery, inspection, live multi-service compose synthesis,
 in-place compose.yaml and .env modification, and stack orchestration actions.
 Hardware & OS agnostic.
@@ -231,7 +231,7 @@ _EXTRA_STACK_ROOTS = ("/boot/config/plugins/compose.manager/projects",)  # Unrai
 def stack_path_ok(path: str, kind: str) -> bool:
     """A stack file path taken from container labels is used only if it is a compose file
     ("compose"), an env file ("env") or a folder ("dir") inside the storage folders, and not
-    in ZettNAS's own data folder."""
+    in Kiboto's own data folder."""
     from backend import config
 
     if not path or not os.path.isabs(path) or "," in path:

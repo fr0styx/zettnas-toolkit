@@ -343,7 +343,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     expect(items.length).toBe(3);
   });
 
-  it('opens and visibly restores ZettNAS console window when openConsoleWindow() is triggered', () => {
+  it('opens and visibly restores Kiboto console window when openConsoleWindow() is triggered', () => {
     DockManager.windows = {};
     DockManager.activeId = null;
 

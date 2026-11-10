@@ -127,7 +127,7 @@ def degraded_text() -> str:
 
 
 class _SystemPrincipal:
-    """ZettNAS itself, for its own background work (indexing checks, maintenance): sees every file."""
+    """Kiboto itself, for its own background work (indexing checks, maintenance): sees every file."""
 
     username = "zettnas-system"
     role_id = "superadmin"
@@ -274,7 +274,7 @@ class RagSearchMixin:
     def _build_rbac_clause(principal: Any, table_alias: str = "f") -> tuple[str, list[Any]]:
         """Builds parameterized SQLite WHERE predicate for multi-user RBAC path isolation.
 
-        Fails closed (SEC-37): without a principal nothing matches. ZettNAS's own background work
+        Fails closed (SEC-37): without a principal nothing matches. Kiboto's own background work
         passes SYSTEM_PRINCIPAL, on purpose."""
         if principal is None:
             logger.warning("rag search: called without a principal; returning nothing (SEC-37)")
@@ -478,7 +478,7 @@ class RagSearchMixin:
         """
         100% Zero-Disk-Touch Cross-Modal Search over `/app/data/rag_index.db` (mode=ro).
         Never calls os.stat(), os.path.exists(), or open() on array paths!
-        Supports ZettAI match tabs (semantic | keyword | audio), file types (all | images | videos | audio | documents | folders),
+        Supports Kib match tabs (semantic | keyword | audio), file types (all | images | videos | audio | documents | folders),
         sort orders (relevance | keyword | mtime), and grouped category summary cards.
         """
         self._ensure_schema()
@@ -665,7 +665,7 @@ class RagSearchMixin:
                 photo_items = [it for it in photo_items if it.get("file_id") not in dropped]
                 doc_items = [it for it in doc_items if it.get("file_id") not in dropped]
 
-            # Build ZettAI Category Summary Groups (Images, Videos, Audio, Documents, Folders)
+            # Build Kib Category Summary Groups (Images, Videos, Audio, Documents, Folders)
             cat_images = [it for it in all_candidates if it.get("category_type") == "images"]
             cat_videos = [it for it in all_candidates if it.get("category_type") == "videos"]
             cat_audio = [it for it in all_candidates if it.get("category_type") == "audio"]

@@ -1,5 +1,5 @@
 """B19: guessing encrypted-folder passwords, sync pairs that replace each other, binds and shares
-that hold ZettNAS's data, and WebDAV/SFTP never showing encrypted files (NSEC-4, NUX-6, NSEC-9, NSEC-5)."""
+that hold Kiboto's data, and WebDAV/SFTP never showing encrypted files (NSEC-4, NUX-6, NSEC-9, NSEC-5)."""
 
 import pytest
 

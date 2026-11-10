@@ -1,5 +1,5 @@
 """
-Corruption checks and nightly copies of the ZettNAS data folder (REL-2).
+Corruption checks and nightly copies of the Kiboto data folder (REL-2).
 
 At start, before anything opens them, every database in the data folder gets a
 `PRAGMA quick_check`. A damaged one is moved aside (name.db.corrupt-<time>) and
@@ -17,7 +17,7 @@ import shutil
 import time
 from typing import Any
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 SKIP_DBS = ("rag_index.db",)
 DAILY_SUBDIR = os.path.join("backups", "daily")
@@ -189,7 +189,7 @@ def check_and_repair(data_dir: str) -> dict[str, Any]:
             result["unreadable"].append(name)
             logger.critical(
                 "[DataHealth] %s could not be opened (permissions or the disk?). Nothing was moved; "
-                "fix the data folder and start ZettNAS again.",
+                "fix the data folder and start Kiboto again.",
                 name,
             )
             continue
@@ -219,7 +219,7 @@ def _record_event(result: dict[str, Any]) -> None:
         add_event(
             "error",
             "Damaged data repaired",
-            "ZettNAS found damaged files at start: " + "; ".join(parts) + ". The damaged files were kept beside them.",
+            "Kiboto found damaged files at start: " + "; ".join(parts) + ". The damaged files were kept beside them.",
             details={**result, **event_text("data_repaired", parts="; ".join(parts))},
         )
     except Exception:
@@ -304,7 +304,7 @@ def warn_if_on_spinning_disk(folder: str, sysbase: str | None = None, st_dev: in
     add_event(
         "warning",
         "App data on a spinning disk",
-        f"ZettNAS keeps its settings and databases on {disk}, a spinning disk, so that disk can never "
+        f"Kiboto keeps its settings and databases on {disk}, a spinning disk, so that disk can never "
         "sleep. Moving the app's data folder to an SSD or cache pool saves power and noise.",
         event_text("data_on_hdd", disk=disk),
     )

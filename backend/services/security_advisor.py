@@ -1,5 +1,5 @@
 """
-ZettNAS Toolkit - Security Posture Advisor Engine
+Kiboto - Security Posture Advisor Engine
 Evaluates live system security posture across authentication, multi-factor,
 transport encryption, network file sharing, and API credentials.
 Computes a real-time security score (0-100), letter grade (A-F), and actionable remediation plan.
@@ -109,7 +109,7 @@ def _check_https(checks: list[dict[str, Any]], issues: list[dict[str, Any]], req
                 "title": "Unencrypted HTTP Transport",
                 "severity": "medium",
                 "description": "Session traffic and login credentials travel over plain HTTP. Passwords could be intercepted over unencrypted local networks or Wi-Fi.",
-                "remediation": "Place ZettNAS behind an SSL reverse proxy (e.g., Nginx, Caddy, Cloudflare Tunnel, or Traefik) and access via HTTPS.",
+                "remediation": "Place Kiboto behind an SSL reverse proxy (e.g., Nginx, Caddy, Cloudflare Tunnel, or Traefik) and access via HTTPS.",
                 "action_url": "https://github.com/fr0styx/zettnas-toolkit/blob/main/docs/INSTALLATION.md#reverse-proxy-sso",
             }
         )
@@ -224,8 +224,8 @@ def _check_ai_runtimes(checks: list[dict[str, Any]], issues: list[dict[str, Any]
                 "severity": "medium",
                 "description": "Ollama / OpenVINO Model Server answer anyone on your network: they can read your prompts' context, "
                 "use your hardware, and pull or delete models. " + ", ".join(exposed),
-                "remediation": "Remove the published ports and put the AI container on the same Docker network as ZettNAS "
-                "(ZettNAS finds zettnas-ollama / zettnas-ovms by name), or publish to 127.0.0.1 only.",
+                "remediation": "Remove the published ports and put the AI container on the same Docker network as Kiboto "
+                "(Kiboto finds zettnas-ollama / zettnas-ovms by name), or publish to 127.0.0.1 only.",
                 "action_url": "https://github.com/fr0styx/zettnas-toolkit/blob/main/docs/INSTALLATION.md#local-ai-runtimes",
             }
         )
@@ -262,7 +262,7 @@ def _check_safe_defaults(checks: list[dict[str, Any]], issues: list[dict[str, An
 
 def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
     """
-    Evaluates the current security posture of the ZettNAS Toolkit instance.
+    Evaluates the current security posture of the Kiboto instance.
     Returns:
         score: int (0-100)
         grade: str ('A', 'B', 'C', 'D', 'F')

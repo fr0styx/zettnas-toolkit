@@ -1,8 +1,8 @@
-"""Photo search through Immich when it runs next to ZettNAS (Batch 6, AI-8).
+"""Photo search through Immich when it runs next to Kiboto (Batch 6, AI-8).
 
 An administrator sets where Immich is; each person connects their own Immich API key, so a
 search shows that person's Immich library and nobody else's. Thumbnails are fetched by
-ZettNAS (the key never reaches the browser). Without Immich, ZettNAS's own photo captions
+Kiboto (the key never reaches the browser). Without Immich, Kiboto's own photo captions
 and text reading at idle answer photo searches.
 """
 
@@ -45,7 +45,7 @@ def status(username: str) -> dict[str, Any]:
         "url": c.get("url") or "",
         "connected": bool(c.get("url") and c["keys"].get(username)),
         "detected": detect(),
-        "sso": bool(c.get("sso")),  # Immich signs in with ZettNAS's provider (set by apps/immich)
+        "sso": bool(c.get("sso")),  # Immich signs in with Kiboto's provider (set by apps/immich)
         "phone_done": username in (c.get("phone_done") or []),
     }
 

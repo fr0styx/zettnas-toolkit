@@ -1,5 +1,5 @@
 """
-Installs language and embedding models into the Ollama runtime ZettNAS uses (AI-03, AI-16).
+Installs language and embedding models into the Ollama runtime Kiboto uses (AI-03, AI-16).
 
 Before, "Pull" only added a model to a list, so picking it failed later. Now an install
 downloads it with Ollama's /api/pull, reports progress, can be cancelled, and checks
@@ -19,7 +19,7 @@ from typing import Any, Optional
 
 from backend.ignored_errors import ignored
 
-logger = logging.getLogger("ZettNAS")
+logger = logging.getLogger("Kiboto")
 
 _NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._\-/:@]{0,199}$")
 _JOBS: dict[str, dict[str, Any]] = {}
@@ -38,7 +38,7 @@ def valid_model_name(name: str) -> bool:
 
 
 def _tags(host: str, timeout: float = 3.0) -> list[dict[str, Any]]:
-    req = urllib.request.Request(f"{host}/api/tags", headers={"User-Agent": "ZettNAS-Toolkit"})
+    req = urllib.request.Request(f"{host}/api/tags", headers={"User-Agent": "Kiboto"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return list(json.loads(resp.read().decode("utf-8")).get("models") or [])
 
@@ -150,7 +150,7 @@ def _run(job_id: str) -> None:
         req = urllib.request.Request(
             f"{host}/api/pull",
             data=json.dumps({"model": name, "stream": True}).encode("utf-8"),
-            headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-Toolkit"},
+            headers={"Content-Type": "application/json", "User-Agent": "Kiboto"},
             method="POST",
         )
         _update(job_id, state="downloading", status="Connecting to the model registry")

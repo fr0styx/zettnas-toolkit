@@ -1,4 +1,4 @@
-"""M3: connecting a fresh Immich to ZettNAS's sign-in provider through Immich's API."""
+"""M3: connecting a fresh Immich to Kiboto's sign-in provider through Immich's API."""
 
 import json
 

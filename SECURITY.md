@@ -27,19 +27,19 @@ What to expect:
 
 ## Scope
 
-In scope: the ZettNAS Toolkit web app and API, the WebDAV/SFTP services it runs, the in-app updater, and the published container images.
+In scope: the Kiboto web app and API, the WebDAV/SFTP services it runs, the in-app updater, and the published container images.
 
-Out of scope: vulnerabilities in the host OS, Docker itself, or third-party containers that ZettNAS manages; issues that need an already-compromised admin account; denial of service from the local network by volume alone.
+Out of scope: vulnerabilities in the host OS, Docker itself, or third-party containers that Kiboto manages; issues that need an already-compromised admin account; denial of service from the local network by volume alone.
 
 ## Hardening recommendations
 
-See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for what ZettNAS defends against and what it doesn't.
+See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for what Kiboto defends against and what it doesn't.
 
 
 - Change the initial `admin` password on first login (1.9.2 and later enforce this).
 - Don't publish the web UI (port 8082) or WebDAV (port 8084) to the internet; use a VPN or a reverse proxy with its own authentication.
 - Leave WebDAV off unless you need it. Give WebDAV users their own accounts.
-- Mount the Docker socket only into ZettNAS, and never `chmod 666` it. ZettNAS reaches it through its allow-list proxy (see below).
+- Mount the Docker socket only into Kiboto, and never `chmod 666` it. Kiboto reaches it through its allow-list proxy (see below).
 - Keep the appdata folder private: it holds the session-signing key and password hashes.
 
 ## Encryption at rest for AI data
@@ -72,8 +72,8 @@ text of indexed files) and the AI chat history (`ai_conversations.db`) with SQLC
 ## Ransomware guard and blocked addresses
 
 **Ransomware guard** (Security → Ransomware guard, on by default). It watches changes
-made through ZettNAS: the file manager, uploads and WebDAV. With **guard files** turned
-on, it also places `!ZettNAS-guard-file.docx` in each share and checks it every 30
+made through Kiboto: the file manager, uploads and WebDAV. With **guard files** turned
+on, it also places `!Kiboto-guard-file.docx` in each share and checks it every 30
 seconds, which catches attacks over SMB and NFS too. It reacts to:
 
 - 150 renames or permanent deletes in 60 seconds from one user or address
@@ -82,9 +82,9 @@ seconds, which catches attacks over SMB and NFS too. It reacts to:
   seconds;
 - a guard file that changed or disappeared.
 
-It then freezes writes: the file manager and WebDAV answer 423, ZettNAS's own Samba
+It then freezes writes: the file manager and WebDAV answer 423, Kiboto's own Samba
 shares turn read-only, and the SFTP service stops. Next it snapshots pools where
-ZettNAS manages snapshots (Btrfs and ZFS on generic Linux; on Unraid, snapshots are
+Kiboto manages snapshots (Btrfs and ZFS on generic Linux; on Unraid, snapshots are
 Unraid's job), blocks the source address for 24 hours, and sends a critical alert to
 every notification channel. Unraid's own SMB shares aren't changed: use guard files
 for early warning there. An admin lifts the freeze under Security.
@@ -92,8 +92,8 @@ for early warning there. An admin lifts the freeze under Security.
 **Blocked addresses.** An address with 20 failed sign-ins (web, the WebDAV portal or a
 WebDAV client) in 15 minutes is blocked for an hour. Blocked addresses get 403 from the web
 app and from WebDAV (port 8084 and /webdav), their SFTP connections are closed before any
-sign-in, and ZettNAS's Samba denies them. rclone serves WebDAV and SFTP on loopback ports
-only; ZettNAS answers on 8084 and the SFTP port and passes each request on, so the
+sign-in, and Kiboto's Samba denies them. rclone serves WebDAV and SFTP on loopback ports
+only; Kiboto answers on 8084 and the SFTP port and passes each request on, so the
 addresses clients use stay the same (SEC-34). SFTP sign-ins are counted per account, which
 is locked after repeated failures (shared with WebDAV), not per address. Loopback and the networks in `KIBOTO_TRUSTED_IPS`
 (comma-separated, for example `192.168.1.10,10.0.0.0/24`) are never blocked. If you
@@ -102,7 +102,7 @@ lock yourself out, run
 
 ## Privileges and root-equivalent roles
 
-ZettNAS runs as root in its container with raw-disk and hardware access, because it
+Kiboto runs as root in its container with raw-disk and hardware access, because it
 reads SMART data, drives the fans and LCD, mounts disks and runs VMs. Treat the web UI
 like an SSH login to the host.
 
@@ -111,14 +111,14 @@ process (`backend/docker_proxy.py`) forwards only the Docker API calls the app n
 and refuses everything else (swarm, plugins, secrets, image build/load/import,
 commit, export). Creating a container with host-level access (privileged, host PID,
 IPC or network namespace, dangerous capabilities, raw block devices, bind mounts of
-`/`, `/etc`, `/boot`, `/dev`, `/var`, the Docker socket or ZettNAS's own data folder,
+`/`, `/etc`, `/boot`, `/dev`, `/var`, the Docker socket or Kiboto's own data folder,
 or a volume that binds one of them) is allowed only from flows you confirm: installing
 a built-in app after its security review, and the updater. Recreating a container keeps
 the access it already had; a change that adds host access, or runs a different image
 with it, needs a superadmin and a confirmation. Each one is logged to
 `data/docker-proxy-audit.log`. Set `KIBOTO_DOCKER_PROXY=off` to bypass the proxy.
 
-**ZettNAS's own data folder** (`users.db`, `secret.key`, backup settings) can't be
+**Kiboto's own data folder** (`users.db`, `secret.key`, backup settings) can't be
 opened, listed, copied, shared or served over WebDAV and SFTP by anyone, even when the
 host shows it inside a shared folder (on Unraid, `/mnt/user/appdata/zettnas-toolkit`).
 
@@ -145,7 +145,7 @@ root-equivalent.
 owner's current role allows: demoting someone shrinks their tokens at once. An admin
 resetting someone's password also revokes that person's tokens.
 
-**WebDAV** always asks for a ZettNAS account. Only a superadmin can change its
+**WebDAV** always asks for a Kiboto account. Only a superadmin can change its
 settings, with a confirmation, and its shared folder must be inside the storage pool.
 
 ## Past advisories

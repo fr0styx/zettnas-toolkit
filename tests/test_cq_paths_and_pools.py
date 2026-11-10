@@ -1,4 +1,4 @@
-"""CodeQL findings that were real: an app's data folder is never a system folder or ZettNAS's
+"""CodeQL findings that were real: an app's data folder is never a system folder or Kiboto's
 own, and a pool name in a URL can't be a zpool option."""
 
 import os
@@ -15,7 +15,7 @@ def test_unsafe_roots_are_refused(monkeypatch, tmp_path):
     for bad in ("", "relative/apps", "/etc", "/", "/usr/lib/x", "/proc/1"):
         assert ac.app_dir_for(bad, "x")[1], bad
     monkeypatch.setattr("backend.fsutil.is_protected", lambda p: p.startswith(str(tmp_path / "zn")))
-    assert ac.app_dir_for(str(tmp_path / "zn"), "x")[1]  # ZettNAS's own folder
+    assert ac.app_dir_for(str(tmp_path / "zn"), "x")[1]  # Kiboto's own folder
     assert ac.app_dir_for(str(tmp_path), "zn")[1]  # an app named after it, under a fine root
     assert ac.app_dir_for(str(tmp_path), "../escape")[1]
 

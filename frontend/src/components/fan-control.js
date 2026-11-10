@@ -1,5 +1,5 @@
 /**
- * ZettNAS Toolkit Fan Curve Workstation
+ * Kiboto Fan Curve Workstation
  * Interactive SVG curve editor, thermal zone isolation, and PWM profile management.
  */
 import { api } from '../api.js';

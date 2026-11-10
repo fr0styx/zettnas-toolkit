@@ -57,7 +57,7 @@ def _tell_the_person(user: dict[str, Any], principal: AuthenticatedPrincipal) ->
         notify_person(
             user.get("username", ""),
             "Your data was downloaded",
-            f"{principal.username} downloaded a copy of your chats, Zetty log and search data on {when}.",
+            f"{principal.username} downloaded a copy of your chats, Kib log and search data on {when}.",
         )
     except Exception:
         pass  # the security log has it either way

@@ -562,7 +562,7 @@ def evaluate(
     real_rbac = search_mod.RagSearchMixin._build_rbac_clause
 
     def as_system(principal, table_alias="f"):
-        # ranking, not permissions: the eval searches as ZettNAS itself (since SEC-37 a search
+        # ranking, not permissions: the eval searches as Kiboto itself (since SEC-37 a search
         # without a principal finds nothing, which made the command-line and nightly runs score 0)
         return real_rbac(search_mod.SYSTEM_PRINCIPAL if principal is None else principal, table_alias)
 
