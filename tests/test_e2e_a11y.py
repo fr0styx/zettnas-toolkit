@@ -122,7 +122,7 @@ def _login(page):
         page.fill("#login-username", "admin")
     page.fill("#login-password", os.environ.get("KIBOTO_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin"))
     page.click("#login-btn")
-    page.wait_for_function("() => localStorage.getItem('zettnas_signed_in') === '1'", timeout=8000)
+    page.wait_for_function("() => localStorage.getItem('kiboto_signed_in') === '1'", timeout=8000)
     page.reload(wait_until="domcontentloaded")
     # the desktop dock, or the launcher on a phone (phone mode hides the desktop, UX-13)
     page.wait_for_function(

@@ -96,7 +96,7 @@ def _sign_in(page):
     page.keyboard.press("Control+A")
     page.keyboard.type(PASSWORD)
     page.keyboard.press("Enter")
-    page.wait_for_function("() => localStorage.getItem('zettnas_signed_in') === '1'", timeout=10000)
+    page.wait_for_function("() => localStorage.getItem('kiboto_signed_in') === '1'", timeout=10000)
     page.reload(wait_until="domcontentloaded")
     page.wait_for_timeout(2500)
 
@@ -201,7 +201,7 @@ def test_sign_in_with_a_recovery_code_by_keyboard():
             page.keyboard.type(code)
             page.keyboard.press("Enter")
             try:
-                page.wait_for_function("() => localStorage.getItem('zettnas_signed_in') === '1'", timeout=8000)
+                page.wait_for_function("() => localStorage.getItem('kiboto_signed_in') === '1'", timeout=8000)
             except Exception:
                 shown = page.evaluate(
                     "() => [...document.querySelectorAll('#login-error, #login-sso-error, .toast, [role=alert]')].map((e) => e.textContent.trim()).filter(Boolean)"
@@ -346,13 +346,13 @@ def test_german_shows_no_english(width, height):
     with sync_playwright() as p:
         browser = _browser(p)
         context = browser.new_context(viewport={"width": width, "height": height})
-        context.add_init_script("localStorage.setItem('zettnas_language', 'de')")
+        context.add_init_script("localStorage.setItem('kiboto_language', 'de')")
         page = context.new_page()
         page.goto(BASE + "/", wait_until="domcontentloaded", timeout=12000)
         page.wait_for_timeout(1500)
         for name, pane, root in GERMAN_SCREENS:
             if pane:
-                if name == "people" and not page.evaluate("() => localStorage.getItem('zettnas_signed_in') === '1'"):
+                if name == "people" and not page.evaluate("() => localStorage.getItem('kiboto_signed_in') === '1'"):
                     _sign_in(page)
                     _close_wizard(page)
                 page.evaluate(f"() => window.openManagementWindow && window.openManagementWindow({json.dumps(pane)})")

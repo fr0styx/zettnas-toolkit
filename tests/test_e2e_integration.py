@@ -159,7 +159,7 @@ def _page_diagnostics(page, sel=None):
                 const cs = getComputedStyle(el);
                 if (cs.display === 'none' || cs.visibility === 'hidden' || el.hidden) chain.push((el.id || el.className || el.tagName) + ':' + cs.display + '/' + cs.visibility);
             }
-            return { target: target ? 'present' : 'missing', hiddenBy: chain, hint: localStorage.getItem('zettnas_signed_in'),
+            return { target: target ? 'present' : 'missing', hiddenBy: chain, hint: localStorage.getItem('kiboto_signed_in'),
                      me, meMs, badge: vis('suite-brand-badge'), overlay: vis('login-overlay'), slow };
         }"""
     )
@@ -200,11 +200,11 @@ def test_e2e_live_desktop_session_and_badge():
             page.fill("#login-username", "admin")
         page.fill("#login-password", os.environ.get("KIBOTO_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin"))
         page.click("#login-btn")
-        page.wait_for_function("() => localStorage.getItem('zettnas_signed_in') === '1'", timeout=8000)
+        page.wait_for_function("() => localStorage.getItem('kiboto_signed_in') === '1'", timeout=8000)
 
         cookies = {c["name"]: c for c in context.cookies()}
         assert "kiboto_session" in cookies and cookies["kiboto_session"]["httpOnly"]
-        assert page.evaluate("() => localStorage.getItem('zettnas_token')") is None
+        assert page.evaluate("() => localStorage.getItem('kiboto_token')") is None
         assert page.evaluate("() => document.cookie").find("kiboto_session") == -1
         # An authenticated API call made by the page itself succeeds with just the cookie
         assert page.evaluate("async () => (await fetch('/api/auth/me')).status") == 200

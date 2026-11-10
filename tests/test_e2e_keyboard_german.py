@@ -64,11 +64,11 @@ def _sign_in_with_keyboard(page):
     page.keyboard.type(PASSWORD)
     page.keyboard.press("Enter")
     try:
-        page.wait_for_function("() => localStorage.getItem('zettnas_signed_in') === '1'", timeout=4000)
+        page.wait_for_function("() => localStorage.getItem('kiboto_signed_in') === '1'", timeout=4000)
     except Exception:
         page.focus("#login-btn")  # Enter in the field didn't submit: the button, by keyboard
         page.keyboard.press("Enter")
-        page.wait_for_function("() => localStorage.getItem('zettnas_signed_in') === '1'", timeout=8000)
+        page.wait_for_function("() => localStorage.getItem('kiboto_signed_in') === '1'", timeout=8000)
     page.reload(wait_until="domcontentloaded")
     page.wait_for_selector("#management-desktop-icon", state="visible", timeout=15000)
     page.wait_for_timeout(1500)
@@ -119,7 +119,7 @@ def test_german_text_fits():
     with sync_playwright() as p:
         browser = _browser(p)
         context = browser.new_context(viewport={"width": 1440, "height": 900})
-        context.add_init_script("localStorage.setItem('zettnas_language', 'de')")
+        context.add_init_script("localStorage.setItem('kiboto_language', 'de')")
         page = context.new_page()
         _sign_in_with_keyboard(page)
 
