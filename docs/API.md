@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-690 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+692 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -321,6 +321,13 @@ request and response schemas.
 | `GET` | `/api/v1/fs/versions` | any of `shares:read`, `shares:user_write`, `storage:read`, `storage:write`, `storage:admin` | Get Versions |
 | `GET` | `/api/v1/fs/versions/download` | any of `shares:read`, `shares:user_write`, `storage:read`, `storage:write`, `storage:admin` | Download Version |
 | `POST` | `/api/v1/fs/versions/restore` | any of `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Restore Version |
+
+### Hardware
+
+| Method | Path | Access | What it does |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/hardware/helper` | `system:view` | Whether the helper runs and answers, and whether this box has the registers it serves |
+| `PUT` | `/api/v1/hardware/helper` | `system:config` | Turns the helper on (confirmed first: 428 until then) or off |
 
 ### Immich
 

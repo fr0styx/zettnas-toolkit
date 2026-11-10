@@ -23313,6 +23313,19 @@
     "title": "HuggingFacePullRequest",
     "type": "object"
    },
+   "HwHelperUpdate": {
+    "properties": {
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "enabled"
+    ],
+    "title": "HwHelperUpdate",
+    "type": "object"
+   },
    "ICloudCode": {
     "properties": {
      "code": {
@@ -54776,6 +54789,83 @@
      "shares:read",
      "storage:read",
      "system:view"
+    ]
+   }
+  },
+  "/api/v1/hardware/helper": {
+   "get": {
+    "description": "Whether the helper runs and answers, and whether this box has the registers it serves.",
+    "operationId": "get_hw_helper_api_v1_hardware_helper_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Hw Helper Api V1 Hardware Helper Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Hw Helper",
+    "tags": [
+     "Hardware"
+    ],
+    "x-required-scopes": [
+     "system:view"
+    ]
+   },
+   "put": {
+    "description": "Turns the helper on (confirmed first: 428 until then) or off.",
+    "operationId": "put_hw_helper_api_v1_hardware_helper_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/HwHelperUpdate"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Hw Helper Api V1 Hardware Helper Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Hw Helper",
+    "tags": [
+     "Hardware"
+    ],
+    "x-required-scopes": [
+     "system:config"
     ]
    }
   },

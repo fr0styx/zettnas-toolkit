@@ -289,11 +289,24 @@ class ZettlabMmioFanController:
             return False
 
     def is_available(self) -> bool:
+        from backend.hardware import hw_client
+
+        if hw_client.available():  # SEC-24: the helper holds /dev/mem
+            return True
         if not is_zettlab_mmio_supported():
             return False
         return self._ensure_mapped()
 
     def read_fans(self) -> list[int]:
+        from backend.hardware import hw_client
+
+        if hw_client.available():
+            try:
+                return [int(x) for x in hw_client.call("fans").get("rpm") or []]
+            except hw_client.HelperError as e:
+                logger.warning("[FANS] The hardware helper didn't read the fans: %s", e)
+                hw_client.forget()
+                return []
         if not self._ensure_mapped():
             return []
         with self._lock:
@@ -311,6 +324,16 @@ class ZettlabMmioFanController:
                 return []
 
     def write_pwm(self, channel: int, pwm_val: int) -> bool:
+        from backend.hardware import hw_client
+
+        if hw_client.available():
+            try:
+                hw_client.call("pwm", channel=int(channel), value=max(0, min(FAN_MAX_PWM, int(pwm_val))))
+                return True
+            except hw_client.HelperError as e:
+                logger.warning("[FANS] The hardware helper didn't set fan %s: %s", channel, e)
+                hw_client.forget()
+                return False
         if not self._ensure_mapped():
             return False
         with self._lock:

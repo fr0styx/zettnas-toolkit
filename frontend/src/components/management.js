@@ -734,6 +734,7 @@ export function initManagement() {
       }, 50);
     } else if (paneId === 'mgmt-pane-hardware-fans') {
       if (typeof restoreHardwareTabsToManagement === 'function') restoreHardwareTabsToManagement();
+      import('./management/hw-helper.js').then((m) => m.loadHwHelperCard()).catch(() => {}); // SEC-24
     } else if (paneId === 'mgmt-pane-hardware-led') {
       if (typeof restoreHardwareTabsToManagement === 'function') restoreHardwareTabsToManagement();
     } else if (paneId === 'mgmt-pane-hardware-copy') {

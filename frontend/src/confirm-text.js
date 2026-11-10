@@ -33,6 +33,7 @@ const ACTIONS = {
   'share.make_subvolume': ['Make snapshot-ready', 'Make the share {target} snapshot-ready? Its files move into a btrfs subvolume of the same name. Close files on it first: changes saved while it runs may be lost.', true],
   'pool.scrub_schedule': ['Check monthly', 'Check the pool {target} for errors once a month? Its disks spin up for the check.', false],
   'security.advisor_fix': ['Apply the fix', 'Apply the Security Advisor fix "{target}"? People may lose access they had before.', false],
+  'hardware.helper': ['Turn on the helper', 'Move the fan and button hardware access into {target}, a small container with no network that alone opens /dev/mem? The next update takes that access away from Kiboto itself.', false],
   'network.nas_name': ['Turn on', 'Let the NAS answer to {target} on the home network? A small helper on the host\'s network does it and only answers name lookups.', false],
   'network.publish_app': ['Put it on the internet', 'Put {target} on the internet through Tailscale Funnel? Anyone with its address reaches its own sign-in page; Kiboto\'s page stays private.', true],
   'network.public_links': ['Publish share links', 'Let anyone who has a share link open it from the internet, through Tailscale Funnel on port {target}? Only share links are reachable that way; the rest of the NAS stays private.', false],

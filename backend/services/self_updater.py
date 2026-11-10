@@ -278,8 +278,77 @@ def narrow_device_rules(rules: list[str] | None) -> list[str] | None:
 RETIRED_ENV = frozenset({"LCD_FPS=10"})
 
 
+_RAW_RULE = "c 1:1 rwm"  # /dev/mem
+
+
+def raw_hardware_access(host_config: dict[str, Any], keep: bool) -> dict[str, Any]:
+    """SEC-24 step 2: Kiboto's container with (keep) or without SYS_RAWIO, the /dev/mem device rule and
+    a /dev/mem device; without them only the hardware helper reaches the fans and the button."""
+    hc = dict(host_config)
+    caps = [str(c) for c in hc.get("CapAdd") or []]
+    rules = [str(r).strip() for r in hc.get("DeviceCgroupRules") or []]
+    has_cap = any(c.upper().removeprefix("CAP_") == "SYS_RAWIO" for c in caps)
+    if keep:
+        if not has_cap:
+            caps.append("SYS_RAWIO")
+        if _RAW_RULE not in rules:
+            rules.append(_RAW_RULE)
+    else:
+        caps = [c for c in caps if c.upper().removeprefix("CAP_") != "SYS_RAWIO"]
+        rules = [r for r in rules if r != _RAW_RULE]
+        hc["Devices"] = [
+            d for d in hc.get("Devices") or [] if not (isinstance(d, dict) and d.get("PathOnHost") == "/dev/mem")
+        ]
+    hc["CapAdd"] = caps or None
+    hc["DeviceCgroupRules"] = rules or None
+    return hc
+
+
+def _helper_answers(sock_path: str) -> bool:
+    import socket
+
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+            s.settimeout(1.0)
+            s.connect(sock_path)
+            s.sendall(b'{"op": "ping"}\n')
+            return b'"ok": true' in s.recv(256)
+    except OSError:
+        return False
+
+
+def raw_hardware_decision(data_dir: str | None) -> bool | None:
+    """What the update does with Kiboto's raw hardware access (SEC-24 step 2): False leaves it out (the
+    hardware helper is on and answers), True puts it back (it was left out and the helper is off now),
+    None leaves the container as it is. The choice is recorded in hw_helper.json."""
+    if not data_dir:
+        return None
+    path = os.path.join(data_dir, "hw_helper.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            cfg = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(cfg, dict):
+        return None
+    decision: bool | None = None
+    if cfg.get("enabled") and _helper_answers(os.path.join(data_dir, "hw", "hw.sock")):
+        decision = False
+    elif cfg.get("dropped") and not cfg.get("enabled"):
+        decision = True
+    if decision is not None:
+        cfg["dropped"] = decision is False
+        try:
+            from backend.fsutil import atomic_write_json
+
+            atomic_write_json(path, cfg)
+        except OSError:
+            logger.warning("[SelfUpdater Helper] Could not record the hardware access choice")
+    return decision
+
+
 def build_recreate_plan(
-    inspect_data: dict[str, Any], old_image_cfg: dict[str, Any], image: str
+    inspect_data: dict[str, Any], old_image_cfg: dict[str, Any], image: str, raw_hw: bool | None = None
 ) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
     """Returns (create body, extra networks to connect after create)."""
     config = dict(inspect_data.get("Config") or {})
@@ -312,6 +381,8 @@ def build_recreate_plan(
     body["Image"] = image
     if host_config.get("DeviceCgroupRules"):
         host_config["DeviceCgroupRules"] = narrow_device_rules(host_config["DeviceCgroupRules"])
+    if raw_hw is not None:  # SEC-24 step 2: the hardware helper holds /dev/mem, or not any more
+        host_config = raw_hardware_access(host_config, keep=raw_hw)
     body["HostConfig"] = host_config
 
     networks = dict((inspect_data.get("NetworkSettings") or {}).get("Networks") or {})
@@ -383,7 +454,13 @@ def apply_update_from_helper(
 
     old_image_ref = str(inspect_data.get("Image") or (inspect_data.get("Config") or {}).get("Image") or "")
     old_image_cfg = _image_config(old_image_ref) if old_image_ref else {}
-    create_body, extra_networks = build_recreate_plan(inspect_data, old_image_cfg, image)
+    raw_hw = raw_hardware_decision(data_dir)
+    if raw_hw is not None:
+        logger.info(
+            "[SelfUpdater Helper] Raw hardware access: %s",
+            "back in Kiboto" if raw_hw else "with the hardware helper only",
+        )
+    create_body, extra_networks = build_recreate_plan(inspect_data, old_image_cfg, image, raw_hw)
 
     # Clean up any leftover rollback container from a previous run
     rollback_name = f"{target}-rollback"

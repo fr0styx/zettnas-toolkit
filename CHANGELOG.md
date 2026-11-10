@@ -146,6 +146,15 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   thinking off; Ollama's plain qwen3:4b always thinks first and is much slower. An install that chose a
   model keeps it.
 
+#### Security
+
+- **A hardware helper, so Kiboto needn't open /dev/mem**: on Zettlab boxes Kiboto sets the fans and reads
+  the COPY button through raw hardware access, which can read and change any of the computer's memory.
+  Hardware → Fans → Hardware helper (off until you turn it on, confirmed) moves that access into kiboto-hw,
+  a small container with no network that answers four questions only: read the fans, set a fan, read the
+  button, are you there. The next update then recreates Kiboto without that access; turning the helper
+  off keeps it running until an update gives Kiboto its access back. How it works: docs/HARDWARE_HELPER.md.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

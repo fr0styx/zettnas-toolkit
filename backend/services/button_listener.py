@@ -51,6 +51,13 @@ def button_listener_daemon():
     MMIO_BASE = 0xE0D20000
     COPY_OFFSET = 0x6C0
 
+    from backend.hardware import hw_client
+
+    if hw_client.available(force=True):  # SEC-24: the helper holds /dev/mem
+        logger.info("[Kiboto] The copy button on chassis %s is read through the hardware helper", model)
+        _poll_button(lambda: int(hw_client.call("button")["value"]))
+        return
+
     try:
         mem_cands = [
             "/dev/mem",
@@ -84,16 +91,21 @@ def button_listener_daemon():
         logger.info(f"[Kiboto] Hardware button mapping failed: {e}")
         return
 
+    _poll_button(lambda: struct.unpack("<I", mem[COPY_OFFSET : COPY_OFFSET + 4])[0])
+
+
+def _poll_button(read_value) -> None:
+    """Watches the copy button: read_value() gives its 32-bit register (from /dev/mem or the helper)."""
     last_state = 1
     while True:
         try:
-            copy_val = struct.unpack("<I", mem[COPY_OFFSET : COPY_OFFSET + 4])[0]
+            copy_val = read_value()
             current_state = (copy_val & 2) >> 1
 
             if current_state == 0 and last_state == 1:
                 # Hardware button mechanical debounce delay
                 time.sleep(0.05)
-                copy_val_check = struct.unpack("<I", mem[COPY_OFFSET : COPY_OFFSET + 4])[0]
+                copy_val_check = read_value()
                 if (copy_val_check & 2) >> 1 != 0:
                     last_state = 1
                     continue

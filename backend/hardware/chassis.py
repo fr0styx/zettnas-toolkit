@@ -184,7 +184,7 @@ class ChassisEngine:
         has_copy_button = bool(
             is_custom_appliance
             or (
-                (os.path.exists("/dev/mem") or os.path.exists(os.path.join(HOST_DEV, "mem")))
+                (os.path.exists("/dev/mem") or os.path.exists(os.path.join(HOST_DEV, "mem")) or _hw_helper_up())
                 and ("zettlab" in vendor or any(k in product for k in ("d4", "d6", "d6u", "d8u")))
             )
         )
@@ -619,3 +619,10 @@ class ChassisEngine:
                 except Exception:
                     ignored("backend.hardware.chassis.ChassisEngine.set_ugreen_bay_led")
         return False
+
+
+def _hw_helper_up() -> bool:
+    """The hardware helper answers (SEC-24): the app may have no /dev/mem of its own then."""
+    from backend.hardware import hw_client
+
+    return hw_client.available()

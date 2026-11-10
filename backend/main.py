@@ -126,6 +126,9 @@ def _start_network_services() -> None:
     from backend.services import nas_name
 
     nas_name.ensure_soon()  # NFEAT-8: <name>.local, its container on the app's current image
+    from backend.services import hw_helper_container
+
+    hw_helper_container.ensure_soon()  # SEC-24 step 2: the hardware helper on the app's current image
 
 
 def _warn_default_password() -> None:
