@@ -223,6 +223,7 @@ export async function applySecurityFix(fixId, btn = null) {
 
 export async function fetchAndRenderSecurityPosture() {
   import('./mfa-policy.js').then((m) => m.renderMfaPolicy()).catch(() => {});
+  import('./malware-scan.js').then((m) => m.renderMalwareScan()).catch(() => {}); // NFEAT-11
   const badge = document.getElementById('sec-advisor-score-badge');
   const container = document.getElementById('sec-advisor-items');
   if (!badge && !container) return;

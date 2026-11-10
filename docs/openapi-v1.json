@@ -36142,6 +36142,56 @@
     "title": "SaveClientPreferencesResponsePreferences",
     "type": "object"
    },
+   "ScanSettings": {
+    "properties": {
+     "enabled": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Enabled"
+     },
+     "inbox": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Inbox"
+     },
+     "upload": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Upload"
+     },
+     "upload_link": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Upload Link"
+     }
+    },
+    "title": "ScanSettings",
+    "type": "object"
+   },
    "ScheduleIn": {
     "properties": {
      "every": {
@@ -64533,6 +64583,183 @@
      }
     },
     "summary": "Remove Ip Block",
+    "tags": [
+     "Security"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/security/malware-scan": {
+   "get": {
+    "description": "Whether ClamAV runs and answers, its signatures, what it scans, counts and the quarantine.",
+    "operationId": "get_malware_scan_api_v1_security_malware_scan_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Malware Scan Api V1 Security Malware Scan Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Malware Scan",
+    "tags": [
+     "Security"
+    ],
+    "x-required-scopes": [
+     "system:view"
+    ]
+   },
+   "put": {
+    "description": "Turns the scan on (confirmed first: 428 until then; starts ClamAV) or off, and chooses what it scans.",
+    "operationId": "put_malware_scan_api_v1_security_malware_scan_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScanSettings"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Malware Scan Api V1 Security Malware Scan Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Malware Scan",
+    "tags": [
+     "Security"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/security/malware-scan/quarantine/{qid}": {
+   "delete": {
+    "description": "Deletes a quarantined file for good (confirmed first).",
+    "operationId": "delete_quarantined_api_v1_security_malware_scan_quarantine__qid__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "qid",
+      "required": true,
+      "schema": {
+       "title": "Qid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Delete Quarantined Api V1 Security Malware Scan Quarantine  Qid  Delete",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Delete Quarantined",
+    "tags": [
+     "Security"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/security/malware-scan/quarantine/{qid}/restore": {
+   "post": {
+    "description": "Puts a quarantined file back where it came from (confirmed first: ClamAV flagged it).",
+    "operationId": "restore_quarantined_api_v1_security_malware_scan_quarantine__qid__restore_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "qid",
+      "required": true,
+      "schema": {
+       "title": "Qid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Restore Quarantined Api V1 Security Malware Scan Quarantine  Qid  Restore Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Restore Quarantined",
     "tags": [
      "Security"
     ],

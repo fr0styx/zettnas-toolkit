@@ -25,6 +25,7 @@ from fastapi import HTTPException, Request
 from fastapi.responses import Response
 
 from backend.config import logger
+from backend.services import malware_scan
 
 DEFAULT_LIMIT_MB = 5 * 1024
 FREE_MARGIN = 1024**3  # leave at least this much free on the disk
@@ -145,6 +146,7 @@ async def receive(item: dict[str, Any], folder: str, request: Request) -> tuple[
         final = await asyncio.to_thread(unique_path, folder, name)
         await asyncio.to_thread(os.replace, part, final)
         part = ""
+        malware_scan.queue_scan(final, "upload_link", str(item.get("created_by") or ""))  # NFEAT-11
         return os.path.basename(final), written
     finally:
         if part and await asyncio.to_thread(os.path.exists, part):

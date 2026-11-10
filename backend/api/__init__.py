@@ -30,6 +30,7 @@ from backend.api.immich import router as immich_router  # noqa: E402
 from backend.api.invites import router as invites_router  # noqa: E402
 from backend.api.jobs import router as jobs_router  # noqa: E402
 from backend.api.led import router as led_router
+from backend.api.malware_scan import router as malware_scan_router
 from backend.api.mcp import router as mcp_router
 from backend.api.media import router as media_router
 from backend.api.metrics import router as metrics_router
@@ -108,6 +109,7 @@ api_router.include_router(public_links_router)  # NFEAT-2
 api_router.include_router(family_access_router)  # NFEAT-1
 api_router.include_router(fleet_router)  # RES-9
 api_router.include_router(family_signin_router)  # NFEAT-6
+api_router.include_router(malware_scan_router)  # NFEAT-11
 api_router.include_router(home_assistant_router)  # RES-5
 api_router.include_router(hw_helper_router)
 api_router.include_router(sftp_router)
@@ -151,6 +153,7 @@ __all__ = [
     "family_access_router",
     "fleet_router",
     "family_signin_router",
+    "malware_scan_router",
     "home_assistant_router",
     "sftp_router",
     "vms_router",

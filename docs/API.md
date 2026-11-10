@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-715 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+719 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -634,6 +634,10 @@ request and response schemas.
 | `GET` | `/api/v1/security/ip-blocks` | any of `system:view`, `audit:read` | List Ip Blocks |
 | `POST` | `/api/v1/security/ip-blocks` | `system:config` | Add Ip Block |
 | `DELETE` | `/api/v1/security/ip-blocks/{ip}` | `system:config` | Remove Ip Block |
+| `GET` | `/api/v1/security/malware-scan` | `system:view` | Whether ClamAV runs and answers, its signatures, what it scans, counts and the quarantine |
+| `PUT` | `/api/v1/security/malware-scan` | `system:config` | Turns the scan on (confirmed first: 428 until then; starts ClamAV) or off, and chooses what it scans |
+| `DELETE` | `/api/v1/security/malware-scan/quarantine/{qid}` | `system:config` | Deletes a quarantined file for good (confirmed first) |
+| `POST` | `/api/v1/security/malware-scan/quarantine/{qid}/restore` | `system:config` | Puts a quarantined file back where it came from (confirmed first: ClamAV flagged it) |
 | `GET` | `/api/v1/security/mfa-policy` | any of `system:view`, `audit:read` | Which roles must use two-step sign-in; per role, how many people still have to set it up |
 | `PUT` | `/api/v1/security/mfa-policy` | `system:config` | Put Mfa Policy |
 | `GET` | `/api/v1/security/ransomware` | any of `system:view`, `audit:read` | Ransomware Status |
