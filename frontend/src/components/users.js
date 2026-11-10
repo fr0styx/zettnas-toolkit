@@ -220,11 +220,11 @@ export async function loadUsersList() {
       return `
         <tr class="zn-row-hover">
           <td class="zn-inline" style="gap: 10px;">
-            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size: var(--zn-fs-sm); border: 1px solid var(--zn-line-20);">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0a7a70, #08695f); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size: var(--zn-fs-sm); border: 1px solid var(--zn-line-20);">
               ${escapeHtml(letter)}
             </div>
             <div>
-              <div style="font-weight:700; color:var(--zn-text-strong); font-size: var(--zn-fs-sm);">${escapeHtml(u.display_name || u.username)} ${isSelf ? '<span style="font-size: var(--zn-fs-xs); background:rgba(14,165,233,0.2); color:var(--zn-text-accent); padding:2px 6px; border-radius:4px; margin-left:4px;">' + escapeHtml(t('users.you', 'You')) + '</span>' : ''}</div>
+              <div style="font-weight:700; color:var(--zn-text-strong); font-size: var(--zn-fs-sm);">${escapeHtml(u.display_name || u.username)} ${isSelf ? '<span style="font-size: var(--zn-fs-xs); background:rgba(51,205,184,0.2); color:var(--zn-text-accent); padding:2px 6px; border-radius:4px; margin-left:4px;">' + escapeHtml(t('users.you', 'You')) + '</span>' : ''}</div>
               <div class="zn-sub">@${escapeHtml(u.username)}</div>
             </div>
           </td>

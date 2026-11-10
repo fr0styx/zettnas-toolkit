@@ -15,9 +15,9 @@
 
 /* The active state of the system button (09-drawer-cards.css) */
 body.theme-light {
-  --pill-active-bg: rgba(2, 132, 199, 0.12);
-  --pill-active-fg: #075985;
-  --pill-active-line: rgba(3, 105, 161, 0.55);
+  --pill-active-bg: rgba(10, 122, 112, 0.12);
+  --pill-active-fg: #075249;
+  --pill-active-line: rgba(8, 105, 95, 0.55);
   --pill-active-glow: none;
   /* status colours some scripts set by name (their dark-theme fallbacks are too light here) */
   --danger: #b91c1c;

@@ -68,7 +68,7 @@ export function openVmCreateModal() {
           <div>
             <label class="vmc-xs-bold-muted">${t('vmd.autostart_label', 'Autostart')}</label>
             <label class="vmc-row-xs-strong">
-              <input type="checkbox" id="vm-create-autostart" style="accent-color: var(--accent-cyan, #0ea5e9);" />
+              <input type="checkbox" id="vm-create-autostart" style="accent-color: var(--accent-cyan, #33cdb8);" />
               <span>${t('vmd.autostart', 'Start with the NAS')}</span>
             </label>
           </div>
@@ -80,7 +80,7 @@ export function openVmCreateModal() {
             <span class="vmc-xs-bold-strong">${t('vmd.ram_title', 'Memory (leaves room for the NAS)')}</span>
             <span class="vmc-xs-bold-accent" id="vm-ram-display">4.0 GB</span>
           </div>
-          <input type="range" id="vm-create-ram-slider" min="0.5" max="${budget.safe_slider_max_gb}" step="0.5" value="4.0" style="width: 100%; accent-color: var(--accent-cyan, #0ea5e9); cursor: pointer;" />
+          <input type="range" id="vm-create-ram-slider" min="0.5" max="${budget.safe_slider_max_gb}" step="0.5" value="4.0" style="width: 100%; accent-color: var(--accent-cyan, #33cdb8); cursor: pointer;" />
           <div class="vmc-row-xs-muted">
             <span>${t('vmd.ram_min', 'Min: 0.5 GB')}</span>
             <span id="vm-slider-max-label">${t('vmd.ram_safe', 'Safe max: {gb} GB', { gb: budget.safe_slider_max_gb })}</span>
@@ -104,7 +104,7 @@ export function openVmCreateModal() {
             <span class="vmc-xs-bold-strong">${t('vmd.vcpus', 'vCPU cores')}</span>
             <span class="vmc-xs-bold-strong" id="vm-vcpu-display">2 vCPUs</span>
           </div>
-          <input type="range" id="vm-create-vcpu-slider" min="1" max="${hostThreads}" step="1" value="2" style="width: 100%; accent-color: var(--accent-cyan, #0ea5e9); cursor: pointer;" />
+          <input type="range" id="vm-create-vcpu-slider" min="1" max="${hostThreads}" step="1" value="2" style="width: 100%; accent-color: var(--accent-cyan, #33cdb8); cursor: pointer;" />
           <div class="vmc-row-xs-muted">
             <span>1 vCPU</span>
             <span id="vm-vcpu-max-label">${t('vmd.thread_limit', 'Physical limit: {count, plural, one {# thread} other {# threads}}', { count: hostThreads })}</span>
@@ -173,7 +173,7 @@ export function openVmCreateModal() {
           <!-- Virtual TPM 2.0 Toggle -->
           <div class="vmc-row-box">
             <label class="vmc-row-xs-strong-2">
-              <input type="checkbox" id="vm-create-tpm" style="accent-color: var(--accent-cyan, #0ea5e9);" />
+              <input type="checkbox" id="vm-create-tpm" style="accent-color: var(--accent-cyan, #33cdb8);" />
               <span data-i18n="vm.tpm_title">${t('vm.tpm_title', 'Enable Virtual TPM 2.0 (vTPM)')}</span>
             </label>
             ${vtpmBadgeHtml()}
@@ -240,7 +240,7 @@ export function openVmCreateModal() {
             <div>
               <label class="vmc-xs-muted-2">${t('vmd.display_mode', 'Display')}</label>
               <label class="vmc-row-xs-strong-3">
-                <input type="checkbox" id="vm-create-enable-gui" checked style="accent-color: var(--accent-cyan, #0ea5e9);" />
+                <input type="checkbox" id="vm-create-enable-gui" checked style="accent-color: var(--accent-cyan, #33cdb8);" />
                 <span>${t('vmd.display_on', 'Graphical desktop (display :0)')}</span>
               </label>
             </div>
@@ -286,7 +286,7 @@ export function openVmCreateModal() {
 
       <div class="smart-modal-footer vmc-row-box-2">
         <button id="vm-create-cancel" class="btn-pill-toggle">${t('common.cancel', 'Cancel')}</button>
-        <button id="vm-create-submit" class="btn-save-preset" style="padding: 7px 18px; font-weight: 700; background: var(--accent-cyan, #0ea5e9); border-color: rgba(14, 165, 233, 0.4); color: var(--zn-text-strong);">${t('vm.create_btn', 'Create Virtual Machine')}</button>
+        <button id="vm-create-submit" class="btn-save-preset" style="padding: 7px 18px; font-weight: 700; background: var(--accent-cyan, #33cdb8); border-color: rgba(51, 205, 184, 0.4); color: var(--zn-text-strong);">${t('vm.create_btn', 'Create Virtual Machine')}</button>
       </div>
     </div>
   `;

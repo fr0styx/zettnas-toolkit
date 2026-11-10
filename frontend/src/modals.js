@@ -314,9 +314,9 @@ export function openEventDetailModal(ev) {
 
   const lvl = (ev.level || "info").toLowerCase();
   let icon = "ℹ️";
-  let badgeColor = "#38bdf8";
-  let badgeBg = "rgba(14, 165, 233, 0.2)";
-  let badgeBorder = "rgba(14, 165, 233, 0.4)";
+  let badgeColor = "#4fd8c4";
+  let badgeBg = "rgba(51, 205, 184, 0.2)";
+  let badgeBorder = "rgba(51, 205, 184, 0.4)";
 
   if (lvl === "error") {
     icon = "❌";

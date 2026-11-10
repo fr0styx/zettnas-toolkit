@@ -259,10 +259,10 @@ body.theme-yak select.fan-preset-select:focus {
 }
 .btn-pill-toggle:hover { background: var(--lt-b-2f4c52ff, #2f4c52); }
 .btn-pill-toggle.active {
-  background: var(--pill-active-bg, rgba(14, 165, 233, 0.25)) !important;
-  color: var(--pill-active-fg, #38bdf8) !important;
-  border-color: var(--pill-active-line, rgba(56, 189, 248, 0.5)) !important;
-  box-shadow: var(--pill-active-glow, 0 0 8px rgba(14, 165, 233, 0.2)) !important;
+  background: var(--pill-active-bg, rgba(51, 205, 184, 0.25)) !important;
+  color: var(--pill-active-fg, #4fd8c4) !important;
+  border-color: var(--pill-active-line, rgba(79, 216, 196, 0.5)) !important;
+  box-shadow: var(--pill-active-glow, 0 0 8px rgba(51, 205, 184, 0.2)) !important;
 }
 
 #btn-check-updates {

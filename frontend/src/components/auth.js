@@ -105,12 +105,12 @@ export function initAuth() {
       }
     });
     userSelectedCard.addEventListener('mouseenter', () => {
-      userSelectedCard.style.background = 'rgba(14,165,233,0.18)';
-      userSelectedCard.style.borderColor = 'rgba(56,189,248,0.5)';
+      userSelectedCard.style.background = 'rgba(51,205,184,0.18)';
+      userSelectedCard.style.borderColor = 'rgba(79,216,196,0.5)';
     });
     userSelectedCard.addEventListener('mouseleave', () => {
-      userSelectedCard.style.background = 'rgba(14,165,233,0.1)';
-      userSelectedCard.style.borderColor = 'rgba(56,189,248,0.3)';
+      userSelectedCard.style.background = 'rgba(51,205,184,0.1)';
+      userSelectedCard.style.borderColor = 'rgba(79,216,196,0.3)';
     });
   }
   if (changeUserBtn) {
@@ -260,7 +260,7 @@ export async function renderLoginChooser(options = {}) {
       const letter = (u.display_name?.[0] || u.username?.[0] || 'U').toUpperCase();
       return `
         <div class="login-user-card" data-username="${escapeHtml(u.username)}" data-display="${escapeHtml(u.display_name || u.username)}" style="cursor:pointer; background:var(--zn-glaze-4); border:1px solid var(--zn-line-10); border-radius:10px; padding:12px 14px; display:flex; align-items:center; gap:12px; transition:all 0.2s ease;">
-          <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:14px; border:1px solid var(--zn-line-20);">
+          <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, #0a7a70, #08695f); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:14px; border:1px solid var(--zn-line-20);">
             ${escapeHtml(letter)}
           </div>
           <div style="text-align:left; flex:1; min-width:0;">
@@ -278,8 +278,8 @@ export async function renderLoginChooser(options = {}) {
         selectUserForLogin(card.dataset.username, card.dataset.display);
       });
       card.addEventListener('mouseenter', () => {
-        card.style.background = 'rgba(14,165,233,0.12)';
-        card.style.borderColor = 'rgba(56,189,248,0.4)';
+        card.style.background = 'rgba(51,205,184,0.12)';
+        card.style.borderColor = 'rgba(79,216,196,0.4)';
       });
       card.addEventListener('mouseleave', () => {
         card.style.background = 'rgba(255,255,255,0.04)';

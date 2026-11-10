@@ -86,7 +86,7 @@ SEMANTIC = {
     ("t", "e6efefff"): "zn-text",
     ("t", "c9d6d7ff"): "zn-text-soft",
     ("t", "95a8abff"): "zn-text-muted",
-    ("t", "38bdf8ff"): "zn-text-accent",
+    ("t", "4fd8c4ff"): "zn-text-accent",
     ("t", "34d399ff"): "zn-text-ok",
     ("t", "fbbf24ff"): "zn-text-warn",
     ("t", "f87171ff"): "zn-text-crit",

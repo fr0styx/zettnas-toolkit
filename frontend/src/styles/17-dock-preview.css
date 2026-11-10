@@ -139,9 +139,9 @@
 }
 
 .dock-tooltip-status.pinned {
-  background: rgba(56, 189, 248, 0.15);
-  color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8));
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(79, 216, 196, 0.15);
+  color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));
+  border: 1px solid rgba(79, 216, 196, 0.3);
 }
 
 .dock-tooltip-close-btn {

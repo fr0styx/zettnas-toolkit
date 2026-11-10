@@ -453,8 +453,8 @@ export async function fetchAndRenderWireguard() {
             }
           } else if (ts.advertise_exit_node) {
             exitNodePill.innerHTML = '<a class="nw-accent" href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer">' + t('net.pending_approval', 'Waiting for approval in the admin console') + ' ↗</a>';
-            exitNodePill.style.color = '#38bdf8';
-            exitNodePill.style.background = 'rgba(56,189,248,0.15)';
+            exitNodePill.style.color = '#4fd8c4';
+            exitNodePill.style.background = 'rgba(79,216,196,0.15)';
             if (exitNodeHint) {
               exitNodeHint.style.display = 'block';
               exitNodeHint.innerHTML = '⚠️ ' + t('net.exit_hint', 'This NAS offers itself as an exit node. To let other devices send their traffic through it, approve it in the {link} (Machines → Edit route settings → Use as exit node).', { link: '<a class="nw-bold-accent" href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer">' + t('net.admin_console', 'Tailscale admin console') + ' ↗</a>' });
@@ -619,11 +619,11 @@ export async function fetchAndRenderWireguard() {
       ipFwdEl.style.color = isFwd ? 'var(--ok2, #3bf58b)' : 'var(--muted, #6c8084)';
       if (wgBadgeEl) {
         wgBadgeEl.textContent = res.enabled ? t('net.nat_on', 'NAT routing on') : t('net.wg_ready', 'Ready');
-        wgBadgeEl.style.color = res.enabled ? '#3bf58b' : '#38bdf8';
+        wgBadgeEl.style.color = res.enabled ? '#3bf58b' : '#4fd8c4';
       }
       if (wgFwdPill) {
         wgFwdPill.textContent = res.enabled ? t('net.nat_short', 'NAT on') : t('net.wg_ready', 'Ready');
-        wgFwdPill.style.color = res.enabled ? '#3bf58b' : '#38bdf8';
+        wgFwdPill.style.color = res.enabled ? '#3bf58b' : '#4fd8c4';
       }
     }
   } catch (e) {}
@@ -1463,7 +1463,7 @@ export async function fetchAndRenderNetworkTopology() {
               <td class="nw-xs-mono">${escapeHtml(nic.mac || '--')}</td>
               <td class="nw-mono-2">${escapeHtml(String(nic.mtu || 1500))}</td>
               <td>
-                ${nic.master ? `<span class="network-member-pill" style="color:var(--lt-ink-brand, var(--accent-cyan)); border-color:rgba(56,189,248,0.3);">${escapeHtml(nic.master)}</span>` : `<span class="nw-muted">${t('net.standalone', 'Standalone')}</span>`}
+                ${nic.master ? `<span class="network-member-pill" style="color:var(--lt-ink-brand, var(--accent-cyan)); border-color:rgba(79,216,196,0.3);">${escapeHtml(nic.master)}</span>` : `<span class="nw-muted">${t('net.standalone', 'Standalone')}</span>`}
               </td>
               <td class="nw-xs-mono">
                 <div>↓ ${rxFmt} <span class="nw-xs-muted-2">(${formatNumber(nic.rx_packets || 0)} pkts)</span></div>
@@ -1474,7 +1474,7 @@ export async function fetchAndRenderNetworkTopology() {
                 <div class="nw-xs-mono">${escapeHtml(nic.pci_slot || '--')}</div>
               </td>
               <td class="nw-x-2">
-                <button class="btn-pill-toggle btn-config-port is-small" data-iface="${escapeHtml(nic.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56,189,248,0.3);">${t('net.configure_port', 'Configure')}</button>
+                <button class="btn-pill-toggle btn-config-port is-small" data-iface="${escapeHtml(nic.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); border-color: rgba(79,216,196,0.3);">${t('net.configure_port', 'Configure')}</button>
               </td>
             </tr>
           `;
@@ -1505,7 +1505,7 @@ export async function fetchAndRenderNetworkTopology() {
               </div>
               <div class="nw-row-3">
                 <span class="network-bridge-ip">${escapeHtml(br.ip_address || 'Unassigned IP')}</span>
-                <button class="btn-pill-toggle btn-config-bridge is-small" data-bridge="${escapeHtml(br.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56,189,248,0.3);">${t('net.configure_bridge', 'Configure')}</button>
+                <button class="btn-pill-toggle btn-config-bridge is-small" data-bridge="${escapeHtml(br.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); border-color: rgba(79,216,196,0.3);">${t('net.configure_bridge', 'Configure')}</button>
               </div>
             </div>
             <div class="nw-xs-muted-2">${t('net.members', 'Member ports:')}</div>
@@ -1526,7 +1526,7 @@ export async function fetchAndRenderNetworkTopology() {
                 <span class="switch-speed-pill speed-10g" title="${escapeHtml(b.mode_title || b.mode_name || b.mode)}">${escapeHtml(b.mode_title || b.mode_name || b.mode || 'Bonding')}</span>
                 <span class="nw-xs-muted-mono-2">${b.miimon || 100}ms</span>
               </div>
-              <button class="btn-pill-toggle btn-config-bond is-small" data-bond="${escapeHtml(b.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56,189,248,0.3);">${t('net.configure_bond', 'Configure')}</button>
+              <button class="btn-pill-toggle btn-config-bond is-small" data-bond="${escapeHtml(b.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); border-color: rgba(79,216,196,0.3);">${t('net.configure_bond', 'Configure')}</button>
             </div>
             <div class="nw-xs-muted-2">${t('net.active_port', 'Active port:')} <strong style="color:var(--ok2, #3bf58b);">${escapeHtml(b.active_slave || t('ci.none', 'None'))}</strong></div>
             <div class="network-bridge-members">
@@ -1580,7 +1580,7 @@ export async function fetchAndRenderNetworkTopology() {
                 <span class="network-member-pill">${escapeHtml(v.parent)}</span>
               </td>
               <td>
-                <span class="network-member-pill" style="color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color:rgba(56,189,248,0.4); font-weight:700;">VID ${escapeHtml(String(v.vlan_id))}</span>
+                <span class="network-member-pill" style="color:var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); border-color:rgba(79,216,196,0.4); font-weight:700;">VID ${escapeHtml(String(v.vlan_id))}</span>
               </td>
               <td>
                 ${v.alias ? `<span class="switch-port-alias-tag" title="${escapeHtml(v.alias)}">${escapeHtml(v.alias)}</span>` : '<span class="nw-xs-muted">--</span>'}

@@ -11,7 +11,7 @@
   backdrop-filter: blur(28px) saturate(140%) !important;
   border: 1px solid var(--zn-line-14) !important;
   border-radius: 12px !important;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 35px rgba(14, 165, 233, 0.2) !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 35px rgba(51, 205, 184, 0.2) !important;
   width: 620px !important;
   max-width: 95vw !important;
   height: 720px !important;
@@ -22,8 +22,8 @@
 
 #modal-new-cloud-remote #cloud-remote-window.active-window,
 #cloud-remote-window.active-window {
-  border-color: rgba(14, 165, 233, 0.5) !important;
-  box-shadow: 0 30px 85px rgba(0, 0, 0, 0.95), 0 0 40px rgba(14, 165, 233, 0.3) !important;
+  border-color: rgba(51, 205, 184, 0.5) !important;
+  box-shadow: 0 30px 85px rgba(0, 0, 0, 0.95), 0 0 40px rgba(51, 205, 184, 0.3) !important;
 }
 
 #cloud-remote-window[data-maximized="true"] {
@@ -119,8 +119,8 @@
 #cloud-remote-window select:focus,
 #cloud-remote-window input:focus,
 #cloud-remote-window textarea:focus {
-  border-color: #38bdf8 !important;
-  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.25) !important;
+  border-color: #4fd8c4 !important;
+  box-shadow: 0 0 0 2px rgba(51, 205, 184, 0.25) !important;
   outline: none !important;
 }
 
@@ -149,8 +149,8 @@
   padding: 8px 16px;
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  background: rgba(56, 189, 248, 0.14);
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(79, 216, 196, 0.14);
+  border: 1px solid rgba(79, 216, 196, 0.35);
   color: var(--zn-text-accent);
   border-radius: 6px;
   cursor: pointer;
@@ -160,10 +160,10 @@
   transition: all 0.15s ease;
 }
 .btn-cloud-test:hover:not(:disabled) {
-  background: rgba(56, 189, 248, 0.28);
-  border-color: #38bdf8;
+  background: rgba(79, 216, 196, 0.28);
+  border-color: #4fd8c4;
   color: var(--zn-text-strong);
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+  box-shadow: 0 0 12px rgba(79, 216, 196, 0.35);
 }
 .btn-cloud-test:disabled {
   opacity: 0.6;
@@ -209,17 +209,17 @@
   padding: 8px 20px;
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  background: #0ea5e9;
-  border: 1px solid #38bdf8;
+  background: #0a7a70;
+  border: 1px solid #33cdb8;
   color: #fff;
   border-radius: 6px;
   cursor: pointer;
-  box-shadow: 0 0 14px rgba(14, 165, 233, 0.4);
+  box-shadow: 0 0 14px rgba(51, 205, 184, 0.4);
   transition: all 0.15s ease;
 }
 .btn-cloud-submit:hover:not(:disabled) {
-  background: #0284c7;
-  box-shadow: 0 0 20px rgba(14, 165, 233, 0.6);
+  background: #0a7a70;
+  box-shadow: 0 0 20px rgba(51, 205, 184, 0.6);
   transform: translateY(-1px);
 }
 .btn-cloud-submit:disabled {
@@ -297,7 +297,7 @@ body.theme-oled #cloud-remote-window select option {
   max-height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(56, 189, 248, 0.2);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(79, 216, 196, 0.2);
   overflow: hidden;
   resize: none;
 }
@@ -420,9 +420,9 @@ body.theme-oled #cloud-remote-window select option {
 }
 .smart-tab-btn.active {
   color: var(--zn-text-strong);
-  background: rgba(14, 165, 233, 0.18);
-  border-color: rgba(14, 165, 233, 0.4);
-  box-shadow: 0 0 12px rgba(14, 165, 233, 0.2);
+  background: rgba(51, 205, 184, 0.18);
+  border-color: rgba(51, 205, 184, 0.4);
+  box-shadow: 0 0 12px rgba(51, 205, 184, 0.2);
 }
 
 /* SMART Pane Container */
@@ -529,7 +529,7 @@ body.theme-oled #cloud-remote-window select option {
 }
 .smart-empty-icon {
   font-size: 28px;
-  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.4));
+  filter: drop-shadow(0 0 10px rgba(79, 216, 196, 0.4));
 }
 .smart-empty-title {
   font-size: 13px;
@@ -546,7 +546,7 @@ body.theme-oled #cloud-remote-window select option {
 /* SMART Self-Test Progress Card */
 .smart-progress-card {
   background: var(--lt-b-0e1c1eb2, rgba(14, 28, 30, 0.7));
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  border: 1px solid rgba(79, 216, 196, 0.25);
   border-radius: 8px;
   padding: 10px 14px;
   display: flex;
@@ -570,13 +570,13 @@ body.theme-oled #cloud-remote-window select option {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--brand, #38bdf8);
-  box-shadow: 0 0 10px var(--brand, #38bdf8);
+  background: var(--brand, #4fd8c4);
+  box-shadow: 0 0 10px var(--brand, #4fd8c4);
   animation: smartPulse 1.5s infinite;
 }
 @keyframes smartPulse {
   0% { transform: scale(0.9); opacity: 0.7; }
-  50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 14px var(--brand, #38bdf8); }
+  50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 14px var(--brand, #4fd8c4); }
   100% { transform: scale(0.9); opacity: 0.7; }
 }
 .smart-progress-status-desc {
@@ -592,7 +592,7 @@ body.theme-oled #cloud-remote-window select option {
 }
 .smart-progress-pct-label {
   font-weight: 800;
-  color: var(--lt-ink-brand, var(--brand, #38bdf8));
+  color: var(--lt-ink-brand, var(--brand, #4fd8c4));
 }
 .smart-progress-eta {
   color: var(--muted);
@@ -608,7 +608,7 @@ body.theme-oled #cloud-remote-window select option {
 }
 .smart-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #0ea5e9, #22c55e);
+  background: linear-gradient(90deg, #33cdb8, #22c55e);
   border-radius: 4px;
   transition: width 0.4s ease;
   position: relative;
@@ -659,8 +659,8 @@ body.theme-oled #cloud-remote-window select option {
   border-radius: 10px;
 }
 .smart-btn-copy-report {
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(79, 216, 196, 0.12);
+  border: 1px solid rgba(79, 216, 196, 0.3);
   color: var(--zn-text-accent);
   font-size: var(--zn-fs-xs);
   font-weight: 600;
@@ -673,8 +673,8 @@ body.theme-oled #cloud-remote-window select option {
   transition: all 0.2s ease;
 }
 .smart-btn-copy-report:hover {
-  background: rgba(56, 189, 248, 0.22);
-  border-color: #38bdf8;
+  background: rgba(79, 216, 196, 0.22);
+  border-color: #4fd8c4;
   color: var(--zn-text-strong);
 }
 .smart-test-history-table-wrap {
@@ -735,9 +735,9 @@ body.theme-oled #cloud-remote-window select option {
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 .smart-test-status-running {
-  background: rgba(56, 189, 248, 0.15);
+  background: rgba(79, 216, 196, 0.15);
   color: var(--zn-text-accent);
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  border: 1px solid rgba(79, 216, 196, 0.3);
 }
 .smart-test-history-empty {
   padding: 18px;

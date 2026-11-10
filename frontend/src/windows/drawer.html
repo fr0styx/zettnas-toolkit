@@ -471,9 +471,9 @@
             <line x1="38" y1="36.8" x2="285" y2="36.8" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
             <line x1="38" y1="53.6" x2="285" y2="53.6" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
             <line x1="38" y1="70.4" x2="285" y2="70.4" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
-            <line x1="38" y1="77.12" x2="285" y2="77.12" stroke="rgba(56,189,248,0.3)" stroke-width="1" stroke-dasharray="3,3"/>
+            <line x1="38" y1="77.12" x2="285" y2="77.12" stroke="rgba(79,216,196,0.3)" stroke-width="1" stroke-dasharray="3,3"/>
             <line x1="38" y1="87.2" x2="285" y2="87.2" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,2"/>
-            <line x1="38" y1="104" x2="285" y2="104" stroke="rgba(56,189,248,0.4)" stroke-width="1"/>
+            <line x1="38" y1="104" x2="285" y2="104" stroke="rgba(79,216,196,0.4)" stroke-width="1"/>
 
             <!-- Vertical temperature guide gridlines (granular 5°C intervals) -->
             <line x1="38" y1="20" x2="38" y2="104" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
@@ -489,9 +489,9 @@
             <text x="32" y="39.5" fill="#6c8084" font-size="7" text-anchor="end" font-weight="600">80%</text>
             <text x="32" y="56.5" fill="#6c8084" font-size="7" text-anchor="end" font-weight="600">60%</text>
             <text x="32" y="73" fill="#6c8084" font-size="7" text-anchor="end" font-weight="600">40%</text>
-            <text x="32" y="79.5" fill="#38bdf8" font-size="7.5" text-anchor="end" font-weight="700">32%</text>
+            <text x="32" y="79.5" fill="#4fd8c4" font-size="7.5" text-anchor="end" font-weight="700">32%</text>
             <text x="32" y="90" fill="#6c8084" font-size="7" text-anchor="end" font-weight="600">20%</text>
-            <text x="32" y="107" fill="#38bdf8" font-size="7.5" text-anchor="end" font-weight="700">0%</text>
+            <text x="32" y="107" fill="#4fd8c4" font-size="7.5" text-anchor="end" font-weight="700">0%</text>
 
             <!-- X-Axis Temperature Labels (30°C to 60°C in 5°C increments) -->
             <text x="38" y="128" fill="#7b898c" font-size="7.5" text-anchor="start" font-weight="700">30°C</text>
@@ -628,7 +628,7 @@
       <div class="draggable-card drawer-card" id="fan-card-acoustic" data-fan-card-id="fan-card-acoustic">
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.acoustic_calibration_title">Acoustic Resonance Calibration</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
-          <span id="acoustic-sweep-badge" class="suite-badge" style="background:rgba(56,189,248,0.15); color:var(--accent, var(--zn-text-accent)); border-color:rgba(56,189,248,0.35);">READY</span>
+          <span id="acoustic-sweep-badge" class="suite-badge" style="background:rgba(79,216,196,0.15); color:var(--accent, var(--zn-text-accent)); border-color:rgba(79,216,196,0.35);">READY</span>
         </div>
         <div class="card-instruction" data-i18n="settings.acoustic_calibration_desc">
           Automated PWM step test from 58 to 183 to detect chassis resonance frequencies and map acoustic RPM stability.
@@ -654,7 +654,7 @@
 
           <!-- Progress bar -->
           <div class="drw-box-2" id="acoustic-progress-bar-wrap" style="display: none;">
-            <div id="acoustic-progress-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #38bdf8, #33cdb8); transition:width 0.3s ease;"></div>
+            <div id="acoustic-progress-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #4fd8c4, #33cdb8); transition:width 0.3s ease;"></div>
           </div>
 
           <!-- Visualizer chart -->
@@ -671,7 +671,7 @@
               <text x="275" y="77" fill="#6c8084" font-size="7" text-anchor="end" font-family="monospace">183 PWM</text>
               
               <!-- Plot paths -->
-              <path id="acoustic-rpm-path" d="" fill="none" stroke="var(--accent, #38bdf8)" stroke-width="2" stroke-linecap="round"/>
+              <path id="acoustic-rpm-path" d="" fill="none" stroke="var(--accent, #4fd8c4)" stroke-width="2" stroke-linecap="round"/>
               <g id="acoustic-chart-points"></g>
             </svg>
             <div class="drw-xs-muted-center" id="acoustic-results-summary">

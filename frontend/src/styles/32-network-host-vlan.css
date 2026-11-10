@@ -72,16 +72,16 @@
 }
 
 .net-proto-btn.active {
-  background: var(--accent-cyan, #0ea5e9);
+  background: var(--accent-cyan, #33cdb8);
   color: var(--zn-text-strong);
-  border-color: var(--accent-cyan, #0ea5e9);
+  border-color: var(--accent-cyan, #33cdb8);
 }
 
 .net-cidr-preset.active,
 .net-dns-preset.active {
-  background: rgba(56, 189, 248, 0.2);
+  background: rgba(79, 216, 196, 0.2);
   color: var(--zn-text-accent);
-  border-color: rgba(56, 189, 248, 0.5);
+  border-color: rgba(79, 216, 196, 0.5);
 }
 
 /* =========================================================================
@@ -126,16 +126,16 @@
 }
 
 .network-member-checkbox-list input[type="checkbox"] {
-  accent-color: var(--accent-cyan, #38bdf8);
+  accent-color: var(--accent-cyan, #4fd8c4);
   width: 14px;
   height: 14px;
   cursor: pointer;
 }
 
 .net-stp-toggle-btn.active {
-  background: var(--accent-cyan, #0ea5e9);
+  background: var(--accent-cyan, #33cdb8);
   color: var(--zn-text-strong);
-  border-color: var(--accent-cyan, #0ea5e9);
+  border-color: var(--accent-cyan, #33cdb8);
 }
 
 .btn-delete-vlan {

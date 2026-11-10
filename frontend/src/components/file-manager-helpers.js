@@ -603,7 +603,7 @@ export class FmInspector {
       content.innerHTML = `
         <div class="fmh-center">
           <div class="fmh-fs40">📦</div>
-          <div style="font-weight: 700; font-size: 14px; color: var(--accent, var(--lt-t-0ea5e9ff, #0ea5e9));">${escapeHtml(t('fm.i_selected', '{n, plural, one {# item selected} other {# items selected}}', { n: count }))}</div>
+          <div style="font-weight: 700; font-size: 14px; color: var(--accent, var(--lt-t-33cdb8ff, #33cdb8));">${escapeHtml(t('fm.i_selected', '{n, plural, one {# item selected} other {# items selected}}', { n: count }))}</div>
           <div class="fmh-xs-muted">${formatBytes(totalBytes)} total</div>
         </div>
         <div class="fm-inspector-section">
@@ -650,7 +650,7 @@ export class FmInspector {
         <div class="fm-inspector-perms-pane fmh-xs">
           <div class="fmh-row-bold-strong">
             <span>${escapeHtml(t('fm.i_posix', 'Who may read and change it'))}</span>
-            <span id="fm-insp-perm-badge" style="font-family: monospace; font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(56,189,248,0.15); color: var(--zn-text-accent);">--</span>
+            <span id="fm-insp-perm-badge" style="font-family: monospace; font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(79,216,196,0.15); color: var(--zn-text-accent);">--</span>
           </div>
 
           ${isGuarded ? `
@@ -709,7 +709,7 @@ export class FmInspector {
             </div>
           ` : ''}
 
-          <button type="button" id="fm-insp-apply-perms-btn" class="btn-pill-toggle active" ${isGuarded ? `disabled title="${escapeHtml(t('fm.why_guarded', 'System folder: its permissions are protected'))}"` : ''} style="width: 100%; font-size: var(--zn-fs-xs); font-weight: 700; padding: 6px 12px; background: #0284c7; color: #fff;">
+          <button type="button" id="fm-insp-apply-perms-btn" class="btn-pill-toggle active" ${isGuarded ? `disabled title="${escapeHtml(t('fm.why_guarded', 'System folder: its permissions are protected'))}"` : ''} style="width: 100%; font-size: var(--zn-fs-xs); font-weight: 700; padding: 6px 12px; background: #0a7a70; color: #fff;">
             ${escapeHtml(t('ui.apply_permissions', 'Apply Permissions'))}
           </button>
         </div>

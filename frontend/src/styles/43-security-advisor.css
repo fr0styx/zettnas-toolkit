@@ -17,7 +17,7 @@
 .sec-advisor-item:focus-visible {
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  border-color: var(--brand, #38bdf8) !important;
+  border-color: var(--brand, #4fd8c4) !important;
 }
 
 .sec-advisor-item:active {
@@ -25,7 +25,7 @@
 }
 
 .sec-advisor-item:focus-visible {
-  outline: 2px solid var(--brand, #38bdf8);
+  outline: 2px solid var(--brand, #4fd8c4);
   outline-offset: 2px;
 }
 
@@ -44,29 +44,29 @@
 
 .sec-advisor-item:hover .sec-advisor-action-pill,
 .sec-advisor-item:focus-visible .sec-advisor-action-pill {
-  background: var(--brand, #38bdf8);
-  border-color: var(--brand, #38bdf8);
+  background: var(--brand, #4fd8c4);
+  border-color: var(--brand, #4fd8c4);
   color: #0c1c1f;
 }
 
 @keyframes elementFocusPulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7);
-    outline: 2px solid rgba(56, 189, 248, 0.9);
+    box-shadow: 0 0 0 0 rgba(79, 216, 196, 0.7);
+    outline: 2px solid rgba(79, 216, 196, 0.9);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(56, 189, 248, 0.25);
-    outline: 2px solid rgba(56, 189, 248, 1);
+    box-shadow: 0 0 0 8px rgba(79, 216, 196, 0.25);
+    outline: 2px solid rgba(79, 216, 196, 1);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+    box-shadow: 0 0 0 0 rgba(79, 216, 196, 0);
     outline: 2px solid transparent;
   }
 }
 
 .element-focus-pulse {
   animation: elementFocusPulse 1.4s ease-out !important;
-  border-color: var(--brand, #38bdf8) !important;
+  border-color: var(--brand, #4fd8c4) !important;
 }
 
 /* AI Chatbot Real-time Tool & Thought Stream Enhancements */
@@ -90,7 +90,7 @@
   50% {
     opacity: 1;
     transform: scale(1.03);
-    filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.55));
+    filter: drop-shadow(0 0 5px rgba(79, 216, 196, 0.55));
   }
 }
 

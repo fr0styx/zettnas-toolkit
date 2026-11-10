@@ -148,7 +148,7 @@ describe('Batch 1: Accessibility, Form Label Linking & ARIA Radiogroups', () => 
 
   it('verifies getThermalLevel returns CSS variables for theme-aware tokens', () => {
     const cool = getThermalLevel(25, false);
-    expect(cool.color).toBe('var(--brand, #38bdf8)');
+    expect(cool.color).toBe('var(--brand, #4fd8c4)');
     expect(cool.cls).toBe('cool');
 
     const ok = getThermalLevel(40, false);

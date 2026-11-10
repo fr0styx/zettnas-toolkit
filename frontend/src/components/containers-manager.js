@@ -117,7 +117,7 @@ export function initContainersManager() {
               <button id="btn-cw-update-all" class="btn-pill-toggle" style="display: none; color: var(--zn-text-warn); border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="${t('ui.update_all_containers_with_available', 'Update all containers with available image updates')}">
                 <span aria-hidden="true">↑</span> <span>${t('cw.update_all', 'Update all')} (<span id="cw-updates-count-badge">0</span>)</span>
               </button>
-              <button id="btn-cw-stacks" class="btn-pill-toggle" title="${t('ui.manage_docker_compose_stacks', 'Manage Docker Compose Stacks')}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8));">
+              <button id="btn-cw-stacks" class="btn-pill-toggle" title="${t('ui.manage_docker_compose_stacks', 'Manage Docker Compose Stacks')}" style="color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));">
                 <span aria-hidden="true">📁</span> <span>${t('cw.stacks', 'Compose stacks')}</span>
               </button>
               <button id="btn-cw-netmap" class="btn-pill-toggle" title="${t('cw.netmap_title', 'Container Network Map')}">
@@ -155,7 +155,7 @@ export function initContainersManager() {
               <thead>
                 <tr>
                   <th class="cw-sortable-th" data-sort-col="name" role="columnheader" aria-sort="none" tabindex="0" title="${t('ui.click_to_sort_by_name', 'Click to sort by Name')}">
-                    <input type="checkbox" id="cw-docker-select-all" title="${t('ui.select_all_containers', 'Select All Containers')}" style="margin: 0 6px 0 0; cursor: pointer; accent-color: var(--brand, #0ea5e9); vertical-align: middle;">
+                    <input type="checkbox" id="cw-docker-select-all" title="${t('ui.select_all_containers', 'Select All Containers')}" style="margin: 0 6px 0 0; cursor: pointer; accent-color: var(--brand, #33cdb8); vertical-align: middle;">
                     <span data-i18n="mgmt.tbl_name">${t('mgmt.tbl_name', 'Name')}</span><span class="docker-sort-indicator" aria-hidden="true"></span>
                   </th>
                   <th class="cw-sortable-th" data-sort-col="stack" role="columnheader" aria-sort="none" tabindex="0" title="${t('ui.click_to_sort_by_stack', 'Click to sort by Stack / Type')}">

@@ -3037,7 +3037,7 @@ export function renderFeedsList() {
     html += `
       <div class="cfl-row" data-feed-id="${escapeHtml(feed.id)}">
         <div class="cfl-main">
-          <span style="width: 8px; height: 8px; border-radius: 50%; background: ${escapeHtml(feed.color || '#38bdf8')};"></span>
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: ${escapeHtml(feed.color || '#4fd8c4')};"></span>
           <div>
             <div class="cfl-name">${escapeHtml(feed.name)}</div>
             <div class="cfl-sub">${escapeHtml(feedMeta(feed))}</div>
@@ -3287,7 +3287,7 @@ export function setupCalendarModalEvents() {
         const res = await api.post('/api/calendar/feeds', {
           name,
           url,
-          color: colorSelect?.value || '#38bdf8',
+          color: colorSelect?.value || '#4fd8c4',
           provider: 'google',
           enabled: true,
         });

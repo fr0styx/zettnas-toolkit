@@ -291,7 +291,7 @@ export function renderNotificationCenter() {
         <div class="notif-center-msg" style="font-size:var(--zn-fs-xs); color:${isChecked ? 'var(--muted)' : '#fff'}; line-height:1.4; word-break:break-word;">${escapeHtml(e.message)}</div>
         <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">${formatDateTime(dt)}</div>
       </div>
-      ${!isChecked ? `<div class="notif-unread-dot" style="width:6px; height:6px; border-radius:50%; background:var(--brand, #0ea5e9); margin-left:auto; margin-top:6px; flex-shrink:0;"></div>` : ''}
+      ${!isChecked ? `<div class="notif-unread-dot" style="width:6px; height:6px; border-radius:50%; background:var(--brand, #33cdb8); margin-left:auto; margin-top:6px; flex-shrink:0;"></div>` : ''}
     `;
     list.appendChild(row);
   });

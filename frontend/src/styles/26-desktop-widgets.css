@@ -814,7 +814,7 @@ body.theme-yak #notif-center-resizer:hover {
 .notif-center-item:not(.notif-event-checked) {
   opacity: 1 !important;
   background: var(--zn-glaze-5);
-  border-left: 2.5px solid var(--brand, #0ea5e9);
+  border-left: 2.5px solid var(--brand, #33cdb8);
 }
 
 /* Dock Pinned closed apps */
@@ -860,8 +860,8 @@ body.theme-yak #notif-center-resizer:hover {
 }
 
 .fan-preset-input:focus {
-  border-color: var(--brand, #0ea5e9) !important;
-  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.25) !important;
+  border-color: var(--brand, #33cdb8) !important;
+  box-shadow: 0 0 0 2px rgba(51, 205, 184, 0.25) !important;
 }
 
 #fan-preset-cancel-btn:hover,
@@ -884,7 +884,7 @@ body.theme-yak #notif-center-resizer:hover {
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-row-main { display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden; }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ico-plain { font-size:var(--zn-fs-xs); }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ellipsis { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-check { color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-size:var(--zn-fs-xs); }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-check { color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); font-size:var(--zn-fs-xs); }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-crit { color:var(--crit, #ff5c5c); }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ok { color:var(--ok2, #33cdb8); }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-danger { color:var(--zn-text-crit); }
@@ -907,7 +907,7 @@ body.theme-yak #notif-center-resizer:hover {
 #add-desktop-shortcut-overlay .asd-input { width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--zn-shade-35); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); }
 #add-desktop-shortcut-overlay .asd-input-mono { width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--zn-shade-35); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); font-family:var(--font-mono, monospace); }
 #add-desktop-shortcut-overlay .asd-emojis { display:flex; flex-wrap:wrap; gap:6px; }
-#add-desktop-shortcut-overlay .asd-save { margin-top:6px; padding:10px 16px; border-radius:8px; font-size:var(--zn-fs-xs); font-weight:700; background:linear-gradient(135deg, #0ea5e9, #33cdb8); color:#fff; border:1px solid #0ea5e9; cursor:pointer; box-shadow:0 4px 14px rgba(14,165,233,0.3); }
+#add-desktop-shortcut-overlay .asd-save { margin-top:6px; padding:10px 16px; border-radius:8px; font-size:var(--zn-fs-xs); font-weight:700; background:linear-gradient(135deg, #33cdb8, #33cdb8); color:#fff; border:1px solid #33cdb8; cursor:pointer; box-shadow:0 4px 14px rgba(51,205,184,0.3); }
 #add-desktop-shortcut-overlay .asd-card { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); border-radius:10px; gap:12px; }
 #add-desktop-shortcut-overlay .asd-card-main { display:flex; align-items:center; gap:12px; min-width:0; }
 #add-desktop-shortcut-overlay .asd-card-svg { width:20px; height:20px; fill:currentColor; }

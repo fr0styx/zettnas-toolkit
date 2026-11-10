@@ -861,7 +861,7 @@ function renderPortsTab(details) {
 
   const hostBanner = isHostNet
     ? `
-      <div style="margin-bottom:14px; padding:12px; background:rgba(56, 189, 248, 0.08); border:1px solid rgba(56, 189, 248, 0.25); border-radius:6px; display:flex; align-items:flex-start; gap:10px;">
+      <div style="margin-bottom:14px; padding:12px; background:rgba(79, 216, 196, 0.08); border:1px solid rgba(79, 216, 196, 0.25); border-radius:6px; display:flex; align-items:flex-start; gap:10px;">
         <span class="ci-fs16-2">⚡</span>
         <div>
           <div class="ci-xs-bold-accent">${t('ci.host_net', 'Host network mode')}</div>
@@ -927,7 +927,7 @@ function renderPortsTab(details) {
       </div>
 
       ${isHostNet ? `
-        <div class="ci-metric-card" style="margin-top:14px; background:rgba(56,189,248,0.04); border:1px solid rgba(56,189,248,0.2); padding:12px; border-radius:8px;">
+        <div class="ci-metric-card" style="margin-top:14px; background:rgba(79,216,196,0.04); border:1px solid rgba(79,216,196,0.2); padding:12px; border-radius:8px;">
           <div class="ci-xs-bold-accent-2">${ico('⚡')} ${t('ci.host_active', 'Host network in use')}</div>
           <p class="ci-xs-soft-2">
             ${t('ci.host_active_desc', 'Port forwarding does not apply in host mode. To map your own host ports (for example {example}), change {mode} to bridge mode in the compose file or the container settings.', { example: '<code>8085:8080</code>', mode: '<code>network_mode: host</code>' })}
@@ -1211,8 +1211,8 @@ async function loadContainerCompose(cid) {
     if (badgeEl) {
       if (data.source === 'disk') {
         setIconLabel(badgeEl, '📄', t('ui.read_from_disk', 'Read from Disk'));
-        badgeEl.style.color = '#38bdf8';
-        badgeEl.style.background = 'rgba(56, 189, 248, 0.15)';
+        badgeEl.style.color = '#4fd8c4';
+        badgeEl.style.background = 'rgba(79, 216, 196, 0.15)';
       } else {
         setIconLabel(badgeEl, '✨', t('ui.synthesized_compose_spec_v3_8', 'Synthesized Compose Spec v3.8'));
         badgeEl.style.color = 'var(--ok2)';
@@ -1520,7 +1520,7 @@ async function renderContainerEditTab(cid) {
   hostEl.innerHTML = `
     <div class="cie-form-wrap ci-x-8">
       <!-- Guidance Notice -->
-      <div style="background:rgba(14,165,233,0.08); border:1px solid rgba(14,165,233,0.25); border-radius:6px; padding:10px 12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+      <div style="background:rgba(51,205,184,0.08); border:1px solid rgba(51,205,184,0.25); border-radius:6px; padding:10px 12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
         <div>
           <div class="ci-xs-bold-accent">${ico('✏️')} ${t('ci.editor', 'Container settings')}</div>
           <div class="ci-xs-muted-3">
@@ -1613,7 +1613,7 @@ async function renderContainerEditTab(cid) {
         </label>
         <div class="ci-row-11">
           <button class="btn-pill-toggle" id="cie-btn-cancel">${t('common.cancel', 'Cancel')}</button>
-          <button class="btn-pill-toggle" id="cie-btn-save" style="font-weight:700; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0c1517); border:none; padding:6px 16px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'Kiboto cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>
+          <button class="btn-pill-toggle" id="cie-btn-save" style="font-weight:700; background:var(--brand, #33cdb8); color:var(--accent-contrast-fg, #0c1517); border:none; padding:6px 16px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'Kiboto cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>
             ${ico('💾')} ${t('ci.save_recreate', 'Save and recreate the container')}
           </button>
         </div>
@@ -1767,8 +1767,8 @@ async function renderContainerEditTab(cid) {
         saveBtn.disabled = true;
         setIconLabel(saveBtn, '⏳', t('ui.recreating_container_2', 'Recreating Container...'));
         statusMsg.style.display = 'block';
-        statusMsg.style.background = 'rgba(14,165,233,0.15)';
-        statusMsg.style.color = '#38bdf8';
+        statusMsg.style.background = 'rgba(51,205,184,0.15)';
+        statusMsg.style.color = '#4fd8c4';
         statusMsg.textContent = t('ui.validating_configuration_creating_backup_and', 'Validating configuration, creating backup, and recreating container...');
 
         try {

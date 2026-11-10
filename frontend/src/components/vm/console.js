@@ -83,8 +83,8 @@ export function setConsoleFocus(focused) {
   if (pill) {
     if (focused) {
       setIconLabel(pill, '⌨️', t('ui.captured', 'Captured'));
-      pill.style.color = '#38bdf8';
-      pill.style.borderColor = 'rgba(14, 165, 233, 0.4)';
+      pill.style.color = '#4fd8c4';
+      pill.style.borderColor = 'rgba(51, 205, 184, 0.4)';
       pill.setAttribute('title', t('ui.keyboard_captured_by_vm_console', 'Keyboard captured by VM console. Click outside or minimize to release.'));
     } else {
       setIconLabel(pill, '⌨️', t('ui.click_to_capture', 'Click to capture'));
@@ -206,7 +206,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
     ctx.strokeRect(0, 0, w, 32);
 
     ctx.font = '600 11px "JetBrains Mono", monospace';
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#4fd8c4';
     ctx.textBaseline = 'middle';
     ctx.fillText(`⚡ QEMU/KVM Hardware Video Display (:0) — ${vmName}`, 16, 16);
 
@@ -223,7 +223,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
     const cardY = 56;
 
     ctx.fillStyle = 'rgba(11, 23, 25, 0.75)';
-    ctx.strokeStyle = 'rgba(14, 165, 233, 0.25)';
+    ctx.strokeStyle = 'rgba(51, 205, 184, 0.25)';
     ctx.lineWidth = 1;
     if (ctx.roundRect) {
       ctx.beginPath();
@@ -280,7 +280,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
 
     ctx.fillStyle = '#6c8084';
     ctx.fillText('Host Hypervisor:', col1X, gridY + 14);
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#4fd8c4';
     ctx.fillText('Linux KVM (VT-x Active)', col1X + 130, gridY + 14);
 
     ctx.fillStyle = '#6c8084';
@@ -295,7 +295,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
 
     ctx.fillStyle = '#6c8084';
     ctx.fillText('Guest IP Address:', col2X, gridY + 14);
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#4fd8c4';
     ctx.fillText(vmIp, col2X + 130, gridY + 14);
 
     ctx.fillStyle = '#6c8084';
@@ -330,8 +330,8 @@ function initGuiDesktopSimulation(canvas, vmName) {
     ctx.fillText('📟 Open Serial TTY Shell', 140 + 95, btnY + 17);
 
     // Button 2: Native VNC Client
-    ctx.fillStyle = 'rgba(14, 165, 233, 0.2)';
-    ctx.strokeStyle = '#0ea5e9';
+    ctx.fillStyle = 'rgba(51, 205, 184, 0.2)';
+    ctx.strokeStyle = '#33cdb8';
     if (ctx.roundRect) {
       ctx.beginPath();
       ctx.roundRect(350, btnY, 180, 34, 6);
@@ -341,7 +341,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
       ctx.fillRect(350, btnY, 180, 34);
       ctx.strokeRect(350, btnY, 180, 34);
     }
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#4fd8c4';
     ctx.fillText('🔗 Copy VNC URI', 350 + 90, btnY + 17);
 
     // Button 3: Copy SSH Command
@@ -1056,7 +1056,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
             </div>
             <span class="toolbar-stat"><span class="stat-dot-pulse"></span> 60 FPS</span>
             <span class="toolbar-stat" id="vm-console-resolution-stat">${initialMode === 'cli' ? '80 × 25 TTY' : '1920 × 1080'}</span>
-            <span class="toolbar-stat" id="vm-console-adapter-stat" style="color: ${initialMode === 'cli' ? '#34d399' : '#38bdf8'};">${initialMode === 'cli' ? 'Serial TTY' : 'VirtIO-GPU'}</span>
+            <span class="toolbar-stat" id="vm-console-adapter-stat" style="color: ${initialMode === 'cli' ? '#34d399' : '#4fd8c4'};">${initialMode === 'cli' ? 'Serial TTY' : 'VirtIO-GPU'}</span>
             <span class="toolbar-stat" id="vm-console-kbd-pill" style="color: var(--zn-text-accent); font-weight: 500; cursor: pointer;" title="${t('ui.keyboard_captured_by_vm_console', 'Keyboard captured by VM console. Click outside or minimize to release.')}"><span aria-hidden="true">⌨️</span> ${t('ui.captured', 'Captured')}</span>
           </div>
           <div class="console-toolbar-right">
@@ -1468,7 +1468,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
       if (resStat) resStat.textContent = '1920 × 1080';
       if (adpStat) {
         adpStat.textContent = t('vm.display_virtio_gpu', 'VirtIO-GPU');
-        adpStat.style.color = '#38bdf8';
+        adpStat.style.color = '#4fd8c4';
       }
       if (titleTxt) titleTxt.textContent = t('vcon.title_mode', 'VM Console: {name} ({mode})', { name: consoleWin._vmName || vmName, mode: t('vm.mode_gui', 'KVM GUI') });
 
@@ -1649,7 +1649,7 @@ function initConsoleSimulation(canvas, vmName) {
       if (line.startsWith('[  ')) {
         ctx.fillStyle = '#6c8084'; // boot dmesg timestamp
       } else if (line.startsWith('root@')) {
-        ctx.fillStyle = '#38bdf8'; // shell prompt
+        ctx.fillStyle = '#4fd8c4'; // shell prompt
       } else if (line.includes('command not found')) {
         ctx.fillStyle = '#f87171'; // bash error
       } else if (line.startsWith('Ubuntu') || line.startsWith('Linux')) {
@@ -1664,7 +1664,7 @@ function initConsoleSimulation(canvas, vmName) {
     const lastIdx = visibleSlice.length - 1;
     const activePrompt = visibleSlice[lastIdx] || promptPrefix;
 
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#4fd8c4';
     ctx.fillText(activePrompt, startX, startY + (lastIdx * lineHeight));
     const promptWidth = ctx.measureText(activePrompt).width;
 

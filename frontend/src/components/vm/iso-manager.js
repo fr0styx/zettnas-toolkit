@@ -167,7 +167,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
         <!-- Tab 2: Local Storage ISOs & Drag-and-Drop Upload -->
         <div id="tab-content-local" style="display: none;">
           <!-- Dropzone -->
-          <div id="iso-dropzone" class="iso-dropzone" style="border: 2px dashed rgba(14,165,233,0.4); border-radius: 8px; padding: 24px; text-align: center; background: rgba(14,165,233,0.03); cursor: pointer; transition: all 0.2s;">
+          <div id="iso-dropzone" class="iso-dropzone" style="border: 2px dashed rgba(51,205,184,0.4); border-radius: 8px; padding: 24px; text-align: center; background: rgba(51,205,184,0.03); cursor: pointer; transition: all 0.2s;">
             <div class="vmi-fs28">💿</div>
             <div class="vmi-fs13-bold-strong">${t('viso.drop', 'Drag ISO files here to upload them')}</div>
             <div class="vmi-xs-muted-2">${t('viso.dest', 'Saved to:')} <code class="vmi-accent">/mnt/user/isos</code> • ${t('viso.types', '.iso and .img files up to 50 GB')}</div>
@@ -291,17 +291,17 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
     if (dropzone) {
       dropzone.ondragover = (e) => {
         e.preventDefault();
-        dropzone.style.borderColor = '#38bdf8';
-        dropzone.style.background = 'rgba(14,165,233,0.1)';
+        dropzone.style.borderColor = '#4fd8c4';
+        dropzone.style.background = 'rgba(51,205,184,0.1)';
       };
       dropzone.ondragleave = () => {
-        dropzone.style.borderColor = 'rgba(14,165,233,0.4)';
-        dropzone.style.background = 'rgba(14,165,233,0.03)';
+        dropzone.style.borderColor = 'rgba(51,205,184,0.4)';
+        dropzone.style.background = 'rgba(51,205,184,0.03)';
       };
       dropzone.ondrop = (e) => {
         e.preventDefault();
-        dropzone.style.borderColor = 'rgba(14,165,233,0.4)';
-        dropzone.style.background = 'rgba(14,165,233,0.03)';
+        dropzone.style.borderColor = 'rgba(51,205,184,0.4)';
+        dropzone.style.background = 'rgba(51,205,184,0.03)';
         const file = e.dataTransfer.files[0];
         if (file) handleUpload(file);
       };
@@ -397,7 +397,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           </div>
           <div class="vmi-row-4">
             <span class="vmi-xs-semi-muted">${iso.size_formatted}</span>
-            <button class="btn-pill-toggle btn-boot-iso" data-path="${escapeHtml(iso.path)}" style="background: rgba(14,165,233,0.18); color: var(--zn-text-accent); border-color: rgba(14,165,233,0.35);">${ico('▶')} ${t('viso.boot', 'Create VM')}</button>
+            <button class="btn-pill-toggle btn-boot-iso" data-path="${escapeHtml(iso.path)}" style="background: rgba(51,205,184,0.18); color: var(--zn-text-accent); border-color: rgba(51,205,184,0.35);">${ico('▶')} ${t('viso.boot', 'Create VM')}</button>
             <button class="btn-pill-toggle btn-delete-iso is-danger" data-path="${escapeHtml(iso.path)}" data-name="${escapeHtml(iso.name)}" title="${t('ui.delete_iso_from_storage', 'Delete ISO from storage')}">🗑</button>
           </div>
         </div>
@@ -461,7 +461,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
         if (task.status === 'downloading') {
           if (targetStat) {
             targetStat.textContent = t('viso.downloading', 'Downloading… {speed} MB/s ({pct}%)', { speed: task.speed_mb_s || 0, pct: task.progress_pct || 0 });
-            targetStat.style.color = '#38bdf8';
+            targetStat.style.color = '#4fd8c4';
           }
           if (btn) {
             btn.disabled = true;
@@ -522,7 +522,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
         <div class="catalog-card glassmorphic-card" style="padding: 14px; border-radius: 8px; border: 1px solid var(--zn-line-8); background: var(--lt-b-13222599, rgba(19,34,37,0.6));">
           <div class="vmi-row-5">
             <div>
-              <span style="font-size: var(--zn-fs-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: var(--zn-text-accent);">${item.badge}</span>
+              <span style="font-size: var(--zn-fs-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(51,205,184,0.15); color: var(--zn-text-accent);">${item.badge}</span>
               ${inStorage ? `<span style="font-size: var(--zn-fs-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--zn-text-ok); margin-left: 6px;">${ico('✓')} ${t('viso.in_storage', 'On this NAS')}</span>` : ''}
               <div class="vmi-fs13-bold-strong-2">${escapeHtml(item.name)}</div>
             </div>
@@ -533,11 +533,11 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           <!-- Download Progress Bar (Hidden by default or shown if in-flight) -->
           <div id="prog-wrap-${item.id}" style="${inStorage ? 'display: block;' : 'display: none;'} margin-bottom: 10px;">
             <div class="vmi-row-xs-2">
-              <span id="prog-stat-${item.id}" style="color: ${inStorage ? '#34d399' : '#38bdf8'};">${inStorage ? t('ui.downloaded_to_mnt_user_isos', 'Downloaded to /mnt/user/isos') : t('viso.ready', 'Ready')}</span>
+              <span id="prog-stat-${item.id}" style="color: ${inStorage ? '#34d399' : '#4fd8c4'};">${inStorage ? t('ui.downloaded_to_mnt_user_isos', 'Downloaded to /mnt/user/isos') : t('viso.ready', 'Ready')}</span>
               <span class="vmi-bold-strong" id="prog-pct-${item.id}">${inStorage ? '100%' : '0%'}</span>
             </div>
             <div class="vmi-box-3">
-              <div id="prog-bar-${item.id}" style="width: ${inStorage ? '100%' : '0%'}; height: 100%; background: ${inStorage ? '#10b981' : '#0ea5e9'}; transition: width 0.2s;"></div>
+              <div id="prog-bar-${item.id}" style="width: ${inStorage ? '100%' : '0%'}; height: 100%; background: ${inStorage ? '#10b981' : '#33cdb8'}; transition: width 0.2s;"></div>
             </div>
           </div>
 
@@ -545,14 +545,14 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
             <span class="vmi-xs-muted-mono">${item.arch || item.architecture || 'x86_64'} • ${item.kernel || 'Linux'}</span>
             <div class="vmi-row-7">
               ${inStorage ? `
-                <button class="btn-pill-toggle btn-boot-catalog-iso" data-filename="${escapeHtml(item.filename)}" style="background: rgba(14,165,233,0.18); color: var(--zn-text-accent); border-color: rgba(14,165,233,0.35);">
+                <button class="btn-pill-toggle btn-boot-catalog-iso" data-filename="${escapeHtml(item.filename)}" style="background: rgba(51,205,184,0.18); color: var(--zn-text-accent); border-color: rgba(51,205,184,0.35);">
                   ${ico('▶')} ${t('viso.boot', 'Create VM')}
                 </button>
                 <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" disabled style="padding: 5px 10px; font-size: var(--zn-fs-xs); font-weight: 700; background: rgba(16,185,129,0.2); color: var(--zn-text-ok); border-color: #34d399;">
                   ${ico('✓')} ${t('viso.ready', 'Ready')}
                 </button>
               ` : `
-                <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" style="padding: 5px 12px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--accent-cyan, #0ea5e9); color: var(--zn-text-strong);">
+                <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" style="padding: 5px 12px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--accent-cyan, #33cdb8); color: var(--zn-text-strong);">
                   <span>${ico('⬇')} ${t('viso.download', 'Download')}</span>
                 </button>
               `}
@@ -574,7 +574,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
         if (targetProg) targetProg.style.display = 'block';
         if (targetStat) {
           targetStat.textContent = t('ui.contacting_download_mirror', 'Contacting download mirror...');
-          targetStat.style.color = '#38bdf8';
+          targetStat.style.color = '#4fd8c4';
         }
 
         try {

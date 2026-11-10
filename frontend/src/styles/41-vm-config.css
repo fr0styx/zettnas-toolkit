@@ -50,7 +50,7 @@
 }
 
 .vm-modal-window.active-window {
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), 0 0 0 1.5px var(--accent-cyan, #0ea5e9) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), 0 0 0 1.5px var(--accent-cyan, #33cdb8) !important;
 }
 
 .vm-modal-window.maximized {
@@ -197,7 +197,7 @@
 .ai-typing-dot {
   width: 6px;
   height: 6px;
-  background: #38bdf8;
+  background: #4fd8c4;
   border-radius: 50%;
   display: inline-block;
   animation: aiTypingBounce 1.4s infinite ease-in-out both;

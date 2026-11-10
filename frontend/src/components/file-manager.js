@@ -285,7 +285,7 @@ export class FileManagerWindow {
               <div class="fm-aux-tool-group fmx-row-4">
                 <button type="button" id="fm-btn-transfers" class="fm-tool-btn fm-btn-transfers-toggle" title="${t('fm.transfers', 'Transfers')}" data-i18n-title="fm.transfers" aria-label="${t('transfers.title', 'Transfers')}">
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>
-                  <span class="fm-transfers-count-badge" style="display: none; background: #0ea5e9; color: #fff; font-size: var(--zn-fs-xs); font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
+                  <span class="fm-transfers-count-badge" style="display: none; background: #0a7a70; color: #fff; font-size: var(--zn-fs-xs); font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
                 </button>
                 <button type="button" id="fm-btn-inspector" class="fm-tool-btn fm-btn-inspector-toggle" title="${t('fm.inspector_toggle', 'Toggle Inspector')}" data-i18n-title="fm.inspector_toggle" aria-label="${t('fm.inspector_toggle', 'Toggle Inspector')}">
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -401,7 +401,7 @@ export class FileManagerWindow {
             <div class="fm-aux-tool-group fmx-row-4">
               <button type="button" class="fm-tool-btn fm-btn-transfers-toggle" title="${t('fm.transfers', 'Transfers')}" data-i18n-title="fm.transfers" aria-label="${t('transfers.title', 'Transfers')}">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>
-                <span class="fm-transfers-count-badge" style="display: none; background: #0ea5e9; color: #fff; font-size: var(--zn-fs-xs); font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
+                <span class="fm-transfers-count-badge" style="display: none; background: #0a7a70; color: #fff; font-size: var(--zn-fs-xs); font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
               </button>
               <button type="button" class="fm-tool-btn fm-btn-inspector-toggle" title="${t('fm.inspector_toggle', 'Toggle Inspector')}" data-i18n-title="fm.inspector_toggle" aria-label="${t('fm.inspector_toggle', 'Toggle Inspector')}">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -1753,7 +1753,7 @@ export class FileManagerWindow {
       span.style.padding = '2px 4px';
       span.style.borderRadius = '4px';
       span.style.cursor = isLast ? 'text' : 'pointer';
-      span.style.color = isLast ? 'var(--accent-cyan, #0ea5e9)' : 'var(--fg)';
+      span.style.color = isLast ? 'var(--accent-cyan, #33cdb8)' : 'var(--fg)';
       span.style.fontWeight = isLast ? 'bold' : 'normal';
       span.style.fontFamily = 'monospace';
       span.style.whiteSpace = 'nowrap';
@@ -2115,8 +2115,8 @@ export class FileManagerWindow {
         const getArrow = (col) => {
           if (this.currentSortBy !== col) return ' <span class="fm-sort-indicator fmx-x-2">▼</span>';
           return this.currentSortDir === 'asc'
-            ? ' <span class="fm-sort-indicator" style="opacity: 0.9; color: var(--lt-ink-brand, var(--accent-cyan, #0ea5e9));">▲</span>'
-            : ' <span class="fm-sort-indicator" style="opacity: 0.9; color: var(--lt-ink-brand, var(--accent-cyan, #0ea5e9));">▼</span>';
+            ? ' <span class="fm-sort-indicator" style="opacity: 0.9; color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));">▲</span>'
+            : ' <span class="fm-sort-indicator" style="opacity: 0.9; color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));">▼</span>';
         };
         this.colName.innerHTML = t('fm.col_name', 'Name') + getArrow('name');
         this.colSize.innerHTML = t('fm.col_size', 'Size') + getArrow('size');
@@ -2360,7 +2360,7 @@ export class FileManagerWindow {
       let icon;
       if (file.is_dir) {
         if (isRemoteDir) {
-          icon = '<svg viewBox="0 0 24 24" width="18" height="18" stroke="#38bdf8" fill="rgba(56,189,248,0.2)" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>';
+          icon = '<svg viewBox="0 0 24 24" width="18" height="18" stroke="#4fd8c4" fill="rgba(79,216,196,0.2)" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>';
         } else if (isDiskDir) {
           icon = '<svg viewBox="0 0 24 24" width="18" height="18" stroke="#a855f7" fill="rgba(168,85,247,0.2)" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="12" cy="12" r="1"></circle></svg>';
         } else {
@@ -3110,7 +3110,7 @@ export class FileManagerWindow {
     input.type = 'text';
     input.className = 'fm-inline-rename-input';
     input.value = oldName;
-    input.style.cssText = 'width: 100%; padding: 2px 4px; font-size: inherit; background: rgba(0,0,0,0.6); border: 1px solid var(--accent, #0ea5e9); border-radius: 4px; color: #fff; outline: none; z-index: 10;';
+    input.style.cssText = 'width: 100%; padding: 2px 4px; font-size: inherit; background: rgba(0,0,0,0.6); border: 1px solid var(--accent, #33cdb8); border-radius: 4px; color: #fff; outline: none; z-index: 10;';
 
     nameEl.style.display = 'none';
     nameEl.parentNode.insertBefore(input, nameEl);
@@ -3794,7 +3794,7 @@ export function showCollisionModal({ sources, destinationDir, action, conflicts,
       </div>
       <div class="fmx-x-4">
         <label class="fmx-row-xs-muted">
-          <input type="checkbox" id="fm-collision-apply-all" checked style="accent-color: var(--accent-cyan, #0ea5e9);" />
+          <input type="checkbox" id="fm-collision-apply-all" checked style="accent-color: var(--accent-cyan, #33cdb8);" />
           <span>${escapeHtml(t('fm.apply_all', 'Apply to all conflicts'))}</span>
         </label>
       </div>
@@ -3812,7 +3812,7 @@ export function showCollisionModal({ sources, destinationDir, action, conflicts,
         ${
           hasDir
             ? `
-          <button id="fm-collision-merge" class="btn-pill-toggle is-primary" style="box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);">${escapeHtml(t('fm.merge', 'Merge'))}</button>
+          <button id="fm-collision-merge" class="btn-pill-toggle is-primary" style="box-shadow: 0 4px 14px rgba(51, 205, 184, 0.35);">${escapeHtml(t('fm.merge', 'Merge'))}</button>
         `
             : ''
         }
@@ -3948,7 +3948,7 @@ export function openMediaOrganizerModal(initialPath = '') {
                   const isTv = it.media_type === 'tv';
                   const typeBadge = isTv
                     ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(168,85,247,0.15); color:var(--zn-text-ai); border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(t('media.org_tv', 'TV show · S{season}E{episode}', { season: String(it.season || 1).padStart(2, '0'), episode: String(it.episode || 1).padStart(2, '0') }))}</span>`
-                    : `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(14,165,233,0.15); color:var(--zn-text-accent); border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(t('media.org_movie', 'Movie'))} ${it.year ? `(${it.year})` : ''}</span>`;
+                    : `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(51,205,184,0.15); color:var(--zn-text-accent); border:1px solid rgba(51,205,184,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(t('media.org_movie', 'Movie'))} ${it.year ? `(${it.year})` : ''}</span>`;
                   const qualBadge = `<span class="ci-badge fmx-xs-soft-box">${escapeHtml(it.resolution || '1080p')} · ${escapeHtml(it.codec || 'x264')}</span>`;
 
                   return `
@@ -4115,7 +4115,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
       </div>
 
       <div id="fm-share-result-section" style="display: none;">
-        <div style="padding: 12px; border-radius: 8px; background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.25); margin-bottom: 16px;">
+        <div style="padding: 12px; border-radius: 8px; background: rgba(51, 205, 184, 0.08); border: 1px solid rgba(51, 205, 184, 0.25); margin-bottom: 16px;">
           <div class="fmx-xs-semi-accent">${t('fm.share_made', 'Here is the link:')}</div>
           <div class="fmx-row-13">
             <input class="fmx-xs-strong-mono-box-grow" type="text" id="fm-share-url-output" readonly />

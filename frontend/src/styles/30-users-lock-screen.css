@@ -23,29 +23,29 @@
 .topbar-user-pill:hover,
 .topbar-user-pill:focus-visible {
   background: var(--zn-glaze-10);
-  border-color: rgba(56, 189, 248, 0.4);
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.18);
+  border-color: rgba(79, 216, 196, 0.4);
+  box-shadow: 0 0 12px rgba(79, 216, 196, 0.18);
   outline: none;
 }
 
 .topbar-user-pill.active,
 .topbar-user-pill[aria-expanded="true"] {
-  background: rgba(14, 165, 233, 0.18);
-  border-color: var(--accent-cyan, #0ea5e9);
-  box-shadow: 0 0 14px rgba(14, 165, 233, 0.3);
+  background: rgba(51, 205, 184, 0.18);
+  border-color: var(--accent-cyan, #33cdb8);
+  box-shadow: 0 0 14px rgba(51, 205, 184, 0.3);
 }
 
 .topbar-user-pill.active .topbar-user-caret,
 .topbar-user-pill[aria-expanded="true"] .topbar-user-caret {
   transform: rotate(180deg);
-  color: var(--lt-ink-brand, var(--accent-cyan, #0ea5e9));
+  color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));
 }
 
 .topbar-user-avatar {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0284c7, #0369a1);
+  background: linear-gradient(135deg, #0a7a70, #08695f);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -55,7 +55,7 @@
   border: 1px solid var(--lt-r-ffffff40, rgba(255, 255, 255, 0.25));
   position: relative;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 2px 6px rgba(10, 122, 112, 0.3);
 }
 
 .topbar-user-status-dot {
@@ -142,7 +142,7 @@
 }
 .login-user-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+  box-shadow: 0 4px 12px rgba(51, 205, 184, 0.15);
 }
 
 /* Acrylic Desktop Lock Overlay */
@@ -181,9 +181,9 @@ body.desktop-locked #os-dock-container {
 }
 
 .users-nav-bar .btn-pill-toggle.active {
-  background: var(--accent-cyan, #0ea5e9);
+  background: var(--accent-cyan, #33cdb8);
   color: var(--zn-text-strong);
-  border-color: rgba(14, 165, 233, 0.4);
+  border-color: rgba(51, 205, 184, 0.4);
 }
 
 .reset-pwd-tokens { display: flex; align-items: flex-start; gap: var(--zn-space-2, 8px); font-size: var(--zn-fs-xs); color: var(--zn-text-soft); line-height: 1.4; }
@@ -202,11 +202,11 @@ body.desktop-locked #os-dock-container {
 
 /* The user menu's markup (user-flyout.js): each rule is the inline style it replaced (NUX-15) */
 #user-profile-flyout .ufl-head { display:flex; align-items:center; gap:12px; padding:16px; border-bottom:1px solid var(--zn-line-8); }
-#user-profile-flyout .ufl-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:16px; border:1px solid var(--lt-r-ffffff4c, rgba(255,255,255,0.3)); box-shadow:0 4px 12px rgba(2,132,199,0.3); }
+#user-profile-flyout .ufl-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, #0a7a70, #08695f); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:16px; border:1px solid var(--lt-r-ffffff4c, rgba(255,255,255,0.3)); box-shadow:0 4px 12px rgba(10,122,112,0.3); }
 #user-profile-flyout .ufl-text { flex:1; min-width:0; }
 #user-profile-flyout .ufl-name { font-weight:700; color:var(--zn-text-strong); font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 #user-profile-flyout .ufl-user { font-size:var(--zn-fs-xs); color:var(--muted); }
-#user-profile-flyout .ufl-role { font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); background:rgba(56,189,248,0.12); padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px; }
+#user-profile-flyout .ufl-role { font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); background:rgba(79,216,196,0.12); padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px; }
 #user-profile-flyout .ufl-actions { padding:8px; }
 #user-profile-flyout .ufl-btn { width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:var(--zn-text-strong); font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease; }
 #user-profile-flyout .ufl-ico { font-size:15px; }
@@ -219,17 +219,17 @@ body.desktop-locked #os-dock-container {
    sign-in code can switch (on an element with an id, or none) stays inline (NUX-15) */
 #login-overlay { position: fixed; inset: 0; z-index: 999999; background: var(--lt-b-080e10ff, #080e10); align-items: center; justify-content: center; }
 #login-overlay .lgn-div1 { background: var(--card, #152123); padding: 36px 32px; border-radius: 14px; text-align: center; border: 1px solid var(--zn-line-12); width: 340px; box-shadow: 0 25px 60px rgba(0,0,0,0.85); position: relative; }
-#login-overlay .lgn-user-selected-card { align-items: center; gap: 12px; background: rgba(14,165,233,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; cursor: pointer; transition: all 0.18s ease; user-select: none; }
-#login-overlay .lgn-selected-initial { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 13px; }
-#login-overlay .lgn-div2 { font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); display: flex; align-items: center; gap: 4px; }
+#login-overlay .lgn-user-selected-card { align-items: center; gap: 12px; background: rgba(51,205,184,0.1); border: 1px solid rgba(79,216,196,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; cursor: pointer; transition: all 0.18s ease; user-select: none; }
+#login-overlay .lgn-selected-initial { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0a7a70, #08695f); align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 13px; }
+#login-overlay .lgn-div2 { font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); display: flex; align-items: center; gap: 4px; }
 #login-overlay .lgn-username { width: 100%; padding: 11px 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong); border-radius: 6px; box-sizing: border-box; text-align: center; font-size: 14px; outline: none; margin-bottom: 10px; }
 #login-overlay .lgn-password { width: 100%; padding: 11px 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-18); color: var(--zn-text-strong); border-radius: 6px; margin-bottom: 12px; box-sizing: border-box; text-align: center; font-size: 15px; outline: none; }
-#login-overlay .lgn-div3 { width: 48px; height: 48px; border-radius: 50%; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.35); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px auto; }
-#login-overlay .lgn-mfa-challenge-code { width: 100%; padding: 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid rgba(56,189,248,0.4); color: var(--zn-text-accent); border-radius: 6px; margin-bottom: 16px; box-sizing: border-box; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: 6px; outline: none; font-family: monospace; }
+#login-overlay .lgn-div3 { width: 48px; height: 48px; border-radius: 50%; background: rgba(79,216,196,0.15); border: 1px solid rgba(79,216,196,0.35); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px auto; }
+#login-overlay .lgn-mfa-challenge-code { width: 100%; padding: 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid rgba(79,216,196,0.4); color: var(--zn-text-accent); border-radius: 6px; margin-bottom: 16px; box-sizing: border-box; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: 6px; outline: none; font-family: monospace; }
 #lock-overlay { position: fixed; inset: 0; z-index: 999990; background: var(--lt-b-080e10bf, rgba(8,14,16,0.75)); backdrop-filter: blur(28px) saturate(180%) brightness(0.65); align-items: center; justify-content: center; }
 #lock-overlay .lck-div1 { background: var(--lt-b-152123d9, rgba(21,33,35,0.85)); padding: 40px 36px; border-radius: 16px; text-align: center; border: 1px solid var(--zn-line-14); width: 340px; box-shadow: 0 30px 80px rgba(0,0,0,0.9); }
-#lock-overlay .lck-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 14px; border: 1px solid var(--lt-r-ffffff40, rgba(255,255,255,0.25)); }
-#lock-overlay .lck-role-badge { font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); font-weight: 600; }
+#lock-overlay .lck-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0a7a70, #08695f); align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 14px; border: 1px solid var(--lt-r-ffffff40, rgba(255,255,255,0.25)); }
+#lock-overlay .lck-role-badge { font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); font-weight: 600; }
 #lock-overlay .lck-password { width: 100%; padding: 12px 42px 12px 14px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-20); color: var(--zn-text-strong); border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
 #lock-overlay .lck-unlock-btn { position: absolute; right: 6px; top: 6px; bottom: 6px; width: 32px; background: var(--ok2, #33cdb8); border: none; border-radius: 6px; color: var(--zn-text-strong); font-weight: 800; cursor: pointer; align-items: center; justify-content: center; }
 #lock-overlay .lck-timeout-select { background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-18); color: var(--zn-text-strong); border-radius: 6px; padding: 4px 8px; font-size: var(--zn-fs-xs); cursor: pointer; outline: none; }

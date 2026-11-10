@@ -110,8 +110,8 @@ export function setAiVisualFiltersDrawerOpen(forceOpen = null) {
   if (toggleBtn) {
     toggleBtn.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
     toggleBtn.style.borderColor = (nextOpen || _aiSelectedColor || _aiSelectedScene)
-      ? 'rgba(56,189,248,0.55)'
-      : 'rgba(56,189,248,0.3)';
+      ? 'rgba(79,216,196,0.55)'
+      : 'rgba(79,216,196,0.3)';
   }
   if (caret) {
     caret.textContent = nextOpen ? '▴' : '▾';
@@ -284,24 +284,24 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
       : hasWarn
         ? (isCritical ? 'rgba(239,68,68,0.62)' : 'rgba(245,158,11,0.62)')
         : isRec
-          ? 'rgba(56,189,248,0.45)'
+          ? 'rgba(79,216,196,0.45)'
           : 'rgba(255,255,255,0.09)';
     const bgCol = isAct
       ? 'rgba(16,185,129,0.09)'
       : hasWarn
         ? (isCritical ? 'rgba(239,68,68,0.07)' : 'rgba(245,158,11,0.07)')
         : isRec
-          ? 'rgba(14,165,233,0.07)'
+          ? 'rgba(51,205,184,0.07)'
           : 'rgba(255,255,255,0.025)';
     const badgeBg = hasWarn
       ? (isCritical ? 'rgba(239,68,68,0.22)' : 'rgba(245,158,11,0.22)')
       : isRec
-        ? 'rgba(56,189,248,0.18)'
+        ? 'rgba(79,216,196,0.18)'
         : 'rgba(16,185,129,0.15)';
     const badgeColor = hasWarn
       ? (isCritical ? '#fca5a5' : '#fcd34d')
       : isRec
-        ? '#38bdf8'
+        ? '#4fd8c4'
         : '#6ee7b7';
     const warningText = m.warning_message || m.fit_reason || 'Warning: This model exceeds your NAS hardware memory/VRAM capacity.';
 
@@ -321,7 +321,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
         </div>
         <div class="aik-row-xs">
           ${m.target_device ? `<span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fca5a5' : '#6ee7b7'};">⚡ ${escapeHtml(m.target_device)}</span>` : ''}
-          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fdba74' : '#bae6fd'};">${ico('💾')} ${t('ait.model_gb', '~{gb} GB Model', { gb: m.vram_or_ram_gb ?? m.est_ram_gb ?? 2.0 })}${m.min_ram_gb ? t('ait.host_gb', ' ({gb}GB+ Host)', { gb: m.min_ram_gb }) : ''}</span>
+          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fdba74' : '#c8f3ec'};">${ico('💾')} ${t('ait.model_gb', '~{gb} GB Model', { gb: m.vram_or_ram_gb ?? m.est_ram_gb ?? 2.0 })}${m.min_ram_gb ? t('ait.host_gb', ' ({gb}GB+ Host)', { gb: m.min_ram_gb }) : ''}</span>
           <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-f5f9f9ff, #f5f9f9);" title="${escapeHtml(t('ait.release_date', 'Hugging Face Release Date: {date}', { date: releaseDateText }))}">📅 ${escapeHtml(releaseDateText)}</span>
           ${m.estimated_speed ? `<span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-fde68aff, #fde68a);">🚀 ${escapeHtml(m.estimated_speed)}</span>` : ''}
         </div>
@@ -344,7 +344,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
                 ? `<button type="button" class="btn-pill-toggle btn-ai-install-model is-small" data-model-id="${escapeHtml(m.id)}" data-model-tag="${escapeHtml(m.ollama_tag)}" title="${escapeHtml(t('ai.install_model_title', 'Download this model into Ollama'))}" style="background: var(--lt-b-facc152e, rgba(250,204,21,0.18)); border: 1px solid var(--lt-r-facc157a, rgba(250,204,21,0.48)); color: var(--lt-t-fde047ff, #fde047);">⬇️ ${escapeHtml(t('ai.install_model', 'Install'))}</button>`
               : isLiveHfResult
                 ? `<button type="button" class="btn-pill-toggle btn-ai-pull-hf-card" data-hf-repo="${escapeHtml(hfRepo)}" style="font-size:var(--zn-fs-xs); font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(250,204,21,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.5)' : 'rgba(250,204,21,0.48)'}; color:${hasWarn ? '#fbbf24' : '#fde047'}; cursor:pointer;">${hasWarn ? '⚠️ Pull Anyway (Unfit)' : '⬇️ Pull from HF'}</button>`
-                : `<button type="button" class="btn-pill-toggle btn-ai-activate-model" data-model-id="${escapeHtml(m.id)}" style="font-size:var(--zn-fs-xs); font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.16)' : 'rgba(14,165,233,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(14,165,233,0.45)'}; color:${hasWarn ? '#fbbf24' : '#38bdf8'}; cursor:pointer;">${hasWarn ? '⚠️ Activate Anyway' : '⚡ Activate'}</button>`
+                : `<button type="button" class="btn-pill-toggle btn-ai-activate-model" data-model-id="${escapeHtml(m.id)}" style="font-size:var(--zn-fs-xs); font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.16)' : 'rgba(51,205,184,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(51,205,184,0.45)'}; color:${hasWarn ? '#fbbf24' : '#4fd8c4'}; cursor:pointer;">${hasWarn ? '⚠️ Activate Anyway' : '⚡ Activate'}</button>`
             }
             <button type="button" class="btn-pill-toggle btn-ai-remove-model is-danger is-small" data-model-id="${escapeHtml(m.id)}" data-model-name="${escapeHtml(m.name)}" title="${t('ui.remove_model_from_catalog_and', 'Remove model from catalog and disk')}" aria-label="${escapeHtml(t('aic.remove_model', 'Remove model {name}', { name: m.name }))}">🗑️</button>
           </div>
@@ -779,7 +779,7 @@ export function setAiWatchedFoldersDropdownOpen(forceOpen = null) {
   menu.style.display = nextOpen ? 'block' : 'none';
   if (btn) {
     btn.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
-    btn.style.borderColor = nextOpen ? 'rgba(56,189,248,0.75)' : 'rgba(56,189,248,0.4)';
+    btn.style.borderColor = nextOpen ? 'rgba(79,216,196,0.75)' : 'rgba(79,216,196,0.4)';
   }
   if (caret) {
     caret.textContent = nextOpen ? '▴' : '▾';
@@ -840,7 +840,7 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
       const inStandby = Boolean(info?.in_standby);
       const dev = info?.backing_dev || '';
       return `
-        <div class="ai-watched-folder-chip" data-folder-path="${escapeHtml(fp)}" style="display:inline-flex; align-items:center; gap:7px; padding:4px 9px; border-radius:8px; background:rgba(14,165,233,0.14); border:1px solid rgba(14,165,233,0.38); font-size:var(--zn-fs-xs); color:var(--lt-t-f5f9f9ff, #f5f9f9);">
+        <div class="ai-watched-folder-chip" data-folder-path="${escapeHtml(fp)}" style="display:inline-flex; align-items:center; gap:7px; padding:4px 9px; border-radius:8px; background:rgba(51,205,184,0.14); border:1px solid rgba(51,205,184,0.38); font-size:var(--zn-fs-xs); color:var(--lt-t-f5f9f9ff, #f5f9f9);">
           <span aria-hidden="true">☑</span>
           <span class="aik-bold-mono">${escapeHtml(fp)}</span>
           <span style="font-size:var(--zn-fs-xs); padding:1px 6px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.18)' : 'rgba(51,205,184,0.18)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
@@ -1438,7 +1438,7 @@ export function initAiKnowledgeEngine() {
       document.querySelectorAll('#ai-search-filetype-bar .ai-filetype-chip').forEach((c) => {
         const isAct = c === chip;
         c.classList.toggle('active', isAct);
-        c.style.borderColor = isAct ? '#38bdf8' : '';
+        c.style.borderColor = isAct ? '#4fd8c4' : '';
       });
       runAiVisualSearch(_getActiveAiSearchQuery());
     });
@@ -1453,7 +1453,7 @@ export function initAiKnowledgeEngine() {
       document.querySelectorAll('#ai-search-match-tabs .ai-match-tab').forEach((b) => {
         const isAct = b === tabBtn;
         b.classList.toggle('active', isAct);
-        b.style.background = isAct ? 'rgba(14,165,233,0.28)' : 'transparent';
+        b.style.background = isAct ? 'rgba(51,205,184,0.28)' : 'transparent';
         b.style.color = isAct ? '#fff' : '#95a8ab';
       });
       runAiVisualSearch(_getActiveAiSearchQuery());
@@ -1503,7 +1503,7 @@ export function initAiKnowledgeEngine() {
       document.querySelectorAll('#ai-search-filetype-bar .ai-filetype-chip').forEach((c) => {
         const isAll = c.dataset.filetype === 'all';
         c.classList.toggle('active', isAll);
-        c.style.borderColor = isAll ? '#38bdf8' : '';
+        c.style.borderColor = isAll ? '#4fd8c4' : '';
       });
       _updateAiVisualFilterBadge();
       const banner = document.getElementById('ai-visual-intent-banner');
@@ -1544,9 +1544,9 @@ export function initAiKnowledgeEngine() {
       document.querySelectorAll('#ai-scene-filter-bar .ai-scene-chip, #ai-scene-pill-bar .ai-scene-pill').forEach((p) => {
         const active = (p.dataset.scene || '') === _aiSelectedScene && (_aiSelectedScene !== '' || p === pill);
         p.classList.toggle('active', active);
-        p.style.background = active ? 'rgba(56,189,248,0.22)' : '';
-        p.style.borderColor = active ? 'rgba(56,189,248,0.55)' : '';
-        p.style.color = active ? '#38bdf8' : '';
+        p.style.background = active ? 'rgba(79,216,196,0.22)' : '';
+        p.style.borderColor = active ? 'rgba(79,216,196,0.55)' : '';
+        p.style.color = active ? '#4fd8c4' : '';
       });
       _updateAiVisualFilterBadge();
       runAiVisualSearch(_getActiveAiSearchQuery());
@@ -1927,8 +1927,8 @@ export async function fetchAndRenderAiStatus() {
     if (topText && !isReindexing) topText.textContent = cfg.respect_standby === false ? tierShort : t('ait.standby_safe', '{tier} • Standby Safe', { tier: tierShort });
     if (topLabel) topLabel.textContent = `AI: ${tierShort}`;
     if (topDot && !isReindexing) {
-      topDot.style.background = tierNum === 1 ? '#3bf58b' : tierNum === 2 ? '#38bdf8' : '#a78bfa';
-      topDot.style.boxShadow = tierNum === 1 ? '0 0 6px #3bf58b' : tierNum === 2 ? '0 0 6px #38bdf8' : '0 0 6px #a78bfa';
+      topDot.style.background = tierNum === 1 ? '#3bf58b' : tierNum === 2 ? '#4fd8c4' : '#a78bfa';
+      topDot.style.boxShadow = tierNum === 1 ? '0 0 6px #3bf58b' : tierNum === 2 ? '0 0 6px #4fd8c4' : '0 0 6px #a78bfa';
     }
     if (topPill) {
       topPill.title = t('ait.accel', 'Kib Active Accelerator: {hw} (NPU → GPU → CPU Priority) • {count, plural, one {# Indexed File} other {# Indexed Files}}', { hw: hwName, count: totalFiles });
@@ -2003,7 +2003,7 @@ export async function fetchAndRenderAiStatus() {
         : tierNum === 1
           ? `✓ ${t('ait.secondary', 'Ready as Secondary Fallback')}${secGpuLabel ? `: ${secGpuLabel}` : t('ait.secondary_npu', ' (Tier 1 NPU currently active)')}`
           : t('ait.t2_standby', 'Standby / Not Detected — Automatically promoted when /dev/nvidia0 or /dev/dri/renderD128 is present.');
-      t2.style.color = (tierNum === 2 || (tierNum === 1 && secGpuLabel)) ? '#38bdf8' : 'var(--muted)';
+      t2.style.color = (tierNum === 2 || (tierNum === 1 && secGpuLabel)) ? '#4fd8c4' : 'var(--muted)';
     });
 
     t3List.forEach((t3) => {
@@ -2084,7 +2084,7 @@ function renderStructuredCardHtml(card) {
           <div class="airg-row-xs">
             ${card.prep_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-6ee7b7ff, #6ee7b7);">${ico('⏱')} ${escapeHtml(t('ait.prep', 'Prep: {v}', { v: card.prep_time }))}</span>` : ''}
             ${card.cook_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-fde68aff, #fde68a);">${ico('🔥')} ${escapeHtml(t('ait.cook', 'Cook: {v}', { v: card.cook_time }))}</span>` : ''}
-            ${card.servings ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-bae6fdff, #bae6fd);">${ico('🍽')} ${escapeHtml(t('ait.serves', 'Serves: {v}', { v: card.servings }))}</span>` : ''}
+            ${card.servings ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-c8f3ecff, #c8f3ec);">${ico('🍽')} ${escapeHtml(t('ait.serves', 'Serves: {v}', { v: card.servings }))}</span>` : ''}
           </div>
         </div>
         <div class="airg-grid-xs">
@@ -2207,7 +2207,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
     const activeLlmId = llmTel.active_model || _aiLastActiveModel || '—';
     const tokPerSec = llmTel.tokens_per_sec || null;
     const combinedHtml = `
-      <div class="ai-rag-synthesis-box" style="background: var(--lt-b-0e1c1ea6, rgba(14,28,30,0.65)); border: 1px solid rgba(56,189,248,0.28); border-radius: 10px; padding: 12px 15px; display: flex; flex-direction: column; gap: 10px;">
+      <div class="ai-rag-synthesis-box" style="background: var(--lt-b-0e1c1ea6, rgba(14,28,30,0.65)); border: 1px solid rgba(79,216,196,0.28); border-radius: 10px; padding: 12px 15px; display: flex; flex-direction: column; gap: 10px;">
         <div class="airg-row">
           <div class="airg-row-2">
             <span class="airg-fs15">🧠</span>
@@ -2310,7 +2310,7 @@ function buildVisualPhotoCardHtml(item) {
         <div class="aik-xs-bold-strong-2" title="${escapeHtml(fName)}">${escapeHtml(fName)}</div>
         <div style="font-size: var(--zn-fs-xs); color: var(--muted,#95a8ab); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(fPath)}</div>
         <div class="aik-row-6">
-          ${colors.map((c) => `<span style="font-size: var(--zn-fs-xs); padding: 1px 5px; border-radius: 4px; background: rgba(56,189,248,0.14); color: var(--zn-text-accent); font-weight: 700; text-transform: capitalize;">🎨 ${escapeHtml(c)}</span>`).join('')}
+          ${colors.map((c) => `<span style="font-size: var(--zn-fs-xs); padding: 1px 5px; border-radius: 4px; background: rgba(79,216,196,0.14); color: var(--zn-text-accent); font-weight: 700; text-transform: capitalize;">🎨 ${escapeHtml(c)}</span>`).join('')}
           ${scenes.map((s) => `<span style="font-size: var(--zn-fs-xs); padding: 1px 5px; border-radius: 4px; background: var(--lt-b-ffffff12, rgba(255,255,255,0.07)); color: var(--zn-text-soft);">#${escapeHtml(s)}</span>`).join('')}
         </div>
       </div>
@@ -2358,7 +2358,7 @@ export function renderAiPreviewInspector(item) {
     </div>
     <!-- 5 Official Kib File Actions (#apps/zettai/search) -->
     <div class="aik-grid">
-      <button type="button" id="btn-ai-inspector-open" class="btn-pill-toggle" style="background: rgba(14,165,233,0.22); border: 1px solid rgba(14,165,233,0.5); color: var(--zn-text-strong);">
+      <button type="button" id="btn-ai-inspector-open" class="btn-pill-toggle" style="background: rgba(51,205,184,0.22); border: 1px solid rgba(51,205,184,0.5); color: var(--zn-text-strong);">
         👁️ ${t('aiq.open_file', 'Open File')}
       </button>
       <button type="button" id="btn-ai-inspector-location" class="btn-pill-toggle" style="background: rgba(51,205,184,0.18); border: 1px solid rgba(51,205,184,0.45); color: var(--lt-t-6ee7b7ff, #6ee7b7);" title="${t('ui.open_parent_folder_in_file', 'Open parent folder in File Manager')}">
@@ -2814,11 +2814,11 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
 
   const folderBannerHtml = folderPath
     ? `
-      <div class="ai-chat-folder-banner" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 6px 10px; border-radius: 8px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.28); margin-bottom: 2px;">
+      <div class="ai-chat-folder-banner" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 6px 10px; border-radius: 8px; background: rgba(79, 216, 196, 0.08); border: 1px solid rgba(79, 216, 196, 0.28); margin-bottom: 2px;">
         <div class="aicm-row-xs">
           <span aria-hidden="true">📁</span>
-          <span style="font-weight: 700; color: var(--lt-t-7dd3fcff, #7dd3fc);">${t('aiq.scope', 'Folder Scope:')}</span>
-          <code style="color: var(--lt-t-e0f2feff, #e0f2fe); font-size: var(--zn-fs-xs); background: var(--zn-shade-25); padding: 1px 5px; border-radius: 4px;">${escapeHtml(folderPath)}</code>
+          <span style="font-weight: 700; color: var(--lt-t-93e6d9ff, #93e6d9);">${t('aiq.scope', 'Folder Scope:')}</span>
+          <code style="color: var(--lt-t-e9fbf8ff, #e9fbf8); font-size: var(--zn-fs-xs); background: var(--zn-shade-25); padding: 1px 5px; border-radius: 4px;">${escapeHtml(folderPath)}</code>
           ${folderManifest && folderManifest.total_files ? `<span class="aicm-xs-muted">${t('aiq.scope_files', '({count, plural, one {# file} other {# files}})', { count: folderManifest.total_files })}</span>` : ''}
         </div>
         ${groundingScore === null ? `
@@ -2843,7 +2843,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
   const docCitationsHtml = citations.length > 0
     ? `
       <details class="ai-chat-doc-citations aicm-xs-3">
-        <summary style="cursor: pointer; color: var(--zn-text-accent); font-weight: 700; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); width: fit-content; user-select: none;">
+        <summary style="cursor: pointer; color: var(--zn-text-accent); font-weight: 700; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 6px; background: rgba(79,216,196,0.12); border: 1px solid rgba(79,216,196,0.32); width: fit-content; user-select: none;">
           <span>📚 ${escapeHtml(t('ai.sources_count', 'Sources ({n})', { n: citations.length }))}</span>
         </summary>
         <div class="aicm-col">
@@ -2854,14 +2854,14 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
             const escPath = escapeHtml(c.path || '');
             const escName = escapeHtml(cname);
             return `
-              <div class="ai-citation-card" style="padding: 7px 10px; border-radius: 7px; background: var(--lt-b-0e1c1ed9, rgba(14,28,30,0.85)); border: 1px solid rgba(56,189,248,0.22); font-size: var(--zn-fs-xs);">
+              <div class="ai-citation-card" style="padding: 7px 10px; border-radius: 7px; background: var(--lt-b-0e1c1ed9, rgba(14,28,30,0.85)); border: 1px solid rgba(79,216,196,0.22); font-size: var(--zn-fs-xs);">
                 <div class="aicm-row-3">
                   <button type="button" class="btn-preview-citation aicm-xs-bold-accent-box" data-action="open-file-preview" data-path="${escPath}" data-name="${escName}">
                     📄 [${idx + 1}] ${escName}<span class="aicm-muted">${escapeHtml(bcrumb)}</span> 👁️
                   </button>
                   <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-a7f3d0ff, #a7f3d0); background: rgba(16,185,129,0.14); padding: 1px 6px; border-radius: 999px;">${scorePct}% match</span>
                 </div>
-                ${c.excerpt ? `<div style="color: var(--zn-text-soft); font-size: var(--zn-fs-xs); line-height: 1.45; font-style: italic; background: var(--zn-shade-25); padding: 5px 8px; border-radius: 5px; border-left: 2px solid #38bdf8;">"${escapeHtml(c.excerpt)}"</div>` : ''}
+                ${c.excerpt ? `<div style="color: var(--zn-text-soft); font-size: var(--zn-fs-xs); line-height: 1.45; font-style: italic; background: var(--zn-shade-25); padding: 5px 8px; border-radius: 5px; border-left: 2px solid #4fd8c4;">"${escapeHtml(c.excerpt)}"</div>` : ''}
               </div>
             `;
           }).join('')}
@@ -2895,7 +2895,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
           <span>🌐 ${t('aiq.sources', 'Sources ({count})', { count: webSources.length })}</span>
         </summary>
         <div class="aicm-row-5">
-          ${webSources.slice(0, 5).map((ws) => `<a href="${escapeHtml(ws.url)}" target="_blank" rel="noopener noreferrer" style="padding: 2px 8px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); color: var(--zn-text-accent); text-decoration: none; font-weight: 600; font-size: var(--zn-fs-xs);">${escapeHtml(ws.title || ws.source || 'Source')} ↗</a>`).join('')}
+          ${webSources.slice(0, 5).map((ws) => `<a href="${escapeHtml(ws.url)}" target="_blank" rel="noopener noreferrer" style="padding: 2px 8px; border-radius: 6px; background: rgba(79,216,196,0.12); border: 1px solid rgba(79,216,196,0.32); color: var(--zn-text-accent); text-decoration: none; font-weight: 600; font-size: var(--zn-fs-xs);">${escapeHtml(ws.title || ws.source || 'Source')} ↗</a>`).join('')}
         </div>
       </details>
     `
@@ -3101,8 +3101,8 @@ export async function selectAiConversation(convId) {
         const userMsgEl = document.createElement('div');
         userMsgEl.className = 'ai-chat-msg ai-chat-msg-user';
         userMsgEl.dataset.convId = convId;
-        userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(14, 165, 233, 0.22); border: 1px solid rgba(56, 189, 248, 0.45); color: #f5f9f9; font-size: var(--zn-fs-xs); line-height: 1.45;';
-        userMsgEl.innerHTML = `<div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-7dd3fcff, #7dd3fc); margin-bottom:3px;">🧑 ${t('aiq.you', 'You')}</div><div>${escapeHtml(m.content)}</div>`;
+        userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(51, 205, 184, 0.22); border: 1px solid rgba(79, 216, 196, 0.45); color: #f5f9f9; font-size: var(--zn-fs-xs); line-height: 1.45;';
+        userMsgEl.innerHTML = `<div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-93e6d9ff, #93e6d9); margin-bottom:3px;">🧑 ${t('aiq.you', 'You')}</div><div>${escapeHtml(m.content)}</div>`;
         listEl.appendChild(userMsgEl);
       } else if (m.role === 'assistant') {
         const botMsgEl = document.createElement('div');
@@ -3427,7 +3427,7 @@ export function isAiThinkingModel(modelName) {
 function _citationChip(n, sources) {
   const web = (sources && sources.webSources) || [];
   const docs = (sources && sources.citations) || [];
-  const chip = 'display:inline-flex; align-items:center; font-size:11px; font-weight:700; color:#7dd3fc; background:rgba(56,189,248,0.16); border:1px solid rgba(56,189,248,0.35); border-radius:999px; padding:0 6px; margin:0 2px; vertical-align:baseline; line-height:1.3; cursor:pointer; text-decoration:none;';
+  const chip = 'display:inline-flex; align-items:center; font-size:11px; font-weight:700; color:#93e6d9; background:rgba(79,216,196,0.16); border:1px solid rgba(79,216,196,0.35); border-radius:999px; padding:0 6px; margin:0 2px; vertical-align:baseline; line-height:1.3; cursor:pointer; text-decoration:none;';
   if (web.length) {
     const ws = web[n - 1];
     if (!ws || !/^https?:\/\//i.test(String(ws.url || ''))) return '';
@@ -3502,9 +3502,9 @@ export function _formatChatMarkdown(rawText, sources = null) {
       ? `<button type="button" class="btn-deploy-stack-code" data-action="deploy-compose-code" style="background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(52, 211, 153, 0.45); border-radius: 4px; color: var(--lt-t-6ee7b7ff, #6ee7b7); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px;">🚀 ${t('aiq.deploy', 'Deploy Stack')}</button>`
       : '';
 
-    return `<div class="ai-chat-code-block" style="margin: 8px 0; border-radius: 8px; background: var(--lt-b-050b0ce0, rgba(5, 11, 12, 0.88)); border: 1px solid rgba(56, 189, 248, 0.3); overflow: hidden;">
+    return `<div class="ai-chat-code-block" style="margin: 8px 0; border-radius: 8px; background: var(--lt-b-050b0ce0, rgba(5, 11, 12, 0.88)); border: 1px solid rgba(79, 216, 196, 0.3); overflow: hidden;">
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; background: var(--lt-b-0e1c1ef2, rgba(14, 28, 30, 0.95)); border-bottom: 1px solid var(--zn-line-8); font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-family: monospace;">
-        <span style="font-weight: 700; color: var(--lt-t-7dd3fcff, #7dd3fc);">${escapeHtml(item.lang)}</span>
+        <span style="font-weight: 700; color: var(--lt-t-93e6d9ff, #93e6d9);">${escapeHtml(item.lang)}</span>
         <div class="aimd-row">
           ${deployBtnHtml}
           <button type="button" class="btn-copy-code aimd-xs-soft-box" data-action="copy-code">${t('catalog.copy', 'Copy')}</button>
@@ -3515,19 +3515,19 @@ export function _formatChatMarkdown(rawText, sources = null) {
   });
 
   const formatted = escaped
-    .replace(/^####\s+(.+)$/gm, '<div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-t-7dd3fcff, #7dd3fc); margin:8px 0 3px;">$1</div>')
+    .replace(/^####\s+(.+)$/gm, '<div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-t-93e6d9ff, #93e6d9); margin:8px 0 3px;">$1</div>')
     .replace(/^###\s+(.+)$/gm, '<div class="aimd-xs-bold-accent">$1</div>')
     .replace(/^&gt;\s?(.*)$/gm, '<div style="border-left:2px solid rgba(168,85,247,0.55); padding-left:8px; margin:3px 0; color:var(--zn-text-soft); font-size:var(--zn-fs-xs); background:rgba(168,85,247,0.07); border-radius:0 4px 4px 0;">$1</div>')
     .replace(/^[-*]\s+(.+)$/gm, '<div class="aimd-row-2"><span class="aimd-xs-accent">•</span><div class="aimd-grow">$1</div></div>')
     .replace(/^(\d+)\.\s+(.+)$/gm, '<div class="aimd-row-2"><span class="aimd-xs-bold">$1.</span><div class="aimd-grow">$2</div></div>')
     .replace(/\*\*(.+?)\*\*/g, '<strong class="aimd-strong">$1</strong>')
-    .replace(/`([^`]+)`/g, '<code style="background:var(--lt-b-00000061, rgba(0,0,0,0.38)); padding:1px 5px; border-radius:4px; color:var(--lt-t-bae6fdff, #bae6fd); font-family:monospace; font-size:var(--zn-fs-xs);">$1</code>')
+    .replace(/`([^`]+)`/g, '<code style="background:var(--lt-b-00000061, rgba(0,0,0,0.38)); padding:1px 5px; border-radius:4px; color:var(--lt-t-c8f3ecff, #c8f3ec); font-family:monospace; font-size:var(--zn-fs-xs);">$1</code>')
     .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="aimd-accent" href="$2" target="_blank" rel="noopener noreferrer">$1 ↗</a>')
     .replace(/\[\^(\d+):\s*([^#\]]+)(?:#L?(\d+))?\]/g, (match, idx, path, line) => {
       const escP = escapeHtml(path.trim());
       const escN = escapeHtml(path.trim().split('/').pop() || 'File');
       const lineStr = line ? ` (L${line})` : '';
-      return `<button type="button" class="ai-citation-inline-pill" data-action="open-file-preview" data-path="${escP}" data-name="${escN}" style="display:inline-flex; align-items:center; gap:3px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.38); border-radius:999px; padding:1px 7px; color:var(--lt-t-7dd3fcff, #7dd3fc); font-size:var(--zn-fs-xs); font-weight:700; cursor:pointer; vertical-align:baseline; margin:0 2px;"><span>📄 [${idx}] ${escN}${lineStr}</span><span class="aimd-xs">👁️</span></button>`;
+      return `<button type="button" class="ai-citation-inline-pill" data-action="open-file-preview" data-path="${escP}" data-name="${escN}" style="display:inline-flex; align-items:center; gap:3px; background:rgba(79,216,196,0.15); border:1px solid rgba(79,216,196,0.38); border-radius:999px; padding:1px 7px; color:var(--lt-t-93e6d9ff, #93e6d9); font-size:var(--zn-fs-xs); font-weight:700; cursor:pointer; vertical-align:baseline; margin:0 2px;"><span>📄 [${idx}] ${escN}${lineStr}</span><span class="aimd-xs">👁️</span></button>`;
     })
     .replace(/\[(\d+)\](?!\()/g, (m, n) => _citationChip(Number(n), sources))
     .replace(/\n\n+/g, '<div class="aimd-size"></div>')
@@ -3635,8 +3635,8 @@ export async function sendAiChatMessage(rawMessage = null) {
   if (listEl) {
     const userMsgEl = document.createElement('div');
     userMsgEl.className = 'ai-chat-msg ai-chat-msg-user';
-    userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(14, 165, 233, 0.22); border: 1px solid rgba(56, 189, 248, 0.45); color: #f5f9f9; font-size: var(--zn-fs-xs); line-height: 1.45;';
-    userMsgEl.innerHTML = `<div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-7dd3fcff, #7dd3fc); margin-bottom:3px;">🧑 ${t('aiq.you', 'You')}</div><div>${escapeHtml(msg)}</div>`;
+    userMsgEl.style.cssText = 'align-self: flex-end; max-width: 85%; padding: 9px 13px; border-radius: 10px; background: rgba(51, 205, 184, 0.22); border: 1px solid rgba(79, 216, 196, 0.45); color: #f5f9f9; font-size: var(--zn-fs-xs); line-height: 1.45;';
+    userMsgEl.innerHTML = `<div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-93e6d9ff, #93e6d9); margin-bottom:3px;">🧑 ${t('aiq.you', 'You')}</div><div>${escapeHtml(msg)}</div>`;
     listEl.appendChild(userMsgEl);
 
     const pendingEl = document.createElement('div');
@@ -3653,7 +3653,7 @@ export async function sendAiChatMessage(rawMessage = null) {
         <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-d8b4feff, #d8b4fe); margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(192, 132, 252, 0.35);">${escapeHtml(activeModel)}</span>
       `;
     } else {
-      pendingEl.style.cssText = 'align-self: flex-start; max-width: 85%; padding: 10px 14px; border-radius: 10px; background: rgba(14, 28, 30, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); display: flex; align-items: center; gap: 9px; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.12);';
+      pendingEl.style.cssText = 'align-self: flex-start; max-width: 85%; padding: 10px 14px; border-radius: 10px; background: rgba(14, 28, 30, 0.75); border: 1px solid rgba(79, 216, 196, 0.35); display: flex; align-items: center; gap: 9px; box-shadow: 0 4px 14px rgba(51, 205, 184, 0.12);';
       pendingEl.innerHTML = `
         <div class="ai-typing-indicator aik-row-8">
           <span class="ai-typing-dot"></span>
@@ -3759,7 +3759,7 @@ export async function sendAiChatMessage(rawMessage = null) {
           if (currentConvId) streamBotMsgEl.dataset.convId = currentConvId;
           streamBotMsgEl.dataset.activeModel = activeModel;
           streamBotMsgEl.dataset.isStreaming = '1';
-          streamBotMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(14, 28, 30, 0.78); border: 1px solid rgba(56, 189, 248, 0.28);';
+          streamBotMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(14, 28, 30, 0.78); border: 1px solid rgba(79, 216, 196, 0.28);';
 
           streamBotMsgEl.innerHTML = `
             <div class="ai-chat-llm-proof-bar aik-row-box-4">
@@ -3821,7 +3821,7 @@ export async function sendAiChatMessage(rawMessage = null) {
                   const pill = document.createElement('span');
                   pill.className = 'ai-chat-tool-pill ai-chat-tool-running';
                   pill.dataset.toolName = toolName;
-                  pill.style.cssText = 'font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(56,189,248,0.16); border: 1px solid rgba(56,189,248,0.42); color: #7dd3fc;';
+                  pill.style.cssText = 'font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(79,216,196,0.16); border: 1px solid rgba(79,216,196,0.42); color: #93e6d9;';
                   pill.textContent = `⚡ ${t('aiq.running_tool', 'Running {tool}...', { tool: toolName })}`;
                   toolsTraceEl.appendChild(pill);
                 }
@@ -3978,7 +3978,7 @@ export async function sendAiChatMessage(rawMessage = null) {
         botMsgEl.className = 'ai-chat-msg ai-chat-msg-assistant';
         botMsgEl.dataset.activeModel = usedModel;
         if (_activeConversationId) botMsgEl.dataset.convId = _activeConversationId;
-        botMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(14, 28, 30, 0.78); border: 1px solid rgba(56, 189, 248, 0.28);';
+        botMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(14, 28, 30, 0.78); border: 1px solid rgba(79, 216, 196, 0.28);';
         botMsgEl.innerHTML = _buildAiAssistantMessageHtml(res, activeModel);
         listEl.appendChild(botMsgEl);
       }
@@ -4019,7 +4019,7 @@ export function updateAiReindexProgress(data) {
     if (univStrip) univStrip.style.display = 'none';
     if (sidebarBadge && sidebarBadge.dataset.reindexing) {
       sidebarBadge.textContent = 'NPU/GPU';
-      sidebarBadge.style.background = 'rgba(14,165,233,0.18)';
+      sidebarBadge.style.background = 'rgba(51,205,184,0.18)';
       sidebarBadge.style.color = 'var(--accent-cyan,#33cdb8)';
       delete sidebarBadge.dataset.reindexing;
     }

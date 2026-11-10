@@ -47,7 +47,7 @@ let _unbindMgmtTrap = null;
 
 // The deploy button: a soft tint of the accent with a thin border, like the dialog's other controls.
 export function setDeployButtonTone(btn, tone) {
-  const color = tone === 'danger' ? 'var(--err, #eb5757)' : 'var(--brand, #0ea5e9)';
+  const color = tone === 'danger' ? 'var(--err, #eb5757)' : 'var(--brand, #33cdb8)';
   btn.style.background = `color-mix(in srgb, ${color} 22%, transparent)`;
   btn.style.border = `1px solid color-mix(in srgb, ${color} 55%, transparent)`;
   btn.style.color = 'var(--text, #e6eaea)';
@@ -899,7 +899,7 @@ export function initManagement() {
           </div>
           <div class="mgx-box">
             <div class="mgx-xs-bold-muted">${t('mvm.ceiling', 'MEMORY CEILING')}</div>
-            <div style="font-size: 13px; font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); margin-top: 4px;">
+            <div style="font-size: 13px; font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); margin-top: 4px;">
               ${escapeHtml(headroom)}
             </div>
           </div>

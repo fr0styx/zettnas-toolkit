@@ -56,7 +56,7 @@ function syncUpdateChannelUI() {
   const looks = {
     stable: ['rgba(51, 205, 184, 0.25)', 'var(--lt-t-33cdb8ff, #33cdb8)'],
     beta: ['rgba(245, 183, 49, 0.22)', 'var(--lt-t-f5b731ff, #f5b731)'],
-    edge: ['rgba(14, 165, 233, 0.25)', 'var(--zn-text-accent)'],
+    edge: ['rgba(51, 205, 184, 0.25)', 'var(--zn-text-accent)'],
   };
   for (const ch of UPDATE_CHANNELS) {
     const btn = document.getElementById(`btn-channel-${ch}`);

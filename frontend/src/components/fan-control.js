@@ -116,7 +116,7 @@ export function updateFanCurveWorkstation(s) {
     const el = $('zp-z1-pwm');
     if (fc.zone1_zero_rpm || fc.zone1_pwm === 0) {
       el.textContent = t('fan.pwm_passive', 'PWM: 0 (PASSIVE)');
-      el.style.color = '#38bdf8';
+      el.style.color = '#4fd8c4';
     } else {
       el.textContent = `PWM: ${fc.zone1_pwm}`;
       el.style.color = '';
@@ -127,7 +127,7 @@ export function updateFanCurveWorkstation(s) {
     const el = $('zp-z2-pwm');
     if (fc.zone2_zero_rpm || fc.zone2_pwm === 0) {
       el.textContent = t('fan.pwm_passive', 'PWM: 0 (PASSIVE)');
-      el.style.color = '#38bdf8';
+      el.style.color = '#4fd8c4';
     } else {
       el.textContent = `PWM: ${fc.zone2_pwm}`;
       el.style.color = '';
@@ -161,9 +161,9 @@ export function updateFanCurveWorkstation(s) {
   if (badgeZ1) {
     if (fc.zone1_zero_rpm) {
       badgeZ1.textContent = t('ui.zone_1_passive_0_rpm', 'Zone 1: PASSIVE (0 RPM)');
-      badgeZ1.style.background = 'rgba(56, 189, 248, 0.18)';
-      badgeZ1.style.color = '#38bdf8';
-      badgeZ1.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+      badgeZ1.style.background = 'rgba(79, 216, 196, 0.18)';
+      badgeZ1.style.color = '#4fd8c4';
+      badgeZ1.style.borderColor = 'rgba(79, 216, 196, 0.4)';
     } else if (fc.zone1_standby) {
       badgeZ1.textContent = t('fan.standby', 'Zone {zone}: Standby ({why})', { zone: 1, why: standbyReason(fc, fc.zone1_standby_rem) });
       badgeZ1.style.background = 'rgba(245, 183, 49, 0.15)';
@@ -179,9 +179,9 @@ export function updateFanCurveWorkstation(s) {
   if (badgeZ2) {
     if (fc.zone2_zero_rpm) {
       badgeZ2.textContent = t('ui.zone_2_passive_0_rpm', 'Zone 2: PASSIVE (0 RPM)');
-      badgeZ2.style.background = 'rgba(56, 189, 248, 0.18)';
-      badgeZ2.style.color = '#38bdf8';
-      badgeZ2.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+      badgeZ2.style.background = 'rgba(79, 216, 196, 0.18)';
+      badgeZ2.style.color = '#4fd8c4';
+      badgeZ2.style.borderColor = 'rgba(79, 216, 196, 0.4)';
     } else if (fc.zone2_standby) {
       badgeZ2.textContent = t('fan.standby', 'Zone {zone}: Standby ({why})', { zone: 2, why: standbyReason(fc, fc.zone2_standby_rem) });
       badgeZ2.style.background = 'rgba(245, 183, 49, 0.15)';
@@ -217,9 +217,9 @@ export function updateFanCurveWorkstation(s) {
     if (fc.driver_mode === 'mmio') {
       fanStatusBadge.textContent = t('fan.mmio', 'MMIO FALLBACK');
       fanStatusBadge.title = t('ui.direct_mmio_memory_access_userspace', 'Direct MMIO Memory Access (Userspace Fallback - No kernel module needed)');
-      fanStatusBadge.style.background = 'rgba(56, 189, 248, 0.15)';
-      fanStatusBadge.style.color = '#38bdf8';
-      fanStatusBadge.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+      fanStatusBadge.style.background = 'rgba(79, 216, 196, 0.15)';
+      fanStatusBadge.style.color = '#4fd8c4';
+      fanStatusBadge.style.borderColor = 'rgba(79, 216, 196, 0.4)';
     } else if (fc.driver_mode === 'hwmon') {
       fanStatusBadge.textContent = t('fan.hwmon', 'KERNEL HWMON');
       fanStatusBadge.title = t('ui.kernel_module_hwmon_driver_active', 'Kernel module hwmon driver active');
@@ -839,7 +839,7 @@ export function initAcousticCalibration() {
 
         const isRes = !!item.resonance_detected;
         if (isRes) hasResonance = true;
-        const color = isRes ? '#f43f5e' : 'var(--accent, #38bdf8)';
+        const color = isRes ? '#f43f5e' : 'var(--accent, #4fd8c4)';
         pointsHtml += `<circle cx="${x.toFixed(1)}" cy="${yClamped.toFixed(1)}" r="3" fill="${color}" stroke="#0e1c1e" stroke-width="1.5"><title>PWM: ${item.pwm} (${item.pct}%), RPM: ${item.rpm_avg || 0}${isRes ? ' [Resonance!]' : ''}</title></circle>`;
       });
 
@@ -883,9 +883,9 @@ export function initAcousticCalibration() {
           badge.style.borderColor = 'rgba(34,197,94,0.35)';
         } else {
           badge.textContent = 'READY';
-          badge.style.background = 'rgba(56,189,248,0.15)';
-          badge.style.color = 'var(--accent, #38bdf8)';
-          badge.style.borderColor = 'rgba(56,189,248,0.35)';
+          badge.style.background = 'rgba(79,216,196,0.15)';
+          badge.style.color = 'var(--accent, #4fd8c4)';
+          badge.style.borderColor = 'rgba(79,216,196,0.35)';
         }
       }
       if (statusEl) {

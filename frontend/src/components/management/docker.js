@@ -1293,7 +1293,7 @@ export async function openAppDeployModal(appId) {
 
             <!-- Stylized Progress Bar -->
             <div class="dkd-box">
-              <div id="adm-progress-bar-fill" style="height:100%; width:0%; background:linear-gradient(90deg, var(--brand, #0ea5e9), var(--ok2, #33cdb8)); transition:width 0.25s ease; box-shadow:0 0 10px rgba(51,205,184,0.5);"></div>
+              <div id="adm-progress-bar-fill" style="height:100%; width:0%; background:linear-gradient(90deg, var(--brand, #33cdb8), var(--ok2, #33cdb8)); transition:width 0.25s ease; box-shadow:0 0 10px rgba(51,205,184,0.5);"></div>
             </div>
 
             <!-- Real-time Activity Log Terminal -->
@@ -2461,7 +2461,7 @@ export async function openAppSourcesModal() {
             </div>
 
             <!-- Quick Add Preset Banner -->
-            <div id="asm-preset-banner" style="background:linear-gradient(135deg, rgba(14,165,233,0.12), rgba(51,205,184,0.08)); border:1px solid rgba(14,165,233,0.3); border-radius:8px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div id="asm-preset-banner" style="background:linear-gradient(135deg, rgba(51,205,184,0.12), rgba(51,205,184,0.08)); border:1px solid rgba(51,205,184,0.3); border-radius:8px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
               <div>
                 <div class="dkd-row-xs-bold-strong">
                   <span>${ico('⭐')} ${t('dk.lissy', 'Lissy93 Portainer templates')}</span>
@@ -2569,8 +2569,8 @@ export async function openAppSourcesModal() {
         btnCustom.disabled = true;
         setIconLabel(btnCustom, '⏳', t('ui.syncing_2', 'Syncing...'));
         statusEl.style.display = 'block';
-        statusEl.style.background = 'rgba(14,165,233,0.15)';
-        statusEl.style.color = '#38bdf8';
+        statusEl.style.background = 'rgba(51,205,184,0.15)';
+        statusEl.style.color = '#4fd8c4';
         statusEl.textContent = t('ui.fetching_and_caching_remote_templates', 'Fetching and caching remote templates...');
         try {
           await api.post('/api/docker/catalog/sources', { name, url });
@@ -2626,7 +2626,7 @@ async function refreshSourcesUI() {
         btnLissy.textContent = t('ui.lissy93_added', '✓ Lissy93 Added');
       } else {
         btnLissy.disabled = false;
-        btnLissy.style.background = 'var(--brand, #0ea5e9)';
+        btnLissy.style.background = 'var(--brand, #33cdb8)';
         btnLissy.style.color = '#fff';
         btnLissy.style.border = 'none';
         btnLissy.textContent = t('ui.add_lissy93_790_apps', '+ Add Lissy93 (790+ Apps)');
@@ -2645,7 +2645,7 @@ async function refreshSourcesUI() {
         ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(51,205,184,0.15); color:var(--accent);">${ico('✓')} ${escapeHtml(t('dk.synced', 'Synced ({when})', { when: formatRelativeTime(src.last_synced) }))}</span>`
         : (src.status === 'error'
           ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(239,68,68,0.15); color:var(--lt-t-fca5a5ff, #fca5a5);" title="${escapeHtml(src.error || 'Sync failed')}">${ico('⚠️')} ${t('ui.error', 'Error')}</span>`
-          : `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(14,165,233,0.15); color:var(--zn-text-accent);">🔄 ${escapeHtml(src.status || 'pending')}</span>`);
+          : `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(51,205,184,0.15); color:var(--zn-text-accent);">🔄 ${escapeHtml(src.status || 'pending')}</span>`);
 
       const toggleBtnClass = isEnabled ? 'btn-pill-toggle active' : 'btn-pill-toggle';
       const toggleText = isEnabled ? 'Enabled' : 'Disabled';

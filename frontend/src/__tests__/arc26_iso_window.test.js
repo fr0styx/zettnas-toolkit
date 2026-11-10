@@ -59,7 +59,7 @@ describe('ISO library window', () => {
     await openIsoManagerModal('local');
     const zone = q('#iso-dropzone');
     zone.ondragover({ preventDefault() {} });
-    expect(zone.style.borderColor).toBe('rgb(56, 189, 248)');
+    expect(zone.style.borderColor).toBe('rgb(79, 216, 196)');
     zone.ondragleave();
     zone.ondrop({ preventDefault() {}, dataTransfer: { files: [iso()] } });
     const xhr = xhrs.at(-1);

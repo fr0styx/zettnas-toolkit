@@ -225,8 +225,8 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
       datasets.push({
         label: t('mch.cpu_util', 'CPU Util (%)'),
         data: data.map((d) => d.cpu_util),
-        borderColor: '#38bdf8',
-        backgroundColor: 'rgba(56, 189, 248, 0.08)',
+        borderColor: '#4fd8c4',
+        backgroundColor: 'rgba(79, 216, 196, 0.08)',
         borderWidth: 2,
         tension: 0.3,
         fill: false,
@@ -315,8 +315,8 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
       datasets.push({
         label: t('mch.rx', 'Download Rx ({unit})', { unit: unitStr }),
         data: data.map((d) => Number(((d.net_rx || 0) / factor).toFixed(2))),
-        borderColor: '#38bdf8',
-        backgroundColor: 'rgba(56, 189, 248, 0.15)',
+        borderColor: '#4fd8c4',
+        backgroundColor: 'rgba(79, 216, 196, 0.15)',
         borderWidth: 2,
         tension: 0.3,
         fill: true,
@@ -380,7 +380,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
       datasets.push({
         label: 'CPU (%)',
         data: data.map((d) => d.cpu_util),
-        borderColor: '#38bdf8',
+        borderColor: '#4fd8c4',
         borderWidth: 1.5,
         tension: 0.3,
         pointRadius: 0

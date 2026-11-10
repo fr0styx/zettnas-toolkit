@@ -34,7 +34,7 @@ export const SYSTEM_SHORTCUTS = [
     desc: 'Drive bays, storage pools, shares and cloud storage.',
     icon: '#i-storage',
     svg: true,
-    color: '#38bdf8',
+    color: '#4fd8c4',
     targetSection: 'mgmt-sec-storage',
     targetPane: 'mgmt-pane-storage-topo',
     badge: 'ZFS/Btrfs'
@@ -584,7 +584,7 @@ function renderSystemShortcutsList(overlay) {
           </div>
         </div>
 
-        <button class="btn-pill-toggle shortcut-toggle-btn ${isActive ? 'active' : ''}" data-shortcut-id="${s.id}" style="flex-shrink:0; padding:5px 12px; font-size:var(--zn-fs-xs); font-weight:700; cursor:pointer; ${isActive ? 'color:var(--lt-t-22c55eff, #22c55e); border-color:rgba(34,197,94,0.4); background:rgba(34,197,94,0.14);' : 'color:var(--zn-text-accent); border-color:rgba(56,189,248,0.4); background:rgba(14,165,233,0.12);'}">
+        <button class="btn-pill-toggle shortcut-toggle-btn ${isActive ? 'active' : ''}" data-shortcut-id="${s.id}" style="flex-shrink:0; padding:5px 12px; font-size:var(--zn-fs-xs); font-weight:700; cursor:pointer; ${isActive ? 'color:var(--lt-t-22c55eff, #22c55e); border-color:rgba(34,197,94,0.4); background:rgba(34,197,94,0.14);' : 'color:var(--zn-text-accent); border-color:rgba(79,216,196,0.4); background:rgba(51,205,184,0.12);'}">
           ${isActive ? '✓ On Desktop' : '+ Add to Desktop'}
         </button>
       </div>
@@ -602,9 +602,9 @@ function renderSystemShortcutsList(overlay) {
         removeDesktopShortcut(scId);
         btn.classList.remove('active');
         btn.textContent = t('ui.add_to_desktop', '+ Add to Desktop');
-        btn.style.color = '#38bdf8';
-        btn.style.borderColor = 'rgba(56,189,248,0.4)';
-        btn.style.background = 'rgba(14,165,233,0.12)';
+        btn.style.color = '#4fd8c4';
+        btn.style.borderColor = 'rgba(79,216,196,0.4)';
+        btn.style.background = 'rgba(51,205,184,0.12)';
       } else {
         addDesktopShortcut({
           id: scDef.id,

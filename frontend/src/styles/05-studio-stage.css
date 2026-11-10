@@ -287,7 +287,7 @@ body.drawer-is-open .chassis-workbench-stage {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(51, 205, 184, 0.14) 0%, rgba(56, 189, 248, 0.08) 100%);
+  background: linear-gradient(135deg, rgba(51, 205, 184, 0.14) 0%, rgba(79, 216, 196, 0.08) 100%);
   border: 1px solid rgba(51, 205, 184, 0.25);
   border-radius: 8px;
   color: var(--ok2, #33cdb8);

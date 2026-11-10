@@ -238,9 +238,9 @@ export async function fetchAndRenderSecurityPosture() {
         badge.style.color = 'var(--lt-t-33cdb8ff, #33cdb8)';
         badge.style.borderColor = 'rgba(51,205,184,0.3)';
       } else if (data.score >= 75) {
-        badge.style.background = 'rgba(56,189,248,0.15)';
+        badge.style.background = 'rgba(79,216,196,0.15)';
         badge.style.color = 'var(--zn-text-accent)';
-        badge.style.borderColor = 'rgba(56,189,248,0.3)';
+        badge.style.borderColor = 'rgba(79,216,196,0.3)';
       } else if (data.score >= 50) {
         badge.style.background = 'rgba(234,179,8,0.15)';
         badge.style.color = 'var(--lt-t-eab308ff, #eab308)';

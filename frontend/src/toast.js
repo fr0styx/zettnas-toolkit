@@ -40,7 +40,7 @@ export function showActionToast(msg, actionText, onAction, durationMs = 10000) {
 
   const toast = document.createElement("div");
   toast.className = "top-toast-item";
-  toast.style.borderLeft = `4px solid #38bdf8`;
+  toast.style.borderLeft = `4px solid #4fd8c4`;
   toast.innerHTML = `
     <div class="tst-ico" aria-hidden="true">↺</div>
     <div class="tst-body">
@@ -150,7 +150,7 @@ function _showTopNotification(msg, type = "error") {
   const isWarn = (type === "warn" || type === "warning");
   const isSucc = (type === "success" || type === "ok");
 
-  let borderColor = "#38bdf8";
+  let borderColor = "#4fd8c4";
   let icon = "ℹ️";
   let tagText = t('toast.info', "Information");
   // heading colours from the theme: the light theme needs darker ones for 4.5:1 (UX-27)
@@ -331,11 +331,11 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   if (isMedia) {
     titleEl.innerHTML = `<span aria-hidden="true">📷</span> ${safeTitle}`;
     okBtn.innerHTML = options.okText ? escapeHtml(options.okText) : "📥 Import Media";
-    okBtn.style.background = "linear-gradient(135deg, #0ea5e9, #33cdb8)";
-    okBtn.style.border = "1px solid #0ea5e9";
+    okBtn.style.background = "linear-gradient(135deg, #33cdb8, #33cdb8)";
+    okBtn.style.border = "1px solid #33cdb8";
     okBtn.style.color = "#fff";
-    headerBg.style.background = "rgba(14, 165, 233, 0.12)";
-    titleEl.style.color = "#38bdf8";
+    headerBg.style.background = "rgba(51, 205, 184, 0.12)";
+    titleEl.style.color = "#4fd8c4";
   } else if (isStandby) {
     titleEl.innerHTML = `<span aria-hidden="true">⚡</span> ${safeTitle}`;
     okBtn.innerHTML = options.okText ? escapeHtml(options.okText) : "⚡ Wake & Inspect";
@@ -369,7 +369,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     } else {
       okBtn.style.background = "var(--zn-confirm-ok)";
       okBtn.style.border = "1px solid var(--zn-confirm-ok-line)";
-      headerBg.style.background = "rgba(14, 165, 233, 0.1)";
+      headerBg.style.background = "rgba(51, 205, 184, 0.1)";
       titleEl.style.color = "var(--zn-confirm-title)";
       card.style.borderColor = "";
       card.style.boxShadow = "";

@@ -133,8 +133,8 @@
 
 .ai-metric-pill.sleep {
   color: var(--zn-text-accent);
-  background: rgba(56, 189, 248, 0.1);
-  border-color: rgba(56, 189, 248, 0.25);
+  background: rgba(79, 216, 196, 0.1);
+  border-color: rgba(79, 216, 196, 0.25);
 }
 
 .ai-metric-pill.active-npu {

@@ -24,15 +24,15 @@
   color: var(--zn-text-strong);
 }
 .btn-rect.primary {
-  background: rgba(14, 165, 233, 0.14);
-  border-color: rgba(14, 165, 233, 0.35);
+  background: rgba(51, 205, 184, 0.14);
+  border-color: rgba(51, 205, 184, 0.35);
   color: var(--zn-text-accent);
 }
 .btn-rect.primary:hover:not(:disabled) {
-  background: rgba(14, 165, 233, 0.28);
-  border-color: #0ea5e9;
+  background: rgba(51, 205, 184, 0.28);
+  border-color: #33cdb8;
   color: var(--zn-text-strong);
-  box-shadow: 0 0 10px rgba(14, 165, 233, 0.4);
+  box-shadow: 0 0 10px rgba(51, 205, 184, 0.4);
 }
 .btn-rect.danger {
   background: rgba(244, 63, 94, 0.12);
@@ -50,9 +50,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(56, 189, 248, 0.12) !important;
+  background: rgba(79, 216, 196, 0.12) !important;
   color: var(--zn-text-accent) !important;
-  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  border: 1px solid rgba(79, 216, 196, 0.35) !important;
   border-radius: 5px !important;
   font-size: var(--zn-fs-xs) !important;
   font-weight: 600 !important;
@@ -61,10 +61,10 @@
   transition: all 0.15s ease;
 }
 .btn-download-app-backup:hover:not(:disabled) {
-  background: rgba(56, 189, 248, 0.28) !important;
-  border-color: #38bdf8 !important;
+  background: rgba(79, 216, 196, 0.28) !important;
+  border-color: #4fd8c4 !important;
   color: var(--zn-text-strong) !important;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.45) !important;
+  box-shadow: 0 0 10px rgba(79, 216, 196, 0.45) !important;
   transform: translateY(-1px);
 }
 
@@ -119,9 +119,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(14, 165, 233, 0.14) !important;
+  background: rgba(51, 205, 184, 0.14) !important;
   color: var(--zn-text-accent) !important;
-  border: 1px solid rgba(14, 165, 233, 0.35) !important;
+  border: 1px solid rgba(51, 205, 184, 0.35) !important;
   border-radius: 5px !important;
   font-size: var(--zn-fs-xs) !important;
   font-weight: 600 !important;
@@ -130,10 +130,10 @@
   transition: all 0.15s ease;
 }
 .btn-run-backup-job:hover:not(:disabled) {
-  background: rgba(14, 165, 233, 0.28) !important;
-  border-color: #0ea5e9 !important;
+  background: rgba(51, 205, 184, 0.28) !important;
+  border-color: #33cdb8 !important;
   color: var(--zn-text-strong) !important;
-  box-shadow: 0 0 10px rgba(14, 165, 233, 0.45) !important;
+  box-shadow: 0 0 10px rgba(51, 205, 184, 0.45) !important;
 }
 
 .btn-sys-restore-snap {
@@ -464,16 +464,16 @@
 .btn-reveal-fm {
   font-size: var(--zn-fs-xs);
   padding: 3px 8px;
-  background: rgba(14, 165, 233, 0.12);
+  background: rgba(51, 205, 184, 0.12);
   color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));
-  border: 1px solid rgba(14, 165, 233, 0.3);
+  border: 1px solid rgba(51, 205, 184, 0.3);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-reveal-fm:hover {
-  background: rgba(14, 165, 233, 0.25);
+  background: rgba(51, 205, 184, 0.25);
   border-color: var(--accent-cyan, #33cdb8);
   color: var(--zn-text-strong);
   box-shadow: 0 0 8px rgba(51, 205, 184, 0.3);
@@ -615,8 +615,8 @@
 }
 
 .mgmt-icon-wallpaper {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(51, 205, 184, 0.15));
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: linear-gradient(135deg, rgba(79, 216, 196, 0.2), rgba(51, 205, 184, 0.15));
+  border: 1px solid rgba(79, 216, 196, 0.3);
   color: var(--zn-text-accent);
 }
 

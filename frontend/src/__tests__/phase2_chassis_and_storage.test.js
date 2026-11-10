@@ -30,7 +30,7 @@ describe('Phase 2: Thermal Heatmap Level Calculations', () => {
     // Cool drive (< 35C)
     const cool = getThermalLevel(28, false);
     expect(cool.cls).toBe('cool');
-    expect(cool.color).toBe('var(--brand, #38bdf8)');
+    expect(cool.color).toBe('var(--brand, #4fd8c4)');
     expect(cool.text).toBe('28°C');
 
     // Optimal healthy drive (35 - 45C)

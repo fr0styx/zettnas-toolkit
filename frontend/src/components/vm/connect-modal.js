@@ -86,7 +86,7 @@ export function openVmConnectModal(vmId, vmObj = null) {
             </span>
             <span class="vmk-xs-bold-strong">${escapeHtml(name)}</span>
           </div>
-          <span style="font-size: var(--zn-fs-xs); font-family: monospace; color: ${ip ? '#38bdf8' : 'var(--muted)'};">
+          <span style="font-size: var(--zn-fs-xs); font-family: monospace; color: ${ip ? '#4fd8c4' : 'var(--muted)'};">
             ${ip ? `IP: ${escapeHtml(ip)}` : t('vmc.no_ip', 'No network address yet (waiting for DHCP)')}
           </span>
         </div>
@@ -102,7 +102,7 @@ export function openVmConnectModal(vmId, vmObj = null) {
               </div>
             </div>
             <div class="vmk-row-4">
-              <button class="btn-console-act btn-connect-gui" style="padding: 4px 10px; font-size: var(--zn-fs-xs); background: #0ea5e9; color: #fff; border-color: #38bdf8;">
+              <button class="btn-console-act btn-connect-gui" style="padding: 4px 10px; font-size: var(--zn-fs-xs); background: #0a7a70; color: #fff; border-color: #33cdb8;">
                 ${t('vmc.launch_gui', 'Open the desktop')}
               </button>
               <button class="btn-console-act btn-connect-tty" style="padding: 4px 10px; font-size: var(--zn-fs-xs); background: rgba(52,211,153,0.15); color: var(--zn-text-ok); border-color: rgba(52,211,153,0.4);">

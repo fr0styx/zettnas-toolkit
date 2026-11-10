@@ -113,7 +113,7 @@ export function renderFans(fans) {
         if (fv) {
           const displayTxt = (rpm === 0 && isPassive) ? '0' : String(rpm);
           if (fv.textContent !== displayTxt) fv.textContent = displayTxt;
-          fv.style.color = (rpm === 0 && isPassive) ? '#38bdf8' : '';
+          fv.style.color = (rpm === 0 && isPassive) ? '#4fd8c4' : '';
         }
         fanEl.classList.toggle('fan-passive', Boolean(rpm === 0 && isPassive));
         if (ic) {
@@ -138,7 +138,7 @@ export function renderFans(fans) {
     if (dfRpm) {
       if (rpm === 0 && isPassive) {
         dfRpm.textContent = t('dash.rpm_passive', '0 (PASSIVE)');
-        dfRpm.style.color = '#38bdf8';
+        dfRpm.style.color = '#4fd8c4';
       } else {
         dfRpm.textContent = rpm;
         dfRpm.style.color = '';
@@ -350,7 +350,7 @@ export function updateRowTelemetryBadges(s) {
     const fc = s.fan_control || {};
     if (maxRpm === 0 && (fc.zone1_zero_rpm || fc.zone2_zero_rpm)) {
       fanBadge.textContent = t('dash.fans_passive', '0 RPM • PASSIVE');
-      fanBadge.style.color = '#38bdf8';
+      fanBadge.style.color = '#4fd8c4';
     } else {
       fanBadge.textContent = `${maxRpm} RPM`;
       fanBadge.style.color = '';
