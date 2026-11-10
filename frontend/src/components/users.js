@@ -629,6 +629,7 @@ export function revokeAllOtherSessions() {
 }
 
 export async function load2FAStatus() {
+  import('./passkeys-card.js').then((m) => m.loadPasskeysCard()).catch(() => {}); // RES-3
   const statusContainer = document.getElementById('mfa-status-card');
   if (!statusContainer) return;
 

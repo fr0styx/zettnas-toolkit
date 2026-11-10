@@ -249,6 +249,21 @@ def init_users_db(db_path: str | None = None) -> None:
             );
         """)
 
+        # 7. Passkeys (RES-3): one row per WebAuthn credential, for the name it was made on
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS passkeys (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                credential_id BLOB NOT NULL UNIQUE,
+                credential BLOB NOT NULL,
+                rp_id TEXT NOT NULL,
+                name TEXT NOT NULL DEFAULT '',
+                created_at REAL NOT NULL,
+                last_used_at REAL
+            );
+        """)
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_passkeys_user ON passkeys(user_id)")
+
         # Columns added after the users table first shipped (MFA, IdP): see db_schema (ARC-8)
         from backend.db_schema import ensure_columns
 
@@ -772,6 +787,7 @@ def delete_user(user_id: str, db_path: str | None = None) -> bool:
         assert_remaining_superadmin_guard(conn, user_id, action="delete")
 
         conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        conn.execute("DELETE FROM passkeys WHERE user_id = ?", (user_id,))  # RES-3
         with _SESSION_CACHE_LOCK:
             _SESSION_CACHE.clear()
         if target_user:

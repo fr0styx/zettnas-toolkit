@@ -391,6 +391,10 @@ _PUBLIC_API_PATHS = {
     "/api/v1/auth/login",
     "/api/auth/mfa/challenge",
     "/api/v1/auth/mfa/challenge",
+    "/api/auth/passkey/login/options",  # RES-3: a passkey is its own credential
+    "/api/v1/auth/passkey/login/options",
+    "/api/auth/passkey/login",
+    "/api/v1/auth/passkey/login",
     "/api/auth/users-list",
     "/api/v1/auth/users-list",
     "/api/health",
@@ -468,6 +472,10 @@ _MFA_SETUP_ALLOWED = _PASSWORD_CHANGE_ALLOWED | {
     ("GET", "/api/auth/mfa/status"),
     ("POST", "/api/auth/mfa/setup"),
     ("POST", "/api/auth/mfa/enable"),
+    # a passkey counts as the second step too (RES-3)
+    ("GET", "/api/auth/passkeys"),
+    ("POST", "/api/auth/passkeys/options"),
+    ("POST", "/api/auth/passkeys"),
 }
 
 

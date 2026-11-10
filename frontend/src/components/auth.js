@@ -10,6 +10,7 @@ import { escapeHtml } from '../utils.js';
 import { showToast } from '../toast.js';
 import { fetchCurrentProfile, getCurrentUser, setCurrentUser, promptRequiredMfa } from './session.js';
 import { openSetupWizard } from './setup-wizard-gate.js';
+import { passkeySignIn, passkeysAvailable } from '../passkeys.js';
 
 import { formatDate, formatTime } from '../format.js';
 let _pendingMfaToken = null;
@@ -165,6 +166,20 @@ export function initAuth() {
       _pendingMfaToken = null;
       document.getElementById('login-step-credentials').style.display = 'block';
       document.getElementById('login-step-mfa').style.display = 'none';
+    });
+  }
+
+  // RES-3: passkeys, on their own or as the second step
+  const passkeyBtn = document.getElementById('login-passkey-btn');
+  if (passkeyBtn && passkeysAvailable()) {
+    passkeyBtn.hidden = false;
+    passkeyBtn.addEventListener('click', () => signInWithPasskey(''));
+  }
+  const usePasskey = document.getElementById('mfa-use-passkey');
+  if (usePasskey) {
+    usePasskey.addEventListener('click', (e) => {
+      e.preventDefault();
+      signInWithPasskey(_pendingMfaToken || '');
     });
   }
 
@@ -398,38 +413,15 @@ async function doLogin() {
     if (res.ok && data.status === 'mfa_required' && data.mfa_token) {
       _pendingMfaToken = data.mfa_token;
       showMfaChallengeView(username);
+      showSecondStepChoices(data);
       if (loginBtn) loginBtn.textContent = t('login.btn', 'Sign in');
       return;
     }
 
     if (res.ok && (data.status === 'ok' || data.token)) {
-      if (data.token) auth.setToken(data.token);
-      if (data.user) setCurrentUser(data.user);
-
-      document.documentElement.classList.remove('auth-required');
-      document.documentElement.classList.add('has-auth-session');
-      if (dock) dock.style.display = '';
-
-      if (overlay) {
-        overlay.style.transition = 'opacity 0.25s ease';
-        overlay.style.opacity = '0';
-        setTimeout(() => {
-          overlay.style.display = 'none';
-          overlay.style.opacity = '1';
-        }, 250);
-      }
-
       if (loginBtn) loginBtn.textContent = t('login.btn', 'Sign in');
       loginPwd.value = '';
-      ZettEventBus.emit('auth:login');
-
-      if (data.must_change_password || data.is_default_password || data.user?.must_change_password) {
-        setTimeout(() => {
-          openSetupWizard(null, false);
-        }, 350);
-      } else if (data.mfa_setup_required) {
-        setTimeout(() => promptRequiredMfa(data), 350);
-      }
+      finishSignIn(data);
     } else {
       // The message stays on screen and is announced (role="alert") until the next attempt.
       let msg = res.status === 401
@@ -446,6 +438,62 @@ async function doLogin() {
     _showLoginError(t('login.error_network', "Couldn't reach Kiboto. Check the connection and try again."));
     if (loginBtn) loginBtn.textContent = t('login.btn', 'Sign in');
   }
+}
+
+/** After a good sign-in (password, code or passkey): keep the session, show the desktop, and open
+ * the setup wizard or the two-step setup when the account needs it. */
+export function finishSignIn(data) {
+  const overlay = document.getElementById('login-overlay');
+  const dock = document.getElementById('os-dock-container');
+  if (data.token) auth.setToken(data.token);
+  if (data.user) setCurrentUser(data.user);
+  document.documentElement.classList.remove('auth-required');
+  document.documentElement.classList.add('has-auth-session');
+  if (dock) dock.style.display = '';
+  if (overlay) {
+    overlay.style.transition = 'opacity 0.25s ease';
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      overlay.style.opacity = '1';
+    }, 250);
+  }
+  ZettEventBus.emit('auth:login');
+  if (data.must_change_password || data.is_default_password || data.user?.must_change_password) {
+    setTimeout(() => openSetupWizard(null, false), 350);
+  } else if (data.mfa_setup_required) {
+    setTimeout(() => promptRequiredMfa(data), 350);
+  }
+}
+
+/** Signs in with a passkey (RES-3): alone, or as the second step with the password step's token. */
+export async function signInWithPasskey(mfaToken = '') {
+  const remember = /** @type {HTMLInputElement | null} */ (document.getElementById('login-remember-me'));
+  _showLoginError('');
+  try {
+    const data = await passkeySignIn({ mfaToken, rememberMe: remember ? remember.checked : true });
+    _pendingMfaToken = null;
+    finishSignIn(data);
+    return true;
+  } catch (err) {
+    const e = /** @type {any} */ (err);
+    if (e && e.name === 'NotAllowedError') return false; // the person closed the browser's passkey window
+    const msg = (e && e.message) || String(e);
+    if (mfaToken) showToast(msg, 'error');
+    else _showLoginError(msg);
+    return false;
+  }
+}
+
+/** The second step: offer the passkey when the account has one, and the code only when it has that. */
+export function showSecondStepChoices(data, available = passkeysAvailable()) {
+  const use = document.getElementById('mfa-use-passkey');
+  if (use) use.hidden = !(data.passkey && available);
+  const form = document.getElementById('form-mfa-challenge');
+  const recovery = document.getElementById('mfa-toggle-recovery');
+  const codeOff = data.code === false;
+  if (form) form.hidden = codeOff;
+  if (recovery) recovery.hidden = codeOff;
 }
 
 function showMfaChallengeView(username) {

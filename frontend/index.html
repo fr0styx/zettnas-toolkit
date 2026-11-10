@@ -327,6 +327,7 @@
 
       <button type="button" id="login-btn" class="suite-toolkit-btn lgn-fs14-bold" data-i18n="login.btn">Sign in</button>
       <button type="button" id="login-sso-btn" class="suite-toolkit-btn login-sso-btn" hidden data-i18n="signin.sso">Sign in with SSO</button>
+      <button type="button" id="login-passkey-btn" class="suite-toolkit-btn login-sso-btn" hidden data-i18n="signin.passkey">Sign in with a passkey</button>
       <p id="login-error" class="login-sso-error" role="alert" hidden></p>
       <p id="login-sso-error" class="login-sso-error" role="alert" hidden></p>
 
@@ -351,6 +352,7 @@
       </form>
 
       <div class="lgn-col-xs">
+        <a class="lgn-accent" href="#" id="mfa-use-passkey" hidden data-i18n="signin.use_passkey">Use a passkey</a>
         <a class="lgn-accent" href="#" id="mfa-toggle-recovery" data-i18n="ui.use_8_character_recovery_code">Use 8-character recovery code</a>
         <a class="lgn-muted" href="#" id="mfa-back-btn" data-i18n="signin.back_to_password">← Back to the password</a>
       </div>

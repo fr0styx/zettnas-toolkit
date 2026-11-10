@@ -35,6 +35,7 @@ from backend.api.notifications import router as notifications_router
 from backend.api.offsite import router as offsite_router  # noqa: E402
 from backend.api.oidc import ldap_router
 from backend.api.oidc import router as oidc_router
+from backend.api.passkeys import router as passkeys_router  # noqa: E402
 from backend.api.photo_import import router as photo_import_router
 from backend.api.protection import router as protection_router
 from backend.api.public_links import router as public_links_router
@@ -62,6 +63,7 @@ api_router.include_router(setup_router)
 api_router.include_router(snapshots_router)
 api_router.include_router(file_versions_router)
 api_router.include_router(offsite_router)
+api_router.include_router(passkeys_router)
 api_router.include_router(invites_router)
 api_router.include_router(immich_router)
 api_router.include_router(auth_router)

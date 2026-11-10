@@ -60,7 +60,11 @@ def account_needs_setup(user: dict[str, Any] | None) -> bool:
         return False
     if user.get("idp_type") == "oidc" and not user.get("password_hash"):
         return False
-    return not bool(user.get("mfa_enabled"))
+    if user.get("mfa_enabled"):
+        return False
+    from backend.services import passkeys
+
+    return not passkeys.has_passkeys(user["id"])  # a passkey is a second step too (RES-3)
 
 
 def setup_pending(sess: dict[str, Any] | None, lookup: Callable[[str], dict[str, Any] | None]) -> bool:

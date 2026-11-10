@@ -560,8 +560,11 @@ async def login(req: LoginRequest, request: Request):
         except Exception as e:
             logger.warning(f"Failed to upgrade password hash for '{target_username}': {e}")
 
-    # 5. Check Multi-Factor Authentication (MFA / 2FA)
-    if bool(user.get("mfa_enabled")):
+    # 5. Check Multi-Factor Authentication (MFA / 2FA): a code, or a passkey as the second step (RES-3)
+    from backend.services import passkeys
+
+    has_passkey = await run_in_threadpool(passkeys.has_passkeys, user["id"])
+    if bool(user.get("mfa_enabled")) or has_passkey:
         # If user passed MFA code or recovery code directly with credentials
         if req.mfa_code or req.recovery_code:
             user_mfa = get_user_mfa(user["id"])
@@ -594,6 +597,8 @@ async def login(req: LoginRequest, request: Request):
             content={
                 "status": "mfa_required",
                 "mfa_token": mfa_tok,
+                "code": bool(user.get("mfa_enabled")),
+                "passkey": has_passkey,
                 "user_id": user["id"],
                 "username": user["username"],
             }

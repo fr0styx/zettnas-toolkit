@@ -103,6 +103,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   is never offered, nor its helpers or anything on its port; apps that control the server are marked
   and warned about. Turning one on is confirmed and written to the security log, like taking it off.
 
+#### Security
+
+- **Passkeys**: sign in with your phone, your laptop's fingerprint or face, or a security key. Add them in
+  Users → Two-step sign-in → Passkeys. On the sign-in page, "Sign in with a passkey" needs no name or
+  password; after a password, a passkey works as the second step, and it counts for roles that require
+  two-step sign-in. Passkeys work on Kiboto's address with a name over https (such as its Tailscale
+  address), not at an IP address; the card says so when they can't. How it works: docs/PASSKEYS.md.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 
