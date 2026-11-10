@@ -41,6 +41,19 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   go unavailable if updates stop rather than showing an old value. The broker password is stored
   encrypted. How to set it up: docs/HOME_ASSISTANT.md.
 
+#### Backup
+
+- **Bring a whole box back from its recovery kit**: each off-site backup run now also stores a copy of
+  Kiboto's settings (people, passwords, shares, apps, VM definitions, the backups and their keys),
+  encrypted with the backup's recovery key. On new hardware the kit alone is enough: the setup wizard's
+  first step has "Restore from a recovery kit" (choose a password for now, then paste the kit), and
+  Backup → Off-site has "Connect from a recovery kit". Kiboto reads the backup without writing to it,
+  brings the settings back and restarts to apply them; then "Bring back everything" puts every folder
+  back where it was, leaving files that are already there as they are, so it can run again if it stops.
+- **Settings backups leave out thumbnails and caches**: a settings backup used to include the
+  thumbnail and video-preview caches, which on a box with many photos made it larger than a restore
+  accepts (256 MB). They rebuild by themselves and are now left out, as is restic's cache.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

@@ -280,6 +280,13 @@ export function initSetupWizard() {
   }, true);
 
   const stepper = initWizardStepper(modal);
+  // RES-7: a temporary password first (the API answers nothing else until then), then the kit
+  let restoreAfter = false;
+  document.getElementById('setup-restore-box')?.addEventListener('click', () => {
+    restoreAfter = true;
+    showRestoreNote();
+    stepper.show(2);
+  });
 
   if (btnSubmit) {
     btnSubmit.addEventListener('click', async () => {
@@ -367,7 +374,8 @@ export function initSetupWizard() {
         if (warnEl) warnEl.style.display = 'none';
 
         showToast(t('setup.success_toast', 'Setup completed! Your new administrator password is now active.'), 'success');
-        if (typeof window.openGettingStarted === 'function') window.openGettingStarted();
+        if (restoreAfter) openRestoreAfterSetup();
+        else if (typeof window.openGettingStarted === 'function') window.openGettingStarted();
       } catch (err) {
         setErr(err.message || 'Failed to update password. Check current password.');
         stepper.show(2);
@@ -377,6 +385,17 @@ export function initSetupWizard() {
       }
     });
   }
+}
+
+/** RES-7: says on the password step that the restore brings the old password back. */
+export function showRestoreNote() {
+  const note = document.getElementById('setup-restore-note');
+  if (note) note.hidden = false;
+}
+
+/** RES-7: once setup has saved the password, the restore opens. */
+export function openRestoreAfterSetup() {
+  return import('./restore-box.js').then((m) => m.openRestoreBox());
 }
 
 /** Saves the optional steps; each one that fails says so and the rest still happen. */

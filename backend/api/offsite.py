@@ -4,11 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.confirmations import require_confirmation
+from backend.services import box_restore
 from backend.services import offsite_backup as ob
 
 router = APIRouter(tags=["Offsite backup"])
 READ = Depends(require_scope("backup:read", "backup:manage", "system:config"))
 MANAGE = Depends(require_scope("backup:manage", "system:config"))
+ADMIN = Depends(require_scope("*"))  # a whole-box restore replaces people and settings
 
 
 class RepoIn(BaseModel):
@@ -21,6 +24,14 @@ class RepoIn(BaseModel):
     rest_user: str = Field(default="", max_length=64)
     rest_password: str = Field(default="", max_length=256)
     lock_days: int = Field(default=0, ge=0, le=3650, description="Object Lock period of the bucket, in days (FEAT-03)")
+
+
+class KitIn(BaseModel):
+    kit: str = Field(min_length=20, max_length=65536, description="The recovery kit text (RES-7)")
+
+
+class VersionIn(BaseModel):
+    snapshot: str = Field(default="latest", min_length=1, max_length=64)
 
 
 class RestoreIn(BaseModel):
@@ -146,3 +157,37 @@ def restore(
     """Starts the restore as a job (REL-16); never over the live files."""
     owner = principal.username if principal else None
     return _errors(ob.start_restore, repo_id, snapshot_id, req.path, req.target, owner=owner)
+
+
+@router.post("/offsite/connect-kit", dependencies=[ADMIN])
+def connect_kit(req: KitIn):
+    """Adds the backup a recovery kit describes, without a schedule, and lists its versions and
+    settings copies (RES-7). The backup is only read."""
+    return _errors(box_restore.connect, req.kit)
+
+
+@router.get("/offsite/repos/{repo_id}/settings-copies", dependencies=[READ])
+def settings_copies(repo_id: str):
+    """The copies of Kiboto's settings stored with this backup, newest first (RES-7)."""
+    return {"copies": _errors(ob.settings_copies, repo_id)}
+
+
+@router.post(
+    "/offsite/repos/{repo_id}/restore-settings",
+    dependencies=[ADMIN, Depends(require_confirmation("system.restore"))],
+)
+def restore_settings(repo_id: str, req: VersionIn):
+    """Brings back a settings copy from this backup; Kiboto restarts to apply it when Docker
+    starts it again by itself (RES-7)."""
+    return _errors(box_restore.restore_settings, repo_id, req.snapshot)
+
+
+@router.post(
+    "/offsite/repos/{repo_id}/restore-all",
+    dependencies=[ADMIN, Depends(require_confirmation("offsite.restore_all"))],
+)
+def restore_all(repo_id: str, req: VersionIn, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Puts every folder of a backup version back where it was, as a job; files already there
+    stay as they are (RES-7)."""
+    owner = principal.username if principal else None
+    return _errors(box_restore.start_files_restore, repo_id, req.snapshot, owner=owner)

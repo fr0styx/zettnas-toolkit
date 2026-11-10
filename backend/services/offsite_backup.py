@@ -24,6 +24,7 @@ from typing import Any
 from backend import config
 from backend.config import DATA_DIR, RCLONE_CONFIG_FILE, logger
 from backend.fsutil import atomic_write_json, atomic_write_text, read_json, resolve_within
+from backend.legacy_names import OLD_BACKUP_TAG as FILE_TAG
 from backend.services import object_lock
 
 REPOS_FILE = os.path.join(DATA_DIR, "offsite_repos.json")
@@ -482,7 +483,8 @@ def recovery_kit(repo_id: str) -> str:
         f"  {step + 1}. See the versions: restic -r '{loc}' snapshots",
         f"  {step + 2}. Restore the newest: restic -r '{loc}' restore latest --target ./restored",
         "",
-        "To restore the whole server on new hardware, see 'Recover on new hardware' in BACKUP_GUIDE.md.",
+        "To bring back the whole server on new hardware: install Kiboto, choose 'Restore from a recovery kit'",
+        "in the setup wizard and paste this kit ('Recover on new hardware' in BACKUP_GUIDE.md).",
     ]
     if rclone_conf:
         lines += ["", "----- rclone.conf -----", rclone_conf, "-----------------------"]
@@ -555,12 +557,13 @@ def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str,
     try:
         from backend.services import backup_hooks
 
+        started = time.time()
         job_manager.update(job.id, detail="Writing database dumps")
         dumps = backup_hooks.run_dumps(repo["paths"])  # a consistent copy of each database (REL-20)
         _unlock(repo)
         code, _out = _run(
             repo,
-            ["backup", "--json", "--host", host_id(), "--tag", "zettnas", "--exclude", ".RecycleBin", *repo["paths"]],
+            ["backup", "--json", "--host", host_id(), "--tag", FILE_TAG, "--exclude", ".RecycleBin", *repo["paths"]],
             track=True,
             ok=(0, WARN_EXIT),
             on_line=line,
@@ -574,6 +577,10 @@ def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str,
             logger.warning("[Offsite] %s: writes are frozen, old versions are kept", repo["name"])
         else:
             _forget(repo, k)
+        job_manager.update(job.id, detail="Storing a copy of the settings")
+        # RES-7: the kit alone brings a whole box back. Dated at the start of this run, so the
+        # files stay the newest version for kits that say plain `restore latest`.
+        settings_copy = backup_settings(repo, at=started)
         result = {
             "snapshot": summary.get("snapshot_id", "")[:8],
             "files_new": summary.get("files_new", 0),
@@ -582,6 +589,7 @@ def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str,
             "unreadable": count[0],
             "unreadable_files": unreadable,
             "dumps": dumps,
+            "settings_copy": settings_copy,
         }
         _update(
             repo_id, last_backup=time.time(), last_result="ok", last_unreadable=count[0], unreadable_files=unreadable
@@ -673,7 +681,7 @@ def cancel(repo_id: str) -> bool:
 
 def snapshots(repo_id: str) -> list[dict[str, Any]]:
     repo = get_repo(repo_id)
-    out = run_restic(repo, ["snapshots", "--json"], timeout=600)
+    out = run_restic(repo, ["snapshots", "--json", "--tag", FILE_TAG], timeout=600)  # not the settings copies
     snaps = json.loads(out or "[]")
     return [
         {
@@ -860,14 +868,18 @@ def drill(repo_id: str) -> dict[str, Any]:
     import tempfile
 
     repo = get_repo(repo_id)
-    out = run_restic(repo, ["ls", "--json", "latest"], timeout=900)
+    out = run_restic(repo, ["ls", "--json", "latest", "--tag", FILE_TAG], timeout=900)
     pick = _pick_file(out)
     if not pick:
         _update(repo_id, last_drill=time.time(), last_drill_result="no file small enough to test")
         return {"ok": False, "reason": "no file small enough to test"}
     scratch = tempfile.mkdtemp(prefix="kiboto-drill-")
     try:
-        run_restic(repo, ["restore", "latest", "--target", scratch, "--include", pick["path"]], timeout=1800)
+        run_restic(
+            repo,
+            ["restore", "latest", "--tag", FILE_TAG, "--target", scratch, "--include", pick["path"]],
+            timeout=1800,
+        )
         restored = os.path.join(scratch, pick["path"].lstrip("/"))
         ok = os.path.isfile(restored) and os.path.getsize(restored) == int(pick["size"])
         digest = _sha256(restored) if ok else ""
@@ -959,3 +971,83 @@ def _safe(fn: Any, repo_or_id: Any, *args: Any, **kwargs: Any) -> None:
             )
         except Exception:
             logger.debug("offsite: notification failed", exc_info=True)
+
+
+# ---- the settings copy that rides along with each backup (RES-7, box_restore) ----
+
+SETTINGS_TAG = "kiboto-settings"
+SETTINGS_DIR = os.path.join(DATA_DIR, "backups", "offsite-settings")  # "backups" is never exported
+SETTINGS_FILE = "kiboto-settings.zettbak"
+KEEP_SETTINGS = 30
+
+
+def backup_settings(repo: dict[str, Any], at: float | None = None) -> str | None:
+    """After a backup run: stores Kiboto's settings, encrypted with the recovery key, as their own
+    snapshot, and keeps the newest KEEP_SETTINGS of them. Returns the snapshot id, or None when it
+    could not be made (the backup itself still counts). `at` dates the snapshot (a second before
+    it), so a file backup started at that time stays the newest version."""
+    from backend.services.backup_engine import generate_backup_zip_stream
+
+    try:
+        key = recovery_key(repo["id"])
+        folder = os.path.join(SETTINGS_DIR, repo["id"])
+        os.makedirs(folder, mode=0o700, exist_ok=True)
+        stream = generate_backup_zip_stream(passphrase=key)
+        try:
+            data = stream.read()
+        finally:
+            stream.close()
+        path = os.path.join(folder, SETTINGS_FILE)
+        tmp = path + ".part"
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+        os.replace(tmp, path)
+        out = run_restic(
+            repo,
+            ["backup", "--json", "--host", host_id(), "--tag", SETTINGS_TAG, *_dated(at), folder],
+            timeout=1800,
+        )
+        snap = ""
+        for line in out.splitlines():
+            if '"summary"' in line:
+                snap = (_message(line).get("snapshot_id") or "")[:8]
+        _forget_settings(repo)
+        return snap or None
+    except (OSError, ValueError, RuntimeError, ResticError) as e:  # never fail the backup over its settings copy
+        logger.warning("[Offsite] %s: the settings copy was not stored: %s", repo.get("name"), e)
+        return None
+
+
+def _dated(at: float | None) -> list[str]:
+    if at is None:
+        return []
+    return ["--time", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(at - 1))]
+
+
+def _forget_settings(repo: dict[str, Any]) -> None:
+    from backend.services.ransomware_guard import get_guard
+
+    if repo.get("append_only") or get_guard().frozen:  # during an attack nothing is pruned (REL-9)
+        return
+    lock = int(repo.get("lock_days") or 0)
+    within = ["--keep-within", f"{lock}d"] if lock else []
+    try:
+        run_restic(repo, ["forget", "--tag", SETTINGS_TAG, "--keep-last", str(KEEP_SETTINGS), *within], timeout=900)
+    except ResticError as e:
+        if "(403)" not in str(e):
+            raise
+
+
+def settings_copies(repo_id: str) -> list[dict[str, Any]]:
+    """The settings copies in a backup, newest first."""
+    repo = get_repo(repo_id)
+    out = run_restic(repo, ["snapshots", "--json", "--tag", SETTINGS_TAG], timeout=600)
+    try:
+        snaps = json.loads(out or "[]")
+    except ValueError:
+        return []
+    return [
+        {"id": s.get("short_id") or s["id"][:8], "time": s.get("time"), "paths": s.get("paths", [])}
+        for s in sorted(snaps, key=lambda s: s.get("time", ""), reverse=True)
+    ]

@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-675 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+679 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -453,6 +453,7 @@ request and response schemas.
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/offsite` | any of `backup:read`, `backup:manage`, `system:config` | Overview |
+| `POST` | `/api/v1/offsite/connect-kit` | `*` | Adds the backup a recovery kit describes, without a schedule, and lists its versions and settings copies (RES-7) |
 | `GET` | `/api/v1/offsite/destinations` | any of `backup:manage`, `system:config` | Where a new backup could go: USB disks, other NASes mounted here, cloud remotes (FEAT-01) |
 | `GET` | `/api/v1/offsite/lock-presets` | any of `backup:read`, `backup:manage`, `system:config` | Cloud services that can lock a copy, with the steps to set a bucket up (FEAT-03) |
 | `PUT` | `/api/v1/offsite/repos` | any of `backup:manage`, `system:config` | Put Repo |
@@ -464,6 +465,9 @@ request and response schemas.
 | `GET` | `/api/v1/offsite/repos/{repo_id}/kit` | any of `backup:manage`, `system:config` | The full recovery kit (REL-17): key, location, cloud settings and restore commands |
 | `POST` | `/api/v1/offsite/repos/{repo_id}/kit-saved` | any of `backup:manage`, `system:config` | Kit Saved |
 | `POST` | `/api/v1/offsite/repos/{repo_id}/lock-check` | any of `backup:manage`, `system:config` | Reads the bucket's Object Lock settings from the provider; nothing is written there |
+| `POST` | `/api/v1/offsite/repos/{repo_id}/restore-all` | `*` | Puts every folder of a backup version back where it was, as a job; files already there stay as they are (RES-7) |
+| `POST` | `/api/v1/offsite/repos/{repo_id}/restore-settings` | `*` | Brings back a settings copy from this backup; Kiboto restarts to apply it when Docker starts it again by itself (RES-7) |
+| `GET` | `/api/v1/offsite/repos/{repo_id}/settings-copies` | any of `backup:read`, `backup:manage`, `system:config` | The copies of Kiboto's settings stored with this backup, newest first (RES-7) |
 | `GET` | `/api/v1/offsite/repos/{repo_id}/snapshots` | any of `backup:read`, `backup:manage`, `system:config` | List Versions |
 | `GET` | `/api/v1/offsite/repos/{repo_id}/snapshots/{snapshot_id}/browse` | any of `backup:read`, `backup:manage`, `system:config` | Browse |
 | `POST` | `/api/v1/offsite/repos/{repo_id}/snapshots/{snapshot_id}/restore` | any of `backup:manage`, `system:config` | Starts the restore as a job (REL-16); never over the live files |

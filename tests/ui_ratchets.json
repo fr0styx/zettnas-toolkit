@@ -287,6 +287,12 @@
   "styles": 0,
   "templates": 1
  },
+ "frontend/src/components/restore-box.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 0,
+  "templates": 2
+ },
  "frontend/src/components/screensaver.js": {
   "buttons": 0,
   "globals": 6,

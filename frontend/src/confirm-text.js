@@ -18,6 +18,7 @@ const ACTIONS = {
   'vm.delete': ['Delete the VM', 'Delete the virtual machine {target}?', true],
   'backup.delete': ['Delete the backup', 'Delete the backup {target}?', true],
   'system.restore': ['Restore settings', 'Restore the system settings from a backup? They replace the current ones.', true],
+  'offsite.restore_all': ['Bring back the files', 'Put every folder of backup {target} back where it was? Files that are already there stay as they are.', false],
   'system.reboot': ['Restart the server', 'Restart the server now?', false],
   'system.shutdown': ['Shut down', 'Shut down the server now?', false],
   'updates.apply': ['Update now', 'Update Kiboto and restart it?', false],

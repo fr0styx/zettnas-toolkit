@@ -49,6 +49,7 @@ OLD_NAME_CONTAINER = "zettnas-name"  # the name responder's container before the
 OLD_PART_SUFFIX = ".zettnas-part"  # a half-copied file left by a transfer before the rebrand: swept
 OLD_STAGE_INFIX = ".zettnas-stage-"  # a move's staging folder from before the rebrand: swept
 OLD_METRIC_PREFIX = "zettnas_"  # /api/metrics repeats every kiboto_ series under this prefix
+OLD_BACKUP_TAG = "zettnas"  # the restic tag on every off-site file backup: existing ones carry it, so it stays
 OLD_LOG_FILE = "zettnas.log"  # the log file and its rotations carry on under the new name
 
 

@@ -6,6 +6,7 @@ import { escapeHtml, copyTextToClipboard } from '../utils.js';
 import { t } from '../i18n.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { formatBytes, formatDateTime } from '../format.js';
+import { openRestoreBox } from './restore-box.js';
 
 const when = (ts) => (ts ? formatDateTime(ts * 1000) : t('offsite.never', 'never'));
 
@@ -37,6 +38,7 @@ export function reposHtml(data) {
         <button type="button" class="btn-pill-toggle is-small" data-off="check" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.verify', 'Verify'))}</button>
         ${r.lock_days ? `<button type="button" class="btn-pill-toggle is-small" data-off="lockcheck" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.lock_check', 'Check the lock'))}</button>` : ''}
         <button type="button" class="btn-pill-toggle is-small" data-off="kit" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.kit', 'Recovery kit'))}</button>
+        <button type="button" class="btn-pill-toggle is-small" data-off="everything" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.restore_everything', 'Bring back everything'))}</button>
         <button type="button" class="btn-pill-toggle is-small is-danger" data-off="forget" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.forget', 'Forget'))}</button>
       </div>
     </li>`,
@@ -205,7 +207,7 @@ export async function renderOffsite(mount) {
     mount.textContent = e.message || String(e);
     return;
   }
-  mount.innerHTML = reposHtml(data) + (data.available ? formHtml(shares) + usbSettingsHtml(usb && usb.settings) : '');
+  mount.innerHTML = reposHtml(data) + (data.available ? connectKitHtml() + formHtml(shares) + usbSettingsHtml(usb && usb.settings) : '');
   mount.querySelector('[data-off-usb]')?.addEventListener('change', async (e) => {
     const box = /** @type {HTMLInputElement} */ (e.target);
     const key = box.name === 'usb_auto_backup' ? 'auto_backup' : 'offer';
@@ -277,6 +279,12 @@ export async function renderOffsite(mount) {
           renderOffsite(mount);
         });
         return;
+      } else if (act === 'connect') {
+        openRestoreBox(null, () => renderOffsite(mount)); // RES-7
+        return;
+      } else if (act === 'everything') {
+        openRestoreBox(b.dataset.id);
+        return;
       } else if (act === 'versions') {
         openVersions(b.dataset.id);
         return;
@@ -286,6 +294,12 @@ export async function renderOffsite(mount) {
       showToast(err.message || String(err), 'error');
     }
   };
+}
+
+/** RES-7: a backup made by another (or a lost) Kiboto, added from its recovery kit. */
+export function connectKitHtml() {
+  return `<p class="offsite-connect">${escapeHtml(t('offsite.connect_kit_help', 'Moving to new hardware? Add the backup of your old Kiboto from its recovery kit.'))}
+    <button type="button" class="btn-pill-toggle is-small" data-off="connect">${escapeHtml(t('offsite.connect_kit', 'Connect from a recovery kit'))}</button></p>`;
 }
 
 export function versionsHtml(versions) {

@@ -187,25 +187,37 @@ To recover on a new install: install Kiboto with the same `KIBOTO_DATA_KEY` (if 
 
 ## Recover on new hardware
 
-When the NAS itself is gone (stolen, burnt, or the motherboard died), you need two things kept
-somewhere else: the **recovery kit** of your off-site backup and, if you made one, the
-**settings backup** with its passphrase.
+When the NAS itself is gone (stolen, burnt, or the motherboard died), the **recovery kit** of your
+off-site backup is enough. Each backup run also stores a copy of Kiboto's settings (people and their
+passwords, shares and permissions, apps, VM definitions, the backups themselves and their keys),
+encrypted with the backup's recovery key.
 
-1. **Get your files back first, on any computer.** The recovery kit (Backup → Off-site →
-   *Recovery kit*) is a text file with the key, where the backup is, the cloud settings it needs
-   and the exact commands. With [restic](https://restic.net) installed:
-   ```bash
-   export RESTIC_PASSWORD='<the key from the kit>'
-   restic -r '<the location from the kit>' snapshots
-   restic -r '<the location from the kit>' restore latest --target ./restored
-   ```
-   For a cloud location, save the kit's `rclone.conf` part to a file, install
-   [rclone](https://rclone.org) and run `export RCLONE_CONFIG=./rclone.conf` first.
-2. **Install Kiboto on the new hardware** and create the pool and shares.
-3. **Bring the settings back** with *Upload & Restore Archive* (above), using the newest
-   settings backup and its passphrase: people, shares and permissions return.
-4. **Copy the restored files into the shares**, or point the off-site backup at the same
-   location again (same name and key) and use *Versions → Restore*.
+1. **Install Kiboto on the new hardware** and create the pool (on Unraid: the array and the shares).
+2. **In the setup wizard's first step, choose *Restore from a recovery kit*.** Choose a password for
+   now (Kiboto answers nothing else until the first-run password is replaced), then paste the kit or
+   pick the saved file. Kiboto connects the backup without writing to it and shows when the settings
+   and the files were saved. On a Kiboto that is already set up, the same is in Backup → Off-site →
+   *Connect from a recovery kit*.
+3. **Bring back the settings.** Kiboto checks them, restarts to apply them (when Docker restarts it by
+   itself, as the compose file and the Unraid template set up; otherwise restart the container) and
+   asks you to sign in with your **old** password.
+4. **Bring back the files**: Backup → Off-site → *Bring back everything* puts every backed-up folder back
+   where it was. Files that are already there stay as they are, so it can run again if it stops. It
+   shows in Jobs.
+
+A backup made before Kiboto 2.0 has no copy of the settings: use the newest settings backup and its
+passphrase with *Upload & Restore Archive* (above) instead, then step 4.
+
+Without a working Kiboto at all, the files still come back on any computer. The kit is a text file
+with the key, where the backup is, the cloud settings it needs and the exact commands. With
+[restic](https://restic.net) installed:
+```bash
+export RESTIC_PASSWORD='<the key from the kit>'
+restic -r '<the location from the kit>' snapshots
+restic -r '<the location from the kit>' restore latest --target ./restored
+```
+For a cloud location, save the kit's `rclone.conf` part to a file, install [rclone](https://rclone.org)
+and run `export RCLONE_CONFIG=./rclone.conf` first.
 
 The Overview shows "Recovery kit not saved" until each off-site backup's kit has been downloaded
 or copied, so nobody finds out on the bad day that the key was only on the NAS.

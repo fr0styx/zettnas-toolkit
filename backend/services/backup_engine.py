@@ -65,6 +65,8 @@ HEAVY_BACKUP_DIRS = {
     "tailscale",
     "taildrop",
     "vfs_cache",
+    "cache",  # thumbnails and video previews, rebuilt by themselves (hundreds of MB)
+    "restic_cache",
 }
 # VM folders hold disks; only their definitions and firmware/TPM state are exported.
 VM_DIR = "vms"

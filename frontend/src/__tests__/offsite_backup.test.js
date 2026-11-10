@@ -6,7 +6,7 @@ describe('offsite backup UI (Batch 6)', () => {
     document.body.innerHTML = reposHtml({ available: true, repos: [{ id: 'usb', name: 'USB disk', location: '/mnt/disks/usb', paths: ['/mnt/user/family'], keep: { daily: 7, weekly: 4, monthly: 12 }, last_backup: 0, last_check: 0, last_result: 'failed: disk full' }] });
     expect(document.body.textContent).toContain('keeps 7 daily, 4 weekly, 12 monthly');
     expect(document.body.textContent).toContain('failed: disk full');
-    expect(document.querySelectorAll('[data-off]').length).toBe(5);
+    expect(document.querySelectorAll('[data-off]').length).toBe(6); // RES-7 adds Bring back everything
   });
 
   it('says when restic is missing', () => {

@@ -1298,6 +1298,11 @@
         <div class="swz-xs-muted" data-i18n="setup.welcome_desc">Find any file by what is in it, and ask Kib about your files. The search runs on this server, and your files and their index stay here. No account, no subscription. First, set your password and name the server.</div>
       </div>
 
+      <div data-setup-step="1" class="setup-restore-offer">
+        <span class="swz-xs-muted" data-i18n="setup.restore_offer">Had a Kiboto before? Bring it back from the recovery kit of its off-site backup.</span>
+        <button type="button" class="btn-pill-toggle is-small" id="setup-restore-box" data-i18n="setup.restore_open">Restore from a recovery kit</button>
+      </div>
+
       <div data-setup-step="1">
         <div class="swz-xs-bold-muted" data-i18n="setup.step1_title">Your hardware</div>
         <div class="smart-meta-grid swz-x-3">
@@ -1317,6 +1322,7 @@
       <div data-setup-step="2">
         <div class="swz-xs-bold-muted" data-i18n="setup.step2_title">Choose your password</div>
         <div class="swz-xs-soft" data-i18n="setup.step2_desc">The default or first-time password is still active. Replace it with your own password (minimum 8 characters).</div>
+        <div class="swz-xs-soft setup-restore-note" id="setup-restore-note" hidden data-i18n="setup.restore_note">Choose a password for now. The restore brings back your people and their old passwords.</div>
 
         <div class="swz-col">
           <div>

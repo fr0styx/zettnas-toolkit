@@ -23644,6 +23644,22 @@
     "title": "KeyIn",
     "type": "object"
    },
+   "KitIn": {
+    "properties": {
+     "kit": {
+      "description": "The recovery kit text (RES-7)",
+      "maxLength": 65536,
+      "minLength": 20,
+      "title": "Kit",
+      "type": "string"
+     }
+    },
+    "required": [
+     "kit"
+    ],
+    "title": "KitIn",
+    "type": "object"
+   },
    "KitSavedResponse": {
     "additionalProperties": true,
     "description": "POST /offsite/repos/{repo_id}/kit-saved",
@@ -41044,6 +41060,19 @@
      }
     },
     "title": "UserUpdateRequest",
+    "type": "object"
+   },
+   "VersionIn": {
+    "properties": {
+     "snapshot": {
+      "default": "latest",
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Snapshot",
+      "type": "string"
+     }
+    },
+    "title": "VersionIn",
     "type": "object"
    },
    "VlanCreateRequest": {
@@ -60310,6 +60339,48 @@
     ]
    }
   },
+  "/api/v1/offsite/connect-kit": {
+   "post": {
+    "description": "Adds the backup a recovery kit describes, without a schedule, and lists its versions and\nsettings copies (RES-7). The backup is only read.",
+    "operationId": "connect_kit_api_v1_offsite_connect_kit_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/KitIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Connect Kit",
+    "tags": [
+     "Offsite backup"
+    ],
+    "x-required-scopes": [
+     "*"
+    ]
+   }
+  },
   "/api/v1/offsite/destinations": {
    "get": {
     "description": "Where a new backup could go: USB disks, other NASes mounted here, cloud remotes (FEAT-01).",
@@ -60808,6 +60879,166 @@
      "Offsite backup"
     ],
     "x-required-scopes": [
+     "backup:manage",
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/offsite/repos/{repo_id}/restore-all": {
+   "post": {
+    "description": "Puts every folder of a backup version back where it was, as a job; files already there\nstay as they are (RES-7).",
+    "operationId": "restore_all_api_v1_offsite_repos__repo_id__restore_all_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "repo_id",
+      "required": true,
+      "schema": {
+       "title": "Repo Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/VersionIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Restore All",
+    "tags": [
+     "Offsite backup"
+    ],
+    "x-required-scopes": [
+     "*"
+    ]
+   }
+  },
+  "/api/v1/offsite/repos/{repo_id}/restore-settings": {
+   "post": {
+    "description": "Brings back a settings copy from this backup; Kiboto restarts to apply it when Docker\nstarts it again by itself (RES-7).",
+    "operationId": "restore_settings_api_v1_offsite_repos__repo_id__restore_settings_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "repo_id",
+      "required": true,
+      "schema": {
+       "title": "Repo Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/VersionIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Restore Settings",
+    "tags": [
+     "Offsite backup"
+    ],
+    "x-required-scopes": [
+     "*"
+    ]
+   }
+  },
+  "/api/v1/offsite/repos/{repo_id}/settings-copies": {
+   "get": {
+    "description": "The copies of Kiboto's settings stored with this backup, newest first (RES-7).",
+    "operationId": "settings_copies_api_v1_offsite_repos__repo_id__settings_copies_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "repo_id",
+      "required": true,
+      "schema": {
+       "title": "Repo Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Settings Copies",
+    "tags": [
+     "Offsite backup"
+    ],
+    "x-required-scopes": [
+     "backup:read",
      "backup:manage",
      "system:config"
     ]
