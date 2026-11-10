@@ -35,6 +35,8 @@ const ACTIONS = {
   'security.advisor_fix': ['Apply the fix', 'Apply the Security Advisor fix "{target}"? People may lose access they had before.', false],
   'hardware.helper': ['Turn on the helper', 'Move the fan and button hardware access into {target}, a small container with no network that alone opens /dev/mem? The next update takes that access away from Kiboto itself.', false],
   'network.nas_name': ['Turn on', 'Let the NAS answer to {target} on the home network? A small helper on the host\'s network does it and only answers name lookups.', false],
+  'users.family_signin': ['Turn on family sign-in', 'Start Pocket ID in {target}, give it an https address in your tailnet and an account for each Kiboto user, so the family can sign in to apps with a passkey?', false],
+  'users.family_signin_app': ['Connect the app', 'Let the family sign in to {target} with Pocket ID? A client secret for it is shown once.', false],
   'fleet.pair': ['Pair the boxes', 'Pair with the Kiboto box at {target}? Each box then sees the other\'s name, version, free space and backups.', false],
   'fleet.offer_space': ['Give backup space', 'Let {target} back up to this box? Its backups are append-only and encrypted with its own key; they use space here.', false],
   'network.family_invite': ['Send an invite', 'Invite {target} to reach this NAS from anywhere through their own Tailscale account? They see only this NAS and still sign in to Kiboto.', false],

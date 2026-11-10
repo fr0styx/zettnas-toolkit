@@ -60,6 +60,8 @@ ACTIONS: dict[str, str] = {
     "pool.scrub_schedule": "Check pool {target} for errors once a month. Its disks spin up for the check",
     "security.advisor_fix": "Apply the Security Advisor fix '{target}'. People may lose access they had before",
     "network.public_links": "Let anyone who has a share link open it from the internet, through Tailscale Funnel on port {target}. Only share links are reachable that way; the rest of the NAS stays private",
+    "users.family_signin": "Start Pocket ID in {target}, give it an https address in your tailnet and an account for each Kiboto user, so the family can sign in to apps with a passkey",
+    "users.family_signin_app": "Let the family sign in to {target} with Pocket ID; a client secret for it is shown once",
     "fleet.pair": "Pair with the Kiboto box at {target}. Each box then sees the other's name, version, free space and backups",
     "fleet.offer_space": "Let {target} back up to this box. Its backups are append-only and encrypted with its own key; they use space here",
     "network.family_invite": "Invite {target} to reach this NAS from anywhere through their own Tailscale account. They see only this NAS and still sign in to Kiboto",

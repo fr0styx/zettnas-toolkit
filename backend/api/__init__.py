@@ -19,6 +19,7 @@ from backend.api.drives import router as drives_router
 from backend.api.encrypted_folders import router as encrypted_folders_router
 from backend.api.family_access import router as family_access_router
 from backend.api.family_filter import router as family_filter_router
+from backend.api.family_signin import router as family_signin_router
 from backend.api.fans import router as fans_router
 from backend.api.file_versions import router as file_versions_router  # noqa: E402
 from backend.api.fleet import router as fleet_router
@@ -106,6 +107,7 @@ api_router.include_router(nas_name_router)  # NFEAT-8
 api_router.include_router(public_links_router)  # NFEAT-2
 api_router.include_router(family_access_router)  # NFEAT-1
 api_router.include_router(fleet_router)  # RES-9
+api_router.include_router(family_signin_router)  # NFEAT-6
 api_router.include_router(home_assistant_router)  # RES-5
 api_router.include_router(hw_helper_router)
 api_router.include_router(sftp_router)
@@ -148,6 +150,7 @@ __all__ = [
     "public_links_router",
     "family_access_router",
     "fleet_router",
+    "family_signin_router",
     "home_assistant_router",
     "sftp_router",
     "vms_router",

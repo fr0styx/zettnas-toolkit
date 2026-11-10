@@ -162,6 +162,8 @@ export async function loadUsersPane(focusPart = 'users-pane-list') {
   if (ff) import('./family-filter.js').then((m) => m.renderFamilyFilter(ff)); // COMP-13
   const fc = document.getElementById('family-calendar-mount');
   if (fc) import('./family-calendar.js').then((m) => m.renderFamilyCalendar(fc)); // NFEAT-7
+  const fsm = document.getElementById('family-signin-mount');
+  if (fsm) import('./family-signin.js').then((m) => m.renderFamilySignin(fsm)); // NFEAT-6
   loadSessionsList();
   load2FAStatus();
   switchUsersSubtab(focusPart);

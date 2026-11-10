@@ -6769,6 +6769,19 @@
     "title": "EnableMfaResponse",
     "type": "object"
    },
+   "EnabledIn": {
+    "properties": {
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "enabled"
+    ],
+    "title": "EnabledIn",
+    "type": "object"
+   },
    "EraseRequest": {
     "properties": {
      "parts": {
@@ -52042,6 +52055,264 @@
     "summary": "Put Family Filter Person",
     "tags": [
      "Authentication & Security"
+    ],
+    "x-required-scopes": [
+     "users:write"
+    ]
+   }
+  },
+  "/api/v1/family-signin": {
+   "get": {
+    "description": "Whether Pocket ID runs, its address, how many people it knows and which apps can sign in with it.",
+    "operationId": "get_family_signin_api_v1_family_signin_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Family Signin Api V1 Family Signin Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Family Signin",
+    "tags": [
+     "Users"
+    ],
+    "x-required-scopes": [
+     "users:read"
+    ]
+   },
+   "put": {
+    "description": "Starts Pocket ID (confirmed first: 428 until then) or stops it; its data and passkeys stay.",
+    "operationId": "put_family_signin_api_v1_family_signin_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EnabledIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Family Signin Api V1 Family Signin Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Family Signin",
+    "tags": [
+     "Users"
+    ],
+    "x-required-scopes": [
+     "users:write"
+    ]
+   }
+  },
+  "/api/v1/family-signin/apps/{app}": {
+   "delete": {
+    "description": "Removes the app's client from Pocket ID; the app's own sign-in settings stay until changed there.",
+    "operationId": "delete_family_signin_app_api_v1_family_signin_apps__app__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "app",
+      "required": true,
+      "schema": {
+       "title": "App",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Delete Family Signin App Api V1 Family Signin Apps  App  Delete",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Delete Family Signin App",
+    "tags": [
+     "Users"
+    ],
+    "x-required-scopes": [
+     "users:write"
+    ]
+   },
+   "post": {
+    "description": "Lets the family sign in to that app with Pocket ID (confirmed first): the issuer, client ID and the\nsecret, shown this once, to paste into the app.",
+    "operationId": "post_family_signin_app_api_v1_family_signin_apps__app__post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "app",
+      "required": true,
+      "schema": {
+       "title": "App",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Family Signin App Api V1 Family Signin Apps  App  Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Family Signin App",
+    "tags": [
+     "Users"
+    ],
+    "x-required-scopes": [
+     "users:write"
+    ]
+   }
+  },
+  "/api/v1/family-signin/sync": {
+   "post": {
+    "description": "Brings Pocket ID's people in step with Kiboto's users now (it also happens on turning it on).",
+    "operationId": "post_family_signin_sync_api_v1_family_signin_sync_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Family Signin Sync Api V1 Family Signin Sync Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Post Family Signin Sync",
+    "tags": [
+     "Users"
+    ],
+    "x-required-scopes": [
+     "users:write"
+    ]
+   }
+  },
+  "/api/v1/family-signin/users/{user_id}/link": {
+   "post": {
+    "description": "A link that signs this person in to Pocket ID once (24 hours), so they can add a passkey.",
+    "operationId": "post_family_signin_link_api_v1_family_signin_users__user_id__link_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "user_id",
+      "required": true,
+      "schema": {
+       "title": "User Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Family Signin Link Api V1 Family Signin Users  User Id  Link Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Family Signin Link",
+    "tags": [
+     "Users"
     ],
     "x-required-scopes": [
      "users:write"

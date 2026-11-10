@@ -180,6 +180,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   notifications), the browser tab's icon, the mark in the top bar and the icon Unraid shows for the
   container are Kiboto's new logo instead of the old placeholder.
 
+#### Added
+
+- **One sign-in for the family's apps**: Users → One sign-in for the family's apps runs Pocket ID for you
+  (a passkey instead of a password per app). Kiboto gives every Kiboto user an account there and keeps
+  them in step, sends each person a one-time link to add a passkey, and connects Immich, Nextcloud,
+  Paperless-ngx, Audiobookshelf and Jellyfin: it makes the client with the right callback addresses and
+  shows what to paste into the app. Needs HTTPS in Use from anywhere. How it works: docs/FAMILY_SIGNIN.md.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-709 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+715 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -929,6 +929,17 @@ request and response schemas.
 | `POST` | `/api/v1/ups/self-test` | `system:config` | Issues 10-second battery self-test diagnostic command to the configured UPS |
 | `POST` | `/api/v1/ups/simulate` | `system:config` | Triggers simulated power outage drill for desktop UI testing |
 | `POST` | `/api/v1/ups/test-connection` | `system:config` | Validates connection to a UPS daemon without altering persistent configuration |
+
+### Users
+
+| Method | Path | Access | What it does |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/family-signin` | `users:read` | Whether Pocket ID runs, its address, how many people it knows and which apps can sign in with it |
+| `PUT` | `/api/v1/family-signin` | `users:write` | Starts Pocket ID (confirmed first: 428 until then) or stops it; its data and passkeys stay |
+| `DELETE` | `/api/v1/family-signin/apps/{app}` | `users:write` | Removes the app's client from Pocket ID; the app's own sign-in settings stay until changed there |
+| `POST` | `/api/v1/family-signin/apps/{app}` | `users:write` | Lets the family sign in to that app with Pocket ID (confirmed first): the issuer, client ID and the secret, shown this once, to paste int… |
+| `POST` | `/api/v1/family-signin/sync` | `users:write` | Brings Pocket ID's people in step with Kiboto's users now (it also happens on turning it on) |
+| `POST` | `/api/v1/family-signin/users/{user_id}/link` | `users:write` | A link that signs this person in to Pocket ID once (24 hours), so they can add a passkey |
 
 ### Virtual Machines
 

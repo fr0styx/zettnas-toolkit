@@ -90,6 +90,9 @@ def rotate_secret_key() -> dict[str, Any]:
     from backend.services.fleet import reseal as reseal_fleet
 
     resealed_backups += reseal_fleet()  # the tokens this box sends to paired boxes (RES-9)
+    from backend.services.family_signin import reseal as reseal_signin
+
+    resealed_backups += reseal_signin()  # Pocket ID's keys (NFEAT-6)
 
     os.remove(previous_key_file())
     result = {"rotated_at": time.time(), "mfa_secrets": resealed_mfa, "backup_passphrases": resealed_backups}
