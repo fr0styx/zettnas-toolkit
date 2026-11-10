@@ -53,9 +53,9 @@ export function renderNotificationConfigUI() {
   if (masterSwitch) masterSwitch.checked = !!cfg.enabled;
   if (masterBadge) {
     masterBadge.textContent = cfg.enabled ? t('notif.badge.active', 'Active') : t('notif.badge.disabled', 'Disabled');
-    masterBadge.style.background = cfg.enabled ? 'rgba(37,194,160,0.15)' : 'rgba(255,255,255,0.06)';
+    masterBadge.style.background = cfg.enabled ? 'rgba(51,205,184,0.15)' : 'rgba(255,255,255,0.06)';
     masterBadge.style.color = cfg.enabled ? 'var(--ok2)' : 'var(--muted)';
-    masterBadge.style.border = cfg.enabled ? '1px solid rgba(37,194,160,0.4)' : '1px solid rgba(255,255,255,0.1)';
+    masterBadge.style.border = cfg.enabled ? '1px solid rgba(51,205,184,0.4)' : '1px solid rgba(255,255,255,0.1)';
   }
 
   // Channel badges
@@ -63,9 +63,9 @@ export function renderNotificationConfigUI() {
     const b = document.getElementById(id);
     if (!b) return;
     b.textContent = active ? activeText : t('ntf.off', 'Off');
-    b.style.background = active ? 'rgba(37,194,160,0.15)' : 'rgba(255,255,255,0.06)';
+    b.style.background = active ? 'rgba(51,205,184,0.15)' : 'rgba(255,255,255,0.06)';
     b.style.color = active ? 'var(--ok2)' : 'var(--muted)';
-    b.style.border = active ? '1px solid rgba(37,194,160,0.4)' : '1px solid rgba(255,255,255,0.1)';
+    b.style.border = active ? '1px solid rgba(51,205,184,0.4)' : '1px solid rgba(255,255,255,0.1)';
   };
 
   updateBadge('notif-badge-discord', !!(cfg.discord_enabled && cfg.discord_webhook_url));

@@ -85,9 +85,9 @@
 }
 
 .screensaver-style-card.active {
-  border-color: var(--brand, #00f0ff) !important;
-  background: var(--lt-b-00f0ff14, rgba(0, 240, 255, 0.08)) !important;
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.15) !important;
+  border-color: var(--brand, #33cdb8) !important;
+  background: var(--lt-b-33cdb814, rgba(51, 205, 184, 0.08)) !important;
+  box-shadow: 0 0 16px rgba(51, 205, 184, 0.15) !important;
 }
 
 /* Custom Desktop Shortcuts & Modal Styles */
@@ -100,8 +100,8 @@
 }
 
 .chassis-hero-box.custom-desktop-shortcut:hover {
-  border-color: rgba(0, 240, 255, 0.55);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65), 0 0 16px rgba(0, 240, 255, 0.3);
+  border-color: rgba(51, 205, 184, 0.55);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65), 0 0 16px rgba(51, 205, 184, 0.3);
 }
 
 .chassis-hero-box.removing {
@@ -126,13 +126,13 @@
 
 .btn-emoji-chip:hover {
   transform: scale(1.12);
-  border-color: rgba(0, 240, 255, 0.5) !important;
-  background: var(--lt-b-00f0ff26, rgba(0, 240, 255, 0.15)) !important;
+  border-color: rgba(51, 205, 184, 0.5) !important;
+  background: var(--lt-b-33cdb826, rgba(51, 205, 184, 0.15)) !important;
 }
 
 .btn-emoji-chip.active {
-  border-color: #00f0ff !important;
-  background: var(--lt-b-00f0ff38, rgba(0, 240, 255, 0.22)) !important;
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+  border-color: #33cdb8 !important;
+  background: var(--lt-b-33cdb838, rgba(51, 205, 184, 0.22)) !important;
+  box-shadow: 0 0 10px rgba(51, 205, 184, 0.3);
 }
 

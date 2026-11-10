@@ -234,9 +234,9 @@ export async function fetchAndRenderSecurityPosture() {
     if (badge) {
       badge.textContent = t('sec.score_grade', 'Score: {score}/100 (grade {grade})', { score: data.score, grade: data.grade });
       if (data.score >= 90) {
-        badge.style.background = 'rgba(37,194,160,0.15)';
-        badge.style.color = 'var(--lt-t-25c2a0ff, #25c2a0)';
-        badge.style.borderColor = 'rgba(37,194,160,0.3)';
+        badge.style.background = 'rgba(51,205,184,0.15)';
+        badge.style.color = 'var(--lt-t-33cdb8ff, #33cdb8)';
+        badge.style.borderColor = 'rgba(51,205,184,0.3)';
       } else if (data.score >= 75) {
         badge.style.background = 'rgba(56,189,248,0.15)';
         badge.style.color = 'var(--zn-text-accent)';

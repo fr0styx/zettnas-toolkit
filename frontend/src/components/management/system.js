@@ -54,7 +54,7 @@ export async function setUpdateChannel(channel) {
 
 function syncUpdateChannelUI() {
   const looks = {
-    stable: ['rgba(37, 194, 160, 0.25)', 'var(--lt-t-25c2a0ff, #25c2a0)'],
+    stable: ['rgba(51, 205, 184, 0.25)', 'var(--lt-t-33cdb8ff, #33cdb8)'],
     beta: ['rgba(245, 183, 49, 0.22)', 'var(--lt-t-f5b731ff, #f5b731)'],
     edge: ['rgba(14, 165, 233, 0.25)', 'var(--zn-text-accent)'],
   };
@@ -169,7 +169,7 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
           statusTitle.textContent = isEdge
             ? t('sysu.uptodate_main', 'Kiboto is up to date with main')
             : t('sysu.uptodate', 'Kiboto is up to date');
-          statusTitle.style.color = 'var(--ok2, #25c2a0)';
+          statusTitle.style.color = 'var(--ok2, #33cdb8)';
         }
         if (statusDesc) {
           statusDesc.textContent = isEdge
@@ -345,7 +345,7 @@ export async function applySystemUpdate() {
         if (res && res.auto_restarting === false) {
           if (progressTitle) setIconLabel(progressTitle, '📦', t('ui.image_pulled', 'Image Pulled'));
           if (progressDesc) {
-            progressDesc.innerHTML = `${escapeHtml(res.message || 'Latest image downloaded.')}<br><br><span style="color:var(--lt-ink-brand, var(--brand, #00f0ff));font-weight:600;">${escapeHtml(t('sysu.restart_to_finish', 'Please restart the container in Unraid or Docker to finalize.'))}</span>`;
+            progressDesc.innerHTML = `${escapeHtml(res.message || 'Latest image downloaded.')}<br><br><span style="color:var(--lt-ink-brand, var(--brand, #33cdb8));font-weight:600;">${escapeHtml(t('sysu.restart_to_finish', 'Please restart the container in Unraid or Docker to finalize.'))}</span>`;
           }
           if (applyBtn) applyBtn.disabled = false;
           return;
@@ -453,9 +453,9 @@ export function openDiagnosticsPreviewModal(data) {
     const status = data.executive_status || 'HEALTHY';
     const alerts = Array.isArray(data.alerts) ? data.alerts : [];
 
-    let borderColor = 'rgba(37, 194, 160, 0.3)';
-    let bgColor = 'rgba(37, 194, 160, 0.08)';
-    let badgeColor = 'var(--accent, #25c2a0)';
+    let borderColor = 'rgba(51, 205, 184, 0.3)';
+    let bgColor = 'rgba(51, 205, 184, 0.08)';
+    let badgeColor = 'var(--accent, #33cdb8)';
     let icon = '🟢';
     let title = t('diagnostics.status_healthy', 'Everything is healthy');
     let desc = t('diagnostics.status_healthy_desc', 'All hardware parameters, storage arrays, and containers are operating normally.');

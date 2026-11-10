@@ -235,7 +235,7 @@ export async function loadUsersList() {
             </span>
           </td>
           <td>
-            <span style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 7px; border-radius: 4px; background: ${isActive ? 'rgba(37,194,160,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${isActive ? 'var(--ok2)' : 'var(--crit)'}; border: 1px solid ${isActive ? 'rgba(37,194,160,0.3)' : 'rgba(239,68,68,0.3)'};">
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 7px; border-radius: 4px; background: ${isActive ? 'rgba(51,205,184,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${isActive ? 'var(--ok2)' : 'var(--crit)'}; border: 1px solid ${isActive ? 'rgba(51,205,184,0.3)' : 'rgba(239,68,68,0.3)'};">
               ${escapeHtml(isActive ? t('users.status_active', 'Active') : t('users.status_disabled', 'Turned off'))}
             </span>
           </td>
@@ -581,7 +581,7 @@ export async function loadSessionsList() {
         <tr>
           <td class="is-bold">
             <span aria-hidden="true">${isCurrent ? '💻' : '🌐'}</span> ${escapeHtml(isCurrent ? t('users.this_browser', 'This browser') : t('users.other_device', 'Another device'))}
-            ${isCurrent ? '<span style="font-size: var(--zn-fs-xs); background:rgba(37,194,160,0.2); color:var(--ok2); padding:2px 6px; border-radius:4px; margin-left:6px;">' + escapeHtml(t('users.this_device', 'This device')) + '</span>' : ''}
+            ${isCurrent ? '<span style="font-size: var(--zn-fs-xs); background:rgba(51,205,184,0.2); color:var(--ok2); padding:2px 6px; border-radius:4px; margin-left:6px;">' + escapeHtml(t('users.this_device', 'This device')) + '</span>' : ''}
             <div class="zn-sub is-spaced">${escapeHtml(s.user_agent || t('users.unknown_browser', 'Unknown browser'))}</div>
           </td>
           <td class="is-soft is-mono">${escapeHtml(s.ip_address || '127.0.0.1')}</td>
@@ -649,9 +649,9 @@ export async function load2FAStatus() {
 
     if (badge) {
       badge.textContent = isEnabled ? t('users.2fa_badge_on', 'On') : t('users.2fa_badge_off', 'Off');
-      badge.style.background = isEnabled ? 'rgba(37,194,160,0.18)' : 'rgba(239,68,68,0.18)';
+      badge.style.background = isEnabled ? 'rgba(51,205,184,0.18)' : 'rgba(239,68,68,0.18)';
       badge.style.color = isEnabled ? 'var(--ok2)' : 'var(--lt-t-fca5a5ff, #fca5a5)'; // readable on its red tint in both themes
-      badge.style.border = `1px solid ${isEnabled ? 'rgba(37,194,160,0.35)' : 'rgba(239,68,68,0.35)'}`;
+      badge.style.border = `1px solid ${isEnabled ? 'rgba(51,205,184,0.35)' : 'rgba(239,68,68,0.35)'}`;
     }
 
     if (desc) {

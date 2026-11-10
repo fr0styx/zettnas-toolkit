@@ -17,8 +17,8 @@ let _ChartLib = null;
 let _renderRequestId = 0;
 
 const DISK_COLORS = [
-  '#00f0ff', // cyan
-  '#25c2a0', // teal
+  '#33cdb8', // teal
+  '#46c776', // green
   '#f5a623', // amber
   '#a78bfa', // purple
   '#f87171', // red
@@ -28,8 +28,8 @@ const DISK_COLORS = [
 ];
 
 const FAN_COLORS = [
-  '#00f0ff', // Fan 1 (Rear)
-  '#25c2a0', // Fan 2 (Disks)
+  '#33cdb8', // Fan 1 (Rear)
+  '#46c776', // Fan 2 (Disks)
   '#f5a623', // Fan 3 (CPU)
 ];
 
@@ -286,7 +286,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
       const maxFans = Math.max(...data.map((d) => (d.fans ? d.fans.length : 0)), 1);
 
       for (let f = 0; f < maxFans; f++) {
-        const color = FAN_COLORS[f % FAN_COLORS.length] || '#00f0ff';
+        const color = FAN_COLORS[f % FAN_COLORS.length] || '#33cdb8';
         const label = fanNames[f] || `Fan ${f + 1}`;
         const fanSpeeds = data.map((d) => (d.fans && d.fans[f] != null ? d.fans[f] : null));
 
@@ -341,7 +341,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
         datasets.push({
           label: t('mch.read', 'Disk Read ({unit})', { unit: unitStr }),
           data: data.map((d) => Number(((d.disk_read || 0) / factor).toFixed(2))),
-          borderColor: '#25c2a0',
+          borderColor: '#33cdb8',
           borderDash: [3, 3],
           borderWidth: 1.5,
           tension: 0.3,

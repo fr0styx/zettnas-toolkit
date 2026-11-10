@@ -4,14 +4,14 @@
 @import "../vm-console-direct.css";
 
 :root{
-  --bg:#0a0e13; --card:#141b24; --card-hi:#1b2430;
-  --fg:#eaf1f8; --muted:#8493a5;
+  --bg:#0a1113; --card:#121b1e; --card-hi:#1a2629;
+  --fg:#e6efef; --muted:#95a8ab;
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans CJK JP", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  --ok:#33d17a; --ok2:#25c2a0; --warn:#f5b731; --crit:#f0553b;
+  --ok:#46c776; --ok2:#33cdb8; --warn:#f2b237; --crit:#f26b5e;
   --desktop-ok2: var(--desktop-accent, var(--ok2));
   --lcd-ok2: var(--lcd-accent, #25c2a0);
-  --track:#232e3c;
+  --track:#223035;
   --stage-zoom: 1;
   --chassis-scale: 1;
   --chassis-opacity: 1;
@@ -19,24 +19,24 @@
   --stage-offset-y: 0px;
 
   /* Chromatic Base & Dynamic Contrast Tokens */
-  --brand-rgb: 0, 240, 255;
+  --brand-rgb: 51, 205, 184;
   --brand: rgb(var(--brand-rgb));
-  --accent-contrast-fg: #0b1118;
+  --accent-contrast-fg: #04201c;
   accent-color: var(--brand);
   --ui-scale: 1;
 
   /* Focus & A11y Ring Tokens (WCAG 2.2 AA) */
-  --focus-ring: #00f0ff;
-  --focus-shadow: 0 0 0 3px rgba(0, 240, 255, 0.35);
+  --focus-ring: #4fd8c4;
+  --focus-shadow: 0 0 0 3px rgba(79, 216, 196, 0.35);
 
   /* Glassmorphism & Visual Effects Tokens */
   --glass-blur: 24px;
   --glass-opacity: 0.72;
   --window-radius: 12px;
   --window-glow-enabled: 0;
-  --accent-rgb: 0, 240, 255;
-  --accent-glow: rgba(0, 240, 255, 0.35);
-  --accent-hover: rgba(0, 240, 255, 0.15);
+  --accent-rgb: 51, 205, 184;
+  --accent-glow: rgba(51, 205, 184, 0.35);
+  --accent-hover: rgba(51, 205, 184, 0.15);
   --wallpaper-dim: 0.15;
   --wallpaper-blur: 0px;
 
@@ -78,7 +78,7 @@ html {
 body, body.studio-workbench:not(.lcd-direct) {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", Arial, sans-serif;
   color: var(--fg);
-  background: radial-gradient(circle at 50% 50%, #151d29 0%, #080c10 70%);
+  background: radial-gradient(circle at 50% 50%, #131d20 0%, #070d0f 70%);
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;

@@ -22,11 +22,11 @@
 
 .desktop-drop-card {
   background: var(--lt-b-121a24eb, rgba(18, 26, 36, 0.92));
-  border: 2px dashed var(--brand, #00f0ff);
+  border: 2px dashed var(--brand, #33cdb8);
   border-radius: 20px;
   padding: 48px 56px;
   text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 240, 255, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(51, 205, 184, 0.25);
   animation: dropCardPulse 2s infinite ease-in-out;
   max-width: 480px;
   width: 90%;
@@ -35,12 +35,12 @@
 @keyframes dropCardPulse {
   0%, 100% {
     transform: scale(1);
-    border-color: var(--brand, #00f0ff);
+    border-color: var(--brand, #33cdb8);
   }
   50% {
     transform: scale(1.02);
-    border-color: var(--ok2, #25c2a0);
-    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 50px rgba(37, 194, 160, 0.35);
+    border-color: var(--ok2, #33cdb8);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 50px rgba(51, 205, 184, 0.35);
   }
 }
 

@@ -48,8 +48,8 @@
 }
 
 .ups-card-status-dot.active {
-  background: var(--ok2, #25c2a0);
-  box-shadow: 0 0 8px var(--ok2, #25c2a0);
+  background: var(--ok2, #33cdb8);
+  box-shadow: 0 0 8px var(--ok2, #33cdb8);
 }
 
 .ups-card-status-dot.warning {
@@ -86,7 +86,7 @@
 
 .ups-card-sub {
   font-size: var(--zn-fs-xs);
-  color: var(--ok2, #25c2a0);
+  color: var(--ok2, #33cdb8);
   font-weight: 500;
 }
 
@@ -120,7 +120,7 @@
 }
 
 .ups-pulse-line {
-  stroke: var(--ok2, #25c2a0);
+  stroke: var(--ok2, #33cdb8);
   stroke-width: 3;
   stroke-linecap: round;
   fill: none;
@@ -163,7 +163,7 @@
 
 .ups-radial-fill {
   fill: none;
-  stroke: var(--ok2, #25c2a0);
+  stroke: var(--ok2, #33cdb8);
   stroke-width: 5;
   stroke-dasharray: 175.9;
   stroke-dashoffset: 0;
@@ -296,9 +296,9 @@
 }
 
 .ups-mode-option input:checked + .ups-mode-box {
-  border-color: var(--ok2, #25c2a0);
-  background: rgba(37, 194, 160, 0.15);
-  box-shadow: 0 0 10px rgba(37, 194, 160, 0.3);
+  border-color: var(--ok2, #33cdb8);
+  background: rgba(51, 205, 184, 0.15);
+  box-shadow: 0 0 10px rgba(51, 205, 184, 0.3);
 }
 
 .ups-mode-box:hover {
@@ -311,7 +311,7 @@
   text-align: right;
   font-size: var(--zn-fs-xs);
   font-weight: 600;
-  color: var(--ok2, #25c2a0);
+  color: var(--ok2, #33cdb8);
   font-variant-numeric: tabular-nums;
 }
 
@@ -346,9 +346,9 @@
 }
 
 .input-modern:focus {
-  border-color: var(--ok2, #25c2a0);
+  border-color: var(--ok2, #33cdb8);
   background: var(--lt-b-0b131eff, #0b131e);
-  box-shadow: 0 0 0 3px rgba(37, 194, 160, 0.22);
+  box-shadow: 0 0 0 3px rgba(51, 205, 184, 0.22);
 }
 
 .input-modern::placeholder {
@@ -380,9 +380,9 @@ body.theme-yak .input-modern:focus {
 .ups-save-badge {
   font-size: var(--zn-fs-xs);
   font-weight: 600;
-  color: var(--ok2, #25c2a0);
-  background: rgba(37, 194, 160, 0.12);
-  border: 1px solid rgba(37, 194, 160, 0.3);
+  color: var(--ok2, #33cdb8);
+  background: rgba(51, 205, 184, 0.12);
+  border: 1px solid rgba(51, 205, 184, 0.3);
   padding: 2px 8px;
   border-radius: 4px;
   display: inline-flex;

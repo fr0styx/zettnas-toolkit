@@ -53,8 +53,8 @@ html.has-wallpaper-blur #desktop-wallpaper-dimmer {
 .os-window.active-window,
 .os-window:focus-within,
 .active-window {
-  border-color: rgba(var(--accent-rgb, 0, 240, 255), calc(0.55 * var(--window-glow-enabled, 1))) !important;
-  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.88), 0 0 24px rgba(var(--accent-rgb, 0, 240, 255), calc(0.3 * var(--window-glow-enabled, 1))) !important;
+  border-color: rgba(var(--accent-rgb, 51, 205, 184), calc(0.55 * var(--window-glow-enabled, 1))) !important;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.88), 0 0 24px rgba(var(--accent-rgb, 51, 205, 184), calc(0.3 * var(--window-glow-enabled, 1))) !important;
 }
 
 body.no-specular-glow #management-modal-overlay #management-window,
@@ -66,11 +66,11 @@ body.no-specular-glow .active-window {
 
 /* 3. Window Corner Radius Selector */
 .window-radius-btn.active {
-  background: var(--brand, #00f0ff) !important;
+  background: var(--brand, #33cdb8) !important;
   color: #0b1118 !important;
   font-weight: 700 !important;
-  border-color: var(--brand, #00f0ff) !important;
-  box-shadow: 0 0 10px rgba(var(--accent-rgb, 0, 240, 255), 0.35);
+  border-color: var(--brand, #33cdb8) !important;
+  box-shadow: 0 0 10px rgba(var(--accent-rgb, 51, 205, 184), 0.35);
 }
 
 /* 4. Sleek Modern Range Sliders */
@@ -90,8 +90,8 @@ input[type="range"].tz-range-slider::-webkit-slider-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--brand, #00f0ff);
-  box-shadow: 0 0 8px rgba(var(--accent-rgb, 0, 240, 255), 0.5);
+  background: var(--brand, #33cdb8);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb, 51, 205, 184), 0.5);
   cursor: pointer;
   border: 2px solid var(--lt-r-0d141eff, #0d141e);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -99,15 +99,15 @@ input[type="range"].tz-range-slider::-webkit-slider-thumb {
 
 input[type="range"].tz-range-slider::-webkit-slider-thumb:hover {
   transform: scale(1.18);
-  box-shadow: 0 0 12px var(--brand, #00f0ff);
+  box-shadow: 0 0 12px var(--brand, #33cdb8);
 }
 
 input[type="range"].tz-range-slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--brand, #00f0ff);
-  box-shadow: 0 0 8px rgba(var(--accent-rgb, 0, 240, 255), 0.5);
+  background: var(--brand, #33cdb8);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb, 51, 205, 184), 0.5);
   cursor: pointer;
   border: 2px solid var(--lt-r-0d141eff, #0d141e);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -125,7 +125,7 @@ input[type="range"].tz-range-slider::-moz-range-thumb {
   backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid var(--zn-line-12);
   border-radius: 12px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 240, 255, 0.08);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(51, 205, 184, 0.08);
   padding: 6px;
   user-select: none;
   display: none;
@@ -161,9 +161,9 @@ input[type="range"].tz-range-slider::-moz-range-thumb {
 
 .context-menu-item:hover,
 .context-menu-item:focus-visible {
-  background: rgba(37, 194, 160, 0.18);
+  background: rgba(51, 205, 184, 0.18);
   color: var(--zn-text-strong);
-  box-shadow: inset 0 0 0 1px rgba(37, 194, 160, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(51, 205, 184, 0.35);
 }
 
 .context-menu-item.danger {

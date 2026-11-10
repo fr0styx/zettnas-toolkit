@@ -1367,8 +1367,8 @@ body.mobile-mode .dock-item.active::before {
   right: 20% !important;
   height: 3px !important;
   border-radius: 0 0 3px 3px !important;
-  background: var(--brand, #25c2a0) !important;
-  box-shadow: 0 0 8px var(--brand, #25c2a0) !important;
+  background: var(--brand, #33cdb8) !important;
+  box-shadow: 0 0 8px var(--brand, #33cdb8) !important;
 }
 body.mobile-mode #dock-hover-tooltip {
   display: none !important;

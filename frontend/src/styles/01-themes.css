@@ -6,19 +6,19 @@
    LIGHT THEME: HIGH-CONTRAST CLEAN MODERN DESKTOP (WCAG 2.2 AA)
    ========================================================================= */
 body.theme-light {
-  --bg: #eef2f6;
+  --bg: #f3f6f6;
   --card: #ffffff;
-  --card-hi: #e2e8f0;
-  --fg: #0f172a;
-  --muted: #475569;
-  --ok: #166534;
-  --ok2: #115e59;
-  --warn: #92400e;
-  --crit: #991b1b;
-  --track: #cbd5e1;
-  --focus-ring: #0284c7;
-  --focus-shadow: 0 0 0 3px rgba(2, 132, 199, 0.3);
-  background: radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 70%);
+  --card-hi: #e8eeee;
+  --fg: #0e1c1e;
+  --muted: #4a5c60;
+  --ok: #17663a;
+  --ok2: #08695f;
+  --warn: #8a4b06;
+  --crit: #a52521;
+  --track: #c9d4d5;
+  --focus-ring: #0a7a70;
+  --focus-shadow: 0 0 0 3px rgba(10, 122, 112, 0.3);
+  background: radial-gradient(circle at 50% 50%, #f9fbfb 0%, #e3eaea 70%);
   color: var(--fg);
 }
 
@@ -117,9 +117,9 @@ body.theme-oled {
   --fg: #ffffff;
   --muted: #888888;
   --track: #181818;
-  --brand: #00f0ff;
-  --focus-ring: #00f0ff;
-  --focus-shadow: 0 0 0 3px rgba(0, 240, 255, 0.4);
+  --brand: #33cdb8;
+  --focus-ring: #4fd8c4;
+  --focus-shadow: 0 0 0 3px rgba(79, 216, 196, 0.4);
   background: #000000;
   color: var(--fg);
 }

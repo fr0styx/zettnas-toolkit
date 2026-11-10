@@ -60,7 +60,7 @@ export function computeContainerRowSignature(c, updateInfo) {
 export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   const isRunning = c.state === 'running';
   const badgeColor = isRunning ? 'var(--ok2)' : 'var(--muted)';
-  const badgeBg = isRunning ? 'rgba(37, 194, 160, 0.15)' : 'rgba(255, 255, 255, 0.05)';
+  const badgeBg = isRunning ? 'rgba(51, 205, 184, 0.15)' : 'rgba(255, 255, 255, 0.05)';
   const idShort = c.id ? c.id.slice(0, 12) : '';
   const isChecked = _selectedContainerIds.has(c.id);
   const checkedAttr = isChecked ? 'checked' : '';

@@ -560,7 +560,7 @@ export function syncDesktopTwinPreview(overrides = {}) {
 
   const curTheme = overrides.theme || state.desktopTheme || 'cyber';
   const curAccent = overrides.accent !== undefined ? overrides.accent : (state.desktopCustomAccent || '');
-  const themeBrandColor = curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#f43f5e' : curTheme === 'yak' ? '#d48a37' : curTheme === 'oled' ? '#00f0ff' : curTheme === 'light' ? '#0284c7' : '#00f0ff';
+  const themeBrandColor = curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#f43f5e' : curTheme === 'yak' ? '#d48a37' : curTheme === 'oled' ? '#33cdb8' : curTheme === 'light' ? '#0284c7' : '#33cdb8';
   const activeColor = curAccent || themeBrandColor;
   const rgb = hexToRgb(activeColor);
 
@@ -569,7 +569,7 @@ export function syncDesktopTwinPreview(overrides = {}) {
     badge.textContent = curTheme.toUpperCase();
     badge.style.color = `var(--lt-ink-brand, ${activeColor})`;
     badge.style.borderColor = activeColor;
-    badge.style.background = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` : 'rgba(0, 240, 255, 0.15)';
+    badge.style.background = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` : 'rgba(51, 205, 184, 0.15)';
   }
 
   const dtWp = document.getElementById('dt-wallpaper');
@@ -1261,8 +1261,8 @@ export function updateHardwareTelemetry(s) {
           upsDot.style.background = 'var(--err, #eb5757)';
           upsDot.style.boxShadow = '0 0 6px var(--err, #eb5757)';
         } else {
-          upsDot.style.background = 'var(--ok2, #25c2a0)';
-          upsDot.style.boxShadow = '0 0 6px var(--ok2, #25c2a0)';
+          upsDot.style.background = 'var(--ok2, #33cdb8)';
+          upsDot.style.boxShadow = '0 0 6px var(--ok2, #33cdb8)';
         }
       }
       if (!upsPill.dataset.boundClick) {
@@ -1990,9 +1990,9 @@ export function updateMediaSlots(mediaSlots) {
         slotBadge.style.color = '#eab308';
         slotBadge.style.borderColor = 'rgba(234, 179, 8, 0.35)';
       } else {
-        slotBadge.style.background = 'rgba(37,194,160,0.15)';
+        slotBadge.style.background = 'rgba(51,205,184,0.15)';
         slotBadge.style.color = 'var(--ok2)';
-        slotBadge.style.borderColor = 'rgba(37,194,160,0.35)';
+        slotBadge.style.borderColor = 'rgba(51,205,184,0.35)';
       }
     } else if (tfSize > 0) {
       slotBadge.textContent = `TF: ${formatFixed(tfSize / 1e9, 1)} GB${tfEjected ? ` ${t('dash.ejected', '(EJECTED)')}` : ''}`;
@@ -2001,9 +2001,9 @@ export function updateMediaSlots(mediaSlots) {
         slotBadge.style.color = '#eab308';
         slotBadge.style.borderColor = 'rgba(234, 179, 8, 0.35)';
       } else {
-        slotBadge.style.background = 'rgba(37,194,160,0.15)';
+        slotBadge.style.background = 'rgba(51,205,184,0.15)';
         slotBadge.style.color = 'var(--ok2)';
-        slotBadge.style.borderColor = 'rgba(37,194,160,0.35)';
+        slotBadge.style.borderColor = 'rgba(51,205,184,0.35)';
       }
     } else {
       slotBadge.textContent = t('dash.slots_empty', 'SLOTS EMPTY');

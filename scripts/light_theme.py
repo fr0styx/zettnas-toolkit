@@ -75,7 +75,7 @@ PAGE = (248, 250, 252)
 DARKEST_SURFACE = (214, 218, 224)
 # Text set in the brand colour gets a dark shade in the light theme (the brand stays for fills)
 BRAND_VARS = ("brand", "accent-cyan")
-BRAND_INK = "#075985"
+BRAND_INK = "#08695f"
 
 # Semantic colour tokens (UX-10): (kind, rrggbbaa) -> token. t = text, r = border, b = background.
 # Lines, glazes (white over a surface) and shades (black over it) are named by their opacity

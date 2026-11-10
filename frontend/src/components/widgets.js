@@ -2015,13 +2015,13 @@ export function initWidgets() {
       if (upsBattery) upsBattery.textContent = `${charge}%`;
       if (upsBar) {
         upsBar.style.width = `${Math.min(100, Math.max(0, charge))}%`;
-        upsBar.style.background = charge < 20 ? 'var(--err, #eb5757)' : (charge < 50 ? 'var(--warn, #f5a623)' : 'var(--ok2, #25c2a0)');
+        upsBar.style.background = charge < 20 ? 'var(--err, #eb5757)' : (charge < 50 ? 'var(--warn, #f5a623)' : 'var(--ok2, #33cdb8)');
       }
       if (upsLoad) upsLoad.textContent = typeof loadW === 'number' ? `${loadW} W` : String(loadW);
       if (upsRuntime) upsRuntime.textContent = `${runtimeMin} min`;
       if (upsBadge) {
         upsBadge.textContent = status.includes('OB') || status.includes('BATT') ? t('wid.ups_on_batt', 'ON BATT') : t('wid.ups_online', 'ONLINE');
-        upsBadge.style.color = status.includes('OB') ? 'var(--warn, #f5a623)' : 'var(--ok2, #25c2a0)';
+        upsBadge.style.color = status.includes('OB') ? 'var(--warn, #f5a623)' : 'var(--ok2, #33cdb8)';
       }
 
       const wUpsGauge = document.getElementById('widget-ups-gauge');
@@ -2103,19 +2103,19 @@ export function initWidgets() {
       if (aiBadge) {
         if (nUtil > 0 && gUtil > 0) {
           aiBadge.textContent = t('wai.dual', 'DUAL RUN');
-          aiBadge.style.color = 'var(--brand, #00f0ff)';
+          aiBadge.style.color = 'var(--brand, #33cdb8)';
         } else if (nUtil > 0 || (stats.ai_active && stats.ai_accelerator === 'npu')) {
           aiBadge.textContent = t('wai.npu', 'NPU RUN');
-          aiBadge.style.color = 'var(--brand, #00f0ff)';
+          aiBadge.style.color = 'var(--brand, #33cdb8)';
         } else if (gUtil > 0 || (stats.ai_active && (stats.ai_accelerator === 'gpu' || stats.ai_accelerator === 'arc'))) {
           aiBadge.textContent = t('wai.gpu', 'GPU RUN');
           aiBadge.style.color = '#c084fc';
         } else if (npu.present && gpu.present) {
           aiBadge.textContent = t('wai.both_ready', 'NPU + GPU');
-          aiBadge.style.color = 'var(--ok2, #25c2a0)';
+          aiBadge.style.color = 'var(--ok2, #33cdb8)';
         } else if (npu.present) {
           aiBadge.textContent = 'NPU';
-          aiBadge.style.color = 'var(--brand, #00f0ff)';
+          aiBadge.style.color = 'var(--brand, #33cdb8)';
         } else if (gpu.present) {
           aiBadge.textContent = t('bench.gpu', 'GPU');
           aiBadge.style.color = '#c084fc';
@@ -2127,7 +2127,7 @@ export function initWidgets() {
 
       if (aiEngineStatus) {
         if (nUtil > 0 || (stats.ai_active && stats.ai_accelerator === 'npu')) {
-          aiEngineStatus.innerHTML = '<span class="ai-status-dot active"></span> <strong style="color:var(--lt-ink-brand, var(--brand, #00f0ff));">' + escapeHtml(t('wai.npu_active', 'Intel AI Boost NPU Active')) + '</strong>';
+          aiEngineStatus.innerHTML = '<span class="ai-status-dot active"></span> <strong style="color:var(--lt-ink-brand, var(--brand, #33cdb8));">' + escapeHtml(t('wai.npu_active', 'Intel AI Boost NPU Active')) + '</strong>';
         } else if (gUtil > 0 || (stats.ai_active && (stats.ai_accelerator === 'gpu' || stats.ai_accelerator === 'arc'))) {
           aiEngineStatus.innerHTML = '<span class="ai-status-dot active-gpu"></span> <strong style="color:var(--zn-text-ai);">' + escapeHtml(t('wai.gpu_active', 'Intel Arc GPU Active')) + '</strong>';
         } else if (npu.present && gpu.present) {
@@ -2188,8 +2188,8 @@ export function initWidgets() {
           topText.textContent = t('wai.reindexing', 'Re-indexing {pct}%{eta}', { pct, eta: etaShort });
         }
         if (topDot) {
-          topDot.style.background = '#00f0ff';
-          topDot.style.boxShadow = '0 0 6px #00f0ff';
+          topDot.style.background = '#33cdb8';
+          topDot.style.boxShadow = '0 0 6px #33cdb8';
         }
       } else if (wReindexStrip) {
         wReindexStrip.style.display = 'none';
@@ -2429,9 +2429,9 @@ export function updateTzModalPreview() {
   const btn12 = document.getElementById('btn-tz-fmt-12');
   const btn24 = document.getElementById('btn-tz-fmt-24');
   if (btn12 && btn24) {
-    btn12.style.background = fmt12 ? 'var(--brand, #00f0ff)' : 'transparent';
+    btn12.style.background = fmt12 ? 'var(--brand, #33cdb8)' : 'transparent';
     btn12.style.color = fmt12 ? '#000' : 'var(--zn-text-muted)';
-    btn24.style.background = !fmt12 ? 'var(--brand, #00f0ff)' : 'transparent';
+    btn24.style.background = !fmt12 ? 'var(--brand, #33cdb8)' : 'transparent';
     btn24.style.color = !fmt12 ? '#000' : 'var(--zn-text-muted)';
     btn12.setAttribute('aria-checked', fmt12 ? 'true' : 'false');
     btn24.setAttribute('aria-checked', fmt12 ? 'false' : 'true');
@@ -2502,7 +2502,7 @@ export function renderTimezoneList() {
         </div>
         <div class="tzl-main">
           <span class="tzl-offset">${escapeHtml(tzAbbr)}</span>
-          <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); color: ${isSelected ? 'var(--lt-ink-brand, var(--brand, #00f0ff))' : 'var(--zn-text)'};">${escapeHtml(timeStr)}</span>
+          <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); color: ${isSelected ? 'var(--lt-ink-brand, var(--brand, #33cdb8))' : 'var(--zn-text)'};">${escapeHtml(timeStr)}</span>
           <span class="tzl-check">${isSelected ? '✓' : ''}</span>
         </div>
       </div>

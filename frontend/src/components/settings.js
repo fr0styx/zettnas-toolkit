@@ -408,8 +408,8 @@ export function initSettings() {
     }
     if (screenPowerBtn) {
       screenPowerBtn.textContent = isOff ? t('settings.screen_turn_on', 'Turn On') : t('settings.screen_turn_off', 'Turn Off');
-      screenPowerBtn.style.borderColor = isOff ? 'rgba(37, 194, 160, 0.5)' : '';
-      screenPowerBtn.style.color = isOff ? 'var(--ok2, #25c2a0)' : '';
+      screenPowerBtn.style.borderColor = isOff ? 'rgba(51, 205, 184, 0.5)' : '';
+      screenPowerBtn.style.color = isOff ? 'var(--ok2, #33cdb8)' : '';
     }
     if (screenBriSlider) {
       screenBriSlider.style.opacity = isOff ? '0.45' : '1';
@@ -707,9 +707,9 @@ export function initSettings() {
       if (scoreBadge) {
         scoreBadge.textContent = t('stg.score', 'Score: {score}/100', { score: adv.score });
         if (adv.score >= 90) {
-          scoreBadge.style.color = 'var(--ok2, #25c2a0)';
-          scoreBadge.style.borderColor = 'rgba(37,194,160,0.4)';
-          scoreBadge.style.background = 'rgba(37,194,160,0.15)';
+          scoreBadge.style.color = 'var(--ok2, #33cdb8)';
+          scoreBadge.style.borderColor = 'rgba(51,205,184,0.4)';
+          scoreBadge.style.background = 'rgba(51,205,184,0.15)';
         } else if (adv.score >= 70) {
           scoreBadge.style.color = 'var(--warn, #f5a623)';
           scoreBadge.style.borderColor = 'rgba(245,166,35,0.4)';
@@ -725,7 +725,7 @@ export function initSettings() {
       if (itemsEl && Array.isArray(adv.checks)) {
         itemsEl.innerHTML = adv.checks.map((chk) => {
           const icon = chk.status === 'pass' ? '✅' : (chk.status === 'fail' ? '❌' : (chk.status === 'warn' ? '⚠️' : 'ℹ️'));
-          const color = chk.status === 'pass' ? 'var(--ok2, #25c2a0)' : (chk.status === 'fail' ? 'var(--crit, #ff5c5c)' : 'var(--warn, #f5a623)');
+          const color = chk.status === 'pass' ? 'var(--ok2, #33cdb8)' : (chk.status === 'fail' ? 'var(--crit, #ff5c5c)' : 'var(--warn, #f5a623)');
           const isPass = chk.status === 'pass';
           const actionText = isPass ? t('sec.action_review', 'Review ➔') : t('sec.action_configure', 'Configure ➔');
           return `
@@ -1066,7 +1066,7 @@ export function syncDesktopThemeUI() {
   if (badge) {
     const localized = t('settings.theme_' + curTheme, THEME_NAMES[curTheme] || curTheme.toUpperCase());
     badge.textContent = localized.toUpperCase();
-    const themeBrandColor = curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#f43f5e' : curTheme === 'yak' ? '#d48a37' : curTheme === 'oled' ? '#00f0ff' : '#00f0ff';
+    const themeBrandColor = curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#f43f5e' : curTheme === 'yak' ? '#d48a37' : curTheme === 'oled' ? '#33cdb8' : '#33cdb8';
     badge.style.color = curAccent || themeBrandColor;
     badge.style.borderColor = curAccent || themeBrandColor;
   }
@@ -1076,7 +1076,7 @@ export function syncDesktopThemeUI() {
   if (picker && curAccent) {
     picker.value = curAccent;
   }
-  const currentAccentOrBrand = curAccent || (curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#fb7185' : curTheme === 'yak' ? '#d48a37' : '#00f0ff');
+  const currentAccentOrBrand = curAccent || (curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#fb7185' : curTheme === 'yak' ? '#d48a37' : '#33cdb8');
   if (hexVal) {
     hexVal.textContent = currentAccentOrBrand.toUpperCase();
   }
@@ -1152,7 +1152,7 @@ export async function sampleWallpaperPalette() {
   }
 
   if (!imgUrl) {
-    const fallbackPalette = ['#00f0ff', '#38bdf8', '#3bf58b', '#ffbe40', '#c084fc', '#f43f5e'];
+    const fallbackPalette = ['#33cdb8', '#38bdf8', '#3bf58b', '#ffbe40', '#c084fc', '#f43f5e'];
     renderExtractedChips(fallbackPalette);
     showToast(t('settings.palette_sampled_default', 'Sampled default theme accents'), 'info');
     return;
@@ -1208,7 +1208,7 @@ export async function sampleWallpaperPalette() {
 
     let sorted = Array.from(colorMap.entries()).sort((a, b) => b[1] - a[1]).map(entry => entry[0]);
     if (sorted.length < 5) {
-      const fillers = ['#00f0ff', '#38bdf8', '#3bf58b', '#ffbe40', '#c084fc', '#f43f5e'];
+      const fillers = ['#33cdb8', '#38bdf8', '#3bf58b', '#ffbe40', '#c084fc', '#f43f5e'];
       for (const f of fillers) {
         if (!sorted.includes(f)) sorted.push(f);
         if (sorted.length >= 6) break;
@@ -1221,7 +1221,7 @@ export async function sampleWallpaperPalette() {
     showToast(t('settings.palette_extracted_success', 'Extracted 6 vibrant wallpaper accents!'), 'success');
   } catch (err) {
     console.warn('[PALETTE] Extraction fallback:', err);
-    const fallbackPalette = ['#00f0ff', '#38bdf8', '#3bf58b', '#ffbe40', '#c084fc', '#f43f5e'];
+    const fallbackPalette = ['#33cdb8', '#38bdf8', '#3bf58b', '#ffbe40', '#c084fc', '#f43f5e'];
     renderExtractedChips(fallbackPalette);
     showToast(t('settings.palette_sampled_default', 'Sampled default theme accents'), 'info');
   }
@@ -1570,8 +1570,8 @@ export function syncLcdThemeUI() {
   if (badge) {
     const localized = t('settings.theme_' + curTheme, THEME_NAMES[curTheme] || curTheme.toUpperCase());
     badge.textContent = localized.toUpperCase();
-    badge.style.color = curAccent || 'var(--brand, #00f0ff)';
-    badge.style.borderColor = curAccent || 'var(--brand, #00f0ff)';
+    badge.style.color = curAccent || 'var(--brand, #33cdb8)';
+    badge.style.borderColor = curAccent || 'var(--brand, #33cdb8)';
   }
 
   const picker = $('lcd-custom-color-picker');
@@ -1580,7 +1580,7 @@ export function syncLcdThemeUI() {
     picker.value = curAccent;
   }
   if (hexVal) {
-    hexVal.textContent = (curAccent || (curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#fb7185' : curTheme === 'yak' ? '#d48a37' : '#00f0ff')).toUpperCase();
+    hexVal.textContent = (curAccent || (curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#fb7185' : curTheme === 'yak' ? '#d48a37' : '#33cdb8')).toUpperCase();
   }
 
   const clarityToggle = $('lcd-text-clarity-toggle');

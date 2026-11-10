@@ -101,7 +101,7 @@
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-  color: var(--ok2, #25c2a0);
+  color: var(--ok2, #33cdb8);
 }
 
 .dock-tooltip-actions {
@@ -266,7 +266,7 @@
   justify-content: center;
   text-align: center;
   box-sizing: border-box;
-  background: radial-gradient(circle at 50% 30%, rgba(37, 194, 160, 0.12) 0%, var(--lt-b-090e15f2, rgba(9, 14, 21, 0.95)) 75%);
+  background: radial-gradient(circle at 50% 30%, rgba(51, 205, 184, 0.12) 0%, var(--lt-b-090e15f2, rgba(9, 14, 21, 0.95)) 75%);
   gap: 8px;
 }
 
@@ -285,7 +285,7 @@
 .dock-splash-icon-ring svg {
   width: 22px;
   height: 22px;
-  color: var(--ok2, #25c2a0);
+  color: var(--ok2, #33cdb8);
 }
 
 .dock-splash-title {
@@ -339,7 +339,7 @@
 
 .dock-desktop-home-card span {
   font-size: var(--zn-fs-xs);
-  color: var(--ok2, #25c2a0);
+  color: var(--ok2, #33cdb8);
   font-weight: 600;
 }
 

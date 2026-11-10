@@ -43,14 +43,14 @@
 }
 
 .btn-primary-accent {
-  background: rgba(var(--ok2-rgb, 0, 240, 255), 0.15) !important;
-  color: var(--ok2, #00f0ff) !important;
-  border-color: rgba(var(--ok2-rgb, 0, 240, 255), 0.35) !important;
+  background: rgba(var(--ok2-rgb, 51, 205, 184), 0.15) !important;
+  color: var(--ok2, #33cdb8) !important;
+  border-color: rgba(var(--ok2-rgb, 51, 205, 184), 0.35) !important;
   font-weight: 600;
 }
 
 .btn-primary-accent:hover {
-  background: rgba(var(--ok2-rgb, 0, 240, 255), 0.25) !important;
-  border-color: var(--ok2, #00f0ff) !important;
+  background: rgba(var(--ok2-rgb, 51, 205, 184), 0.25) !important;
+  border-color: var(--ok2, #33cdb8) !important;
 }
 

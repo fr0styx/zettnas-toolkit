@@ -72,9 +72,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(37, 194, 160, 0.14) !important;
-  color: var(--ok2, #25c2a0) !important;
-  border: 1px solid rgba(37, 194, 160, 0.35) !important;
+  background: rgba(51, 205, 184, 0.14) !important;
+  color: var(--ok2, #33cdb8) !important;
+  border: 1px solid rgba(51, 205, 184, 0.35) !important;
   border-radius: 5px !important;
   font-size: var(--zn-fs-xs) !important;
   font-weight: 600 !important;
@@ -83,10 +83,10 @@
   transition: all 0.15s ease;
 }
 .btn-restore-app-backup:hover:not(:disabled) {
-  background: rgba(37, 194, 160, 0.28) !important;
-  border-color: #25c2a0 !important;
+  background: rgba(51, 205, 184, 0.28) !important;
+  border-color: #33cdb8 !important;
   color: var(--zn-text-strong) !important;
-  box-shadow: 0 0 10px rgba(37, 194, 160, 0.45) !important;
+  box-shadow: 0 0 10px rgba(51, 205, 184, 0.45) !important;
   transform: translateY(-1px);
 }
 
@@ -202,11 +202,11 @@
   color: var(--zn-text-strong);
 }
 .docker-filter-btn.active {
-  background: var(--accent-cyan, #00f0ff) !important;
+  background: var(--accent-cyan, #33cdb8) !important;
   color: #0b0f17 !important;
   font-weight: 700;
-  border-color: var(--accent-cyan, #00f0ff) !important;
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+  border-color: var(--accent-cyan, #33cdb8) !important;
+  box-shadow: 0 0 10px rgba(51, 205, 184, 0.25);
 }
 .docker-count-badge {
   display: inline-block;
@@ -255,18 +255,18 @@
   font-family: var(--font-mono, monospace);
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff));
-  background: var(--lt-b-00f0ff1a, rgba(0, 240, 255, 0.1));
-  border: 1px solid var(--lt-r-00f0ff59, rgba(0, 240, 255, 0.35));
+  color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));
+  background: var(--lt-b-33cdb81a, rgba(51, 205, 184, 0.1));
+  border: 1px solid var(--lt-r-33cdb859, rgba(51, 205, 184, 0.35));
   text-decoration: none;
   transition: all 0.15s ease;
   cursor: pointer;
   white-space: nowrap;
 }
 .btn-webui-badge:hover {
-  background: var(--lt-b-00f0ff40, rgba(0, 240, 255, 0.25));
-  border-color: var(--accent-cyan, #00f0ff);
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+  background: var(--lt-b-33cdb840, rgba(51, 205, 184, 0.25));
+  border-color: var(--accent-cyan, #33cdb8);
+  box-shadow: 0 0 10px rgba(51, 205, 184, 0.35);
   color: var(--zn-text-strong);
   transform: translateY(-1px);
 }
@@ -299,9 +299,9 @@
   margin-right: 4px;
 }
 .docker-hw-gpu {
-  background: var(--lt-b-00f0ff1f, rgba(0, 240, 255, 0.12));
-  color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff));
-  border: 1px solid var(--lt-r-00f0ff4c, rgba(0, 240, 255, 0.3));
+  background: var(--lt-b-33cdb81f, rgba(51, 205, 184, 0.12));
+  color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));
+  border: 1px solid var(--lt-r-33cdb84c, rgba(51, 205, 184, 0.3));
 }
 .docker-hw-nvidia {
   background: rgba(34, 197, 94, 0.12);
@@ -373,7 +373,7 @@
   border: 1px solid var(--zn-line-6);
 }
 .docker-telemetry-pill .telem-cpu {
-  color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff));
+  color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));
   font-weight: 600;
 }
 .docker-telemetry-pill .telem-mem {
@@ -393,7 +393,7 @@
   background: var(--lt-b-0d1117f2, rgba(13, 17, 23, 0.95));
   backdrop-filter: blur(20px);
   border: 1px solid var(--zn-line-12);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 240, 255, 0.08);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(51, 205, 184, 0.08);
   resize: both;
   overflow: hidden;
 }
@@ -427,9 +427,9 @@
 
 .ci-tab-btn.active {
   color: var(--zn-text-strong);
-  background: var(--lt-b-00f0ff26, rgba(0, 240, 255, 0.15));
-  border-color: var(--lt-r-00f0ff66, rgba(0, 240, 255, 0.4));
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+  background: var(--lt-b-33cdb826, rgba(51, 205, 184, 0.15));
+  border-color: var(--lt-r-33cdb866, rgba(51, 205, 184, 0.4));
+  box-shadow: 0 0 10px rgba(51, 205, 184, 0.2);
 }
 
 .ci-panes-container {
@@ -465,7 +465,7 @@
   font-size: var(--zn-fs-xs);
   padding: 3px 8px;
   background: rgba(14, 165, 233, 0.12);
-  color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff));
+  color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));
   border: 1px solid rgba(14, 165, 233, 0.3);
   border-radius: 4px;
   cursor: pointer;
@@ -474,9 +474,9 @@
 
 .btn-reveal-fm:hover {
   background: rgba(14, 165, 233, 0.25);
-  border-color: var(--accent-cyan, #00f0ff);
+  border-color: var(--accent-cyan, #33cdb8);
   color: var(--zn-text-strong);
-  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 8px rgba(51, 205, 184, 0.3);
 }
 
 .ci-proto-tag {
@@ -490,15 +490,15 @@
 }
 
 .btn-docker-inspect {
-  background: var(--lt-b-00f0ff1a, rgba(0, 240, 255, 0.1));
-  border: 1px solid var(--lt-r-00f0ff4c, rgba(0, 240, 255, 0.3));
-  color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff));
+  background: var(--lt-b-33cdb81a, rgba(51, 205, 184, 0.1));
+  border: 1px solid var(--lt-r-33cdb84c, rgba(51, 205, 184, 0.3));
+  color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));
   transition: all 0.15s ease;
 }
 
 .btn-docker-inspect:hover {
-  background: var(--lt-b-00f0ff40, rgba(0, 240, 255, 0.25));
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+  background: var(--lt-b-33cdb840, rgba(51, 205, 184, 0.25));
+  box-shadow: 0 0 10px rgba(51, 205, 184, 0.35);
   color: var(--zn-text-strong);
 }
 
@@ -507,8 +507,8 @@
 }
 
 .btn-docker-name-link:hover {
-  color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff)) !important;
-  text-shadow: var(--lt-text-shadow, 0 0 8px rgba(0, 240, 255, 0.4));
+  color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8)) !important;
+  text-shadow: var(--lt-text-shadow, 0 0 8px rgba(51, 205, 184, 0.4));
 }
 
 /* Metrics Device Filter Row & Badges */
@@ -534,10 +534,10 @@
   color: var(--zn-text-strong);
 }
 .metrics-device-btn.active {
-  background: var(--lt-b-00f0ff26, rgba(0, 240, 255, 0.15));
-  border-color: var(--accent-cyan, #00f0ff);
+  background: var(--lt-b-33cdb826, rgba(51, 205, 184, 0.15));
+  border-color: var(--accent-cyan, #33cdb8);
   color: var(--zn-text-strong);
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+  box-shadow: 0 0 10px rgba(51, 205, 184, 0.25);
 }
 .metrics-device-summary-strip {
   display: flex;
@@ -591,8 +591,8 @@
 .mgmt-app-card:hover {
   transform: translateY(-3px);
   background: var(--lt-b-172332d9, rgba(23, 35, 50, 0.85));
-  border-color: rgba(37, 194, 160, 0.45);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(37, 194, 160, 0.15);
+  border-color: rgba(51, 205, 184, 0.45);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(51, 205, 184, 0.15);
 }
 
 .mgmt-app-card:active {
@@ -615,14 +615,14 @@
 }
 
 .mgmt-icon-wallpaper {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(37, 194, 160, 0.15));
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(51, 205, 184, 0.15));
   border: 1px solid rgba(56, 189, 248, 0.3);
   color: var(--zn-text-accent);
 }
 
 .mgmt-icon-metrics {
-  background: linear-gradient(135deg, rgba(37, 194, 160, 0.2), rgba(52, 211, 153, 0.15));
-  border: 1px solid rgba(37, 194, 160, 0.3);
+  background: linear-gradient(135deg, rgba(51, 205, 184, 0.2), rgba(52, 211, 153, 0.15));
+  border: 1px solid rgba(51, 205, 184, 0.3);
   color: var(--zn-text-ok);
 }
 
@@ -715,7 +715,7 @@
 .mgmt-app-action {
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  color: var(--ok2, #25c2a0);
+  color: var(--ok2, #33cdb8);
   transition: transform 0.15s ease;
 }
 
@@ -804,7 +804,7 @@ body.theme-yak .mgmt-back-btn:hover {
 
 /* Sharing-protocol pills: live state (UX-4) */
 .proto-pill { font-size: var(--zn-fs-xs); border: 1px solid var(--border, var(--zn-line-12)); color: var(--muted, #94a3b8); background: transparent; }
-.proto-pill[data-state="on"] { color: var(--ok2, #25c2a0); border-color: color-mix(in srgb, var(--ok2, #25c2a0) 40%, transparent); }
+.proto-pill[data-state="on"] { color: var(--ok2, #33cdb8); border-color: color-mix(in srgb, var(--ok2, #33cdb8) 40%, transparent); }
 .proto-pill[data-state="off"] { color: var(--muted, #94a3b8); }
 
 /* AI search ran on keywords only (AI-4) */

@@ -22,13 +22,13 @@
 }
 .theme-preset-card:hover {
   background: var(--lt-b-1b2a3dff, #1b2a3d);
-  border-color: var(--lt-r-00f0ff66, rgba(0, 240, 255, 0.4));
+  border-color: var(--lt-r-33cdb866, rgba(51, 205, 184, 0.4));
   transform: translateY(-1px);
 }
 .theme-preset-card.active {
-  background: var(--lt-b-00f0ff1f, rgba(0, 240, 255, 0.12));
-  border-color: var(--brand, #00f0ff);
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+  background: var(--lt-b-33cdb81f, rgba(51, 205, 184, 0.12));
+  border-color: var(--brand, #33cdb8);
+  box-shadow: 0 0 12px rgba(51, 205, 184, 0.25);
 }
 .theme-swatch-circle {
   width: 22px;
@@ -52,7 +52,7 @@
   text-overflow: ellipsis;
 }
 .theme-preset-card.active .theme-preset-name {
-  color: var(--lt-ink-brand, var(--brand, #00f0ff));
+  color: var(--lt-ink-brand, var(--brand, #33cdb8));
 }
 .theme-preset-desc {
   font-size: var(--zn-fs-xs);

@@ -1240,7 +1240,7 @@ export async function openAppDeployModal(appId) {
                 <button type="button" id="adm-choice-replace-btn" class="btn-pill-toggle is-danger" style="text-align: center; color: var(--lt-t-ff8080ff, #ff8080);">
                   🔄 ${t('catalog.replace', 'Replace the one there')}
                 </button>
-                <button type="button" id="adm-choice-new-btn" class="btn-pill-toggle" style="text-align: center; border: 2px solid var(--ok2, #25c2a0); background: rgba(37, 194, 160, 0.18); color: var(--ok2, #25c2a0);">
+                <button type="button" id="adm-choice-new-btn" class="btn-pill-toggle" style="text-align: center; border: 2px solid var(--ok2, #33cdb8); background: rgba(51, 205, 184, 0.18); color: var(--ok2, #33cdb8);">
                   ➕ ${t('catalog.alongside', 'Install another copy')}
                 </button>
               </div>
@@ -1288,12 +1288,12 @@ export async function openAppDeployModal(appId) {
                   <div class="dkd-xs-muted" id="adm-progress-status-text">${t('catalog.preparing', 'Getting its folders ready...')}</div>
                 </div>
               </div>
-              <div id="adm-progress-pct-badge" style="font-size:13px; font-weight:800; font-family:var(--font-mono, monospace); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); background:var(--lt-b-00f0ff14, rgba(0,240,255,0.08)); padding:3px 9px; border-radius:6px; border:1px solid var(--lt-r-00f0ff33, rgba(0,240,255,0.2));">0%</div>
+              <div id="adm-progress-pct-badge" style="font-size:13px; font-weight:800; font-family:var(--font-mono, monospace); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); background:var(--lt-b-33cdb814, rgba(51,205,184,0.08)); padding:3px 9px; border-radius:6px; border:1px solid var(--lt-r-33cdb833, rgba(51,205,184,0.2));">0%</div>
             </div>
 
             <!-- Stylized Progress Bar -->
             <div class="dkd-box">
-              <div id="adm-progress-bar-fill" style="height:100%; width:0%; background:linear-gradient(90deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); transition:width 0.25s ease; box-shadow:0 0 10px rgba(37,194,160,0.5);"></div>
+              <div id="adm-progress-bar-fill" style="height:100%; width:0%; background:linear-gradient(90deg, var(--brand, #0ea5e9), var(--ok2, #33cdb8)); transition:width 0.25s ease; box-shadow:0 0 10px rgba(51,205,184,0.5);"></div>
             </div>
 
             <!-- Real-time Activity Log Terminal -->
@@ -1305,12 +1305,12 @@ export async function openAppDeployModal(appId) {
             </div>
 
             <!-- Success Callout -->
-            <div id="adm-success-box" style="display:none; padding:12px 14px; background:rgba(37,194,160,0.12); border:1px solid var(--ok2, #25c2a0); border-radius:6px; align-items:center; justify-content:space-between; gap:12px;">
+            <div id="adm-success-box" style="display:none; padding:12px 14px; background:rgba(51,205,184,0.12); border:1px solid var(--ok2, #33cdb8); border-radius:6px; align-items:center; justify-content:space-between; gap:12px;">
               <div>
-                <div style="font-weight:700; color:var(--ok2, #25c2a0); font-size:var(--zn-fs-xs);">🚀 ${t('catalog.live', 'The app is running')}</div>
+                <div style="font-weight:700; color:var(--ok2, #33cdb8); font-size:var(--zn-fs-xs);">🚀 ${t('catalog.live', 'The app is running')}</div>
                 <div class="dkd-xs-soft-2" id="adm-success-msg">${t('catalog.live_desc', 'It is installed and started.')}</div>
               </div>
-              <a id="adm-webui-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:var(--ok2, #25c2a0); color:#000; font-weight:700; font-size:var(--zn-fs-xs); padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+              <a id="adm-webui-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:var(--ok2, #33cdb8); color:#000; font-weight:700; font-size:var(--zn-fs-xs); padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
                 🌐 ${t('catalog.open_app', 'Open the app')} ↗
               </a>
             </div>
@@ -1488,10 +1488,10 @@ export async function openAppDeployModal(appId) {
     choiceReplaceBtn.style.boxShadow = 'none';
   }
   if (choiceNewBtn) {
-    choiceNewBtn.style.border = '2px solid var(--ok2, #25c2a0)';
-    choiceNewBtn.style.background = 'rgba(37, 194, 160, 0.18)';
+    choiceNewBtn.style.border = '2px solid var(--ok2, #33cdb8)';
+    choiceNewBtn.style.background = 'rgba(51, 205, 184, 0.18)';
     choiceNewBtn.style.opacity = '1';
-    choiceNewBtn.style.boxShadow = '0 0 8px rgba(37,194,160,0.3)';
+    choiceNewBtn.style.boxShadow = '0 0 8px rgba(51,205,184,0.3)';
   }
 
   if (nameInput) {
@@ -1531,8 +1531,8 @@ export async function openAppDeployModal(appId) {
       const isRunning = existingContainerInfo.state === 'running';
       if (existingBadge) {
         existingBadge.textContent = isRunning ? t('catalog.state_running', 'Running') : t('catalog.state_stopped', 'Stopped');
-        existingBadge.style.color = isRunning ? 'var(--ok2, #25c2a0)' : 'var(--muted)';
-        existingBadge.style.background = isRunning ? 'rgba(37,194,160,0.15)' : 'rgba(255,255,255,0.08)';
+        existingBadge.style.color = isRunning ? 'var(--ok2, #33cdb8)' : 'var(--muted)';
+        existingBadge.style.background = isRunning ? 'rgba(51,205,184,0.15)' : 'rgba(255,255,255,0.08)';
       }
       if (existingDesc) {
         existingDesc.textContent = t('catalog.existing_desc', '{name} is already installed. Replace it, or install another copy next to it?', { name: existingContainerInfo.name }); // a name is text, never HTML
@@ -1548,9 +1548,9 @@ export async function openAppDeployModal(appId) {
         banner.style.border = '1px solid var(--warn, #f5a623)';
         banner.innerHTML = portTakenHtml(defaultPort, suggestedPort, resolveData.in_use_by);
       } else {
-        banner.style.background = 'rgba(37, 194, 160, 0.12)';
-        banner.style.border = '1px solid var(--ok2, #25c2a0)';
-        banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">${ico('✓')} ${t('dk.alongside_lead', 'Install alongside:')}</span> ${t('dk.alongside', 'Suggested name {name} on free port {port}.', { name: bold(suggestedContainerName), port: bold(suggestedPort) })}`;
+        banner.style.background = 'rgba(51, 205, 184, 0.12)';
+        banner.style.border = '1px solid var(--ok2, #33cdb8)';
+        banner.innerHTML = `<span style="color:var(--ok2, #33cdb8); font-weight:bold;">${ico('✓')} ${t('dk.alongside_lead', 'Install alongside:')}</span> ${t('dk.alongside', 'Suggested name {name} on free port {port}.', { name: bold(suggestedContainerName), port: bold(suggestedPort) })}`;
       }
       if (deployConfirmBtn) setIconLabel(deployConfirmBtn, '🚀', t('ui.deploy_new_instance', 'Deploy New Instance'));
     } else if (resolveData.conflict_detected) {
@@ -1562,9 +1562,9 @@ export async function openAppDeployModal(appId) {
     } else {
       if (nameInput) nameInput.value = appId;
       if (portInput) portInput.value = suggestedPort;
-      banner.style.background = 'rgba(37, 194, 160, 0.12)';
-      banner.style.border = '1px solid var(--ok2, #25c2a0)';
-      banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ ${escapeHtml(t('catalog.install_ready', 'Ready to install'))}</span> ${escapeHtml(t('catalog.install_ready_detail', '{name} will open on port {port}.', { name: appId, port: suggestedPort }))}`;
+      banner.style.background = 'rgba(51, 205, 184, 0.12)';
+      banner.style.border = '1px solid var(--ok2, #33cdb8)';
+      banner.innerHTML = `<span style="color:var(--ok2, #33cdb8); font-weight:bold;">✓ ${escapeHtml(t('catalog.install_ready', 'Ready to install'))}</span> ${escapeHtml(t('catalog.install_ready_detail', '{name} will open on port {port}.', { name: appId, port: suggestedPort }))}`;
     }
   } catch (e) {
     if (nameInput) nameInput.value = appId;
@@ -1590,8 +1590,8 @@ export async function openAppDeployModal(appId) {
       choiceReplaceBtn.style.boxShadow = '0 0 8px rgba(235,87,87,0.4)';
     }
     if (choiceNewBtn) {
-      choiceNewBtn.style.border = '1px solid rgba(37, 194, 160, 0.4)';
-      choiceNewBtn.style.background = 'rgba(37, 194, 160, 0.1)';
+      choiceNewBtn.style.border = '1px solid rgba(51, 205, 184, 0.4)';
+      choiceNewBtn.style.background = 'rgba(51, 205, 184, 0.1)';
       choiceNewBtn.style.opacity = '0.75';
       choiceNewBtn.style.boxShadow = 'none';
     }
@@ -1623,10 +1623,10 @@ export async function openAppDeployModal(appId) {
     }
 
     if (choiceNewBtn) {
-      choiceNewBtn.style.border = '2px solid var(--ok2, #25c2a0)';
-      choiceNewBtn.style.background = 'rgba(37, 194, 160, 0.18)';
+      choiceNewBtn.style.border = '2px solid var(--ok2, #33cdb8)';
+      choiceNewBtn.style.background = 'rgba(51, 205, 184, 0.18)';
       choiceNewBtn.style.opacity = '1';
-      choiceNewBtn.style.boxShadow = '0 0 8px rgba(37,194,160,0.3)';
+      choiceNewBtn.style.boxShadow = '0 0 8px rgba(51,205,184,0.3)';
     }
     if (choiceReplaceBtn) {
       choiceReplaceBtn.style.border = '1px solid rgba(235, 87, 87, 0.4)';
@@ -1635,9 +1635,9 @@ export async function openAppDeployModal(appId) {
       choiceReplaceBtn.style.boxShadow = 'none';
     }
 
-    banner.style.background = 'rgba(37, 194, 160, 0.12)';
-    banner.style.border = '1px solid var(--ok2, #25c2a0)';
-    banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">${ico('✓')} ${t('dk.new_lead', 'New copy:')}</span> ${t('dk.new_instance', 'Setting up {name} on free port {port}, next to the one already there.', { name: bold(suggestedContainerName), port: bold(suggestedPort) })}`;
+    banner.style.background = 'rgba(51, 205, 184, 0.12)';
+    banner.style.border = '1px solid var(--ok2, #33cdb8)';
+    banner.innerHTML = `<span style="color:var(--ok2, #33cdb8); font-weight:bold;">${ico('✓')} ${t('dk.new_lead', 'New copy:')}</span> ${t('dk.new_instance', 'Setting up {name} on free port {port}, next to the one already there.', { name: bold(suggestedContainerName), port: bold(suggestedPort) })}`;
 
     if (deployConfirmBtn) {
       setIconLabel(deployConfirmBtn, '🚀', t('ui.deploy_new_instance', 'Deploy New Instance'));
@@ -1750,11 +1750,11 @@ export async function openAppDeployModal(appId) {
           deployConfirmBtn.style.pointerEvents = 'none';
         }
       } else {
-        banner.style.background = 'rgba(37, 194, 160, 0.12)';
-        banner.style.border = '1px solid var(--ok2, #25c2a0)';
+        banner.style.background = 'rgba(51, 205, 184, 0.12)';
+        banner.style.border = '1px solid var(--ok2, #33cdb8)';
         portInput.style.borderColor = '';
         const cName = nameInput ? nameInput.value.trim() : appId;
-        banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">${ico('✓')} ${t('dk.ready_lead', 'Ready to install:')}</span> ${t('dk.ready', 'Port {port} is free for the container {name}.', { port: escapeHtml(String(val)), name: bold(cName) })}`;
+        banner.innerHTML = `<span style="color:var(--ok2, #33cdb8); font-weight:bold;">${ico('✓')} ${t('dk.ready_lead', 'Ready to install:')}</span> ${t('dk.ready', 'Port {port} is free for the container {name}.', { port: escapeHtml(String(val)), name: bold(cName) })}`;
         if (deployConfirmBtn) {
           deployConfirmBtn.disabled = false;
           deployConfirmBtn.style.opacity = '1';
@@ -1841,7 +1841,7 @@ export async function openAppDeployModal(appId) {
   function logDeployLine(msg, type = 'info') {
     if (!deployLogs) return;
     const now = new Date().toTimeString().split(' ')[0];
-    const color = type === 'error' ? 'var(--crit, #ff6b6b)' : type === 'success' ? 'var(--ok2, #25c2a0)' : '#cbd5e1';
+    const color = type === 'error' ? 'var(--crit, #ff6b6b)' : type === 'success' ? 'var(--ok2, #33cdb8)' : '#cbd5e1';
     const line = document.createElement('div');
     line.style.color = color;
     line.textContent = `[${now}] ${msg}`;
@@ -1869,7 +1869,7 @@ export async function openAppDeployModal(appId) {
       if (progressFill) progressFill.style.width = '100%';
       if (progressPct) {
         progressPct.textContent = t('preview.actual_size', '100%');
-        progressPct.style.color = 'var(--ok2, #25c2a0)';
+        progressPct.style.color = 'var(--ok2, #33cdb8)';
       }
       if (progressTitle) progressTitle.textContent = `✓ ${t('dk.installed', '{app} is installed', { app: appId.toUpperCase() })}`;
       if (progressSpinner) {
@@ -2011,7 +2011,7 @@ export async function openAppDeployModal(appId) {
     if (progressFill) progressFill.style.width = '0%';
     if (progressPct) {
       progressPct.textContent = '0%';
-      progressPct.style.color = 'var(--accent-cyan, #00f0ff)';
+      progressPct.style.color = 'var(--accent-cyan, #33cdb8)';
     }
     if (progressTitle) progressTitle.textContent = t('catalog.installing_name', 'Installing {name}...', { name: cName });
     if (progressStatus) {
@@ -2146,9 +2146,9 @@ export async function openDockerPruneModal() {
                 <div class="dkd-xs-bold-muted-2">${t('dk.volumes', 'Volumes')}</div>
                 <div class="dkd-xs-bold-strong" id="dpm-df-volumes">${t('common.loading', 'Loading…')}</div>
               </div>
-              <div style="background:var(--lt-b-00f0ff0f, rgba(0,240,255,0.06)); border:1px solid var(--lt-r-00f0ff33, rgba(0,240,255,0.2)); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); text-transform:uppercase; font-weight:700;">${t('dk.reclaimable', 'Can be freed')}</div>
-                <div id="dpm-df-reclaimable" style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--ok2, #25c2a0); margin-top:2px;">--</div>
+              <div style="background:var(--lt-b-33cdb80f, rgba(51,205,184,0.06)); border:1px solid var(--lt-r-33cdb833, rgba(51,205,184,0.2)); padding:8px 10px; border-radius:6px; text-align:center;">
+                <div style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); text-transform:uppercase; font-weight:700;">${t('dk.reclaimable', 'Can be freed')}</div>
+                <div id="dpm-df-reclaimable" style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--ok2, #33cdb8); margin-top:2px;">--</div>
               </div>
             </div>
 
@@ -2461,11 +2461,11 @@ export async function openAppSourcesModal() {
             </div>
 
             <!-- Quick Add Preset Banner -->
-            <div id="asm-preset-banner" style="background:linear-gradient(135deg, rgba(14,165,233,0.12), rgba(37,194,160,0.08)); border:1px solid rgba(14,165,233,0.3); border-radius:8px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div id="asm-preset-banner" style="background:linear-gradient(135deg, rgba(14,165,233,0.12), rgba(51,205,184,0.08)); border:1px solid rgba(14,165,233,0.3); border-radius:8px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
               <div>
                 <div class="dkd-row-xs-bold-strong">
                   <span>${ico('⭐')} ${t('dk.lissy', 'Lissy93 Portainer templates')}</span>
-                  <span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(37,194,160,0.2); color:var(--accent);">790+ Apps</span>
+                  <span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(51,205,184,0.2); color:var(--accent);">790+ Apps</span>
                 </div>
                 <div class="dkd-xs-muted-3">
                   ${t('dk.lissy_desc', 'A large community list of self-hosted apps, web tools and stacks.')}
@@ -2576,7 +2576,7 @@ export async function openAppSourcesModal() {
           await api.post('/api/docker/catalog/sources', { name, url });
           nameInput.value = '';
           urlInput.value = '';
-          statusEl.style.background = 'rgba(37,194,160,0.15)';
+          statusEl.style.background = 'rgba(51,205,184,0.15)';
           statusEl.style.color = 'var(--accent)';
           statusEl.textContent = t('ui.source_added_and_synced_successfully', '✓ Source added and synced successfully!');
           showToast(t('toast.added_template_source', 'Added template source "{name}"!', { name: name }), 'success');
@@ -2620,9 +2620,9 @@ async function refreshSourcesUI() {
     if (btnLissy) {
       if (hasLissy) {
         btnLissy.disabled = true;
-        btnLissy.style.background = 'rgba(37,194,160,0.15)';
+        btnLissy.style.background = 'rgba(51,205,184,0.15)';
         btnLissy.style.color = 'var(--accent)';
-        btnLissy.style.border = '1px solid rgba(37,194,160,0.3)';
+        btnLissy.style.border = '1px solid rgba(51,205,184,0.3)';
         btnLissy.textContent = t('ui.lissy93_added', '✓ Lissy93 Added');
       } else {
         btnLissy.disabled = false;
@@ -2642,7 +2642,7 @@ async function refreshSourcesUI() {
       const isBuiltin = src.id === 'builtin';
       const isEnabled = src.enabled !== false;
       const statusBadge = src.status === 'ok'
-        ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(37,194,160,0.15); color:var(--accent);">${ico('✓')} ${escapeHtml(t('dk.synced', 'Synced ({when})', { when: formatRelativeTime(src.last_synced) }))}</span>`
+        ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(51,205,184,0.15); color:var(--accent);">${ico('✓')} ${escapeHtml(t('dk.synced', 'Synced ({when})', { when: formatRelativeTime(src.last_synced) }))}</span>`
         : (src.status === 'error'
           ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(239,68,68,0.15); color:var(--lt-t-fca5a5ff, #fca5a5);" title="${escapeHtml(src.error || 'Sync failed')}">${ico('⚠️')} ${t('ui.error', 'Error')}</span>`
           : `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(14,165,233,0.15); color:var(--zn-text-accent);">🔄 ${escapeHtml(src.status || 'pending')}</span>`);

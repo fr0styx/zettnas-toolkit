@@ -331,7 +331,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   if (isMedia) {
     titleEl.innerHTML = `<span aria-hidden="true">📷</span> ${safeTitle}`;
     okBtn.innerHTML = options.okText ? escapeHtml(options.okText) : "📥 Import Media";
-    okBtn.style.background = "linear-gradient(135deg, #0ea5e9, #25c2a0)";
+    okBtn.style.background = "linear-gradient(135deg, #0ea5e9, #33cdb8)";
     okBtn.style.border = "1px solid #0ea5e9";
     okBtn.style.color = "#fff";
     headerBg.style.background = "rgba(14, 165, 233, 0.12)";

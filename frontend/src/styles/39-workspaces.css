@@ -43,7 +43,7 @@
 }
 
 .drive-temp-cell.temp-cool .drive-temp-val {
-  color: var(--ok2, #25c2a0);
+  color: var(--ok2, #33cdb8);
 }
 
 .drive-temp-cell.temp-warm .drive-temp-val {
@@ -138,9 +138,9 @@
 }
 
 .ai-metric-pill.active-npu {
-  color: var(--lt-t-00f0ffff, #00f0ff);
-  background: var(--lt-b-00f0ff26, rgba(0, 240, 255, 0.15));
-  border-color: var(--lt-r-00f0ff59, rgba(0, 240, 255, 0.35));
+  color: var(--lt-t-33cdb8ff, #33cdb8);
+  background: var(--lt-b-33cdb826, rgba(51, 205, 184, 0.15));
+  border-color: var(--lt-r-33cdb859, rgba(51, 205, 184, 0.35));
   animation: pulse-ai-glow 1.5s infinite alternate;
 }
 
@@ -212,8 +212,8 @@
 }
 
 .ai-status-dot.active {
-  background: var(--brand, #00f0ff);
-  box-shadow: 0 0 8px var(--brand, #00f0ff);
+  background: var(--brand, #33cdb8);
+  box-shadow: 0 0 8px var(--brand, #33cdb8);
 }
 
 .ai-status-dot.active-gpu {
@@ -222,7 +222,7 @@
 }
 
 .ai-status-dot.standby {
-  background: var(--ok2, #25c2a0);
+  background: var(--ok2, #33cdb8);
   opacity: 0.8;
 }
 

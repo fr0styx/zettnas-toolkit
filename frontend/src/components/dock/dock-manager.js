@@ -496,7 +496,7 @@ export const DockManager = {
           let col = '#93c5fd';
           if (ev.level === 'error') { nIcon = '❌'; col = 'var(--crit, #ff5c5c)'; }
           else if (ev.level === 'warning') { nIcon = '⚠️'; col = 'var(--warn, #f5a623)'; }
-          else if (ev.level === 'success') { nIcon = '✅'; col = 'var(--ok2, #25c2a0)'; }
+          else if (ev.level === 'success') { nIcon = '✅'; col = 'var(--ok2, #33cdb8)'; }
           const timeStr = formatTime(ev.ts, undefined, '');
           return `
             <div class="dock-notif-feed-item">

@@ -22,7 +22,7 @@ export const SYSTEM_SHORTCUTS = [
     desc: 'Manage Docker containers, Compose stacks, app catalog, and live container terminal.',
     icon: '#i-chip',
     svg: true,
-    color: '#00f0ff',
+    color: '#33cdb8',
     targetSection: 'mgmt-sec-docker',
     targetPane: 'mgmt-pane-docker',
     badge: 'Docker'
@@ -46,7 +46,7 @@ export const SYSTEM_SHORTCUTS = [
     desc: 'Visual hardware switch faceplate, link negotiation, host bridges, and Docker network topology.',
     icon: '#i-net',
     svg: true,
-    color: '#00f0ff',
+    color: '#33cdb8',
     targetSection: 'mgmt-sec-network',
     targetPane: 'mgmt-pane-network',
     badge: 'Switch'
@@ -463,7 +463,7 @@ export function openAddDesktopShortcutModal() {
             <label class="asd-label-wide">${escapeHtml(t('ds.icon', 'Icon'))}</label>
             <div class="asd-emojis" id="custom-shortcut-emojis">
               ${['🌐', '🏠', '🎬', '🛡️', '📦', '⚡', '🔌', '🚀', '🎮', '🎵', '💾', '📊', '📡', '🛠️'].map((emoji, idx) => `
-                <button type="button" class="btn-emoji-chip ${idx === 0 ? 'active' : ''}" data-emoji="${emoji}" style="padding:6px 10px; font-size:16px; background:${idx === 0 ? 'rgba(0,240,255,0.2)' : 'rgba(255,255,255,0.05)'}; border:1px solid ${idx === 0 ? 'rgba(0,240,255,0.6)' : 'rgba(255,255,255,0.1)'}; border-radius:6px; cursor:pointer;">${emoji}</button>
+                <button type="button" class="btn-emoji-chip ${idx === 0 ? 'active' : ''}" data-emoji="${emoji}" style="padding:6px 10px; font-size:16px; background:${idx === 0 ? 'rgba(51,205,184,0.2)' : 'rgba(255,255,255,0.05)'}; border:1px solid ${idx === 0 ? 'rgba(51,205,184,0.6)' : 'rgba(255,255,255,0.1)'}; border-radius:6px; cursor:pointer;">${emoji}</button>
               `).join('')}
             </div>
           </div>
@@ -509,8 +509,8 @@ export function openAddDesktopShortcutModal() {
           b.style.background = 'rgba(255,255,255,0.05)';
           b.style.borderColor = 'rgba(255,255,255,0.1)';
         });
-        btn.style.background = 'rgba(0,240,255,0.2)';
-        btn.style.borderColor = 'rgba(0,240,255,0.6)';
+        btn.style.background = 'rgba(51,205,184,0.2)';
+        btn.style.borderColor = 'rgba(51,205,184,0.6)';
         selectedEmoji = btn.dataset.emoji || '🌐';
       });
     });
@@ -535,7 +535,7 @@ export function openAddDesktopShortcutModal() {
         url,
         icon: selectedEmoji,
         svg: false,
-        color: '#00f0ff'
+        color: '#33cdb8'
       };
 
       addDesktopShortcut(customDef);
@@ -572,7 +572,7 @@ function renderSystemShortcutsList(overlay) {
     return `
       <div class="shortcut-system-card asd-card">
         <div class="asd-card-main">
-          <div style="width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--lt-b-00f0ff1f, rgba(0,240,255,0.12)) 0%, rgba(37,194,160,0.08) 100%); border:1px solid var(--lt-r-00f0ff4c, rgba(0,240,255,0.3)); color:${s.color}; flex-shrink:0;">
+          <div style="width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--lt-b-33cdb81f, rgba(51,205,184,0.12)) 0%, rgba(51,205,184,0.08) 100%); border:1px solid var(--lt-r-33cdb84c, rgba(51,205,184,0.3)); color:${s.color}; flex-shrink:0;">
             <svg class="asd-card-svg"><use href="${s.icon}"/></svg>
           </div>
           <div class="asd-card-text">

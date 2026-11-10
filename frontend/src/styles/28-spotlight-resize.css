@@ -5,20 +5,20 @@
 /* Desktop Lasso Selection Marquee */
 #desktop-lasso-rect {
   position: absolute;
-  border: 1px solid var(--accent, #00f0ff);
-  background: var(--lt-b-00f0ff1f, rgba(0, 240, 255, 0.12));
+  border: 1px solid var(--accent, #33cdb8);
+  background: var(--lt-b-33cdb81f, rgba(51, 205, 184, 0.12));
   pointer-events: none;
   border-radius: 4px;
   z-index: 99;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.15);
+  box-shadow: 0 0 12px rgba(51, 205, 184, 0.15);
 }
 
 .chassis-hero-box.desktop-icon-selected {
-  outline: 2px solid var(--accent, #00f0ff);
+  outline: 2px solid var(--accent, #33cdb8);
   outline-offset: 3px;
-  background: var(--lt-b-00f0ff14, rgba(0, 240, 255, 0.08));
+  background: var(--lt-b-33cdb814, rgba(51, 205, 184, 0.08));
   border-radius: 8px;
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
+  box-shadow: 0 0 16px rgba(51, 205, 184, 0.25);
 }
 
 /* Spotlight Command Palette */
@@ -66,7 +66,7 @@
 .spotlight-search-icon {
   font-size: 18px;
   line-height: 1;
-  color: var(--accent, var(--lt-t-00f0ffff, #00f0ff));
+  color: var(--accent, var(--lt-t-33cdb8ff, #33cdb8));
 }
 
 #spotlight-input {
@@ -118,8 +118,8 @@
 
 .spotlight-result-item:hover,
 .spotlight-result-item.active {
-  background: var(--lt-b-00f0ff1f, rgba(0, 240, 255, 0.12));
-  outline: 1px solid rgba(0, 240, 255, 0.25);
+  background: var(--lt-b-33cdb81f, rgba(51, 205, 184, 0.12));
+  outline: 1px solid rgba(51, 205, 184, 0.25);
 }
 
 .spotlight-item-left {

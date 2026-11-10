@@ -164,7 +164,7 @@ describe('Batch 5: Performance, WAI-ARIA, Keyboard Ergonomics & i18n Verificatio
     const css = readStyleCss();
 
     // Root contrast & fonts
-    expect(css).toContain('--muted:#8493a5;');
+    expect(css).toContain('--muted:#95a8ab;');
     expect(css).toContain('--font-sans:');
     expect(css).toContain('--font-mono:');
 

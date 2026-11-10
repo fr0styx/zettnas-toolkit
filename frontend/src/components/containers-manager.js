@@ -112,7 +112,7 @@ export function initContainersManager() {
             <!-- Quick Action Buttons -->
             <div class="cw-action-btns-wrap cwm-row-3">
               <button id="btn-cw-check-updates" class="btn-pill-toggle" title="${t('ui.check_remote_registries_for_container', 'Check remote registries for container image updates')}">
-                <span style="color: var(--ok2, #25c2a0);">✓</span> <span>${t('cw.check_updates', 'Check for updates')}</span>
+                <span style="color: var(--ok2, #33cdb8);">✓</span> <span>${t('cw.check_updates', 'Check for updates')}</span>
               </button>
               <button id="btn-cw-update-all" class="btn-pill-toggle" style="display: none; color: var(--zn-text-warn); border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="${t('ui.update_all_containers_with_available', 'Update all containers with available image updates')}">
                 <span aria-hidden="true">↑</span> <span>${t('cw.update_all', 'Update all')} (<span id="cw-updates-count-badge">0</span>)</span>

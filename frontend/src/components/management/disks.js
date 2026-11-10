@@ -70,7 +70,7 @@ function buildDiskRowInner(d) {
     <td>
       <span class="bay-sub-badge" style="background:var(--zn-glaze-6); padding:2px 6px; border-radius:4px;">${escapeHtml(transportStr)} • ${escapeHtml(driverStr)}</span>
     </td>
-    <td class="disk-size-cell" style="font-weight:600; color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff));">${escapeHtml(sizeStr)}</td>
+    <td class="disk-size-cell" style="font-weight:600; color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8));">${escapeHtml(sizeStr)}</td>
     <td>
       <span class="bay-health-tag ${thermal.cls}">${escapeHtml(healthStr)}</span>
     </td>

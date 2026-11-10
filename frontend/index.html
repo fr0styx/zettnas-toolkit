@@ -201,8 +201,8 @@
             subCss += '.mgmt-sidebar-item[data-mgmt-target="management-hub-view"] { background: transparent !important; border-color: transparent !important; color: #94a3b8 !important; font-weight: 600 !important; }\n';
             subCss += '.mgmt-sidebar-item[data-mgmt-target="management-hub-view"]::before { display: none !important; }\n';
             // Apply active styles to the target section sidebar button
-            subCss += '.mgmt-sidebar-item[data-mgmt-target="' + sec + '"] { background: rgba(37, 194, 160, 0.14) !important; border-color: rgba(37, 194, 160, 0.35) !important; color: #fff !important; font-weight: 700 !important; }\n';
-            subCss += '.mgmt-sidebar-item[data-mgmt-target="' + sec + '"]::before { content: "" !important; position: absolute !important; left: 0 !important; top: 6px !important; bottom: 6px !important; width: 3px !important; border-radius: 0 3px 3px 0 !important; background: var(--ok2, #25c2a0) !important; box-shadow: 0 0 8px var(--ok2, #25c2a0) !important; display: block !important; }\n';
+            subCss += '.mgmt-sidebar-item[data-mgmt-target="' + sec + '"] { background: rgba(51, 205, 184, 0.14) !important; border-color: rgba(51, 205, 184, 0.35) !important; color: #fff !important; font-weight: 700 !important; }\n';
+            subCss += '.mgmt-sidebar-item[data-mgmt-target="' + sec + '"]::before { content: "" !important; position: absolute !important; left: 0 !important; top: 6px !important; bottom: 6px !important; width: 3px !important; border-radius: 0 3px 3px 0 !important; background: var(--ok2, #33cdb8) !important; box-shadow: 0 0 8px var(--ok2, #33cdb8) !important; display: block !important; }\n';
             // Hide hub grid and show detail container and matching section card
             subCss += '#management-hub-view { display: none !important; }\n';
             subCss += '#management-detail-container { display: block !important; }\n';
@@ -214,7 +214,7 @@
             }
             if (ap !== sec) {
               subCss += '#' + sec + ' .mgmt-inner-tab { background: transparent !important; color: #94a3b8 !important; border-color: transparent !important; }\n';
-              subCss += '#' + sec + ' .mgmt-inner-tab[data-tab-target="' + ap + '"] { background: rgba(37, 194, 160, 0.16) !important; color: #fff !important; border-color: rgba(37, 194, 160, 0.4) !important; font-weight: 700 !important; }\n';
+              subCss += '#' + sec + ' .mgmt-inner-tab[data-tab-target="' + ap + '"] { background: rgba(51, 205, 184, 0.16) !important; color: #fff !important; border-color: rgba(51, 205, 184, 0.4) !important; font-weight: 700 !important; }\n';
               subCss += '#' + sec + ' .mgmt-tab-pane { display: none !important; }\n';
               subCss += '#' + ap + ' { display: block !important; }\n';
             }
@@ -657,7 +657,7 @@
             <div class="ai-dial-svg-wrap">
               <svg viewBox="0 0 36 36" class="circular-chart">
                 <path class="circle-bg" stroke="rgba(255,255,255,0.08)" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path id="w-ai-npu-arc" class="circle" stroke="var(--brand, #00f0ff)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path id="w-ai-npu-arc" class="circle" stroke="var(--brand, #33cdb8)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
               </svg>
               <div class="ai-dial-val" id="w-ai-npu-val">0%</div>
             </div>
@@ -843,7 +843,7 @@
           <div class="net-dial-svg-wrap">
             <svg viewBox="0 0 36 36" class="circular-chart">
               <path class="circle-bg" stroke="rgba(255,255,255,0.08)" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              <path id="w-net-dial-arc" class="circle" stroke="var(--brand, #00f0ff)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path id="w-net-dial-arc" class="circle" stroke="var(--brand, #33cdb8)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
             </svg>
             <div class="net-dial-val" id="w-net-dial-pct">0%</div>
           </div>

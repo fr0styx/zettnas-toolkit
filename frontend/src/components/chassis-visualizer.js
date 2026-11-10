@@ -493,7 +493,7 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
 
       rowsHtml += `
         <tr data-slot="${slot}">
-          <td style="font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff));">BAY ${slot}</td>
+          <td style="font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8));">BAY ${slot}</td>
           <td>
             <select class="slot-drive-select tz-select-input cv-xs-strong-box-2">
               ${optionsHtml}

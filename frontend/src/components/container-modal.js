@@ -128,7 +128,7 @@ export function initContainerModal() {
                 <label class="ci-row-xs-muted-2">
                   <input type="checkbox" id="ci-logs-autoscroll" checked> ${t('ci.autoscroll', 'Auto-scroll')}
                 </label>
-                <label style="display:flex; align-items:center; gap:4px; font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); cursor:pointer; font-weight:600;" title="${t('ui.stream_live_container_logs_continuously', 'Stream live container logs continuously via SSE')}">
+                <label style="display:flex; align-items:center; gap:4px; font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); cursor:pointer; font-weight:600;" title="${t('ui.stream_live_container_logs_continuously', 'Stream live container logs continuously via SSE')}">
                   <input type="checkbox" id="ci-logs-stream-toggle"> <span>${t('ci.follow', 'Follow live')}</span>
                 </label>
               </div>
@@ -620,7 +620,7 @@ async function loadContainerDetails(cid) {
     const ov = details.overview || {};
     const res = details.resources || {};
     const stateColor = ov.running ? 'var(--ok2)' : 'var(--muted)';
-    const stateBg = ov.running ? 'rgba(37, 194, 160, 0.15)' : 'rgba(255, 255, 255, 0.08)';
+    const stateBg = ov.running ? 'rgba(51, 205, 184, 0.15)' : 'rgba(255, 255, 255, 0.08)';
 
     // Update Header state pill
     const titleState = document.getElementById('ci-header-state');
@@ -659,7 +659,7 @@ async function loadContainerDetails(cid) {
         </div>
         <div class="ci-metric-card ci-box">
           <div class="ci-xs-bold-muted">${t('ci.network_ip', 'Network IP')}</div>
-          <div style="font-size:13px; font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); margin-top:3px;">${escapeHtml(ov.ip_address || 'Host Network')}</div>
+          <div style="font-size:13px; font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); margin-top:3px;">${escapeHtml(ov.ip_address || 'Host Network')}</div>
           <div class="ci-xs-muted-3">${escapeHtml(t('ci.mode', 'Mode: {mode}', { mode: ov.network_mode || 'bridge' }))}</div>
         </div>
         <div class="ci-metric-card ci-box">
@@ -686,7 +686,7 @@ async function loadContainerDetails(cid) {
       <div class="ci-metric-card ci-box-3">
         <div class="ci-row-6">
           <div class="ci-xs-bold-strong">${ico('⚡')} ${t('ci.tuning', 'Live resource limits (no downtime)')}</div>
-          <span style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); background:var(--lt-b-00f0ff1a, rgba(0,240,255,0.1)); padding:2px 6px; border-radius:4px;">${t('ci.hot', 'Applies at once')}</span>
+          <span style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); background:var(--lt-b-33cdb81a, rgba(51,205,184,0.1)); padding:2px 6px; border-radius:4px;">${t('ci.hot', 'Applies at once')}</span>
         </div>
         <div class="ci-grid-2">
           <div>
@@ -707,7 +707,7 @@ async function loadContainerDetails(cid) {
             </select>
           </div>
           <div>
-            <button class="btn-pill-toggle is-block" id="ci-btn-apply-resources" style="color: var(--ok2); border-color: var(--ok2); background: rgba(37,194,160,0.15);">
+            <button class="btn-pill-toggle is-block" id="ci-btn-apply-resources" style="color: var(--ok2); border-color: var(--ok2); background: rgba(51,205,184,0.15);">
               ${ico('💾')} ${t('ci.apply', 'Apply')}
             </button>
           </div>
@@ -875,7 +875,7 @@ function renderPortsTab(details) {
 
   const webuiBanner = webUrl
     ? `
-      <div style="margin-bottom:14px; padding:12px; background:var(--lt-b-00f0ff14, rgba(0, 240, 255, 0.08)); border:1px solid var(--lt-r-00f0ff40, rgba(0, 240, 255, 0.25)); border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+      <div style="margin-bottom:14px; padding:12px; background:var(--lt-b-33cdb814, rgba(51, 205, 184, 0.08)); border:1px solid var(--lt-r-33cdb840, rgba(51, 205, 184, 0.25)); border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
         <div>
           <div class="ci-xs-bold-strong-2">${t('ci.webui', 'Web page found')}</div>
           <div class="ci-xs-muted-3">${isHostNet ? t('ci.webui_port_host', 'On port {port} (host network)', { port: details.primary_port }) : t('ci.webui_port', 'On port {port}', { port: details.primary_port })}</div>
@@ -911,7 +911,7 @@ function renderPortsTab(details) {
                 ? `<span class="ci-bold-accent">${t('ci.host_direct', 'Host direct (:{port})', { port: p.public_port })}</span>`
                 : (p.public_port ? `${escapeHtml(p.ip || '0.0.0.0')}:${p.public_port}` : `<span class="ci-muted">${t('ci.none', 'None')}</span>`);
               const directLink = p.public_port
-                ? `<a href="http://${currentHost}:${p.public_port}/" target="_blank" rel="noopener noreferrer" style="color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); font-size:var(--zn-fs-xs);">http://${currentHost}:${p.public_port} ↗</a>`
+                ? `<a href="http://${currentHost}:${p.public_port}/" target="_blank" rel="noopener noreferrer" style="color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); font-size:var(--zn-fs-xs);">http://${currentHost}:${p.public_port} ↗</a>`
                 : '—';
               return `
                 <tr>
@@ -954,7 +954,7 @@ function renderPortsTab(details) {
               </div>
             `).join('')}
             <div class="ci-x-6">
-              <button class="btn-pill-toggle" id="ci-btn-apply-ports" style="color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); border-color: var(--accent-cyan,#00f0ff); background: var(--lt-b-00f0ff1f, rgba(0,240,255,0.12));">
+              <button class="btn-pill-toggle" id="ci-btn-apply-ports" style="color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); border-color: var(--accent-cyan,#33cdb8); background: var(--lt-b-33cdb81f, rgba(51,205,184,0.12));">
                 ${ico('🚀')} ${t('ci.recreate_ports', 'Recreate the container with the new ports')}
               </button>
             </div>
@@ -1216,7 +1216,7 @@ async function loadContainerCompose(cid) {
       } else {
         setIconLabel(badgeEl, '✨', t('ui.synthesized_compose_spec_v3_8', 'Synthesized Compose Spec v3.8'));
         badgeEl.style.color = 'var(--ok2)';
-        badgeEl.style.background = 'rgba(37, 194, 160, 0.15)';
+        badgeEl.style.background = 'rgba(51, 205, 184, 0.15)';
       }
     }
 
@@ -1298,7 +1298,7 @@ export function appendLogLine(l) {
     const textMatch = (l.msg || '').toLowerCase().includes(_activeLogFilter) || (l.ts || '').toLowerCase().includes(_activeLogFilter);
     if (!textMatch) return;
   }
-  const tsHtml = l.ts ? `<span style="color:var(--lt-t-00f0ffff, #00f0ff); opacity:0.6; margin-right:6px;">${escapeHtml(l.ts.slice(11, 19))}</span>` : '';
+  const tsHtml = l.ts ? `<span style="color:var(--lt-t-33cdb8ff, #33cdb8); opacity:0.6; margin-right:6px;">${escapeHtml(l.ts.slice(11, 19))}</span>` : '';
   const color = l.stream === 'stderr' ? '#f87171' : '#e2e8f0';
   const row = document.createElement('div');
   row.style.cssText = `white-space:pre-wrap; word-break:break-all; color:${color}; margin-bottom:2px;`;
@@ -1348,7 +1348,7 @@ function renderLogsOutput() {
 
   terminal.innerHTML = lines
     .map((l) => {
-      const tsHtml = l.ts ? `<span style="color:var(--lt-t-00f0ffff, #00f0ff); opacity:0.6; margin-right:6px;">${escapeHtml(l.ts.slice(11, 19))}</span>` : '';
+      const tsHtml = l.ts ? `<span style="color:var(--lt-t-33cdb8ff, #33cdb8); opacity:0.6; margin-right:6px;">${escapeHtml(l.ts.slice(11, 19))}</span>` : '';
       const color = l.stream === 'stderr' ? '#f87171' : '#e2e8f0';
       return `<div style="white-space:pre-wrap; word-break:break-all; color:${color}; margin-bottom:2px;">${tsHtml}${escapeHtml(l.msg)}</div>`;
     })
@@ -1376,7 +1376,7 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
             <div class="ci-xs-soft-3">
               ${t('ci.delete_q', 'Delete the container {name} ({id}) for good?', {
                 name: '<strong class="ci-strong" id="cdm-cname"></strong>',
-                id: '<code id="cdm-cid" style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff));"></code>',
+                id: '<code id="cdm-cid" style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8));"></code>',
               })}
             </div>
             <div style="background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.25); border-radius:6px; padding:10px 12px; font-size:var(--zn-fs-xs); color:var(--lt-t-fca5a5ff, #fca5a5); line-height:1.4;">
@@ -1784,8 +1784,8 @@ async function renderContainerEditTab(cid) {
             env: envVars,
           });
 
-          statusMsg.style.background = 'rgba(37,194,160,0.15)';
-          statusMsg.style.color = 'var(--ok2, #25c2a0)';
+          statusMsg.style.background = 'rgba(51,205,184,0.15)';
+          statusMsg.style.color = 'var(--ok2, #33cdb8)';
           statusMsg.textContent = `✓ ${res.message || 'Container recreated successfully!'}`;
           showToast(t('toast.container_successfully_recreated', 'Container "{target_name}" successfully recreated!', { target_name: res.target_name || name }), 'success');
 

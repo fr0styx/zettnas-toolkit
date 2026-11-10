@@ -723,7 +723,7 @@ export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, kibStat
     statePill.style.background = isPaused
       ? 'rgba(245,158,11,0.22)'
       : isRunning
-        ? 'rgba(37,194,160,0.22)'
+        ? 'rgba(51,205,184,0.22)'
         : isStopped
           ? 'rgba(239,68,68,0.22)'
           : isComplete
@@ -843,7 +843,7 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
         <div class="ai-watched-folder-chip" data-folder-path="${escapeHtml(fp)}" style="display:inline-flex; align-items:center; gap:7px; padding:4px 9px; border-radius:8px; background:rgba(14,165,233,0.14); border:1px solid rgba(14,165,233,0.38); font-size:var(--zn-fs-xs); color:var(--lt-t-f8fafcff, #f8fafc);">
           <span aria-hidden="true">☑</span>
           <span class="aik-bold-mono">${escapeHtml(fp)}</span>
-          <span style="font-size:var(--zn-fs-xs); padding:1px 6px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.18)' : 'rgba(37,194,160,0.18)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
+          <span style="font-size:var(--zn-fs-xs); padding:1px 6px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.18)' : 'rgba(51,205,184,0.18)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
             ${inStandby ? `💤 Standby${dev ? ` (${escapeHtml(dev)})` : ''}` : `🟢 Running${dev ? ` (${escapeHtml(dev)})` : ''}`}
           </span>
           <button type="button" class="btn-ai-sync-single-folder aik-xs-accent-box" data-folder-path="${escapeHtml(fp)}" title="${t('ui.sync_this_folder_now_standby', 'Sync this folder now (Standby Safe)')}">🔄</button>
@@ -894,14 +894,14 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
         const inStandby = Boolean(f.in_standby);
         const dev = f.backing_dev || '';
         return `
-          <div role="option" aria-selected="${isWatched ? 'true' : 'false'}" class="btn-pill-toggle ai-discovered-share-pill ai-watched-dropdown-item ${isWatched ? 'active' : ''}" data-folder-path="${escapeHtml(f.path)}" data-watched="${isWatched ? '1' : '0'}" style="display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:7px 10px; border-radius:8px; background:${isWatched ? 'rgba(37,194,160,0.16)' : 'rgba(255,255,255,0.03)'}; border:1px solid ${isWatched ? 'rgba(37,194,160,0.48)' : 'rgba(255,255,255,0.08)'}; color:${isWatched ? '#fff' : '#cbd5e1'}; cursor:pointer; text-align:left;" title="${inStandby ? `Backing disk (${dev}) is in STANDBY — will only sync when disk is running` : `Backing disk (${dev || 'NVMe/Pool'}) is RUNNING — click to check/uncheck for RAG`}">
+          <div role="option" aria-selected="${isWatched ? 'true' : 'false'}" class="btn-pill-toggle ai-discovered-share-pill ai-watched-dropdown-item ${isWatched ? 'active' : ''}" data-folder-path="${escapeHtml(f.path)}" data-watched="${isWatched ? '1' : '0'}" style="display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:7px 10px; border-radius:8px; background:${isWatched ? 'rgba(51,205,184,0.16)' : 'rgba(255,255,255,0.03)'}; border:1px solid ${isWatched ? 'rgba(51,205,184,0.48)' : 'rgba(255,255,255,0.08)'}; color:${isWatched ? '#fff' : '#cbd5e1'}; cursor:pointer; text-align:left;" title="${inStandby ? `Backing disk (${dev}) is in STANDBY — will only sync when disk is running` : `Backing disk (${dev || 'NVMe/Pool'}) is RUNNING — click to check/uncheck for RAG`}">
             <div class="aik-row-3">
               <span class="ai-folder-checkbox-icon" style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:4px; background:${isWatched ? '#10b981' : 'rgba(255,255,255,0.08)'}; border:1px solid ${isWatched ? '#34d399' : 'rgba(255,255,255,0.28)'}; color:#042f2e; font-size:var(--zn-fs-xs); font-weight:900; flex-shrink:0;">${isWatched ? '✓' : ''}</span>
               <span aria-hidden="true">📁</span>
               <span class="aik-bold-mono-2">${escapeHtml(f.path)}</span>
             </div>
             <div class="aik-row-4">
-              <span style="font-size:var(--zn-fs-xs); padding:1px 7px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.16)' : 'rgba(37,194,160,0.16)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
+              <span style="font-size:var(--zn-fs-xs); padding:1px 7px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.16)' : 'rgba(51,205,184,0.16)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
                 ${inStandby ? `💤 ${escapeHtml(dev || 'Standby')}` : `🟢 ${escapeHtml(dev || 'Running')}`}
               </span>
               <span style="font-size:var(--zn-fs-xs); font-weight:700; padding:1px 6px; border-radius:6px; background:${isWatched ? 'rgba(16,185,129,0.22)' : 'rgba(255,255,255,0.06)'}; color:${isWatched ? '#6ee7b7' : '#94a3b8'};">
@@ -1526,8 +1526,8 @@ export function initAiKnowledgeEngine() {
       document.querySelectorAll('#ai-color-filter-bar .ai-color-chip, #ai-color-swatch-bar .ai-color-swatch').forEach((s) => {
         const active = (s.dataset.color || '') === _aiSelectedColor && (_aiSelectedColor !== '' || s === swatch);
         s.classList.toggle('active', active);
-        s.style.border = active ? '2px solid #00f0ff' : '';
-        s.style.boxShadow = active ? '0 0 8px rgba(0,240,255,0.35)' : '';
+        s.style.border = active ? '2px solid #33cdb8' : '';
+        s.style.boxShadow = active ? '0 0 8px rgba(51,205,184,0.35)' : '';
       });
       _updateAiVisualFilterBadge();
       runAiVisualSearch(_getActiveAiSearchQuery());
@@ -2011,7 +2011,7 @@ export async function fetchAndRenderAiStatus() {
       t3.textContent = tierNum === 3
         ? `✓ ${t('ait.active_hw', 'ACTIVE: {hw}', { hw: hwName })} (${hw.execution_provider || 'CPUExecutionProvider'})`
         : `✓ ${t('ait.universal', 'Ready as Universal Fallback ({dim}-d EmbeddingGemma 2 MRL Engine)', { dim: dimFallback })}`;
-      t3.style.color = tierNum === 3 ? '#c4b5fd' : 'var(--ok2, #25c2a0)';
+      t3.style.color = tierNum === 3 ? '#c4b5fd' : 'var(--ok2, #33cdb8)';
     });
 
     const dbSummary = document.getElementById('ai-index-db-summary');
@@ -2361,7 +2361,7 @@ export function renderAiPreviewInspector(item) {
       <button type="button" id="btn-ai-inspector-open" class="btn-pill-toggle" style="background: rgba(14,165,233,0.22); border: 1px solid rgba(14,165,233,0.5); color: var(--zn-text-strong);">
         👁️ ${t('aiq.open_file', 'Open File')}
       </button>
-      <button type="button" id="btn-ai-inspector-location" class="btn-pill-toggle" style="background: rgba(37,194,160,0.18); border: 1px solid rgba(37,194,160,0.45); color: var(--lt-t-6ee7b7ff, #6ee7b7);" title="${t('ui.open_parent_folder_in_file', 'Open parent folder in File Manager')}">
+      <button type="button" id="btn-ai-inspector-location" class="btn-pill-toggle" style="background: rgba(51,205,184,0.18); border: 1px solid rgba(51,205,184,0.45); color: var(--lt-t-6ee7b7ff, #6ee7b7);" title="${t('ui.open_parent_folder_in_file', 'Open parent folder in File Manager')}">
         📂 ${t('aiq.open_location', 'Open Location')}
       </button>
       <button type="button" id="btn-ai-inspector-download" class="btn-pill-toggle">
@@ -4020,7 +4020,7 @@ export function updateAiReindexProgress(data) {
     if (sidebarBadge && sidebarBadge.dataset.reindexing) {
       sidebarBadge.textContent = 'NPU/GPU';
       sidebarBadge.style.background = 'rgba(14,165,233,0.18)';
-      sidebarBadge.style.color = 'var(--accent-cyan,#00f0ff)';
+      sidebarBadge.style.color = 'var(--accent-cyan,#33cdb8)';
       delete sidebarBadge.dataset.reindexing;
     }
     return;

@@ -36,7 +36,7 @@
       <div class="draggable-card drawer-card" data-layout-card-id="sec-lcd-style" id="sec-lcd-style">
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm drw-x-2"><use href="#i-storage"/></svg><span data-i18n="settings.lcd_layout_style_title">Screen Dashboard Style</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
-          <span id="lcd-style-active-badge" data-sample class="preset-state-badge" style="color:var(--lt-ink-brand, var(--brand, #00f0ff)); border-color:var(--brand, #00f0ff);">CLASSIC CARDS</span>
+          <span id="lcd-style-active-badge" data-sample class="preset-state-badge" style="color:var(--lt-ink-brand, var(--brand, #33cdb8)); border-color:var(--brand, #33cdb8);">CLASSIC CARDS</span>
         </div>
         <div class="card-instruction" data-i18n="settings.lcd_layout_style_desc">Show several cards with live readings, or one large, high-contrast view with the IP address.</div>
         <div class="lcd-style-picker-row" role="radiogroup" aria-label="Screen Dashboard Style" data-i18n-aria-label="settings.lcd_layout_style_title">
@@ -48,7 +48,7 @@
       <div class="draggable-card drawer-card" data-layout-card-id="sec-lcd-theme" id="sec-lcd-theme">
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm drw-x-2"><use href="#i-screen"/></svg><span data-i18n="settings.lcd_theme_title">LCD Screen Theme</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
-          <span id="lcd-theme-active-badge" data-sample class="preset-state-badge" style="color:var(--lt-ink-brand, var(--brand, #00f0ff)); border-color:var(--brand, #00f0ff);">CYBER TEAL</span>
+          <span id="lcd-theme-active-badge" data-sample class="preset-state-badge" style="color:var(--lt-ink-brand, var(--brand, #33cdb8)); border-color:var(--brand, #33cdb8);">CYBER TEAL</span>
         </div>
         <div class="card-instruction" data-i18n="settings.lcd_theme_desc">Select a color scheme specifically for the physical 640x172 LCD screen and console dashboard.</div>
         <div class="lcd-theme-picker-row">
@@ -356,7 +356,7 @@
         </div>
         <div class="card-instruction" data-i18n="settings.primary_color_desc">Select illumination preset or pick a custom hex color.</div>
         <div class="color-grid">
-          <button class="color-chip active" data-hex="25c2a0" style="background:#25c2a0; color:#0b1f1a;" data-i18n="dr.teal">Teal</button>
+          <button class="color-chip active" data-hex="25c2a0" style="background:#33cdb8; color:#0b1f1a;" data-i18n="dr.teal">Teal</button>
           <button class="color-chip" data-hex="00ffff" style="background:#00ffff; color:#0b1f1a;" data-i18n="dr.cyan">Cyan</button>
           <button class="color-chip" data-hex="33d17a" style="background:#33d17a; color:#0b1f1a;" data-i18n="dr.green">Green</button>
           <button class="color-chip" data-hex="0064ff" style="background:#0064ff; color:#fff;" data-i18n="dr.blue">Blue</button>
@@ -367,7 +367,7 @@
           <button class="color-chip" data-hex="ffffff" style="background:#ffffff; color:#111;" data-i18n="dr.white">White</button>
           <label class="color-chip custom-picker-chip" id="custom-chip-label" title="Choose custom color" data-i18n-title="ui.choose_custom_color">
             <span id="custom-chip-text" data-i18n="dr.custom">Custom</span>
-            <input type="color" id="custom-color-picker" value="#25c2a0">
+            <input type="color" id="custom-color-picker" value="#33cdb8">
           </label>
         </div>
       </div>
@@ -461,8 +461,8 @@
           <svg class="fan-curve-svg" viewBox="0 0 300 140" preserveAspectRatio="none">
             <defs>
               <linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#25c2a0" stop-opacity="0.35"/>
-                <stop offset="100%" stop-color="#25c2a0" stop-opacity="0.0"/>
+                <stop offset="0%" stop-color="#33cdb8" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#33cdb8" stop-opacity="0.0"/>
               </linearGradient>
             </defs>
 
@@ -522,7 +522,7 @@
             <div class="legend-item" id="leg-item-cpu"><span class="legend-dot" style="background:#ffaa00;"></span> CPU</div>
             <button class="btn-reset-curve-view" id="btn-reset-curve" style="display:none;"><span aria-hidden="true">↺</span> <span data-i18n="fan.show_all_zones">Show All Zones</span></button>
             <div class="drw-row-3">
-              <span id="fan-curve-range-val" class="suite-badge" title="Dynamic Fan Ramp Range" data-i18n-title="ui.dynamic_fan_ramp_range" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);" data-sample>Ramp: 37°C – 50°C</span>
+              <span id="fan-curve-range-val" class="suite-badge" title="Dynamic Fan Ramp Range" data-i18n-title="ui.dynamic_fan_ramp_range" style="background:rgba(51,205,184,0.15); color:var(--ok2); border-color:rgba(51,205,184,0.35);" data-sample>Ramp: 37°C – 50°C</span>
               <div class="drw-xs-bold-ok" id="curve-readout-text" data-sample>Active Mapping</div>
             </div>
           </div>
@@ -654,7 +654,7 @@
 
           <!-- Progress bar -->
           <div class="drw-box-2" id="acoustic-progress-bar-wrap" style="display: none;">
-            <div id="acoustic-progress-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #38bdf8, #25c2a0); transition:width 0.3s ease;"></div>
+            <div id="acoustic-progress-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #38bdf8, #33cdb8); transition:width 0.3s ease;"></div>
           </div>
 
           <!-- Visualizer chart -->
@@ -710,7 +710,7 @@
               <div class="drw-row-11">
                 <span id="media-slot-info-badge" class="suite-badge drw-xs-2" data-sample>SLOTS EMPTY</span>
                 <button id="btn-media-rescan" type="button" class="btn-pill-toggle is-small drw-x-11" title="Rescan and re-detect inserted cards" data-i18n-title="ui.rescan_and_re_detect_inserted"><span aria-hidden="true">🔄</span> <span data-i18n="ui.scan">Scan</span></button>
-                <button id="btn-media-copy-now" type="button" class="btn-pill-toggle is-small" style="margin: 0; color: var(--ok2, #25c2a0); border-color: rgba(37,194,160,0.4);" title="Copy the inserted card now" data-i18n-title="ui.start_media_ingest_now_from"><span aria-hidden="true">▶</span> <span data-i18n="media.copy_now">Copy Now</span></button>
+                <button id="btn-media-copy-now" type="button" class="btn-pill-toggle is-small" style="margin: 0; color: var(--ok2, #33cdb8); border-color: rgba(51,205,184,0.4);" title="Copy the inserted card now" data-i18n-title="ui.start_media_ingest_now_from"><span aria-hidden="true">▶</span> <span data-i18n="media.copy_now">Copy Now</span></button>
                 <button id="btn-media-eject" type="button" class="btn-pill-toggle is-danger is-small drw-x-11" title="Safely unmount and eject card" data-i18n-title="ui.safely_unmount_and_eject_card"><span aria-hidden="true">⏏</span> <span data-i18n="media.eject_btn">Eject</span></button>
               </div>
             </div>

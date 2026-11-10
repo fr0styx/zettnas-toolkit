@@ -150,7 +150,7 @@ body.phone-shell .ai-chat-composer-row #ai-chat-input { flex: 1 0 100%; min-widt
 .ef-where { grid-column: 1; }
 .ef-actions { grid-column: 2; grid-row: 1 / span 2; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 .ef-state { font-size: var(--zn-fs-xs); padding: 1px 6px; border-radius: 999px; background: var(--card-hi); }
-.ef-open { color: var(--ok2, #25c2a0); }
+.ef-open { color: var(--ok2, #33cdb8); }
 .ef-locked { color: var(--muted); }
 .ef-create { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--track); border-radius: 8px; padding: 10px; font-size: var(--zn-fs-xs); }
 .ef-create .ef-actions { grid-column: auto; grid-row: auto; justify-content: flex-start; }

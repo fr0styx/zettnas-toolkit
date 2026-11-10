@@ -2,7 +2,7 @@
    Light-theme values for colours the dark themes hard-code (UX-7). Other themes use the
    var() fallbacks, i.e. their original colours. */
 body.theme-light:not(.lcd-direct) {
-  --lt-ink-brand: #075985;
+  --lt-ink-brand: #08695f;
   --lt-text-shadow: none;
   --lt-b-0000001a: rgba(15, 23, 42, 0.02);
   --lt-b-00000026: rgba(15, 23, 42, 0.022);
@@ -21,16 +21,7 @@ body.theme-light:not(.lcd-direct) {
   --lt-b-000000f2: rgba(255, 255, 255, 0.96);
   --lt-b-000000ff: #ffffff;
   --lt-b-001428ff: #f6f8fa;
-  --lt-b-00f0ff0f: rgba(15, 23, 42, 0.036);
   --lt-b-00f0ff14: rgba(15, 23, 42, 0.048);
-  --lt-b-00f0ff1a: rgba(15, 23, 42, 0.06);
-  --lt-b-00f0ff1f: rgba(15, 23, 42, 0.06);
-  --lt-b-00f0ff26: rgba(15, 23, 42, 0.06);
-  --lt-b-00f0ff29: rgba(15, 23, 42, 0.06);
-  --lt-b-00f0ff2e: rgba(15, 23, 42, 0.06);
-  --lt-b-00f0ff33: rgba(15, 23, 42, 0.06);
-  --lt-b-00f0ff38: rgba(15, 23, 42, 0.06);
-  --lt-b-00f0ff40: rgba(15, 23, 42, 0.06);
   --lt-b-02061766: rgba(250, 250, 252, 0.96);
   --lt-b-02061773: rgba(250, 250, 252, 0.96);
   --lt-b-020617e0: rgba(250, 250, 252, 0.96);
@@ -204,11 +195,6 @@ body.theme-light:not(.lcd-direct) {
   --lt-b-ffffff47: rgba(15, 23, 42, 0.06);
   --lt-r-000000ff: rgba(15, 23, 42, 0.16);
   --lt-r-00f0ff33: rgba(15, 23, 42, 0.28);
-  --lt-r-00f0ff40: rgba(15, 23, 42, 0.28);
-  --lt-r-00f0ff4c: rgba(15, 23, 42, 0.28);
-  --lt-r-00f0ff59: rgba(15, 23, 42, 0.28);
-  --lt-r-00f0ff66: rgba(15, 23, 42, 0.28);
-  --lt-r-00f0ff73: rgba(15, 23, 42, 0.28);
   --lt-r-0b111aff: rgba(15, 23, 42, 0.16);
   --lt-r-0c1118ff: rgba(15, 23, 42, 0.16);
   --lt-r-0d141eff: rgba(15, 23, 42, 0.16);
@@ -234,12 +220,11 @@ body.theme-light:not(.lcd-direct) {
   --lt-r-ffffff59: rgba(15, 23, 42, 0.28);
   --lt-r-ffffff66: rgba(15, 23, 42, 0.28);
   --lt-r-ffffff73: rgba(15, 23, 42, 0.28);
-  --lt-t-00f0ffff: #00656b;
   --lt-t-0284c7ff: #016395;
   --lt-t-0ea5e9ff: #09648e;
   --lt-t-10b981ff: #096949;
   --lt-t-22c55eff: #126a32;
-  --lt-t-25c2a0ff: #146856;
+  --lt-t-33cdb8ff: #19665c;
   --lt-t-3b82f6ff: #0954cd;
   --lt-t-3bf58bff: #056b31;
   --lt-t-4ade80ff: #146c34;

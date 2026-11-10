@@ -228,7 +228,7 @@ export function updateManagementTelemetry(stats) {
       const p = unraid.parity_check || {};
       if (p.active) {
         parityEl.textContent = t('mgx.parity_active', 'Active ({action} {pct}%) • {count, plural, one {# Error} other {# Errors}}', { action: p.action || t('mgx.sync', 'Sync'), pct: p.progress_pct || 0, count: p.errors || 0 });
-        parityEl.style.color = 'var(--accent-cyan,#00f0ff)';
+        parityEl.style.color = 'var(--accent-cyan,#33cdb8)';
       } else {
         parityEl.textContent = t('mgx.parity_idle', 'Completed / Idle • {count, plural, one {# Error} other {# Errors}}', { count: p.errors || 0 });
         parityEl.style.color = 'var(--ok2)';
@@ -308,7 +308,7 @@ export function updateManagementTelemetry(stats) {
       if (stats.gpu.ready) {
         gpuBadge.textContent = t('mgx.gpu_active', 'ACCELERATION ACTIVE');
         gpuBadge.style.color = 'var(--ok2)';
-        gpuBadge.style.borderColor = 'rgba(37,194,160,0.35)';
+        gpuBadge.style.borderColor = 'rgba(51,205,184,0.35)';
       } else {
         gpuBadge.textContent = t('mgx.gpu_software', 'SOFTWARE ONLY');
         gpuBadge.style.color = 'var(--muted)';
@@ -885,7 +885,7 @@ export function initManagement() {
 
       if (strip) {
         const kvmActive = tel?.kvm?.state === 'active';
-        const kvmColor = kvmActive ? 'var(--ok2, #25c2a0)' : (tel?.kvm?.state === 'restricted' ? 'var(--warn, #f5a623)' : 'var(--danger, #ff6b6b)');
+        const kvmColor = kvmActive ? 'var(--ok2, #33cdb8)' : (tel?.kvm?.state === 'restricted' ? 'var(--warn, #f5a623)' : 'var(--danger, #ff6b6b)');
         const kvmBadge = tel?.kvm?.badge || (kvmActive ? 'KVM Acceleration Active' : 'Software Emulation');
         const headroom = tel?.memory?.headroom_mb ? `${formatFixed(tel.memory.headroom_mb / 1024, 1)} GB Safe Headroom` : 'Dynamic';
         const cpuRatio = tel?.cpu?.ratio ? `${tel.cpu.ratio}:1 Allocation` : 'Optimal';
@@ -921,8 +921,8 @@ export function initManagement() {
           grid.innerHTML = vmsList.map((vm) => {
             const isRunning = vm.state === 'running';
             const isPaused = vm.state === 'paused';
-            const statusColor = isRunning ? 'var(--ok2, #25c2a0)' : (isPaused ? 'var(--warn, #f5a623)' : 'var(--muted, #94a3b8)');
-            const statusBg = isRunning ? 'rgba(37,194,160,0.15)' : (isPaused ? 'rgba(245,166,35,0.15)' : 'rgba(255,255,255,0.06)');
+            const statusColor = isRunning ? 'var(--ok2, #33cdb8)' : (isPaused ? 'var(--warn, #f5a623)' : 'var(--muted, #94a3b8)');
+            const statusBg = isRunning ? 'rgba(51,205,184,0.15)' : (isPaused ? 'rgba(245,166,35,0.15)' : 'rgba(255,255,255,0.06)');
 
             const ramGb = vm.ram_gb ? `${vm.ram_gb} GB` : (vm.memory_mb ? (vm.memory_mb >= 1024 ? `${formatFixed(vm.memory_mb / 1024, 0)} GB` : `${vm.memory_mb} MB`) : '1 GB');
             const cores = vm.vcpus || vm.cores || 1;
@@ -1019,7 +1019,7 @@ export function initManagement() {
           <div class="mgx-col-box">
             <div class="mgx-row">
               <div class="mgx-fs13-bold-strong-2">${t('mvm.virt_ext', 'Hardware Virtualization Extension')}</div>
-              <span style="padding: 3px 8px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; background: ${tel.kvm.state === 'active' ? 'rgba(37,194,160,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${tel.kvm.state === 'active' ? 'var(--ok2)' : 'var(--danger)'};">
+              <span style="padding: 3px 8px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; background: ${tel.kvm.state === 'active' ? 'rgba(51,205,184,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${tel.kvm.state === 'active' ? 'var(--ok2)' : 'var(--danger)'};">
                 ${escapeHtml(tel.kvm.badge || 'KVM')}
               </span>
             </div>
