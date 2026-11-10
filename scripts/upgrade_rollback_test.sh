@@ -75,8 +75,8 @@ result() { in_data "cat /d/update_result.json" 2>/dev/null | python3 -c "import 
 has_seed() { in_data "cat /d/upgrade_marker.json" 2>/dev/null | grep -q '"seed": 42'; }
 helper() {
   docker run --rm --name zn-upgrade-helper \
-    -v /var/run/docker.sock:/var/run/docker.sock -v "$DATA":/zettnas-data \
-    "$NEW" python3 -m backend.services.self_updater --apply --target "$NAME" --image "$1" --delay 1 --data-dir /zettnas-data
+    -v /var/run/docker.sock:/var/run/docker.sock -v "$DATA":/kiboto-data \
+    "$NEW" python3 -m backend.services.self_updater --apply --target "$NAME" --image "$1" --delay 1 --data-dir /kiboto-data
 }
 
 docker pull -q "$BROKEN" >/dev/null

@@ -105,7 +105,7 @@ def test_only_the_person_or_an_administrator_may(family):
 
     lea, mum = family["lea"], family["mum"]
     me = api.export_user_data(lea["id"], request(), principal(lea))
-    assert me.headers["content-disposition"].startswith('attachment; filename="zettnas-data-lea-')
+    assert me.headers["content-disposition"].startswith('attachment; filename="kiboto-data-lea-')
     assert json.loads(me.body)["account"]["username"] == "lea"
     with pytest.raises(HTTPException) as e:
         api.export_user_data(mum["id"], request(), principal(lea))

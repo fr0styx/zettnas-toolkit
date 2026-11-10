@@ -75,7 +75,7 @@ def export_user_data(
     _log("user.data_exported", principal, request, {"target_user_id": user_id})
     if someone_else:
         _tell_the_person(user, principal)
-    name = f"zettnas-data-{user.get('username', 'user')}-{time.strftime('%Y-%m-%d')}.json"
+    name = f"kiboto-data-{user.get('username', 'user')}-{time.strftime('%Y-%m-%d')}.json"
     return Response(
         json.dumps(data, ensure_ascii=False, indent=1, default=str),
         media_type="application/json",

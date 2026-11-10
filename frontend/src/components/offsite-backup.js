@@ -151,7 +151,7 @@ export async function offerRecoveryKit(repo, onSaved = null) {
     t('offsite.kit_title', 'Save the recovery key now'),
     t('offsite.kit_msg_full', 'Without this kit nobody can read the backup, not even you, if this NAS is lost or broken. It holds the key, where the backup is and how to restore it. Keep it outside the NAS: in a password manager, on a USB stick or printed.'),
     async () => {
-      downloadText(kit.filename || `zettnas-recovery-${repo.id}.txt`, kit.text);
+      downloadText(kit.filename || `kiboto-recovery-${repo.id}.txt`, kit.text);
       await saved();
     },
     async () => {

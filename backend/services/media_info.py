@@ -15,7 +15,7 @@ from typing import Any
 
 from backend.logging_config import one_line
 
-logger = logging.getLogger("zettnas.media_info")
+logger = logging.getLogger("kiboto.media_info")
 
 _CACHE: OrderedDict[tuple, dict[str, Any] | None] = OrderedDict()
 _LOCK = threading.Lock()

@@ -30,7 +30,7 @@ from typing import IO, Any
 
 from backend.services import thumbs
 
-logger = logging.getLogger("zettnas.photo_import")
+logger = logging.getLogger("kiboto.photo_import")
 
 MEDIA_EXTS = thumbs.IMAGE_EXTS | thumbs.VIDEO_EXTS
 _CHUNK = 1 << 20

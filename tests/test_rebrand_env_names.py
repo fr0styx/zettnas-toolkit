@@ -77,3 +77,19 @@ def test_the_guard_file_from_before_takes_the_new_name(tmp_path):
     assert sorted(p.name for p in one.iterdir()) == [rg.CANARY_NAME] and (one / rg.CANARY_NAME).read_bytes() == b"old"
     assert sorted(p.name for p in both.iterdir()) == [rg.CANARY_NAME] and (both / rg.CANARY_NAME).read_bytes() == b"new"
     rg._rename_old_canary(str(tmp_path), str(tmp_path / rg.CANARY_NAME))  # nothing there: nothing happens
+
+
+def test_the_log_file_from_before_the_rebrand_carries_on(tmp_path):
+    from backend import logging_config
+
+    logs = tmp_path / "logs"
+    logs.mkdir()
+    (logs / "zettnas.log").write_text("before\n")
+    (logs / "zettnas.log.1").write_text("older\n")
+    path = str(logs / "kiboto.log")
+    logging_config._adopt_old_log(path)
+    assert (logs / "kiboto.log").read_text() == "before\n" and (logs / "kiboto.log.1").read_text() == "older\n"
+    assert not (logs / "zettnas.log").exists()
+    (logs / "zettnas.log").write_text("stray\n")  # a new file is never overwritten
+    logging_config._adopt_old_log(path)
+    assert (logs / "kiboto.log").read_text() == "before\n"

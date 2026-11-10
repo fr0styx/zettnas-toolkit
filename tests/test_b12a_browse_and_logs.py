@@ -126,7 +126,7 @@ def test_the_log_file_rotates_and_goes_into_the_bundle(tmp_path, monkeypatch):
     root = logging.getLogger("zn-test-file")
     root.propagate = False
     path = logging_config._add_file_handler(root, logging.Formatter("%(message)s"))
-    assert path == str(tmp_path / "logs" / "zettnas.log")
+    assert path == str(tmp_path / "logs" / "kiboto.log")
     root.warning("disk sdb said hello token=zat_abcdefghijklmnopqrstuv")
     for h in root.handlers:
         h.flush()
@@ -134,8 +134,8 @@ def test_the_log_file_rotates_and_goes_into_the_bundle(tmp_path, monkeypatch):
     monkeypatch.setenv("TESTING", "1")
     data = diagnostics._build_bundle_sync({})
     names = zipfile.ZipFile(io.BytesIO(data)).namelist()
-    assert "logs/zettnas.log" in names
-    text = zipfile.ZipFile(io.BytesIO(data)).read("logs/zettnas.log").decode()
+    assert "logs/kiboto.log" in names
+    text = zipfile.ZipFile(io.BytesIO(data)).read("logs/kiboto.log").decode()
     assert "disk sdb said hello" in text and "zat_abcdefghijklmnopqrstuv" not in text
     for h in list(root.handlers):
         root.removeHandler(h)

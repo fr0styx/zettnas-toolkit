@@ -407,7 +407,7 @@ def tool_control_docker_container(
 
 
 # The file or folder a question is about ("Ask Kib about this"); set per chat turn
-FOCUS_PATH: contextvars.ContextVar[str | None] = contextvars.ContextVar("zettnas_chat_focus", default=None)
+FOCUS_PATH: contextvars.ContextVar[str | None] = contextvars.ContextVar("kiboto_chat_focus", default=None)
 
 
 def _extract_folder_and_intent(query: str) -> tuple[str | None, str, str]:

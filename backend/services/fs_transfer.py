@@ -19,6 +19,7 @@ from collections.abc import Callable
 from enum import Enum, StrEnum
 from typing import Any, Optional
 
+from backend import legacy_names
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, is_protected, prune_protected, read_json
 from backend.ignored_errors import ignored
@@ -148,12 +149,12 @@ def tree_totals(path: str) -> tuple[int, int]:
 
 def _part_path(dst: str) -> str:
     """Where a file is written before it is renamed into place: hidden, next to the target."""
-    return os.path.join(os.path.dirname(dst), f".{os.path.basename(dst)}.zettnas-part")
+    return os.path.join(os.path.dirname(dst), f".{os.path.basename(dst)}.kiboto-part")
 
 
 def _stage_path(dst: str) -> str:
     """Where a folder that replaces `dst` is built before the swap: hidden, next to it."""
-    return os.path.join(os.path.dirname(dst), f".{os.path.basename(dst)}.zettnas-stage-{uuid.uuid4().hex[:6]}")
+    return os.path.join(os.path.dirname(dst), f".{os.path.basename(dst)}.kiboto-stage-{uuid.uuid4().hex[:6]}")
 
 
 # fsync on FUSE and some network mounts is not supported; any other failure means the data may
@@ -490,11 +491,15 @@ def _sweep_entry(dirpath: str, name: str, action: str, counts: dict[str, int]) -
     """Clears one unfinished item: a part file goes; a folder being built for an overwrite goes
     for a copy and is kept, visible, for a move (it may hold the only copy of moved files)."""
     path = os.path.join(dirpath, name)
-    if name.startswith(".") and name.endswith(".zettnas-part") and not os.path.isdir(path):
+    if (
+        name.startswith(".")
+        and name.endswith((".kiboto-part", legacy_names.OLD_PART_SUFFIX))
+        and not os.path.isdir(path)
+    ):
         os.unlink(path)
         counts["removed"] += 1
         return True
-    m = re.match(r"^\.(.+)\.zettnas-stage-[0-9a-f]{6}$", name)
+    m = re.match(r"^\.(.+)\.(?:kiboto|zettnas)-stage-[0-9a-f]{6}$", name)  # zettnas-: legacy_names
     if m and os.path.isdir(path) and not os.path.islink(path):
         if action == "move":
             os.rename(path, _generate_unique_target(os.path.join(dirpath, f"{m.group(1)} (incomplete move)")))
@@ -518,7 +523,7 @@ def sweep_leftovers(task: "TransferTask") -> dict[str, int]:
         logger.info("[FS Transfer] Nothing to sweep in %s: %s", task.destination, err)
         return counts
     for entry in entries:
-        if any(entry.startswith(f".{n}.zettnas-") for n in names):
+        if any(entry.startswith((f".{n}.kiboto-", f".{n}.zettnas-")) for n in names):  # zettnas-: legacy_names
             _sweep_entry(task.destination, entry, task.action, counts)
     for n in names:
         top = os.path.join(task.destination, n)

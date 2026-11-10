@@ -751,8 +751,11 @@ _LAST_MODEL_PROBLEM: dict[str, str] = {"text": ""}  # why the selected model cou
 # Live streaming (AI-12): when a sink is set, LLM replies are streamed and each piece is passed to
 # sink(kind, text) with kind "token", "think" or "reset" (drop what was streamed: the model chose
 # tools instead). Setting the cancel event stops generation at the next chunk.
-_TOKEN_SINK: contextvars.ContextVar = contextvars.ContextVar("zettnas_ai_token_sink", default=None)
-_CANCEL_EVENT: contextvars.ContextVar = contextvars.ContextVar("zettnas_ai_cancel", default=None)
+_TOKEN_SINK: contextvars.ContextVar = contextvars.ContextVar(  # gitleaks:allow (a context variable name)
+    "kiboto_ai_token_sink",
+    default=None,
+)
+_CANCEL_EVENT: contextvars.ContextVar = contextvars.ContextVar("kiboto_ai_cancel", default=None)
 
 
 _DATA_TAG_RE = re.compile(

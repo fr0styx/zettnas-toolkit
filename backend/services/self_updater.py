@@ -15,7 +15,7 @@ import sys
 import time
 from typing import Any, Optional
 
-logger = logging.getLogger("zettnas.self_updater")
+logger = logging.getLogger("kiboto.self_updater")
 
 
 # The updater only creates containers it fully controls (its helper and the app
@@ -31,7 +31,7 @@ def _docker_request(method: str, path: str, body: dict | None = None, timeout: f
     return raw_req(method, path, body=body, timeout=timeout, headers=headers)
 
 
-HELPER_DATA_DIR = "/zettnas-data"
+HELPER_DATA_DIR = "/kiboto-data"
 APP_DATA_DIR = "/app/data"
 
 

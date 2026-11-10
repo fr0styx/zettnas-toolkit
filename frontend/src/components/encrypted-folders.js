@@ -164,7 +164,7 @@ function downloadKey(mount) {
   const text = `${t('ef.file_head', 'Kiboto encrypted folder recovery key')}: ${box?.dataset.folder || ''}\n\n${key}\n`;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
-  a.download = `zettnas-recovery-key-${(box?.dataset.folder || 'folder').replace(/[^\p{L}\p{N}_-]+/gu, '-')}.txt`;
+  a.download = `kiboto-recovery-key-${(box?.dataset.folder || 'folder').replace(/[^\p{L}\p{N}_-]+/gu, '-')}.txt`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }

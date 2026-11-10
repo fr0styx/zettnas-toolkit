@@ -200,7 +200,7 @@ class _ThinkSplitter:
 
 # How long the last model call took to its first token, in ms (AI-16): measured on a streamed
 # reply, or Ollama's own load and prompt times on a whole one; None when the server can't say
-_FIRST_TOKEN_MS: contextvars.ContextVar[float | None] = contextvars.ContextVar("zettnas_first_token_ms", default=None)
+_FIRST_TOKEN_MS: contextvars.ContextVar[float | None] = contextvars.ContextVar("kiboto_first_token_ms", default=None)
 
 
 def _note_first_token(state: dict[str, Any], data: dict[str, Any], streaming: bool) -> None:

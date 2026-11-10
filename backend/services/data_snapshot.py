@@ -24,7 +24,7 @@ from backend import legacy_names
 from backend import settings as _settings
 from backend.fsutil import atomic_write_json, read_json
 
-logger = logging.getLogger("zettnas.data_snapshot")
+logger = logging.getLogger("kiboto.data_snapshot")
 
 SNAPSHOT_SUBDIR = os.path.join("backups", "pre-update")
 KEEP = 3  # newest snapshots kept; the newest one taken from a Stable build is kept as well (OPS-5)

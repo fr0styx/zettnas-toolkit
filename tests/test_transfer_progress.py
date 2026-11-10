@@ -41,7 +41,7 @@ def make_tree(root, files):
 
 
 def no_part_files(root):
-    return not [p for p in root.rglob("*") if p.name.endswith(".zettnas-part")]
+    return not [p for p in root.rglob("*") if p.name.endswith(".kiboto-part")]
 
 
 def wait(task_id, timeout=10):
@@ -116,7 +116,7 @@ def test_cross_device_move_falls_back_to_copy(tmp_path):
     real_replace = os.replace
 
     def fake_replace(a, b):
-        if str(a).endswith("f.bin") and not str(a).endswith(".zettnas-part"):
+        if str(a).endswith("f.bin") and not str(a).endswith(".kiboto-part"):
             raise OSError(18, "Invalid cross-device link")
         return real_replace(a, b)
 

@@ -7,6 +7,12 @@ Kept for good, elsewhere and on purpose, because data made before depends on the
 salt (db_crypto._KDF_SALT), the two-factor secret box's key and associated data (secret_box), the
 backup manifest name and config-export prefix that restores still read (backup_engine), and the
 restic tag on off-site snapshots (offsite_backup). Changing those would make that data unreadable.
+The same goes for names stored outside Kiboto's data: replication's ZFS snapshot names
+(zettnas-repl-, the next incremental send's base), the encrypted-dataset and data-id properties,
+the snapshot views, WORM and version folders, the NFS exports file, the fan watchdog's heartbeat
+file (its own contract), the secrets file, the restic location backup_migration made
+(zettnas-restic), the family calendar's DAV identity, the RAG schema's embedding id, and the WebDAV
+fallback secret (tokens signed with it).
 """
 
 import os
@@ -34,6 +40,9 @@ OLD_SESSION_COOKIE = "zettnas_session"  # browsers signed in before the rebrand 
 OLD_CANARY_NAME = "!ZettNAS-guard-file.docx"  # the ransomware guard's file before the rebrand
 OLD_NAS_NAME = "zettnas"  # zettnas.local keeps answering beside kiboto.local (D17)
 OLD_NAME_CONTAINER = "zettnas-name"  # the name responder's container before the rebrand: replaced
+OLD_PART_SUFFIX = ".zettnas-part"  # a half-copied file left by a transfer before the rebrand: swept
+OLD_STAGE_INFIX = ".zettnas-stage-"  # a move's staging folder from before the rebrand: swept
+OLD_LOG_FILE = "zettnas.log"  # the log file and its rotations carry on under the new name
 
 
 def managed_labels() -> dict[str, str]:

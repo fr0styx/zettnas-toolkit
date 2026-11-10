@@ -15,6 +15,12 @@ installs made before keep working through it.
   guard's file in each share is renamed to `!Kiboto-guard-file.docx` the next time it is checked.
   The README and every doc say Kiboto too, with kiboto.net as the website. Zettlab and ZettOS, the
   hardware maker's names, stay.
+- **Files Kiboto writes get Kiboto names**: the log file is `logs/kiboto.log` (the old `zettnas.log` and
+  its rotations are renamed to it once, so nothing earlier is lost), half-copied files are `.kiboto-part`
+  (ones a transfer left before the update are still cleaned up), and downloads are named kiboto-…: the
+  support bundle, recovery kits and keys, a person's data export, a VPN client's file and a theme
+  (`.kiboto-theme.json`; theme files saved before still import). A new SNMP setup's v3 user is
+  `kiboto_admin`; a saved one keeps its user.
 - **Docker objects get Kiboto names**: what Kiboto creates from now on is called kiboto-*: the AI pack
   (`kiboto-ai`, serving `kiboto-chat` and `kiboto-embed`), the SFTP sidecar, the updater's helper and an
   app's own network (`kiboto-app-<app>`), labelled `com.kiboto.managed`. What an install made before

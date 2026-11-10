@@ -168,7 +168,7 @@ def test_diagnostics_bundle_endpoint(client, auth_headers):
     assert res.headers.get("Content-Type") == "application/zip"
     disposition = res.headers.get("Content-Disposition", "")
     assert "attachment" in disposition
-    assert "zettnas_diagnostics_" in disposition
+    assert "kiboto_diagnostics_" in disposition
     assert disposition.endswith('.zip"') or disposition.endswith(".zip")
 
     # Read zip bytes and inspect archive contents

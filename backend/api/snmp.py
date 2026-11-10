@@ -30,7 +30,7 @@ def _load_snmp_config() -> dict[str, Any]:
             "port": 161,
             "version": "v2c",
             "community": "public",
-            "v3_user": "zettnas_admin",
+            "v3_user": "kiboto_admin",
             "v3_security_level": "authPriv",
             "v3_auth_protocol": "SHA-256",
             "v3_priv_protocol": "AES-128",
@@ -53,7 +53,7 @@ class SnmpConfigRequest(BaseModel):
     port: int = Field(161, ge=1, le=65535)
     version: str = Field("v2c", pattern="^(v2c|v3|both)$")
     community: str | None = Field(None, min_length=1, max_length=64)
-    v3_user: str | None = Field("zettnas_admin", min_length=1, max_length=64)
+    v3_user: str | None = Field("kiboto_admin", min_length=1, max_length=64)
     v3_security_level: str | None = Field("authPriv", pattern="^(noAuthNoPriv|authNoPriv|authPriv)$")
     v3_auth_protocol: str | None = Field("SHA-256", pattern="^(MD5|SHA|SHA-256)$")
     v3_priv_protocol: str | None = Field("AES-128", pattern="^(DES|AES|AES-128)$")

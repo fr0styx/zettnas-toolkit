@@ -582,7 +582,7 @@ async def get_diagnostics_bundle():
         zip_bytes = await asyncio.to_thread(_build_bundle_sync, None)
 
     timestamp_str = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
-    filename = f"zettnas_diagnostics_{timestamp_str}.zip"
+    filename = f"kiboto_diagnostics_{timestamp_str}.zip"
     return Response(
         content=zip_bytes,
         media_type="application/zip",
@@ -627,7 +627,7 @@ async def post_diagnostics_bundle(request: Request):
         zip_bytes = await asyncio.to_thread(_build_bundle_sync, payload_dict)
 
     timestamp_str = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
-    filename = f"zettnas_diagnostics_{timestamp_str}.zip"
+    filename = f"kiboto_diagnostics_{timestamp_str}.zip"
     return Response(
         content=zip_bytes,
         media_type="application/zip",

@@ -16,6 +16,7 @@ from contextvars import ContextVar
 from datetime import UTC, datetime, timezone
 from typing import Any, Optional
 
+from backend import legacy_names
 from backend import settings as _settings
 from backend.settings import test_mode
 
@@ -191,7 +192,20 @@ LOG_FILE_BACKUPS = 3
 
 
 def log_file_path() -> str:
-    return os.path.join(os.environ.get("DATA_DIR") or "/app/data", "logs", "zettnas.log")
+    return os.path.join(os.environ.get("DATA_DIR") or "/app/data", "logs", "kiboto.log")
+
+
+def _adopt_old_log(path: str) -> None:
+    """The log file before the rebrand was zettnas.log: it and its rotations carry on under the new
+    name, so what happened before the update stays in the log and the support bundle."""
+    folder = os.path.dirname(path)
+    for suffix in ["", *(f".{n}" for n in range(1, LOG_FILE_BACKUPS + 1))]:
+        old, new = os.path.join(folder, legacy_names.OLD_LOG_FILE + suffix), path + suffix
+        if os.path.exists(old) and not os.path.exists(new):
+            try:
+                os.replace(old, new)
+            except OSError:
+                return
 
 
 def _add_file_handler(root_logger: logging.Logger, formatter: logging.Formatter) -> str | None:
@@ -204,6 +218,7 @@ def _add_file_handler(root_logger: logging.Logger, formatter: logging.Formatter)
     path = log_file_path()
     try:
         os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
+        _adopt_old_log(path)
         handler = RotatingFileHandler(path, maxBytes=LOG_FILE_BYTES, backupCount=LOG_FILE_BACKUPS, encoding="utf-8")
     except OSError as e:
         logging.getLogger("Kiboto").warning(f"[Logging] no log file: {e}")

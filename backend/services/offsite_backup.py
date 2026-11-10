@@ -865,7 +865,7 @@ def drill(repo_id: str) -> dict[str, Any]:
     if not pick:
         _update(repo_id, last_drill=time.time(), last_drill_result="no file small enough to test")
         return {"ok": False, "reason": "no file small enough to test"}
-    scratch = tempfile.mkdtemp(prefix="zettnas-drill-")
+    scratch = tempfile.mkdtemp(prefix="kiboto-drill-")
     try:
         run_restic(repo, ["restore", "latest", "--target", scratch, "--include", pick["path"]], timeout=1800)
         restored = os.path.join(scratch, pick["path"].lstrip("/"))

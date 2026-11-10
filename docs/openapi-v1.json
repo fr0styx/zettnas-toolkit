@@ -36508,7 +36508,7 @@
         "type": "null"
        }
       ],
-      "default": "zettnas_admin",
+      "default": "kiboto_admin",
       "title": "V3 User"
      },
      "version": {

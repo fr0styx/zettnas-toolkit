@@ -14,7 +14,7 @@ PLATFORM=${2:-linux/amd64}
 PORT=${3:-18082}
 WAIT=${4:-120}
 ARCH=${PLATFORM#*/}
-NAME="zettnas-smoke-$ARCH"
+NAME="kiboto-smoke-$ARCH"
 
 fail() {
   logs=$(docker logs "$NAME" 2>&1 | tail -40 | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"} {print}')
@@ -72,8 +72,8 @@ echo "first healthy answer after ${took}s"
 if [ -n "${STARTUP_BUDGET_SECS:-}" ] && [ "$took" -gt "$STARTUP_BUDGET_SECS" ]; then
   fail "the first healthy answer came after ${took}s, over the ${STARTUP_BUDGET_SECS}s budget"
 fi
-curl -fsS -o /tmp/zettnas-smoke-index.html "http://127.0.0.1:$PORT/" || fail "GET / failed"
-grep -qi "<html" /tmp/zettnas-smoke-index.html || fail "index.html not served"
+curl -fsS -o /tmp/kiboto-smoke-index.html "http://127.0.0.1:$PORT/" || fail "GET / failed"
+grep -qi "<html" /tmp/kiboto-smoke-index.html || fail "index.html not served"
 code=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:$PORT/api/users")
 [ "$code" = 401 ] || fail "/api/users without a session returned $code, expected 401"
 bad=$(docker logs "$NAME" 2>&1 | grep -E "Traceback|CRITICAL" | head -5 || true)

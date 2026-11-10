@@ -37,12 +37,12 @@ def _format_bytes(num_bytes: int) -> str:
 
 def is_self_container(cid: str, name: str = "") -> bool:
     """
-    Checks if the container is the zettnas-toolkit management container itself
+    Checks if the container is Kiboto's own container (kiboto, or zettnas-toolkit from before)
     to prevent accidental self-destruction.
     """
     self_hostname = socket.gethostname()
     clean_name = (name or "").lstrip("/").lower()
-    if clean_name in ("zettnas-toolkit", "zettnas", "zettnas_toolkit"):
+    if clean_name in ("kiboto", "zettnas-toolkit", "zettnas", "zettnas_toolkit"):
         return True
     return bool(self_hostname and cid and (cid.startswith(self_hostname) or self_hostname.startswith(cid)))
 

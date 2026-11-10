@@ -1,6 +1,6 @@
 """ARC-29: the test switches can't weaken a real install. TESTING / KIBOTO_TEST_MODE make password
 hashing fast, allow the shared default password and turn the Docker proxy off; in the released
-image (which carries /etc/zettnas-release) they do nothing, whatever the environment says."""
+image (which carries /etc/kiboto-release) they do nothing, whatever the environment says."""
 
 import pathlib
 import re
@@ -22,7 +22,7 @@ def test_switches_work_outside_the_image(monkeypatch, tmp_path):
 
 
 def test_switches_do_nothing_in_the_released_image(monkeypatch, tmp_path):
-    marker = tmp_path / "zettnas-release"
+    marker = tmp_path / "kiboto-release"
     marker.write_text("release image")
     monkeypatch.setattr(settings, "RELEASE_MARKER", str(marker))
     for name in ("TESTING", "KIBOTO_TEST_MODE", "KIBOTO_FAST_HASH"):

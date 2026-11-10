@@ -92,7 +92,7 @@ def test_resume_clears_the_unfinished_file_and_runs_again(root, tmp_path):
     _write(root / "src" / "album" / "a.jpg", "a")
     _write(root / "src" / "album" / "b.jpg", "b")
     _write(root / "dst" / "album" / "a.jpg", "a")
-    _write(root / "dst" / "album" / ".b.jpg.zettnas-part", "half")
+    _write(root / "dst" / "album" / ".b.jpg.kiboto-part", "half")
     manager = _crashed(root, tmp_path)
     new = manager.resume_interrupted("t1")
     assert new is not None and new.id != "t1" and new.owner == "admin"
@@ -148,19 +148,19 @@ def test_undoing_a_move_brings_the_items_back(root, tmp_path):
 
 
 def test_dismiss_clears_unfinished_files_and_keeps_moved_ones(root, tmp_path):
-    _write(root / "dst" / ".album.zettnas-stage-abc123" / "moved.jpg", "only copy")
-    _write(root / "dst" / ".album.zettnas-part", "half")
-    _write(root / "dst" / "other" / ".x.zettnas-part", "not this transfer's")
+    _write(root / "dst" / ".album.kiboto-stage-abc123" / "moved.jpg", "only copy")
+    _write(root / "dst" / ".album.zettnas-part", "half")  # left by a version before the rebrand
+    _write(root / "dst" / "other" / ".x.kiboto-part", "not this transfer's")
     manager = _crashed(root, tmp_path, action="move")
     assert manager.dismiss_interrupted("t1") == {"removed": 1, "kept": 1}
     assert (root / "dst" / "album (incomplete move)" / "moved.jpg").read_text() == "only copy"
-    assert (root / "dst" / "other" / ".x.zettnas-part").exists()  # only its own targets are read
+    assert (root / "dst" / "other" / ".x.kiboto-part").exists()  # only its own targets are read
     assert manager.dismiss_interrupted("t1") is None
 
 
 def test_a_copy_stage_and_nested_part_files_are_removed(root, tmp_path):
-    _write(root / "dst" / "album" / ".sub.zettnas-stage-abc123" / "x.jpg", "partial copy")
-    _write(root / "dst" / "album" / "deep" / ".y.jpg.zettnas-part", "half")
+    _write(root / "dst" / "album" / ".sub.zettnas-stage-abc123" / "x.jpg", "partial copy")  # from before the rebrand
+    _write(root / "dst" / "album" / "deep" / ".y.jpg.kiboto-part", "half")
     _write(root / "dst" / "album" / "keep.jpg", "done")
     manager = _crashed(root, tmp_path)
     assert manager.dismiss_interrupted("t1") == {"removed": 2, "kept": 0}

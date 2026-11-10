@@ -115,7 +115,7 @@ def test_snmp_api_suite(client, auth_headers):
     cfg = res.json()
     assert "community" not in cfg
     assert "community_masked" in cfg
-    assert cfg["v3_user"] == "zettnas_admin"
+    assert cfg["v3_user"] == "kiboto_admin"
 
     # 3. Update SNMP Config
     new_cfg = {

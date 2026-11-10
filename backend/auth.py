@@ -490,7 +490,7 @@ def session_cookie(cookies) -> str:
     return cookies.get(SESSION_COOKIE) or cookies.get(legacy_names.OLD_SESSION_COOKIE) or ""
 
 
-CLIENT_IP_CTX: contextvars.ContextVar[str] = contextvars.ContextVar("zettnas_client_ip", default="")
+CLIENT_IP_CTX: contextvars.ContextVar[str] = contextvars.ContextVar("kiboto_client_ip", default="")
 
 
 def _is_file_write(path: str, method: str) -> bool:

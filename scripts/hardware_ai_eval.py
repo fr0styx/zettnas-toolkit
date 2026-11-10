@@ -29,7 +29,7 @@ SETS = ("all", "documents")  # base + extended, and long / Office / scanned / mu
 
 def _isolated_env() -> None:
     """The app's code runs here without its data folder or the host's devices."""
-    tmp = tempfile.mkdtemp(prefix="zettnas-ai-eval-")
+    tmp = tempfile.mkdtemp(prefix="kiboto-ai-eval-")
     for name in ("data", "pool", "sys", "dev", "proc"):
         os.makedirs(os.path.join(tmp, name), exist_ok=True)
     os.environ.update(

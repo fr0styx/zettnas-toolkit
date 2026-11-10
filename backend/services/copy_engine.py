@@ -402,12 +402,12 @@ def select_files_to_copy(entries, skip_existing):
     return files, total
 
 
-PART_SUFFIX = ".zettnas-part"
+PART_SUFFIX = ".kiboto-part"
 CHUNK = 4 * 1024 * 1024
 
 
 async def copy_one_file(src_f: str, dst_f: str, verify_checksum: bool = True) -> bool:
-    """Copies one file through "<dst>.zettnas-part" next to it, verifies it, then moves it into
+    """Copies one file through "<dst>.kiboto-part" next to it, verifies it, then moves it into
     place. A file being overwritten stays untouched until the new copy is complete, so a pulled
     card, a read error, a checksum mismatch or a cancel never leaves you with neither copy.
     Returns False when the copy was cancelled."""

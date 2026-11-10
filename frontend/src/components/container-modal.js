@@ -1496,7 +1496,7 @@ async function renderContainerEditTab(cid) {
   const currentImage = ov.image || '';
   const currentNetwork = ov.network_mode || 'bridge';
   const currentRestart = ov.restart_policy || 'unless-stopped';
-  const isToolkit = currentName === 'zettnas-toolkit' || currentName === 'zettnas' || (cid && window.location.hostname && cid.startsWith(window.location.hostname));
+  const isToolkit = ['kiboto', 'zettnas-toolkit', 'zettnas'].includes(currentName) || (cid && window.location.hostname && cid.startsWith(window.location.hostname));
 
   const portsList = (details.ports || []).map((p) => ({
     container_port: p.private_port,

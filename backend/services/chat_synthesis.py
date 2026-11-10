@@ -765,10 +765,10 @@ def _generate_local_code_response(clean_msg: str, active_model: str) -> str | No
             'log "Backup completed successfully."\n'
             "```\n\n"
             "### 🚀 Setup Instructions:\n"
-            "1. Save as `/usr/local/bin/zettnas-backup.sh` and run `chmod +x /usr/local/bin/zettnas-backup.sh`\n"
+            "1. Save as `/usr/local/bin/kiboto-backup.sh` and run `chmod +x /usr/local/bin/kiboto-backup.sh`\n"
             "2. Add to your crontab (`crontab -e`):\n"
             "   ```cron\n"
-            "   0 2 * * * /usr/local/bin/zettnas-backup.sh /mnt/user/data /mnt/user/backups 14 >> /var/log/backup.log 2>&1\n"
+            "   0 2 * * * /usr/local/bin/kiboto-backup.sh /mnt/user/data /mnt/user/backups 14 >> /var/log/backup.log 2>&1\n"
             "   ```"
         )
 

@@ -125,7 +125,7 @@ def main():
                             elif len(shares) > 1:
                                 # outside the data folder: the chroot holds only links to the shares
                                 user_chroot = os.path.join(
-                                    tempfile.gettempdir(), "zettnas-sftp-chroot", username.lower()
+                                    tempfile.gettempdir(), "kiboto-sftp-chroot", username.lower()
                                 )
                                 os.makedirs(user_chroot, mode=0o700, exist_ok=True)
                                 for entry in os.listdir(user_chroot):
@@ -192,7 +192,7 @@ def main():
         pass
     if not os.path.exists(root):
         root = pool_path
-    chroot_base = os.path.join(tempfile.gettempdir(), "zettnas-sftp-chroot")
+    chroot_base = os.path.join(tempfile.gettempdir(), "kiboto-sftp-chroot")
     if not root.startswith(chroot_base + os.sep) and safe_serve_root(root, pool_path) is None:
         login_lockout.register_failure(lock_key)
         sys.exit(1)

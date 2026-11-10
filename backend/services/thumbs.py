@@ -20,7 +20,7 @@ from typing import Optional
 
 from backend import config, legacy_names
 
-logger = logging.getLogger("zettnas.thumbs")
+logger = logging.getLogger("kiboto.thumbs")
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tif", ".tiff", ".avif", ".heic", ".heif", ".dng"}
 VIDEO_EXTS = {".mp4", ".m4v", ".mov", ".mkv", ".webm", ".avi", ".3gp", ".mts", ".m2ts", ".wmv", ".mpg", ".mpeg"}

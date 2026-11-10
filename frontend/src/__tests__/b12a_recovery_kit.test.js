@@ -14,7 +14,7 @@ describe('B12a (REL-17): the recovery kit must be saved', () => {
   });
 
   it('downloading the full kit records it as saved', async () => {
-    api.get.mockResolvedValue({ filename: 'zettnas-recovery-usb.txt', text: 'Recovery key: abc' });
+    api.get.mockResolvedValue({ filename: 'kiboto-recovery-usb.txt', text: 'Recovery key: abc' });
     api.post.mockResolvedValue({});
     const onSaved = vi.fn();
     await offerRecoveryKit({ id: 'usb' }, onSaved);
@@ -23,6 +23,23 @@ describe('B12a (REL-17): the recovery kit must be saved', () => {
     await download();
     expect(api.post).toHaveBeenCalledWith('/api/offsite/repos/usb/kit-saved', {});
     expect(onSaved).toHaveBeenCalled();
+  });
+
+  it('a kit without a file name is saved as kiboto-recovery-<backup>.txt', async () => {
+    api.get.mockResolvedValue({ text: 'Recovery key: abc' });
+    api.post.mockResolvedValue({});
+    const names = [];
+    const real = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+      const el = real(tag);
+      if (tag === 'a') el.click = () => names.push(el.download);
+      return el;
+    });
+    await offerRecoveryKit({ id: 'usb' }, vi.fn());
+    const [, , download] = toast.showConfirmToast.mock.calls[0];
+    await download();
+    expect(names).toEqual(['kiboto-recovery-usb.txt']);
+    vi.restoreAllMocks();
   });
 
   it('a backup whose kit was never saved says so', () => {

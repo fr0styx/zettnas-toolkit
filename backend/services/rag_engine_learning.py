@@ -469,7 +469,7 @@ class RagLearningMixin:
                 except Exception as e:
                     logger.debug(f"[RAG] Spin-up auto-learn watcher error: {e}")
 
-        t = threading.Thread(target=_watch_loop, name="zettnas-rag-spinup-watcher", daemon=True)
+        t = threading.Thread(target=_watch_loop, name="kiboto-rag-spinup-watcher", daemon=True)
         self._watcher_thread = t
         t.start()
 

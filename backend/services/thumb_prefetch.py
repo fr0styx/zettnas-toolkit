@@ -26,7 +26,7 @@ from backend.config import DATA_DIR
 from backend.fsutil import atomic_write_json, read_json
 from backend.services import thumbs
 
-logger = logging.getLogger("zettnas.thumb_prefetch")
+logger = logging.getLogger("kiboto.thumb_prefetch")
 
 MAX_QUEUE = 5000
 BATCH = 200

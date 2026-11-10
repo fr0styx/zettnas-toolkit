@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 # Written by the release image's build (Dockerfile); environment variables can't create it.
-RELEASE_MARKER = "/etc/zettnas-release"
+RELEASE_MARKER = "/etc/kiboto-release"
 
 
 def test_mode() -> bool:

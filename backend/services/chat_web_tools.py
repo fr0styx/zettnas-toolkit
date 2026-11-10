@@ -355,7 +355,7 @@ def _normalize_web_query_and_topic(raw_query: str) -> tuple[str, str]:
 
 # Web access for the current chat turn (AI-06). Tools that leave the NAS check it,
 # whichever path calls them (keyword routing or the model's own tool calls).
-_WEB_ALLOWED: contextvars.ContextVar = contextvars.ContextVar("zettnas_ai_web_allowed", default=False)
+_WEB_ALLOWED: contextvars.ContextVar = contextvars.ContextVar("kiboto_ai_web_allowed", default=False)
 _WEB_BLOCKED_MSG = "Web access is off for this chat. Turn on Web to let Kib search the internet or get the weather."
 
 

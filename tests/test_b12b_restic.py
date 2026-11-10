@@ -227,7 +227,7 @@ def test_the_drill_compares_the_restored_file_by_checksum(env, monkeypatch):
     assert res["ok"] and res["verified"] == "sha256" and len(res["sha256"]) == 64
     assert ob.get_repo("usb")["last_drill_verified"] == "sha256"
     with monkeypatch.context() as m:
-        m.setattr(ob, "_sha256", lambda p: "restored" if "zettnas-drill-" in p else "original")
+        m.setattr(ob, "_sha256", lambda p: "restored" if "kiboto-drill-" in p else "original")
         with pytest.raises(ob.ResticError, match="differs"):
             ob.drill("usb")
     for name in ("a.txt", "b.txt"):

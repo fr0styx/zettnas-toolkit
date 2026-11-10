@@ -1597,7 +1597,7 @@ class RagSearchMixin:
             "answer": answer_md,
             "answer_markdown": answer_md,
             "elapsed_ms": elapsed_ms,
-            "synthesis_engine": "zettnas_rag_v3_hierarchical",
+            "synthesis_engine": "kiboto_rag_v3_hierarchical",
             "crag_grade": crag_eval["grade"],
             "crag_confidence": crag_eval["confidence"],
             "grounding_confidence_score": grounding["grounding_confidence_score"],

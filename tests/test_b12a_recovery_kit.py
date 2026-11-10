@@ -70,7 +70,7 @@ def test_until_the_kit_is_saved_the_overview_says_so(env, monkeypatch):
 def test_the_api_gives_the_kit_and_records_it_saved(env, client, auth_headers):
     _repo(env)
     res = client.get("/api/offsite/repos/usb/kit", headers=auth_headers)
-    assert res.status_code == 200 and res.json()["filename"] == "zettnas-recovery-usb.txt"
+    assert res.status_code == 200 and res.json()["filename"] == "kiboto-recovery-usb.txt"
     assert "correct-horse-battery-staple" in res.json()["text"]
     assert client.post("/api/offsite/repos/usb/kit-saved", headers=auth_headers).status_code == 200
     assert ob.kits_not_saved() == []

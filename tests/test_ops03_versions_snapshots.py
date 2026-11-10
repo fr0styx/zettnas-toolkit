@@ -110,8 +110,8 @@ def test_spawn_mounts_the_data_folder_into_the_helper(monkeypatch):
     monkeypatch.setattr(self_updater, "_docker_request", fake)
     assert self_updater.spawn_self_updater("img:new", "zettnas-toolkit", 0.1)
     create = next(b for m, p, b in fake.calls if p.startswith("/containers/create?name=kiboto-self-updater"))
-    assert "/mnt/user/appdata/z/data:/zettnas-data" in create["HostConfig"]["Binds"]
-    assert create["Cmd"][-2:] == ["--data-dir", "/zettnas-data"]
+    assert "/mnt/user/appdata/z/data:/kiboto-data" in create["HostConfig"]["Binds"]
+    assert create["Cmd"][-2:] == ["--data-dir", "/kiboto-data"]
 
 
 def test_unhealthy_update_restores_the_snapshot(monkeypatch, data):

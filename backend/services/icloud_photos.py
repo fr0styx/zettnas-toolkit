@@ -23,7 +23,7 @@ from backend.config import DATA_DIR
 from backend.fsutil import atomic_write_json, json_locked, read_json
 from backend.services import photo_import
 
-logger = logging.getLogger("zettnas.icloud_photos")
+logger = logging.getLogger("kiboto.icloud_photos")
 
 ROOT = os.path.join(DATA_DIR, "icloud")
 DOWNLOAD_TIMEOUT_S = 300

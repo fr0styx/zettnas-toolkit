@@ -191,7 +191,7 @@ class GitHub:
             "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "zettnas-ci-notices",
+            "User-Agent": "kiboto-ci-notices",
         }
 
     def call(self, method: str, path: str, data: dict[str, Any] | None = None, raw: bool = False) -> Any:
@@ -213,7 +213,7 @@ class GitHub:
 
 
 def latest_node(major: int) -> str | None:
-    req = urllib.request.Request("https://nodejs.org/dist/index.json", headers={"User-Agent": "zettnas-ci-notices"})
+    req = urllib.request.Request("https://nodejs.org/dist/index.json", headers={"User-Agent": "kiboto-ci-notices"})
     releases = json.loads(open_url(req))
     same = [r["version"] for r in releases if (version_tuple(r["version"]) or (0,))[0] == major]
     return max(same, key=lambda v: version_tuple(v) or (0,)) if same else None

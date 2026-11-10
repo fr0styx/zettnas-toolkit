@@ -5,7 +5,7 @@ stored thumbnail (photo_assets.thumb_webp, so no disk wakes), and a search quest
 vector in the same space, in any language SigLIP 2 learned. Photos whose vectors are close to
 the question's come back even when no caption or file name says what they show.
 
-Off until a server is set (rag config "photo_vector_host", e.g. http://zettnas-clip:11436).
+Off until a server is set (rag config "photo_vector_host", e.g. http://kiboto-clip:11436).
 Vectors are made in the background, a batch at a time, only while the machine is idle (the
 caption queue's rules), and are kept per model, so a different model starts over.
 """

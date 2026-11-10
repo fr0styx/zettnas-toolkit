@@ -137,7 +137,7 @@ The application starts four persistent background daemon threads upon startup vi
   4. Activity Monitor Integration: publishes test lifecycle events and findings to the system audit ledger.
 
 ### 2.12 System Observability & Sanitized Diagnostics Subsystem
-- **Bundle Format**: Standardized multi-layer ZIP archive (`zettnas_diagnostics_<timestamp>.zip`).
+- **Bundle Format**: Standardized multi-layer ZIP archive (`kiboto_diagnostics_<timestamp>.zip`).
 - **Responsibilities & Invariants**:
   1. Zero Spindown Disruption: preserves platter sleep states throughout diagnostic capture.
   2. Deep Subsystem Coverage: collects kernel dmesg, MMIO fan registers, USB descriptors, Btrfs chunk allocation, ZFS pools, Docker stacks, and App Backups.

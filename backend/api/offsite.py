@@ -105,7 +105,7 @@ def get_key(repo_id: str):
 @router.get("/offsite/repos/{repo_id}/kit", dependencies=[MANAGE])
 def get_kit(repo_id: str):
     """The full recovery kit (REL-17): key, location, cloud settings and restore commands."""
-    return {"filename": f"zettnas-recovery-{repo_id}.txt", "text": _errors(ob.recovery_kit, repo_id)}
+    return {"filename": f"kiboto-recovery-{repo_id}.txt", "text": _errors(ob.recovery_kit, repo_id)}
 
 
 @router.post("/offsite/repos/{repo_id}/kit-saved", dependencies=[MANAGE])

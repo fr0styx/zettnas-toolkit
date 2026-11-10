@@ -85,7 +85,7 @@ def probe(url: str, seconds: int) -> tuple[int | None, str]:
     last = ""
     while time.time() < end:
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "zettnas-catalog-verify"})
+            req = urllib.request.Request(url, headers={"User-Agent": "kiboto-catalog-verify"})
             with urllib.request.urlopen(req, timeout=8, context=ctx) as r:
                 return r.status, ""
         except urllib.error.HTTPError as e:

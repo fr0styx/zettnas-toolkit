@@ -24,7 +24,7 @@ from fractions import Fraction
 
 from backend.services import media_info
 
-logger = logging.getLogger("zettnas.video_compat")
+logger = logging.getLogger("kiboto.video_compat")
 
 MAX_LONG_SIDE = 1280
 _slots = threading.BoundedSemaphore(2)

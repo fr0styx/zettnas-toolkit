@@ -319,7 +319,7 @@ class RagIndexingMixin:
                 except Exception:
                     ignored("backend.services.rag_engine.RagSearchEngine.start_background_sync._worker")
 
-        t = threading.Thread(target=_worker, name="zettnas-rag-sync", daemon=True)
+        t = threading.Thread(target=_worker, name="kiboto-rag-sync", daemon=True)
         self._sync_thread = t
         t.start()
         return {"status": "started", **self.get_sync_progress()}

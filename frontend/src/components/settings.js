@@ -1254,8 +1254,8 @@ export function exportThemeBundle() {
   } catch (e) {}
 
   const bundle = {
-    app: 'zettnas-toolkit',
-    format: 'zett-theme',
+    app: 'kiboto',
+    format: 'kiboto-theme',
     version: 1,
     exported_at: new Date().toISOString(),
     theme: state.desktopTheme || 'cyber',
@@ -1286,7 +1286,7 @@ export function exportThemeBundle() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `zettnas-theme-${state.desktopTheme || 'cyber'}-${Date.now().toString(36)}.zett-theme.json`;
+  a.download = `kiboto-theme-${state.desktopTheme || 'cyber'}-${Date.now().toString(36)}.kiboto-theme.json`;
   document.body.appendChild(a);
   a.click();
   URL.revokeObjectURL(url);
@@ -1300,8 +1300,8 @@ export function importThemeBundle(file) {
   reader.onload = (e) => {
     try {
       const data = JSON.parse(e.target.result);
-      if (!data || (data.format !== 'zett-theme' && !data.theme)) {
-        throw new Error('Invalid theme file format. Expected a .zett-theme.json bundle.');
+      if (!data || (!['kiboto-theme', 'zett-theme'].includes(data.format) && !data.theme)) { // zett-theme: saved before the rebrand
+        throw new Error('Invalid theme file format. Expected a .kiboto-theme.json bundle.');
       }
 
       // Snapshot current state for undo

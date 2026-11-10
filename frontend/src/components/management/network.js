@@ -1185,7 +1185,7 @@ export async function fetchAndRenderWireguard() {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${cfg.client_name || 'zettnas-client'}.conf`;
+            a.download = `${cfg.client_name || 'kiboto-client'}.conf`;
             a.click();
             URL.revokeObjectURL(url);
             showToast(t('toast.downloaded_wireguard_conf_profile', 'Downloaded WireGuard .conf profile.'), 'info');
@@ -1255,7 +1255,7 @@ export async function fetchAndRenderWireguard() {
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;
-                  a.download = `${cfg.client_name || 'zettnas-client'}.conf`;
+                  a.download = `${cfg.client_name || 'kiboto-client'}.conf`;
                   a.click();
                   URL.revokeObjectURL(url);
                   showToast(t('toast.exported_wireguard_conf_profile', 'Exported WireGuard .conf profile.'), 'info');
