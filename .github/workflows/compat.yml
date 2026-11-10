@@ -1,0 +1,33 @@
+name: Nightly compatibility recordings
+
+# B9: Kiboto's Unraid and TrueNAS parsers run over every recorded release on each commit
+# (tests/test_b9_compat_*.py, in the unit suite). This job checks each night which release lines
+# have come out since, and fails when Unraid's newest line has no recording yet
+# (scripts/compat_capture.py unraid on a box running it). TrueNAS lines without one are listed.
+on:
+  schedule:
+    - cron: "41 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-lines:
+    name: Release lines without a recording
+    if: github.repository == 'fr0styx/kiboto'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Compare release lines with the recordings
+        run: python scripts/compat_trains.py --summary "$GITHUB_STEP_SUMMARY"
