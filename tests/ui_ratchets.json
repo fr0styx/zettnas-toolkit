@@ -215,6 +215,12 @@
   "styles": 60,
   "templates": 22
  },
+ "frontend/src/components/management/family-access.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 0,
+  "templates": 1
+ },
  "frontend/src/components/management/network.js": {
   "buttons": 0,
   "globals": 5,

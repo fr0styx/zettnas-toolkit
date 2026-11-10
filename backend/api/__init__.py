@@ -17,6 +17,7 @@ from backend.api.diagnostics import router as diagnostics_router
 from backend.api.docker import router as docker_router
 from backend.api.drives import router as drives_router
 from backend.api.encrypted_folders import router as encrypted_folders_router
+from backend.api.family_access import router as family_access_router
 from backend.api.family_filter import router as family_filter_router
 from backend.api.fans import router as fans_router
 from backend.api.file_versions import router as file_versions_router  # noqa: E402
@@ -102,6 +103,7 @@ api_router.include_router(media_router)
 api_router.include_router(photo_import_router)  # NFEAT-3
 api_router.include_router(nas_name_router)  # NFEAT-8
 api_router.include_router(public_links_router)  # NFEAT-2
+api_router.include_router(family_access_router)  # NFEAT-1
 api_router.include_router(home_assistant_router)  # RES-5
 api_router.include_router(hw_helper_router)
 api_router.include_router(sftp_router)
@@ -142,6 +144,7 @@ __all__ = [
     "photo_import_router",
     "nas_name_router",
     "public_links_router",
+    "family_access_router",
     "home_assistant_router",
     "sftp_router",
     "vms_router",

@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-692 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+699 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -408,6 +408,13 @@ request and response schemas.
 
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/fs/shared/join/{token}` | public ⏱ | The invite page a family member opens: get the Tailscale app, sign in, accept (public; the token is the credential) |
+| `GET` | `/api/v1/fs/shared/join/{token}/state` | public ⏱ | Whether the invite was accepted yet (the page asks every few seconds) |
+| `GET` | `/api/v1/network/family-access` | `system:view` | Who was invited, who joined and who is online; whether a Tailscale API key is kept and how long it lasts |
+| `POST` | `/api/v1/network/family-access/invites` | `system:config` | A single-use invite to reach this NAS (and nothing else) from anywhere (confirmed first: 428 until then) |
+| `DELETE` | `/api/v1/network/family-access/invites/{user_id}` | `system:config` | Withdraws the person's invite; for one already accepted, says where to remove the share in Tailscale |
+| `DELETE` | `/api/v1/network/family-access/key` | `system:config` | Forgets the Tailscale API key; invites already made keep working |
+| `PUT` | `/api/v1/network/family-access/key` | `system:config` | Checks a Tailscale API access key against this machine, then keeps it sealed |
 | `GET` | `/api/v1/network/nas-name` | `system:view` | Whether the NAS answers to <name>.local, the name, the older names that still answer and the web address |
 | `PUT` | `/api/v1/network/nas-name` | `system:config` | Turns the name on or off or changes it; the previous name keeps answering |
 | `GET` | `/api/v1/network/public-apps` | `system:view` | The apps on the internet, the Funnel ports still free and the apps that could go (RES-6) |

@@ -60,6 +60,7 @@ ACTIONS: dict[str, str] = {
     "pool.scrub_schedule": "Check pool {target} for errors once a month. Its disks spin up for the check",
     "security.advisor_fix": "Apply the Security Advisor fix '{target}'. People may lose access they had before",
     "network.public_links": "Let anyone who has a share link open it from the internet, through Tailscale Funnel on port {target}. Only share links are reachable that way; the rest of the NAS stays private",
+    "network.family_invite": "Invite {target} to reach this NAS from anywhere through their own Tailscale account. They see only this NAS and still sign in to Kiboto",
     "network.publish_app": "Put {target} on the internet through Tailscale Funnel. Anyone with its address reaches its own sign-in page; Kiboto's page stays private",
     "hardware.helper": "Move the fan and button hardware access into {target}, a small container with no network that alone opens /dev/mem. The next update takes that access away from Kiboto itself",
     "network.nas_name": "Let the NAS answer to {target} on the home network. A small helper on the host's network does it and only answers name lookups",

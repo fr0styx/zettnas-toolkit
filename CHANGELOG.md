@@ -155,6 +155,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   button, are you there. The next update then recreates Kiboto without that access; turning the helper
   off keeps it running until an update gives Kiboto its access back. How it works: docs/HARDWARE_HELPER.md.
 
+#### Added
+
+- **Family from anywhere**: Network → File Sharing Services → Family from anywhere invites each Kiboto user
+  to reach this NAS from outside through their own free Tailscale account; they see only the NAS, nothing
+  else on your network, and still sign in to Kiboto. Kiboto gives you a link or QR code to a guided page
+  that knows their phone or computer: get the Tailscale app, sign in with Google, Apple or Microsoft,
+  accept, then open Kiboto. You see who is invited, who joined and who is online, and can withdraw an
+  invite. Needs a Tailscale API access key once (Kiboto keeps it sealed and warns before it runs out) and,
+  for the page to open from anywhere, Share links from anywhere. How it works: docs/REMOTE_ACCESS.md.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

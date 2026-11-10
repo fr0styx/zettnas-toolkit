@@ -61,6 +61,30 @@ for each, which ticks itself within seconds of each click. Pressing a card's but
 fine: Kiboto keeps the request for an hour and finishes it as soon as both are done. With your own
 Headscale server there is no Funnel.
 
+## Family from anywhere: each person their own way in
+
+Network → File Sharing Services → **Family from anywhere** lets each Kiboto user reach this NAS from
+outside with their own free Tailscale account. They see only the NAS, nothing else on your tailnet, and
+they still sign in to Kiboto with their own name and password.
+
+1. Once: open Tailscale's [Keys page](https://login.tailscale.com/admin/settings/keys), make an
+   **API access key** and paste it into the card. Tailscale lets only a person's own key make share
+   invites, and such a key lasts at most 90 days; Kiboto keeps it sealed, shows how long it has left and
+   warns two weeks before it runs out. Invites already accepted keep working after it expires.
+2. Click **Invite** next to a person and confirm. Send them the message (**Copy message**) or let them
+   scan the **QR code**. The invite works once and for 7 days.
+3. Their page knows their phone or computer and shows three steps: get the Tailscale app, sign in with
+   Google, Apple or Microsoft (or a Tailscale account), accept. It notices when they are in and then
+   offers **Open Kiboto**; adding it to the home screen keeps it one tap away.
+
+The page lives under the share-link address, so it opens from anywhere when **Share links from
+anywhere** is on. Without it, the message carries Tailscale's own invite link and the steps instead.
+
+The card shows who is invited, who joined and who is online. **Withdraw** cancels an open invite.
+Tailscale has no way to take back an accepted share through its API: **Remove access** takes the
+person off the card and opens Tailscale's Machines page, where you remove them under this NAS →
+Sharing. With your own Headscale server there are no share invites; give each person a key from it.
+
 ## What it does and doesn't do
 
 - Nothing is opened on your router, and nobody outside your tailnet can reach the addresses.

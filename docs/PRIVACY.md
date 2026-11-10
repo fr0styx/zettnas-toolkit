@@ -37,6 +37,7 @@ health report below, which is off unless you turn it on.
 | Cloud remotes and backups | the providers you connect (S3, B2, OneDrive, Google Drive, …) | the files you choose to sync | as you configure |
 | Locked cloud copy check | Backblaze (api.backblazeb2.com and the API address it returns), or the S3 service of the backup's bucket (Amazon at s3.<region>.amazonaws.com, Wasabi at s3.<region>.wasabisys.com, or the endpoint you set) | the cloud drive's key, to read the bucket's lock settings; nothing is written | when you press **Check the lock** on an off-site backup |
 | Remote access | Tailscale (login.tailscale.com) | what Tailscale needs to connect your devices | if you turn it on |
+| Family from anywhere | Tailscale's API (api.tailscale.com) | the Tailscale API key you paste, to make a share invite of this NAS, read whether it was accepted, read the key's expiry, or withdraw it | when you save the key, invite or withdraw someone, and while the card or an open invite page checks for acceptance (at most every 5 seconds) |
 | Remote access | the Headscale server you name instead of Tailscale | the same, sent to your own server | if you choose Headscale |
 | Anonymous health report | the Kiboto project's receiver (a Cloudflare Worker) | app version, platform, processor type, image variant, a drive-count range, features in use, a random id ([details](HEALTH_SIGNAL.md)) | weekly, only if you turn on **Help improve Kiboto** (off by default) |
 

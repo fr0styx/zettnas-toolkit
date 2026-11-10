@@ -2,7 +2,7 @@
   "important": 3354,
   "buttonClasses": 76,
   "inlineStyles": 1427,
-  "emojiIcons": 1,
+  "emojiIcons": 2,
   "primitiveUses": 4,
   "importantPerFile": {
     "frontend/index.html": 64,

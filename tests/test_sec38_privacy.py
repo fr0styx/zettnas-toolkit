@@ -118,6 +118,8 @@ NOT_CONTACTED = {
     "calendar.google.com",
     "token.actions.githubusercontent.com",
     "graph.microsoft.com",
+    "apps.apple.com",  # store links on the family invite page, opened by the visitor (NFEAT-1)
+    "play.google.com",
 }
 
 

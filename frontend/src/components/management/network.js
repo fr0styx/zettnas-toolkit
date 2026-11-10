@@ -2439,6 +2439,7 @@ export function initNetworkControls() {
     servicesBtn.addEventListener('click', () => import('./nas-name.js').then((m) => m.loadNasNameCard()));
     servicesBtn.addEventListener('click', () => import('./public-links.js').then((m) => m.loadPublicLinksCard()));
     servicesBtn.addEventListener('click', () => import('./public-apps.js').then((m) => m.loadPublicAppsCard())); // RES-6
+    servicesBtn.addEventListener('click', () => import('./family-access.js').then((m) => m.loadFamilyAccessCard())); // NFEAT-1
     servicesBtn.addEventListener('click', () => import('./home-assistant.js').then((m) => m.loadHomeAssistantCard()));
   }
   const portsBtn = document.querySelector('[data-tab-target="mgmt-pane-network-ports"]');

@@ -23434,44 +23434,6 @@
     "title": "ImmichConnect",
     "type": "object"
    },
-   "InviteIn": {
-    "properties": {
-     "days": {
-      "default": 7,
-      "maximum": 90.0,
-      "minimum": 1.0,
-      "title": "Days",
-      "type": "integer"
-     },
-     "max_uses": {
-      "default": 1,
-      "maximum": 50.0,
-      "minimum": 1.0,
-      "title": "Max Uses",
-      "type": "integer"
-     },
-     "note": {
-      "default": "",
-      "maxLength": 120,
-      "title": "Note",
-      "type": "string"
-     },
-     "quota_gb": {
-      "default": 0,
-      "maximum": 100000.0,
-      "minimum": 0.0,
-      "title": "Quota Gb",
-      "type": "integer"
-     },
-     "role_id": {
-      "default": "share_user",
-      "title": "Role Id",
-      "type": "string"
-     }
-    },
-    "title": "InviteIn",
-    "type": "object"
-   },
    "JobCancelled": {
     "properties": {
      "id": {
@@ -23640,21 +23602,6 @@
      "cleared"
     ],
     "title": "JobsCleared",
-    "type": "object"
-   },
-   "KeyIn": {
-    "properties": {
-     "api_key": {
-      "maxLength": 200,
-      "minLength": 20,
-      "title": "Api Key",
-      "type": "string"
-     }
-    },
-    "required": [
-     "api_key"
-    ],
-    "title": "KeyIn",
     "type": "object"
    },
    "KitIn": {
@@ -42053,6 +42000,89 @@
     "title": "WireguardSubnetRouteRequest",
     "type": "object"
    },
+   "backend__api__family_access__InviteIn": {
+    "properties": {
+     "user_id": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "User Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "user_id"
+    ],
+    "title": "InviteIn",
+    "type": "object"
+   },
+   "backend__api__family_access__KeyIn": {
+    "properties": {
+     "key": {
+      "maxLength": 200,
+      "minLength": 10,
+      "title": "Key",
+      "type": "string"
+     }
+    },
+    "required": [
+     "key"
+    ],
+    "title": "KeyIn",
+    "type": "object"
+   },
+   "backend__api__immich__KeyIn": {
+    "properties": {
+     "api_key": {
+      "maxLength": 200,
+      "minLength": 20,
+      "title": "Api Key",
+      "type": "string"
+     }
+    },
+    "required": [
+     "api_key"
+    ],
+    "title": "KeyIn",
+    "type": "object"
+   },
+   "backend__api__invites__InviteIn": {
+    "properties": {
+     "days": {
+      "default": 7,
+      "maximum": 90.0,
+      "minimum": 1.0,
+      "title": "Days",
+      "type": "integer"
+     },
+     "max_uses": {
+      "default": 1,
+      "maximum": 50.0,
+      "minimum": 1.0,
+      "title": "Max Uses",
+      "type": "integer"
+     },
+     "note": {
+      "default": "",
+      "maxLength": 120,
+      "title": "Note",
+      "type": "string"
+     },
+     "quota_gb": {
+      "default": 0,
+      "maximum": 100000.0,
+      "minimum": 0.0,
+      "title": "Quota Gb",
+      "type": "integer"
+     },
+     "role_id": {
+      "default": "share_user",
+      "title": "Role Id",
+      "type": "string"
+     }
+    },
+    "title": "InviteIn",
+    "type": "object"
+   },
    "backend__api__offsite__RestoreIn": {
     "properties": {
      "path": {
@@ -53538,6 +53568,96 @@
     ]
    }
   },
+  "/api/v1/fs/shared/join/{token}": {
+   "get": {
+    "description": "The invite page a family member opens: get the Tailscale app, sign in, accept (public; the token is the credential).",
+    "operationId": "family_join_page_api_v1_fs_shared_join__token__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "token",
+      "required": true,
+      "schema": {
+       "title": "Token",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
+     }
+    },
+    "security": [],
+    "summary": "Family Join Page",
+    "tags": [
+     "Network"
+    ],
+    "x-rate-limit": {
+     "requests": 60,
+     "seconds": 60
+    }
+   }
+  },
+  "/api/v1/fs/shared/join/{token}/state": {
+   "get": {
+    "description": "Whether the invite was accepted yet (the page asks every few seconds).",
+    "operationId": "family_join_state_api_v1_fs_shared_join__token__state_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "token",
+      "required": true,
+      "schema": {
+       "title": "Token",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
+     }
+    },
+    "security": [],
+    "summary": "Family Join State",
+    "tags": [
+     "Network"
+    ],
+    "x-rate-limit": {
+     "requests": 60,
+     "seconds": 60
+    }
+   }
+  },
   "/api/v1/fs/shared/{token}": {
    "get": {
     "description": "Public access endpoint for shared files and folders (no session needed).\nAllows streaming the file or downloading a zip of a folder. A password goes in\nthe X-Share-Password header or a POST body, never in the URL; browsers get a\nsmall password form.",
@@ -54999,7 +55119,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/KeyIn"
+        "$ref": "#/components/schemas/backend__api__immich__KeyIn"
        }
       }
      },
@@ -55411,7 +55531,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/InviteIn"
+        "$ref": "#/components/schemas/backend__api__invites__InviteIn"
        }
       }
      },
@@ -59071,6 +59191,212 @@
     ],
     "x-required-scopes": [
      "containers:manage"
+    ]
+   }
+  },
+  "/api/v1/network/family-access": {
+   "get": {
+    "description": "Who was invited, who joined and who is online; whether a Tailscale API key is kept and how long it lasts.",
+    "operationId": "get_family_access_api_v1_network_family_access_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Family Access Api V1 Network Family Access Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Family Access",
+    "tags": [
+     "Network"
+    ],
+    "x-required-scopes": [
+     "system:view"
+    ]
+   }
+  },
+  "/api/v1/network/family-access/invites": {
+   "post": {
+    "description": "A single-use invite to reach this NAS (and nothing else) from anywhere (confirmed first: 428 until then).",
+    "operationId": "post_family_invite_api_v1_network_family_access_invites_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/backend__api__family_access__InviteIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Family Invite Api V1 Network Family Access Invites Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Family Invite",
+    "tags": [
+     "Network"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/network/family-access/invites/{user_id}": {
+   "delete": {
+    "description": "Withdraws the person's invite; for one already accepted, says where to remove the share in Tailscale.",
+    "operationId": "delete_family_invite_api_v1_network_family_access_invites__user_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "user_id",
+      "required": true,
+      "schema": {
+       "title": "User Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Delete Family Invite Api V1 Network Family Access Invites  User Id  Delete",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Delete Family Invite",
+    "tags": [
+     "Network"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/network/family-access/key": {
+   "delete": {
+    "description": "Forgets the Tailscale API key; invites already made keep working.",
+    "operationId": "delete_family_key_api_v1_network_family_access_key_delete",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Delete Family Key Api V1 Network Family Access Key Delete",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Delete Family Key",
+    "tags": [
+     "Network"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   },
+   "put": {
+    "description": "Checks a Tailscale API access key against this machine, then keeps it sealed.",
+    "operationId": "put_family_key_api_v1_network_family_access_key_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/backend__api__family_access__KeyIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Family Key Api V1 Network Family Access Key Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Family Key",
+    "tags": [
+     "Network"
+    ],
+    "x-required-scopes": [
+     "system:config"
     ]
    }
   },

@@ -54,6 +54,8 @@ PUBLIC = {
     "/api/v1/auth/oidc/login": "single sign-on",
     "/api/v1/auth/oidc/callback": "single sign-on",
     "/api/v1/fs/shared/{token}": "a public link; the token (and password) is the credential",
+    "/api/v1/fs/shared/join/{token}": "a family invite page (NFEAT-1); the token is the credential",
+    "/api/v1/fs/shared/join/{token}/state": "whether that invite was accepted; the token is the credential",
     "/api/v1/shared/{token}": "a public link; the token (and password) is the credential",
     "/api/v1/invite/{token}": "an invite; the token is the credential",
     "/api/v1/wallpapers/download/{filename}": "the sign-in page background",

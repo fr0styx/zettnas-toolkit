@@ -167,6 +167,17 @@ def disable() -> dict[str, Any]:
     return status()
 
 
+def tailscale_status() -> dict[str, Any]:
+    """`tailscale status --json` as a dict ({} when Tailscale doesn't answer)."""
+    return _status_doc()
+
+
+def base_url() -> str:
+    """https://<name>:8443 while public share links work from anywhere; "" otherwise."""
+    st = _state()
+    return str(st.get("base_url") or "") if st.get("enabled") and not st.get("approval_url") else ""
+
+
 def public_url(token: str) -> str:
     """The link's address from anywhere, when public links are on; "" otherwise."""
     st = _state()
