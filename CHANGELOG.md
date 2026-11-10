@@ -59,6 +59,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **The badge beside KIBOTO says Beta**: the top bar and the side drawer said "Toolkit"; 2.0 is a beta
   until the weekly release train makes it stable.
 
+#### Fixes
+
+- **Connecting Tailscale could take the NAS off its own network**: Kiboto accepted every subnet route the
+  tailnet offered, and its Tailscale runs on the host's network. When another device advertised the
+  network the NAS sits on (a router or a second server as subnet router), the NAS sent its home traffic
+  into the tailnet and dropped off the network until Tailscale was stopped. Accept Routes is now off
+  unless you tick it, the "Use from anywhere" sign-in no longer turns it on, and a route that covers the
+  NAS's own network is never accepted: Kiboto turns Accept Routes off, records it in Events and says
+  which device offers which route beside the box.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

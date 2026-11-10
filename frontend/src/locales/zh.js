@@ -6250,6 +6250,7 @@ export default {
   "mw.auth_k_optional": "认证密钥（可选）",
   "mw.custom_hostname": "自定义主机名",
   "mw.accept_routes": "接受路由",
+  "net.ts_route_conflict": "“接受路由”已关闭：{peer} 提供了 {route}，正是这台 NAS 所在的网络。接受它会让 NAS 与家庭网络断开。",
   "mw.node_active_on_tailnet": "✓ 已在 Tailnet 上启用",
   "mw.this_appliance_is_securely_connected_to": "本设备已安全接入你的 Tailscale 网状网络。发往本机的流量使用 WireGuard 端到端加密。",
   "mw.direct_https_url": "直接 HTTPS 地址：",

@@ -15,7 +15,7 @@ from backend.ignored_errors import ignored
 def execute_tailscale_up(
     auth_key: str | None = None,
     hostname: str | None = None,
-    accept_routes: bool = True,
+    accept_routes: bool = False,
 ) -> dict[str, Any]:
     """Connects host to the Zero-Trust Tailscale mesh network."""
     c_info = tailscale._get_tailscale_container_info()
@@ -55,6 +55,13 @@ def execute_tailscale_up(
                 auth_url = tailscale.auth_url_in(str(s_doc.get("AuthURL") or "")) or None
         except Exception as e:
             logger.debug(f"[Network] Fallback status json check: {e}")
+
+    if accept_routes and not auth_url:
+        # never a route over this NAS's own network: it would drop off its network (see guard_lan_routes)
+        refused = tailscale.guard_lan_routes()
+        if refused:
+            out = f"{out}\n" if out else ""
+            out += "Accept Routes was turned off: " + ", ".join(f"{c['peer']} offers {c['route']}" for c in refused)
 
     if auth_url:
         return {
@@ -148,7 +155,7 @@ def _tailscale_devices(env_vars: Any, image_name: Any, state_dir: Any) -> Any:
 def deploy_tailscale_container(
     auth_key: str | None = None,
     hostname: str | None = None,
-    accept_routes: bool = True,
+    accept_routes: bool = False,
     state_dir: str | None = None,
 ) -> dict[str, Any]:
     """
@@ -242,7 +249,9 @@ def deploy_tailscale_container(
         env_vars.append(f"TS_HOSTNAME={hostname.strip()}")
     if auth_key:
         env_vars.append(f"TS_AUTHKEY={auth_key.strip()}")
-    extra = ["--reset", *tailscale.login_args()] + (["--accept-routes"] if accept_routes else [])
+    # never --accept-routes here: it would come back at every start, before anything checks the
+    # routes (Kiboto turns it on through `tailscale up`, which guard_lan_routes follows)
+    extra = ["--reset", *tailscale.login_args()]
     env_vars.append("TS_EXTRA_ARGS=" + " ".join(extra))
 
     create_body = _tailscale_devices(env_vars, image_name, state_dir)

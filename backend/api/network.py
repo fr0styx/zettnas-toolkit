@@ -259,13 +259,19 @@ async def delete_vlan_endpoint(vlan_iface: str):
 class TailscaleUpRequest(BaseModel):
     auth_key: str | None = Field(default=None, description="Pre-authenticated Tailscale ephemeral or reusable auth key")
     hostname: str | None = Field(default=None, description="Custom node hostname on tailnet")
-    accept_routes: bool = Field(default=True, description="Accept subnet routes from other nodes")
+    accept_routes: bool = Field(
+        default=False,
+        description="Accept subnet routes from other nodes (never one over the NAS's own network)",
+    )
 
 
 class TailscaleDeployRequest(BaseModel):
     auth_key: str | None = Field(default=None, description="Pre-authenticated Tailscale ephemeral or reusable auth key")
     hostname: str | None = Field(default=None, description="Custom node hostname on tailnet")
-    accept_routes: bool = Field(default=True, description="Accept subnet routes from other nodes")
+    accept_routes: bool = Field(
+        default=False,
+        description="Accept subnet routes from other nodes (never one over the NAS's own network)",
+    )
     state_dir: str | None = Field(default=None, description="Custom persistent state directory on host")
 
 

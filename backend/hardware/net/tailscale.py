@@ -165,8 +165,9 @@ def _run_tailscale_cmd(args: list[str], timeout: float = 10.0) -> tuple[int, str
     return 127, "tailscale CLI or running container not found"
 
 
-def detect_local_subnets() -> list[str]:
-    """Detects local physical IPv4 network subnets (e.g. ['192.168.1.0/24'])."""
+def detect_local_subnets(fallback: bool = True) -> list[str]:
+    """Detects local physical IPv4 network subnets (e.g. ['192.168.1.0/24']). With fallback, a guess
+    when none is found (a suggestion for the subnet router field); without, an empty list."""
     subnets = []
     try:
         routes = common._parse_routes()
@@ -184,9 +185,76 @@ def detect_local_subnets() -> list[str]:
                     subnets.append(s)
     except Exception as e:
         logger.debug(f"[Network] Error detecting subnets: {e}")
-    if not subnets:
+    if not subnets and fallback:
         subnets = ["192.168.1.0/24"]
     return subnets
+
+
+def lan_route_conflicts(doc: dict[str, Any]) -> list[dict[str, str]]:
+    """Subnet routes other nodes offer that cover a network this NAS is on. Accepting one sends the
+    NAS's own home traffic into the tailnet: it drops off its network until the route goes."""
+    import ipaddress
+
+    lans = []
+    for s in detect_local_subnets(fallback=False):
+        try:
+            lans.append(ipaddress.ip_network(s, strict=False))
+        except ValueError:
+            continue
+    out = []
+    for peer in (doc.get("Peer") or {}).values():
+        for route in peer.get("PrimaryRoutes") or []:
+            try:
+                net = ipaddress.ip_network(route, strict=False)
+            except ValueError:
+                continue
+            if net.prefixlen == 0:
+                continue  # an exit node's default route is chosen on purpose, not accepted with routes
+            for lan in lans:
+                if net.version == lan.version and net.overlaps(lan):
+                    name = str(peer.get("HostName") or peer.get("DNSName") or "another node").rstrip(".")
+                    out.append({"peer": name, "route": str(net), "lan": str(lan)})
+    return out
+
+
+def guard_lan_routes(doc: dict[str, Any] | None = None, route_all: bool | None = None) -> list[dict[str, str]]:
+    """With Accept Routes on, turns it off when another node offers a route over the NAS's own
+    network, and says so in Events. Returns those routes (empty when there are none)."""
+    import json
+
+    if doc is None:
+        code, out = _run_tailscale_cmd(["status", "--json"], timeout=4.0)
+        try:
+            doc = json.loads(out) if code == 0 else {}
+        except ValueError:
+            doc = {}
+    conflicts = lan_route_conflicts(doc or {})
+    if not conflicts:
+        return []
+    if route_all is None:
+        code, out = _run_tailscale_cmd(["debug", "prefs"], timeout=2.0)
+        try:
+            route_all = bool(json.loads(out).get("RouteAll")) if code == 0 else False
+        except ValueError:
+            route_all = False
+    if route_all:
+        code, out = _run_tailscale_cmd(["set", "--accept-routes=false"], timeout=8.0)
+        what = ", ".join(f"{c['peer']} offers {c['route']}" for c in conflicts)
+        logger.warning(
+            "[Tailscale] Accept Routes turned off: %s, the network this NAS is on (%s)", what, out.strip()[:120]
+        )
+        try:
+            from backend.state import add_event
+
+            add_event(
+                "warning",
+                "Tailscale routes not accepted",
+                f"{what}: the network this NAS is on. Accepting it would cut the NAS off from your home network, "
+                "so Accept Routes is off.",
+            )
+        except (ImportError, OSError, ValueError, RuntimeError) as e:
+            logger.debug("[Tailscale] the routes event was not recorded: %s", e)
+    return conflicts
 
 
 def get_taildrop_dir() -> str:

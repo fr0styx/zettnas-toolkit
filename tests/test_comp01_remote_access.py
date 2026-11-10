@@ -269,7 +269,8 @@ def test_the_container_carries_the_login_server(tmp_path, monkeypatch):
     )
     tailscale_setup.deploy_tailscale_container(hostname="zettnas", state_dir=str(tmp_path / "ts"))
     env = next(body for method, path, body in calls if path.startswith("/containers/create"))["Env"]
-    assert "TS_EXTRA_ARGS=--reset --login-server=https://hs.example.com --accept-routes" in env
+    # never --accept-routes in the container: it would come back at every start, unchecked
+    assert "TS_EXTRA_ARGS=--reset --login-server=https://hs.example.com" in env
 
 
 def test_the_sign_in_link_is_found_for_either_server(tmp_path, monkeypatch):

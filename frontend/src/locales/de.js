@@ -6250,6 +6250,7 @@ export default {
   "mw.auth_k_optional": "Auth-Schlüssel (optional)",
   "mw.custom_hostname": "Eigener Hostname",
   "mw.accept_routes": "Routen übernehmen",
+  "net.ts_route_conflict": "Routen annehmen ist aus: {peer} bietet {route} an, das Netz, in dem dieses NAS steht. Sie anzunehmen würde das NAS von Ihrem Heimnetz trennen.",
   "mw.node_active_on_tailnet": "✓ Im Tailnet aktiv",
   "mw.this_appliance_is_securely_connected_to": "Dieses Gerät ist sicher mit Ihrem Tailscale-Netz verbunden. Verkehr zu diesem Rechner ist mit WireGuard Ende-zu-Ende verschlüsselt.",
   "mw.direct_https_url": "Direkte HTTPS-Adresse:",

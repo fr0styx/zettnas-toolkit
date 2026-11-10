@@ -186,6 +186,13 @@ export async function fetchAndRenderReplication() {
   }
 }
 
+/** Why Accept Routes is off: another node offers a route over this NAS's own network. */
+export function routeConflictText(ts) {
+  const c = (ts && Array.isArray(ts.route_conflicts) && ts.route_conflicts[0]) || null;
+  if (!c) return '';
+  return t('net.ts_route_conflict', 'Accept Routes is off: {peer} offers {route}, the network this NAS is on. Accepting it would cut the NAS off from your home network.', { peer: c.peer, route: c.route });
+}
+
 export function renderTailscalePeersTable(peers, filterQuery = '') {
   const tbody = document.getElementById('ts-peers-table-body');
   const countPill = document.getElementById('ts-peer-count-pill');
@@ -394,6 +401,16 @@ export async function fetchAndRenderWireguard() {
           }
         }
         if (reauthBtn) reauthBtn.style.display = 'inline-block';
+
+        // Accept Routes as it is, and why it was turned off (a route over this NAS's own network)
+        const conflictBox = document.getElementById('ts-route-conflict');
+        if (conflictBox) {
+          conflictBox.textContent = routeConflictText(ts);
+          conflictBox.hidden = !conflictBox.textContent;
+        }
+        if (tsAcceptRoutesCb && typeof ts.accept_routes === 'boolean' && document.activeElement !== tsAcceptRoutesCb) {
+          /** @type {HTMLInputElement} */ (tsAcceptRoutesCb).checked = ts.accept_routes;
+        }
 
         // 1. Subnet Router Gateway
         const subnetToggle = document.getElementById('ts-subnet-router-toggle');
@@ -614,7 +631,7 @@ export async function fetchAndRenderWireguard() {
   async function deployTailscaleContainer(btn) {
     const authKey = tsAuthKeyInput ? tsAuthKeyInput.value.trim() : '';
     const hostname = tsHostnameInput ? tsHostnameInput.value.trim() : '';
-    const acceptRoutes = tsAcceptRoutesCb ? tsAcceptRoutesCb.checked : true;
+    const acceptRoutes = tsAcceptRoutesCb ? tsAcceptRoutesCb.checked : false;
     const origText = btn ? btn.textContent : '';
     try {
       if (btn) {
@@ -705,7 +722,7 @@ export async function fetchAndRenderWireguard() {
 
       const authKey = tsAuthKeyInput ? tsAuthKeyInput.value.trim() : '';
       const hostname = tsHostnameInput ? tsHostnameInput.value.trim() : '';
-      const acceptRoutes = tsAcceptRoutesCb ? tsAcceptRoutesCb.checked : true;
+      const acceptRoutes = tsAcceptRoutesCb ? tsAcceptRoutesCb.checked : false;
 
       // If user clicked 'Log in to Tailscale' and we already have an authUrl stored
       if (mode === 'login' && !authKey && tsUpBtn.dataset.authUrl) {

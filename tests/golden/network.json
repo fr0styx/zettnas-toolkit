@@ -2464,6 +2464,7 @@
       }
      ],
      "peers_count": 2,
+     "route_conflicts": [],
      "serve_enabled": true,
      "serve_url": "https://nas.tail1234.ts.net",
      "ssh_enabled": false,
@@ -2533,6 +2534,17 @@
      "--hostname",
      "nas",
      "--accept-routes"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "status",
+     "--json"
     ]
    ],
    "result": {
@@ -3414,6 +3426,7 @@
       }
      ],
      "peers_count": 2,
+     "route_conflicts": [],
      "serve_enabled": true,
      "serve_url": "https://nas.tail1234.ts.net",
      "ssh_enabled": false,
@@ -3495,6 +3508,24 @@
      "--hostname",
      "nas",
      "--accept-routes"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "status",
+     "--json"
     ]
    ],
    "result": {
@@ -3663,6 +3694,7 @@
      "key_expiry_days": null,
      "peers": [],
      "peers_count": 0,
+     "route_conflicts": [],
      "serve_enabled": true,
      "serve_url": "",
      "ssh_enabled": false,
@@ -3726,7 +3758,7 @@
      "docker",
      "POST",
      "/containers/create?name=tailscale",
-     "{\"Env\": [\"TS_STATE_DIR=/var/lib/tailscale\", \"TS_HOSTNAME=nas\", \"TS_AUTHKEY=tskey-auth-example\", \"TS_EXTRA_ARGS=--reset --accept-routes\", \"TS_USERSPACE=true\"], \"HostConfig\": {\"Binds\": [\"<root>/ts-state:/var/lib/tailscale\"], \"CapAdd\": [\"NET_ADMIN\", \"NET_RAW\"], \"Devices\": [], \"NetworkMode\": \"host\", \"RestartPolicy\": {\"Name\": \"unless-stopped\"}}, \"Image\": \"tailscale/tailscale:stable\", \"Labels\": {\"app.name\": \"Tailscale Zero-Trust Mesh\", \"com.docker.compose.project\": \"tailscale\", \"com.docker.compose.service\": \"tailscale\", \"net.unraid.docker.icon\": \"https://raw.githubusercontent.com/tailscale/tailscale/main/cmd/tailscale/logo.png\", \"net.unraid.docker.managed\": \"dockerman\"}}"
+     "{\"Env\": [\"TS_STATE_DIR=/var/lib/tailscale\", \"TS_HOSTNAME=nas\", \"TS_AUTHKEY=tskey-auth-example\", \"TS_EXTRA_ARGS=--reset\", \"TS_USERSPACE=true\"], \"HostConfig\": {\"Binds\": [\"<root>/ts-state:/var/lib/tailscale\"], \"CapAdd\": [\"NET_ADMIN\", \"NET_RAW\"], \"Devices\": [], \"NetworkMode\": \"host\", \"RestartPolicy\": {\"Name\": \"unless-stopped\"}}, \"Image\": \"tailscale/tailscale:stable\", \"Labels\": {\"app.name\": \"Tailscale Zero-Trust Mesh\", \"com.docker.compose.project\": \"tailscale\", \"com.docker.compose.service\": \"tailscale\", \"net.unraid.docker.icon\": \"https://raw.githubusercontent.com/tailscale/tailscale/main/cmd/tailscale/logo.png\", \"net.unraid.docker.managed\": \"dockerman\"}}"
     ],
     [
      "docker",
@@ -3753,6 +3785,17 @@
      "--hostname",
      "nas",
      "--accept-routes"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "status",
+     "--json"
     ]
    ],
    "result": {
@@ -4246,10 +4289,10 @@
    "function": "(vlan_name: str) -> dict[str, typing.Any]"
   },
   "deploy_tailscale_container": {
-   "function": "(auth_key: str | None = None, hostname: str | None = None, accept_routes: bool = True, state_dir: str | None = None) -> dict[str, typing.Any]"
+   "function": "(auth_key: str | None = None, hostname: str | None = None, accept_routes: bool = False, state_dir: str | None = None) -> dict[str, typing.Any]"
   },
   "detect_local_subnets": {
-   "function": "() -> list[str]"
+   "function": "(fallback: bool = True) -> list[str]"
   },
   "execute_tailscale_down": {
    "function": "() -> dict[str, typing.Any]"
@@ -4276,7 +4319,7 @@
    "function": "() -> dict[str, typing.Any]"
   },
   "execute_tailscale_up": {
-   "function": "(auth_key: str | None = None, hostname: str | None = None, accept_routes: bool = True) -> dict[str, typing.Any]"
+   "function": "(auth_key: str | None = None, hostname: str | None = None, accept_routes: bool = False) -> dict[str, typing.Any]"
   },
   "generate_wireguard_client_config": {
    "function": "(client_name: str, client_ip: str = '10.13.13.2/32', server_endpoint: str = '', server_pubkey: str = '', dns: str = '1.1.1.1', allowed_ips: str = '0.0.0.0/0, ::/0', keepalive: int = 25) -> dict[str, typing.Any]"

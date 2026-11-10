@@ -10,6 +10,19 @@ from backend.hardware.net import tailscale, wireguard
 from backend.ignored_errors import ignored
 
 
+def _key_days_left(key_exp: str) -> int | None:
+    """Whole days until the node key expires (0 once it has), or None when unknown."""
+    if not key_exp:
+        return None
+    try:
+        from datetime import datetime
+
+        exp_dt = datetime.fromisoformat(key_exp.replace("Z", "+00:00"))
+        return max(0, (exp_dt - datetime.now(UTC)).days)
+    except (ValueError, TypeError):
+        return None
+
+
 def get_mesh_vpn_status() -> dict[str, Any]:
     """
     Zero-Trust Mesh Hub detector:
@@ -85,18 +98,7 @@ def get_mesh_vpn_status() -> dict[str, Any]:
             # Key Expiry
             key_exp = doc.get("Self", {}).get("KeyExpiry", "")
             ts_info["key_expiry"] = key_exp
-            key_days = None
-            if key_exp:
-                try:
-                    from datetime import datetime
-
-                    exp_dt = datetime.fromisoformat(key_exp.replace("Z", "+00:00"))
-                    now_dt = datetime.now(UTC)
-                    delta = (exp_dt - now_dt).days
-                    key_days = max(0, delta)
-                except Exception:
-                    ignored("backend.hardware.network.get_mesh_vpn_status")
-            ts_info["key_expiry_days"] = key_days
+            ts_info["key_expiry_days"] = key_days = _key_days_left(key_exp)
             ts_info["key_expired"] = (key_days == 0) if key_days is not None else False
 
             # Check debug prefs for RunSSH and AdvertiseRoutes
@@ -106,6 +108,7 @@ def get_mesh_vpn_status() -> dict[str, Any]:
                 try:
                     p_doc = json.loads(p_out.strip())
                     ts_info["ssh_enabled"] = bool(p_doc.get("RunSSH", False))
+                    ts_info["accept_routes"] = bool(p_doc.get("RouteAll", False))
                     p_routes = p_doc.get("AdvertiseRoutes") or []
                 except Exception:
                     ignored("backend.hardware.network.get_mesh_vpn_status")
@@ -127,6 +130,10 @@ def get_mesh_vpn_status() -> dict[str, Any]:
             ts_info["advertised_routes"] = lan_routes
             ts_info["is_subnet_router"] = len(lan_routes) > 0
             ts_info["detected_subnets"] = tailscale.detect_local_subnets()
+            # a route over the NAS's own network is never accepted: it would drop off its network
+            ts_info["route_conflicts"] = tailscale.guard_lan_routes(doc, ts_info.get("accept_routes", False))
+            if ts_info["route_conflicts"]:
+                ts_info["accept_routes"] = False
 
             # Parse Peers
             peers_dict = doc.get("Peer", {})

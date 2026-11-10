@@ -6250,6 +6250,7 @@ export default {
   "mw.auth_k_optional": "Clave de autenticación (opcional)",
   "mw.custom_hostname": "Nombre de host personalizado",
   "mw.accept_routes": "Aceptar rutas",
+  "net.ts_route_conflict": "Aceptar rutas está desactivado: {peer} ofrece {route}, la red en la que está este NAS. Aceptarla dejaría el NAS fuera de tu red de casa.",
   "mw.node_active_on_tailnet": "✓ Activo en el tailnet",
   "mw.this_appliance_is_securely_connected_to": "Este equipo está conectado de forma segura a tu red Tailscale. El tráfico hacia esta máquina va cifrado de extremo a extremo con WireGuard.",
   "mw.direct_https_url": "URL HTTPS directa:",
