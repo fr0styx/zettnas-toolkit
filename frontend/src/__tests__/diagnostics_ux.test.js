@@ -30,7 +30,7 @@ describe('Diagnostics UX & Observability Frontend Suite', () => {
 
     expect(downloadBlobSpy).toHaveBeenCalledWith(
       '/api/system/diagnostics-bundle',
-      'zettnas_diagnostics.zip',
+      'kiboto_diagnostics.zip',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

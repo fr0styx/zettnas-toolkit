@@ -649,7 +649,7 @@ export function initManagement() {
   }
 
   function showHub() {
-    const earlyStyle = document.getElementById('zettnas-mgmt-early-style');
+    const earlyStyle = document.getElementById('kiboto-mgmt-early-style');
     if (earlyStyle) earlyStyle.remove();
     renderStatusSummary(); // UX-1: what needs attention comes first
     if (hubView) hubView.style.display = 'grid';
@@ -1048,7 +1048,7 @@ export function initManagement() {
   }
 
   function showSection(targetId, specificPane = null, subTabId = null) {
-    const earlyStyle = document.getElementById('zettnas-mgmt-early-style');
+    const earlyStyle = document.getElementById('kiboto-mgmt-early-style');
     if (earlyStyle) earlyStyle.remove();
     let desiredSubPane = specificPane;
     if (desiredSubPane === 'mgmt-pane-system') desiredSubPane = 'mgmt-pane-backups';

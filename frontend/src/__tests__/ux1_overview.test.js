@@ -27,7 +27,7 @@ describe('Overview and Advanced (UX-1, UX-2)', () => {
     expect(document.querySelector('[data-mgmt-target="mgmt-sec-vms"].mgmt-sidebar-item').hidden).toBe(false);
     sw.checked = false;
     sw.dispatchEvent(new Event('change'));
-    expect(localStorage.getItem('zettnas_advanced')).toBe('0');
+    expect(localStorage.getItem('kiboto_advanced')).toBe('0');
     expect(document.querySelector('.mgmt-sidebar-item[data-mgmt-target="mgmt-sec-vms"]').hidden).toBe(true);
     expect(document.querySelector('.mgmt-sidebar-item[data-mgmt-target="mgmt-sec-network"]').hidden).toBe(true);
     expect(document.querySelector('.mgmt-app-card[data-mgmt-target="mgmt-sec-vms"]').hidden).toBe(true);

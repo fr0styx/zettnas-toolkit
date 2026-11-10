@@ -31,8 +31,8 @@ export function isDesktopLocked() {
 export function initAuth() {
   if (isLcdMode()) {
     try {
-      sessionStorage.removeItem('zettnas_desktop_locked');
-      localStorage.removeItem('zettnas_desktop_locked');
+      sessionStorage.removeItem('kiboto_desktop_locked');
+      localStorage.removeItem('kiboto_desktop_locked');
     } catch (e) {}
     return;
   }
@@ -199,19 +199,19 @@ export function initAuth() {
   initInactivityTracker();
 
   // Enforce lock if persisted in sessionStorage
-  if (sessionStorage.getItem('zettnas_desktop_locked') === 'true') {
+  if (sessionStorage.getItem('kiboto_desktop_locked') === 'true') {
     lockDesktop();
   }
 
   // Intercept browser back/forward and bfcache navigation while locked
   window.addEventListener('popstate', () => {
-    if (sessionStorage.getItem('zettnas_desktop_locked') === 'true' || _isLocked) {
+    if (sessionStorage.getItem('kiboto_desktop_locked') === 'true' || _isLocked) {
       lockDesktop();
     }
   });
 
   window.addEventListener('pageshow', () => {
-    if (sessionStorage.getItem('zettnas_desktop_locked') === 'true' || _isLocked) {
+    if (sessionStorage.getItem('kiboto_desktop_locked') === 'true' || _isLocked) {
       lockDesktop();
     }
   });
@@ -518,7 +518,7 @@ async function submitMfaChallenge() {
       codeInput.value = '';
       if (_isLocked) {
         _isLocked = false;
-        sessionStorage.removeItem('zettnas_desktop_locked');
+        sessionStorage.removeItem('kiboto_desktop_locked');
         document.documentElement.classList.remove('is-desktop-locked');
         document.body.classList.remove('desktop-locked');
         clearInterval(_clockInterval);
@@ -563,11 +563,11 @@ export function initLockOverlay() {
   }
 
   if (timeoutSelect) {
-    const cur = localStorage.getItem('zettnas_auto_lock_timeout_ms') || String(DEFAULT_IDLE_TIMEOUT_MS);
+    const cur = localStorage.getItem('kiboto_auto_lock_timeout_ms') || String(DEFAULT_IDLE_TIMEOUT_MS);
     timeoutSelect.value = cur;
     timeoutSelect.addEventListener('change', () => {
       const val = timeoutSelect.value;
-      localStorage.setItem('zettnas_auto_lock_timeout_ms', val);
+      localStorage.setItem('kiboto_auto_lock_timeout_ms', val);
       resetInactivityTimer();
       window.fetch('/api/system/client-preferences', {
         method: 'POST',
@@ -598,15 +598,15 @@ export function lockDesktop() {
   if (!lockOverlay) return;
 
   _isLocked = true;
-  sessionStorage.setItem('zettnas_desktop_locked', 'true');
+  sessionStorage.setItem('kiboto_desktop_locked', 'true');
   document.documentElement.classList.add('is-desktop-locked');
   document.body.classList.add('desktop-locked');
   lockOverlay.style.display = 'flex';
   lockOverlay.style.opacity = '1';
 
   try {
-    if (!history.state || !history.state.zettnas_locked) {
-      history.pushState({ zettnas_locked: true }, '', window.location.href);
+    if (!history.state || !history.state.kiboto_locked) {
+      history.pushState({ kiboto_locked: true }, '', window.location.href);
     }
   } catch (e) {}
 
@@ -618,7 +618,7 @@ export function lockDesktop() {
   const errorEl = document.getElementById('lock-error');
   const timeoutSelect = document.getElementById('lock-timeout-select');
   if (timeoutSelect) {
-    timeoutSelect.value = localStorage.getItem('zettnas_auto_lock_timeout_ms') || String(DEFAULT_IDLE_TIMEOUT_MS);
+    timeoutSelect.value = localStorage.getItem('kiboto_auto_lock_timeout_ms') || String(DEFAULT_IDLE_TIMEOUT_MS);
   }
   if (errorEl) errorEl.style.display = 'none';
   if (pwdInput) {
@@ -670,7 +670,7 @@ export async function unlockDesktop() {
     if (res.ok && (data.status === 'ok' || data.token)) {
       if (data.token) auth.setToken(data.token);
       _isLocked = false;
-      sessionStorage.removeItem('zettnas_desktop_locked');
+      sessionStorage.removeItem('kiboto_desktop_locked');
       document.documentElement.classList.remove('is-desktop-locked');
       document.body.classList.remove('desktop-locked');
       clearInterval(_clockInterval);
@@ -686,7 +686,7 @@ export async function unlockDesktop() {
 
       const timeoutSelect = document.getElementById('lock-timeout-select');
       if (timeoutSelect) {
-        localStorage.setItem('zettnas_auto_lock_timeout_ms', timeoutSelect.value);
+        localStorage.setItem('kiboto_auto_lock_timeout_ms', timeoutSelect.value);
       }
       pwdInput.value = '';
       resetInactivityTimer();
@@ -725,7 +725,7 @@ export function switchUser() {
   if (lockOverlay) lockOverlay.style.display = 'none';
   clearInterval(_clockInterval);
   _isLocked = false;
-  sessionStorage.removeItem('zettnas_desktop_locked');
+  sessionStorage.removeItem('kiboto_desktop_locked');
   document.documentElement.classList.remove('is-desktop-locked');
   document.body.classList.remove('desktop-locked');
 
@@ -745,7 +745,7 @@ export function switchUser() {
 }
 
 export async function logout() {
-  sessionStorage.removeItem('zettnas_desktop_locked');
+  sessionStorage.removeItem('kiboto_desktop_locked');
   document.documentElement.classList.remove('is-desktop-locked');
   document.body.classList.remove('desktop-locked');
   _isLocked = false;
@@ -795,7 +795,7 @@ function resetInactivityTimer() {
   if (_isLocked || isLcdMode()) return;
   clearTimeout(_autoLockTimer);
 
-  const timeoutMs = parseInt(localStorage.getItem('zettnas_auto_lock_timeout_ms') || `${DEFAULT_IDLE_TIMEOUT_MS}`, 10);
+  const timeoutMs = parseInt(localStorage.getItem('kiboto_auto_lock_timeout_ms') || `${DEFAULT_IDLE_TIMEOUT_MS}`, 10);
   if (timeoutMs > 0) {
     _autoLockTimer = setTimeout(() => {
       // Don't auto-lock if login screen is currently active

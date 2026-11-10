@@ -38,8 +38,8 @@ function waitForSignIn(ms) {
 // page scripts (and any injected script) never see it (FE-05). localStorage keeps just a
 // "signed in" hint for the first paint. Only the on-device LCD renderer holds a token,
 // in memory, sent as a Bearer header.
-const LEGACY_TOKEN_KEY = 'zettnas_token';
-const SESSION_HINT_KEY = 'zettnas_signed_in';
+const LEGACY_TOKEN_KEY = 'kiboto_token';
+const SESSION_HINT_KEY = 'kiboto_signed_in';
 let _memoryToken = null;
 // Bumped at every sign-in: a 401 for a request sent before it is stale and must not sign the user out.
 let _authEpoch = 0;

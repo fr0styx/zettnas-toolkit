@@ -133,7 +133,7 @@ describe('Tier 2: Aero Snap 2.0, Single Desktop Invariant, Spotlight Actions & M
       win._preSnapHeight = '320px';
       applyWindowSnap(win, 'maximize', 'snap-size-test');
       restoreWindowSnap(win, 'snap-size-test');
-      const saved = JSON.parse(localStorage.getItem('zettnas_window_bounds_v2') || '{}')['snap-size-test'] || {};
+      const saved = JSON.parse(localStorage.getItem('kiboto_window_bounds_v2') || '{}')['snap-size-test'] || {};
       expect(saved.snapped).toBe('');
       expect(saved.width).toBe(520);
       expect(saved.height).toBe(320);

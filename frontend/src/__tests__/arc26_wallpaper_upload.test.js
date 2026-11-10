@@ -59,7 +59,7 @@ describe('wallpapers', () => {
     const data = await P.uploadAndApplyWallpaper(image());
     expect(data.filename).toBe('sky.png');
     expect(post.mock.calls[0][1].image).toMatch(/^data:image\/png;base64,/);
-    expect(localStorage.getItem('zettnas_active_wallpaper')).toBe('sky.png');
+    expect(localStorage.getItem('kiboto_active_wallpaper')).toBe('sky.png');
     expect(lastToast()).toEqual(['Wallpaper uploaded & applied: sky.png', 'success']);
   });
 

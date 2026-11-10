@@ -284,7 +284,7 @@ def render_lcd_loop():
                     context.add_cookies(
                         [
                             {
-                                "name": "zettnas_session",
+                                "name": "kiboto_session",
                                 "value": config.LCD_INTERNAL_TOKEN,
                                 "domain": "127.0.0.1",
                                 "path": "/",

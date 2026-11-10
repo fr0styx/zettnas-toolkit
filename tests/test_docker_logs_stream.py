@@ -34,7 +34,7 @@ def test_stream_docker_container_logs_socket_missing(client):
         patch("os.path.exists", return_value=False),
         patch("backend.services.compose_synthesizer.get_container_logs_chunk", return_value=mock_chunk),
     ):
-        headers = {"Authorization": "Bearer admin-token-test", "Cookie": "zettnas_session=admin-token-test"}
+        headers = {"Authorization": "Bearer admin-token-test", "Cookie": "kiboto_session=admin-token-test"}
         with patch(
             "backend.auth.validate_user_session",
             return_value={"user_id": "u1", "username": "admin", "role_id": "superadmin", "scopes": ["*"]},
@@ -97,7 +97,7 @@ def test_stream_docker_container_logs_socket_multiplexed(client):
             return_value={"user_id": "u1", "username": "admin", "role_id": "superadmin", "scopes": ["*"]},
         ),
     ):
-        headers = {"Authorization": "Bearer admin-token-test", "Cookie": "zettnas_session=admin-token-test"}
+        headers = {"Authorization": "Bearer admin-token-test", "Cookie": "kiboto_session=admin-token-test"}
         response = client.get(
             "/api/docker/containers/c_test_123/logs/stream?tail=50&follow=false",
             headers=headers,

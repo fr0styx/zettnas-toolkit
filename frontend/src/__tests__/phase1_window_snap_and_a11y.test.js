@@ -89,7 +89,7 @@ describe('Phase 1: 8-Zone Aero Snap Geometry Engine', () => {
     expect(win.style.left).toBe('8px');
     expect(win.style.top).toBe(`${NAVBAR_OFFSET}px`);
 
-    const savedBounds = JSON.parse(localStorage.getItem('zettnas_window_bounds_v2') || '{}');
+    const savedBounds = JSON.parse(localStorage.getItem('kiboto_window_bounds_v2') || '{}');
     expect(savedBounds['test-window']).toBeDefined();
     expect(savedBounds['test-window'].snapped).toBe('left');
 

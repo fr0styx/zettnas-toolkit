@@ -37,7 +37,7 @@ describe('Batch 6: Observability, Structured Logging & Diagnostics Export', () =
   });
 
   it('successfully triggers downloadBlob and notifies user with toast', async () => {
-    const mockFilename = 'zettnas_diagnostics_20261009_172000.zip';
+    const mockFilename = 'kiboto_diagnostics_20261009_172000.zip';
     const downloadSpy = vi.spyOn(api, 'downloadBlob').mockImplementation(async () => {
       // Simulate button loading state during request
       const btn = document.getElementById('btn-download-diagnostics');
@@ -53,7 +53,7 @@ describe('Batch 6: Observability, Structured Logging & Diagnostics Export', () =
 
     expect(downloadSpy).toHaveBeenCalledWith(
       '/api/system/diagnostics-bundle',
-      'zettnas_diagnostics.zip',
+      'kiboto_diagnostics.zip',
       expect.objectContaining({ method: 'POST' })
     );
     expect(toast.showToast).toHaveBeenCalledWith('Generating diagnostics bundle (scrubbing secrets)...', 'info');

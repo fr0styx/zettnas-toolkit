@@ -14,7 +14,9 @@ from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
 import backend.config as config
+from backend import legacy_names
 from backend.auth import (
+    SESSION_COOKIE,
     AuthenticatedPrincipal,
     create_session,
     extract_token,
@@ -443,7 +445,7 @@ def _build_session_response(
 
     is_https = request_is_https(request)
     response.set_cookie(
-        key="zettnas_session",
+        key=SESSION_COOKIE,
         value=token,
         max_age=ttl,
         httponly=True,
@@ -879,7 +881,8 @@ def logout(request: Request):
         revoke_session(token)
 
     response = JSONResponse(content={"status": "ok"})
-    response.delete_cookie(key="zettnas_session", path="/")
+    response.delete_cookie(key=SESSION_COOKIE, path="/")
+    response.delete_cookie(key=legacy_names.OLD_SESSION_COOKIE, path="/")
     return response
 
 

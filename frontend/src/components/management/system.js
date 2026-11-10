@@ -14,7 +14,7 @@ import { setIconLabel } from '../../ui/primitives.js';
 const UPDATE_CHANNELS = ['stable', 'beta', 'edge'];
 let _currentUpdateChannel = 'stable';
 try {
-  const saved = localStorage.getItem('zettnas_update_channel');
+  const saved = localStorage.getItem('kiboto_update_channel');
   if (UPDATE_CHANNELS.includes(saved)) _currentUpdateChannel = saved;
 } catch (e) {}
 
@@ -45,7 +45,7 @@ async function postUpdate(channel, targetImage) {
 export async function setUpdateChannel(channel) {
   _currentUpdateChannel = UPDATE_CHANNELS.includes(channel) ? channel : 'stable';
   try {
-    localStorage.setItem('zettnas_update_channel', _currentUpdateChannel);
+    localStorage.setItem('kiboto_update_channel', _currentUpdateChannel);
   } catch (e) {}
   syncUpdateChannelUI();
   return fetchAndRenderSystemAbout(true, _currentUpdateChannel);
@@ -413,14 +413,14 @@ export async function downloadDiagnosticsBundle() {
 
     let filename;
     try {
-      filename = await api.downloadBlob('/api/system/diagnostics-bundle', 'zettnas_diagnostics.zip', {
+      filename = await api.downloadBlob('/api/system/diagnostics-bundle', 'kiboto_diagnostics.zip', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
     } catch (postErr) {
       // Graceful fallback to GET if POST route is rejected by proxy
-      filename = await api.downloadBlob('/api/system/diagnostics-bundle', 'zettnas_diagnostics.zip');
+      filename = await api.downloadBlob('/api/system/diagnostics-bundle', 'kiboto_diagnostics.zip');
     }
     showToast(t('diagnostics.download_success', 'Diagnostics bundle downloaded successfully') + ` (${filename}).`, 'success');
   } catch (err) {

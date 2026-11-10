@@ -192,7 +192,7 @@ def extract_token(request: Request) -> str:
         return header[7:].strip()
 
     # 2. HttpOnly session cookie set at login (the web UI)
-    cookie_token = request.cookies.get("zettnas_session", "").strip()
+    cookie_token = session_cookie(request.cookies).strip()
     if cookie_token:
         return cookie_token
 
@@ -479,6 +479,17 @@ def _allowed_while_password_change_pending(method: str, path: str, sess: dict[st
 
 _WEBDAV_WRITE_METHODS = {"PUT", "DELETE", "MOVE", "COPY", "MKCOL", "PROPPATCH"}
 _FS_READONLY_POSTS = ("/api/fs/conflict-check", "/api/fs/checksum", "/api/fs/folder-size")
+SESSION_COOKIE = "kiboto_session"
+
+
+def session_cookie(cookies) -> str:
+    """The web session's token from a request's or websocket's cookies: kiboto_session, or the
+    zettnas_session a browser signed in before the rebrand still sends (legacy_names)."""
+    from backend import legacy_names
+
+    return cookies.get(SESSION_COOKIE) or cookies.get(legacy_names.OLD_SESSION_COOKIE) or ""
+
+
 CLIENT_IP_CTX: contextvars.ContextVar[str] = contextvars.ContextVar("zettnas_client_ip", default="")
 
 
@@ -631,7 +642,7 @@ async def auth_middleware(request: Request, call_next):
         if (
             request.method in ("POST", "PUT", "PATCH", "DELETE")
             and not request.headers.get("Authorization", "").startswith("Bearer ")
-            and request.cookies.get("zettnas_session")
+            and session_cookie(request.cookies)
             and not _origin_matches_host(request)
         ):
             logger.warning("[Auth] Blocked cross-site %s %s from %s", request.method, path, client_host)

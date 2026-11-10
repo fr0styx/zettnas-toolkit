@@ -192,21 +192,21 @@ describe('Appearance Studio & Desktop Personalization Revamp Suite', () => {
     ecoToggle.dispatchEvent(new Event('change'));
 
     expect(document.body.getAttribute('data-performance-mode')).toBe('eco');
-    expect(localStorage.getItem('zettnas_eco_mode')).toBe('true');
+    expect(localStorage.getItem('kiboto_eco_mode')).toBe('true');
 
     // Disable eco mode
     ecoToggle.checked = false;
     ecoToggle.dispatchEvent(new Event('change'));
 
     expect(document.body.hasAttribute('data-performance-mode')).toBe(false);
-    expect(localStorage.getItem('zettnas_eco_mode')).toBe('false');
+    expect(localStorage.getItem('kiboto_eco_mode')).toBe('false');
   });
 
   it('exportThemeBundle produces valid JSON download with current appearance state', () => {
     state.desktopTheme = 'amber';
     state.desktopCustomAccent = '#ffbe40';
-    localStorage.setItem('zettnas_glass_blur', '28');
-    localStorage.setItem('zettnas_window_radius', '20px');
+    localStorage.setItem('kiboto_glass_blur', '28');
+    localStorage.setItem('kiboto_window_radius', '20px');
 
     let clicked = false;
     const origCreateElement = document.createElement.bind(document);
@@ -245,7 +245,7 @@ describe('Appearance Studio & Desktop Personalization Revamp Suite', () => {
   it('restoreAppearanceDefaultsWithUndo resets to cyber factory defaults and supports undo', () => {
     state.desktopTheme = 'crimson';
     state.desktopCustomAccent = '#f43f5e';
-    localStorage.setItem('zettnas_glass_blur', '36');
+    localStorage.setItem('kiboto_glass_blur', '36');
 
     document.body.innerHTML = `
       <div id="mgmt-pane-theme">

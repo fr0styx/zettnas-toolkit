@@ -12,8 +12,8 @@ import { resolveZone, savePersonZone } from '../time-zone-prefs.js';
 import { currentLocale, formatDate, formatNumber, setClockPrefs } from '../format.js';
 import { zoneCatalog } from '../time-zones.js';
 import { WIDGET_NAMES, getWidgetKeyFromElement, getWidgetDisplayName } from './widget-names.js';
-const STORAGE_KEY = 'zettnas_widgets_config';
-const WEATHER_CACHE_KEY = 'zettnas_weather_cache';
+const STORAGE_KEY = 'kiboto_widgets_config'; // gitleaks:allow (a storage key name)
+const WEATHER_CACHE_KEY = 'kiboto_weather_cache';
 
 const DEFAULT_CONFIG = {
   enabled: true,
@@ -522,7 +522,7 @@ export function applyWidgetConfig() {
   }
 
   // Safely remove early-injected style now that all classes and styles are applied
-  const earlyStyle = document.getElementById('zettnas-widgets-early-style');
+  const earlyStyle = document.getElementById('kiboto-widgets-early-style');
   if (earlyStyle && earlyStyle.parentNode) {
     earlyStyle.parentNode.removeChild(earlyStyle);
   }
@@ -720,7 +720,7 @@ const COUNTRY_NAMES = {
   IN: 'India',
 };
 
-const HOLIDAY_CACHE_PREFIX = 'zettnas_holidays_';
+const HOLIDAY_CACHE_PREFIX = 'kiboto_holidays_';
 
 export function getActiveCountry() {
   const cfg = _config || loadWidgetConfig();
@@ -3061,7 +3061,7 @@ export async function exportCalendarIcs() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `zettnas_calendar_${new Date().toISOString().split('T')[0]}.ics`;
+    a.download = `kiboto_calendar_${new Date().toISOString().split('T')[0]}.ics`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

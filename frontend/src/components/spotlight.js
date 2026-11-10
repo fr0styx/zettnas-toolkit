@@ -259,7 +259,7 @@ function _buildDefaultSpotlightItems() {
       keywords: ['theme', 'oled', 'dark', 'black', '>theme oled'],
       run: () => {
         document.body.className = 'theme-oled';
-        localStorage.setItem('zettnas_desktop_theme', 'oled');
+        localStorage.setItem('kiboto_desktop_theme', 'oled');
         showToast(t('toast.switched_to_oled_pure_black_theme', 'Switched to OLED Pure Black theme'), 'info');
       },
     },
@@ -272,7 +272,7 @@ function _buildDefaultSpotlightItems() {
       keywords: ['theme', 'cyber', 'teal', 'blue', '>theme cyber'],
       run: () => {
         document.body.className = 'theme-cyber';
-        localStorage.setItem('zettnas_desktop_theme', 'cyber');
+        localStorage.setItem('kiboto_desktop_theme', 'cyber');
         showToast(t('toast.switched_to_cyber_teal_theme', 'Switched to Cyber Teal theme'), 'info');
       },
     },
@@ -285,7 +285,7 @@ function _buildDefaultSpotlightItems() {
       keywords: ['theme', 'amber', 'gold', 'orange', '>theme amber'],
       run: () => {
         document.body.className = 'theme-amber';
-        localStorage.setItem('zettnas_desktop_theme', 'amber');
+        localStorage.setItem('kiboto_desktop_theme', 'amber');
         showToast(t('toast.switched_to_amber_gold_theme', 'Switched to Amber Gold theme'), 'info');
       },
     },

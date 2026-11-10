@@ -3,13 +3,13 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 // PERF-9: a German user doesn't download the English strings unless one is missing
 describe("English only for missing keys (PERF-9)", () => {
   afterEach(() => {
-    localStorage.removeItem("zettnas_language");
+    localStorage.removeItem("kiboto_language");
     vi.resetModules();
   });
 
   it("loads only the saved language at start, and English on the first missing key", async () => {
     vi.resetModules();
-    localStorage.setItem("zettnas_language", "de");
+    localStorage.setItem("kiboto_language", "de");
     const m = await import("../i18n.js");
     await m.setLanguage("de");
     expect(m.TRANSLATIONS.de).toBeDefined();
@@ -22,7 +22,7 @@ describe("English only for missing keys (PERF-9)", () => {
 
   it("an English user gets English at start", async () => {
     vi.resetModules();
-    localStorage.setItem("zettnas_language", "en");
+    localStorage.setItem("kiboto_language", "en");
     const m = await import("../i18n.js");
     await vi.waitFor(() => expect(m.TRANSLATIONS.en).toBeDefined());
   });

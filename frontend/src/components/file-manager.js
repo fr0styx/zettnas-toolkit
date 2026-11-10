@@ -33,7 +33,7 @@ import '../styles/files-lazy.css'; // the explorer's own sheet loads with this c
 // Virtualized DOM constants
 const ROW_HEIGHT = 42;
 const BUFFER = 5;
-const BOUNDS_KEY = 'zettnas_fm_bounds';
+const BOUNDS_KEY = 'kiboto_fm_bounds';
 
 // Shared clipboard across all File Explorer instances
 let _clipboard = { items: [], action: 'copy', sourceInstanceId: null };
@@ -122,8 +122,8 @@ export class FileManagerWindow {
     this.id = id;
     this.dockId = dockId;
     this.isPrimary = isPrimary;
-    this.currentPath = initialPath || (isPrimary ? (localStorage.getItem('zettnas_fm_last_path') || '/mnt/user') : '/mnt/user');
-    this.viewMode = localStorage.getItem('zettnas_fm_view_mode') || 'list';
+    this.currentPath = initialPath || (isPrimary ? (localStorage.getItem('kiboto_fm_last_path') || '/mnt/user') : '/mnt/user');
+    this.viewMode = localStorage.getItem('kiboto_fm_view_mode') || 'list';
     this.fileList = [];
     this.rawFileList = [];
     this.selectedPaths = new Set();
@@ -1621,7 +1621,7 @@ export class FileManagerWindow {
     if (this.viewMode === mode) return;
     this.viewMode = mode;
     try {
-      localStorage.setItem('zettnas_fm_view_mode', mode);
+      localStorage.setItem('kiboto_fm_view_mode', mode);
     } catch (_) {}
 
     if (this.windowEl) {
@@ -2042,7 +2042,7 @@ export class FileManagerWindow {
       this.currentPath = res.current;
       prefetchThumbs(res);
       if (this.isPrimary) {
-        try { localStorage.setItem('zettnas_fm_last_path', this.currentPath); } catch (_) {}
+        try { localStorage.setItem('kiboto_fm_last_path', this.currentPath); } catch (_) {}
       }
 
       // History update
@@ -3636,7 +3636,7 @@ export function initFileManager() {
   window._fmInitialized = true;
 
   // Initialize primary instance
-  const currentPath = localStorage.getItem('zettnas_fm_last_path') || '/mnt/user';
+  const currentPath = localStorage.getItem('kiboto_fm_last_path') || '/mnt/user';
   let primary = _fmInstances.get('file-manager-window');
   if (!primary) {
     primary = new FileManagerWindow('file-manager-window', 'fm', currentPath, true);

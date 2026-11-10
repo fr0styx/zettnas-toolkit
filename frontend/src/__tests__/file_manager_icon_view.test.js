@@ -88,7 +88,7 @@ describe('File Manager Icon View & Grid Mode', () => {
 
     expect(inst.viewMode).toBe('icon');
     expect(getFmViewMode()).toBe('icon');
-    expect(localStorage.getItem('zettnas_fm_view_mode')).toBe('icon');
+    expect(localStorage.getItem('kiboto_fm_view_mode')).toBe('icon');
     expect(fmWin.classList.contains('fm-mode-icon')).toBe(true);
     expect(btnIcon.classList.contains('active')).toBe(true);
     expect(btnList.classList.contains('active')).toBe(false);
@@ -97,7 +97,7 @@ describe('File Manager Icon View & Grid Mode', () => {
     btnList.click();
     expect(inst.viewMode).toBe('list');
     expect(getFmViewMode()).toBe('list');
-    expect(localStorage.getItem('zettnas_fm_view_mode')).toBe('list');
+    expect(localStorage.getItem('kiboto_fm_view_mode')).toBe('list');
     expect(fmWin.classList.contains('fm-mode-icon')).toBe(false);
     expect(btnList.classList.contains('active')).toBe(true);
     expect(btnIcon.classList.contains('active')).toBe(false);

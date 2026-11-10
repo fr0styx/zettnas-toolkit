@@ -227,7 +227,7 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
       'rb-desktop-icon': { left: 24, top: 413 },
       'chassis-desktop-icon': { left: 24, top: 525 }
     };
-    localStorage.setItem('zettnas_desktop_icon_positions_v3', JSON.stringify(legacyPositions));
+    localStorage.setItem('kiboto_desktop_icon_positions_v3', JSON.stringify(legacyPositions));
 
     initDraggableDesktopIcons();
 
@@ -259,7 +259,7 @@ describe('Desktop Context Menu, Dock Context Menu, and Wallpaper Engine', () => 
     }
 
     // Verify persisted to localStorage without overlaps
-    const updated = JSON.parse(localStorage.getItem('zettnas_desktop_icon_positions_v3'));
+    const updated = JSON.parse(localStorage.getItem('kiboto_desktop_icon_positions_v3'));
     expect(updated['containers-desktop-icon'].top).not.toBe(updated['fm-desktop-icon'].top);
   });
 

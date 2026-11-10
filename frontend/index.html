@@ -12,11 +12,26 @@
 <title data-i18n="ix.zettnas_studio_hardware_suite">ZettNAS Studio • Hardware Suite</title>
 <script>
   (function() {
+    // Kiboto rebrand: saved settings move from zettnas* keys to kiboto* keys before anything reads them
+    try {
+      [window.localStorage, window.sessionStorage].forEach(function(store) {
+        var old = [];
+        for (var i = 0; i < store.length; i++) {
+          var k = store.key(i);
+          if (k && k.indexOf('zettnas') === 0) old.push(k);
+        }
+        old.forEach(function(k) {
+          var n = 'kiboto' + k.slice(7);
+          if (store.getItem(n) === null) store.setItem(n, store.getItem(k));
+          store.removeItem(k);
+        });
+      });
+    } catch (e) { /* storage off: nothing to move */ }
     try {
       var params = new URLSearchParams(window.location.search);
       var lcdToken = params.get('lcd_token');
       // The session itself is an HttpOnly cookie; this only picks the first screen.
-      var signedIn = localStorage.getItem('zettnas_signed_in') === '1' || !!localStorage.getItem('zettnas_token');
+      var signedIn = localStorage.getItem('kiboto_signed_in') === '1' || !!localStorage.getItem('kiboto_token');
       var isLcd = window.location.search.indexOf('mode=lcd') !== -1 || !!lcdToken;
       if (signedIn || isLcd) {
         document.documentElement.classList.add('has-auth-session');
@@ -29,7 +44,7 @@
 
     // Pre-initialize desktop widgets positioning from localStorage to eliminate any jump on refresh
     try {
-      var wRaw = localStorage.getItem('zettnas_widgets_config');
+      var wRaw = localStorage.getItem('kiboto_widgets_config');
       if (wRaw) {
         var wCfg = JSON.parse(wRaw);
         var css = '';
@@ -65,7 +80,7 @@
         }
         if (css) {
           var s = document.createElement('style');
-          s.id = 'zettnas-widgets-early-style';
+          s.id = 'kiboto-widgets-early-style';
           s.textContent = css;
           document.head.appendChild(s);
         }
@@ -74,18 +89,18 @@
 
     // Pre-initialize lockscreen state from sessionStorage to eliminate any desktop exposure on back/forward or reload
     try {
-      if (sessionStorage.getItem('zettnas_desktop_locked') === 'true') {
+      if (sessionStorage.getItem('kiboto_desktop_locked') === 'true') {
         document.documentElement.classList.add('is-desktop-locked');
       }
     } catch (e) {}
 
     // Pre-initialize desktop wallpaper from localStorage to eliminate any delay, jump, or flash on reload
     try {
-      var savedWp = localStorage.getItem('zettnas_active_wallpaper');
+      var savedWp = localStorage.getItem('kiboto_active_wallpaper');
       if (savedWp) {
         var wpUrl = '/api/wallpapers/download/' + encodeURIComponent(savedWp);
         var sWp = document.createElement('style');
-        sWp.id = 'zettnas-wallpaper-early-style';
+        sWp.id = 'kiboto-wallpaper-early-style';
         sWp.textContent = '#desktop-wallpaper, body { background-image: url("' + wpUrl + '") !important; background-size: cover !important; background-position: center center !important; background-repeat: no-repeat !important; background-attachment: fixed !important; }\n';
         document.head.appendChild(sWp);
 
@@ -100,23 +115,23 @@
 
     // Pre-initialize visual tokens and glass settings
     try {
-      var sDim = localStorage.getItem('zettnas_wallpaper_dim');
+      var sDim = localStorage.getItem('kiboto_wallpaper_dim');
       if (sDim !== null) document.documentElement.style.setProperty('--wallpaper-dim', (parseInt(sDim, 10) / 100).toFixed(2));
-      var sWpBlur = localStorage.getItem('zettnas_wallpaper_blur');
+      var sWpBlur = localStorage.getItem('kiboto_wallpaper_blur');
       if (sWpBlur !== null) document.documentElement.style.setProperty('--wallpaper-blur', parseInt(sWpBlur, 10) + 'px');
-      var sGBlur = localStorage.getItem('zettnas_glass_blur');
+      var sGBlur = localStorage.getItem('kiboto_glass_blur');
       if (sGBlur !== null) document.documentElement.style.setProperty('--glass-blur', parseInt(sGBlur, 10) + 'px');
-      var sGOpacity = localStorage.getItem('zettnas_glass_opacity');
+      var sGOpacity = localStorage.getItem('kiboto_glass_opacity');
       if (sGOpacity !== null) document.documentElement.style.setProperty('--glass-opacity', (parseInt(sGOpacity, 10) / 100).toFixed(2));
-      var sRadius = localStorage.getItem('zettnas_window_radius');
+      var sRadius = localStorage.getItem('kiboto_window_radius');
       if (sRadius) document.documentElement.style.setProperty('--window-radius', sRadius);
-      var sGlow = localStorage.getItem('zettnas_window_glow');
+      var sGlow = localStorage.getItem('kiboto_window_glow');
       if (sGlow === 'false') document.documentElement.style.setProperty('--window-glow-enabled', '0');
     } catch (e) {}
 
     // Pre-initialize Mission Control active section and subpanes from localStorage to eliminate any jump/flicker to HUB on refresh
     try {
-      var owRaw = localStorage.getItem('zettnas_open_windows_v1');
+      var owRaw = localStorage.getItem('kiboto_open_windows_v1');
       if (owRaw) {
         var ow = JSON.parse(owRaw);
         var mgmt = ow && ow.windows && ow.windows.management;
@@ -203,7 +218,7 @@
             }
             if (subCss) {
               var sMgmt = document.createElement('style');
-              sMgmt.id = 'zettnas-mgmt-early-style';
+              sMgmt.id = 'kiboto-mgmt-early-style';
               sMgmt.textContent = subCss;
               document.head.appendChild(sMgmt);
             }

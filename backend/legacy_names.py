@@ -15,6 +15,7 @@ from typing import overload
 REMOVE_IN = "2.2.0"
 ENV_PREFIX = "KIBOTO_"
 OLD_ENV_PREFIX = "ZETTNAS_"
+OLD_SESSION_COOKIE = "zettnas_session"  # browsers signed in before the rebrand still send it
 
 
 def old_env_name(name: str) -> str | None:

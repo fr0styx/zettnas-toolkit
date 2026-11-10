@@ -71,13 +71,13 @@ describe('Batch 2: Glassmorphism, Wallpaper Readability, OLED Theme & Specular G
     expect(document.getElementById('wallpaper-blur-val').textContent).toBe('10px');
     expect(document.getElementById('wallpaper-blur-slider').value).toBe('10');
 
-    expect(localStorage.getItem('zettnas_wallpaper_dim')).toBe('35');
-    expect(localStorage.getItem('zettnas_wallpaper_blur')).toBe('10');
+    expect(localStorage.getItem('kiboto_wallpaper_dim')).toBe('35');
+    expect(localStorage.getItem('kiboto_wallpaper_blur')).toBe('10');
   });
 
   it('initWallpaperReadabilityControls restores saved state and resets on button click', () => {
-    localStorage.setItem('zettnas_wallpaper_dim', '40');
-    localStorage.setItem('zettnas_wallpaper_blur', '15');
+    localStorage.setItem('kiboto_wallpaper_dim', '40');
+    localStorage.setItem('kiboto_wallpaper_blur', '15');
 
     document.body.innerHTML = `
       <span id="wallpaper-dim-val"></span>
@@ -100,8 +100,8 @@ describe('Batch 2: Glassmorphism, Wallpaper Readability, OLED Theme & Specular G
 
     expect(document.documentElement.style.getPropertyValue('--wallpaper-dim')).toBe('0.15');
     expect(document.documentElement.style.getPropertyValue('--wallpaper-blur')).toBe('0px');
-    expect(localStorage.getItem('zettnas_wallpaper_dim')).toBe('15');
-    expect(localStorage.getItem('zettnas_wallpaper_blur')).toBe('0');
+    expect(localStorage.getItem('kiboto_wallpaper_dim')).toBe('15');
+    expect(localStorage.getItem('kiboto_wallpaper_blur')).toBe('0');
   });
 
   it('applyGlassSettings updates acrylic blur, opacity, window radius, and specular glow', () => {
@@ -129,10 +129,10 @@ describe('Batch 2: Glassmorphism, Wallpaper Readability, OLED Theme & Specular G
     expect(radius20Btn.classList.contains('active')).toBe(true);
     expect(document.getElementById('window-glow-toggle').checked).toBe(false);
 
-    expect(localStorage.getItem('zettnas_glass_blur')).toBe('30');
-    expect(localStorage.getItem('zettnas_glass_opacity')).toBe('85');
-    expect(localStorage.getItem('zettnas_window_radius')).toBe('20px');
-    expect(localStorage.getItem('zettnas_window_glow')).toBe('false');
+    expect(localStorage.getItem('kiboto_glass_blur')).toBe('30');
+    expect(localStorage.getItem('kiboto_glass_opacity')).toBe('85');
+    expect(localStorage.getItem('kiboto_window_radius')).toBe('20px');
+    expect(localStorage.getItem('kiboto_window_glow')).toBe('false');
   });
 
   it('initGlassControls binds interactions and supports reset to defaults', () => {
@@ -154,7 +154,7 @@ describe('Batch 2: Glassmorphism, Wallpaper Readability, OLED Theme & Specular G
     const btn6 = document.querySelector('.window-radius-btn[data-radius="6px"]');
     btn6.click();
     expect(document.documentElement.style.getPropertyValue('--window-radius')).toBe('6px');
-    expect(localStorage.getItem('zettnas_window_radius')).toBe('6px');
+    expect(localStorage.getItem('kiboto_window_radius')).toBe('6px');
 
     // Click reset defaults
     const resetBtn = document.getElementById('glass-reset-btn');

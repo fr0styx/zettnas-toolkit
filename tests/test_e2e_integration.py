@@ -203,9 +203,9 @@ def test_e2e_live_desktop_session_and_badge():
         page.wait_for_function("() => localStorage.getItem('zettnas_signed_in') === '1'", timeout=8000)
 
         cookies = {c["name"]: c for c in context.cookies()}
-        assert "zettnas_session" in cookies and cookies["zettnas_session"]["httpOnly"]
+        assert "kiboto_session" in cookies and cookies["kiboto_session"]["httpOnly"]
         assert page.evaluate("() => localStorage.getItem('zettnas_token')") is None
-        assert page.evaluate("() => document.cookie").find("zettnas_session") == -1
+        assert page.evaluate("() => document.cookie").find("kiboto_session") == -1
         # An authenticated API call made by the page itself succeeds with just the cookie
         assert page.evaluate("async () => (await fetch('/api/auth/me')).status") == 200
         # and a reload keeps the session

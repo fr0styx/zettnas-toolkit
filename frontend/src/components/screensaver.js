@@ -48,10 +48,10 @@ export function applyScreensaverSettings(enabled, timeoutMinutes, mode, requireL
 
   if (persist) {
     try {
-      localStorage.setItem('zettnas_screensaver_enabled', String(_enabled));
-      localStorage.setItem('zettnas_screensaver_timeout', String(_timeoutMinutes));
-      localStorage.setItem('zettnas_screensaver_mode', _mode);
-      localStorage.setItem('zettnas_screensaver_require_lock', String(_requireLock));
+      localStorage.setItem('kiboto_screensaver_enabled', String(_enabled));
+      localStorage.setItem('kiboto_screensaver_timeout', String(_timeoutMinutes));
+      localStorage.setItem('kiboto_screensaver_mode', _mode);
+      localStorage.setItem('kiboto_screensaver_require_lock', String(_requireLock));
     } catch (e) {}
   }
 }
@@ -62,21 +62,21 @@ export function initScreensaverSystem() {
 
   // Load persisted configuration
   try {
-    const sEnabled = localStorage.getItem('zettnas_screensaver_enabled');
+    const sEnabled = localStorage.getItem('kiboto_screensaver_enabled');
     if (sEnabled !== null) _enabled = sEnabled === 'true';
 
-    const sTimeout = localStorage.getItem('zettnas_screensaver_timeout');
+    const sTimeout = localStorage.getItem('kiboto_screensaver_timeout');
     if (sTimeout !== null) {
       const parsed = parseInt(sTimeout, 10);
       if (!isNaN(parsed) && parsed >= 0) _timeoutMinutes = parsed;
     }
 
-    const sMode = localStorage.getItem('zettnas_screensaver_mode');
+    const sMode = localStorage.getItem('kiboto_screensaver_mode');
     if (sMode && ['matrix_rain', 'retro_clock', 'starfield'].includes(sMode)) {
       _mode = sMode;
     }
 
-    const sLock = localStorage.getItem('zettnas_screensaver_require_lock');
+    const sLock = localStorage.getItem('kiboto_screensaver_require_lock');
     if (sLock !== null) _requireLock = sLock === 'true';
   } catch (e) {}
 

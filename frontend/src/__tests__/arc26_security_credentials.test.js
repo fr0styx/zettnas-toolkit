@@ -83,13 +83,13 @@ describe('credentials card', () => {
 
   it('a new password signs this browser out', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout'] });
-    localStorage.setItem('zettnas_signed_in', '1');
+    localStorage.setItem('kiboto_signed_in', '1');
     byId('sec-cur-pwd').value = 'old';
     byId('sec-new-pwd').value = 'a long new password';
     byId('sec-confirm-pwd').value = 'a long new password';
     vi.spyOn(api, 'post').mockResolvedValue({});
     byId('sec-save-btn').click();
-    await vi.waitFor(() => expect(localStorage.getItem('zettnas_signed_in')).toBeNull());
+    await vi.waitFor(() => expect(localStorage.getItem('kiboto_signed_in')).toBeNull());
     expect(byId('sec-new-pwd').value).toBe('');
   });
 

@@ -244,7 +244,7 @@ export function initSetupWizard() {
     }
     modal.classList.remove('open');
     if (dismiss) {
-      sessionStorage.setItem('zettnas_wizard_dismissed', '1');
+      sessionStorage.setItem('kiboto_wizard_dismissed', '1');
     }
   };
 
@@ -351,9 +351,9 @@ export function initSetupWizard() {
           }
         }
 
-        localStorage.setItem('zettnas_wizard_completed', '1');
+        localStorage.setItem('kiboto_wizard_completed', '1');
         // a new owner starts with the everyday places; Advanced is one switch away (UX-2)
-        if (firstRun) localStorage.setItem('zettnas_advanced', '0');
+        if (firstRun) localStorage.setItem('kiboto_advanced', '0');
         if (state.stats?.security) {
           state.stats.security.is_default_password = false;
         }
@@ -435,7 +435,7 @@ export function checkAndTriggerSetupWizard(stats) {
 
   // Trigger if default password is in use and not dismissed in this session
   if (stats && stats.security && stats.security.is_default_password) {
-    if (sessionStorage.getItem('zettnas_wizard_dismissed') === '1') {
+    if (sessionStorage.getItem('kiboto_wizard_dismissed') === '1') {
       return;
     }
     _wizardShown = true;

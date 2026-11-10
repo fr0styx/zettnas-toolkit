@@ -7,7 +7,7 @@ import { api } from '../api.js';
 import { escapeHtml } from '../utils.js';
 import { t } from '../i18n.js';
 
-const HIDDEN_KEY = 'zettnas_getting_started_hidden';
+const HIDDEN_KEY = 'kiboto_getting_started_hidden'; // gitleaks:allow (a storage key name)
 const ITEMS = {
   password: ['gs.password', 'Choose your own password', 'gs.password_desc', 'Replace the first-time password.'],
   two_factor: ['gs.two_factor', 'Turn on two-factor sign-in', 'gs.two_factor_desc', 'A code from your phone, on top of the password.'],

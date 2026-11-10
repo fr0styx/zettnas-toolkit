@@ -223,7 +223,7 @@ def test_login_legacy_password_only(client: TestClient):
     assert "user" in data
     assert data["user"]["role"] == "superadmin"
     # Verify HttpOnly cookie was set
-    assert "zettnas_session" in res.cookies
+    assert "kiboto_session" in res.cookies
 
 
 def test_login_multiuser_with_username_and_cookie(client: TestClient):
@@ -254,10 +254,10 @@ def test_login_multiuser_with_username_and_cookie(client: TestClient):
     login_data = login_res.json()
     assert login_data["user"]["username"] == "docker_lead"
     assert login_data["user"]["role"] == "app_operator"
-    assert "zettnas_session" in login_res.cookies
+    assert "kiboto_session" in login_res.cookies
 
     # 4. Verify GET /api/auth/me using the cookie
-    me_res = client.get("/api/auth/me", cookies={"zettnas_session": login_data["token"]})
+    me_res = client.get("/api/auth/me", cookies={"kiboto_session": login_data["token"]})
     assert me_res.status_code == 200
     me_data = me_res.json()
     assert me_data["username"] == "docker_lead"
@@ -270,8 +270,8 @@ def test_logout_endpoint_clears_cookie(client: TestClient):
     token = login_res.json()["token"]
 
     logout_res = client.post(
-        "/api/auth/logout", headers={"Authorization": f"Bearer {token}"}, cookies={"zettnas_session": token}
+        "/api/auth/logout", headers={"Authorization": f"Bearer {token}"}, cookies={"kiboto_session": token}
     )
     assert logout_res.status_code == 200
     # Session cookie must be expired or cleared
-    assert logout_res.cookies.get("zettnas_session") == "" or "zettnas_session" not in logout_res.cookies
+    assert logout_res.cookies.get("kiboto_session") == "" or "kiboto_session" not in logout_res.cookies

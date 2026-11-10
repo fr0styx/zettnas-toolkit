@@ -50,7 +50,7 @@ def test_security_schemes_match_what_the_server_reads():
     schemes = SCHEMA["components"]["securitySchemes"]
     assert schemes["bearerAuth"] == {**schemes["bearerAuth"], "type": "http", "scheme": "bearer"}
     src = inspect.getsource(auth.extract_token)
-    assert f'cookies.get("{schemes["cookieAuth"]["name"]}"' in src
+    assert schemes["cookieAuth"]["name"] == auth.SESSION_COOKIE and "session_cookie(request.cookies)" in src
     assert set(schemes) == {"bearerAuth", "cookieAuth"}  # extract_token reads nothing else (URL tickets are single-use)
     assert SCHEMA["security"]
 

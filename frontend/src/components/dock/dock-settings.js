@@ -150,11 +150,11 @@ export function applyDockSettings(position = 'bottom', magnification = true, max
 
   if (persist) {
     try {
-      localStorage.setItem('zettnas_dock_position', _dockPosition);
-      localStorage.setItem('zettnas_dock_magnification', _magnificationEnabled ? 'true' : 'false');
-      localStorage.setItem('zettnas_dock_scale', _magnificationScale.toString());
-      localStorage.setItem('zettnas_dock_size', _dockSize);
-      localStorage.setItem('zettnas_dock_autohide', _dockAutohide ? 'true' : 'false');
+      localStorage.setItem('kiboto_dock_position', _dockPosition);
+      localStorage.setItem('kiboto_dock_magnification', _magnificationEnabled ? 'true' : 'false');
+      localStorage.setItem('kiboto_dock_scale', _magnificationScale.toString());
+      localStorage.setItem('kiboto_dock_size', _dockSize);
+      localStorage.setItem('kiboto_dock_autohide', _dockAutohide ? 'true' : 'false');
     } catch (e) {}
   }
 }
@@ -177,15 +177,15 @@ export function initDockSettingsControls() {
   let savedAutohide = false;
 
   try {
-    const p = localStorage.getItem('zettnas_dock_position');
+    const p = localStorage.getItem('kiboto_dock_position');
     if (p) savedPos = p;
-    const m = localStorage.getItem('zettnas_dock_magnification');
+    const m = localStorage.getItem('kiboto_dock_magnification');
     if (m !== null) savedMag = (m === 'true');
-    const s = localStorage.getItem('zettnas_dock_scale');
+    const s = localStorage.getItem('kiboto_dock_scale');
     if (s !== null) savedScale = parseFloat(s) || 1.45;
-    const sz = localStorage.getItem('zettnas_dock_size');
+    const sz = localStorage.getItem('kiboto_dock_size');
     if (sz) savedSize = sz;
-    const ah = localStorage.getItem('zettnas_dock_autohide');
+    const ah = localStorage.getItem('kiboto_dock_autohide');
     if (ah !== null) savedAutohide = (ah === 'true');
   } catch (e) {}
 

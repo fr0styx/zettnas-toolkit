@@ -906,8 +906,8 @@ export function initSettings() {
         fetchSecurity();
 
         if (payload.new_password) {
-          localStorage.removeItem('zettnas_token');
-          localStorage.removeItem('zettnas_signed_in');
+          localStorage.removeItem('kiboto_token');
+          localStorage.removeItem('kiboto_signed_in');
           setTimeout(() => window.location.reload(), 1000);
         }
       } catch (err) {
@@ -921,9 +921,9 @@ export function initSettings() {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
       try { await api.post('/api/auth/logout', {}); } catch (e) { /* session may already be gone */ }
-      localStorage.removeItem('zettnas_token');
-          localStorage.removeItem('zettnas_signed_in');
-      document.cookie = 'zettnas_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      localStorage.removeItem('kiboto_token');
+          localStorage.removeItem('kiboto_signed_in');
+      document.cookie = 'kiboto_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       window.location.reload();
     });
   }
@@ -942,11 +942,11 @@ export function initSettings() {
       const id = c.dataset.layoutCardId || c.dataset.ledCardId || c.dataset.fanCardId || c.dataset.btnCardId || c.dataset.miscCardId;
       if (id) collapsed.push(id);
     });
-    localStorage.setItem('zettnas_collapsed_cards', JSON.stringify(collapsed));
+    localStorage.setItem('kiboto_collapsed_cards', JSON.stringify(collapsed));
   });
 
   try {
-    const collapsed = JSON.parse(localStorage.getItem('zettnas_collapsed_cards') || '[]');
+    const collapsed = JSON.parse(localStorage.getItem('kiboto_collapsed_cards') || '[]');
     document.querySelectorAll('.draggable-card').forEach((c) => {
       const id = c.dataset.layoutCardId || c.dataset.ledCardId || c.dataset.fanCardId || c.dataset.btnCardId || c.dataset.miscCardId;
       if (id && collapsed.includes(id)) {
@@ -1145,7 +1145,7 @@ export async function sampleWallpaperPalette() {
     if (match) imgUrl = match[1];
   }
   if (!imgUrl && typeof localStorage !== 'undefined') {
-    const savedName = localStorage.getItem('zettnas_active_wallpaper');
+    const savedName = localStorage.getItem('kiboto_active_wallpaper');
     if (savedName) {
       imgUrl = `/api/wallpapers/download/${encodeURIComponent(savedName)}`;
     }
@@ -1237,20 +1237,20 @@ export function exportThemeBundle() {
   let savedEco = false;
 
   try {
-    if (localStorage.getItem('zettnas_glass_blur') !== null) savedBlur = parseInt(localStorage.getItem('zettnas_glass_blur'), 10);
-    if (localStorage.getItem('zettnas_glass_opacity') !== null) savedOpacity = parseInt(localStorage.getItem('zettnas_glass_opacity'), 10);
-    if (localStorage.getItem('zettnas_window_radius')) savedRadius = localStorage.getItem('zettnas_window_radius');
-    if (localStorage.getItem('zettnas_window_glow') !== null) savedGlow = localStorage.getItem('zettnas_window_glow') === 'true';
+    if (localStorage.getItem('kiboto_glass_blur') !== null) savedBlur = parseInt(localStorage.getItem('kiboto_glass_blur'), 10);
+    if (localStorage.getItem('kiboto_glass_opacity') !== null) savedOpacity = parseInt(localStorage.getItem('kiboto_glass_opacity'), 10);
+    if (localStorage.getItem('kiboto_window_radius')) savedRadius = localStorage.getItem('kiboto_window_radius');
+    if (localStorage.getItem('kiboto_window_glow') !== null) savedGlow = localStorage.getItem('kiboto_window_glow') === 'true';
 
-    if (localStorage.getItem('zettnas_wallpaper_dim') !== null) savedDim = parseInt(localStorage.getItem('zettnas_wallpaper_dim'), 10);
-    if (localStorage.getItem('zettnas_wallpaper_blur') !== null) savedBlurWp = parseInt(localStorage.getItem('zettnas_wallpaper_blur'), 10);
+    if (localStorage.getItem('kiboto_wallpaper_dim') !== null) savedDim = parseInt(localStorage.getItem('kiboto_wallpaper_dim'), 10);
+    if (localStorage.getItem('kiboto_wallpaper_blur') !== null) savedBlurWp = parseInt(localStorage.getItem('kiboto_wallpaper_blur'), 10);
 
-    if (localStorage.getItem('zettnas_dock_position')) savedDockPos = localStorage.getItem('zettnas_dock_position');
-    if (localStorage.getItem('zettnas_dock_size')) savedDockSize = localStorage.getItem('zettnas_dock_size');
-    if (localStorage.getItem('zettnas_dock_magnification') !== null) savedDockMag = parseFloat(localStorage.getItem('zettnas_dock_magnification'));
-    if (localStorage.getItem('zettnas_dock_autohide') !== null) savedDockAutoHide = localStorage.getItem('zettnas_dock_autohide') === 'true';
+    if (localStorage.getItem('kiboto_dock_position')) savedDockPos = localStorage.getItem('kiboto_dock_position');
+    if (localStorage.getItem('kiboto_dock_size')) savedDockSize = localStorage.getItem('kiboto_dock_size');
+    if (localStorage.getItem('kiboto_dock_magnification') !== null) savedDockMag = parseFloat(localStorage.getItem('kiboto_dock_magnification'));
+    if (localStorage.getItem('kiboto_dock_autohide') !== null) savedDockAutoHide = localStorage.getItem('kiboto_dock_autohide') === 'true';
 
-    if (localStorage.getItem('zettnas_eco_mode') !== null) savedEco = localStorage.getItem('zettnas_eco_mode') === 'true';
+    if (localStorage.getItem('kiboto_eco_mode') !== null) savedEco = localStorage.getItem('kiboto_eco_mode') === 'true';
   } catch (e) {}
 
   const bundle = {
@@ -1267,7 +1267,7 @@ export function exportThemeBundle() {
       glow: savedGlow
     },
     wallpaper: {
-      active_file: (typeof localStorage !== 'undefined' ? localStorage.getItem('zettnas_active_wallpaper') : null) || null,
+      active_file: (typeof localStorage !== 'undefined' ? localStorage.getItem('kiboto_active_wallpaper') : null) || null,
       dim: savedDim,
       blur: savedBlurWp
     },
@@ -1333,7 +1333,7 @@ export function importThemeBundle(file) {
         const isEco = !!data.performance.eco_mode;
         if (isEco) document.body.setAttribute('data-performance-mode', 'eco');
         else document.body.removeAttribute('data-performance-mode');
-        try { localStorage.setItem('zettnas_eco_mode', isEco ? 'true' : 'false'); } catch (err) {}
+        try { localStorage.setItem('kiboto_eco_mode', isEco ? 'true' : 'false'); } catch (err) {}
         const ecoToggle = document.getElementById('eco-mode-toggle');
         if (ecoToggle) ecoToggle.checked = isEco;
       }
@@ -1356,18 +1356,18 @@ function takeAppearanceSnapshot() {
     _appearanceUndoSnapshot = {
       theme: state.desktopTheme || 'cyber',
       customAccent: state.desktopCustomAccent || '',
-      glassBlur: localStorage.getItem('zettnas_glass_blur'),
-      glassOpacity: localStorage.getItem('zettnas_glass_opacity'),
-      windowRadius: localStorage.getItem('zettnas_window_radius'),
-      windowGlow: localStorage.getItem('zettnas_window_glow'),
-      wallpaperDim: localStorage.getItem('zettnas_wallpaper_dim'),
-      wallpaperBlur: localStorage.getItem('zettnas_wallpaper_blur'),
-      wallpaperFile: localStorage.getItem('zettnas_active_wallpaper'),
-      dockPos: localStorage.getItem('zettnas_dock_position'),
-      dockSize: localStorage.getItem('zettnas_dock_size'),
-      dockMag: localStorage.getItem('zettnas_dock_magnification'),
-      dockAutoHide: localStorage.getItem('zettnas_dock_autohide'),
-      ecoMode: localStorage.getItem('zettnas_eco_mode')
+      glassBlur: localStorage.getItem('kiboto_glass_blur'),
+      glassOpacity: localStorage.getItem('kiboto_glass_opacity'),
+      windowRadius: localStorage.getItem('kiboto_window_radius'),
+      windowGlow: localStorage.getItem('kiboto_window_glow'),
+      wallpaperDim: localStorage.getItem('kiboto_wallpaper_dim'),
+      wallpaperBlur: localStorage.getItem('kiboto_wallpaper_blur'),
+      wallpaperFile: localStorage.getItem('kiboto_active_wallpaper'),
+      dockPos: localStorage.getItem('kiboto_dock_position'),
+      dockSize: localStorage.getItem('kiboto_dock_size'),
+      dockMag: localStorage.getItem('kiboto_dock_magnification'),
+      dockAutoHide: localStorage.getItem('kiboto_dock_autohide'),
+      ecoMode: localStorage.getItem('kiboto_eco_mode')
     };
   } catch (e) {}
 }
@@ -1390,7 +1390,7 @@ export function restoreAppearanceDefaultsWithUndo() {
 
   // 5. Reset eco mode
   document.body.removeAttribute('data-performance-mode');
-  try { localStorage.removeItem('zettnas_eco_mode'); } catch (err) {}
+  try { localStorage.removeItem('kiboto_eco_mode'); } catch (err) {}
   const ecoToggle = document.getElementById('eco-mode-toggle');
   if (ecoToggle) ecoToggle.checked = false;
 
@@ -1431,7 +1431,7 @@ export function restoreAppearanceDefaultsWithUndo() {
 
     if (snap.ecoMode === 'true') {
       document.body.setAttribute('data-performance-mode', 'eco');
-      try { localStorage.setItem('zettnas_eco_mode', 'true'); } catch (e) {}
+      try { localStorage.setItem('kiboto_eco_mode', 'true'); } catch (e) {}
       if (ecoToggle) ecoToggle.checked = true;
     }
     syncDesktopThemeUI();
@@ -1700,11 +1700,11 @@ export function gatherClientPreferences() {
     const key = localStorage.key(i);
     if (!key) continue;
     // Exclude volatile session tokens and temporary caches
-    if (key === 'zettnas_token' || key === 'zettnas_signed_in' || key.startsWith('zettnas_weather_cache_') || key.startsWith('zettnas_holiday_cache_')) {
+    if (key === 'kiboto_token' || key === 'kiboto_signed_in' || key.startsWith('kiboto_weather_cache_') || key.startsWith('kiboto_holiday_cache_')) {
       continue;
     }
     // Capture all ZettNAS desktop configurations, window positions, widgets, dock pinned apps, themes, and layout locks
-    if (key.startsWith('zettnas_') || key.startsWith('lcd_') || key === 'screen_layout_style') {
+    if (key.startsWith('kiboto_') || key.startsWith('lcd_') || key === 'screen_layout_style') {
       prefs[key] = localStorage.getItem(key);
     }
   }
@@ -1713,8 +1713,9 @@ export function gatherClientPreferences() {
 
 export function applyClientPreferences(prefs) {
   if (!prefs || typeof prefs !== 'object' || typeof localStorage === 'undefined') return;
-  Object.entries(prefs).forEach(([k, v]) => {
-    if (k === 'zettnas_token' || k === 'zettnas_signed_in') return;
+  Object.entries(prefs).forEach(([key, v]) => {
+    const k = key.replace(/^zettnas/, 'kiboto'); // saved before the Kiboto rebrand
+    if (k === 'kiboto_token' || k === 'kiboto_signed_in') return;
     try {
       localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
     } catch (e) {
@@ -1729,7 +1730,7 @@ export function applyClientPreferences(prefs) {
 export async function syncClientPreferencesFromServerIfEmpty() {
   if (typeof localStorage === 'undefined' || typeof window === 'undefined') return;
   // If user has no desktop widgets or theme configured locally, hydrate from server DATA_DIR
-  const hasLocal = localStorage.getItem('zettnas_desktop_widgets_config') || localStorage.getItem('lcd_theme');
+  const hasLocal = localStorage.getItem('kiboto_desktop_widgets_config') || localStorage.getItem('lcd_theme');
   if (!hasLocal) {
     try {
       const token = auth.getToken();
@@ -1834,7 +1835,7 @@ export function initSystemTab() {
         a.href = url;
 
         const disposition = res.headers.get('content-disposition');
-        let filename = `zettnas_backup_${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.zip`;
+        let filename = `kiboto_backup_${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.zip`;
         if (disposition && disposition.includes('filename=')) {
           filename = disposition.split('filename=')[1].replace(/["']/g, '').trim();
         }

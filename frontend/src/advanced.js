@@ -10,7 +10,7 @@ export const ADVANCED_SECTIONS = ['mgmt-sec-vms', 'mgmt-sec-network', 'mgmt-sec-
 export const ADVANCED_ROUTES = ['network', 'power', 'vms', 'activity'];
 export const ADVANCED_DOCK_APPS = ['vm'];
 export const ADVANCED_SPOTLIGHT = ['act-quiet-fans', 'act-perf-fans', 'act-fan-pct', 'act-spindown', 'act-locate-drive', 'act-isolate-container'];
-const PREF = 'zettnas_advanced';
+const PREF = 'kiboto_advanced';
 
 let _server = null; // the person's setting from /api/auth/me, once known
 

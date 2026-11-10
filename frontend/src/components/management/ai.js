@@ -43,7 +43,7 @@ let _aiSyncPollTimer = null;
 let _aiLastResultsList = [];
 let _aiSearchHistory = [];
 try {
-  const savedHist = JSON.parse(localStorage.getItem('zettnas_ai_search_history') || '[]');
+  const savedHist = JSON.parse(localStorage.getItem('kiboto_ai_search_history') || '[]');
   if (Array.isArray(savedHist)) _aiSearchHistory = savedHist.slice(0, 8);
 } catch (_) {}
 
@@ -52,7 +52,7 @@ function _recordAiSearchHistory(query) {
   if (!clean) return;
   _aiSearchHistory = [clean, ..._aiSearchHistory.filter((q) => q.toLowerCase() !== clean.toLowerCase())].slice(0, 8);
   try {
-    localStorage.setItem('zettnas_ai_search_history', JSON.stringify(_aiSearchHistory));
+    localStorage.setItem('kiboto_ai_search_history', JSON.stringify(_aiSearchHistory));
   } catch (_) {}
   renderAiSearchHistory();
 }
@@ -1244,7 +1244,7 @@ export function initAiKnowledgeEngine() {
     clearHistBtn.dataset.bound = '1';
     clearHistBtn.addEventListener('click', () => {
       _aiSearchHistory = [];
-      try { localStorage.removeItem('zettnas_ai_search_history'); } catch (_) {}
+      try { localStorage.removeItem('kiboto_ai_search_history'); } catch (_) {}
       renderAiSearchHistory();
     });
   }
@@ -2761,11 +2761,11 @@ function _initAiWebToggle() {
   if (!el || el.dataset.bound) return;
   el.dataset.bound = '1';
   try {
-    el.checked = localStorage.getItem('zettnas_ai_web') === '1';
+    el.checked = localStorage.getItem('kiboto_ai_web') === '1';
   } catch (e) { /* storage blocked */ }
   el.addEventListener('change', () => {
     try {
-      localStorage.setItem('zettnas_ai_web', el.checked ? '1' : '0');
+      localStorage.setItem('kiboto_ai_web', el.checked ? '1' : '0');
     } catch (e) { /* storage blocked */ }
   });
 }
@@ -3309,7 +3309,7 @@ export function toggleAiSidebar() {
     openBtn.style.display = isCollapsed ? 'flex' : 'none';
   }
   try {
-    localStorage.setItem('zettnas_ai_sidebar_collapsed', isCollapsed ? '1' : '0');
+    localStorage.setItem('kiboto_ai_sidebar_collapsed', isCollapsed ? '1' : '0');
   } catch (_) {}
 }
 
@@ -3398,7 +3398,7 @@ export function initAiConversationControls() {
   try {
     // On a phone the list starts closed: open, it covers the chat (56-phone.css)
     const onPhone = document.body.classList.contains('phone-shell');
-    if (onPhone || localStorage.getItem('zettnas_ai_sidebar_collapsed') === '1') {
+    if (onPhone || localStorage.getItem('kiboto_ai_sidebar_collapsed') === '1') {
       const sidebar = document.getElementById('ai-chat-sidebar');
       if (sidebar) sidebar.classList.add('collapsed');
       if (btnOpen) btnOpen.style.display = 'flex';

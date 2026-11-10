@@ -258,10 +258,10 @@ describe('Batch 4: Desktop Context Menu, Drag & Drop Ingestion & Screensaver Eng
     expect(settings.mode).toBe('matrix_rain');
     expect(settings.requireLock).toBe(false);
 
-    expect(localStorage.getItem('zettnas_screensaver_enabled')).toBe('true');
-    expect(localStorage.getItem('zettnas_screensaver_timeout')).toBe('10');
-    expect(localStorage.getItem('zettnas_screensaver_mode')).toBe('matrix_rain');
-    expect(localStorage.getItem('zettnas_screensaver_require_lock')).toBe('false');
+    expect(localStorage.getItem('kiboto_screensaver_enabled')).toBe('true');
+    expect(localStorage.getItem('kiboto_screensaver_timeout')).toBe('10');
+    expect(localStorage.getItem('kiboto_screensaver_mode')).toBe('matrix_rain');
+    expect(localStorage.getItem('kiboto_screensaver_require_lock')).toBe('false');
 
     // 2. Activate screensaver in matrix_rain mode
     activateScreensaver(true);

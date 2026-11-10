@@ -11,8 +11,8 @@ import { ZettEventBus } from '../event-bus.js';
 
 import { t } from '../i18n.js';
 import { advancedOn, isAdvancedSection } from '../advanced.js';
-export const SHORTCUTS_STORAGE_KEY = 'zettnas_custom_desktop_shortcuts_v1';
-export const POSITIONS_STORAGE_KEY = 'zettnas_desktop_icon_positions_v3';
+export const SHORTCUTS_STORAGE_KEY = 'kiboto_custom_desktop_shortcuts_v1'; // gitleaks:allow (a storage key name)
+export const POSITIONS_STORAGE_KEY = 'kiboto_desktop_icon_positions_v3'; // gitleaks:allow (a storage key name)
 
 export const SYSTEM_SHORTCUTS = [
   {

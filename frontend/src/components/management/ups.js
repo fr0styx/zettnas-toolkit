@@ -457,7 +457,7 @@ export async function loadUpsConfigToDrawer() {
 
     // Restore policy collapse state
     try {
-      const isPolicyCollapsed = localStorage.getItem('zettnas_ups_policy_collapsed') === '1';
+      const isPolicyCollapsed = localStorage.getItem('kiboto_ups_policy_collapsed') === '1';
       const policyBody = document.getElementById('ups-policy-body');
       const policySummary = document.getElementById('ups-policy-summary');
       const toggleText = document.getElementById('ups-toggle-policy-text');
@@ -588,13 +588,13 @@ export function initUpsDrawerControls() {
       policyBody.style.display = 'flex';
       if (policySummary) policySummary.style.display = 'none';
       if (toggleText) toggleText.textContent = t('mgmt.ups_collapse_policy', 'Collapse Policy');
-      try { localStorage.setItem('zettnas_ups_policy_collapsed', '0'); } catch (_) {}
+      try { localStorage.setItem('kiboto_ups_policy_collapsed', '0'); } catch (_) {}
     } else {
       policyBody.style.display = 'none';
       if (policySummary) policySummary.style.display = 'flex';
       updateUpsPolicySummary();
       if (toggleText) toggleText.textContent = t('mgmt.ups_expand_policy', 'Configure Policy');
-      try { localStorage.setItem('zettnas_ups_policy_collapsed', '1'); } catch (_) {}
+      try { localStorage.setItem('kiboto_ups_policy_collapsed', '1'); } catch (_) {}
     }
   });
 

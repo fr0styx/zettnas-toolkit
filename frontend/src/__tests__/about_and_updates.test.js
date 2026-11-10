@@ -157,7 +157,7 @@ describe('System About & Software Updates Frontend Component', () => {
 
     await setUpdateChannel('edge');
 
-    expect(localStorage.getItem('zettnas_update_channel')).toBe('edge');
+    expect(localStorage.getItem('kiboto_update_channel')).toBe('edge');
     expect(apiGetSpy).toHaveBeenCalledWith(expect.stringContaining('channel=edge'));
     expect(document.getElementById('about-version-badge').textContent).toContain('Edge (Rolling)');
     expect(document.getElementById('update-status-title').textContent).toContain('Update Available (Edge): 5c0639d');

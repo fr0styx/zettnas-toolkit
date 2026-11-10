@@ -12,7 +12,7 @@ import { restoreWindowsAfterWiden } from './window-state.js';
 import { isCompact } from '../../device.js';
 
 export function initDraggableDesktopIcons() {
-  const storageKey = 'zettnas_desktop_icon_positions_v3';
+  const storageKey = 'kiboto_desktop_icon_positions_v3'; // gitleaks:allow (a storage key name)
   let savedPositions = {};
   try {
     const raw = localStorage.getItem(storageKey);

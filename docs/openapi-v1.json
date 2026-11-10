@@ -41823,7 +41823,7 @@
    "cookieAuth": {
     "description": "The web UI's session cookie.",
     "in": "cookie",
-    "name": "zettnas_session",
+    "name": "kiboto_session",
     "type": "apiKey"
    }
   }

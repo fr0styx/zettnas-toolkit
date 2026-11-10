@@ -38,6 +38,7 @@ VmId = Annotated[str, Path(pattern=r"^[A-Za-z0-9_-]{1,64}$")]
 router = APIRouter(prefix="/vms", tags=["Virtual Machines"])
 
 # Split into service modules (ARC-01); names stay importable from here.
+from backend.auth import session_cookie
 from backend.services import vm_guest, vm_host, vm_qemu, vm_store  # noqa: E402, F401
 from backend.services.vm_guest import (  # noqa: E402, F401
     _VM_IP_BACKGROUND,
@@ -1052,7 +1053,7 @@ def _ws_credential(websocket: WebSocket) -> tuple[str | None, bool]:
         return None, False
     cookie = (
         websocket.cookies.get("session_token")
-        or websocket.cookies.get("zettnas_session")
+        or session_cookie(websocket.cookies)
         or websocket.cookies.get("zat_token")
     )
     return cookie, bool(cookie)

@@ -19,7 +19,7 @@ export function setWallpaper(url, filename = null) {
   if (url) {
     if (filename) {
       try {
-        localStorage.setItem('zettnas_active_wallpaper', filename);
+        localStorage.setItem('kiboto_active_wallpaper', filename);
       } catch (e) {}
     }
     if (wpLayer) {
@@ -38,7 +38,7 @@ export function setWallpaper(url, filename = null) {
     document.body.style.setProperty('background-attachment', 'fixed', 'important');
   } else {
     try {
-      localStorage.removeItem('zettnas_active_wallpaper');
+      localStorage.removeItem('kiboto_active_wallpaper');
     } catch (e) {}
     if (wpLayer) {
       wpLayer.style.removeProperty('background-image');
@@ -58,7 +58,7 @@ export function setWallpaper(url, filename = null) {
   // Update active state in visual gallery grid if rendered
   _updateGalleryActiveState(filename);
 
-  const earlyWp = document.getElementById('zettnas-wallpaper-early-style');
+  const earlyWp = document.getElementById('kiboto-wallpaper-early-style');
   if (earlyWp && earlyWp.parentNode) {
     earlyWp.parentNode.removeChild(earlyWp);
   }
@@ -150,8 +150,8 @@ export function applyWallpaperReadability(dimPercent, blurPx, persist = true) {
 
   if (persist) {
     try {
-      localStorage.setItem('zettnas_wallpaper_dim', dimPercent.toString());
-      localStorage.setItem('zettnas_wallpaper_blur', blurPx.toString());
+      localStorage.setItem('kiboto_wallpaper_dim', dimPercent.toString());
+      localStorage.setItem('kiboto_wallpaper_blur', blurPx.toString());
     } catch (e) {}
   }
 }
@@ -208,10 +208,10 @@ export function applyGlassSettings(blurPx, opacityPercent, radiusPx, glowEnabled
 
   if (persist) {
     try {
-      localStorage.setItem('zettnas_glass_blur', blurPx.toString());
-      localStorage.setItem('zettnas_glass_opacity', opacityPercent.toString());
-      localStorage.setItem('zettnas_window_radius', radiusPx);
-      localStorage.setItem('zettnas_window_glow', glowEnabled ? 'true' : 'false');
+      localStorage.setItem('kiboto_glass_blur', blurPx.toString());
+      localStorage.setItem('kiboto_glass_opacity', opacityPercent.toString());
+      localStorage.setItem('kiboto_window_radius', radiusPx);
+      localStorage.setItem('kiboto_window_glow', glowEnabled ? 'true' : 'false');
     } catch (e) {}
   }
 }

@@ -220,7 +220,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     expect(isEventChecked(event1)).toBe(true);
     expect(isEventChecked(event2)).toBe(false);
 
-    const savedRaw = localStorage.getItem('zettnas_checked_events_v1');
+    const savedRaw = localStorage.getItem('kiboto_checked_events_v1');
     expect(savedRaw).toBeDefined();
     expect(savedRaw).toContain('NVMe Temperature High');
   });
@@ -755,7 +755,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
   it('openManagementWindow applies desired section and cleans up zettnas-mgmt-early-style without flashing HUB', () => {
     // Set up minimal DOM for Management window
     document.body.innerHTML = `
-      <style id="zettnas-mgmt-early-style">.test { color: red; }</style>
+      <style id="kiboto-mgmt-early-style">.test { color: red; }</style>
       <div id="management-modal-overlay" class="smart-modal-backdrop" style="display: none;">
         <div id="management-window" class="smart-modal-window">
           <div id="management-window-header"></div>
@@ -780,13 +780,13 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     // Re-initialize management component with new DOM
     initManagement();
 
-    expect(document.getElementById('zettnas-mgmt-early-style')).not.toBeNull();
+    expect(document.getElementById('kiboto-mgmt-early-style')).not.toBeNull();
 
     // Call openManagementWindow with 'mgmt-pane-widgets'
     window.openManagementWindow('mgmt-pane-widgets');
 
     // Early style should have been removed
-    expect(document.getElementById('zettnas-mgmt-early-style')).toBeNull();
+    expect(document.getElementById('kiboto-mgmt-early-style')).toBeNull();
 
     // HUB button must NOT be active; Appearance button must be active
     const hubBtn = document.querySelector('.mgmt-sidebar-item[data-mgmt-target="management-hub-view"]');

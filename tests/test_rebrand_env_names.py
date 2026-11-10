@@ -52,3 +52,12 @@ def test_the_data_key_from_either_name_or_credential(monkeypatch, tmp_path):
     assert db_crypto._KDF_SALT == b"zettnas-data-key-v1"  # old databases were keyed with it
     os.remove(tmp_path / "zettnas-data-key")
     assert not db_crypto.enabled()
+
+
+def test_the_session_cookie_from_before_still_signs_in():
+    from backend.auth import SESSION_COOKIE, session_cookie
+
+    assert SESSION_COOKIE == "kiboto_session"
+    assert session_cookie({"zettnas_session": "old"}) == "old"
+    assert session_cookie({"zettnas_session": "old", "kiboto_session": "new"}) == "new"
+    assert session_cookie({}) == ""

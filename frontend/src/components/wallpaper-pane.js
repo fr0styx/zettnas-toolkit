@@ -54,9 +54,9 @@ export async function renameWallpaper(oldName) {
         });
         if (data.success) {
           showToast(t('toast.wallpaper_renamed_to', 'Wallpaper renamed to {new_name}', { new_name: data.new_name }), 'success');
-          if (localStorage.getItem('zettnas_active_wallpaper') === oldName) {
+          if (localStorage.getItem('kiboto_active_wallpaper') === oldName) {
             try {
-              localStorage.setItem('zettnas_active_wallpaper', data.new_name);
+              localStorage.setItem('kiboto_active_wallpaper', data.new_name);
             } catch (e) {}
           }
           await loadWallpapers();
@@ -80,9 +80,9 @@ export async function deleteWallpaper(filename) {
     async () => {
       try {
         await api.delete(`/api/wallpapers/${encodeURIComponent(filename)}`);
-        if (localStorage.getItem('zettnas_active_wallpaper') === filename) {
+        if (localStorage.getItem('kiboto_active_wallpaper') === filename) {
           try {
-            localStorage.removeItem('zettnas_active_wallpaper');
+            localStorage.removeItem('kiboto_active_wallpaper');
           } catch (e) {}
         }
         showToast(t('toast.wallpaper_deleted', 'Wallpaper deleted'), 'success');
@@ -280,7 +280,7 @@ export async function uploadAndApplyWallpaper(file) {
         if (data && data.success) {
           if (data.filename) {
             try {
-              localStorage.setItem('zettnas_active_wallpaper', data.filename);
+              localStorage.setItem('kiboto_active_wallpaper', data.filename);
             } catch (e) {}
           }
           await loadWallpapers();
@@ -409,9 +409,9 @@ export function initWallpaperReadabilityControls() {
   let savedDim = 15;
   let savedBlur = 0;
   try {
-    const d = localStorage.getItem('zettnas_wallpaper_dim');
+    const d = localStorage.getItem('kiboto_wallpaper_dim');
     if (d !== null) savedDim = parseInt(d, 10);
-    const b = localStorage.getItem('zettnas_wallpaper_blur');
+    const b = localStorage.getItem('kiboto_wallpaper_blur');
     if (b !== null) savedBlur = parseInt(b, 10);
   } catch (e) {}
 
@@ -461,13 +461,13 @@ export function initGlassControls() {
   let savedGlow = false;
 
   try {
-    const b = localStorage.getItem('zettnas_glass_blur');
+    const b = localStorage.getItem('kiboto_glass_blur');
     if (b !== null) savedBlur = parseInt(b, 10);
-    const o = localStorage.getItem('zettnas_glass_opacity');
+    const o = localStorage.getItem('kiboto_glass_opacity');
     if (o !== null) savedOpacity = parseInt(o, 10);
-    const r = localStorage.getItem('zettnas_window_radius');
+    const r = localStorage.getItem('kiboto_window_radius');
     if (r) savedRadius = r;
-    const g = localStorage.getItem('zettnas_window_glow');
+    const g = localStorage.getItem('kiboto_window_glow');
     if (g !== null) savedGlow = (g === 'true');
   } catch (e) {}
 
@@ -530,7 +530,7 @@ export function initGlassControls() {
   const ecoToggle = document.getElementById('eco-mode-toggle');
   let savedEco = false;
   try {
-    const e = localStorage.getItem('zettnas_eco_mode');
+    const e = localStorage.getItem('kiboto_eco_mode');
     if (e !== null) savedEco = (e === 'true');
   } catch (err) {}
 
@@ -549,7 +549,7 @@ export function initGlassControls() {
         document.body.removeAttribute('data-performance-mode');
       }
       try {
-        localStorage.setItem('zettnas_eco_mode', isEco ? 'true' : 'false');
+        localStorage.setItem('kiboto_eco_mode', isEco ? 'true' : 'false');
       } catch (err) {}
       showToast(isEco ? 'Eco Mode enabled: GPU blur disabled' : 'Eco Mode disabled: Glass blur restored', 'info');
     });
@@ -561,7 +561,7 @@ export function initGlassControls() {
       if (ecoToggle) ecoToggle.checked = false;
       document.body.removeAttribute('data-performance-mode');
       try {
-        localStorage.removeItem('zettnas_eco_mode');
+        localStorage.removeItem('kiboto_eco_mode');
       } catch (e) {}
       showToast(t('toast.glass_and_visual_effects_reset_to', 'Glass and visual effects reset to defaults'), 'info');
     });

@@ -9,8 +9,8 @@ import { getSnapGeometry } from './snap.js';
 import { bringToFront } from './window-drag.js';
 import { isCompact } from '../../device.js';
 
-const WIN_BOUNDS_KEY = 'zettnas_window_bounds_v2';
-export const OPEN_WINDOWS_KEY = 'zettnas_open_windows_v1';
+const WIN_BOUNDS_KEY = 'kiboto_window_bounds_v2'; // gitleaks:allow (a storage key name)
+export const OPEN_WINDOWS_KEY = 'kiboto_open_windows_v1'; // gitleaks:allow (a storage key name)
 
 export function loadSavedWindowBounds() {
   try {

@@ -32,8 +32,8 @@ let _dockerUpdatesCache = null;
 let _dockerSortCol = null;
 let _dockerSortDir = 'asc';
 try {
-  const savedCol = localStorage.getItem('zettnas_docker_sort_col');
-  const savedDir = localStorage.getItem('zettnas_docker_sort_dir');
+  const savedCol = localStorage.getItem('kiboto_docker_sort_col');
+  const savedDir = localStorage.getItem('kiboto_docker_sort_dir');
   if (savedCol && ['name', 'hardware', 'cpu', 'ports', 'status'].includes(savedCol)) {
     _dockerSortCol = savedCol;
   }
@@ -52,11 +52,11 @@ export function setDockerSort(col, dir) {
   if (dir) _dockerSortDir = dir;
   try {
     if (col) {
-      localStorage.setItem('zettnas_docker_sort_col', _dockerSortCol);
-      localStorage.setItem('zettnas_docker_sort_dir', _dockerSortDir);
+      localStorage.setItem('kiboto_docker_sort_col', _dockerSortCol);
+      localStorage.setItem('kiboto_docker_sort_dir', _dockerSortDir);
     } else {
-      localStorage.removeItem('zettnas_docker_sort_col');
-      localStorage.removeItem('zettnas_docker_sort_dir');
+      localStorage.removeItem('kiboto_docker_sort_col');
+      localStorage.removeItem('kiboto_docker_sort_dir');
     }
   } catch (e) {}
   renderDockerContainersTable();
@@ -255,8 +255,8 @@ export function _resetDockerStateForTesting() {
   _dockerSortCol = null;
   _dockerSortDir = 'asc';
   try {
-    localStorage.removeItem('zettnas_docker_sort_col');
-    localStorage.removeItem('zettnas_docker_sort_dir');
+    localStorage.removeItem('kiboto_docker_sort_col');
+    localStorage.removeItem('kiboto_docker_sort_dir');
   } catch (e) {}
 }
 
@@ -513,8 +513,8 @@ function _bindDockerEvents() {
         _dockerSortDir = (col === 'cpu' || col === 'hardware') ? 'desc' : 'asc';
       }
       try {
-        localStorage.setItem('zettnas_docker_sort_col', _dockerSortCol);
-        localStorage.setItem('zettnas_docker_sort_dir', _dockerSortDir);
+        localStorage.setItem('kiboto_docker_sort_col', _dockerSortCol);
+        localStorage.setItem('kiboto_docker_sort_dir', _dockerSortDir);
       } catch (e) {}
       renderDockerContainersTable();
     };

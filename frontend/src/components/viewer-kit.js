@@ -164,7 +164,7 @@ export function srtToVtt(srt) {
   return `WEBVTT\n\n${body.trim()}\n`;
 }
 
-const RESUME_KEY = 'zettnas_video_resume';
+const RESUME_KEY = 'kiboto_video_resume'; // gitleaks:allow (a storage key name)
 
 /** Where to continue a video, or 0 (only between 15 s in and 15 s before the end). */
 export function getResume(path, duration, storage = globalThis.localStorage) {

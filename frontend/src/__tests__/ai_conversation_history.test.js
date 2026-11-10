@@ -60,12 +60,12 @@ describe('ZettAI Conversation History & Dual-Pane UI Suite', () => {
     managementModule.toggleAiSidebar();
     expect(sidebar.classList.contains('collapsed')).toBe(true);
     expect(openBtn.style.display).toBe('flex');
-    expect(localStorage.getItem('zettnas_ai_sidebar_collapsed')).toBe('1');
+    expect(localStorage.getItem('kiboto_ai_sidebar_collapsed')).toBe('1');
 
     managementModule.toggleAiSidebar();
     expect(sidebar.classList.contains('collapsed')).toBe(false);
     expect(openBtn.style.display).toBe('none');
-    expect(localStorage.getItem('zettnas_ai_sidebar_collapsed')).toBe('0');
+    expect(localStorage.getItem('kiboto_ai_sidebar_collapsed')).toBe('0');
   });
 
   it('fetches and renders conversations into chronological groups', async () => {

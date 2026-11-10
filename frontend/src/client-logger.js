@@ -157,8 +157,8 @@ export function collectClientEnvironment() {
   let dimVal = '0.15';
   let blurVal = '0px';
   try {
-    theme = docEl?.getAttribute('data-theme') || localStorage.getItem('zettnas_theme') || 'default';
-    accent = localStorage.getItem('zettnas_accent_color') || 'default';
+    theme = docEl?.getAttribute('data-theme') || localStorage.getItem('kiboto_theme') || 'default';
+    accent = localStorage.getItem('kiboto_accent_color') || 'default';
     dimVal = docEl?.style?.getPropertyValue('--wallpaper-dim') || '0.15';
     blurVal = docEl?.style?.getPropertyValue('--wallpaper-blur') || '0px';
   } catch (e) {}

@@ -19,13 +19,13 @@ describe('stale 401 after sign-in', () => {
     const err = await pending;
     expect(err.status).toBe(401);
     expect(auth.hasToken()).toBe(true);
-    expect(window.localStorage.getItem('zettnas_signed_in')).toBe('1');
+    expect(window.localStorage.getItem('kiboto_signed_in')).toBe('1');
   });
 
   it('still signs out on a 401 for a request sent after login', async () => {
     auth.setToken('x');
     vi.spyOn(window, 'fetch').mockResolvedValue(new Response('{}', { status: 401 }));
     await api.get('/api/fans').catch(() => {});
-    expect(window.localStorage.getItem('zettnas_signed_in')).toBe(null);
+    expect(window.localStorage.getItem('kiboto_signed_in')).toBe(null);
   });
 });

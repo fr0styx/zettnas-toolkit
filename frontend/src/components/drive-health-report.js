@@ -14,7 +14,7 @@ import { t } from '../i18n.js';
 import { formatBytes, formatDateTime } from '../format.js';
 import { showToast } from '../toast.js';
 
-const LAST_DIR_PREF = 'zettnas_dh_report_dir';
+const LAST_DIR_PREF = 'kiboto_dh_report_dir';
 
 // The server sends each text with a message key and its values; show it in the reader's language,
 // with the server's English as the fallback
@@ -237,7 +237,7 @@ export function freeName(name, taken) {
 
 function lastDir() {
   try {
-    return localStorage.getItem(LAST_DIR_PREF) || localStorage.getItem('zettnas_fm_last_path') || '/mnt/user';
+    return localStorage.getItem(LAST_DIR_PREF) || localStorage.getItem('kiboto_fm_last_path') || '/mnt/user';
   } catch (e) {
     return '/mnt/user';
   }

@@ -3,7 +3,7 @@
  * Supported Languages: English (en), Deutsch (de), 简体中文 (zh), Français (fr), Español (es).
  */
 
-const STORAGE_KEY = 'zettnas_language';
+const STORAGE_KEY = 'kiboto_language'; // gitleaks:allow (a storage key name)
 
 export const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English' },

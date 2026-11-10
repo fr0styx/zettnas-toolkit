@@ -12,6 +12,11 @@ installs made before keep working through it.
   name set beside an old one wins. The compose files fall back to a `.env` that still uses the old
   names; the data key's systemd credential is read as `kiboto-data-key` or `zettnas-data-key`.
   Encrypted databases need nothing: the key derivation is unchanged.
+- **Saved browser settings move over**: on the first load after the update, every setting the browser
+  kept under a `zettnas…` name (dock, wallpaper, windows, language, …) moves to its `kiboto…` name
+  before anything reads it, and a preferences backup made before restores under the new names. The
+  session cookie is now `kiboto_session`; a browser signed in before keeps its `zettnas_session`
+  and stays signed in, and signing out clears both.
 
 #### Security
 

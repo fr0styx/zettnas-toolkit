@@ -157,7 +157,7 @@ SECURITY_SCHEMES = {
     "cookieAuth": {
         "type": "apiKey",
         "in": "cookie",
-        "name": "zettnas_session",
+        "name": "kiboto_session",
         "description": "The web UI's session cookie.",
     },
 }

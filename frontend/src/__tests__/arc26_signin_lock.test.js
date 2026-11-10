@@ -212,7 +212,7 @@ describe('sign-in and lock screen (auth.js)', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'L', ctrlKey: true, altKey: true }));
     expect(A.isDesktopLocked()).toBe(true);
     expect(shown('lock-overlay')).toBe('flex');
-    expect(sessionStorage.getItem('zettnas_desktop_locked')).toBe('true');
+    expect(sessionStorage.getItem('kiboto_desktop_locked')).toBe('true');
     expect(byId('lock-clock').textContent).not.toBe('');
     expect(locked).toHaveBeenCalled();
 
@@ -232,7 +232,7 @@ describe('sign-in and lock screen (auth.js)', () => {
     byId('lock-password').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
     await vi.waitFor(() => expect(A.isDesktopLocked()).toBe(false));
     expect(JSON.parse(fetchMock.mock.calls.at(-1)[1].body)).toMatchObject({ username: 'alice', password: 'pw' });
-    expect(sessionStorage.getItem('zettnas_desktop_locked')).toBeNull();
+    expect(sessionStorage.getItem('kiboto_desktop_locked')).toBeNull();
   });
 
   it('unlocking with two-step sign-in finishes on the second step', async () => {
@@ -265,7 +265,7 @@ describe('sign-in and lock screen (auth.js)', () => {
     const sel = byId('lock-timeout-select');
     sel.value = '1000';
     sel.dispatchEvent(new Event('change'));
-    expect(localStorage.getItem('zettnas_auto_lock_timeout_ms')).toBe('1000');
+    expect(localStorage.getItem('kiboto_auto_lock_timeout_ms')).toBe('1000');
     expect(fetchMock).toHaveBeenCalledWith('/api/system/client-preferences', expect.objectContaining({ method: 'POST' }));
 
     vi.useFakeTimers();
@@ -273,7 +273,7 @@ describe('sign-in and lock screen (auth.js)', () => {
     window.dispatchEvent(new Event('mousemove'));
     await vi.advanceTimersByTimeAsync(1100);
     expect(A.isDesktopLocked()).toBe(true);
-    localStorage.removeItem('zettnas_auto_lock_timeout_ms');
+    localStorage.removeItem('kiboto_auto_lock_timeout_ms');
   });
 
   it('a lock survives going back in history', () => {
@@ -309,9 +309,9 @@ describe('sign-in and lock screen (auth.js)', () => {
     state.isLcdDirect = true;
     try {
       expect(A.isLcdMode()).toBe(true);
-      sessionStorage.setItem('zettnas_desktop_locked', 'true');
+      sessionStorage.setItem('kiboto_desktop_locked', 'true');
       A.initAuth();
-      expect(sessionStorage.getItem('zettnas_desktop_locked')).toBeNull();
+      expect(sessionStorage.getItem('kiboto_desktop_locked')).toBeNull();
       A.lockDesktop();
       expect(A.isDesktopLocked()).toBe(false);
     } finally {

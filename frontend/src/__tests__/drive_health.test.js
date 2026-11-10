@@ -232,7 +232,7 @@ describe('Drive Health', () => {
       'rb-desktop-icon': { left: 24, top: 525 },
       'chassis-desktop-icon': { left: 24, top: 637 },
     };
-    localStorage.setItem('zettnas_desktop_icon_positions_v3', JSON.stringify(saved));
+    localStorage.setItem('kiboto_desktop_icon_positions_v3', JSON.stringify(saved));
     Object.defineProperty(window, 'innerHeight', { value: 1200, configurable: true });
     Object.defineProperty(window, 'innerWidth', { value: 1600, configurable: true });
     initDraggableDesktopIcons();

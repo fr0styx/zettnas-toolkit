@@ -68,7 +68,7 @@ describe('first-run wizard', () => {
     W.initSetupWizard();
     byId('setup-wizard-close').click();
     expect(byId('setup-wizard-modal').classList.contains('open')).toBe(false);
-    expect(sessionStorage.getItem('zettnas_wizard_dismissed')).toBe('1');
+    expect(sessionStorage.getItem('kiboto_wizard_dismissed')).toBe('1');
     byId('setup-wizard-modal').classList.add('open');
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(byId('setup-wizard-modal').classList.contains('open')).toBe(false);
@@ -102,7 +102,7 @@ describe('first-run wizard', () => {
     await vi.advanceTimersByTimeAsync(700);
     expect(byId('setup-wizard-modal').classList.contains('open')).toBe(true);
     await load();
-    sessionStorage.setItem('zettnas_wizard_dismissed', '1');
+    sessionStorage.setItem('kiboto_wizard_dismissed', '1');
     byId('setup-wizard-modal').classList.remove('open');
     W.checkAndTriggerSetupWizard({ security: { is_default_password: true } });
     await vi.advanceTimersByTimeAsync(700);
@@ -126,7 +126,7 @@ describe('first-run wizard', () => {
     const cfg = api.post.mock.calls.find((c) => c[0] === '/api/notifications/config')[1];
     expect(cfg).toMatchObject({ enabled: true, apprise_urls: ['mailto://a', 'ntfy://alerts'] });
     expect(state.stats.security.is_default_password).toBe(false);
-    expect(localStorage.getItem('zettnas_advanced')).toBe('0');
+    expect(localStorage.getItem('kiboto_advanced')).toBe('0');
     expect(byId('sec-default-pwd-warning').style.display).toBe('none');
     expect(byId('setup-wizard-modal').classList.contains('open')).toBe(false);
     delete window.openGettingStarted;

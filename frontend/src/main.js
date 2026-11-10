@@ -253,8 +253,8 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
     state.isLcdDirect = true;
     document.body.classList.add('lcd-direct');
     try {
-      sessionStorage.removeItem('zettnas_desktop_locked');
-      localStorage.removeItem('zettnas_desktop_locked');
+      sessionStorage.removeItem('kiboto_desktop_locked');
+      localStorage.removeItem('kiboto_desktop_locked');
     } catch (e) {}
     const overlay = document.getElementById('console-modal-overlay');
     const win = document.getElementById('console-window');

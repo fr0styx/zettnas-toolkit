@@ -36,7 +36,7 @@ export { DESKTOP_WINDOW_SELECTOR, activeWindowZIndex, bringToFront, handleWindow
 export { OPEN_WINDOWS_KEY, applySavedBounds, clearMobileInlineBounds, loadSavedWindowBounds, restoreOpenWindowsState, restoreWindowsAfterWiden, saveOpenWindowsState, saveWindowBounds, setWindowRestorationComplete } from './dock/window-state.js';
 
 try {
-  localStorage.removeItem('zettnas_last_read_event_ts');
+  localStorage.removeItem('kiboto_last_read_event_ts');
 } catch {}
 
 window.DockManager = DockManager;
@@ -163,7 +163,7 @@ export function initDockSystem() {
 
   // Mobile / Stacked Mode Toggle & Auto-detection
   const mobileToggleBtn = document.getElementById('mobile-view-toggle-btn');
-  const storedMobile = localStorage.getItem('zettnas_mobile_mode');
+  const storedMobile = localStorage.getItem('kiboto_mobile_mode');
   const isMobileInitial = storedMobile === '1' || (storedMobile === null && window.innerWidth <= COMPACT_MAX);
   const purgeAllMobileWindows = () => {
     document.querySelectorAll('.os-window, .file-manager-window, #management-window, .management-window, .smart-modal-window, #console-window, .chassis-front-panel, #container-inspector-window, #stack-inspector-window, #app-deploy-modal-window, #notif-center-panel').forEach(clearMobileInlineBounds);
@@ -183,7 +183,7 @@ export function initDockSystem() {
       const isMobile = document.body.classList.toggle('mobile-mode');
       mobileToggleBtn.classList.toggle('active', isMobile);
       mobileToggleBtn.title = isMobile ? t('dock.stacked_on', 'Stacked view: click for desktop windows') : t('dock.stacked_off', 'Switch to the stacked view');
-      localStorage.setItem('zettnas_mobile_mode', isMobile ? '1' : '0');
+      localStorage.setItem('kiboto_mobile_mode', isMobile ? '1' : '0');
       if (isMobile) {
         purgeAllMobileWindows();
       } else {

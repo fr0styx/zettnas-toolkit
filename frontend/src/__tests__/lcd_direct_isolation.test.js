@@ -47,18 +47,18 @@ describe('LCD Direct Hardware Display Isolation', () => {
 
     expect(lockOverlay.style.display).toBe('none');
     expect(isDesktopLocked()).toBe(false);
-    expect(sessionStorage.getItem('zettnas_desktop_locked')).toBeNull();
+    expect(sessionStorage.getItem('kiboto_desktop_locked')).toBeNull();
   });
 
   it('initAuth clears existing lock flags and exits early when in LCD mode', () => {
-    sessionStorage.setItem('zettnas_desktop_locked', 'true');
-    localStorage.setItem('zettnas_desktop_locked', 'true');
+    sessionStorage.setItem('kiboto_desktop_locked', 'true');
+    localStorage.setItem('kiboto_desktop_locked', 'true');
     state.isLcdDirect = true;
 
     initAuth();
 
-    expect(sessionStorage.getItem('zettnas_desktop_locked')).toBeNull();
-    expect(localStorage.getItem('zettnas_desktop_locked')).toBeNull();
+    expect(sessionStorage.getItem('kiboto_desktop_locked')).toBeNull();
+    expect(localStorage.getItem('kiboto_desktop_locked')).toBeNull();
     expect(document.getElementById('lock-overlay').style.display).toBe('none');
   });
 
@@ -74,7 +74,7 @@ describe('LCD Direct Hardware Display Isolation', () => {
 
   it('restoreOpenWindowsState exits early and does not restore windows in LCD mode', () => {
     state.isLcdDirect = true;
-    localStorage.setItem('zettnas_open_windows_v1', JSON.stringify({
+    localStorage.setItem('kiboto_open_windows_v1', JSON.stringify({
       windows: {
         'mgmt-window': { x: 100, y: 100, w: 800, h: 600, z: 1001, minimized: false }
       }

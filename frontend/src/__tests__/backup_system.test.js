@@ -11,30 +11,30 @@ describe('Unified Configuration Backup & Restore System', () => {
 
   it('gatherClientPreferences collects all client desktop customizations and excludes auth and caches', () => {
     localStorage.setItem('lcd_theme', 'emerald');
-    localStorage.setItem('zettnas_language', 'zh');
-    localStorage.setItem('zettnas_desktop_widgets_config', '{"widgets":{"clock":true}}');
-    localStorage.setItem('zettnas_dock_pinned_v1', '["terminal","files"]');
-    localStorage.setItem('zettnas_win_bounds', '{"console":{"x":50,"y":50}}');
-    localStorage.setItem('zettnas_token', 'session_secret_token_123');
-    localStorage.setItem('zettnas_weather_cache_nyc', '{"temp":72}');
+    localStorage.setItem('kiboto_language', 'zh');
+    localStorage.setItem('kiboto_desktop_widgets_config', '{"widgets":{"clock":true}}');
+    localStorage.setItem('kiboto_dock_pinned_v1', '["terminal","files"]');
+    localStorage.setItem('kiboto_win_bounds', '{"console":{"x":50,"y":50}}');
+    localStorage.setItem('kiboto_token', 'session_secret_token_123');
+    localStorage.setItem('kiboto_weather_cache_nyc', '{"temp":72}');
     localStorage.setItem('unrelated_key', 'should_not_be_included');
 
     const prefs = gatherClientPreferences();
 
     expect(prefs.lcd_theme).toBe('emerald');
-    expect(prefs.zettnas_language).toBe('zh');
-    expect(prefs.zettnas_desktop_widgets_config).toBe('{"widgets":{"clock":true}}');
-    expect(prefs.zettnas_dock_pinned_v1).toBe('["terminal","files"]');
-    expect(prefs.zettnas_win_bounds).toBe('{"console":{"x":50,"y":50}}');
+    expect(prefs.kiboto_language).toBe('zh');
+    expect(prefs.kiboto_desktop_widgets_config).toBe('{"widgets":{"clock":true}}');
+    expect(prefs.kiboto_dock_pinned_v1).toBe('["terminal","files"]');
+    expect(prefs.kiboto_win_bounds).toBe('{"console":{"x":50,"y":50}}');
 
     // Security & Cache invariants: volatile tokens and transient caches must NEVER be exported
-    expect(prefs.zettnas_token).toBeUndefined();
-    expect(prefs.zettnas_weather_cache_nyc).toBeUndefined();
+    expect(prefs.kiboto_token).toBeUndefined();
+    expect(prefs.kiboto_weather_cache_nyc).toBeUndefined();
     expect(prefs.unrelated_key).toBeUndefined();
   });
 
   it('applyClientPreferences safely restores preferences into localStorage without overwriting auth token', () => {
-    localStorage.setItem('zettnas_token', 'active_user_session');
+    localStorage.setItem('kiboto_token', 'active_user_session');
 
     applyClientPreferences({
       lcd_theme: 'amber',
@@ -44,9 +44,9 @@ describe('Unified Configuration Backup & Restore System', () => {
     });
 
     expect(localStorage.getItem('lcd_theme')).toBe('amber');
-    expect(localStorage.getItem('zettnas_language')).toBe('fr');
-    expect(localStorage.getItem('zettnas_dock_pinned_v1')).toBe('["console","storage"]');
-    expect(localStorage.getItem('zettnas_token')).toBe('active_user_session');
+    expect(localStorage.getItem('kiboto_language')).toBe('fr');
+    expect(localStorage.getItem('kiboto_dock_pinned_v1')).toBe('["console","storage"]');
+    expect(localStorage.getItem('kiboto_token')).toBe('active_user_session');
   });
 
   it('confirms sec-backup was removed from index.html and only Mission Control backup exists', () => {

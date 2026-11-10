@@ -101,7 +101,7 @@ def test_home_folder_isolation_and_browse(setup_phase4_env):
     # Login as alice
     login_alice = client.post("/api/auth/login", json={"username": "alice", "password": "AlicePass123!"})
     assert login_alice.status_code == 200
-    token_alice = login_alice.json().get("token") or login_alice.cookies.get("zettnas_session")
+    token_alice = login_alice.json().get("token") or login_alice.cookies.get("kiboto_session")
     headers_alice = {"Authorization": f"Bearer {token_alice}"}
 
     # 1. Alice can browse her own home folder
@@ -135,7 +135,7 @@ def test_home_folder_isolation_and_browse(setup_phase4_env):
 
     # 6. Admin can browse both homes and see all entries
     login_admin = client.post("/api/auth/login", json={"username": "admin_user", "password": "AdminPass123!"})
-    token_admin = login_admin.json().get("token") or login_admin.cookies.get("zettnas_session")
+    token_admin = login_admin.json().get("token") or login_admin.cookies.get("kiboto_session")
     headers_admin = {"Authorization": f"Bearer {token_admin}"}
 
     r_admin_homes = client.get(f"/api/browse?path={env['homes_dir']}", headers=headers_admin)
@@ -281,16 +281,16 @@ def test_webdav_portal_desktop_sso_and_unauth_fallback(setup_phase4_env):
     assert "Sign In" in resp_unauth.text
     assert "www-authenticate" not in resp_unauth.headers
 
-    # 2. Login to ZettNAS Workbench Desktop (sets zettnas_session cookie)
+    # 2. Login to ZettNAS Workbench Desktop (sets kiboto_session cookie)
     resp_login = client.post(
         "/api/auth/login",
         json={"username": "admin_user", "password": "AdminPass123!"},
     )
     assert resp_login.status_code == 200
-    desktop_token = resp_login.json().get("token") or resp_login.cookies.get("zettnas_session")
+    desktop_token = resp_login.json().get("token") or resp_login.cookies.get("kiboto_session")
 
     # 3. Access WebDAV portal with desktop cookie -> SSO automatically authenticates!
-    resp_sso = client.get("/webdav/", cookies={"zettnas_session": desktop_token})
+    resp_sso = client.get("/webdav/", cookies={"kiboto_session": desktop_token})
     assert resp_sso.status_code == 200
     assert "ZettNAS WebDAV" in resp_sso.text
     assert "admin_user" in resp_sso.text

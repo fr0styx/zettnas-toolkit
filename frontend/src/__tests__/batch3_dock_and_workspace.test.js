@@ -75,11 +75,11 @@ describe('Batch 3: Dock Magnification, Spatial Placement & Workspace Insets', ()
     expect(dockEl.classList.contains('dock-size-medium')).toBe(true);
     expect(dockEl.classList.contains('dock-magnify-enabled')).toBe(true);
 
-    expect(localStorage.getItem('zettnas_dock_position')).toBe('bottom');
-    expect(localStorage.getItem('zettnas_dock_magnification')).toBe('true');
-    expect(localStorage.getItem('zettnas_dock_scale')).toBe('1.45');
-    expect(localStorage.getItem('zettnas_dock_size')).toBe('medium');
-    expect(localStorage.getItem('zettnas_dock_autohide')).toBe('false');
+    expect(localStorage.getItem('kiboto_dock_position')).toBe('bottom');
+    expect(localStorage.getItem('kiboto_dock_magnification')).toBe('true');
+    expect(localStorage.getItem('kiboto_dock_scale')).toBe('1.45');
+    expect(localStorage.getItem('kiboto_dock_size')).toBe('medium');
+    expect(localStorage.getItem('kiboto_dock_autohide')).toBe('false');
   });
 
   it('applyDockSettings updates workspace insets and classes for left and top dock positions', () => {
@@ -112,11 +112,11 @@ describe('Batch 3: Dock Magnification, Spatial Placement & Workspace Insets', ()
   });
 
   it('initDockSettingsControls reads persisted settings and updates control elements', () => {
-    localStorage.setItem('zettnas_dock_position', 'left');
-    localStorage.setItem('zettnas_dock_magnification', 'true');
-    localStorage.setItem('zettnas_dock_scale', '1.6');
-    localStorage.setItem('zettnas_dock_size', 'large');
-    localStorage.setItem('zettnas_dock_autohide', 'true');
+    localStorage.setItem('kiboto_dock_position', 'left');
+    localStorage.setItem('kiboto_dock_magnification', 'true');
+    localStorage.setItem('kiboto_dock_scale', '1.6');
+    localStorage.setItem('kiboto_dock_size', 'large');
+    localStorage.setItem('kiboto_dock_autohide', 'true');
 
     initDockSettingsControls();
 
@@ -149,12 +149,12 @@ describe('Batch 3: Dock Magnification, Spatial Placement & Workspace Insets', ()
     // Click Top position
     topBtn.click();
     expect(getDockSettings().position).toBe('top');
-    expect(localStorage.getItem('zettnas_dock_position')).toBe('top');
+    expect(localStorage.getItem('kiboto_dock_position')).toBe('top');
 
     // Click Small size
     smallBtn.click();
     expect(getDockSettings().size).toBe('small');
-    expect(localStorage.getItem('zettnas_dock_size')).toBe('small');
+    expect(localStorage.getItem('kiboto_dock_size')).toBe('small');
 
     // Toggle magnification off
     magToggle.checked = false;

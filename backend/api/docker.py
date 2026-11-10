@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope, session_cookie
 from backend.config import docker_sock, logger
 from backend.confirmations import require_confirmation
 from backend.hardware.docker_stats import container_action, read_docker_containers
@@ -694,7 +694,7 @@ async def _authenticate_ws(
     )
     token = (
         query_token
-        or websocket.cookies.get("zettnas_session")
+        or session_cookie(websocket.cookies)
         or websocket.cookies.get("session_token")
         or websocket.cookies.get("zat_token")
     )
@@ -702,7 +702,7 @@ async def _authenticate_ws(
         return False
 
     is_cookie_auth = not query_token and bool(
-        websocket.cookies.get("zettnas_session")
+        session_cookie(websocket.cookies)
         or websocket.cookies.get("session_token")
         or websocket.cookies.get("zat_token")
     )

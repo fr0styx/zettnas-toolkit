@@ -9,7 +9,7 @@ from backend.auth import query_credential_allowed, request_is_https
 def _login(client):
     res = client.post("/api/auth/login", json={"username": "admin", "password": "admin"})
     assert res.status_code == 200, res.text
-    assert "zettnas_session" in res.cookies
+    assert "kiboto_session" in res.cookies
     return res.json()["token"]
 
 

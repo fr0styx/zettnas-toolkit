@@ -99,7 +99,7 @@ describe('Phase 5: Multi-User Identity, RBAC & Desktop Lock UI', () => {
 
     lockDesktop();
     expect(isDesktopLocked()).toBe(true);
-    expect(sessionStorage.getItem('zettnas_desktop_locked')).toBe('true');
+    expect(sessionStorage.getItem('kiboto_desktop_locked')).toBe('true');
     expect(document.documentElement.classList.contains('is-desktop-locked')).toBe(true);
     expect(document.body.classList.contains('desktop-locked')).toBe(true);
     expect(lockOverlay.style.display).toBe('flex');
@@ -124,23 +124,23 @@ describe('Phase 5: Multi-User Identity, RBAC & Desktop Lock UI', () => {
     document.body.appendChild(manualFields);
     document.body.appendChild(selectedCard);
 
-    sessionStorage.setItem('zettnas_desktop_locked', 'true');
+    sessionStorage.setItem('kiboto_desktop_locked', 'true');
     document.documentElement.classList.add('is-desktop-locked');
 
     switchUser();
     expect(isDesktopLocked()).toBe(false);
-    expect(sessionStorage.getItem('zettnas_desktop_locked')).toBe(null);
+    expect(sessionStorage.getItem('kiboto_desktop_locked')).toBe(null);
     expect(document.documentElement.classList.contains('is-desktop-locked')).toBe(false);
     expect(document.documentElement.classList.contains('auth-required')).toBe(true);
   });
 
   it('logout clears session, user state, and removes lock state', async () => {
     const { logout } = await import('../components/auth.js');
-    sessionStorage.setItem('zettnas_desktop_locked', 'true');
+    sessionStorage.setItem('kiboto_desktop_locked', 'true');
     document.documentElement.classList.add('is-desktop-locked');
 
     await logout();
-    expect(sessionStorage.getItem('zettnas_desktop_locked')).toBe(null);
+    expect(sessionStorage.getItem('kiboto_desktop_locked')).toBe(null);
     expect(document.documentElement.classList.contains('is-desktop-locked')).toBe(false);
     expect(getCurrentUser()).toBe(null);
     expect(document.documentElement.classList.contains('auth-required')).toBe(true);

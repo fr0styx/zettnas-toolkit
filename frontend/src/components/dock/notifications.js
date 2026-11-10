@@ -11,12 +11,12 @@ import { initWindowKeyboardShortcuts } from './shortcuts.js';
 import { bringToFront } from './window-drag.js';
 import { applySavedBounds, loadSavedWindowBounds, saveOpenWindowsState } from './window-state.js';
 
-let lastReadEventTs = parseFloat(localStorage.getItem('zettnas_last_read_event_ts_v2') || '0');
-export let clearedEventsTs = parseFloat(localStorage.getItem('zettnas_cleared_events_ts') || '0');
+let lastReadEventTs = parseFloat(localStorage.getItem('kiboto_last_read_event_ts_v2') || '0');
+export let clearedEventsTs = parseFloat(localStorage.getItem('kiboto_cleared_events_ts') || '0');
 let currentNotifFilter = 'all';
 
-export const CHECKED_EVENTS_KEY = 'zettnas_checked_events_v1';
-export const DOCK_PINNED_KEY = 'zettnas_dock_pinned_apps_v1'; // a storage key name, not a secret: gitleaks:allow
+export const CHECKED_EVENTS_KEY = 'kiboto_checked_events_v1'; // gitleaks:allow (a storage key name)
+export const DOCK_PINNED_KEY = 'kiboto_dock_pinned_apps_v1'; // a storage key name, not a secret: gitleaks:allow
 
 let checkedEventKeys = new Set();
 try {
@@ -34,9 +34,9 @@ export function resetCheckedEventsState() {
   clearedEventsTs = 0;
   try {
     localStorage.removeItem(CHECKED_EVENTS_KEY);
-    localStorage.removeItem('zettnas_last_read_event_ts');
-    localStorage.removeItem('zettnas_last_read_event_ts_v2');
-    localStorage.removeItem('zettnas_cleared_events_ts');
+    localStorage.removeItem('kiboto_last_read_event_ts');
+    localStorage.removeItem('kiboto_last_read_event_ts_v2');
+    localStorage.removeItem('kiboto_cleared_events_ts');
   } catch {}
 }
 
@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.latestStats.events.forEach(ev => markEventChecked(ev, false));
         saveCheckedEvents();
         lastReadEventTs = Math.max(...state.latestStats.events.map(ev => ev.ts));
-        localStorage.setItem('zettnas_last_read_event_ts_v2', lastReadEventTs.toString());
+        localStorage.setItem('kiboto_last_read_event_ts_v2', lastReadEventTs.toString());
         updateNotificationBadge();
         renderNotificationCenter();
       }
@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clearAllBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       clearedEventsTs = Math.floor(Date.now() / 1000);
-      localStorage.setItem('zettnas_cleared_events_ts', clearedEventsTs.toString());
+      localStorage.setItem('kiboto_cleared_events_ts', clearedEventsTs.toString());
       updateNotificationBadge();
       renderNotificationCenter();
     });
