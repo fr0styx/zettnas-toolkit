@@ -102,6 +102,8 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   remote access doesn't use it), at its own https address with Tailscale's certificate. Kiboto's own page
   is never offered, nor its helpers or anything on its port; apps that control the server are marked
   and warned about. Turning one on is confirmed and written to the security log, like taking it off.
+  When Funnel isn't allowed on the tailnet yet, the card shows Tailscale's "allow Funnel" link instead
+  of saying the Tailscale container is stopped.
 
 #### Security
 

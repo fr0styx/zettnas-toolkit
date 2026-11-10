@@ -117,6 +117,9 @@ def _as_text(value: str | bytes | None) -> str:
     return value.decode("utf-8", "replace") if isinstance(value, bytes) else (value or "")
 
 
+EXEC_WAIT_CAP = 8  # seconds a waiting serve/funnel command gets inside the container
+
+
 def _run_tailscale_cmd(args: list[str], timeout: float = 10.0) -> tuple[int, str]:
     """
     Executes a Tailscale command using Docker exec if 'tailscale' container is running,
@@ -134,7 +137,9 @@ def _run_tailscale_cmd(args: list[str], timeout: float = 10.0) -> tuple[int, str
             # wrap with timeout so Docker exec returns output cleanly before timing out
             cmd_list = ["tailscale"] + args
             if args and args[0] in ("serve", "funnel") and len(args) > 1 and args[1] not in ("status", "reset"):
-                cmd_list = ["timeout", str(max(1, int(timeout))), "tailscale"] + args
+                # below the Docker exec connection's own 10 s, so what it printed (an approval link)
+                # comes back instead of a read timeout and a misleading "container is stopped"
+                cmd_list = ["timeout", str(max(1, min(int(timeout), EXEC_WAIT_CAP))), "tailscale"] + args
             res = execute_in_container("tailscale", cmd_list)
             if res.get("success"):
                 exit_code = res.get("exit_code", 0)
