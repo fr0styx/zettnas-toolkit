@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-672 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+675 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -319,6 +319,14 @@ request and response schemas.
 | `PUT` | `/api/v1/immich/phone` | signed in | Marks this person's phone as backing up to Immich (Getting started, B8) |
 | `GET` | `/api/v1/immich/thumbnail/{asset_id}` | any of `shares:read`, `system:read` | Get Thumbnail |
 | `PUT` | `/api/v1/immich/url` | any of `system:config`, `ai:manage` | Put Url |
+
+### Integrations
+
+| Method | Path | Access | What it does |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/integrations/home-assistant` | `system:config` | The broker settings (the password only as has_password) and how the last send went |
+| `PUT` | `/api/v1/integrations/home-assistant` | `system:config` | Changes the settings; a password left out keeps the saved one, an empty one clears it |
+| `POST` | `/api/v1/integrations/home-assistant/test` | `system:config` | Announces the sensors and sends their values now, to check the broker settings |
 
 ### Invites
 

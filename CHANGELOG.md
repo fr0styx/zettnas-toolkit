@@ -33,6 +33,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   listing, never the files, and only when you start it (its disks wake up if they sleep); it runs as a
   job you can cancel, and the last result is kept, so opening it again reads nothing.
 
+#### Home Assistant
+
+- **Kiboto's health in Home Assistant**: Network → File Sharing Services has a Home Assistant card. With the
+  broker Home Assistant uses (Mosquitto), Kiboto sends CPU, memory, disk temperatures, the UPS and the
+  ransomware guard as sensors once a minute; they appear on their own as one MQTT device (discovery), and
+  go unavailable if updates stop rather than showing an old value. The broker password is stored
+  encrypted. How to set it up: docs/HOME_ASSISTANT.md.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

@@ -433,6 +433,13 @@ def startup_system():
     atexit.register(lambda: Z_STATE.fans_locked or _shutdown_fans("exit"))
 
 
+def _start_home_assistant() -> None:
+    """Home Assistant over MQTT (RES-5): its publisher idles until a broker is set."""
+    from backend.services import home_assistant
+
+    home_assistant.start()
+
+
 def _rejoin_app_networks() -> None:
     """Kiboto back on the networks it shares with apps, which an update leaves behind (NSEC-10)."""
     from backend.services.app_networks import rejoin
@@ -535,6 +542,7 @@ async def lifespan(app: FastAPI):
     startup_system()
     threading.Thread(target=_open_encrypted_folders, name="EncryptedFolders", daemon=True).start()
     threading.Thread(target=_rejoin_app_networks, name="AppNetworks", daemon=True).start()
+    _start_home_assistant()
     try:
         yield
     finally:

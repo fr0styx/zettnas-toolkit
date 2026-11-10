@@ -23054,6 +23054,108 @@
     "title": "HealthSignalIn",
     "type": "object"
    },
+   "HomeAssistantIn": {
+    "properties": {
+     "discovery_prefix": {
+      "anyOf": [
+       {
+        "pattern": "^[A-Za-z0-9_\\-/]{1,64}$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Discovery Prefix"
+     },
+     "enabled": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Enabled"
+     },
+     "host": {
+      "anyOf": [
+       {
+        "maxLength": 253,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Host"
+     },
+     "interval_s": {
+      "anyOf": [
+       {
+        "maximum": 3600.0,
+        "minimum": 15.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Interval S"
+     },
+     "password": {
+      "anyOf": [
+       {
+        "maxLength": 256,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Password"
+     },
+     "port": {
+      "anyOf": [
+       {
+        "maximum": 65535.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Port"
+     },
+     "tls": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tls"
+     },
+     "username": {
+      "anyOf": [
+       {
+        "maxLength": 128,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Username"
+     }
+    },
+    "title": "HomeAssistantIn",
+    "type": "object"
+   },
    "HostIpConfigApplyRequest": {
     "properties": {
      "dns1": {
@@ -54568,6 +54670,116 @@
     "x-required-scopes": [
      "system:config",
      "ai:manage"
+    ]
+   }
+  },
+  "/api/v1/integrations/home-assistant": {
+   "get": {
+    "description": "The broker settings (the password only as has_password) and how the last send went.",
+    "operationId": "get_home_assistant_api_v1_integrations_home_assistant_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Home Assistant Api V1 Integrations Home Assistant Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Home Assistant",
+    "tags": [
+     "Integrations"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   },
+   "put": {
+    "description": "Changes the settings; a password left out keeps the saved one, an empty one clears it.",
+    "operationId": "put_home_assistant_api_v1_integrations_home_assistant_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/HomeAssistantIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Home Assistant Api V1 Integrations Home Assistant Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Home Assistant",
+    "tags": [
+     "Integrations"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/integrations/home-assistant/test": {
+   "post": {
+    "description": "Announces the sensors and sends their values now, to check the broker settings.",
+    "operationId": "test_home_assistant_api_v1_integrations_home_assistant_test_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Test Home Assistant Api V1 Integrations Home Assistant Test Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Test Home Assistant",
+    "tags": [
+     "Integrations"
+    ],
+    "x-required-scopes": [
+     "system:config"
     ]
    }
   },

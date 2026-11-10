@@ -21,6 +21,7 @@ from backend.api.family_filter import router as family_filter_router
 from backend.api.fans import router as fans_router
 from backend.api.file_versions import router as file_versions_router  # noqa: E402
 from backend.api.fs import router as fs_router
+from backend.api.home_assistant import router as home_assistant_router
 from backend.api.immich import router as immich_router  # noqa: E402
 from backend.api.invites import router as invites_router  # noqa: E402
 from backend.api.jobs import router as jobs_router  # noqa: E402
@@ -98,6 +99,7 @@ api_router.include_router(media_router)
 api_router.include_router(photo_import_router)  # NFEAT-3
 api_router.include_router(nas_name_router)  # NFEAT-8
 api_router.include_router(public_links_router)  # NFEAT-2
+api_router.include_router(home_assistant_router)  # RES-5
 api_router.include_router(sftp_router)
 api_router.include_router(vms_router)
 api_router.include_router(snmp_router)
@@ -136,6 +138,7 @@ __all__ = [
     "photo_import_router",
     "nas_name_router",
     "public_links_router",
+    "home_assistant_router",
     "sftp_router",
     "vms_router",
     "snmp_router",
