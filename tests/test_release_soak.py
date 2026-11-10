@@ -86,5 +86,6 @@ def test_promotion_waits_seven_days_honours_holds_and_can_be_skipped():
     assert wf["env"]["SOAK_DAYS"] == "3"
     steps = "\n".join(str(s.get("run", "")) for s in wf["jobs"]["promote"]["steps"])
     assert "HOLD" in steps and "cosign verify" in steps
-    assert ':latest${suffix}" -t "$IMAGE:stable${suffix}' in steps
+    assert ':latest${suffix}" -t "$image:stable${suffix}' in steps
+    assert 'for image in "$IMAGE" "$OLD_IMAGE"' in steps  # the old name too, until 2.2
     assert "prerelease=false" in steps

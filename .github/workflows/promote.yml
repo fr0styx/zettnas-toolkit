@@ -37,7 +37,8 @@ concurrency:
 
 env:
   SOAK_DAYS: "3"
-  IMAGE: ghcr.io/${{ github.repository }}
+  IMAGE: ghcr.io/fr0styx/kiboto
+  OLD_IMAGE: ghcr.io/fr0styx/zettnas-toolkit  # until 2.2: installs made before the rebrand pull this name
 
 jobs:
   promote:
@@ -132,16 +133,21 @@ jobs:
           MINOR: ${{ steps.pick.outputs.minor }}
         run: |
           set -euo pipefail
-          for suffix in "" "-core"; do
-            src="$IMAGE:${VERSION}${suffix}"
-            digest=$(docker buildx imagetools inspect "$src" --format '{{json .Manifest}}' | jq -r .digest)
-            cosign verify "$IMAGE@$digest" \
-              --certificate-identity-regexp '^https://github\.com/${{ github.repository }}/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9].*)$' \
-              --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
-            docker buildx imagetools create \
-              -t "$IMAGE:latest${suffix}" -t "$IMAGE:stable${suffix}" -t "$IMAGE:${MINOR}${suffix}" \
-              "$IMAGE@$digest"
-            echo "- $IMAGE:latest${suffix}, :stable${suffix}, :${MINOR}${suffix} -> $digest (signature verified)" >> "$GITHUB_STEP_SUMMARY"
+          for image in "$IMAGE" "$OLD_IMAGE"; do
+            for suffix in "" "-core"; do
+              src="$image:${VERSION}${suffix}"
+              # a release from before the rebrand exists under the old name only
+              if ! digest=$(docker buildx imagetools inspect "$src" --format '{{json .Manifest}}' | jq -r .digest); then
+                echo "- $src: not published under this name, skipped" >> "$GITHUB_STEP_SUMMARY"; continue
+              fi
+              cosign verify "$image@$digest" \
+                --certificate-identity-regexp '^https://github\.com/fr0styx/(kiboto|zettnas-toolkit)/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9].*)$' \
+                --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
+              docker buildx imagetools create \
+                -t "$image:latest${suffix}" -t "$image:stable${suffix}" -t "$image:${MINOR}${suffix}" \
+                "$image@$digest"
+              echo "- $image:latest${suffix}, :stable${suffix}, :${MINOR}${suffix} -> $digest (signature verified)" >> "$GITHUB_STEP_SUMMARY"
+            done
           done
 
       - name: Mark the release as the latest

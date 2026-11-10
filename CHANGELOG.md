@@ -15,6 +15,12 @@ installs made before keep working through it.
   guard's file in each share is renamed to `!Kiboto-guard-file.docx` the next time it is checked.
   The README and every doc say Kiboto too, with kiboto.net as the website. Zettlab and ZettOS, the
   hardware maker's names, stay.
+- **The image is ghcr.io/fr0styx/kiboto**: every build is published and signed under the new name and,
+  until Kiboto 2.2, under `ghcr.io/fr0styx/zettnas-toolkit` too, so installs made before keep finding
+  their updates, including through Unraid's own update button. In-app updates use the new name once it
+  has the version (the old one otherwise) and accept a signature from the project's CI under either
+  repository name, so renaming the GitHub repository to fr0styx/kiboto doesn't stop updates. Update
+  to this version before that rename: older versions only trust the old repository's signatures.
 - **Settings are named KIBOTO_\***: every `ZETTNAS_*` environment variable is now `KIBOTO_*`
   (`KIBOTO_DATA_KEY`, `KIBOTO_PLATFORM`, ...). The old names still work until Kiboto 2.2, and a new
   name set beside an old one wins. The compose files fall back to a `.env` that still uses the old

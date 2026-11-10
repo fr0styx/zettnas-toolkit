@@ -17,7 +17,7 @@ def _apply(client, auth_headers):
 
 
 def test_a_moved_tag_is_refused(client, auth_headers, update_env, monkeypatch):
-    async def served(tag):
+    async def served(tag, image_repo=None):
         return "sha256:" + "a" * 64
 
     monkeypatch.setattr(update_env, "_registry_digest", served)
@@ -27,7 +27,7 @@ def test_a_moved_tag_is_refused(client, auth_headers, update_env, monkeypatch):
 
 
 def test_the_served_image_is_accepted(client, auth_headers, update_env, monkeypatch):
-    async def served(tag):
+    async def served(tag, image_repo=None):
         return "sha256:" + "a" * 64
 
     monkeypatch.setattr(update_env, "_registry_digest", served)

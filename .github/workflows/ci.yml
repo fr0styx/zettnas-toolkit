@@ -20,6 +20,10 @@ concurrency:
 
 env:
   NODE_OPTIONS: "--no-deprecation"
+  IMAGE: ghcr.io/fr0styx/kiboto
+  # Kiboto rebrand: every image also goes out under the old name, signed there too, so installs made
+  # before the rename keep finding their updates (until 2.2; backend/legacy_names.py)
+  OLD_IMAGE: ghcr.io/fr0styx/zettnas-toolkit
 
 jobs:
   lint-and-test:
@@ -343,7 +347,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ env.IMAGE }}
           flavor: |
             latest=false
             suffix=${{ matrix.suffix }},onlatest=true
@@ -364,7 +368,7 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          outputs: type=image,name=ghcr.io/${{ github.repository }},push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VARIANT=${{ matrix.variant }}
@@ -381,7 +385,7 @@ jobs:
       # FEAT-13), which added 2 MB; raise it only with the reason here.
       - name: Smoke-test the built image (amd64, ${{ matrix.variant }})
         env:
-          IMAGE: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+          IMAGE: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
           STARTUP_BUDGET_SECS: "45"
           IMAGE_BUDGET_MB: ${{ matrix.variant == 'core' && '345' || '700' }}
         run: sh scripts/smoke_test.sh "$IMAGE" linux/amd64 18082 120
@@ -392,7 +396,7 @@ jobs:
       # it was continue-on-error.
       - name: Smoke-test the built image (arm64, emulated, ${{ matrix.variant }})
         env:
-          IMAGE: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+          IMAGE: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
         run: sh scripts/smoke_test.sh "$IMAGE" linux/arm64 18083 600
 
       # Release gate (OPS-06): no Critical vulnerability that already has a fix.
@@ -401,7 +405,7 @@ jobs:
         with:
           # The action installs Trivy v0.70.0 unless told otherwise; Dependabot does not bump this
           version: v0.76.2
-          image-ref: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+          image-ref: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
           severity: CRITICAL
           ignore-unfixed: true
           exit-code: "1"
@@ -412,7 +416,7 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: v0.76.2
-          image-ref: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+          image-ref: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
           severity: HIGH
           ignore-unfixed: true
           exit-code: "0"
@@ -425,12 +429,12 @@ jobs:
       # rolling back never reaches edge/main (OPS-9, audit batch 1).
       - name: Upgrade and rollback test
         run: |
-          NEW="ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"
+          NEW="${{ env.IMAGE }}@${{ steps.build.outputs.digest }}"
           docker pull -q "$NEW"
           RECENT=$(git ls-remote --tags --refs "https://github.com/${{ github.repository }}" 'v*' \
             | sed 's#.*refs/tags/v##' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -t. -k1,1n -k2,2n -k3,3n | tail -2)
           for tag in latest $RECENT; do
-            OLD="ghcr.io/${{ github.repository }}:$tag${{ matrix.suffix }}"  # core images end in -core (NARC-10)
+            OLD="${{ env.OLD_IMAGE }}:$tag${{ matrix.suffix }}"  # core images end in -core (NARC-10)
             docker pull -q "$OLD" || { echo "no image $OLD, skipped"; continue; }
             echo "### from $tag"
             if ! sh scripts/upgrade_rollback_test.sh "$OLD" "$NEW"; then
@@ -444,7 +448,7 @@ jobs:
 
       # Keyless signature bound to this workflow's identity; nothing to keep secret.
       - name: Sign image digest
-        run: cosign sign --yes "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"
+        run: cosign sign --yes "${{ env.IMAGE }}@${{ steps.build.outputs.digest }}"
 
       - name: Publish tags for the verified digest
         env:
@@ -463,9 +467,15 @@ jobs:
             if [ "$moving_ok" = 0 ] && [[ "$tag" != *":sha-"* ]]; then continue; fi
             args+=(-t "$tag")
           done <<< "$TAGS"
-          docker buildx imagetools create "${args[@]}" "ghcr.io/${{ github.repository }}@${DIGEST}"
+          docker buildx imagetools create "${args[@]}" "${{ env.IMAGE }}@${DIGEST}"
           echo "Published ${#args[@]} tag argument(s) for ${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
-          echo "Verify: cosign verify ghcr.io/${{ github.repository }}@${DIGEST} --certificate-identity-regexp '^https://github\.com/${{ github.repository }}/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9].*)$' --certificate-oidc-issuer https://token.actions.githubusercontent.com" >> "$GITHUB_STEP_SUMMARY"
+          # the same tags under the old image name, and its own signature there (OLD_IMAGE)
+          old_args=()
+          for ((i = 1; i < ${#args[@]}; i += 2)); do old_args+=(-t "${OLD_IMAGE}${args[i]#"$IMAGE"}"); done
+          docker buildx imagetools create "${old_args[@]}" "${IMAGE}@${DIGEST}"
+          cosign sign --yes "${OLD_IMAGE}@${DIGEST}"
+          echo "Also published and signed as ${OLD_IMAGE}@${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Verify: cosign verify ${{ env.IMAGE }}@${DIGEST} --certificate-identity-regexp '^https://github\.com/fr0styx/(kiboto|zettnas-toolkit)/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9].*)$' --certificate-oidc-issuer https://token.actions.githubusercontent.com" >> "$GITHUB_STEP_SUMMARY"
 
   create-release:
     name: GitHub Release & Release Notes

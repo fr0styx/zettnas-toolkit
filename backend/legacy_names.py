@@ -15,6 +15,8 @@ from typing import overload
 REMOVE_IN = "2.2.0"
 ENV_PREFIX = "KIBOTO_"
 OLD_ENV_PREFIX = "ZETTNAS_"
+OLD_IMAGE_REPO = "fr0styx/zettnas-toolkit"  # CI also publishes and signs every image under this name
+OLD_GITHUB_REPO = "fr0styx/zettnas-toolkit"  # images signed before the repo's rename carry this identity
 OLD_SESSION_COOKIE = "zettnas_session"  # browsers signed in before the rebrand still send it
 OLD_CANARY_NAME = "!ZettNAS-guard-file.docx"  # the ransomware guard's file before the rebrand
 OLD_NAS_NAME = "zettnas"  # zettnas.local keeps answering beside kiboto.local (D17)

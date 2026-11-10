@@ -25,13 +25,19 @@ from dataclasses import dataclass
 
 import httpx
 
+from backend import legacy_names, product
 from backend.config import logger
 
-REPO = "fr0styx/zettnas-toolkit"
+REPO = product.IMAGE_REPO
+# images also go out under the name from before the rebrand, and were signed by the repository under
+# its old name before it was renamed: both count until 2.2 (legacy_names)
+REPOS = (product.IMAGE_REPO, legacy_names.OLD_IMAGE_REPO)
 REGISTRY = "https://ghcr.io"
 ISSUER = "https://token.actions.githubusercontent.com"
 IDENTITY_RE = re.compile(
-    r"^https://github\.com/fr0styx/zettnas-toolkit/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9][^/\s]*)$"
+    r"^https://github\.com/(?:"
+    + "|".join(re.escape(r) for r in (product.GITHUB_REPO, legacy_names.OLD_GITHUB_REPO))
+    + r")/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9][^/\s]*)$"
 )
 _DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _BUNDLE_PREFIX = "application/vnd.dev.sigstore.bundle"
@@ -62,8 +68,8 @@ class SignatureResult:
 # ---------------------------------------------------------------------------
 
 
-def _token(client: httpx.Client) -> str:
-    r = client.get(f"{REGISTRY}/token", params={"scope": f"repository:{REPO}:pull"})
+def _token(client: httpx.Client, repo: str = REPO) -> str:
+    r = client.get(f"{REGISTRY}/token", params={"scope": f"repository:{repo}:pull"})
     r.raise_for_status()
     token = r.json().get("token")
     if not token:
@@ -71,28 +77,46 @@ def _token(client: httpx.Client) -> str:
     return token
 
 
-def _manifests_referring_to(client: httpx.Client, headers: dict, digest: str) -> list[dict]:
+def _manifests_referring_to(client: httpx.Client, headers: dict, digest: str, repo: str = REPO) -> list[dict]:
     """Referrer manifests of a digest: the referrers API, else cosign's fallback tag."""
-    r = client.get(f"{REGISTRY}/v2/{REPO}/referrers/{digest}", headers={**headers, "Accept": _INDEX})
+    r = client.get(f"{REGISTRY}/v2/{repo}/referrers/{digest}", headers={**headers, "Accept": _INDEX})
     if r.status_code == 200:
         found = r.json().get("manifests") or []
         if found:
             return found
-    r = client.get(f"{REGISTRY}/v2/{REPO}/manifests/{digest.replace(':', '-')}", headers={**headers, "Accept": _INDEX})
+    r = client.get(f"{REGISTRY}/v2/{repo}/manifests/{digest.replace(':', '-')}", headers={**headers, "Accept": _INDEX})
     if r.status_code == 404:
         return []
     r.raise_for_status()
     return r.json().get("manifests") or []
 
 
-def fetch_bundles(digest: str, client: httpx.Client | None = None) -> list[bytes]:
-    """The Sigstore bundles stored for an image digest (each checked against its blob digest)."""
+def fetch_bundles(digest: str, client: httpx.Client | None = None, repo: str | None = None) -> list[bytes]:
+    """The Sigstore bundles stored for an image digest (each checked against its blob digest), from
+    the image name given, else the first of REPOS that has any."""
+    if repo is not None:
+        return _fetch_bundles_in(digest, client, repo)
+    last: Exception | None = None
+    for name in REPOS:
+        try:
+            found = _fetch_bundles_in(digest, client, name)
+        except (httpx.HTTPError, OSError, ValueError, KeyError, SignatureError) as exc:  # no package (yet), or private
+            last = exc
+            continue
+        if found:
+            return found
+    if last is not None:
+        raise last
+    return []
+
+
+def _fetch_bundles_in(digest: str, client: httpx.Client | None, repo: str) -> list[bytes]:
     own = client is None
     client = client or httpx.Client(timeout=15.0, follow_redirects=True)
     try:
-        headers = {"Authorization": f"Bearer {_token(client)}"}
+        headers = {"Authorization": f"Bearer {_token(client, repo)}"}
         bundles = []
-        for ref in _manifests_referring_to(client, headers, digest)[:_MAX_REFERRERS]:
+        for ref in _manifests_referring_to(client, headers, digest, repo)[:_MAX_REFERRERS]:
             # In cosign's fallback index the entry's type is often "empty"; the bundle type is in the manifest
             ref_type = str(ref.get("artifactType", ""))
             if ref_type and not ref_type.startswith(_BUNDLE_PREFIX) and ref_type != _EMPTY:
@@ -101,7 +125,7 @@ def fetch_bundles(digest: str, client: httpx.Client | None = None) -> list[bytes
             if not _DIGEST_RE.match(ref_digest):
                 continue
             r = client.get(
-                f"{REGISTRY}/v2/{REPO}/manifests/{ref_digest}",
+                f"{REGISTRY}/v2/{repo}/manifests/{ref_digest}",
                 headers={**headers, "Accept": ref.get("mediaType") or _MANIFEST},
             )
             r.raise_for_status()
@@ -114,7 +138,7 @@ def fetch_bundles(digest: str, client: httpx.Client | None = None) -> list[bytes
                     continue
                 if int(layer.get("size") or 0) > _MAX_BUNDLE_BYTES:
                     continue
-                b = client.get(f"{REGISTRY}/v2/{REPO}/blobs/{blob_digest}", headers=headers)
+                b = client.get(f"{REGISTRY}/v2/{repo}/blobs/{blob_digest}", headers=headers)
                 b.raise_for_status()
                 if "sha256:" + hashlib.sha256(b.content).hexdigest() != blob_digest:
                     raise SignatureError("a signature download was corrupted")

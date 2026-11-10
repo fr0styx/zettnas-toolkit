@@ -47,7 +47,7 @@ def _data_mount_source(container_name: str) -> str | None:
 
 
 def spawn_self_updater(
-    target_image: str = "ghcr.io/fr0styx/zettnas-toolkit:latest",
+    target_image: str = "ghcr.io/fr0styx/kiboto:latest",
     container_name: str = "zettnas-toolkit",
     delay_seconds: float = 2.5,
     restore_snapshot_id: str | None = None,
@@ -491,7 +491,7 @@ def main():
     parser = argparse.ArgumentParser(description="Kiboto Ephemeral Self-Updater Helper")
     parser.add_argument("--apply", action="store_true", help="Execute container recreate sequence")
     parser.add_argument("--target", default="zettnas-toolkit", help="Target container name")
-    parser.add_argument("--image", default="ghcr.io/fr0styx/zettnas-toolkit:latest", help="Target Docker image")
+    parser.add_argument("--image", default="ghcr.io/fr0styx/kiboto:latest", help="Target Docker image")
     parser.add_argument("--delay", type=float, default=2.5, help="Delay seconds before stopping caller")
     parser.add_argument("--data-dir", default=None, help="Target's data folder mounted into the helper")
     parser.add_argument("--restore-from", default=None, help="Snapshot to restore before starting (revert)")

@@ -155,6 +155,7 @@ def health():
 # Backward-compatibility re-exports for extracted domain routers
 import logging
 
+from backend import legacy_names, product
 from backend.api.catalog import router as catalog_router
 from backend.api.diagnostics import (
     _build_bundle_sync,
@@ -1192,7 +1193,10 @@ def get_system_about():
     }
 
 
-_IMAGE_REPO = "ghcr.io/fr0styx/zettnas-toolkit"
+_IMAGE_REPO = "ghcr.io/" + product.IMAGE_REPO
+# CI publishes every image under the name from before the rebrand too (until 2.2): installs made
+# before find their updates there, and this version accepts both (legacy_names)
+_IMAGE_REPOS = (_IMAGE_REPO, "ghcr.io/" + legacy_names.OLD_IMAGE_REPO)
 _MANIFEST_ACCEPT = ", ".join(
     [
         "application/vnd.oci.image.index.v1+json",
@@ -1206,13 +1210,40 @@ _MANIFEST_ACCEPT = ", ".join(
 _TAG = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$")  # Docker's tag grammar
 
 
-async def _registry_digest(tag: str) -> str | None:
-    """Digest GHCR currently serves for a tag of our image (anonymous pull token)."""
+def _repo_of(image_ref: str) -> str:
+    """Which of our image names a reference uses (the new one when it is neither)."""
+    return next((r for r in _IMAGE_REPOS if image_ref.startswith((r + ":", r + "@"))), _IMAGE_REPO)
+
+
+async def _registry_digest(tag: str, image_repo: str | None = None) -> str | None:
+    """Digest GHCR currently serves for a tag of our image under that name, else under the first of
+    our names that has the tag (anonymous pull token)."""
+    for name in (image_repo,) if image_repo else _IMAGE_REPOS:
+        found = await _registry_digest_in(tag, name)
+        if found:
+            return found
+    return None
+
+
+async def _image_with_tag(tag: str) -> str:
+    """Our image with this tag: under the new name when the registry has it there, else the old name,
+    which carries every tag until 2.2 (and is the safe choice when the registry can't be asked)."""
+    import httpx
+
+    try:
+        if await _registry_digest_in(tag, _IMAGE_REPO):
+            return f"{_IMAGE_REPO}:{tag}"
+    except (httpx.HTTPError, OSError, ValueError):
+        logger.debug("[System Update] Could not ask the registry for %s:%s", _IMAGE_REPO, tag, exc_info=True)
+    return f"{_IMAGE_REPOS[1]}:{tag}"
+
+
+async def _registry_digest_in(tag: str, image_repo: str) -> str | None:
     import httpx
 
     if not _TAG.match(tag or ""):
         return None  # only a real image tag goes into the registry URL
-    repo = _IMAGE_REPO.split("/", 1)[1]
+    repo = image_repo.split("/", 1)[1]
     async with httpx.AsyncClient(timeout=6.0) as client:
         tok = await client.get("https://ghcr.io/token", params={"scope": f"repository:{repo}:pull"})
         token = tok.json().get("token") if tok.status_code == 200 else None
@@ -1237,12 +1268,13 @@ def _running_repo_digests() -> list[str]:
     st, img = _docker_request("GET", f"/images/{image_id}/json")
     if st != 200 or not isinstance(img, dict):
         return []
-    prefix = _IMAGE_REPO + "@"
-    return [d[len(prefix) :] for d in img.get("RepoDigests") or [] if d.startswith(prefix)]
+    return [d.split("@", 1)[1] for d in img.get("RepoDigests") or [] if d.split("@", 1)[0] in _IMAGE_REPOS]
 
 
 _IMAGE_REF_RE = re.compile(
-    r"^ghcr\.io/fr0styx/zettnas-toolkit(?::[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})?(?:@sha256:[0-9a-f]{64})?$"
+    r"^(?:"
+    + "|".join(re.escape(r) for r in _IMAGE_REPOS)
+    + r")(?::[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})?(?:@sha256:[0-9a-f]{64})?$"
 )
 
 
@@ -1257,8 +1289,7 @@ def _local_repo_digests(image_ref: str) -> list[str]:
     st, img = _docker_request("GET", f"/images/{image_ref}/json")
     if st != 200 or not isinstance(img, dict):
         return []
-    prefix = _IMAGE_REPO + "@"
-    return [d[len(prefix) :] for d in img.get("RepoDigests") or [] if d.startswith(prefix)]
+    return [d.split("@", 1)[1] for d in img.get("RepoDigests") or [] if d.split("@", 1)[0] in _IMAGE_REPOS]
 
 
 async def _check_update_signature(target_img: str, expected_digest: str | None, pulled: list[str]) -> dict:
@@ -1577,7 +1608,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     else:
         from backend.config import variant_tag
 
-        target_img = f"ghcr.io/fr0styx/zettnas-toolkit:{variant_tag(CHANNEL_IMAGE_TAG[channel])}"
+        target_img = await _image_with_tag(variant_tag(CHANNEL_IMAGE_TAG[channel]))
 
     # Invalidate cached update check so immediate post-update checks reflect the new state
     _last_update_check[channel]["data"] = None
@@ -1595,7 +1626,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     tag = target_img.rsplit(":", 1)[1] if ":" in target_img.split("/")[-1] else "latest"
     if "@" not in target_img:
         try:
-            expected_digest = await _registry_digest(tag)
+            expected_digest = await _registry_digest(tag, _repo_of(target_img))
         except Exception as exc:
             logger.warning(f"[System Update] Could not look up the digest for '{one_line(tag)}': {one_line(exc)}")
 
