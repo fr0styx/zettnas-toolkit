@@ -257,7 +257,7 @@ body.theme-yak select.fan-preset-select:focus {
   background: var(--lt-b-253c40ff, #253c40); color: var(--zn-text); border: 1px solid var(--zn-line-8); border-radius: 6px;
   font-size: var(--zn-fs-sm, 13px); font-weight: 600; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
-.btn-pill-toggle:hover { background: var(--lt-b-2f4c52ff, #2f4c52); }
+.btn-pill-toggle:hover { background: var(--lt-b-2a4449ff, #2a4449); } /* dark enough to get a light-theme value */
 .btn-pill-toggle.active {
   background: var(--pill-active-bg, rgba(51, 205, 184, 0.25)) !important;
   color: var(--pill-active-fg, #4fd8c4) !important;

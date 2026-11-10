@@ -2430,9 +2430,9 @@ export function updateTzModalPreview() {
   const btn24 = document.getElementById('btn-tz-fmt-24');
   if (btn12 && btn24) {
     btn12.style.background = fmt12 ? 'var(--brand, #33cdb8)' : 'transparent';
-    btn12.style.color = fmt12 ? '#000' : 'var(--zn-text-muted)';
+    btn12.style.color = fmt12 ? 'var(--accent-contrast-fg)' : 'var(--zn-text-muted)';
     btn24.style.background = !fmt12 ? 'var(--brand, #33cdb8)' : 'transparent';
-    btn24.style.color = !fmt12 ? '#000' : 'var(--zn-text-muted)';
+    btn24.style.color = !fmt12 ? 'var(--accent-contrast-fg)' : 'var(--zn-text-muted)';
     btn12.setAttribute('aria-checked', fmt12 ? 'true' : 'false');
     btn24.setAttribute('aria-checked', fmt12 ? 'false' : 'true');
   }
