@@ -54,6 +54,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   thumbnail and video-preview caches, which on a box with many photos made it larger than a restore
   accepts (256 MB). They rebuild by themselves and are now left out, as is restic's cache.
 
+#### Look
+
+- **The badge beside KIBOTO says Beta**: the top bar and the side drawer said "Toolkit"; 2.0 is a beta
+  until the weekly release train makes it stable.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

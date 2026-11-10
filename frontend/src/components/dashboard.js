@@ -545,8 +545,8 @@ export function applyDesktopTheme(themeName, customAccent = null) {
   const icon = $('suite-brand-icon');
 
   if (title) title.textContent = isYak ? 'YAK EXPRESS' : 'KIBOTO';
-  if (badge) badge.textContent = isYak ? 'RELIABILITY CULT' : t('nav.toolkit', 'Toolkit');
-  if (drawerSub) drawerSub.textContent = isYak ? 'LOGISTICS LAB' : t('settings.drawer_badge', 'Toolkit');
+  if (badge) badge.textContent = isYak ? 'RELIABILITY CULT' : t('nav.badge', 'Beta');
+  if (drawerSub) drawerSub.textContent = isYak ? 'LOGISTICS LAB' : t('settings.drawer_badge', 'Beta');
   if (icon) icon.innerHTML = isYak ? '<use href="#i-yak"/>' : '<use href="#i-chip"/>';
 
   updateChassisImageForTheme();

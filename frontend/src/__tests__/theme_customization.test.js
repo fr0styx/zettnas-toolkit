@@ -86,6 +86,7 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
       </div>
       <span id="suite-brand-title">KIBOTO</span>
       <span id="suite-brand-badge">NAS WORKBENCH</span>
+      <span id="drawer-sub-badge">Toolkit</span>
     `;
     const consoleWin = document.getElementById('console-window');
     const screenEl = document.getElementById('screen');
@@ -96,6 +97,9 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
 
     // 1. Apply Amber Desktop Theme
     applyDesktopTheme('amber', '#ffbe40');
+    // the badge beside KIBOTO and in the drawer says Beta while 2.0 is a beta
+    expect(document.getElementById('suite-brand-badge').textContent).toBe('Beta');
+    expect(document.getElementById('drawer-sub-badge').textContent).toBe('Beta');
 
     // Desktop body is themed
     expect(document.body.classList.contains('theme-amber')).toBe(true);
