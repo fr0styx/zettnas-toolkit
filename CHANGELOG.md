@@ -2,7 +2,14 @@
 
 Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep that name.
 
-## Unreleased
+## v2.0.0 (2026-11-10)
+### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
+
+ZettNAS is now **Kiboto** and its assistant is **Kib**, at [kiboto.net](https://kiboto.net). Installs made before
+keep working through the rename: the old setting names, the sign-in cookie, containers, networks, labels, metric
+names and the old image name are all still accepted until Kiboto 2.2. Nothing to do before upgrading, but update to
+this version before any later one: later versions are signed under the repository's new name, which 2.0.0 is the
+first to accept.
 
 #### Kiboto
 
@@ -16,8 +23,8 @@ installs made before keep working through it.
   The README and every doc say Kiboto too, with kiboto.net as the website. Zettlab and ZettOS, the
   hardware maker's names, stay.
 - **The container is called kiboto**: a new install uses `unraid/kiboto.xml` (appdata in
-  `/mnt/user/appdata/kiboto`) or the compose files, which now name the container `kiboto` and pull
-  `ghcr.io/fr0styx/kiboto`. An existing `zettnas-toolkit` container keeps its name and keeps updating: Kiboto finds
+  `/mnt/user/appdata/kiboto`) or the compose files, which now name the container `kiboto`. They pull
+  `:latest` under the old image name until this release reaches stable, then `ghcr.io/fr0styx/kiboto`. An existing `zettnas-toolkit` container keeps its name and keeps updating: Kiboto finds
   itself under either name, the old Unraid templates stay until 2.2, and apps set up before still reach
   Kiboto by its old name on their networks.
 - **Metrics, MIB and API names**: Prometheus metrics are `kiboto_*` and, until Kiboto 2.2, also under their
@@ -77,7 +84,7 @@ installs made before keep working through it.
 - **A ZFS share rolled back inside Docker no longer loses its files** (NREL-7): ZFS shows a
   snapshot at `.zfs/snapshot/<name>` by mounting it on first access, which the kernel doesn't do
   inside a container, so there the snapshot read as empty and a rollback removed the share's
-  files (the snapshot of the state before the rollback still held them). ZettNAS now mounts such
+  files (the snapshot of the state before the rollback still held them). Kiboto now mounts such
   a snapshot read-only to read it, for rollbacks, browsing and restores, and unmounts it before
   the snapshot is deleted. A rollback from a snapshot that reads as empty while the share has
   files is refused. Found by the new round trip on real pools (`scripts/hardware_snapshots.py`).
@@ -107,7 +114,7 @@ installs made before keep working through it.
   account's password and change the address in Settings.
 
 - **The shared folders follow share access over the network too** (SEC-28; warned in 1.11,
-  D11). Where ZettNAS runs Samba itself (generic Linux), smb.conf now lists who may open
+  D11). Where Kiboto runs Samba itself (generic Linux), smb.conf now lists who may open
   each share and who may only read, from the same settings the file manager follows; a
   share nobody may open is switched off. Lists set on a share by hand still win. Changing
   share access, a role or an account's status rewrites them.
@@ -130,9 +137,9 @@ installs made before keep working through it.
   instead of 0.02, since they score the same every night. The per-commit check on cross-language
   and paraphrase questions now guards each language and split, not only the question kinds.
 
-- **Zetty says "not in your files" instead of borrowing a related fact** (AI-28): with a
-  reranker set up, the documents a question found are scored against it once more before Zetty
-  answers. When none of them looks like an answer, Zetty says so in the question's language and
+- **Kib says "not in your files" instead of borrowing a related fact** (AI-28): with a
+  reranker set up, the documents a question found are scored against it once more before Kib
+  answers. When none of them looks like an answer, Kib says so in the question's language and
   the model isn't asked: it had given the washing machine's warranty date when asked about the
   TV's. A line in the prompt saying the documents looked unrelated didn't stop the model.
 
@@ -148,16 +155,16 @@ installs made before keep working through it.
 - **The nightly answer check guards the shipped model again, and scores it fairly** (NAI-10, NAI-18):
   the citation numbers in an answer ("… three bananas [1]") no longer count as a wrong second fact,
   and "… is not in the indexed files" counts as the right reply to a question the files can't
-  answer. The baseline now comes from the first nightly with the answer model ZettNAS ships
+  answer. The baseline now comes from the first nightly with the answer model Kiboto ships
   (Qwen3-4B, q4_K_M, thinking off): 95% of answers right and 70% of unanswerable questions
   declined, so a drop fails the nightly instead of being skipped as "another model".
 
 - **Sources from PDFs name the page** (AI-21): a search or chat source from a PDF shows "p. 4"
-  next to its section, and Zetty is told the page too. PDFs get their pages when they are next
+  next to its section, and Kib is told the page too. PDFs get their pages when they are next
   indexed (a changed file, or Re-index Knowledge Base in AI settings); empty pages now count, so the numbers
   match the reader's.
 
-- **Summaries of long files cover the whole file** (AI-22): asking Zetty to summarise, or what is
+- **Summaries of long files cover the whole file** (AI-22): asking Kib to summarise, or what is
   in, a file too long to read at once makes it read the file in parts (up to six, spread over
   very long files), take notes on each, and answer from the notes, with a source per part.
   Before, only the first part was read. "Summarise" and "what's in it" now also work in German,
@@ -197,14 +204,14 @@ installs made before keep working through it.
   the queue of opened folders is kept in the data folder, so what was still waiting at a restart is
   made once its disk is awake instead of being forgotten. Nothing wakes a sleeping disk.
 
-- **TrueNAS 27 and 28** (COMP-08): ZettNAS no longer sends the TrueNAS API key to an `http://`
+- **TrueNAS 27 and 28** (COMP-08): Kiboto no longer sends the TrueNAS API key to an `http://`
   address. Since 25.04 TrueNAS revokes a key that arrives without encryption, so it is refused
   before anything is sent, with a message to use `https://` (`TRUENAS_VERIFY_TLS=0` still accepts
-  the self-signed certificate). New `TRUENAS_USER`: with the key's user set, ZettNAS signs in with
+  the self-signed certificate). New `TRUENAS_USER`: with the key's user set, Kiboto signs in with
   `auth.login_ex`, which TrueNAS 28 requires; without it the older sign-in, which 27 still has,
-  stays. The calls ZettNAS makes were checked against the TrueNAS 27 API reference.
+  stays. The calls Kiboto makes were checked against the TrueNAS 27 API reference.
 
-- **Ask Zetty answers what was asked, or says it isn't there** (NAI-19): the rules for answers from
+- **Ask Kib answers what was asked, or says it isn't there** (NAI-19): the rules for answers from
   your files now say to give the value for that very case (a refill target, not the normal range;
   one person's entry, not another's), to check a fact is about the same person, thing and kind of
   event (an inspection date is not an insurance date), and not to offer a related fact when the
@@ -235,7 +242,7 @@ installs made before keep working through it.
   once, moved into the file and removed. The copy on the pool is no longer read, so a stale one
   can't come back.
 
-- **The fan watchdog rests where ZettNAS drives no fan** (NPERF-6): on a host without fan
+- **The fan watchdog rests where Kiboto drives no fan** (NPERF-6): on a host without fan
   control (no PWM in hwmon, no fan registers) it looked every 5 seconds; after its first minute
   it now looks once a minute and no longer reports a fan release there.
 
@@ -268,7 +275,7 @@ installs made before keep working through it.
   hundreds of thousands stays cheap. A large library can raise ZETTNAS_THUMB_CACHE_MB (about
   13 kB per thumbnail).
 
-- **The card reader is asked about its cards only when something changes** (PERF-18): ZettNAS
+- **The card reader is asked about its cards only when something changes** (PERF-18): Kiboto
   now listens for the kernel's own notice that a card went in or out, and reads the slots' size
   then (and every half minute, in case a notice was missed), instead of on every two-second
   pass. Where those notices can't be heard, the slots are read as before.
@@ -361,9 +368,9 @@ installs made before keep working through it.
   styles that widgets.js wrote into them moved into `77-mc-lists.css`, which loads with Mission
   Control; each class computes the same style as the one it replaced, checked in both themes.
 
-- **Time Machine finds ZettNAS's own Time Machine shares** (FEAT-09): with Find the NAS by name on,
+- **Time Machine finds Kiboto's own Time Machine shares** (FEAT-09): with Find the NAS by name on,
   a share with Time Machine turned on is announced to Macs as a backup disk, so it shows up in
-  Time Machine's disk list. Only while ZettNAS's own Samba serves it; a host's Samba (Unraid,
+  Time Machine's disk list. Only while Kiboto's own Samba serves it; a host's Samba (Unraid,
   TrueNAS) announces its shares itself. The name service no longer shows the app's health check.
 
 - **The name service listens only where it has to** (CodeQL alert 473): it listened on port 5353
@@ -383,7 +390,7 @@ installs made before keep working through it.
 
 - **Share links from anywhere** (NFEAT-2): a switch in Network → File Sharing Services publishes
   the share links, and only them, through Tailscale Funnel on port 8443, so a link works for
-  someone outside the home without router changes. The rest of ZettNAS stays private. New links
+  someone outside the home without router changes. The rest of Kiboto stays private. New links
   then carry the internet address, and the share dialog says where a link works. Turning it on is
   confirmed in the app; the first time, Tailscale may ask the tailnet's owner to allow Funnel (the
   card shows the link). The address carries the NAS's Tailscale name: give the device the family's
@@ -408,11 +415,11 @@ installs made before keep working through it.
 
 - **Bring photos home from Google Photos and iCloud** (NFEAT-3): right-click a Google Takeout or an
   iCloud Photos export in the File Explorer (its .zip parts, or the folder they were unpacked into)
-  and choose "Bring photos home…". ZettNAS says what the export holds, files every photo and video
+  and choose "Bring photos home…". Kiboto says what the export holds, files every photo and video
   under a folder per year and month by when it was taken (from Google's sidecar files, iCloud's
   "Photo Details" list, else the photo's EXIF) and sets each file's date to that moment. Album
   copies and photos already there are skipped, photos deleted in iCloud are left out, and the
-  export is only read. The import runs in the Jobs centre and can be cancelled. ZettNAS never signs
+  export is only read. The import runs in the Jobs centre and can be cancelled. Kiboto never signs
   in to Google or Apple: it reads the files you download from them.
 
 - **The file viewer's markup uses classes** (NUX-15): 16 inline styles in the viewer's loading,
@@ -442,7 +449,7 @@ installs made before keep working through it.
   snapshots) use 81 classes instead of 108 inline styles; pixel-for-pixel the same in both
   themes.
 
-- **Zetty's answers are built from stylesheet classes** (NUX-15): chat replies, their markdown
+- **Kib's answers are built from stylesheet classes** (NUX-15): chat replies, their markdown
   and the knowledge-search answer use 60 classes instead of 70 inline styles; pixel-for-pixel
   the same in both themes.
 

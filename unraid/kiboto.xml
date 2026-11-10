@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <Container version="2">
   <Name>kiboto</Name>
-  <Repository>ghcr.io/fr0styx/kiboto:latest</Repository>
+  <!-- ghcr.io/fr0styx/kiboto gets :latest when 2.0.0 reaches stable; until then the old name carries it -->
+  <Repository>ghcr.io/fr0styx/zettnas-toolkit:latest</Repository>
   <Registry>https://ghcr.io/v2/fr0styx/kiboto</Registry>
   <Network>bridge</Network>
   <MyIP/>

@@ -1,7 +1,7 @@
 services:
   zettnas-toolkit:
     build: .
-    image: ghcr.io/fr0styx/kiboto:latest
+    image: ghcr.io/fr0styx/zettnas-toolkit:latest  # ghcr.io/fr0styx/kiboto gets :latest when 2.0.0 reaches stable; until then this name carries it
     container_name: kiboto
     networks:
       default:
@@ -84,7 +84,7 @@ services:
 
   # Puts the fans in a safe state if the app is killed while it controls them (docs/FAN_WATCHDOG.md)
   fan-watchdog:
-    image: ghcr.io/fr0styx/kiboto:latest
+    image: ghcr.io/fr0styx/zettnas-toolkit:latest  # ghcr.io/fr0styx/kiboto gets :latest when 2.0.0 reaches stable; until then this name carries it
     container_name: kiboto-fan-watchdog
     restart: unless-stopped
     command: ["python3", "-m", "backend.fan_watchdog"]

@@ -8,7 +8,7 @@ version: "3.8"
 
 services:
   zettnas-toolkit:
-    image: ghcr.io/fr0styx/kiboto:latest
+    image: ghcr.io/fr0styx/zettnas-toolkit:latest  # ghcr.io/fr0styx/kiboto gets :latest when 2.0.0 reaches stable; until then this name carries it
     container_name: kiboto
     networks:
       default:
