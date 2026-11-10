@@ -884,7 +884,8 @@ def test_agentic_chat_local_autonomous_reasoning_and_coding_with_tools_disabled(
         assert res["status"] == "ok"
         reply = res["reply"]
         assert "Kib" in reply
-        assert "2.0" not in reply.replace(__version__, "")
+        # no made-up version numbers: only the real one, and the model's licence (Qwen3-4B is Apache 2.0, D4)
+        assert "2.0" not in reply.replace(__version__, "").replace("Apache 2.0", "").replace("Apache-2.0", "")
         assert "0 hard drive wakeups" not in reply.lower() and "sovereign" not in reply.lower()
 
     for question in (

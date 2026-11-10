@@ -11,6 +11,7 @@ from typing import (  # noqa: F401
     Any,
 )
 
+from backend.ai_defaults import DEFAULT_CHAT_MODEL
 from backend.config import (  # noqa: F401
     logger,
 )
@@ -737,9 +738,9 @@ def build_llm_execution_telemetry(
     if not active_model:
         try:
             cfg = _core().get_rag_engine().get_config()
-            active_model = str(cfg.get("active_model") or cfg.get("llm_model") or "qwen2.5:3b")
+            active_model = str(cfg.get("active_model") or cfg.get("llm_model") or DEFAULT_CHAT_MODEL)
         except Exception:
-            active_model = "qwen2.5:3b"
+            active_model = DEFAULT_CHAT_MODEL
 
     accel = resolve_model_runtime_accelerator(active_model, host_accel=accel)
     ram_gb = round(read_total_ram_bytes() / (1024**3), 1)

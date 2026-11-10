@@ -137,6 +137,15 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   and a request made before that is finished by itself once both are on. With your own Headscale server
   the cards say Funnel isn't available.
 
+#### AI
+
+- **Qwen3-4B is the default chat model**: new installs and the model suggestions use Qwen3-4B (Apache-2.0)
+  instead of Qwen2.5-3B, whose licence is for research only. On the five-language test it answered 94.9% of
+  questions right (Phi-4-mini 87.8%), backed 85.7% of its answers with your files and said "not in your
+  files" for 70% of the questions they can't answer (Phi-4-mini 30%). Kiboto pins the q4_K_M build with
+  thinking off; Ollama's plain qwen3:4b always thinks first and is much slower. An install that chose a
+  model keeps it.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

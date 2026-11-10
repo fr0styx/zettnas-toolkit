@@ -16,6 +16,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 
+from backend.ai_defaults import DEFAULT_CHAT_MODEL
 from backend.ignored_errors import ignored
 
 logger = logging.getLogger(__name__)
@@ -559,7 +560,7 @@ async def get_model_recommendations(
     recs = build_llm_recommendations(
         accel=accel,
         ram_gb=ram_gb,
-        active_model=rag_cfg.get("active_model") or "qwen2.5:3b",
+        active_model=rag_cfg.get("active_model") or DEFAULT_CHAT_MODEL,
         custom_models=rag_cfg.get("custom_hf_models", []),
         sort_by=sort_by,
         min_release_year=min_year,
@@ -613,7 +614,7 @@ def select_recommended_model(req: ModelSelectRequest) -> dict[str, Any]:
 
     if is_embedding_only_model(model_tag) or (selected_entry and is_embedding_only_model(selected_entry)):
         updated_cfg = rag.update_config({"embedding_model": model_tag})
-        current_active = updated_cfg.get("active_model") or "qwen2.5:3b"
+        current_active = updated_cfg.get("active_model") or DEFAULT_CHAT_MODEL
         return {
             "status": "ok",
             "active_model": current_active,
@@ -1046,7 +1047,7 @@ async def ask_knowledge_base(
     effective_top_k = min(12, max(1, int(req.limit if req.limit is not None else req.top_k)))
     rag = get_rag_engine()
     cfg = rag.get_config()
-    active_model = str(cfg.get("active_model") or cfg.get("llm_model") or "qwen2.5:3b")
+    active_model = str(cfg.get("active_model") or cfg.get("llm_model") or DEFAULT_CHAT_MODEL)
 
     status = get_media_engine().get_status()
     accel = status["acceleration"]
@@ -1186,7 +1187,7 @@ def get_ai_chat_tools() -> dict[str, Any]:
     rag_cfg = get_rag_engine().get_config()
     return {
         "status": "ok",
-        "active_model": rag_cfg.get("active_model") or "qwen2.5:3b",
+        "active_model": rag_cfg.get("active_model") or DEFAULT_CHAT_MODEL,
         "tools": AVAILABLE_NAS_TOOLS,
     }
 

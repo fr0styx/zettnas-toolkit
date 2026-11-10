@@ -30,6 +30,7 @@ from typing import Any, Optional, Union
 from PIL import Image, ImageFile
 
 from backend import db_crypto
+from backend.ai_defaults import DEFAULT_CHAT_MODEL
 from backend.config import ALLOWED_BROWSE_ROOTS, DATA_DIR, HOST_DEV, HOST_PROC, HOST_SYS, logger
 from backend.db_crypto import sqlite3  # SQLCipher module: the index can be encrypted at rest (AI-20)
 from backend.fsutil import atomic_write_json, read_json, resolve_within
@@ -971,12 +972,12 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             "schedule_enabled": False,
             "schedule_start": "01:00",
             "schedule_end": "06:00",
-            "active_model": "qwen2.5:3b",
+            "active_model": DEFAULT_CHAT_MODEL,
             "embedding_model": "embeddinggemma",
             "embedding_dim": 768,
             "embedding_provider": "ollama",
             "llm_endpoint": "",
-            "llm_model": "qwen2.5:3b",
+            "llm_model": DEFAULT_CHAT_MODEL,
             "idle_unload_minutes": 15,  # chat models unload after this many idle minutes (decision 4)
             "favorites": [],
             "search_history": [],
@@ -1019,7 +1020,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         default_cfg["excluded_paths"] = cleaned_excl
 
         if not default_cfg.get("active_model"):
-            default_cfg["active_model"] = default_cfg.get("llm_model") or "qwen2.5:3b"
+            default_cfg["active_model"] = default_cfg.get("llm_model") or DEFAULT_CHAT_MODEL
         if not default_cfg.get("embedding_model"):
             default_cfg["embedding_model"] = "embeddinggemma"
         return default_cfg

@@ -38,6 +38,7 @@ from typing import Any, Optional
 import httpx
 from pydantic import BaseModel, Field
 
+from backend.ai_defaults import DEFAULT_CHAT_MODEL
 from backend.config import FAN_STATE_FILE, logger
 from backend.fsutil import atomic_write_json, read_json
 from backend.ignored_errors import ignored
@@ -1984,7 +1985,7 @@ def _run_agentic_chat_turn(
 
     rag = get_rag_engine()
     cfg = rag.get_config()
-    active_model = str(model_override or cfg.get("active_model") or cfg.get("llm_model") or "qwen2.5:3b").strip()
+    active_model = str(model_override or cfg.get("active_model") or cfg.get("llm_model") or DEFAULT_CHAT_MODEL).strip()
     llm_endpoint = str(cfg.get("llm_endpoint") or "").strip()
     accel = detect_hardware_accelerator()
     msg_lower = clean_msg.lower()
@@ -2196,7 +2197,7 @@ async def stream_agentic_chat(
 
     rag = get_rag_engine()
     cfg = rag.get_config()
-    active_model = str(model_override or cfg.get("active_model") or cfg.get("llm_model") or "qwen2.5:3b").strip()
+    active_model = str(model_override or cfg.get("active_model") or cfg.get("llm_model") or DEFAULT_CHAT_MODEL).strip()
     target_accel = "gpu"
     act_lower = active_model.lower()
     if any(k in act_lower for k in ("npu", "openvino", "ovms", "1.5b", "deepseek-r1", "r1-distill")):

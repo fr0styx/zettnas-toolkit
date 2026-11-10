@@ -29,7 +29,8 @@
     "cpu",
     "igpu",
     "dgpu"
-   ]
+   ],
+   "default": false
   },
   {
    "id": "llama3.2-3b-npu",
@@ -121,7 +122,7 @@
   },
   {
    "id": "qwen3-4b",
-   "ollama_tag": "qwen3:4b",
+   "ollama_tag": "qwen3:4b-q4_K_M",
    "hf_repo": "Qwen/Qwen3-4B-GGUF",
    "name": "Qwen3 4B",
    "family": "Qwen3",
@@ -147,7 +148,8 @@
     "cpu",
     "igpu",
     "dgpu"
-   ]
+   ],
+   "default": true
   },
   {
    "id": "qwen2.5-7b-gpu",

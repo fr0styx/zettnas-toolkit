@@ -18,6 +18,7 @@ import urllib.parse
 import urllib.request
 from typing import Any, Optional
 
+from backend.ai_defaults import DEFAULT_CHAT_MODEL
 from backend.config import DATA_DIR, HOST_DEV, HOST_PROC, HOST_SYS, logger
 from backend.fsutil import atomic_write_json, read_json
 from backend.ignored_errors import ignored
@@ -403,7 +404,7 @@ def evaluate_model_hardware_fit(
     model: dict[str, Any],
     accel: dict[str, Any],
     eff_ram: float,
-    primary_rec: str = "qwen2.5:3b",
+    primary_rec: str = DEFAULT_CHAT_MODEL,
 ) -> dict[str, Any]:
     """
     Evaluates whether a model fits the user's detected NPU, GPU, and RAM headroom.
@@ -550,7 +551,7 @@ def catalog_entry(m: dict[str, Any], hw: dict[str, Any]) -> dict[str, Any]:
 def build_llm_recommendations(
     accel: dict[str, Any],
     ram_gb: float,
-    active_model: str = "qwen2.5:3b",
+    active_model: str = DEFAULT_CHAT_MODEL,
     custom_models: list[dict[str, Any]] | None = None,
     include_incompatible: bool = False,
     sort_by: str = "date",
@@ -573,7 +574,7 @@ def build_llm_recommendations(
     )
     eff_ram = max(4.0, float(ram_gb or 16.0))
     safe_ai_ram_gb = round(eff_ram * 0.55, 1)
-    active_norm = str(active_model or "qwen2.5:3b").strip().lower()
+    active_norm = str(active_model or DEFAULT_CHAT_MODEL).strip().lower()
 
     if removed_models is None:
         try:
@@ -589,7 +590,7 @@ def build_llm_recommendations(
             f"Chat models run in Ollama on the {gpu_label}; models served by OpenVINO Model Server "
             f"can use the {npu_label}."
         )
-        primary_rec = "qwen2.5:7b" if eff_ram >= 16.0 else "qwen2.5:3b"
+        primary_rec = "qwen2.5:7b" if eff_ram >= 16.0 else DEFAULT_CHAT_MODEL
     elif has_npu:
         tier_headline = f"{npu_label} ({eff_ram:.1f} GB RAM)"
         advisor_summary = (
@@ -599,13 +600,13 @@ def build_llm_recommendations(
     elif has_gpu:
         tier_headline = f"{gpu_label} ({eff_ram:.1f} GB RAM)"
         advisor_summary = f"Chat models run in Ollama on the {gpu_label}; 3B–8B models fit well."
-        primary_rec = "qwen2.5:7b" if eff_ram >= 16.0 else "qwen2.5:3b"
+        primary_rec = "qwen2.5:7b" if eff_ram >= 16.0 else DEFAULT_CHAT_MODEL
     else:
         tier_headline = f"CPU AVX2/NEON Execution ({eff_ram:.1f} GB RAM)"
         advisor_summary = (
             "No GPU or NPU found: chat runs on the CPU, so small (1.5B–4B) models keep the NAS responsive."
         )
-        primary_rec = "qwen2.5:3b" if eff_ram >= 8.0 else ""  # too little memory for a chat model
+        primary_rec = DEFAULT_CHAT_MODEL if eff_ram >= 8.0 else ""  # too little memory for a chat model
 
     hw = {"has_npu": has_npu, "has_gpu": has_gpu, "has_dgpu": has_dgpu, "npu_label": npu_label, "gpu_label": gpu_label}
     hw["class"] = hardware_class(accel)
@@ -729,7 +730,7 @@ def build_llm_recommendations(
         if (has_npu and has_gpu)
         else (f"NPU ({tier_headline})" if has_npu else (f"GPU ({tier_headline})" if has_gpu else tier_headline)),
         "hardware_summary": f"{tier_headline} — {advisor_summary}",
-        "active_model": active_model or "qwen2.5:3b",
+        "active_model": active_model or DEFAULT_CHAT_MODEL,
         "compatible_count": compatible_count,
         "warning_count": warning_count,
         "sort_by": sort_by,
@@ -746,7 +747,7 @@ def build_llm_recommendations(
             "advisor_summary": advisor_summary,
             "primary_recommendation": primary_rec,
             "hardware_class": hardware_class(accel),
-            "active_model": active_model or "qwen2.5:3b",
+            "active_model": active_model or DEFAULT_CHAT_MODEL,
         },
         "models": enriched_models,
     }
@@ -904,7 +905,7 @@ def search_huggingface_models(
     accel = detect_hardware_accelerator()
     rag = get_rag_engine()
     rag_cfg = rag.get_config()
-    active_model = str(rag_cfg.get("active_model") or rag_cfg.get("llm_model") or "qwen2.5:3b").strip()
+    active_model = str(rag_cfg.get("active_model") or rag_cfg.get("llm_model") or DEFAULT_CHAT_MODEL).strip()
     active_norm = active_model.lower()
 
     clean_q = _normalize_hf_repo_input(query)
@@ -1097,7 +1098,7 @@ def pull_huggingface_model(repo_id: str, activate: bool = True) -> dict[str, Any
     accel = detect_hardware_accelerator()
     rag = get_rag_engine()
     rag_cfg = rag.get_config()
-    active_norm = str(rag_cfg.get("active_model") or "qwen2.5:3b").lower()
+    active_norm = str(rag_cfg.get("active_model") or DEFAULT_CHAT_MODEL).lower()
 
     fetched_item: dict[str, Any] | None = None
     if not test_mode() and is_hf_repo_id(clean_repo):
@@ -1339,7 +1340,7 @@ class MediaEngine:
         llm_recs = build_llm_recommendations(
             accel=accel,
             ram_gb=ram_gb,
-            active_model=rag_cfg.get("active_model") or rag_cfg.get("llm_model") or "qwen2.5:3b",
+            active_model=rag_cfg.get("active_model") or rag_cfg.get("llm_model") or DEFAULT_CHAT_MODEL,
             custom_models=rag_cfg.get("custom_hf_models", []),
         )
 

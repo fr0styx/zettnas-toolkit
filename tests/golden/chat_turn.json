@@ -156,7 +156,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -248,16 +248,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -327,7 +327,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -419,16 +419,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -519,7 +519,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -611,16 +611,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -680,7 +680,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -772,16 +772,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -835,7 +835,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -927,16 +927,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -987,7 +987,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -1079,16 +1079,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -1148,7 +1148,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -1240,16 +1240,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -1309,7 +1309,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -1401,16 +1401,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -1472,7 +1472,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -1564,16 +1564,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -1627,7 +1627,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -1719,16 +1719,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -1793,7 +1793,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -1885,16 +1885,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -1985,7 +1985,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -2077,16 +2077,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -2148,7 +2148,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -2240,16 +2240,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -2309,7 +2309,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -2401,16 +2401,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -2461,7 +2461,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -2553,16 +2553,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -2618,7 +2618,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -2710,16 +2710,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -2779,7 +2779,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -2871,16 +2871,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -2929,7 +2929,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -3021,16 +3021,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -3111,7 +3111,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -3203,16 +3203,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -3272,7 +3272,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -3364,16 +3364,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -3435,7 +3435,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -3527,16 +3527,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -3606,7 +3606,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -3698,16 +3698,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -3798,7 +3798,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -3890,16 +3890,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -3959,7 +3959,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -4051,16 +4051,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -4114,7 +4114,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -4206,16 +4206,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -4266,7 +4266,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -4358,16 +4358,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -4427,7 +4427,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -4519,16 +4519,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -4588,7 +4588,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -4680,16 +4680,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -4751,7 +4751,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -4843,16 +4843,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -4906,7 +4906,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -4998,16 +4998,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -5072,7 +5072,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -5164,16 +5164,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -5264,7 +5264,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -5356,16 +5356,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -5427,7 +5427,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -5519,16 +5519,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -5588,7 +5588,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -5680,16 +5680,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -5740,7 +5740,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -5832,16 +5832,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -5897,7 +5897,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -5989,16 +5989,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -6058,7 +6058,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -6150,16 +6150,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -6208,7 +6208,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -6300,16 +6300,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -6390,7 +6390,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -6482,16 +6482,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -6551,7 +6551,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -6643,16 +6643,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": true,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "fake",
      "tier_code": "UNKNOWN",
      "tokens_generated": 12,
@@ -6714,7 +6714,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -6806,16 +6806,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -6875,7 +6875,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -6967,16 +6967,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -7038,7 +7038,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -7130,16 +7130,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -7199,7 +7199,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -7291,16 +7291,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -7354,7 +7354,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -7446,16 +7446,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -7506,7 +7506,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -7598,16 +7598,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -7667,7 +7667,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -7759,16 +7759,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -7828,7 +7828,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -7920,16 +7920,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -7991,7 +7991,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -8083,16 +8083,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -8146,7 +8146,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -8238,16 +8238,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -8312,7 +8312,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -8404,16 +8404,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -8504,7 +8504,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -8596,16 +8596,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -8667,7 +8667,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -8759,16 +8759,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -8828,7 +8828,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -8920,16 +8920,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -8980,7 +8980,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -9072,16 +9072,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -9137,7 +9137,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -9229,16 +9229,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -9298,7 +9298,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -9390,16 +9390,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -9448,7 +9448,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -9540,16 +9540,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -9630,7 +9630,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -9722,16 +9722,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -9791,7 +9791,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -9883,16 +9883,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -9904,8 +9904,8 @@
     },
     "message": "who are you",
     "photos": [],
-    "reply": "I'm **Kib**, the assistant built into **Kiboto** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen2.5 3B Instruct. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Qwen Research License (non-commercial)\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
-    "reply_markdown": "I'm **Kib**, the assistant built into **Kiboto** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen2.5 3B Instruct. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Qwen Research License (non-commercial)\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
+    "reply": "I'm **Kib**, the assistant built into **Kiboto** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen3 4B. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Apache 2.0\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
+    "reply_markdown": "I'm **Kib**, the assistant built into **Kiboto** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen3 4B. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Apache 2.0\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
     "status": "ok",
     "tool_names": [
      "get_system_telemetry"
@@ -9954,7 +9954,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -10046,16 +10046,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -10115,7 +10115,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -10207,16 +10207,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -10278,7 +10278,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -10370,16 +10370,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -10439,7 +10439,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -10531,16 +10531,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -10594,7 +10594,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -10686,16 +10686,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -10746,7 +10746,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -10838,16 +10838,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -10907,7 +10907,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -10999,16 +10999,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -11068,7 +11068,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -11160,16 +11160,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -11231,7 +11231,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -11323,16 +11323,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -11386,7 +11386,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -11478,16 +11478,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -11552,7 +11552,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -11644,16 +11644,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -11744,7 +11744,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -11836,16 +11836,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -11907,7 +11907,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -11999,16 +11999,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -12068,7 +12068,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -12160,16 +12160,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -12220,7 +12220,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -12312,16 +12312,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -12377,7 +12377,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -12469,16 +12469,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -12538,7 +12538,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -12630,16 +12630,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -12688,7 +12688,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -12780,16 +12780,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -12870,7 +12870,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -12962,16 +12962,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -13031,7 +13031,7 @@
     }
    ],
    "out": {
-    "active_model": "qwen2.5:3b",
+    "active_model": "qwen3:4b-q4_K_M",
     "available_tools": [
      {
       "description": "Reads live CPU load, CPU temperature, system RAM usage, uptime, and NPU/GPU hardware acceleration status.",
@@ -13123,16 +13123,16 @@
     "llm_telemetry": {
      "accelerator_label": "Not reported by Ollama",
      "accelerator_tier": 0,
-     "active_model": "qwen2.5:3b",
+     "active_model": "qwen3:4b-q4_K_M",
      "fits_hardware": true,
      "hardware_device": "Not reported by Ollama",
      "hardware_device_compact": "Not reported by Ollama",
      "hardware_tier": "Not reported",
      "hardware_warning": false,
-     "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+     "hf_repo": "Qwen/Qwen3-4B-GGUF",
      "llm_invoked": false,
-     "model_name": "Qwen2.5 3B Instruct",
-     "quantization": "INT4 / Q4_K_M",
+     "model_name": "Qwen3 4B",
+     "quantization": "Q4_K_M",
      "runtime_mode": "No AI model (built-in tools only)",
      "tier_code": "UNKNOWN",
      "tokens_generated": null,
@@ -13144,8 +13144,8 @@
     },
     "message": "who are you",
     "photos": [],
-    "reply": "I'm **Kib**, the assistant built into **Kiboto** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen2.5 3B Instruct. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Qwen Research License (non-commercial)\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
-    "reply_markdown": "I'm **Kib**, the assistant built into **Kiboto** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen2.5 3B Instruct. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Qwen Research License (non-commercial)\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
+    "reply": "I'm **Kib**, the assistant built into **Kiboto** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen3 4B. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Apache 2.0\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
+    "reply_markdown": "I'm **Kib**, the assistant built into **Kiboto** <version>. I run on this NAS, not in the cloud.\n\n- **Language model:** Qwen3 4B. **Qwen** was developed and trained by **Alibaba Cloud (Qwen Team)**.\n- **Model licence:** Apache 2.0\n- **Right now:** CPU 8.5%, 42\u00b0C, RAM 24.9 / 16.0 GB\n\n**What I can do:** show system, disk, fan, storage and network status; list and (after you confirm) control containers and fan profiles; search the folders you chose to index; do calculations; and help with scripts and Compose files.\n\n**Your data:** questions and indexed files stay on this NAS. Web search and weather only run when you turn on the Web toggle for a chat, and the answer then says which services were contacted.",
     "status": "ok",
     "tool_names": [
      "get_system_telemetry"

@@ -10,6 +10,7 @@ from typing import (  # noqa: F401
     Any,
 )
 
+from backend.ai_defaults import DEFAULT_CHAT_MODEL
 from backend.config import (  # noqa: F401
     FAN_STATE_FILE,
     logger,
@@ -86,7 +87,7 @@ def tool_get_system_telemetry() -> dict[str, Any]:
         "ram_available_gb": ram_avail_gb,
         "ram_used_pct": ram_pct,
         "uptime_seconds": uptime_s,
-        "active_ai_model": rag_cfg.get("active_model") or "qwen2.5:3b",
+        "active_ai_model": rag_cfg.get("active_model") or DEFAULT_CHAT_MODEL,
         "hardware_accelerator": {
             "active_tier": accel.get("active_tier", 1),
             "device_label": accel.get("device_label", "CPU"),
@@ -511,7 +512,7 @@ def _long_file_answer(
     except (OSError, ValueError, sqlite3.Error):
         logger.debug("chat_nas_tools: long file read failed", exc_info=True)
         return None
-    model = str(cfg.get("active_model") or cfg.get("llm_model") or "qwen2.5:3b").strip()
+    model = str(cfg.get("active_model") or cfg.get("llm_model") or DEFAULT_CHAT_MODEL).strip()
     endpoint = str(cfg.get("llm_endpoint") or "").strip()
     parts = file_map_reduce.map_notes(
         one_file.get("name") or path,
