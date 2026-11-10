@@ -221,6 +221,12 @@
   "styles": 0,
   "templates": 1
  },
+ "frontend/src/components/management/fleet.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 0,
+  "templates": 2
+ },
  "frontend/src/components/management/network.js": {
   "buttons": 0,
   "globals": 5,

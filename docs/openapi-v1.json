@@ -1996,6 +1996,24 @@
     "title": "BrowseResponseDirsItem",
     "type": "object"
    },
+   "BuddyIn": {
+    "properties": {
+     "paths": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 64,
+      "minItems": 1,
+      "title": "Paths",
+      "type": "array"
+     }
+    },
+    "required": [
+     "paths"
+    ],
+    "title": "BuddyIn",
+    "type": "object"
+   },
    "ButtonConfigRequest": {
     "properties": {
      "action": {
@@ -29153,6 +29171,19 @@
     "title": "ObjectCount",
     "type": "object"
    },
+   "OfferIn": {
+    "properties": {
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "enabled"
+    ],
+    "title": "OfferIn",
+    "type": "object"
+   },
    "OidcSettings": {
     "properties": {
      "admin_groups": {
@@ -30071,6 +30102,28 @@
     "title": "PackUseResponseReindex",
     "type": "object"
    },
+   "PairIn": {
+    "properties": {
+     "address": {
+      "maxLength": 255,
+      "minLength": 8,
+      "title": "Address",
+      "type": "string"
+     },
+     "code": {
+      "maxLength": 32,
+      "minLength": 16,
+      "title": "Code",
+      "type": "string"
+     }
+    },
+    "required": [
+     "address",
+     "code"
+    ],
+    "title": "PairIn",
+    "type": "object"
+   },
    "PasswordIn": {
     "properties": {
      "password": {
@@ -30103,6 +30156,48 @@
      }
     },
     "title": "PauseCopyResponse",
+    "type": "object"
+   },
+   "PeerPairIn": {
+    "properties": {
+     "address": {
+      "maxLength": 255,
+      "minLength": 8,
+      "title": "Address",
+      "type": "string"
+     },
+     "box_id": {
+      "maxLength": 16,
+      "minLength": 16,
+      "title": "Box Id",
+      "type": "string"
+     },
+     "code": {
+      "maxLength": 32,
+      "minLength": 16,
+      "title": "Code",
+      "type": "string"
+     },
+     "name": {
+      "default": "",
+      "maxLength": 64,
+      "title": "Name",
+      "type": "string"
+     },
+     "token": {
+      "maxLength": 64,
+      "minLength": 32,
+      "title": "Token",
+      "type": "string"
+     }
+    },
+    "required": [
+     "code",
+     "box_id",
+     "address",
+     "token"
+    ],
+    "title": "PeerPairIn",
     "type": "object"
    },
    "PeopleIn": {
@@ -52308,6 +52403,429 @@
     ],
     "x-required-scopes": [
      "hardware:fans"
+    ]
+   }
+  },
+  "/api/v1/fleet": {
+   "get": {
+    "description": "This box, a waiting pairing code, and each paired box with its summary (asked at most once a minute).",
+    "operationId": "get_fleet_api_v1_fleet_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Fleet Api V1 Fleet Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Fleet",
+    "tags": [
+     "Fleet"
+    ],
+    "x-required-scopes": [
+     "system:view"
+    ]
+   }
+  },
+  "/api/v1/fleet/pairing": {
+   "post": {
+    "description": "A pairing code (10 minutes, single use) for another box to type in, with this box's address.",
+    "operationId": "post_pairing_api_v1_fleet_pairing_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Pairing Api V1 Fleet Pairing Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Post Pairing",
+    "tags": [
+     "Fleet"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/fleet/peer/buddy": {
+   "post": {
+    "description": "A paired box asks for backup space; given only when this box's owner allowed it.",
+    "operationId": "peer_buddy_api_v1_fleet_peer_buddy_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Peer Buddy Api V1 Fleet Peer Buddy Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
+     }
+    },
+    "security": [],
+    "summary": "Peer Buddy",
+    "tags": [
+     "Fleet"
+    ],
+    "x-rate-limit": {
+     "requests": 120,
+     "seconds": 60
+    }
+   }
+  },
+  "/api/v1/fleet/peer/pair": {
+   "post": {
+    "description": "Another box pairs with this one, using the pairing code shown here.",
+    "operationId": "peer_pair_api_v1_fleet_peer_pair_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PeerPairIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Peer Pair Api V1 Fleet Peer Pair Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
+     }
+    },
+    "security": [],
+    "summary": "Peer Pair",
+    "tags": [
+     "Fleet"
+    ],
+    "x-rate-limit": {
+     "requests": 10,
+     "seconds": 600
+    }
+   }
+  },
+  "/api/v1/fleet/peer/summary": {
+   "get": {
+    "description": "This box's summary for a paired box: name, version, storage, backups.",
+    "operationId": "peer_summary_api_v1_fleet_peer_summary_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Peer Summary Api V1 Fleet Peer Summary Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
+     }
+    },
+    "security": [],
+    "summary": "Peer Summary",
+    "tags": [
+     "Fleet"
+    ],
+    "x-rate-limit": {
+     "requests": 120,
+     "seconds": 60
+    }
+   }
+  },
+  "/api/v1/fleet/peer/unpair": {
+   "post": {
+    "description": "A paired box unpaired: this one forgets it too.",
+    "operationId": "peer_unpair_api_v1_fleet_peer_unpair_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Peer Unpair Api V1 Fleet Peer Unpair Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
+     }
+    },
+    "security": [],
+    "summary": "Peer Unpair",
+    "tags": [
+     "Fleet"
+    ],
+    "x-rate-limit": {
+     "requests": 120,
+     "seconds": 60
+    }
+   }
+  },
+  "/api/v1/fleet/peers": {
+   "post": {
+    "description": "Pairs with the box at that address using its code (confirmed first: 428 until then).",
+    "operationId": "post_peer_api_v1_fleet_peers_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PairIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Peer Api V1 Fleet Peers Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Peer",
+    "tags": [
+     "Fleet"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/fleet/peers/{box_id}": {
+   "delete": {
+    "description": "Unpairs; the other box is told and forgets this one too. Backups already there stay.",
+    "operationId": "delete_peer_api_v1_fleet_peers__box_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "box_id",
+      "required": true,
+      "schema": {
+       "title": "Box Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Delete Peer Api V1 Fleet Peers  Box Id  Delete",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Delete Peer",
+    "tags": [
+     "Fleet"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/fleet/peers/{box_id}/backup": {
+   "post": {
+    "description": "Asks that box for backup space and sets up an off-site backup of these folders there.",
+    "operationId": "post_buddy_backup_api_v1_fleet_peers__box_id__backup_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "box_id",
+      "required": true,
+      "schema": {
+       "title": "Box Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/BuddyIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Buddy Backup Api V1 Fleet Peers  Box Id  Backup Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Buddy Backup",
+    "tags": [
+     "Fleet"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/fleet/peers/{box_id}/offer": {
+   "put": {
+    "description": "Lets that box back up here (confirmed first when turned on) or stops new space being given.",
+    "operationId": "put_offer_api_v1_fleet_peers__box_id__offer_put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "box_id",
+      "required": true,
+      "schema": {
+       "title": "Box Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OfferIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Offer Api V1 Fleet Peers  Box Id  Offer Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Offer",
+    "tags": [
+     "Fleet"
+    ],
+    "x-required-scopes": [
+     "system:config"
     ]
    }
   },

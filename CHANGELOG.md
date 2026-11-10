@@ -165,6 +165,15 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   invite. Needs a Tailscale API access key once (Kiboto keeps it sealed and warns before it runs out) and,
   for the page to open from anywhere, Share links from anywhere. How it works: docs/REMOTE_ACCESS.md.
 
+#### Added
+
+- **Your Kiboto boxes: pairing and buddy backups**: Network → File Sharing Services → Your Kiboto boxes pairs
+  two Kiboto boxes on your tailnet with a one-time code. Each then shows the other at a glance: version,
+  free space, how long it has been up and how its off-site backups went (nothing else is shared). Tick
+  "Let it back up here" on the box with space (it needs the Backup target app) and choose "Back up to
+  this box" on the other: it gets an off-site backup there, encrypted with its own key and append-only,
+  so ransomware on it can't wipe the copies. How it works: docs/BACKUP_GUIDE.md.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

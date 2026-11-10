@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-699 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+709 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -321,6 +321,21 @@ request and response schemas.
 | `GET` | `/api/v1/fs/versions` | any of `shares:read`, `shares:user_write`, `storage:read`, `storage:write`, `storage:admin` | Get Versions |
 | `GET` | `/api/v1/fs/versions/download` | any of `shares:read`, `shares:user_write`, `storage:read`, `storage:write`, `storage:admin` | Download Version |
 | `POST` | `/api/v1/fs/versions/restore` | any of `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Restore Version |
+
+### Fleet
+
+| Method | Path | Access | What it does |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/fleet` | `system:view` | This box, a waiting pairing code, and each paired box with its summary (asked at most once a minute) |
+| `POST` | `/api/v1/fleet/pairing` | `system:config` | A pairing code (10 minutes, single use) for another box to type in, with this box's address |
+| `POST` | `/api/v1/fleet/peer/buddy` | public ⏱ | A paired box asks for backup space; given only when this box's owner allowed it |
+| `POST` | `/api/v1/fleet/peer/pair` | public ⏱ | Another box pairs with this one, using the pairing code shown here |
+| `GET` | `/api/v1/fleet/peer/summary` | public ⏱ | This box's summary for a paired box: name, version, storage, backups |
+| `POST` | `/api/v1/fleet/peer/unpair` | public ⏱ | A paired box unpaired: this one forgets it too |
+| `POST` | `/api/v1/fleet/peers` | `system:config` | Pairs with the box at that address using its code (confirmed first: 428 until then) |
+| `DELETE` | `/api/v1/fleet/peers/{box_id}` | `system:config` | Unpairs; the other box is told and forgets this one too |
+| `POST` | `/api/v1/fleet/peers/{box_id}/backup` | `system:config` | Asks that box for backup space and sets up an off-site backup of these folders there |
+| `PUT` | `/api/v1/fleet/peers/{box_id}/offer` | `system:config` | Lets that box back up here (confirmed first when turned on) or stops new space being given |
 
 ### Hardware
 

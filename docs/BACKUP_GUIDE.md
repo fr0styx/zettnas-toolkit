@@ -221,3 +221,24 @@ and run `export RCLONE_CONFIG=./rclone.conf` first.
 
 The Overview shows "Recovery kit not saved" until each off-site backup's kit has been downloaded
 or copied, so nobody finds out on the bad day that the key was only on the NAS.
+
+## Back up to another Kiboto box (buddy backups)
+
+Two Kiboto boxes on the same tailnet, at two homes or in two rooms, can keep each other's off-site copy.
+Network → File Sharing Services → **Your Kiboto boxes**:
+
+1. On box A, click **Pair this box**. It shows a code (10 minutes, single use) and A's Tailscale address.
+2. On box B, type that address and code and click **Pair with that box** (confirmed). Each box now sees
+   the other's name, version, free space, how long it has been running and how its backups went,
+   nothing else: no files, users or settings. Five wrong codes end the code.
+3. On the box that gives space (say A): install **Backup target (restic REST server)** from the App
+   Catalog, then tick **Let it back up here** next to B (confirmed).
+4. On B: **Back up to this box**, choose the shares, **Set up the backup**. A makes B an account of its
+   own on the REST server, and B gets an off-site backup called "Buddy: A" in Backup → Off-site,
+   which runs with the others and has its own recovery kit.
+
+B's backups are encrypted with B's key, which A never sees, and A's REST server is append-only: B can
+add versions but never delete them, so ransomware on B can't wipe the copies on A. Versions stay on A
+until A's owner removes them. **Unpair** on either box tells the other; backups
+already made stay where they are. The boxes talk over the tailnet only, so a box on the open internet
+can't be paired with.

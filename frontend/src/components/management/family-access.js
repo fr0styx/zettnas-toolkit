@@ -4,6 +4,7 @@
  * guided page to send them.
  */
 import { api } from '../../api.js';
+import '../../styles/80-public-apps.css'; // the list and warning styles it shares with Apps from anywhere
 import { t } from '../../i18n.js';
 import { showToast } from '../../toast.js';
 import { escapeHtml } from '../../utils.js';

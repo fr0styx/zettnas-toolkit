@@ -11,9 +11,17 @@ export const withoutComments = (html) => {
   } while (html !== prev);
   return html;
 };
+// Leading indentation is for us too (about 0.7 kB after Brotli); <pre>, <textarea> and <script>
+// keep theirs, since whitespace means something there. A line break stays, so inline spacing does too.
+const KEEP_WHITESPACE = /(<(pre|textarea|script)\b[\s\S]*?<\/\2>)/gi;
+export const withoutIndent = (html) =>
+  html
+    .split(KEEP_WHITESPACE)
+    .map((part, i) => (i % 3 === 1 ? part : i % 3 === 2 ? '' : part.replace(/\n[ \t]+/g, '\n')))
+    .join('');
 export const stripHtmlComments = () => ({
   name: 'zn-strip-html-comments',
-  transformIndexHtml: { order: 'post', handler: (html) => withoutComments(html) },
+  transformIndexHtml: { order: 'post', handler: (html) => withoutIndent(withoutComments(html)) },
 });
 
 export default defineConfig({

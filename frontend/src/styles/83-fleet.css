@@ -1,0 +1,7 @@
+/* Your Kiboto boxes (fleet.js, RES-9): each paired box, the pairing code and the form */
+#fleet-card .fleet-peer { display: grid; gap: 4px; padding: var(--zn-space-2) 0; }
+#fleet-card .fleet-actions { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); }
+#fleet-card .fleet-backups { margin: 2px 0 0; padding-left: 18px; font-size: var(--zn-fs-xs); }
+#fleet-card .fleet-pair, #fleet-card .fleet-form { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: center; margin-top: var(--zn-space-2); }
+#fleet-card .fleet-form input { flex: 1 1 160px; min-width: 0; }
+#fleet-card .fleet-code strong { font-family: var(--font-mono); font-size: 18px; letter-spacing: 0.08em; }

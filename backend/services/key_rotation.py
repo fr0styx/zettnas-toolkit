@@ -87,6 +87,9 @@ def rotate_secret_key() -> dict[str, Any]:
     from backend.services.family_access import reseal as reseal_family
 
     resealed_backups += reseal_family()  # the Tailscale API key for family invites (NFEAT-1)
+    from backend.services.fleet import reseal as reseal_fleet
+
+    resealed_backups += reseal_fleet()  # the tokens this box sends to paired boxes (RES-9)
 
     os.remove(previous_key_file())
     result = {"rotated_at": time.time(), "mfa_secrets": resealed_mfa, "backup_passphrases": resealed_backups}
