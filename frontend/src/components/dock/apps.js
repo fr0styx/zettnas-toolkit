@@ -163,7 +163,7 @@ export const KNOWN_APPS = {
   },
   zettai: {
     id: 'zettai',
-    icon: '#i-search',
+    icon: '#i-kib',
     getTitle: () => t('dock.kib', 'Ask Kib'),
     launch: () => {
       if (typeof window.openManagementWindow === 'function') {

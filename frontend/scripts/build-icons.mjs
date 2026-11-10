@@ -1,5 +1,6 @@
 // Builds frontend/public/zi-sprite.svg, the icons that replace emoji (UX-14), from
 // lucide-static (a pinned dev dependency) and frontend/src/icons/emoji-icons.json.
+// An icon drawn for Kiboto itself (frontend/src/icons/own/<name>.svg, e.g. Kib) wins over Lucide's.
 //   node frontend/scripts/build-icons.mjs          write the sprite
 //   node frontend/scripts/build-icons.mjs --check  exit 1 when it is out of date
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -8,6 +9,7 @@ import { dirname, join } from 'node:path';
 
 const MAP = 'frontend/src/icons/emoji-icons.json';
 const OUT = 'frontend/public/zi-sprite.svg';
+const OWN = 'frontend/src/icons/own';
 const require = createRequire(import.meta.url);
 const pkgDir = dirname(require.resolve('lucide-static/package.json'));
 const { version } = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'));
@@ -18,7 +20,8 @@ const names = [...new Set(Object.values(JSON.parse(readFileSync(MAP, 'utf8'))))]
   .sort();
 
 const symbols = names.map((name) => {
-  const file = join(pkgDir, 'icons', `${name}.svg`);
+  const own = join(OWN, `${name}.svg`);
+  const file = existsSync(own) ? own : join(pkgDir, 'icons', `${name}.svg`);
   if (!existsSync(file)) throw new Error(`lucide-static ${version} has no icon "${name}"`);
   const body = readFileSync(file, 'utf8')
     .replace(/<!--[\s\S]*?-->/g, '')
@@ -31,7 +34,7 @@ const symbols = names.map((name) => {
 
 const sprite = [
   '<svg xmlns="http://www.w3.org/2000/svg">',
-  `<!-- Icons from Lucide (lucide-static ${version}), built by frontend/scripts/build-icons.mjs; do not edit.`,
+  `<!-- Icons from Lucide (lucide-static ${version}) and Kiboto's own (${OWN}), built by frontend/scripts/build-icons.mjs; do not edit.`,
   // a comment may not contain "--": space out every run of dashes
   license.replace(/-{2,}/g, (run) => run.split('').join(' ')),
   '-->',

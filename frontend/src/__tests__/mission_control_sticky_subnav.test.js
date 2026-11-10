@@ -154,7 +154,7 @@ describe('Mission Control Fixated Sticky Sub-Navigation Bar', () => {
     const aiSecSlice = htmlContent.slice(aiSecIdx, aiSecIdx + 1500);
 
     // Verify SVG icons are used instead of emojis
-    expect(aiSecSlice).toContain('<use href="#i-chat"/>');
+    expect(aiSecSlice).toContain('<use href="#i-kib"/>'); // Ask Kib carries Kib's face
     expect(aiSecSlice).toContain('<use href="#i-search"/>');
     expect(aiSecSlice).toContain('<use href="#i-sliders"/>');
   });
