@@ -1353,6 +1353,9 @@ function buildShareCardInner(s, canManageShares) {
         ${ico('📂')} ${t('ui.open_in_file_explorer', 'Open in File Explorer')}
       </button>
       ${canManageShares ? `
+        <button class="btn-share-space btn-pill-toggle is-small" data-share-name="${escapeHtml(s.name)}" data-path="${escapeHtml(s.mountpoint || '')}" title="${t('space.button_title', "Where this share's space goes")}">
+          ${t('space.button', 'Space')}
+        </button>
         <button class="btn-share-compress btn-pill-toggle is-small" data-share-name="${escapeHtml(s.name)}" title="${t('compress.button_title', 'Compression for this share')}">
           ${t('compress.button', 'Compression')}
         </button>
@@ -1393,6 +1396,12 @@ function bindSharesGridEvents(grid, container) {
       playChirp(720, 0.08, 'triangle');
       ZettEventBus.emit('window:open', { id: 'file-manager-window', path });
       showToast(t('mgmt.opened_share', `Opened share in File Explorer: ${path}`), 'info');
+      return;
+    }
+
+    const spaceBtn = e.target.closest('.btn-share-space');
+    if (spaceBtn) {
+      import('./storage-analyzer.js').then((m) => m.openStorageAnalyzer(spaceBtn.dataset.shareName, spaceBtn.dataset.path || ''));
       return;
     }
 

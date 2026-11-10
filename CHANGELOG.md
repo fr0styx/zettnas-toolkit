@@ -13,6 +13,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   so nobody locks themselves out, and accounts that sign in through OpenID Connect are left to their
   identity provider's own second step.
 
+#### Storage
+
+- **Where a share's space goes**: a share's card in Storage has a Space button. Analysing adds up the
+  share's folders, its biggest files and the kinds of files (videos, photos, backups…), drawn as a
+  map you can click into folder by folder, with a link to the Duplicates window. It reads the folder
+  listing, never the files, and only when you start it (its disks wake up if they sleep); it runs as a
+  job you can cancel, and the last result is kept, so opening it again reads nothing.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

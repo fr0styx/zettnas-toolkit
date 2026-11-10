@@ -430,6 +430,21 @@
     "title": "Allocation",
     "type": "object"
    },
+   "AnalyzeIn": {
+    "properties": {
+     "share": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Share",
+      "type": "string"
+     }
+    },
+    "required": [
+     "share"
+    ],
+    "title": "AnalyzeIn",
+    "type": "object"
+   },
    "AppBackupRequest": {
     "properties": {
      "custom_name": {
@@ -63808,6 +63823,104 @@
     "x-rate-limit": {
      "description": "At most 32 live telemetry streams at once."
     }
+   }
+  },
+  "/api/v1/storage/analysis": {
+   "post": {
+    "description": "Starts adding up where a share's space goes (a job; it reads the share's folder listing).",
+    "operationId": "start_storage_analysis_api_v1_storage_analysis_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AnalyzeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Start Storage Analysis Api V1 Storage Analysis Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Start Storage Analysis",
+    "tags": [
+     "Storage Subsystem & PAL"
+    ],
+    "x-required-scopes": [
+     "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/storage/analysis/{share}": {
+   "get": {
+    "description": "The last analysis of a share (none yet: result is null), and whether one is running.",
+    "operationId": "get_storage_analysis_api_v1_storage_analysis__share__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "share",
+      "required": true,
+      "schema": {
+       "maxLength": 128,
+       "minLength": 1,
+       "title": "Share",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Storage Analysis Api V1 Storage Analysis  Share  Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Get Storage Analysis",
+    "tags": [
+     "Storage Subsystem & PAL"
+    ],
+    "x-required-scopes": [
+     "storage:admin"
+    ]
    }
   },
   "/api/v1/storage/disks": {

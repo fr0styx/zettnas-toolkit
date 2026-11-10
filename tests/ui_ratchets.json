@@ -329,6 +329,12 @@
   "styles": 28,
   "templates": 2
  },
+ "frontend/src/components/storage-analyzer.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 0,
+  "templates": 2
+ },
  "frontend/src/components/time-picker.js": {
   "buttons": 0,
   "globals": 7,

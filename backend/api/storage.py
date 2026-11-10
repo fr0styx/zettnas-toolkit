@@ -821,3 +821,42 @@ async def unraid_api_status() -> dict[str, Any]:
         return await asyncio.to_thread(unraid_api.status)
     except unraid_api.UnraidApiError as e:
         raise HTTPException(status_code=502, detail=str(e)) from e
+
+
+# --- where a share's space goes (storage analyzer) --------------------------------------------
+
+
+class AnalyzeIn(BaseModel):
+    share: str = Field(..., min_length=1, max_length=128)
+
+
+def _share_root(name: str) -> str | None:
+    for share in get_storage_platform().list_shares():
+        if share.name == name and share.mountpoint and os.path.isdir(share.mountpoint):
+            return share.mountpoint
+    return None
+
+
+@router.post("/analysis", dependencies=[Depends(require_scope("storage:admin"))])
+def start_storage_analysis(
+    req: AnalyzeIn, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+) -> dict[str, Any]:
+    """Starts adding up where a share's space goes (a job; it reads the share's folder listing)."""
+    from backend.services import storage_analyzer
+
+    root = _share_root(req.share)
+    if not root:
+        raise HTTPException(status_code=404, detail="No such share")
+    try:
+        job_id = storage_analyzer.start(req.share, root, owner=principal.username or None)
+    except RuntimeError:
+        raise HTTPException(status_code=409, detail="That share is being analysed already") from None
+    return {"share": req.share, "job_id": job_id}
+
+
+@router.get("/analysis/{share}", dependencies=[Depends(require_scope("storage:admin"))])
+def get_storage_analysis(share: Annotated[str, Path(min_length=1, max_length=128)]) -> dict[str, Any]:
+    """The last analysis of a share (none yet: result is null), and whether one is running."""
+    from backend.services import storage_analyzer
+
+    return {"share": share, "running": storage_analyzer.running(share), "result": storage_analyzer.last_result(share)}

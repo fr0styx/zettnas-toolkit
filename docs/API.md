@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-670 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+672 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -733,6 +733,8 @@ request and response schemas.
 
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/storage/analysis` | `storage:admin` | Starts adding up where a share's space goes (a job; it reads the share's folder listing) |
+| `GET` | `/api/v1/storage/analysis/{share}` | `storage:admin` | The last analysis of a share (none yet: result is null), and whether one is running |
 | `GET` | `/api/v1/storage/disks` | any of `storage:read`, `system:view` | Returns detected physical disks discovered via DiskDiscoveryHAL |
 | `GET` | `/api/v1/storage/overview` | any of `storage:read`, `system:view` | Returns unified storage overview: pools, shares, platform info, and physical disk inventories |
 | `GET` | `/api/v1/storage/platform` | any of `storage:read`, `shares:read`, `system:view` | Returns platform classification (Unraid, TrueNAS, Generic Linux), capabilities (observer mode vs active provisioner), and storage busy state |
