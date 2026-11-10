@@ -17,6 +17,10 @@ installs made before keep working through it.
   before anything reads it, and a preferences backup made before restores under the new names. The
   session cookie is now `kiboto_session`; a browser signed in before keeps its `zettnas_session`
   and stays signed in, and signing out clears both.
+- **kiboto.local**: with "Find this NAS by name" on, the NAS answers to `kiboto.local` and shows as
+  Kiboto in Finder and Windows; `zettnas.local` keeps answering, so bookmarks and saved shares still
+  work. A NAS that kept the default name moves to the new one; a name the family chose stays. The
+  name service's container is now `kiboto-name` and replaces the old `zettnas-name`.
 
 #### Security
 

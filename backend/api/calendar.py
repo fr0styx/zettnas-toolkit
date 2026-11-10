@@ -555,7 +555,7 @@ async def export_calendar_ics(principal: AuthenticatedPrincipal = Depends(get_cu
         lines.extend(
             [
                 "BEGIN:VEVENT",
-                f"UID:{uid}@zettnas.local",
+                f"UID:{uid}@kiboto.local",
                 f"DTSTART:{dtstart}",
                 f"SUMMARY:{summary}",
                 f"DESCRIPTION:{desc}",

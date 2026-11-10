@@ -36431,7 +36431,7 @@
         "type": "null"
        }
       ],
-      "default": "admin@zettnas.local",
+      "default": "admin@kiboto.local",
       "title": "Contact"
      },
      "enabled": {

@@ -113,12 +113,19 @@ class FakeDocker:
             "HostConfig": {"NetworkMode": "bridge", "PortBindings": {"8082/tcp": [{"HostPort": "8090"}]}},
         }
         self.box = None
+        self.old = None  # the zettnas-name container from before the rebrand
         self.calls = []
 
     def __call__(self, method, path, body=None, headers=None):
         self.calls.append((method, path.split("?")[0]))
         if path.startswith(f"/containers/{nas_name.CONTAINER}/json"):
             return (200, self.box) if self.box else (404, {})
+        if path.startswith("/containers/zettnas-name"):
+            if path.endswith("/json"):
+                return (200, self.old) if self.old else (404, {})
+            if method == "DELETE":
+                self.old = None
+            return 204, None
         if path.startswith("/containers/") and path.endswith("/json"):
             return 200, self.me
         if path.startswith("/containers/create"):
@@ -150,15 +157,15 @@ def test_off_until_turned_on_then_with_the_products_name(docker):
     assert docker.created_with == {"X-ZettNAS-Elevated": "1"}  # the Docker guard's yes
     assert st == {
         "enabled": True,
-        "name": "zettnas",
-        "also_answers": [],
+        "name": "kiboto",
+        "also_answers": ["zettnas"],
         "running": True,
-        "address": "zettnas.local",
-        "url": "http://zettnas.local:8090",
+        "address": "kiboto.local",
+        "url": "http://kiboto.local:8090",
         "error": "",
     }
     cmd = docker.box["Config"]["Cmd"]
-    assert cmd == [nas_name.RESPONDER, "--names", "zettnas", "--label", "ZettNAS", "--http-port", "8090"]
+    assert cmd == [nas_name.RESPONDER, "--names", "kiboto,zettnas", "--label", "Kiboto", "--http-port", "8090"]
     assert docker.box["Config"]["Image"] == "ghcr.io/x/zettnas-toolkit:sha-abc"
     assert docker.box["Config"]["HostConfig"]["NetworkMode"] == "host"
     calls = len(docker.calls)
@@ -169,9 +176,9 @@ def test_a_rename_keeps_the_old_name_answering_and_an_update_recreates(docker):
     nas_name.save(enabled=True)
     nas_name.ensure()
     st = nas_name.save(name="Smith-NAS.local")
-    assert st["name"] == "smith-nas" and st["also_answers"] == ["zettnas"]
+    assert st["name"] == "smith-nas" and st["also_answers"] == ["kiboto", "zettnas"]
     cmd = docker.box["Config"]["Cmd"]
-    assert cmd[cmd.index("--names") + 1] == "smith-nas,zettnas" and cmd[cmd.index("--label") + 1] == "smith-nas"
+    assert cmd[cmd.index("--names") + 1] == "smith-nas,kiboto,zettnas" and cmd[cmd.index("--label") + 1] == "smith-nas"
     docker.me["Config"]["Image"] = "ghcr.io/x/zettnas-toolkit:sha-new"
     nas_name.ensure()
     assert (
@@ -182,11 +189,21 @@ def test_a_rename_keeps_the_old_name_answering_and_an_update_recreates(docker):
         nas_name.save(name="-bad name-")
 
 
-def test_after_the_rebrand_the_old_product_name_still_answers(docker, monkeypatch):
-    monkeypatch.setattr(nas_name, "DEFAULT_NAME", "newbrand")
-    monkeypatch.setattr(nas_name, "PREVIOUS_NAMES", ("zettnas",))
-    st = nas_name.save(enabled=True)
-    assert st["name"] == "newbrand" and st["also_answers"] == ["zettnas"]
+def test_after_the_rebrand_the_old_product_name_still_answers(docker):
+    # turned on before the rebrand: the default "zettnas" was saved, and its container still runs
+    import json
+
+    with open(nas_name.STATE_FILE, "w") as f:
+        json.dump({"enabled": True, "name": "zettnas", "previous": []}, f)
+    docker.old = {"State": {"Running": True}}
+    st = nas_name.ensure()
+    assert st["name"] == "kiboto" and st["also_answers"] == ["zettnas"] and st["address"] == "kiboto.local"
+    assert docker.old is None and ("DELETE", "/containers/zettnas-name") in docker.calls  # one responder
+    cmd = docker.box["Config"]["Cmd"]
+    assert cmd[cmd.index("--names") + 1] == "kiboto,zettnas" and cmd[cmd.index("--label") + 1] == "Kiboto"
+    # a name the family chose stays theirs
+    nas_name.save(name="smith-nas")
+    assert nas_name.config()["name"] == "smith-nas"
 
 
 def test_turning_it_off_removes_the_container(docker):
@@ -200,7 +217,7 @@ def test_turning_it_off_removes_the_container(docker):
 def test_on_the_hosts_network_the_apps_own_port_is_used(docker):
     nas_name.save(enabled=True)
     docker.me["HostConfig"] = {"NetworkMode": "host"}
-    assert nas_name.ensure()["url"] == "http://zettnas.local:8082"
+    assert nas_name.ensure()["url"] == "http://kiboto.local:8082"
 
 
 def test_without_docker_it_says_why(docker, monkeypatch):
@@ -226,7 +243,7 @@ def test_without_a_docker_socket_it_says_so_instead_of_failing(monkeypatch, tmp_
 
 def test_the_api(client, auth_headers, docker):
     r = client.get("/api/network/nas-name", headers=auth_headers)
-    assert r.status_code == 200 and r.json()["name"] == "zettnas" and r.json()["enabled"] is False
+    assert r.status_code == 200 and r.json()["name"] == "kiboto" and r.json()["enabled"] is False
     assert client.put("/api/network/nas-name", json={"enabled": True}, headers=auth_headers).json()["running"]
     r = client.put("/api/network/nas-name", json={"name": "family-nas"}, headers=auth_headers)
     assert r.status_code == 200 and r.json()["address"] == "family-nas.local"
@@ -337,7 +354,7 @@ def test_turning_it_on_asks_first(client, auth_headers, docker):
     r = client.put("/api/network/nas-name", json={"enabled": True}, headers=auth_headers)
     assert r.status_code == 428 and r.json()["action"] == "network.nas_name" and docker.box is None
     tok = client.post(
-        "/api/confirmations", headers=auth_headers, json={"action": "network.nas_name", "target": "zettnas.local"}
+        "/api/confirmations", headers=auth_headers, json={"action": "network.nas_name", "target": "kiboto.local"}
     )
     ok = client.put(
         "/api/network/nas-name",
@@ -434,7 +451,7 @@ def test_only_zettnas_own_samba_counts_for_time_machine(monkeypatch):
 
 def test_the_shares_reach_the_container_whose_health_check_is_off(docker, monkeypatch):
     nas_name.save(enabled=True)
-    first = docker.box["Config"]["Labels"]["zettnas.config"]
+    first = docker.box["Config"]["Labels"]["kiboto.config"]
     assert docker.box["Config"]["Healthcheck"] == {"Test": ["NONE"]}
     monkeypatch.setattr(nas_name, "timemachine_shares", lambda: ["Mac"])
     started = []
@@ -443,7 +460,7 @@ def test_the_shares_reach_the_container_whose_health_check_is_off(docker, monkey
     assert started == [nas_name.ensure]
     nas_name.ensure()
     assert docker.box["Config"]["Cmd"][-2:] == ["--timemachine", "Mac"]
-    assert docker.box["Config"]["Labels"]["zettnas.config"] != first  # a new share remakes it
+    assert docker.box["Config"]["Labels"]["kiboto.config"] != first  # a new share remakes it
     nas_name.save(enabled=False)
     started.clear()
     nas_name.refresh()

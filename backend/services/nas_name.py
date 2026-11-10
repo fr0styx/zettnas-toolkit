@@ -7,9 +7,9 @@ the setting: off until the person turns it on and confirms (the Docker guard let
 the host's network through only then; the yes is remembered, so an update or a rename can make it
 again), the name, and the names the NAS had before.
 
-The rebrand: DEFAULT_NAME is the one place the product's name is used. After the rebrand, the old
-name goes into PREVIOUS_NAMES so bookmarks, saved shares and Finder favourites keep working; a name
-the family changes in the settings is kept the same way.
+The rebrand: DEFAULT_NAME is the one place the product's name is used. The name from before the
+Kiboto rebrand is in PREVIOUS_NAMES, so bookmarks, saved shares and Finder favourites keep working;
+a name the family changes in the settings is kept the same way.
 """
 
 import hashlib
@@ -20,14 +20,15 @@ import socket
 import threading
 from typing import Any
 
+from backend import legacy_names
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
 
-DEFAULT_NAME = "zettnas"  # the rebrand changes this, and adds "zettnas" to PREVIOUS_NAMES
-DEFAULT_LABEL = "ZettNAS"  # how Finder lists the NAS when it has the default name
-PREVIOUS_NAMES: tuple[str, ...] = ()  # names that still answer after a rename of the product
+DEFAULT_NAME = "kiboto"
+DEFAULT_LABEL = "Kiboto"  # how Finder lists the NAS when it has the default name
+PREVIOUS_NAMES: tuple[str, ...] = (legacy_names.OLD_NAS_NAME,)  # still answer after the rebrand
 KEEP_OLD = 3  # names the family used before that still answer
-CONTAINER = "zettnas-name"
+CONTAINER = "kiboto-name"
 RESPONDER = "/app/backend/services/mdns_responder.py"
 STATE_FILE = os.path.join(DATA_DIR, "nas_name.json")
 ELEVATED = {"X-ZettNAS-Elevated": "1"}
@@ -47,6 +48,8 @@ def config() -> dict[str, Any]:
     data = read_json(STATE_FILE, {})
     data = data if isinstance(data, dict) else {}
     name = str(data.get("name") or settings.current("nas_name") or DEFAULT_NAME).lower()
+    if name == legacy_names.OLD_NAS_NAME:
+        name = DEFAULT_NAME  # the default saved before the rebrand: the new one, the old still answers
     previous = [p for p in data.get("previous", []) if isinstance(p, str) and valid(p)]
     return {
         "enabled": bool(data.get("enabled", False)),
@@ -147,7 +150,7 @@ def desired(me: dict[str, Any], cfg: dict[str, Any]) -> dict[str, Any]:
         "HostConfig": {"NetworkMode": "host", "RestartPolicy": {"Name": "unless-stopped"}, "ReadonlyRootfs": True},
     }
     fingerprint = hashlib.sha256(json.dumps(want, sort_keys=True).encode()).hexdigest()[:16]
-    want["Labels"] = {"app": CONTAINER, "managed-by": "zettnas-toolkit", "zettnas.config": fingerprint}
+    want["Labels"] = {"app": CONTAINER, "managed-by": "zettnas-toolkit", "kiboto.config": fingerprint}
     return want
 
 
@@ -162,11 +165,22 @@ def _remove() -> None:
     _docker("DELETE", f"/containers/{CONTAINER}?force=true")
 
 
+def _remove_old_container() -> None:
+    """The responder made before the rebrand (zettnas-name) goes, so only one container answers."""
+    old = legacy_names.OLD_NAME_CONTAINER
+    code, _ = _docker("GET", f"/containers/{old}/json")
+    if code == 200:
+        _docker("POST", f"/containers/{old}/stop?t=3")
+        _docker("DELETE", f"/containers/{old}?force=true")
+        logger.info("[NasName] Removed %s, the name service from before the rebrand", old)
+
+
 def ensure() -> dict[str, Any]:
     """Makes the container match the setting (started, recreated after an update or a rename, or
     removed) and says how it stands."""
     cfg = config()
     with _lock:
+        _remove_old_container()
         code, info = _docker("GET", f"/containers/{CONTAINER}/json")
         exists = code == 200 and isinstance(info, dict)
         if not cfg["enabled"]:
@@ -179,9 +193,7 @@ def ensure() -> dict[str, Any]:
             return status(cfg, running=False, error=NO_DOCKER)
         want = desired(me, cfg)
         if exists:
-            same = (info.get("Config") or {}).get("Labels", {}).get("zettnas.config") == want["Labels"][
-                "zettnas.config"
-            ]
+            same = (info.get("Config") or {}).get("Labels", {}).get("kiboto.config") == want["Labels"]["kiboto.config"]
             running = bool((info.get("State") or {}).get("Running"))
             if same and running:
                 return status(cfg, running=True, port=web_port(me))

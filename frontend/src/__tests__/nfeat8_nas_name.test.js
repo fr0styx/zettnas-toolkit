@@ -6,7 +6,7 @@ const { api } = await import('../api.js');
 const { showToast } = await import('../toast.js');
 const { loadNasNameCard, nasNameStatus } = await import('../components/management/nas-name.js');
 
-const ON = { enabled: true, running: true, name: 'zettnas', address: 'zettnas.local', url: 'http://zettnas.local:8082', also_answers: [], error: '' };
+const ON = { enabled: true, running: true, name: 'kiboto', address: 'kiboto.local', url: 'http://kiboto.local:8082', also_answers: [], error: '' };
 const q = (s) => document.querySelector(s);
 
 describe('find this NAS by name (NFEAT-8)', () => {
@@ -19,7 +19,7 @@ describe('find this NAS by name (NFEAT-8)', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('says how it stands', () => {
-    expect(nasNameStatus(ON)).toBe('On: zettnas.local on this network.');
+    expect(nasNameStatus(ON)).toBe('On: kiboto.local on this network.');
     expect(nasNameStatus({ ...ON, enabled: false })).toBe('Off: computers find the NAS only by its address.');
     expect(nasNameStatus({ ...ON, running: false })).toBe('Starting…');
     expect(nasNameStatus({ ...ON, error: 'Docker is not reachable' })).toBe('Docker is not reachable');
@@ -30,9 +30,9 @@ describe('find this NAS by name (NFEAT-8)', () => {
     const put = vi.spyOn(api, 'put').mockResolvedValue({ ...ON, name: 'smith-nas', address: 'smith-nas.local', url: 'http://smith-nas.local:8082', also_answers: ['zettnas'] });
     await loadNasNameCard();
     expect(q('#nas-name-toggle').getAttribute('aria-pressed')).toBe('true');
-    expect(q('#nas-name-input').value).toBe('zettnas');
+    expect(q('#nas-name-input').value).toBe('kiboto');
     expect(q('#nas-name-link').hidden).toBe(false);
-    expect(q('#nas-name-link').getAttribute('href')).toBe('http://zettnas.local:8082');
+    expect(q('#nas-name-link').getAttribute('href')).toBe('http://kiboto.local:8082');
     q('#nas-name-input').value = ' smith-nas ';
     q('#nas-name-input').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
     await vi.waitFor(() => expect(q('#nas-name-old').hidden).toBe(false));

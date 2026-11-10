@@ -16,6 +16,8 @@ REMOVE_IN = "2.2.0"
 ENV_PREFIX = "KIBOTO_"
 OLD_ENV_PREFIX = "ZETTNAS_"
 OLD_SESSION_COOKIE = "zettnas_session"  # browsers signed in before the rebrand still send it
+OLD_NAS_NAME = "zettnas"  # zettnas.local keeps answering beside kiboto.local (D17)
+OLD_NAME_CONTAINER = "zettnas-name"  # the name responder's container before the rebrand: replaced
 
 
 def old_env_name(name: str) -> str | None:

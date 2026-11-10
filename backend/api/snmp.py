@@ -34,7 +34,7 @@ def _load_snmp_config() -> dict[str, Any]:
             "v3_security_level": "authPriv",
             "v3_auth_protocol": "SHA-256",
             "v3_priv_protocol": "AES-128",
-            "contact": "admin@zettnas.local",
+            "contact": "admin@kiboto.local",
             "location": "Server Room / Homelab Rack",
         }
         atomic_write_json(SNMP_CONFIG_FILE, default_cfg)
@@ -57,7 +57,7 @@ class SnmpConfigRequest(BaseModel):
     v3_security_level: str | None = Field("authPriv", pattern="^(noAuthNoPriv|authNoPriv|authPriv)$")
     v3_auth_protocol: str | None = Field("SHA-256", pattern="^(MD5|SHA|SHA-256)$")
     v3_priv_protocol: str | None = Field("AES-128", pattern="^(DES|AES|AES-128)$")
-    contact: str | None = "admin@zettnas.local"
+    contact: str | None = "admin@kiboto.local"
     location: str | None = "Homelab Rack"
 
 
