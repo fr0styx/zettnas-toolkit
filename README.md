@@ -3,7 +3,7 @@
     <source media="(prefers-color-scheme: dark)" srcset="docs/img/kiboto-lockup-on-dark.svg">
     <img src="docs/img/kiboto-lockup.svg" width="280" alt="Kiboto">
   </picture>
-  <p><strong>The home NAS that knows what is in your files. Search and ask about them privately, and run your files, apps, storage, backups and hardware from one web desktop.</strong></p>
+  <p><strong>The operating system for your home NAS.</strong> Storage, apps, virtual machines, backups, remote access and hardware, run from one web desktop, with Kib, a private assistant that knows what's in your files.</p>
   <p>
     <a href="https://github.com/fr0styx/kiboto/releases"><img src="https://img.shields.io/github/v/release/fr0styx/kiboto?include_prereleases&color=0a7a70&style=flat-square" alt="Latest release"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-0a7a70.svg?style=flat-square" alt="MIT license"></a>
@@ -21,8 +21,8 @@ fans and the light bar on Zettlab and Aoostar boxes.
 
 <img src="docs/img/kib-found.svg" width="64" align="right" alt="Kib">
 
-**Meet Kib.** Ask Kib finds your documents, photos and scans by what is in them, in five languages,
-and answers with the files it used. Kib runs on the NAS: your files and their index stay there, and
+**Meet Kib.** Ask Kib finds your documents, photos and scans by what is in them, privately and in
+five languages, and answers with the files it used. Kib runs on the NAS: your files and their index stay there, and
 web search is off until you turn it on. No account, no subscription. How well it finds things is
 measured on a public test set ([search quality](docs/SEARCH_QUALITY.md)); what it may and may not do
 is written down and tested ([safe AI](docs/SAFE_AI.md)).
