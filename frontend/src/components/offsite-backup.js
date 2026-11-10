@@ -4,7 +4,7 @@
 import { api } from '../api.js';
 import { escapeHtml, copyTextToClipboard } from '../utils.js';
 import { t } from '../i18n.js';
-import { showToast, showConfirmToast } from '../toast.js';
+import { showToast, showConfirmToast, showDangerConfirm } from '../toast.js';
 import { formatBytes, formatDateTime } from '../format.js';
 import { openRestoreBox } from './restore-box.js';
 
@@ -274,7 +274,7 @@ export async function renderOffsite(mount) {
         await offerRecoveryKit({ id: b.dataset.id }, () => renderOffsite(mount));
         return;
       } else if (act === 'forget') {
-        showConfirmToast(t('offsite.forget_confirm', 'Forget this backup in Kiboto? The backup itself stays where it is.'), async () => {
+        showDangerConfirm(t('offsite.forget_confirm', 'Forget this backup in Kiboto? The backup itself stays where it is.'), async () => {
           await api.delete(`/api/offsite/repos/${id}`);
           renderOffsite(mount);
         });

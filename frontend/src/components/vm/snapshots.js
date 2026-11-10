@@ -3,7 +3,7 @@
 
 import { api } from '../../api.js';
 import { escapeHtml, trapFocus } from '../../utils.js';
-import { showToast, showConfirmToast } from '../../toast.js';
+import { showToast, showConfirmToast, showDangerConfirm } from '../../toast.js';
 import { t } from '../../i18n.js';
 import { makeDraggable } from '../dock.js';
 import { vmState } from './state.js';
@@ -248,7 +248,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       container.querySelectorAll('.btn-snap-revert').forEach((b) => {
         b.onclick = () => {
           const snapName = b.dataset.name;
-          showConfirmToast(
+          showDangerConfirm(
             t('vsn.revert_q', 'Go back to the snapshot “{snap}” of {name}? Changes made since then are lost.', { snap: snapName, name: targetVm.name }),
             async () => {
               try {
@@ -343,7 +343,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       container.querySelectorAll('.btn-bk-restore').forEach((b) => {
         b.onclick = () => {
           const bId = b.dataset.id;
-          showConfirmToast(
+          showDangerConfirm(
             t('vsn.restore_q', 'Restore {name} from the backup “{id}”? Its disks and settings are replaced by the backup’s.', { name: targetVm.name, id: bId }),
             async () => {
               try {

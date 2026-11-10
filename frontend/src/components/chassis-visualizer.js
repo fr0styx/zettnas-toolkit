@@ -3,7 +3,7 @@ import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
 import { announceA11y } from '../a11y.js';
-import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
+import { showToast, showConfirmToast, showDangerConfirm, showPromptToast } from '../toast.js';
 import { state } from '../state.js';
 import { makeDraggable, bringToFront, DockManager } from './dock.js';
 
@@ -838,7 +838,7 @@ function bindTopologyTreeEvents(tree, container) {
     if (destroyBtn) {
       e.stopPropagation();
       const pid = destroyBtn.dataset.poolId;
-      showConfirmToast(
+      showDangerConfirm(
         t('chassis.destroy_pool', 'Destroy Pool'),
         t('chassis.destroy_pool_msg', 'Destroy pool "{pool}"? Its data is unmounted.', { pool: pid }),
         async () => {
@@ -872,7 +872,7 @@ function bindTopologyTreeEvents(tree, container) {
             fetchAndRenderStorageTopology(container);
           } catch (err) {
             if (err.message && err.message.includes('force=true')) {
-              showConfirmToast(
+              showDangerConfirm(
                 t('chassis.force_eject_title', 'Force eject pool'),
                 `${err.message}\n\n${t('chassis.force_eject_q', 'Eject and unmount it anyway?')}`,
                 async () => {
@@ -3023,7 +3023,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
         } catch (err) {
           if (err && err.error === 'disks_not_safe' && err.body && err.body.erasable) {
             const erase = await new Promise((resolve) => {
-              showConfirmToast(
+              showDangerConfirm(
                 t('chassis.disks_have_data', 'Disks contain data'),
                 `${escapeHtml(err.message)}<br><br>${escapeHtml(t('chassis.erase_continue', 'Erase everything on them and continue?'))}`,
                 () => resolve(true),
@@ -3348,7 +3348,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
       const restoreBtn = e.target.closest('.btn-snap-restore');
       if (restoreBtn) {
         const sName = restoreBtn.dataset.snap;
-        showConfirmToast(
+        showDangerConfirm(
           t('chassis.snap_revert_title', 'Go back to snapshot'),
           t('chassis.snap_revert_msg', 'Roll back to snapshot "{name}"? The current state is saved first.', { name: sName }),
           async () => {

@@ -3,7 +3,7 @@
  * Split out of management.js (ARCH-1); management.js re-exports everything here.
  */
 import { api } from '../../api.js';
-import { showToast, showConfirmToast } from '../../toast.js';
+import { showToast, showConfirmToast, showDangerConfirm } from '../../toast.js';
 import { escapeHtml } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { formatBytes, formatDateTime } from '../../format.js';
@@ -253,7 +253,7 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
       btn.addEventListener('click', () => {
         const snapName = btn.dataset.snapName;
         const poolId = btn.dataset.poolId || 'default';
-        showConfirmToast(t('backup.snap_restore_q', 'Go back to snapshot "{name}"? The folder as it is now is kept as a snapshot first.', { name: snapName }), async () => {
+        showDangerConfirm(t('backup.snap_restore_q', 'Go back to snapshot "{name}"? The folder as it is now is kept as a snapshot first.', { name: snapName }), async () => {
           try {
             showToast(t('toast.restoring_snapshot', 'Restoring snapshot {snapName}...', { snapName: snapName }), 'info');
             await api.post('/api/backup/restore-snapshot', {
@@ -415,7 +415,7 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
       btn.addEventListener('click', () => {
         const backupId = btn.dataset.backupId;
         const appName = btn.dataset.appName;
-        showConfirmToast(
+        showDangerConfirm(
           t('backup.app_restore_title', 'Restore the data of "{app}"?', { app: appName }),
           t('backup.app_restore_msg', 'Its settings and data go back to the folders they came from. What is there now is kept in a .pre_restore copy first.'),
           async () => {

@@ -208,6 +208,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   storage, "Pause" and "Stop" while nothing runs, "Disconnect" while Tailscale is not installed. What a
   page hides now stays hidden at every width.
 
+#### Fixes
+
+- **Dangerous questions are red in every language**: "Destroy pool", "Forget this backup", going back
+  to a snapshot and restoring an app or a virtual machine were asked with a red button and the focus
+  on Cancel only when the words matched an English, German, French or Spanish list. In Chinese, and
+  for "destroy" and "forget" in every language but English, Enter confirmed at once. These questions
+  are now marked as dangerous where they are asked.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

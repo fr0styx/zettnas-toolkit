@@ -75,7 +75,7 @@ export function showActionToast(msg, actionText, onAction, durationMs = 10000) {
 }
 
 // Words that mark an action as destructive (the button turns red), in the five UI languages
-const DESTRUCTIVE_RE = /\b(delete|remove|destroy|wipe|format|erase|revoke|reset|clear|uninstall|purge|discard|kill|löschen|entfernen|zurücksetzen|supprimer|effacer|retirer|eliminar|borrar|quitar)\b|删除|移除|清除|清空/i;
+const DESTRUCTIVE_RE = /\b(delete|remove|destroy|wipe|format|erase|revoke|reset|clear|uninstall|purge|discard|kill|forget|löschen|entfernen|zurücksetzen|zerstören|vergessen|supprimer|effacer|retirer|détruire|oublier|eliminar|borrar|quitar|destruir|olvidar)\b|删除|移除|清除|清空|销毁|忘记/i;
 const GENERIC_TITLES = new Set(['confirm action', 'confirm', 'are you sure?']);
 const isGenericTitle = (title) => GENERIC_TITLES.has(String(title || '').trim().toLowerCase()) || String(title || '').trim() === t('confirm.title', 'Confirm action');
 
@@ -114,6 +114,13 @@ export function showConfirmToast(title, msg, onConfirm, onCancel, options = {}) 
   triggerHaptic('warning');
   _showTopConfirm(title, msg, onConfirm, onCancel, options);
   ZettEventBus.emit('toast:confirm', { title, msg, onConfirm, onCancel, options });
+}
+
+/** A confirmation for an action that loses or overwrites something: red, with focus on Cancel,
+ *  whatever the language of its words (SET-00). Takes what showConfirmToast takes. */
+export function showDangerConfirm(title, msg, onConfirm, onCancel, options = {}) {
+  if (typeof msg === 'function') return showConfirmToast(title, msg, onConfirm, { ...(onCancel || {}), destructive: true });
+  return showConfirmToast(title, msg, onConfirm, onCancel, { ...options, destructive: true });
 }
 
 export function hideConfirmToast() {

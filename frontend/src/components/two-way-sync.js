@@ -5,7 +5,7 @@
 import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { showLoadError } from './load-error.js';
-import { showConfirmToast, showToast } from '../toast.js';
+import { showDangerConfirm, showToast } from '../toast.js';
 import { formatDateTime } from '../format.js';
 
 function el(tag, props = {}, ...children) {
@@ -145,7 +145,7 @@ export async function renderTwoWaySync(mount) {
     try {
       if (b.dataset.sync === 'delete') {
         // asked first, as Offsite's Forget is (NUX-23)
-        showConfirmToast(t('sync2.forget_confirm', 'Forget this two-way sync? Files on both sides stay as they are.'), async () => {
+        showDangerConfirm(t('sync2.forget_confirm', 'Forget this two-way sync? Files on both sides stay as they are.'), async () => {
           try {
             await api.delete(`/api/sync/pairs/${id}`);
             renderTwoWaySync(mount);
