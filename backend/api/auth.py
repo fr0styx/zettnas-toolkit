@@ -46,6 +46,7 @@ from backend.models.schemas import (
 from backend.paging import PageParams
 from backend.password_policy import password_problem
 from backend.passwords import hash_password, is_legacy_hash, needs_rehash, verify_password
+from backend.services import mfa_policy
 from backend.totp import (
     generate_qr_svg,
     generate_recovery_codes,
@@ -437,6 +438,7 @@ def _build_session_response(
         },
         "must_change_password": must_change,
         "is_default_password": is_def_pwd,
+        "mfa_setup_required": mfa_policy.account_needs_setup(user),
     }
     response = JSONResponse(content=response_data)
 
@@ -726,6 +728,7 @@ async def enable_mfa(data: MfaEnableRequest, request: Request):
     hashed_codes = [hash_recovery_code(c) for c in rec_codes]
 
     ok = enable_user_mfa(user["id"], data.secret, hashed_codes)
+    mfa_policy.forget(user["id"])
     if not ok:
         return error_response(500, "Failed to enable two-factor authentication.")
     from backend.users_db import seal_smb_for_two_factor
@@ -827,6 +830,7 @@ def disable_mfa(data: MfaDisableRequest, request: Request):
     _clear_failures(lock_key)
 
     ok = disable_user_mfa(user["id"])
+    mfa_policy.forget(user["id"])
     if not ok:
         return error_response(500, "Failed to disable two-factor authentication.")
 
@@ -1022,6 +1026,7 @@ def get_current_user_profile(request: Request):
         "preferences": user.get("preferences", {}),
         "advanced": advanced_for(user),
         "is_default_password": is_def_pwd,
+        "mfa_setup_required": mfa_policy.account_needs_setup(user),
     }
 
 

@@ -27812,6 +27812,20 @@
     "title": "MfaEnableRequest",
     "type": "object"
    },
+   "MfaPolicyIn": {
+    "properties": {
+     "required_roles": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 64,
+      "title": "Required Roles",
+      "type": "array"
+     }
+    },
+    "title": "MfaPolicyIn",
+    "type": "object"
+   },
    "MigrateBackupJobResponse": {
     "additionalProperties": true,
     "description": "POST /backup/schedule/{job_id}/migrate",
@@ -62358,6 +62372,83 @@
      }
     },
     "summary": "Remove Ip Block",
+    "tags": [
+     "Security"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/security/mfa-policy": {
+   "get": {
+    "description": "Which roles must use two-step sign-in; per role, how many people still have to set it up.",
+    "operationId": "get_mfa_policy_api_v1_security_mfa_policy_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Mfa Policy Api V1 Security Mfa Policy Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Mfa Policy",
+    "tags": [
+     "Security"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "audit:read"
+    ]
+   },
+   "put": {
+    "operationId": "put_mfa_policy_api_v1_security_mfa_policy_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MfaPolicyIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Mfa Policy Api V1 Security Mfa Policy Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Mfa Policy",
     "tags": [
      "Security"
     ],

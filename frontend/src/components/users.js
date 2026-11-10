@@ -669,7 +669,7 @@ export async function load2FAStatus() {
   }
 }
 
-async function start2FASetup() {
+export async function start2FASetup() {
   const modal = document.getElementById('modal-setup-2fa');
   if (!modal) return;
   openModal(modal);

@@ -24,6 +24,17 @@ export function setCurrentUser(user) {
 
 setSessionUserProvider(() => _currentUser?.username || null);
 
+let _mfaPrompted = false;
+
+/** When the person's role requires two-step sign-in and it isn't on yet: say so and open its setup (once per page load). */
+export function promptRequiredMfa(data) {
+  if (!data?.mfa_setup_required || _mfaPrompted) return false;
+  _mfaPrompted = true;
+  import('../toast.js').then((m) => m.showToast(t('mfa.required_now', 'Your role requires two-step sign-in. Set it up to continue.'), 'info')).catch(() => {});
+  import('./users.js').then((m) => m.start2FASetup()).catch(() => {});
+  return true;
+}
+
 export function getCurrentUser() {
   return _currentUser;
 }
@@ -34,6 +45,7 @@ export async function fetchCurrentProfile() {
     if (res.ok) {
       const data = await res.json();
       setCurrentUser(data);
+      promptRequiredMfa(data);
       return data;
     }
   } catch (err) {

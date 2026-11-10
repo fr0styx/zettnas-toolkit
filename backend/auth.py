@@ -19,6 +19,7 @@ from backend.fsutil import atomic_write_json
 from backend.ignored_errors import ignored
 from backend.users_db import (
     create_user_session,
+    get_user_by_id,
     get_user_by_username,
     init_users_db,
     revoke_all_sessions_for_user,
@@ -462,6 +463,19 @@ _PASSWORD_CHANGE_ALLOWED = {
 }
 
 
+# What a session whose role requires two-step sign-in, not yet set up, may still reach.
+_MFA_SETUP_ALLOWED = _PASSWORD_CHANGE_ALLOWED | {
+    ("GET", "/api/auth/mfa/status"),
+    ("POST", "/api/auth/mfa/setup"),
+    ("POST", "/api/auth/mfa/enable"),
+}
+
+
+def _allowed_while_mfa_setup_pending(method: str, path: str) -> bool:
+    norm = path.replace("/api/v1/", "/api/").rstrip("/") or "/"
+    return method == "OPTIONS" or (method, norm) in _MFA_SETUP_ALLOWED
+
+
 def password_change_pending(sess: dict[str, Any]) -> bool:
     if not sess or sess.get("is_system") or sess.get("is_proxy_sso"):
         return False
@@ -636,6 +650,18 @@ async def auth_middleware(request: Request, call_next):
             and not _allowed_while_password_change_pending(request.method, path, sess)
         ):
             return error_response(403, "Change your password before continuing.", error="password_change_required")
+
+        from backend.services import mfa_policy
+
+        if (
+            is_api
+            and sess.get("role_id") in mfa_policy.required_roles()
+            and not _allowed_while_mfa_setup_pending(request.method, path)
+            and await asyncio.to_thread(mfa_policy.setup_pending, sess, get_user_by_id)
+        ):
+            return error_response(
+                403, "Turn on two-step sign-in before continuing: your role requires it.", error="mfa_setup_required"
+            )
 
         # CSRF (SEC-17): a write that authenticates only with the browser's cookie must
         # come from this server's own pages. Bearer-token clients are not affected.

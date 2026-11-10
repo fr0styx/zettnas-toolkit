@@ -2,6 +2,17 @@
 
 Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep that name.
 
+## Unreleased
+
+#### Security
+
+- **Require two-step sign-in by role**: Mission Control → Security has a "Require two-step sign-in" list
+  of roles. Someone in a ticked role who hasn't turned it on can still sign in, but Kiboto opens the setup
+  straight away and answers nothing else until it is on. The list shows how many people in each role are
+  still without it. An administrator can't require it of their own role before turning it on themselves,
+  so nobody locks themselves out, and accounts that sign in through OpenID Connect are left to their
+  identity provider's own second step.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

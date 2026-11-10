@@ -56,6 +56,7 @@ const MESSAGES = {
   vm_start_failed: () => t('err.vm_start_failed', "The virtual machine didn't start."),
   user_exists: () => t('err.user_exists', 'Someone with that name already exists.'),
   password_change_required: () => t('err.password_change_required', 'Change your password before you continue.'),
+  mfa_setup_required: () => t('err.mfa_setup_required', 'Turn on two-step sign-in before you continue: your role requires it.'),
   idp_account: () => t('err.idp_account', 'This account signs in through your identity provider.'),
   disks_not_safe: () => t('err.disks_not_safe', "The disks aren't in a safe state for that."),
   confirmation_required: () => t('err.confirmation_required', 'Please confirm this first.'),

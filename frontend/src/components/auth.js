@@ -8,7 +8,7 @@ import { t } from '../i18n.js';
 import { state } from '../state.js';
 import { escapeHtml } from '../utils.js';
 import { showToast } from '../toast.js';
-import { fetchCurrentProfile, getCurrentUser, setCurrentUser } from './session.js';
+import { fetchCurrentProfile, getCurrentUser, setCurrentUser, promptRequiredMfa } from './session.js';
 import { openSetupWizard } from './setup-wizard-gate.js';
 
 import { formatDate, formatTime } from '../format.js';
@@ -427,6 +427,8 @@ async function doLogin() {
         setTimeout(() => {
           openSetupWizard(null, false);
         }, 350);
+      } else if (data.mfa_setup_required) {
+        setTimeout(() => promptRequiredMfa(data), 350);
       }
     } else {
       // The message stays on screen and is announced (role="alert") until the next attempt.
