@@ -40,12 +40,7 @@ describe('FE-07: destructive Spotlight actions', () => {
     expect(toasts.map((t) => t.type)).toEqual(['error']);
   });
 
-  it('asks before stopping a container', async () => {
-    apiPost.mockResolvedValue({});
-    const done = parseNaturalLanguageAction('>isolate container web').run();
-    expect(apiPost).not.toHaveBeenCalled();
-    await confirms[0].onConfirm();
-    await done;
-    expect(apiPost).toHaveBeenCalledWith('/api/docker/containers/web/stop');
+  it('has no command for stopping a container: its address never existed (SET-00)', () => {
+    expect(parseNaturalLanguageAction('>isolate container web')).toBeNull();
   });
 });

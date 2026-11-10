@@ -57,7 +57,7 @@ export function initSpotlight() {
       <div id="spotlight-palette-window" role="dialog" aria-modal="true" aria-label="${t('ui.command_palette', 'Command Palette')}">
         <div class="spotlight-search-bar">
           <span class="spotlight-search-icon" aria-hidden="true">🔍</span>
-          <input type="text" id="spotlight-input" role="combobox" aria-expanded="false" aria-controls="spotlight-results" aria-autocomplete="list" aria-label="${t('spotlight.label', 'Search apps, folders and actions')}" placeholder="Search apps, containers, actions (>reboot, @container, #file)..." autocomplete="off" spellcheck="false">
+          <input type="text" id="spotlight-input" role="combobox" aria-expanded="false" aria-controls="spotlight-results" aria-autocomplete="list" aria-label="${t('spotlight.label', 'Search apps, folders and actions')}" placeholder="${t('spotlight.label', 'Search apps, folders and actions')}" autocomplete="off" spellcheck="false">
           <span class="spotlight-kbd-badge">ESC</span>
         </div>
         <div id="spotlight-results" role="listbox" aria-label="${t('spotlight.results', 'Results')}"></div>
@@ -116,7 +116,7 @@ export function initSpotlight() {
 }
 
 // The typed commands, the same in every language
-const CMD = { snap: '>snap pool <id>', fan: '>fan <pct>%', locate: '>locate drive <dev>', isolate: '>isolate container <id>', trash: '>trash empty' };
+const CMD = { snap: '>snap pool <id>', locate: '>locate drive <dev>', trash: '>trash empty' };
 
 function _buildDefaultSpotlightItems() {
   _spotlightItems = [
@@ -208,88 +208,6 @@ function _buildDefaultSpotlightItems() {
 
     // Direct Hardware & System Actions
     {
-      id: 'act-quiet-fans',
-      title: t('sp.fan_quiet', 'Fan mode: Quiet'),
-      subtitle: t('sp.fan_quiet_sub', 'Slow, quiet fans'),
-      icon: '🤫',
-      category: 'action',
-      keywords: ['fans', 'curve', 'quiet', 'silent', '>quiet'],
-      run: async () => {
-        try {
-          await api.post('/api/fans/profile', { profile: 'quiet' });
-          showToast(t('toast.fan_profile_switched_to_quiet_acoustic', 'Fan profile switched to Quiet (Acoustic)'), 'success');
-        } catch (e) {
-          showToast(t('toast.failed_to_switch_fan_profile', 'Failed to switch fan profile: {message}', { message: e.message }), 'error');
-        }
-      },
-    },
-    {
-      id: 'act-perf-fans',
-      title: t('sp.fan_perf', 'Fan mode: Performance'),
-      subtitle: t('sp.fan_perf_sub', 'Most airflow, for heavy load'),
-      icon: '🚀',
-      category: 'action',
-      keywords: ['fans', 'curve', 'turbo', 'performance', '>turbo'],
-      run: async () => {
-        try {
-          await api.post('/api/fans/profile', { profile: 'performance' });
-          showToast(t('toast.fan_profile_switched_to_performance_max', 'Fan profile switched to Performance (Max Airflow)'), 'success');
-        } catch (e) {
-          showToast(t('toast.failed_to_switch_fan_profile', 'Failed to switch fan profile: {message}', { message: e.message }), 'error');
-        }
-      },
-    },
-    {
-      id: 'act-spindown',
-      title: t('sp.spindown', 'Spin down idle drives'),
-      subtitle: t('sp.spindown_sub', 'Put idle drives into standby now'),
-      icon: '💤',
-      category: 'action',
-      keywords: ['standby', 'spindown', 'sleep', 'power', '>spindown'],
-      run: async () => {
-        showToast(t('toast.spindown_signal_dispatched_to_idle_disks', 'Spindown signal dispatched to idle disks.'), 'info');
-      },
-    },
-    {
-      id: 'act-theme-oled',
-      title: t('sp.theme_oled', 'Theme: pure black (OLED)'),
-      subtitle: t('sp.theme_oled_sub', 'True black with high contrast'),
-      icon: '🌑',
-      category: 'setting',
-      keywords: ['theme', 'oled', 'dark', 'black', '>theme oled'],
-      run: () => {
-        document.body.className = 'theme-oled';
-        localStorage.setItem('kiboto_desktop_theme', 'oled');
-        showToast(t('toast.switched_to_oled_pure_black_theme', 'Switched to OLED Pure Black theme'), 'info');
-      },
-    },
-    {
-      id: 'act-theme-cyber',
-      title: t('sp.theme_teal', 'Theme: teal'),
-      subtitle: t('sp.theme_teal_sub', 'Bright teal accents'),
-      icon: '💠',
-      category: 'setting',
-      keywords: ['theme', 'cyber', 'teal', 'blue', '>theme cyber'],
-      run: () => {
-        document.body.className = 'theme-cyber';
-        localStorage.setItem('kiboto_desktop_theme', 'cyber');
-        showToast(t('toast.switched_to_cyber_teal_theme', 'Switched to Lagoon theme'), 'info');
-      },
-    },
-    {
-      id: 'act-theme-amber',
-      title: t('sp.theme_amber', 'Theme: amber'),
-      subtitle: t('sp.theme_amber_sub', 'Warm amber, like an old terminal'),
-      icon: '🔶',
-      category: 'setting',
-      keywords: ['theme', 'amber', 'gold', 'orange', '>theme amber'],
-      run: () => {
-        document.body.className = 'theme-amber';
-        localStorage.setItem('kiboto_desktop_theme', 'amber');
-        showToast(t('toast.switched_to_amber_gold_theme', 'Switched to Amber Gold theme'), 'info');
-      },
-    },
-    {
       id: 'act-refresh',
       title: t('sp.refresh', 'Refresh system readings'),
       subtitle: t('sp.refresh_sub', 'Read hardware, temperatures and drives now'),
@@ -313,17 +231,6 @@ function _buildDefaultSpotlightItems() {
       },
     },
     {
-      id: 'act-fan-pct',
-      title: `${t('sp.fan_set', 'Set fan speed')} (${CMD.fan})`,
-      subtitle: t('sp.fan_set_sub', 'Set the fans to a percentage, e.g. >fan 75%'),
-      icon: '🌀',
-      category: 'action',
-      keywords: ['fan', 'speed', 'pwm', 'acoustic', 'turbo', 'quiet', '>fan'],
-      run: () => {
-        openSpotlight('>fan ');
-      },
-    },
-    {
       id: 'act-locate-drive',
       title: `${t('sp.locate', 'Find a drive by its light')} (${CMD.locate})`,
       subtitle: t('sp.locate_sub', 'Blink the bay light to find the drive’s slot'),
@@ -342,17 +249,6 @@ function _buildDefaultSpotlightItems() {
       category: 'action',
       keywords: ['trash', 'empty', 'recycle', 'purge', 'clean', '>trash'],
       run: () => emptyTrash(),
-    },
-    {
-      id: 'act-isolate-container',
-      title: `${t('sp.isolate', 'Isolate a container')} (${CMD.isolate})`,
-      subtitle: t('sp.isolate_sub', 'Stop the container and cut its network'),
-      icon: '🛑',
-      category: 'action',
-      keywords: ['isolate', 'container', 'stop', 'docker', 'quarantine', '>isolate'],
-      run: () => {
-        openSpotlight('>isolate container ');
-      },
     },
   ];
 }
@@ -391,47 +287,6 @@ export function parseNaturalLanguageAction(rawQuery) {
     };
   }
 
-  // 2. Fan override: > fan quiet / turbo / normal / <pct>%
-  const fanMatch = clean.match(/^fan\s+(quiet|turbo|normal|performance|(\d+)%?)/i);
-  if (fanMatch) {
-    const mode = fanMatch[1].toLowerCase();
-    const pct = fanMatch[2] ? parseInt(fanMatch[2], 10) : null;
-    let label;
-    let runFn;
-    if (pct !== null) {
-      label = `${pct}% PWM`;
-      runFn = async () => {
-        try {
-          const pwmVal = Math.round((pct / 100) * 255);
-          await api.post('/api/fans/manual', { pwm: pwmVal });
-          showToast(t('toast.fan_speed_set_to_pwm', 'Fan speed set to {pct}% ({pwmVal} PWM)', { pct: pct, pwmVal: pwmVal }), 'success');
-        } catch (e) {
-          showToast(t('toast.failed_to_set_fan_speed', 'Failed to set fan speed: {message}', { message: e.message }), 'error');
-        }
-      };
-    } else {
-      const prof = mode === 'turbo' ? 'performance' : (mode === 'quiet' ? 'quiet' : 'normal');
-      label = prof.toUpperCase();
-      runFn = async () => {
-        try {
-          await api.post('/api/fans/profile', { profile: prof });
-          showToast(t('toast.fan_profile_switched_to', 'Fan profile switched to {prof}', { prof: prof.toUpperCase() }), 'success');
-        } catch (e) {
-          showToast(t('toast.failed_to_switch_fan_profile', 'Failed to switch fan profile: {message}', { message: e.message }), 'error');
-        }
-      };
-    }
-    return {
-      id: `dyn-fan-${mode}`,
-      title: t('sp.fan_dyn', 'Fan speed: {label}', { label }),
-      subtitle: t('sp.fan_dyn_sub', 'Set the fans to {label}', { label }),
-      icon: '🌀',
-      category: 'action',
-      keywords: ['fan', 'speed', mode],
-      run: runFn
-    };
-  }
-
   // 3. Locate drive: > locate drive <dev> or > locate <dev>
   const locateMatch = clean.match(/^locate(?:\s+drive)?\s+(\S+)/i);
   if (locateMatch) {
@@ -465,30 +320,6 @@ export function parseNaturalLanguageAction(rawQuery) {
       category: 'action',
       keywords: ['trash', 'empty', 'recycle'],
       run: () => emptyTrash()
-    };
-  }
-
-  // 5. Isolate / stop container: > isolate container <id> or > isolate <id>
-  const isolateMatch = clean.match(/^(?:isolate|stop)(?:\s+container)?\s+(\S+)/i);
-  if (isolateMatch) {
-    const cId = isolateMatch[1];
-    return {
-      id: `dyn-isolate-${cId}`,
-      title: t('sp.isolate_dyn', 'Isolate container: {id}', { id: cId }),
-      subtitle: t('sp.isolate_dyn_sub', 'Stop {id} and cut its network', { id: cId }),
-      icon: '🛑',
-      category: 'action',
-      keywords: ['isolate', 'container', cId],
-      run: async () => {
-        try {
-          const ok = await confirmThen(t('spotlight.stop_app', 'Stop the app'), t('spotlight.stop_app_msg', 'Stop the container {name}? It stays installed; start it again from Apps.', { name: cId }), async () => {
-            await api.post(`/api/docker/containers/${encodeURIComponent(cId)}/stop`);
-          });
-          if (ok) showToast(t('toast.container_stopped', 'Container \'{cId}\' stopped', { cId: cId }), 'warning');
-        } catch (e) {
-          showToast(t('toast.failed_to_stop_container', 'Failed to stop container \'{cId}\': {message}', { cId: cId, message: e.message }), 'error');
-        }
-      }
     };
   }
 

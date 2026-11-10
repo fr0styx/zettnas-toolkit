@@ -15,6 +15,7 @@ vi.mock('../api.js', () => ({
 vi.mock('../toast.js', () => ({
   showToast: vi.fn(),
   showConfirmToast: vi.fn((msg, onConfirm) => onConfirm()),
+  showDangerConfirm: vi.fn((msg, onConfirm) => onConfirm()),
 }));
 
 import { api } from '../api.js';

@@ -216,6 +216,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   for "destroy" and "forget" in every language but English, Enter confirmed at once. These questions
   are now marked as dangerous where they are asked.
 
+#### Fixes
+
+- **Search commands that did nothing are gone**: "Spin down idle drives" showed a message and did
+  nothing; the fan commands and "Isolate a container" called addresses Kiboto never had; the three
+  theme commands replaced every style of the page. The search box no longer advertises ">reboot",
+  "@container" and "#file", which never existed. Fans are set in Settings → Hardware, apps are
+  stopped in Apps.
+- **A failed save of a virtual machine no longer says "configuration updated"**: when the machine
+  was gone, the edit dialog tried a second address, ignored its error and reported success.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

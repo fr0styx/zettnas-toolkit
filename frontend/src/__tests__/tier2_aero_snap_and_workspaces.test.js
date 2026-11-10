@@ -281,14 +281,10 @@ describe('Tier 2: Aero Snap 2.0, Single Desktop Invariant, Spotlight Actions & M
       expect(action.category).toBe('action');
     });
 
-    it('parses natural language fan overrides (>fan quiet / turbo / <pct>%)', () => {
-      const quietAction = parseNaturalLanguageAction('>fan quiet');
-      expect(quietAction).not.toBeNull();
-      expect(quietAction.title).toContain('Fan speed: QUIET');
-
-      const pctAction = parseNaturalLanguageAction('>fan 75%');
-      expect(pctAction).not.toBeNull();
-      expect(pctAction.title).toContain('75% PWM');
+    it('no longer offers the typed commands that reached no route (SET-00)', () => {
+      expect(parseNaturalLanguageAction('>fan quiet')).toBeNull();
+      expect(parseNaturalLanguageAction('>fan 75%')).toBeNull();
+      expect(parseNaturalLanguageAction('>isolate container jellyfin')).toBeNull();
     });
 
     it('parses natural language drive locate and trash purge commands', () => {
@@ -299,19 +295,15 @@ describe('Tier 2: Aero Snap 2.0, Single Desktop Invariant, Spotlight Actions & M
       const trashAction = parseNaturalLanguageAction('>trash empty');
       expect(trashAction).not.toBeNull();
       expect(trashAction.title).toBe('Empty the Recycle Bin');
-
-      const isolateAction = parseNaturalLanguageAction('>isolate container jellyfin');
-      expect(isolateAction).not.toBeNull();
-      expect(isolateAction.title).toContain('Isolate container: jellyfin');
     });
 
     it('integrates dynamic actions into filterSpotlightResults', () => {
       initSpotlight();
       openSpotlight();
 
-      filterSpotlightResults('>fan 85%');
+      filterSpotlightResults('>locate sdb');
       const results = document.getElementById('spotlight-results');
-      expect(results.textContent).toContain('85% PWM');
+      expect(results.textContent).toContain('Find drive: sdb');
     });
   });
 

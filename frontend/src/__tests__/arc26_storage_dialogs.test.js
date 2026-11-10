@@ -1,7 +1,11 @@
 /** ARC-26 / NUX-20: destroying and ejecting pools, removing shares: asked and reported in the reader's language. */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../toast.js', () => ({ showToast: vi.fn(), showConfirmToast: vi.fn(), showPromptToast: vi.fn(), showBottomSheet: vi.fn() }));
+// showDangerConfirm is the same question, marked destructive (SET-00): one mock records both
+vi.mock('../toast.js', () => {
+  const ask = vi.fn();
+  return { showToast: vi.fn(), showConfirmToast: ask, showDangerConfirm: ask, showPromptToast: vi.fn(), showBottomSheet: vi.fn() };
+});
 const { api } = await import('../api.js');
 const { showToast, showConfirmToast } = await import('../toast.js');
 const { setLanguage } = await import('../i18n.js');

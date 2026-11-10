@@ -31,8 +31,6 @@ describe('drive titles (NUX-20)', () => {
       expect(results()).toContain('Pool-Snapshot: tank');
       filterSpotlightResults('>locate sdb');
       expect(results()).toContain('Laufwerk finden: sdb');
-      filterSpotlightResults('>isolate container web');
-      expect(results()).toContain('Container isolieren: web');
       filterSpotlightResults('? Nudelrezept');
       expect(results()).toContain('Kib fragen: „Nudelrezept“');
       filterSpotlightResults('qqqqzzzz-nothing');

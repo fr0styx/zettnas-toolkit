@@ -10,12 +10,17 @@ vi.mock('../api.js', () => ({
   auth: { hasToken: vi.fn().mockReturnValue(true), getToken: vi.fn(() => 'x') },
 }));
 
-vi.mock('../toast.js', () => ({
-  showToast: vi.fn(),
-  showConfirmToast: vi.fn(),
-  showPromptToast: vi.fn(),
-  showBottomSheet: vi.fn(),
-}));
+// showDangerConfirm is the same question, marked destructive (SET-00): one mock records both
+vi.mock('../toast.js', () => {
+  const ask = vi.fn();
+  return {
+    showToast: vi.fn(),
+    showConfirmToast: ask,
+    showDangerConfirm: ask,
+    showPromptToast: vi.fn(),
+    showBottomSheet: vi.fn(),
+  };
+});
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 const VM = { id: 'vm1', name: 'files', state: 'running' };

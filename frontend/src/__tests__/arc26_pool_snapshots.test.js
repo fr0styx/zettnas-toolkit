@@ -1,7 +1,11 @@
 /** ARC-26 / NUX-20: a pool's snapshot window: list, take, go back, delete; its dialogs translated. */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../toast.js', () => ({ showToast: vi.fn(), showConfirmToast: vi.fn(), showPromptToast: vi.fn(), showBottomSheet: vi.fn() }));
+// showDangerConfirm is the same question, marked destructive (SET-00): one mock records both
+vi.mock('../toast.js', () => {
+  const ask = vi.fn();
+  return { showToast: vi.fn(), showConfirmToast: ask, showDangerConfirm: ask, showPromptToast: vi.fn(), showBottomSheet: vi.fn() };
+});
 const { api } = await import('../api.js');
 const { showToast, showConfirmToast } = await import('../toast.js');
 const { openSnapshotsModal } = await import('../components/chassis-visualizer.js');

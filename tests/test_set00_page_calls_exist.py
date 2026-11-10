@@ -24,10 +24,6 @@ KNOWN_MISSING = {
     ("GET", "/api/notifications/me"),  # "My alerts": the route is /api/notifications/notifications/me
     ("PUT", "/api/notifications/me"),
     ("GET", "/api/smart/schedule"),  # Drive Health: the route is /api/storage/smart/schedule
-    ("POST", "/api/fans/profile"),  # Spotlight fan commands
-    ("POST", "/api/fans/manual"),
-    ("POST", "/api/docker/containers/{}/stop"),  # Spotlight "Isolate container"
-    ("POST", "/api/vms/{}"),  # the save of "Edit virtual machine"
 }
 
 

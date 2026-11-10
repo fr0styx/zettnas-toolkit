@@ -927,19 +927,7 @@ export function openVmEditModal(vmId, vmObj = null) {
         submitBtn.disabled = true;
         submitBtn.textContent = t('ui.saving', 'Saving...');
 
-        try {
-          if (api.put) {
-            await api.put(`/api/vms/${vmId}`, payload);
-          } else {
-            await api.post(`/api/vms/${vmId}`, payload);
-          }
-        } catch (apiErr) {
-          if (apiErr.status === 405 || apiErr.status === 404) {
-            await api.post(`/api/vms/${vmId}`, payload).catch(() => null);
-          } else {
-            throw apiErr;
-          }
-        }
+        await api.put(`/api/vms/${vmId}`, payload);
 
         Object.assign(targetVm, payload);
         showToast(t('toast.vm_configuration_updated', 'VM \'{newName}\' configuration updated', { newName: newName }), 'success');

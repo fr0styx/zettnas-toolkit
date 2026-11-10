@@ -44,15 +44,19 @@ describe('Phase 4: Spotlight Universal Command Palette & Desktop Workspace', () 
     initSpotlight();
     openSpotlight();
 
-    filterSpotlightResults('quiet');
+    filterSpotlightResults('health');
     const results = document.getElementById('spotlight-results');
-    expect(results.textContent).toContain('Fan mode: Quiet');
+    expect(results.textContent).toContain('Drive Health');
 
-    filterSpotlightResults('>turbo');
-    expect(results.textContent).toContain('Fan mode: Performance');
+    filterSpotlightResults('>refresh');
+    expect(results.textContent).toContain('Refresh system readings');
 
-    filterSpotlightResults('oled');
-    expect(results.textContent).toContain('Theme: pure black (OLED)');
+    // SET-00: commands that called nothing, or an address the server never had, are gone
+    for (const gone of ['quiet', '>turbo', 'oled', 'spindown', 'isolate']) {
+      filterSpotlightResults(gone);
+      expect(results.textContent, gone).not.toMatch(/Fan mode|Theme:|Spin down|Isolate/);
+    }
+    expect(document.getElementById('spotlight-input').placeholder).not.toContain('>reboot');
   });
 
   it('registers custom spotlight items and executes them', () => {
