@@ -17,7 +17,7 @@ Every operation that is not marked `public` needs one of these (they are the `be
 
 1. **`Authorization: Bearer <token>`** — an API token (`zat_…`, made under Settings › API tokens,
    limited to the scopes you give it) or the session token that `POST /api/v1/auth/login` returns.
-2. **The `zettnas_session` cookie** — the HttpOnly cookie the web UI gets at sign-in. Requests
+2. **The `kiboto_session` cookie** — the HttpOnly cookie the web UI gets at sign-in. Requests
    with the cookie that change something must come from the same site (otherwise 403
    `csrf_blocked`).
 

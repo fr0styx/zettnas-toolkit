@@ -4609,7 +4609,7 @@ export default {
   "catalog.cred_password": "Mot de passe",
   "catalog.cred_title": "Identifiants",
   "catalog.copy": "Copier",
-  "catalog.cred_saved": "Enregistré dans le dossier de l'app sous .zettnas-secrets.json.",
+  "catalog.cred_saved": "Enregistré dans un fichier caché du dossier de l'app, pour qu'une réinstallation le garde.",
   "fm.favorites": "Favoris",
   "fm.fav_add": "Ajouter aux favoris",
   "fm.fav_remove": "Retirer des favoris",

@@ -1166,7 +1166,7 @@ export function renderAppCatalogGrid() {
 }
 
 /** After a deploy: the login to use (generated passwords included), or where to connect. */
-function showDeployCredentials(successBox, data, hostPort) {
+export function showDeployCredentials(successBox, data, hostPort) {
   if (!successBox || !successBox.parentElement) return;
   successBox.parentElement.querySelector('.adm-credentials')?.remove();
   const c = data.credentials || {};
@@ -1180,7 +1180,7 @@ function showDeployCredentials(successBox, data, hostPort) {
   box.innerHTML = `<div class="adm-cred-title">🔑 ${escapeHtml(t('catalog.cred_title', 'Sign-in details'))}</div>` +
     rows.map(([label, value], i) => `<div class="adm-cred-row"><span class="adm-cred-label">${escapeHtml(label)}</span><code class="adm-cred-val">${escapeHtml(value)}</code><button type="button" class="adm-cred-copy" data-i="${i}" aria-label="${escapeHtml(t('catalog.copy', 'Copy'))} ${escapeHtml(label)}">${escapeHtml(t('catalog.copy', 'Copy'))}</button></div>`).join('') +
     (c.note ? `<div class="adm-cred-note">${escapeHtml(c.note)}</div>` : '') +
-    (c.password && /[A-Za-z0-9_-]{20,}/.test(c.password) ? `<div class="adm-cred-note">${escapeHtml(t('catalog.cred_saved', 'Saved in the app folder as .zettnas-secrets.json.'))}</div>` : '');
+    (c.password && /[A-Za-z0-9_-]{20,}/.test(c.password) ? `<div class="adm-cred-note">${escapeHtml(t('catalog.cred_saved', 'Saved in a hidden file in the app\'s folder, so a reinstall keeps it.'))}</div>` : '');
   box.addEventListener('click', async (e) => {
     const btn = e.target instanceof Element ? e.target.closest('.adm-cred-copy') : null;
     if (!btn) return;

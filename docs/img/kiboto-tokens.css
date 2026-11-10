@@ -1,0 +1,110 @@
+/* Kiboto tokens (Lagoon). Dark is the default, like the app; light follows body.theme-light. */
+:root {
+  --kb-bg: #0a1113;
+  --kb-surface: #121b1e;
+  --kb-surface-raised: #1a2629;
+  --kb-surface-overlay: #1d2a2e;
+  --kb-line: #223035;
+  --kb-border: #5d7175;
+  --kb-text: #e6efef;
+  --kb-text-muted: #95a8ab;
+  --kb-primary: #33cdb8;
+  --kb-primary-hover: #4fd8c4;
+  --kb-primary-text: #4fd8c4;
+  --kb-on-primary: #04201c;
+  --kb-primary-soft: #0f2a28;
+  --kb-accent: #f6b44c;
+  --kb-accent-text: #f8c470;
+  --kb-on-accent: #2a1a04;
+  --kb-focus: #4fd8c4;
+  --kb-success: #46c776;
+  --kb-success-text: #62d68b;
+  --kb-success-soft: #11281b;
+  --kb-on-success: #05210f;
+  --kb-warning: #f2b237;
+  --kb-warning-text: #f6c35e;
+  --kb-warning-soft: #2b2210;
+  --kb-on-warning: #2a1a04;
+  --kb-danger: #f26b5e;
+  --kb-danger-text: #ff8a7e;
+  --kb-danger-soft: #2f1715;
+  --kb-on-danger: #2a0806;
+  --kb-info: #6f9cf5;
+  --kb-info-text: #8db1ff;
+  --kb-info-soft: #141f36;
+  --kb-on-info: #071533;
+  --kb-display: #0a1113;
+  --kb-display-glow: #4fd8c4;
+  --kb-font-display: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+  --kb-font-sans: "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --kb-font-mono: "Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --kb-radius-xs: 4px; --kb-radius-sm: 6px; --kb-radius-md: 10px; --kb-radius-lg: 14px; --kb-radius-xl: 20px; --kb-radius-pill: 999px;
+  --kb-space-1: 4px; --kb-space-2: 8px; --kb-space-3: 12px; --kb-space-4: 16px; --kb-space-5: 24px; --kb-space-6: 32px; --kb-space-7: 48px; --kb-space-8: 64px;
+  --kb-elevation-1: 0 1px 2px rgba(0,0,0,.5);
+  --kb-elevation-2: 0 8px 24px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.05);
+  --kb-elevation-3: 0 24px 64px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.07);
+  --kb-duration-instant: 80ms; --kb-duration-fast: 140ms; --kb-duration-base: 220ms; --kb-duration-slow: 320ms;
+  --kb-ease: cubic-bezier(.2,0,0,1); --kb-ease-enter: cubic-bezier(0,0,.2,1); --kb-ease-exit: cubic-bezier(.4,0,1,1); --kb-ease-kib: cubic-bezier(.3,1.3,.5,1);
+  --kb-brand-rgb: 51, 205, 184;
+}
+body.theme-light {
+  --kb-bg: #f3f6f6;
+  --kb-surface: #ffffff;
+  --kb-surface-raised: #e8eeee;
+  --kb-surface-overlay: #ffffff;
+  --kb-line: #d6dfe0;
+  --kb-border: #778b8e;
+  --kb-text: #0e1c1e;
+  --kb-text-muted: #4a5c60;
+  --kb-primary: #0a7a70;
+  --kb-primary-hover: #08695f;
+  --kb-primary-text: #08695f;
+  --kb-on-primary: #ffffff;
+  --kb-primary-soft: #e0f4f1;
+  --kb-accent: #f2a93b;
+  --kb-accent-text: #9a4d05;
+  --kb-on-accent: #2a1a04;
+  --kb-focus: #0a7a70;
+  --kb-success: #1d7a3e;
+  --kb-success-text: #17663a;
+  --kb-success-soft: #e3f3e8;
+  --kb-on-success: #ffffff;
+  --kb-warning: #e7a320;
+  --kb-warning-text: #8a4b06;
+  --kb-warning-soft: #fdf1d8;
+  --kb-on-warning: #2a1a04;
+  --kb-danger: #c8322b;
+  --kb-danger-text: #a52521;
+  --kb-danger-soft: #fbe5e3;
+  --kb-on-danger: #ffffff;
+  --kb-info: #2b62c9;
+  --kb-info-text: #2152ad;
+  --kb-info-soft: #e3ebfa;
+  --kb-on-info: #ffffff;
+  --kb-display: #0e1c1e;
+  --kb-display-glow: #4fd8c4;
+  --kb-elevation-1: 0 1px 2px rgba(14,28,30,.08), 0 1px 1px rgba(14,28,30,.04);
+  --kb-elevation-2: 0 8px 24px rgba(14,28,30,.10), 0 0 0 1px rgba(14,28,30,.06);
+  --kb-elevation-3: 0 24px 64px rgba(14,28,30,.18), 0 0 0 1px rgba(14,28,30,.08);
+  --kb-brand-rgb: 10, 122, 112;
+}
+
+/* Bridge: today's token names, pointed at the new ones. Lets 00-tokens.css, 01-themes.css and
+   50-components.css switch over in one change; remove each alias once its users are renamed. */
+:root, body.theme-light {
+  --bg: var(--kb-bg); --card: var(--kb-surface); --card-hi: var(--kb-surface-raised);
+  --fg: var(--kb-text); --muted: var(--kb-text-muted); --track: var(--kb-line);
+  --ok: var(--kb-success); --ok2: var(--kb-primary); --warn: var(--kb-warning); --crit: var(--kb-danger);
+  --brand-rgb: var(--kb-brand-rgb); --brand: rgb(var(--kb-brand-rgb)); --accent-rgb: var(--kb-brand-rgb);
+  --accent-contrast-fg: var(--kb-on-primary);
+  --accent-glow: rgba(var(--kb-brand-rgb), .30); --accent-hover: rgba(var(--kb-brand-rgb), .14);
+  --focus-ring: var(--kb-focus); --focus-shadow: 0 0 0 3px rgba(var(--kb-brand-rgb), .35);
+  --font-sans: var(--kb-font-sans); --font-mono: var(--kb-font-mono);
+  --window-radius: var(--kb-radius-lg); --zn-radius: var(--kb-radius-md); --zn-radius-sm: var(--kb-radius-sm);
+  --zn-text-strong: var(--kb-text); --zn-text: var(--kb-text); --zn-text-muted: var(--kb-text-muted);
+  --zn-line: var(--kb-line); --zn-line-strong: var(--kb-border); --zn-surface: var(--kb-surface);
+  --zn-danger-bg: var(--kb-danger-soft); --zn-danger-text: var(--kb-danger-text);
+  /* Confirm buttons keep white labels in every theme, so they stay on the deep fills */
+  --zn-confirm-ok: #0a7a70; --zn-confirm-ok-line: #08695f; --zn-confirm-danger: #c8322b; --zn-confirm-danger-line: #a52521;
+  --zn-confirm-title: var(--kb-primary-text); --zn-confirm-danger-title: var(--kb-danger-text);
+}

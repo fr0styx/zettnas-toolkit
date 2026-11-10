@@ -5,7 +5,7 @@ Thanks for helping. This page covers the setup, the checks every pull request mu
 ## Setup
 
 ```bash
-git clone https://github.com/fr0styx/kiboto.git && cd zettnas-toolkit
+git clone https://github.com/fr0styx/kiboto.git && cd kiboto
 
 # Run it with your working copy mounted
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d

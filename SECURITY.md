@@ -15,7 +15,7 @@ Security fixes go to the release on Stable (`:latest` / `:stable`) and to the ne
 Please **do not open a public issue** for security problems.
 
 Report privately through GitHub: **Security → Report a vulnerability** on
-[fr0styx/zettnas-toolkit](https://github.com/fr0styx/kiboto/security/advisories/new).
+[fr0styx/kiboto](https://github.com/fr0styx/kiboto/security/advisories/new).
 Include the version, how the container is deployed (Unraid template, Compose, `docker run`), and steps to reproduce.
 
 What to expect:

@@ -188,6 +188,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Paperless-ngx, Audiobookshelf and Jellyfin: it makes the client with the right callback addresses and
   shows what to paste into the app. Needs HTTPS in Use from anywhere. How it works: docs/FAMILY_SIGNIN.md.
 
+#### Changed
+
+- **The README and the guides speak Kiboto throughout**: a new README with the logo, the Lagoon colours and
+  Kib; docs/BRAND.md with the logo files, colours and Kib's faces; leftover old names in the guides are gone.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

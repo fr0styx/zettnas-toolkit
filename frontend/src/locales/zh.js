@@ -4609,7 +4609,7 @@ export default {
   "catalog.cred_password": "密码",
   "catalog.cred_title": "登录信息",
   "catalog.copy": "复制",
-  "catalog.cred_saved": "已保存在应用文件夹的 .zettnas-secrets.json 中。",
+  "catalog.cred_saved": "保存在应用文件夹中的隐藏文件里，重新安装时会保留。",
   "fm.favorites": "收藏夹",
   "fm.fav_add": "添加到收藏夹",
   "fm.fav_remove": "从收藏夹移除",
