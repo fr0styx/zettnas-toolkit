@@ -26166,6 +26166,45 @@
     "title": "LockPresetsResponsePresetsItem",
     "type": "object"
    },
+   "LoginIn": {
+    "properties": {
+     "credential": {
+      "additionalProperties": true,
+      "title": "Credential",
+      "type": "object"
+     },
+     "ticket": {
+      "maxLength": 128,
+      "minLength": 8,
+      "title": "Ticket",
+      "type": "string"
+     }
+    },
+    "required": [
+     "ticket",
+     "credential"
+    ],
+    "title": "LoginIn",
+    "type": "object"
+   },
+   "LoginOptionsIn": {
+    "properties": {
+     "mfa_token": {
+      "default": "",
+      "description": "After the password: the passkey is the second step",
+      "maxLength": 2048,
+      "title": "Mfa Token",
+      "type": "string"
+     },
+     "remember_me": {
+      "default": false,
+      "title": "Remember Me",
+      "type": "boolean"
+     }
+    },
+    "title": "LoginOptionsIn",
+    "type": "object"
+   },
    "LoginRequest": {
     "properties": {
      "mfa_code": {
@@ -34125,6 +34164,33 @@
     "title": "RagWatchedFoldersRequest",
     "type": "object"
    },
+   "RegisterIn": {
+    "properties": {
+     "credential": {
+      "additionalProperties": true,
+      "title": "Credential",
+      "type": "object"
+     },
+     "name": {
+      "default": "",
+      "maxLength": 60,
+      "title": "Name",
+      "type": "string"
+     },
+     "ticket": {
+      "maxLength": 128,
+      "minLength": 8,
+      "title": "Ticket",
+      "type": "string"
+     }
+    },
+    "required": [
+     "ticket",
+     "credential"
+    ],
+    "title": "RegisterIn",
+    "type": "object"
+   },
    "RemoteAccessConnectRequest": {
     "properties": {
      "auth_key": {
@@ -34342,6 +34408,21 @@
      }
     },
     "title": "RemoveScheduleResponse",
+    "type": "object"
+   },
+   "RenameIn": {
+    "properties": {
+     "name": {
+      "maxLength": 60,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name"
+    ],
+    "title": "RenameIn",
     "type": "object"
    },
    "RenameRequest": {
@@ -46070,6 +46151,268 @@
     "x-required-scopes": [
      "users:write",
      "system:config"
+    ]
+   }
+  },
+  "/api/v1/auth/passkey/login": {
+   "post": {
+    "description": "Signs in with the signed challenge (counts as both steps: the device checked who you are).",
+    "operationId": "passkey_login_api_v1_auth_passkey_login_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LoginIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
+     }
+    },
+    "security": [],
+    "summary": "Passkey Login",
+    "tags": [
+     "Authentication"
+    ],
+    "x-rate-limit": {
+     "description": "Failed passkey sign-ins count against the address like passwords."
+    }
+   }
+  },
+  "/api/v1/auth/passkey/login/options": {
+   "post": {
+    "description": "A challenge to sign in with a passkey: any passkey on this address, or, with the token the\npassword step gave, one of that person's own.",
+    "operationId": "passkey_login_options_api_v1_auth_passkey_login_options_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LoginOptionsIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
+     }
+    },
+    "security": [],
+    "summary": "Passkey Login Options",
+    "tags": [
+     "Authentication"
+    ],
+    "x-rate-limit": {
+     "description": "A locked address (failed sign-ins) gets no passkey challenge for a while."
+    }
+   }
+  },
+  "/api/v1/auth/passkeys": {
+   "get": {
+    "description": "Your passkeys, and the name passkeys made on this address belong to.",
+    "operationId": "list_passkeys_api_v1_auth_passkeys_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "List Passkeys",
+    "tags": [
+     "Authentication"
+    ]
+   },
+   "post": {
+    "description": "Saves the passkey the browser made.",
+    "operationId": "passkey_register_api_v1_auth_passkeys_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RegisterIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Passkey Register",
+    "tags": [
+     "Authentication"
+    ]
+   }
+  },
+  "/api/v1/auth/passkeys/options": {
+   "post": {
+    "description": "What the browser needs to make a passkey for you on this address.",
+    "operationId": "passkey_register_options_api_v1_auth_passkeys_options_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Passkey Register Options",
+    "tags": [
+     "Authentication"
+    ]
+   }
+  },
+  "/api/v1/auth/passkeys/{pk_id}": {
+   "delete": {
+    "description": "Removes one of your passkeys. The last one goes only if a code still protects the account where\nyour role requires two-step sign-in.",
+    "operationId": "passkey_delete_api_v1_auth_passkeys__pk_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pk_id",
+      "required": true,
+      "schema": {
+       "title": "Pk Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Passkey Delete",
+    "tags": [
+     "Authentication"
+    ]
+   },
+   "patch": {
+    "operationId": "passkey_rename_api_v1_auth_passkeys__pk_id__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pk_id",
+      "required": true,
+      "schema": {
+       "title": "Pk Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RenameIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Passkey Rename",
+    "tags": [
+     "Authentication"
     ]
    }
   },
@@ -68483,6 +68826,52 @@
     "summary": "Export User Data",
     "tags": [
      "users"
+    ]
+   }
+  },
+  "/api/v1/users/{user_id}/passkeys": {
+   "delete": {
+    "description": "Removes every passkey of a person who lost their devices (an administrator, for an account whose\nrole they could give).",
+    "operationId": "admin_remove_passkeys_api_v1_users__user_id__passkeys_delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "user_id",
+      "required": true,
+      "schema": {
+       "title": "User Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Admin Remove Passkeys",
+    "tags": [
+     "Authentication"
+    ],
+    "x-required-scopes": [
+     "users:write"
     ]
    }
   },

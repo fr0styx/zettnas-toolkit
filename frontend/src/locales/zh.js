@@ -3354,6 +3354,7 @@ export default {
   "remote.no_https": "要使用 https:// 地址，请在 Tailscale 管理控制台的 DNS 页面开启 MagicDNS 和 HTTPS 证书，然后点击“开启 HTTPS”。",
   "remote.addr_kiboto": "Kiboto",
   "remote.addr_immich": "Immich（照片备份）",
+  "remote.apps_n": "{n, plural, other {# 个应用}}在你的 tailnet 上",
   "remote.publish": "开启 HTTPS",
   "remote.disconnect": "断开连接",
   "remote.connected": "已以 {name} 连接。在已登录同一网络的 Tailscale 应用的手机上，扫描二维码即可打开 Kiboto。",

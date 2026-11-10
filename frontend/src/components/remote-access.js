@@ -105,17 +105,68 @@ function httpsHint(s) {
   return el('p', { class: 'zn-muted', text: t('remote.no_https', 'For https:// addresses, turn on MagicDNS and HTTPS certificates on the DNS page of the Tailscale admin console, then press "Turn on HTTPS".') });
 }
 
-async function connectedView(s) {
-  const kiboto = (s.addresses || {}).kiboto || (s.addresses || {}).zettnas || '';
-  const immich = (s.addresses || {}).immich || '';
-  const apps = (s.addresses || {}).apps || [];
-  const list = el(
+const APPS_OPEN_KEY = 'kiboto_remote_apps_open';
+
+/** Whether this browser last left the app list open (a per-viewer convenience). */
+function appsOpen() {
+  try {
+    return localStorage.getItem(APPS_OPEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+/** The port of an address, to tell apps apart at a glance (":8096"), or '' for the default port. */
+export function portLabel(url) {
+  try {
+    const p = new URL(url).port;
+    return p ? `:${p}` : '';
+  } catch {
+    return '';
+  }
+}
+
+/** Kiboto's address (under its name before the rebrand on older servers). */
+const kibotoAddress = (addresses) => addresses.kiboto || addresses.zettnas || '';
+
+const link = (url, text) => el('a', { href: url, target: '_blank', rel: 'noopener noreferrer', title: url, text });
+
+/** Kiboto and Immich as links; every other app folded away in a grid, since there can be many. */
+export function addressesView(addresses = {}, open = appsOpen()) {
+  const kiboto = kibotoAddress(addresses);
+  const immich = addresses.immich || '';
+  const apps = [...(addresses.apps || [])].sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  const main = el(
     'ul',
     { class: 'zn-list remote-addresses' },
-    kiboto ? el('li', {}, `${t('remote.addr_kiboto', 'Kiboto')}: `, el('code', { text: kiboto })) : null,
-    immich ? el('li', {}, `${t('remote.addr_immich', 'Immich (photo backup)')}: `, el('code', { text: immich })) : null,
-    ...apps.map((a) => el('li', {}, `${a.name}: `, el('code', { text: a.url }))),
+    kiboto ? el('li', {}, `${t('remote.addr_kiboto', 'Kiboto')}: `, link(kiboto, kiboto)) : null,
+    immich ? el('li', {}, `${t('remote.addr_immich', 'Immich (photo backup)')}: `, link(immich, immich)) : null,
   );
+  if (!apps.length) return el('div', { class: 'remote-addr-col' }, main);
+  const fold = el(
+    'details',
+    { class: 'remote-apps', open },
+    el('summary', { text: t('remote.apps_n', '{n, plural, one {# app} other {# apps}} on your tailnet', { n: apps.length }) }),
+    el(
+      'ul',
+      { class: 'remote-app-grid' },
+      ...apps.map((a) => el('li', {}, link(a.url, a.name), el('span', { class: 'remote-app-port', text: portLabel(a.url) }))),
+    ),
+  );
+  fold.addEventListener('toggle', () => {
+    try {
+      localStorage.setItem(APPS_OPEN_KEY, fold.open ? '1' : '0');
+    } catch {
+      /* private window: it just opens closed next time */
+    }
+  });
+  return el('div', { class: 'remote-addr-col' }, main, fold);
+}
+
+async function connectedView(s) {
+  const kiboto = kibotoAddress(s.addresses || {});
+  const apps = (s.addresses || {}).apps || [];
+  const list = addressesView(s.addresses || {});
   // an app installed after HTTPS was turned on still has a plain address (NFEAT-5)
   const newApps = s.https && apps.some((a) => !a.url.startsWith('https://'));
   const actions = el(

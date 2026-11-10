@@ -3354,6 +3354,7 @@ export default {
   "remote.no_https": "Para direcciones https://, activa MagicDNS y los certificados HTTPS en la página DNS de la consola de administración de Tailscale y pulsa «Activar HTTPS».",
   "remote.addr_kiboto": "Kiboto",
   "remote.addr_immich": "Immich (copia de fotos)",
+  "remote.apps_n": "{n, plural, one {# app} other {# apps}} en tu tailnet",
   "remote.publish": "Activar HTTPS",
   "remote.disconnect": "Desconectar",
   "remote.connected": "Conectado como {name}. En un móvil con la app de Tailscale conectada a la misma red, escanea el código para abrir Kiboto.",

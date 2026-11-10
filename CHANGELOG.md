@@ -121,6 +121,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   many filters are on ("Filters · 2") and stays open or closed as you left it in this browser. History
   shows your five newest searches.
 
+#### Remote access
+
+- **A tidier "Use from anywhere" card**: Kiboto's and Immich's addresses are links at the top, beside the
+  QR code; the other apps fold into one line ("15 apps on your tailnet") that opens a compact grid of app
+  names with their ports, each a link. The card remembers in this browser whether you left it open.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

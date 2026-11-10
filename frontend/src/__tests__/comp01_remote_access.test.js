@@ -90,9 +90,18 @@ describe('COMP-01: use from anywhere', () => {
       { name: 'paperless', url: 'http://zettnas.tail1234.ts.net:8000/' },
     ];
     let mount = await mounted({ ...RUNNING, addresses: { zettnas, apps } });
-    const items = [...mount.querySelectorAll('.remote-addresses li')].map((li) => li.textContent);
-    expect(items).toContain('jellyfin: https://zettnas.tail1234.ts.net:18096/');
-    expect(items).toContain('paperless: http://zettnas.tail1234.ts.net:8000/');
+    // the apps are folded away under one line, as links named after the app with their port
+    const fold = mount.querySelector('details.remote-apps');
+    expect(fold.querySelector('summary').textContent).toBe('2 apps on your tailnet');
+    const links = [...fold.querySelectorAll('a')].map((a) => [a.textContent, a.getAttribute('href')]);
+    expect(links).toEqual([
+      ['jellyfin', 'https://zettnas.tail1234.ts.net:18096/'],
+      ['paperless', 'http://zettnas.tail1234.ts.net:8000/'],
+    ]);
+    expect(fold.textContent).toContain(':18096');
+    fold.open = true;
+    fold.dispatchEvent(new Event('toggle'));
+    expect(localStorage.getItem('kiboto_remote_apps_open')).toBe('1');
     expect(mount.querySelector('[data-remote="publish"]').textContent).toBe('Turn on HTTPS for new apps');
     document.body.innerHTML = '';
     mount = await mounted({ ...RUNNING, addresses: { zettnas, apps: apps.slice(0, 1) } });
@@ -121,5 +130,15 @@ describe('COMP-01: use from anywhere', () => {
     expect(ra.appPort({ port: '8082', protocol: 'http:' })).toBe(8082);
     expect(ra.appPort({ port: '', protocol: 'https:' })).toBe(443);
     expect(ra.appPort({ port: '', protocol: 'http:' })).toBe(80);
+  });
+
+  it('labels ports and keeps the main addresses as links', async () => {
+    const { portLabel, addressesView } = await import('../components/remote-access.js');
+    expect(portLabel('http://a.ts.net:2283/')).toBe(':2283');
+    expect(portLabel('https://a.ts.net/')).toBe('');
+    expect(portLabel('not a url')).toBe('');
+    const view = addressesView({ kiboto: 'https://a.ts.net/', immich: 'https://a.ts.net:8443/' }, false);
+    expect([...view.querySelectorAll('.remote-addresses a')].map((a) => a.getAttribute('href'))).toEqual(['https://a.ts.net/', 'https://a.ts.net:8443/']);
+    expect(view.querySelector('details')).toBeNull();
   });
 });

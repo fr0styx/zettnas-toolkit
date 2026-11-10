@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-682 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+690 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -83,6 +83,19 @@ request and response schemas.
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/led` | any of `hardware:read`, `system:view` | Get Led |
 | `POST` | `/api/v1/led` | `hardware:rgb` | Post Led |
+
+### Authentication
+
+| Method | Path | Access | What it does |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/auth/passkey/login` | public ⏱ | Signs in with the signed challenge (counts as both steps: the device checked who you are) |
+| `POST` | `/api/v1/auth/passkey/login/options` | public ⏱ | A challenge to sign in with a passkey: any passkey on this address, or, with the token the password step gave, one of that person's own |
+| `GET` | `/api/v1/auth/passkeys` | signed in | Your passkeys, and the name passkeys made on this address belong to |
+| `POST` | `/api/v1/auth/passkeys` | signed in | Saves the passkey the browser made |
+| `POST` | `/api/v1/auth/passkeys/options` | signed in | What the browser needs to make a passkey for you on this address |
+| `DELETE` | `/api/v1/auth/passkeys/{pk_id}` | signed in | Removes one of your passkeys |
+| `PATCH` | `/api/v1/auth/passkeys/{pk_id}` | signed in | Passkey Rename |
+| `DELETE` | `/api/v1/users/{user_id}/passkeys` | `users:write` | Removes every passkey of a person who lost their devices (an administrator, for an account whose role they could give) |
 
 ### Authentication & Security
 
