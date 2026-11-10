@@ -3638,7 +3638,7 @@ export default {
   "aipack.state_warming": "Préparation : {phase}. Le premier démarrage télécharge quelques Go.",
   "aipack.state_ready": "Prêt.",
   "aipack.state_stopped": "Arrêté pendant l'inactivité ; il redémarre à la prochaine question.",
-  "aipack.state_not_ours": "Un conteneur nommé zettnas-ai existe sans venir du pack d'IA ; il n'est pas touché.",
+  "aipack.state_not_ours": "Un conteneur nommé kiboto-ai existe sans venir du pack d'IA ; il n'est pas touché.",
   "aipack.use": "L'utiliser pour le chat et la recherche",
   "aipack.in_use": "Kiboto utilise le pack d'IA.",
   "aipack.use_title": "Utiliser le pack d'IA ?",

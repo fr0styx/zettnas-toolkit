@@ -2,7 +2,7 @@
 
 from backend.services import ai_pack
 
-URL = "http://zettnas-ai:8000/v3"
+URL = "http://kiboto-ai:8000/v3"
 
 
 class Clock:

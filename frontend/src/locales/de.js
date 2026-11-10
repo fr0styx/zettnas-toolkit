@@ -3638,7 +3638,7 @@ export default {
   "aipack.state_warming": "Wird vorbereitet: {phase}. Der erste Start lädt einige GB herunter.",
   "aipack.state_ready": "Bereit.",
   "aipack.state_stopped": "Im Leerlauf angehalten; startet bei der nächsten Frage wieder.",
-  "aipack.state_not_ours": "Ein Container namens zettnas-ai existiert, der nicht vom KI-Paket stammt; er bleibt unangetastet.",
+  "aipack.state_not_ours": "Ein Container namens kiboto-ai existiert, der nicht vom KI-Paket stammt; er bleibt unangetastet.",
   "aipack.use": "Für Chat und Suche verwenden",
   "aipack.in_use": "Kiboto verwendet das KI-Paket.",
   "aipack.use_title": "KI-Paket verwenden?",

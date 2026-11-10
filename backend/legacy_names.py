@@ -17,10 +17,50 @@ ENV_PREFIX = "KIBOTO_"
 OLD_ENV_PREFIX = "ZETTNAS_"
 OLD_IMAGE_REPO = "fr0styx/zettnas-toolkit"  # CI also publishes and signs every image under this name
 OLD_GITHUB_REPO = "fr0styx/zettnas-toolkit"  # images signed before the repo's rename carry this identity
+OLD_MANAGED_LABEL = "com.zettnas.managed"  # new containers carry both (an older version, after a
+OLD_APP_LABEL = "com.zettnas.app"  # rollback, knows only these)
+OLD_APP_NETWORK_PREFIX = "zettnas-app-"  # an app's network made before keeps its name
+OLD_FOLLOW_TAG_LABEL = "zettnas.image.follow-tag"
+OLD_AI_PACK = "zettnas-ai"  # an AI pack made before keeps its container, models folder and model names
+OLD_AI_PACK_LABEL = "zettnas.ai-pack"
+OLD_AI_PACK_MODELS = ("zettnas-chat", "zettnas-embed")
+OLD_AI_APP_MODELS = ("zettnas-chat", "zettnas-embed")  # "AI for apps" still answers to these ids
+OLD_SAMBA = "zettnas-samba"  # sidecars made before are found (Samba) or replaced (SFTP, the updater)
+OLD_SFTP = "zettnas-sftp"
+OLD_SELF_UPDATER = "zettnas-self-updater"
+OLD_APP_CONTAINER = "zettnas-toolkit"  # the app's own container on installs made before
+OLD_MODEL_SERVERS = ("zettnas-ollama", "zettnas-ovms")
 OLD_SESSION_COOKIE = "zettnas_session"  # browsers signed in before the rebrand still send it
 OLD_CANARY_NAME = "!ZettNAS-guard-file.docx"  # the ransomware guard's file before the rebrand
 OLD_NAS_NAME = "zettnas"  # zettnas.local keeps answering beside kiboto.local (D17)
 OLD_NAME_CONTAINER = "zettnas-name"  # the name responder's container before the rebrand: replaced
+
+
+def managed_labels() -> dict[str, str]:
+    """The labels that mark a container or network as Kiboto's: the new one and, until 2.2, the old."""
+    from backend import product
+
+    return {product.MANAGED_LABEL: "1", OLD_MANAGED_LABEL: "1"}
+
+
+def is_managed(labels: dict | None) -> bool:
+    from backend import product
+
+    labels = labels or {}
+    return labels.get(product.MANAGED_LABEL) == "1" or labels.get(OLD_MANAGED_LABEL) == "1"
+
+
+def follow_tag_labels() -> dict[str, str]:
+    from backend import product
+
+    return {product.FOLLOW_TAG_LABEL: "1", OLD_FOLLOW_TAG_LABEL: "1"}
+
+
+def follows_tag(labels: dict | None) -> bool:
+    from backend import product
+
+    labels = labels or {}
+    return labels.get(product.FOLLOW_TAG_LABEL) == "1" or labels.get(OLD_FOLLOW_TAG_LABEL) == "1"
 
 
 def old_env_name(name: str) -> str | None:

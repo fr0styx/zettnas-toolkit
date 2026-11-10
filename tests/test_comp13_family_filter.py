@@ -164,11 +164,11 @@ def test_api(client, auth_headers, store, monkeypatch):
     assert seen[0] == ("admin", ["192.168.1.9"], [])
 
 
-def test_adguard_joins_zettnas_network():
+def test_adguard_joins_kibotos_network():
     from backend.services.catalog_templates import CURATED_APP_CATALOG
 
     app = next(a for a in CURATED_APP_CATALOG if a["id"] == "adguardhome")
-    assert app["join_zettnas_network"] is True
+    assert app["join_kiboto_network"] is True
 
 
 def test_kid_accounts_can_be_filtered(client, auth_headers, store, monkeypatch):

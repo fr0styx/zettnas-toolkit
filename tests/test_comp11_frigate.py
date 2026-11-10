@@ -138,7 +138,7 @@ def test_the_catalog_entry():
     from backend.services.catalog_templates import CURATED_APP_CATALOG, FRIGATE_YML
 
     app = next(a for a in CURATED_APP_CATALOG if a["id"] == "frigate")
-    assert app["devices"] == ["/dev/dri"] and app["join_zettnas_network"] is True
+    assert app["devices"] == ["/dev/dri"] and app["join_kiboto_network"] is True
     assert "5000" not in " ".join(app["ports"])  # the unauthenticated API stays on the inside
     conf = yaml.safe_load(FRIGATE_YML)
     assert conf["detectors"]["ov"] == {"type": "openvino", "device": "GPU"}
@@ -152,16 +152,16 @@ def test_deploy_options(monkeypatch):
     body = {"HostConfig": {}}
     app_catalog._apply_runtime_options(body, {"shm_size": 268435456})
     assert body["HostConfig"]["ShmSize"] == 268435456
-    monkeypatch.setattr("backend.services.app_networks.private_network", lambda app_id: f"zettnas-app-{app_id}")
+    monkeypatch.setattr("backend.services.app_networks.private_network", lambda app_id: f"kiboto-app-{app_id}")
     joined = {"HostConfig": {}}
-    app_catalog._apply_runtime_options(joined, {"id": "frigate", "join_zettnas_network": True})
-    assert joined["HostConfig"]["NetworkMode"] == "zettnas-app-frigate"  # its own network with Kiboto (NSEC-10)
+    app_catalog._apply_runtime_options(joined, {"id": "frigate", "join_kiboto_network": True})
+    assert joined["HostConfig"]["NetworkMode"] == "kiboto-app-frigate"  # its own network with Kiboto (NSEC-10)
     kept = {"HostConfig": {"NetworkMode": "immich_net"}}
-    app_catalog._apply_runtime_options(kept, {"join_zettnas_network": True})
+    app_catalog._apply_runtime_options(kept, {"join_kiboto_network": True})
     assert kept["HostConfig"]["NetworkMode"] == "immich_net"  # a stack's own network stays
     monkeypatch.setattr("backend.services.app_networks.private_network", lambda app_id: None)
     alone = {"HostConfig": {}}
-    app_catalog._apply_runtime_options(alone, {"id": "frigate", "join_zettnas_network": True})
+    app_catalog._apply_runtime_options(alone, {"id": "frigate", "join_kiboto_network": True})
     assert "NetworkMode" not in alone["HostConfig"]  # Kiboto outside a container: Docker's default
 
 
@@ -174,11 +174,11 @@ def test_frigate_deploys_on_its_own_network(tmp_path, monkeypatch):
     fake = FakeDocker()
     monkeypatch.setattr(app_catalog, "_docker_request", fake)
     monkeypatch.setattr(app_catalog, "check_port_available_detailed", lambda *a, **k: (True, None))
-    monkeypatch.setattr("backend.services.app_networks.private_network", lambda app_id: f"zettnas-app-{app_id}")
+    monkeypatch.setattr("backend.services.app_networks.private_network", lambda app_id: f"kiboto-app-{app_id}")
     events = list(app_catalog.stream_deploy_catalog_app("frigate", storage_root=str(tmp_path)))
     assert events[-1]["step"] == "success", events[-1]
     body = fake.created["frigate"]
-    assert body["HostConfig"]["NetworkMode"] == "zettnas-app-frigate"
+    assert body["HostConfig"]["NetworkMode"] == "kiboto-app-frigate"
     assert body["HostConfig"]["ShmSize"] == 268435456
     with open(os.path.join(tmp_path, "frigate", "config", "config.yml"), encoding="utf-8") as f:
         assert "type: openvino" in f.read()

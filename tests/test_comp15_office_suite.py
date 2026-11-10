@@ -48,7 +48,7 @@ def office():
 
 def test_the_template():
     app = office()
-    assert app["join_zettnas_network"] is True
+    assert app["join_kiboto_network"] is True
     assert app["env"]["NEXTCLOUD_ADMIN_PASSWORD"] == "{{secret:admin_password}}"
     cmds = [" ".join(s["cmd"]) for s in app["after_start"]]
     assert "status --output=json" in cmds[0] and app["after_start"][0]["tries"] > 10

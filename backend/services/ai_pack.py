@@ -1,11 +1,12 @@
 """The AI pack (AI-40, PERF-1): chat and search embeddings on the Intel GPU in one OpenVINO
 Model Server, installed from the app catalog and set up for Kiboto.
 
-- One container, "zettnas-ai", on Kiboto's own Docker network with no published port (OVMS has
-  no sign-in), with a memory limit, the GPU (/dev/dri) and the NPU when there is one.
+- One container, "kiboto-ai" ("zettnas-ai" when an install made it before the rebrand), on
+  Kiboto's own Docker network with no published port (OVMS has no sign-in),
+  with a memory limit, the GPU (/dev/dri) and the NPU when there is one.
 - The image is pinned by digest (catalog_digests.json, inside the signed Kiboto image).
 - On first start it downloads the preset's two models from Hugging Face (OpenVINO's own
-  int4/int8 builds), writes one OVMS config serving them as zettnas-chat and zettnas-embed,
+  int4/int8 builds), writes one OVMS config serving them as kiboto-chat and kiboto-embed,
   and serves them; later starts reuse the downloads.
 - No reranker: OVMS 2026.4's rerank put an invoice above the roof repair a question was about
   (bge-reranker-base) or failed outright (Qwen3-Reranker), so the pack leaves reranking alone.
@@ -25,14 +26,15 @@ import urllib.request
 from collections.abc import Iterator
 from typing import Any
 
+from backend import legacy_names
 from backend.config import logger
 
-CONTAINER = "zettnas-ai"
+CONTAINER = "kiboto-ai"
 IMAGE = "openvino/model_server:latest-gpu"
-LABEL = "zettnas.ai-pack"
+LABEL = "kiboto.ai-pack"
 PORT = 8000
 OVMS_UID = 5000  # the image runs as ovms (5000:5000); the models folder is handed to it
-CHAT_NAME, EMBED_NAME = "zettnas-chat", "zettnas-embed"
+CHAT_NAME, EMBED_NAME = "kiboto-chat", "kiboto-embed"
 EMBED_MODEL = "OpenVINO/Qwen3-Embedding-0.6B-int8-ov"  # multilingual, 1024 dimensions
 EMBED_DIM = 1024
 
@@ -48,18 +50,45 @@ SCRIPT = r"""set -e
 M=/models
 pull() {
   if [ ! -f "$M/$1/graph.pbtxt" ]; then
-    echo "zettnas-ai: downloading $1"
+    echo "$PACK_NAME: downloading $1"
     /ovms/bin/ovms --pull --source_model "$1" --model_repository_path "$M" --task "$2" --target_device "$DEVICE"
   fi
 }
 pull "$CHAT_MODEL" text_generation
 pull "$EMBED_MODEL" embeddings
 rm -f "$M/config.json"
-/ovms/bin/ovms --add_to_config --config_path "$M/config.json" --model_name zettnas-chat --model_path "$M/$CHAT_MODEL"
-/ovms/bin/ovms --add_to_config --config_path "$M/config.json" --model_name zettnas-embed --model_path "$M/$EMBED_MODEL"
-echo "zettnas-ai: serving"
+/ovms/bin/ovms --add_to_config --config_path "$M/config.json" --model_name "$CHAT_ID" --model_path "$M/$CHAT_MODEL"
+/ovms/bin/ovms --add_to_config --config_path "$M/config.json" --model_name "$EMBED_ID" --model_path "$M/$EMBED_MODEL"
+echo "$PACK_NAME: serving"
 exec /ovms/bin/ovms --config_path "$M/config.json" --rest_port 8000
 """
+
+
+def pack_name() -> str:
+    """The pack's container: one made before the rebrand keeps its name, its models folder and its
+    model names until 2.2 (legacy_names); otherwise kiboto-ai."""
+    old = legacy_names.OLD_AI_PACK
+    st, info = _docker("GET", f"/containers/{old}/json")
+    if (
+        st == 200
+        and isinstance(info, dict)
+        and ((info.get("Config") or {}).get("Labels") or {}).get(legacy_names.OLD_AI_PACK_LABEL)
+    ):
+        return old
+    return CONTAINER
+
+
+def _label(name: str) -> str:
+    return legacy_names.OLD_AI_PACK_LABEL if name == legacy_names.OLD_AI_PACK else LABEL
+
+
+def _model_ids(name: str) -> tuple[str, str]:
+    return legacy_names.OLD_AI_PACK_MODELS if name == legacy_names.OLD_AI_PACK else (CHAT_NAME, EMBED_NAME)
+
+
+def is_pack_url(url: str | None) -> bool:
+    """Whether a model URL points at the AI pack, under its name or the one from before."""
+    return bool(url) and any(f"//{n}:" in str(url) for n in (CONTAINER, legacy_names.OLD_AI_PACK))
 
 
 def _docker(method: str, path: str, body: dict | None = None, headers: dict | None = None):
@@ -143,15 +172,16 @@ def render_groups(dev: str = "/dev") -> list[str]:
         return []
 
 
-def create_body(preset: str, models_dir: str, network: str, image: str, dev: str = "/dev") -> dict[str, Any]:
+def create_body(
+    preset: str, models_dir: str, network: str, image: str, dev: str = "/dev", name: str = CONTAINER
+) -> dict[str, Any]:
     p = PRESETS[preset]
     device = "GPU" if os.path.isdir(os.path.join(dev, "dri")) else "CPU"
     devices = [d for d in ("/dev/dri", "/dev/accel/accel0") if os.path.exists(os.path.join(dev, d[len("/dev/") :]))]
-    from backend.services.image_ref import FOLLOW_TAG_LABEL
-
-    labels = {LABEL: preset, "com.zettnas.managed": "1"}  # no Unraid label: Unraid's stop list
+    labels = {_label(name): preset, **legacy_names.managed_labels()}  # no Unraid label: Unraid's stop list
     if "@" in image:
-        labels[FOLLOW_TAG_LABEL] = "1"
+        labels.update(legacy_names.follow_tag_labels())
+    chat_id, embed_id = _model_ids(name)
     return {
         "Image": image,
         "Entrypoint": ["/bin/bash"],
@@ -160,6 +190,9 @@ def create_body(preset: str, models_dir: str, network: str, image: str, dev: str
             f"CHAT_MODEL={p['chat']}",
             f"EMBED_MODEL={EMBED_MODEL}",
             f"DEVICE={device}",
+            f"CHAT_ID={chat_id}",
+            f"EMBED_ID={embed_id}",
+            f"PACK_NAME={name}",
         ],
         "HostConfig": {
             "Binds": [f"{models_dir}:/models:rw"],
@@ -169,7 +202,7 @@ def create_body(preset: str, models_dir: str, network: str, image: str, dev: str
             "RestartPolicy": {"Name": "unless-stopped"},
             "NetworkMode": network,
         },
-        "NetworkingConfig": {"EndpointsConfig": {network: {"Aliases": [CONTAINER]}}},
+        "NetworkingConfig": {"EndpointsConfig": {network: {"Aliases": [name]}}},
         "Labels": labels,
     }
 
@@ -183,12 +216,13 @@ def stream_install(preset: str | None = None, storage_root: str = "/mnt/user/app
     if preset not in PRESETS:
         yield {"step": "error", "percent": 0, "message": f"Unknown preset {preset}.", "done": True}
         return
-    st, old = _docker("GET", f"/containers/{CONTAINER}/json")
-    if st == 200 and not ((old.get("Config") or {}).get("Labels") or {}).get(LABEL):
+    name = pack_name()
+    st, old = _docker("GET", f"/containers/{name}/json")
+    if st == 200 and not ((old.get("Config") or {}).get("Labels") or {}).get(_label(name)):
         yield {
             "step": "error",
             "percent": 0,
-            "message": f"A container named {CONTAINER} exists and wasn't made by the AI pack; it is left alone.",
+            "message": f"A container named {name} exists and wasn't made by the AI pack; it is left alone.",
             "done": True,
         }
         return
@@ -204,7 +238,7 @@ def stream_install(preset: str | None = None, storage_root: str = "/mnt/user/app
         return
     from backend.services.app_catalog import app_dir_for
 
-    app_dir, problem = app_dir_for(storage_root, CONTAINER)  # not a system or Kiboto folder
+    app_dir, problem = app_dir_for(storage_root, name)  # not a system or Kiboto folder
     if problem:
         yield {"step": "error", "percent": 0, "message": problem, "done": True}
         return
@@ -215,17 +249,17 @@ def stream_install(preset: str | None = None, storage_root: str = "/mnt/user/app
     except OSError as e:
         logger.warning(f"[AI pack] could not hand {models_dir} to the model server: {e}")
     if st == 200:
-        _docker("POST", f"/containers/{CONTAINER}/stop?t=20")
-        _docker("DELETE", f"/containers/{CONTAINER}")
+        _docker("POST", f"/containers/{name}/stop?t=20")
+        _docker("DELETE", f"/containers/{name}")
     yield {"step": "create", "percent": 60, "message": "Creating the AI container...", "done": False}
     st, resp = _docker(
         "POST",
-        f"/containers/create?name={CONTAINER}",
-        body=create_body(preset, models_dir, network, image),
+        f"/containers/create?name={name}",
+        body=create_body(preset, models_dir, network, image, name=name),
         headers={"X-Kiboto-Elevated": "1"},  # the GPU: a built-in app's device, like Jellyfin's
     )
     if st != 201:
-        yield {"step": "error", "percent": 0, "message": f"Could not create {CONTAINER}: {resp}", "done": True}
+        yield {"step": "error", "percent": 0, "message": f"Could not create {name}: {resp}", "done": True}
         return
     _docker("POST", f"/containers/{resp.get('Id')}/start")
     yield {
@@ -233,7 +267,7 @@ def stream_install(preset: str | None = None, storage_root: str = "/mnt/user/app
         "percent": 100,
         "message": "The AI pack is starting. It downloads its models first (a few GB), then warms up.",
         "done": True,
-        "container_name": CONTAINER,
+        "container_name": name,
     }
 
 
@@ -241,7 +275,7 @@ def stream_install(preset: str | None = None, storage_root: str = "/mnt/user/app
 
 
 def base_url() -> str:
-    return f"http://{CONTAINER}:{PORT}"
+    return f"http://{pack_name()}:{PORT}"
 
 
 def models_ready(timeout: float = 2.0) -> bool:
@@ -257,7 +291,7 @@ def models_ready(timeout: float = 2.0) -> bool:
 
 def _phase(logs: str) -> str:
     """What the container says it is doing: downloading, loading or serving."""
-    lines = [ln for ln in logs.splitlines() if "zettnas-ai:" in ln]
+    lines = [ln for ln in logs.splitlines() if f"{CONTAINER}:" in ln or f"{legacy_names.OLD_AI_PACK}:" in ln]
     if not lines:
         return "starting"
     last = lines[-1]
@@ -271,20 +305,21 @@ def status(cfg: dict[str, Any]) -> dict[str, Any]:
     """cfg: the AI settings (passed in: this module doesn't import the AI engine, which calls it)."""
     b = box()
     out: dict[str, Any] = {"box": b, "recommendation": recommend(b), "installed": False, "state": "absent"}
-    st, info = _docker("GET", f"/containers/{CONTAINER}/json")
+    name = pack_name()
+    st, info = _docker("GET", f"/containers/{name}/json")
     if st != 200 or not isinstance(info, dict):
         return out
     labels = (info.get("Config") or {}).get("Labels") or {}
-    if not labels.get(LABEL):
+    if not labels.get(_label(name)):
         out["state"] = "not-ours"  # someone's own container under that name: never touched
         return out
-    out.update(installed=True, preset=labels.get(LABEL))
+    out.update(installed=True, preset=labels.get(_label(name)))
     if not (info.get("State") or {}).get("Running"):
         out["state"] = "stopped"
     elif models_ready():
         out["state"] = "ready"
     else:
-        st_l, logs = _docker("GET", f"/containers/{CONTAINER}/logs?stdout=1&stderr=1&tail=200")
+        st_l, logs = _docker("GET", f"/containers/{name}/logs?stdout=1&stderr=1&tail=200")
         out["state"] = "warming"
         out["phase"] = _phase(logs if isinstance(logs, str) else "")
     out["in_use"] = in_use(cfg)
@@ -293,13 +328,19 @@ def status(cfg: dict[str, Any]) -> dict[str, Any]:
 
 def pack_config() -> dict[str, Any]:
     """What use_pack() sets: chat at once; embeddings through a re-index."""
-    return {"llm_endpoint": f"{base_url()}/v1", "active_model": CHAT_NAME}
+    name = pack_name()
+    return {"llm_endpoint": f"http://{name}:{PORT}/v1", "active_model": _model_ids(name)[0]}
 
 
 def reindex_request() -> dict[str, Any]:
     """The re-embed onto the pack's embedder (POST /api/ai/reindex); search keeps the old
     vectors until every chunk is done."""
-    return {"embedding_model": EMBED_NAME, "embedding_dim": EMBED_DIM, "embedding_host": f"{base_url()}/v3"}
+    name = pack_name()
+    return {
+        "embedding_model": _model_ids(name)[1],
+        "embedding_dim": EMBED_DIM,
+        "embedding_host": f"http://{name}:{PORT}/v3",
+    }
 
 
 def in_use(cfg: dict[str, Any]) -> bool:
@@ -339,8 +380,13 @@ def mark_used() -> None:
 def _ours_running() -> tuple[bool, bool]:
     """(the pack's own container exists, it runs), cached for a few seconds."""
     now = time.monotonic()
-    st, info = _docker("GET", f"/containers/{CONTAINER}/json")
-    ours = st == 200 and isinstance(info, dict) and bool(((info.get("Config") or {}).get("Labels") or {}).get(LABEL))
+    name = pack_name()
+    st, info = _docker("GET", f"/containers/{name}/json")
+    ours = (
+        st == 200
+        and isinstance(info, dict)
+        and bool(((info.get("Config") or {}).get("Labels") or {}).get(_label(name)))
+    )
     running = ours and bool((info.get("State") or {}).get("Running"))
     _RUNNING.update(at=now, value=running)
     return ours, running
@@ -351,7 +397,7 @@ def wake_for(url: str | None, sleep=time.sleep, clock=time.monotonic, wait: floa
     and wait until its models are loaded, at most `wait` seconds (a search passes what its own
     deadline leaves; indexing waits the full warm-up). True when the pack answers (or url isn't
     the pack). A search never waits minutes for a pack that is warming up or broken (NAI-1)."""
-    if not url or f"//{CONTAINER}:" not in url:
+    if not is_pack_url(url):
         return True
     mark_used()
     if clock() - _RUNNING["at"] < RUNNING_CACHE_SECS and _RUNNING["value"]:
@@ -364,7 +410,7 @@ def wake_for(url: str | None, sleep=time.sleep, clock=time.monotonic, wait: floa
         return True  # not ours to start: the request goes as it would have
     if not running:
         logger.info("[AI pack] starting the AI container for a request (warming up)")
-        _docker("POST", f"/containers/{CONTAINER}/start")
+        _docker("POST", f"/containers/{pack_name()}/start")
         _STARTED["at"] = clock()
     deadline = clock() + limit
     while True:
@@ -392,6 +438,6 @@ def idle_tick(cfg: dict[str, Any], indexing: bool = False, clock=time.monotonic)
     if not (ours and running):
         return False
     logger.info("[AI pack] idle: stopping the AI container until the next question")
-    _docker("POST", f"/containers/{CONTAINER}/stop?t=20")
+    _docker("POST", f"/containers/{pack_name()}/stop?t=20")
     _RUNNING.update(at=clock(), value=False)
     return True

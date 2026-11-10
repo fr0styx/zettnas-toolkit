@@ -1473,6 +1473,9 @@ def _turn_call_model(
                     c_target = str(t_args.get("container") or "").strip().lower()
                     c_act = str(t_args.get("action") or "restart").strip().lower()
                     if c_target in (
+                        "kiboto",
+                        "kiboto-db",
+                        "kiboto-ollama",
                         "zettnas-toolkit",
                         "zettnas-db",
                         "zettnas-ollama",

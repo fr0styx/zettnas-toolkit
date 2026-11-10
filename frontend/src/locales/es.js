@@ -3638,7 +3638,7 @@ export default {
   "aipack.state_warming": "Preparándose: {phase}. El primer inicio descarga unos GB.",
   "aipack.state_ready": "Listo.",
   "aipack.state_stopped": "Detenido por inactividad; vuelve a arrancar con la siguiente pregunta.",
-  "aipack.state_not_ours": "Existe un contenedor llamado zettnas-ai que no creó el paquete de IA; no se toca.",
+  "aipack.state_not_ours": "Existe un contenedor llamado kiboto-ai que no creó el paquete de IA; no se toca.",
   "aipack.use": "Usarlo para chat y búsqueda",
   "aipack.in_use": "Kiboto usa el paquete de IA.",
   "aipack.use_title": "¿Usar el paquete de IA?",

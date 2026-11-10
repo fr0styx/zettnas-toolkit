@@ -585,9 +585,9 @@ EMBED_BATCH_SIZE = 32
 def _wake(host: str | None, wait: float | None = None) -> None:
     """The AI pack may be stopped for idling: start it before asking it (AI-40), waiting no longer
     than `wait` when the request has a deadline (NAI-1)."""
-    if host and "//zettnas-ai:" in host:
-        from backend.services import ai_pack
+    from backend.services import ai_pack
 
+    if ai_pack.is_pack_url(host):
         ai_pack.wake_for(host, wait=wait)
 
 

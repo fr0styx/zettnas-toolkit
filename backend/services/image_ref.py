@@ -9,7 +9,7 @@ import re
 from functools import lru_cache
 
 # set on containers Kiboto pinned at install: their updates follow the tag and re-pin
-FOLLOW_TAG_LABEL = "zettnas.image.follow-tag"
+FOLLOW_TAG_LABEL = "kiboto.image.follow-tag"  # with legacy_names.OLD_FOLLOW_TAG_LABEL until 2.2
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _LOCK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "catalog_digests.json")
 

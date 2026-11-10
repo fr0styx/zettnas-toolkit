@@ -17,6 +17,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
+from backend import legacy_names
 from backend.config import DATA_DIR, POOL_PATH, docker_sock, logger
 from backend.fsutil import atomic_write_json, protected_rclone_excludes, read_json
 from backend.ignored_errors import ignored
@@ -255,7 +256,7 @@ Match Group sftpusers
         return True
 
     def _start_sidecar(self, port: int) -> bool:
-        """Starts or creates the zettnas-sftp sidecar container with host network mode."""
+        """Starts or creates the kiboto-sftp sidecar container with host network mode."""
         sock_path = docker_sock()
         if not os.path.exists(sock_path):
             return False
@@ -264,24 +265,28 @@ Match Group sftpusers
             from backend.services.container_mutator import _docker_request
 
             # 1. Check if container already exists
-            code, c_data = _docker_request("GET", "/containers/zettnas-sftp/json")
+            old = legacy_names.OLD_SFTP  # the sidecar made before the rebrand goes; kiboto-sftp replaces it
+            if _docker_request("GET", f"/containers/{old}/json")[0] == 200:
+                _docker_request("POST", f"/containers/{old}/stop?t=2")
+                _docker_request("DELETE", f"/containers/{old}?force=true")
+            code, c_data = _docker_request("GET", "/containers/kiboto-sftp/json")
             if code == 200:
                 is_running = bool(c_data.get("State", {}).get("Running", False))
                 # same port and command; an older sidecar ran rclone on the open port (SEC-34)
                 current = c_data.get("Config", {}).get("Cmd", []) == _front_cmd(port)
                 if is_running and current:
-                    logger.info("[SFTP] Sidecar zettnas-sftp already running on port %s", port)
+                    logger.info("[SFTP] Sidecar kiboto-sftp already running on port %s", port)
                     return True
 
                 if current:
-                    code_st, _ = _docker_request("POST", "/containers/zettnas-sftp/start")
+                    code_st, _ = _docker_request("POST", "/containers/kiboto-sftp/start")
                     if code_st in (204, 200, 304):
-                        logger.info(f"[SFTP] Existing sidecar zettnas-sftp started on port {port}")
+                        logger.info(f"[SFTP] Existing sidecar kiboto-sftp started on port {port}")
                         return True
 
                 # Port mismatch or failure: recreate cleanly
-                _docker_request("POST", "/containers/zettnas-sftp/stop?t=2")
-                _docker_request("DELETE", "/containers/zettnas-sftp?force=true")
+                _docker_request("POST", "/containers/kiboto-sftp/stop?t=2")
+                _docker_request("DELETE", "/containers/kiboto-sftp?force=true")
 
             # 2. Inspect parent container for image and host volume bindings
             code_tk, tk_info = _docker_request("GET", "/containers/zettnas-toolkit/json")
@@ -332,16 +337,16 @@ Match Group sftpusers
                     "RestartPolicy": {"Name": "unless-stopped"},
                 },
                 "Labels": {
-                    "app": "zettnas-sftp",
+                    "app": "kiboto-sftp",
                     "managed-by": "zettnas-toolkit",
                 },
             }
 
-            code_cr, resp_cr = _docker_request("POST", "/containers/create?name=zettnas-sftp", body=payload)
+            code_cr, resp_cr = _docker_request("POST", "/containers/create?name=kiboto-sftp", body=payload)
             if code_cr in (201, 200):
-                code_st, resp_st = _docker_request("POST", "/containers/zettnas-sftp/start")
+                code_st, resp_st = _docker_request("POST", "/containers/kiboto-sftp/start")
                 if code_st in (204, 200, 304):
-                    logger.info("[SFTP] Sidecar container zettnas-sftp started on host port %s", port)
+                    logger.info("[SFTP] Sidecar container kiboto-sftp started on host port %s", port)
                     return True
                 else:
                     logger.error(f"[SFTP] Failed to start sidecar container: {code_st} {resp_st}")
@@ -387,7 +392,7 @@ Match Group sftpusers
             try:
                 from backend.services.container_mutator import _docker_request
 
-                code, c_data = _docker_request("GET", "/containers/zettnas-sftp/json")
+                code, c_data = _docker_request("GET", "/containers/kiboto-sftp/json")
                 if code == 200:
                     sidecar_detected = True
                     sidecar_status = "running" if c_data.get("State", {}).get("Running") else "stopped"
@@ -484,9 +489,10 @@ Match Group sftpusers
             try:
                 from backend.services.container_mutator import _docker_request
 
-                code, _ = _docker_request("GET", "/containers/zettnas-sftp/json")
-                if code == 200:
-                    _docker_request("POST", "/containers/zettnas-sftp/stop?t=2")
+                for name in ("kiboto-sftp", legacy_names.OLD_SFTP):  # one made before the rebrand, too
+                    code, _ = _docker_request("GET", f"/containers/{name}/json")
+                    if code == 200:
+                        _docker_request("POST", f"/containers/{name}/stop?t=2")
             except Exception as e:
                 logger.warning("[SFTP] Failed to stop sidecar: %s", e)
 

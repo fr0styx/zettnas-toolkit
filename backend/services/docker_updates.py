@@ -240,12 +240,13 @@ def _check_container_image_update(c: dict) -> dict[str, Any]:
         res["status"] = "policy_off"
         return res
 
-    from backend.services.image_ref import FOLLOW_TAG_LABEL, name_and_tag, split_ref
+    from backend import legacy_names
+    from backend.services.image_ref import name_and_tag, split_ref
 
     pinned_digest = ""
     if "@sha256:" in img:
         name = name_and_tag(img)
-        follows = (c.get("Labels") or {}).get(FOLLOW_TAG_LABEL) == "1"
+        follows = legacy_names.follows_tag(c.get("Labels"))
         if not follows or ":" not in name.rsplit("/", 1)[-1]:
             # pinned by its owner (or without a tag): nothing to compare against
             res["status"] = "pinned"
@@ -417,9 +418,9 @@ def update_single_container(cid: str) -> dict[str, Any]:
     if not img:
         raise ValueError(f"No image configured for container '{orig_name}'.")
 
-    from backend.services.image_ref import FOLLOW_TAG_LABEL
+    from backend import legacy_names
 
-    was_pinned = "@" in img and (inspect_data.get("Config", {}).get("Labels") or {}).get(FOLLOW_TAG_LABEL) == "1"
+    was_pinned = "@" in img and legacy_names.follows_tag(inspect_data.get("Config", {}).get("Labels"))
     if was_pinned:
         img = _update_target(img)
     logger.info("[Docker Updates] Pulling newest image for '%s' (%s)...", orig_name, img)

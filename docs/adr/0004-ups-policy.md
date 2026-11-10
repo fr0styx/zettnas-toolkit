@@ -12,7 +12,7 @@ down, in different orders, risk an unclean array.
 ## Decision
 
 - On Unraid and TrueNAS, Kiboto hands the shutdown to the host.
-- Kiboto stops only the stacks it manages (labelled `com.zettnas.managed`).
+- Kiboto stops only the stacks it manages (labelled `com.kiboto.managed`; ones installed before the rebrand carry `com.zettnas.managed`, which counts too until 2.2).
 - Kiboto never cuts outlet power without a verified host shutdown path.
 
 ## Consequences

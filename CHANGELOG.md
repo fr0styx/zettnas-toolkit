@@ -15,6 +15,14 @@ installs made before keep working through it.
   guard's file in each share is renamed to `!Kiboto-guard-file.docx` the next time it is checked.
   The README and every doc say Kiboto too, with kiboto.net as the website. Zettlab and ZettOS, the
   hardware maker's names, stay.
+- **Docker objects get Kiboto names**: what Kiboto creates from now on is called kiboto-*: the AI pack
+  (`kiboto-ai`, serving `kiboto-chat` and `kiboto-embed`), the SFTP sidecar, the updater's helper and an
+  app's own network (`kiboto-app-<app>`), labelled `com.kiboto.managed`. What an install made before
+  keeps working until Kiboto 2.2: an existing `zettnas-ai` pack keeps its name, its downloaded models and
+  its model names; an app keeps its `zettnas-app-` network; containers labelled `com.zettnas.managed`
+  still count as Kiboto's (new ones carry both labels, so a rollback still knows them); the old SFTP
+  sidecar is replaced by the new one; and "AI for apps" still answers to `zettnas-chat` and
+  `zettnas-embed`, so apps set up with those don't need changing.
 - **The image is ghcr.io/fr0styx/kiboto**: every build is published and signed under the new name and,
   until Kiboto 2.2, under `ghcr.io/fr0styx/zettnas-toolkit` too, so installs made before keep finding
   their updates, including through Unraid's own update button. In-app updates use the new name once it

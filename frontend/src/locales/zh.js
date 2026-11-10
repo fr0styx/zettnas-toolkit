@@ -3638,7 +3638,7 @@ export default {
   "aipack.state_warming": "正在准备：{phase}。首次启动会下载数 GB。",
   "aipack.state_ready": "已就绪。",
   "aipack.state_stopped": "空闲时已停止；下次提问时会再次启动。",
-  "aipack.state_not_ours": "已存在一个名为 zettnas-ai 的容器，并非由 AI 套件创建；不会被改动。",
+  "aipack.state_not_ours": "已存在一个名为 kiboto-ai 的容器，并非由 AI 套件创建；不会被改动。",
   "aipack.use": "用于聊天和搜索",
   "aipack.in_use": "Kiboto 正在使用 AI 套件。",
   "aipack.use_title": "使用 AI 套件？",

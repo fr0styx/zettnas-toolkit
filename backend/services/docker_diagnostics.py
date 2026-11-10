@@ -110,7 +110,7 @@ def _diag_containers(result: Any) -> Any:
                 result["containers_summary"]["oom_killed"] += 1
 
             is_troubled = status in ("restarting", "dead") or is_oom
-            if is_troubled and name == "zettnas-samba":
+            if is_troubled and name in ("kiboto-samba", "zettnas-samba"):
                 try:
                     from backend.hardware.pal_storage import PlatformType, StoragePlatformDetector
 

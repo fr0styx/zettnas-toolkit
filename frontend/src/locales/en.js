@@ -3638,7 +3638,7 @@ export default {
   "aipack.state_warming": "Warming up: {phase}. The first start downloads a few GB.",
   "aipack.state_ready": "Ready.",
   "aipack.state_stopped": "Stopped while idle; it starts again on the next question.",
-  "aipack.state_not_ours": "A container named zettnas-ai exists that the AI pack didn't make; it is left alone.",
+  "aipack.state_not_ours": "A container named kiboto-ai exists that the AI pack didn't make; it is left alone.",
   "aipack.use": "Use it for chat and search",
   "aipack.in_use": "Kiboto uses the AI pack.",
   "aipack.use_title": "Use the AI pack?",

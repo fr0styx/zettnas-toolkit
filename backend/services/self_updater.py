@@ -59,8 +59,11 @@ def spawn_self_updater(
     """
     try:
         # 1. Clean up any stale updater container
-        _docker_request("POST", "/containers/zettnas-self-updater/stop?t=2")
-        _docker_request("DELETE", "/containers/zettnas-self-updater?force=true")
+        from backend import legacy_names
+
+        for helper in ("kiboto-self-updater", legacy_names.OLD_SELF_UPDATER):  # a leftover from before, too
+            _docker_request("POST", f"/containers/{helper}/stop?t=2")
+            _docker_request("DELETE", f"/containers/{helper}?force=true")
 
         # 2. Define ephemeral updater command
         cmd = [
@@ -99,7 +102,7 @@ def spawn_self_updater(
             },
         }
 
-        st, res = _docker_request("POST", "/containers/create?name=zettnas-self-updater", body=create_body)
+        st, res = _docker_request("POST", "/containers/create?name=kiboto-self-updater", body=create_body)
         if st in (200, 201) and isinstance(res, dict):
             cid = res.get("Id")
             if cid:

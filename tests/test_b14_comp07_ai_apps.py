@@ -58,7 +58,8 @@ def test_a_key_comes_with_the_apps_settings_filled_in(key):
 def test_the_key_lists_its_models_and_can_do_nothing_else(client, key, auth_headers):
     r = client.get("/api/v1/ai/openai/models", headers=bearer(key))
     assert r.status_code == 200
-    assert [m["id"] for m in r.json()["data"]] == [ai_apps.CHAT_MODEL, ai_apps.EMBED_MODEL]
+    ids = [m["id"] for m in r.json()["data"]]
+    assert ids == [ai_apps.CHAT_MODEL, ai_apps.EMBED_MODEL, "zettnas-chat", "zettnas-embed"]  # apps set up before
     assert client.get("/api/v1/ai/apps", headers=bearer(key)).status_code == 403  # not an admin's key
     assert client.get("/api/v1/users", headers=bearer(key)).status_code in (401, 403)
     listed = client.get("/api/v1/ai/apps", headers=auth_headers).json()

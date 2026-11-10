@@ -47,21 +47,23 @@ def docker(monkeypatch):
 
 
 def test_the_name_is_safe_for_docker():
-    assert app_networks.network_name("office-suite") == "zettnas-app-office-suite"
-    assert app_networks.network_name("My App/2") == "zettnas-app-my-app-2"
-    assert app_networks.network_name("") == "zettnas-app-app"
-    assert len(app_networks.network_name("x" * 200)) == len("zettnas-app-") + 40
+    assert app_networks.network_name("office-suite") == "kiboto-app-office-suite"
+    assert app_networks.network_name("My App/2") == "kiboto-app-my-app-2"
+    assert app_networks.network_name("") == "kiboto-app-app"
+    assert len(app_networks.network_name("x" * 200)) == len("kiboto-app-") + 40
 
 
-def test_an_app_gets_its_own_network_with_zettnas_on_it(docker):
-    assert app_networks.private_network("frigate") == "zettnas-app-frigate"
-    assert docker.networks["zettnas-app-frigate"]["Labels"] == {
-        "com.zettnas.managed": "1",
+def test_an_app_gets_its_own_network_with_kiboto_on_it(docker):
+    assert app_networks.private_network("frigate") == "kiboto-app-frigate"
+    assert docker.networks["kiboto-app-frigate"]["Labels"] == {
+        "com.kiboto.managed": "1",
+        "com.kiboto.app": "frigate",
+        "com.zettnas.managed": "1",  # an older version, after a rollback, knows only these
         "com.zettnas.app": "frigate",
     }
-    assert "zettnas-app-frigate" in docker.me["NetworkSettings"]["Networks"]
+    assert "kiboto-app-frigate" in docker.me["NetworkSettings"]["Networks"]
     creates = [c for c in docker.calls if c[1] == "/networks/create"]
-    assert app_networks.private_network("frigate") == "zettnas-app-frigate"  # the second install reuses it
+    assert app_networks.private_network("frigate") == "kiboto-app-frigate"  # the second install reuses it
     assert [c for c in docker.calls if c[1] == "/networks/create"] == creates
 
 
@@ -88,15 +90,15 @@ def test_a_refused_network_installs_on_the_default(docker, monkeypatch):
     assert app_networks.private_network("adguardhome") is None
 
 
-def test_zettnas_rejoins_its_app_networks_after_an_update(docker):
+def test_kiboto_rejoins_its_app_networks_after_an_update(docker):
     app_networks.private_network("frigate")
     app_networks.private_network("office-suite")
     docker.me["NetworkSettings"]["Networks"] = {"zettnas_default": {}}  # recreated by an update
     assert app_networks.rejoin() == 2
     assert set(docker.me["NetworkSettings"]["Networks"]) == {
         "zettnas_default",
-        "zettnas-app-frigate",
-        "zettnas-app-office-suite",
+        "kiboto-app-frigate",
+        "kiboto-app-office-suite",
     }
     assert app_networks.rejoin() == 0
 
@@ -107,7 +109,7 @@ def test_sign_ins_relayed_from_any_shared_network_are_not_blocked(monkeypatch):
             "Networks": {
                 "bridge": {"IPAddress": "172.17.0.2", "IPPrefixLen": 16},
                 "zettnas_default": {"IPAddress": "172.20.0.3", "IPPrefixLen": 16},
-                "zettnas-app-office-suite": {"IPAddress": "172.23.0.2", "IPPrefixLen": 16},
+                "kiboto-app-office-suite": {"IPAddress": "172.23.0.2", "IPPrefixLen": 16},
             }
         }
     }
@@ -117,3 +119,13 @@ def test_sign_ins_relayed_from_any_shared_network_are_not_blocked(monkeypatch):
     assert ip_block._relay("172.23.0.9") is True
     assert ip_block._relay("172.17.0.9") is False  # the default bridge is not a shared app network
     assert ip_block._relay("not an address") is False
+
+
+def test_an_apps_network_made_before_the_rebrand_is_kept_and_rejoined(docker):
+    """Until 2.2 (legacy_names): the app is already on zettnas-app-<id>, so that one is used."""
+    docker.networks["zettnas-app-frigate"] = {"Labels": {"com.zettnas.managed": "1", "com.zettnas.app": "frigate"}}
+    assert app_networks.private_network("frigate") == "zettnas-app-frigate"
+    assert "kiboto-app-frigate" not in docker.networks
+    docker.me["NetworkSettings"]["Networks"] = {"zettnas_default": {}}  # recreated by an update
+    assert app_networks.rejoin() == 1
+    assert "zettnas-app-frigate" in docker.me["NetworkSettings"]["Networks"]

@@ -3,11 +3,12 @@
 The office suite, Frigate and AdGuard Home used to join Kiboto's own network so Kiboto could
 reach them by name without publishing a port. That network also holds Kiboto's model servers,
 which answer without a sign-in, so a compromised app could reach them. Now each such app gets
-"zettnas-app-<id>": a bridge with only that app and Kiboto on it. Names still resolve, the
+"kiboto-app-<id>": a bridge with only that app and Kiboto on it. Names still resolve, the
 apps still reach the internet, and an app sees neither the model servers nor the other apps.
 
 An update recreates Kiboto's container on its main network only, so Kiboto rejoins every app
-network when it starts. Apps installed before this keep the network they were installed on.
+network when it starts. Apps installed before this keep the network they were installed on,
+and one made before the rebrand keeps its zettnas-app- name.
 """
 
 from __future__ import annotations
@@ -18,15 +19,16 @@ import socket
 import urllib.parse
 from typing import Any
 
+from backend import legacy_names, product
 from backend.config import logger
 from backend.services import docker_client
 
-PREFIX = "zettnas-app-"
-APP_LABEL = "com.zettnas.app"
+PREFIX = "kiboto-app-"
+APP_LABEL = product.APP_LABEL
 
 
 def network_name(app_id: str) -> str:
-    """The app's own network: zettnas-app- and its id, lower case, in Docker's name characters."""
+    """The app's own network: kiboto-app- and its id, lower case, in Docker's name characters."""
     clean = re.sub(r"[^a-z0-9_.-]+", "-", str(app_id or "app").lower()).strip("-.") or "app"
     return PREFIX + clean[:40]
 
@@ -63,7 +65,12 @@ def private_network(app_id: str) -> str | None:
     try:
         status, _ = docker_client.request("GET", f"/networks/{urllib.parse.quote(name)}")
         if status == 404:
-            body = {"Name": name, "Driver": "bridge", "Labels": {"com.zettnas.managed": "1", APP_LABEL: str(app_id)}}
+            old = legacy_names.OLD_APP_NETWORK_PREFIX + name[len(PREFIX) :]  # the app's network made before
+            old_status, _ = docker_client.request("GET", f"/networks/{urllib.parse.quote(old)}")
+            if old_status == 200:
+                return old if _join(me, old) else None
+            labels = {**legacy_names.managed_labels(), APP_LABEL: str(app_id), legacy_names.OLD_APP_LABEL: str(app_id)}
+            body = {"Name": name, "Driver": "bridge", "Labels": labels}
             status, _ = docker_client.request("POST", "/networks/create", body=body)
             if status not in (200, 201, 409):
                 return None
@@ -83,13 +90,18 @@ def rejoin() -> int:
         return 0
     joined = 0
     try:
-        query = urllib.parse.quote(json.dumps({"label": [APP_LABEL]}))
-        status, nets = docker_client.request("GET", f"/networks?filters={query}")
-        if status != 200 or not isinstance(nets, list):
-            return 0
-        for net in nets:
-            name = str(net.get("Name") or "")
-            if name.startswith(PREFIX) and name not in _joined(me) and _join(me, name):
+        nets: list = []
+        for label in (APP_LABEL, legacy_names.OLD_APP_LABEL):  # networks made before carry the old one
+            query = urllib.parse.quote(json.dumps({"label": [label]}))
+            status, some = docker_client.request("GET", f"/networks?filters={query}")
+            if status == 200 and isinstance(some, list):
+                nets += some
+        for name in sorted({str(n.get("Name") or "") for n in nets}):
+            if (
+                name.startswith((PREFIX, legacy_names.OLD_APP_NETWORK_PREFIX))
+                and name not in _joined(me)
+                and _join(me, name)
+            ):
                 joined += 1
     except (docker_client.DockerError, OSError, ValueError):
         logger.warning("app_networks: could not rejoin the app networks", exc_info=True)

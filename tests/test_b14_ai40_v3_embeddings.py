@@ -45,15 +45,15 @@ def test_which_servers_speak_openai(host, openai):
 
 
 def test_a_batch_goes_to_v3_embeddings_in_order(server):
-    blobs = emb.compute_neural_embeddings_batch(["a", "b"], model="zettnas-embed", host="http://ovms:8000/v3")
-    assert server[0] == ("http://ovms:8000/v3/embeddings", {"model": "zettnas-embed", "input": ["a", "b"]})
+    blobs = emb.compute_neural_embeddings_batch(["a", "b"], model="kiboto-embed", host="http://ovms:8000/v3")
+    assert server[0] == ("http://ovms:8000/v3/embeddings", {"model": "kiboto-embed", "input": ["a", "b"]})
     vecs = [emb.unpack_embedding(b) for b in blobs]
     assert vecs[0] == pytest.approx([0.6, 0.8])
     assert vecs[1] == pytest.approx([3 / math.sqrt(34), 5 / math.sqrt(34)])
 
 
 def test_one_text_goes_there_too(server):
-    blob, vec = emb.compute_neural_embedding_via_ollama("hello", model="zettnas-embed", host="http://ovms:8000/v3")
+    blob, vec = emb.compute_neural_embedding_via_ollama("hello", model="kiboto-embed", host="http://ovms:8000/v3")
     assert server[0][0] == "http://ovms:8000/v3/embeddings"
     assert vec == pytest.approx([0.6, 0.8]) and emb.unpack_embedding(blob) == pytest.approx([0.6, 0.8])
 

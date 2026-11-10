@@ -8,13 +8,13 @@ import urllib.request
 from collections.abc import Iterator
 from typing import Any, Optional
 
+from backend import legacy_names
 from backend.config import DATA_DIR, docker_sock, logger
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.docker_stats import UnixHTTPConnection
 from backend.ignored_errors import ignored
 from backend.services.catalog_templates import CURATED_APP_CATALOG
 from backend.services.container_mutator import _docker_request, check_port_available, check_port_available_detailed
-from backend.services.image_ref import FOLLOW_TAG_LABEL
 from backend.state import add_event, event_text
 
 CATALOG_SOURCES_FILE = os.path.join(DATA_DIR, "catalog_sources.json")
@@ -1288,7 +1288,7 @@ def _apply_runtime_options(create_body: dict[str, Any], app: dict[str, Any]) -> 
         host["Sysctls"] = {str(k): str(v) for k, v in app["sysctls"].items()}
     if app.get("shm_size"):
         host["ShmSize"] = int(app["shm_size"])
-    if app.get("join_zettnas_network") and not host.get("NetworkMode"):
+    if (app.get("join_kiboto_network") or app.get("join_zettnas_network")) and not host.get("NetworkMode"):
         from backend.services.app_networks import private_network
 
         net = private_network(str(app.get("id") or "app"))  # Kiboto reaches it by name; nothing else does (NSEC-10)
@@ -1362,11 +1362,11 @@ def _deploy_companions(
             "Labels": {
                 "com.docker.compose.project": service_name,
                 "com.docker.compose.service": s_name,
-                "com.zettnas.managed": "1",
+                **legacy_names.managed_labels(),
             },
         }
         if "@" in image:
-            body["Labels"][FOLLOW_TAG_LABEL] = "1"
+            body["Labels"].update(legacy_names.follow_tag_labels())
         if host_cfg_cmd:
             body["Cmd"] = host_cfg_cmd
         st, resp = _docker_request("POST", f"/containers/create?name={cname}", body=body)
@@ -1756,7 +1756,7 @@ def stream_deploy_catalog_app(
         "Labels": {
             "com.docker.compose.project": service_name,
             "com.docker.compose.service": service_name,
-            "com.zettnas.managed": "1",  # Kiboto stops only its own apps on a power cut (REL-10)
+            **legacy_names.managed_labels(),  # Kiboto stops only its own apps on a power cut (REL-10)
             "net.unraid.docker.managed": "dockerman",
             "net.unraid.docker.webui": f"{app.get('webui_scheme', 'http')}://[IP]:[PORT:{port}]{(app.get('webui_path') or '/')}",
             "net.unraid.docker.icon": app.get("logo")
@@ -1765,7 +1765,7 @@ def stream_deploy_catalog_app(
     }
 
     if "@" in image_name:
-        create_body["Labels"][FOLLOW_TAG_LABEL] = "1"
+        create_body["Labels"].update(legacy_names.follow_tag_labels())
     if network_name:
         create_body["HostConfig"]["NetworkMode"] = network_name
     _apply_runtime_options(create_body, app)

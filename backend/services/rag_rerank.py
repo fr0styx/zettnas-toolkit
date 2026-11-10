@@ -65,9 +65,9 @@ def rerank_scores(
     url = str(cfg.get("rerank_endpoint") or "").strip()
     if not url or not docs or not endpoint_ok(url):
         return None
-    if "//zettnas-ai:" in url:  # the AI pack, maybe stopped for idling (AI-40)
-        from backend.services import ai_pack
+    from backend.services import ai_pack
 
+    if ai_pack.is_pack_url(url):  # the AI pack, maybe stopped for idling (AI-40)
         if not ai_pack.wake_for(url, wait=0.0):
             return None  # warming up: this search goes without reranking rather than wait (NAI-1)
     payload: dict[str, Any] = {

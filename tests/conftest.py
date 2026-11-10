@@ -270,10 +270,11 @@ def _no_registry_lookups(monkeypatch):
     """Tests never ask the real registry; tests that need a digest set their own."""
     from backend.api import system
 
-    async def _unknown(tag):
+    async def _unknown(tag, image_repo=None):
         return None
 
     monkeypatch.setattr(system, "_registry_digest", _unknown)
+    monkeypatch.setattr(system, "_registry_digest_in", _unknown)  # the update target falls back to the old name
 
 
 @pytest.fixture(autouse=True)

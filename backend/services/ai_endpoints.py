@@ -24,7 +24,14 @@ from typing import Optional
 
 from backend import settings as _settings
 
-CONTAINER_NAMES = ("zettnas-ollama", "ollama", "zettnas-ovms", "ovms")
+CONTAINER_NAMES = (
+    "kiboto-ollama",
+    "zettnas-ollama",
+    "ollama",
+    "kiboto-ovms",
+    "zettnas-ovms",
+    "ovms",
+)  # old names until 2.2
 _DOCKER_BRIDGES = ipaddress.ip_network("172.16.0.0/12")
 
 

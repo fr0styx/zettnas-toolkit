@@ -16,6 +16,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
+from backend import legacy_names
 from backend import settings as _settings
 from backend.config import DATA_DIR, POOL_PATH, docker_sock, logger
 from backend.config import docker_sock as _docker_sock_path
@@ -498,7 +499,7 @@ class SambaEngine:
                     containers = r.json()
                     for c in containers:
                         names = [n.lstrip("/") for n in c.get("Names", [])]
-                        if "zettnas-samba" in names:
+                        if {"kiboto-samba", legacy_names.OLD_SAMBA} & set(names):
                             return {
                                 "detected": True,
                                 "id": c.get("Id", "")[:12],
@@ -511,7 +512,7 @@ class SambaEngine:
         return {"detected": False, "status": "not_found"}
 
     def reload_service(self) -> bool:
-        """Attempts to signal smbd or restart the zettnas-samba container if running."""
+        """Attempts to signal smbd or restart the Samba sidecar (kiboto-samba, or zettnas-samba from before)."""
         # 1. Try smbcontrol if available in container/host
         try:
             res = subprocess.run(["smbcontrol", "all", "reload-config"], capture_output=True, timeout=2)
@@ -523,15 +524,18 @@ class SambaEngine:
 
         # 2. Try docker restart on sidecar container if available
         docker_sock = _docker_sock_path()
-        if os.path.exists(docker_sock):
+        sidecar_info = self.check_sidecar()
+        if os.path.exists(docker_sock) and sidecar_info.get("detected"):
             try:
                 import httpx
 
                 transport = httpx.HTTPTransport(uds=docker_sock)
                 with httpx.Client(transport=transport, timeout=3.0) as client:
-                    r = client.post("http://localhost/containers/zettnas-samba/restart?t=2")
+                    r = client.post(
+                        f"http://localhost/containers/{sidecar_info.get('id') or 'kiboto-samba'}/restart?t=2"
+                    )
                     if r.status_code in (204, 200):
-                        logger.info("[SambaEngine] zettnas-samba sidecar restarted successfully")
+                        logger.info("[SambaEngine] Samba sidecar restarted successfully")
                         return True
             except Exception:
                 ignored("backend.services.samba_engine.SambaEngine.reload_service")
@@ -581,7 +585,7 @@ class SambaEngine:
 
                 transport = httpx.HTTPTransport(uds=docker_sock)
                 with httpx.Client(transport=transport, timeout=5.0) as client:
-                    cid = sidecar_info.get("id", "zettnas-samba")
+                    cid = sidecar_info.get("id", "kiboto-samba")
                     if delete:
                         create_exec = client.post(
                             f"http://localhost/containers/{cid}/exec",

@@ -371,9 +371,9 @@ def _try_local_llm_completion(
         return (None, None, 0, None, None, None)
 
     mark_chat_activity()
-    if llm_endpoint and "//zettnas-ai:" in llm_endpoint:  # the AI pack, maybe stopped for idling (AI-40)
-        from backend.services import ai_pack
+    from backend.services import ai_pack
 
+    if ai_pack.is_pack_url(llm_endpoint):  # the AI pack, maybe stopped for idling (AI-40)
         ai_pack.wake_for(llm_endpoint)
     candidate_endpoints: list[tuple[str, str]] = []
     if llm_endpoint and llm_endpoint.strip():

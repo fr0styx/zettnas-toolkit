@@ -23,10 +23,13 @@ import urllib.request
 from collections.abc import Iterator
 from typing import Any
 
+from backend import legacy_names
 from backend.config import logger
 
-CHAT_MODEL = "zettnas-chat"
-EMBED_MODEL = "zettnas-embed"
+CHAT_MODEL = "kiboto-chat"
+EMBED_MODEL = "kiboto-embed"
+# apps set up before the rebrand were given these ids; they keep working until 2.2 (legacy_names)
+OLD_CHAT_MODEL, OLD_EMBED_MODEL = legacy_names.OLD_AI_APP_MODELS
 SCOPE = "ai:apps"
 _BUSY: set[str] = set()
 _BUSY_LOCK = threading.Lock()
@@ -150,8 +153,10 @@ def models() -> dict[str, Any]:
     return {
         "object": "list",
         "data": [
-            {"id": CHAT_MODEL, "object": "model", "created": now, "owned_by": "zettnas"},
-            {"id": EMBED_MODEL, "object": "model", "created": now, "owned_by": "zettnas"},
+            {"id": CHAT_MODEL, "object": "model", "created": now, "owned_by": "kiboto"},
+            {"id": EMBED_MODEL, "object": "model", "created": now, "owned_by": "kiboto"},
+            {"id": OLD_CHAT_MODEL, "object": "model", "created": now, "owned_by": "kiboto"},
+            {"id": OLD_EMBED_MODEL, "object": "model", "created": now, "owned_by": "kiboto"},
         ],
     }
 
@@ -200,9 +205,9 @@ def chat_body(body: dict[str, Any], model: str) -> dict[str, Any]:
 
 
 def _open(url: str, payload: dict[str, Any], timeout: float):
-    if "//zettnas-ai:" in url:  # the AI pack, maybe stopped for idling (AI-40)
-        from backend.services import ai_pack
+    from backend.services import ai_pack
 
+    if ai_pack.is_pack_url(url):  # the AI pack, maybe stopped for idling (AI-40)
         ai_pack.wake_for(url)
     req = urllib.request.Request(
         url,
@@ -240,7 +245,7 @@ def chat(body: dict[str, Any]) -> dict[str, Any]:
         with resp:
             data = json.loads(resp.read().decode("utf-8", "replace"))
     if isinstance(data, dict):
-        data["model"] = CHAT_MODEL
+        data["model"] = OLD_CHAT_MODEL if body.get("model") == OLD_CHAT_MODEL else CHAT_MODEL
     return data
 
 
@@ -284,7 +289,7 @@ def embeddings(body: dict[str, Any]) -> dict[str, Any]:
     tokens = sum(len(t.split()) for t in texts)
     return {
         "object": "list",
-        "model": EMBED_MODEL,
+        "model": OLD_EMBED_MODEL if body.get("model") == OLD_EMBED_MODEL else EMBED_MODEL,
         "data": data,
         "usage": {"prompt_tokens": tokens, "total_tokens": tokens},
     }

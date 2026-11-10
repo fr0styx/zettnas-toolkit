@@ -173,4 +173,4 @@ def test_catalog_installs_carry_the_follow_tag_label(lock, monkeypatch, tmp_path
 
     with open(app_catalog.__file__, encoding="utf-8") as f:
         src = f.read()
-    assert src.count('[FOLLOW_TAG_LABEL] = "1"') == 2  # main container and companions
+    assert src.count(".update(legacy_names.follow_tag_labels())") == 2  # main container and companions

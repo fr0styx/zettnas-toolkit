@@ -32,6 +32,8 @@ describe('AI pack settings (AI-40)', () => {
     const html = packHtml({ ...BASE, installed: false, state: 'not-ours' });
     expect(html).not.toContain('data-ai-pack-install');
     expect(html).toContain('left alone');
+    expect(stateText({ state: 'not-ours' })).toContain('kiboto-ai');
+    expect(stateText({ state: 'absent' })).toBe('');
   });
 
   it('reads the last event of the install stream', async () => {

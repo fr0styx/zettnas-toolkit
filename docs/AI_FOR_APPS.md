@@ -9,7 +9,7 @@ http://<your server>:8082/api/v1/ai/openai
 
 | Path | What it does |
 |---|---|
-| `GET /models` | `zettnas-chat` and `zettnas-embed` |
+| `GET /models` | `kiboto-chat` and `kiboto-embed` (and `zettnas-chat`, `zettnas-embed`, the names before the rebrand, until 2.2) |
 | `POST /chat/completions` | a reply from the chat model; `"stream": true` streams it |
 | `POST /embeddings` | vectors from the embedder (up to 64 texts at a time) |
 
@@ -28,8 +28,8 @@ in AI settings still applies. Revoke a key there to cut an app off.
 
 - **Paperless-ngx**: environment variables `PAPERLESS_AI_ENABLED=true`,
   `PAPERLESS_AI_LLM_BACKEND=openai-like`, `PAPERLESS_AI_LLM_ENDPOINT` (the address),
-  `PAPERLESS_AI_LLM_API_KEY` (the key), `PAPERLESS_AI_LLM_MODEL=zettnas-chat`,
-  `PAPERLESS_AI_LLM_EMBEDDING_BACKEND=openai-like`, `PAPERLESS_AI_LLM_EMBEDDING_MODEL=zettnas-embed`.
+  `PAPERLESS_AI_LLM_API_KEY` (the key), `PAPERLESS_AI_LLM_MODEL=kiboto-chat`,
+  `PAPERLESS_AI_LLM_EMBEDDING_BACKEND=openai-like`, `PAPERLESS_AI_LLM_EMBEDDING_MODEL=kiboto-embed`.
 - **Open WebUI**: `OPENAI_API_BASE_URL` (the address) and `OPENAI_API_KEY` (the key), or Admin
   settings → Connections.
 - **Home Assistant**: its built-in OpenAI integration can't change its address. Use an

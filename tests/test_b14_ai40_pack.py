@@ -38,12 +38,12 @@ def test_the_preset_follows_the_box(tmp_path, ram_gb, gpu, preset):
 def test_the_container_has_no_port_a_memory_limit_and_its_own_label(tmp_path):
     _, dev = _box_files(tmp_path, 16 * 1048576, gpu=True, npu=True)
     body = ai_pack.create_body(
-        "standard", "/data/zettnas-ai/models", "zettnas_default", "img@sha256:" + "a" * 64, dev=dev
+        "standard", "/data/kiboto-ai/models", "zettnas_default", "img@sha256:" + "a" * 64, dev=dev
     )
     hc = body["HostConfig"]
     assert "PortBindings" not in hc and "ExposedPorts" not in body
     assert hc["NetworkMode"] == "zettnas_default"
-    assert body["NetworkingConfig"]["EndpointsConfig"]["zettnas_default"]["Aliases"] == ["zettnas-ai"]
+    assert body["NetworkingConfig"]["EndpointsConfig"]["zettnas_default"]["Aliases"] == ["kiboto-ai"]
     assert hc["Memory"] == 10240 * 1024 * 1024
     assert [d["PathOnHost"] for d in hc["Devices"]] == ["/dev/dri", "/dev/accel/accel0"]
     assert body["Labels"][ai_pack.LABEL] == "standard"
@@ -53,15 +53,16 @@ def test_the_container_has_no_port_a_memory_limit_and_its_own_label(tmp_path):
 
 
 class FakeDocker:
-    def __init__(self, existing=None, running=True):
+    def __init__(self, existing=None, running=True, name="kiboto-ai"):
         self.calls = []
         self.existing = existing
         self.running = running
+        self.name = name
 
     def __call__(self, method, path, body=None, headers=None):
         self.calls.append((method, path, body))
-        if path == "/containers/zettnas-ai/json":
-            if self.existing is None:
+        if path in ("/containers/kiboto-ai/json", "/containers/zettnas-ai/json"):
+            if self.existing is None or path != f"/containers/{self.name}/json":
                 return 404, {}
             return 200, {"Config": {"Labels": self.existing}, "State": {"Running": self.running}}
         if path.startswith("/containers/") and path.endswith("/json"):  # Kiboto itself
@@ -81,7 +82,7 @@ def test_install_creates_and_starts_the_pack(tmp_path, monkeypatch):
     created = [c for c in d.calls if c[1].startswith("/containers/create")]
     assert created and created[0][2]["Labels"][ai_pack.LABEL] == "small"
     assert ("POST", "/containers/new/start", None) in d.calls
-    assert os.path.isdir(tmp_path / "zettnas-ai" / "models")
+    assert os.path.isdir(tmp_path / "kiboto-ai" / "models")
 
 
 def test_install_leaves_someone_elses_container_alone(tmp_path, monkeypatch):
@@ -109,15 +110,16 @@ def test_status_says_what_the_pack_is_doing(monkeypatch):
 
 def test_the_warm_up_phase_comes_from_the_log():
     assert (
-        ai_pack._phase("x\nzettnas-ai: downloading OpenVINO/Qwen3-4B-int4-ov\n")
+        ai_pack._phase("x\nkiboto-ai: downloading OpenVINO/Qwen3-4B-int4-ov\n")
         == "downloading OpenVINO/Qwen3-4B-int4-ov"
     )
-    assert ai_pack._phase("zettnas-ai: serving\n") == "loading"
+    assert ai_pack._phase("kiboto-ai: serving\n") == "loading"
     assert ai_pack._phase("") == "starting"
 
 
 def test_using_the_pack_sets_chat_and_asks_for_a_reindex(monkeypatch):
     updates = []
+    monkeypatch.setattr(ai_pack, "_docker", FakeDocker())
     monkeypatch.setattr(ai_pack, "models_ready", lambda timeout=2.0: True)
 
     class Engine:
@@ -126,10 +128,10 @@ def test_using_the_pack_sets_chat_and_asks_for_a_reindex(monkeypatch):
             return u
 
     cfg = ai_pack.use_pack(Engine())
-    assert cfg["llm_endpoint"] == "http://zettnas-ai:8000/v1" and cfg["active_model"] == "zettnas-chat"
+    assert cfg["llm_endpoint"] == "http://kiboto-ai:8000/v1" and cfg["active_model"] == "kiboto-chat"
     assert "rerank_endpoint" not in cfg  # OVMS's rerank ranked badly in testing: left alone
     assert "embedding_model" not in cfg  # the embeddings move through a re-index, not at once
-    assert ai_pack.reindex_request()["embedding_host"] == "http://zettnas-ai:8000/v3"
+    assert ai_pack.reindex_request()["embedding_host"] == "http://kiboto-ai:8000/v3"
     assert ai_pack.in_use(cfg)
     monkeypatch.setattr(ai_pack, "models_ready", lambda timeout=2.0: False)
     with pytest.raises(RuntimeError):
@@ -139,7 +141,7 @@ def test_using_the_pack_sets_chat_and_asks_for_a_reindex(monkeypatch):
 def test_idle_stops_it_and_the_next_question_starts_it(monkeypatch):
     d = FakeDocker(existing={ai_pack.LABEL: "standard"}, running=True)
     monkeypatch.setattr(ai_pack, "_docker", d)
-    cfg = {"llm_endpoint": "http://zettnas-ai:8000/v1", "idle_unload_minutes": 15}
+    cfg = {"llm_endpoint": "http://kiboto-ai:8000/v1", "idle_unload_minutes": 15}
     now = [1000.0]
     clock = lambda: now[0]  # noqa: E731
     ai_pack._LAST_USE["at"] = 1000.0
@@ -147,18 +149,19 @@ def test_idle_stops_it_and_the_next_question_starts_it(monkeypatch):
     now[0] += 16 * 60
     assert not ai_pack.idle_tick(cfg, indexing=True, clock=clock)  # indexing still needs it
     assert ai_pack.idle_tick(cfg, clock=clock)
-    assert ("POST", "/containers/zettnas-ai/stop?t=20", None) in d.calls
+    assert ("POST", "/containers/kiboto-ai/stop?t=20", None) in d.calls
     assert not ai_pack.idle_tick({"llm_endpoint": "http://ovms:8000/v1"}, clock=clock)  # not using the pack
 
     d.running = False
     ready = iter([False, True])
     monkeypatch.setattr(ai_pack, "models_ready", lambda timeout=2.0: next(ready))
-    assert ai_pack.wake_for("http://zettnas-ai:8000/v3/embeddings", sleep=lambda s: None, clock=clock)
-    assert ("POST", "/containers/zettnas-ai/start", None) in d.calls
+    assert ai_pack.wake_for("http://kiboto-ai:8000/v3/embeddings", sleep=lambda s: None, clock=clock)
+    assert ("POST", "/containers/kiboto-ai/start", None) in d.calls
     assert ai_pack.wake_for("http://ollama:11434/api/embed")  # not the pack: nothing to do
 
 
 def test_the_api_reports_installs_and_uses(client, auth_headers, monkeypatch):
+    monkeypatch.setattr(ai_pack, "_docker", FakeDocker())
     monkeypatch.setattr(ai_pack, "status", lambda cfg: {"state": "absent", "installed": False})
     assert client.get("/api/v1/ai/pack", headers=auth_headers).json()["state"] == "absent"
     monkeypatch.setattr(ai_pack, "stream_install", lambda preset, root: iter([{"step": "done", "preset": preset}]))
@@ -168,7 +171,22 @@ def test_the_api_reports_installs_and_uses(client, auth_headers, monkeypatch):
     assert json.loads(r.text.strip().splitlines()[-1])["step"] == "done"  # the catalog goes to the same installer
     monkeypatch.setattr(ai_pack, "use_pack", lambda engine: (_ for _ in ()).throw(RuntimeError("not ready")))
     assert client.post("/api/v1/ai/pack/use", headers=auth_headers).status_code == 409
-    monkeypatch.setattr(ai_pack, "use_pack", lambda engine: {"llm_endpoint": "http://zettnas-ai:8000/v1"})
+    monkeypatch.setattr(ai_pack, "use_pack", lambda engine: {"llm_endpoint": "http://kiboto-ai:8000/v1"})
     assert (
-        client.post("/api/v1/ai/pack/use", headers=auth_headers).json()["reindex"]["embedding_model"] == "zettnas-embed"
+        client.post("/api/v1/ai/pack/use", headers=auth_headers).json()["reindex"]["embedding_model"] == "kiboto-embed"
     )
+
+
+def test_a_pack_made_before_the_rebrand_keeps_its_name_folder_and_models(monkeypatch):
+    """Until 2.2 (legacy_names): an existing zettnas-ai stays as it is, so its downloads and the
+    model names the AI settings point at keep working."""
+    old = FakeDocker(existing={"zettnas.ai-pack": "standard"}, name="zettnas-ai")
+    monkeypatch.setattr(ai_pack, "_docker", old)
+    assert ai_pack.pack_name() == "zettnas-ai"
+    assert ai_pack.reindex_request()["embedding_model"] == "zettnas-embed"
+    assert ai_pack.reindex_request()["embedding_host"] == "http://zettnas-ai:8000/v3"
+    assert ai_pack.is_pack_url("http://zettnas-ai:8000/v1") and ai_pack.is_pack_url("http://kiboto-ai:8000/v1")
+    assert not ai_pack.is_pack_url("http://ollama:11434/v1")
+    # someone else's zettnas-ai isn't the pack: a new install is kiboto-ai
+    monkeypatch.setattr(ai_pack, "_docker", FakeDocker(existing={"maintainer": "me"}, name="zettnas-ai"))
+    assert ai_pack.pack_name() == "kiboto-ai"

@@ -407,9 +407,11 @@ def _apply_share_freeze(frozen: bool) -> None:
         logger.debug("ransomware_guard: WebDAV not running", exc_info=True)
     if frozen:
         try:
+            from backend import legacy_names
             from backend.services.container_mutator import _docker_request
 
-            _docker_request("POST", "/containers/zettnas-sftp/stop?t=2")
+            for name in ("kiboto-sftp", legacy_names.OLD_SFTP):  # one made before the rebrand, too
+                _docker_request("POST", f"/containers/{name}/stop?t=2")
         except Exception:
             logger.debug("ransomware_guard: no SFTP service to stop", exc_info=True)
 

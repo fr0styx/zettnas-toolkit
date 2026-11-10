@@ -355,6 +355,9 @@ def tool_control_docker_container(
     if not clean_name:
         return {"tool": "control_docker_container", "status": "error", "error": "Container name is required."}
     if clean_name.lower() in (
+        "kiboto",
+        "kiboto-db",
+        "kiboto-ollama",
         "zettnas-toolkit",
         "zettnas-db",
         "zettnas-ollama",

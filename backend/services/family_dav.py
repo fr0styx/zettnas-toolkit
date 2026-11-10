@@ -13,6 +13,7 @@ import re
 import urllib.parse
 from typing import Any
 
+from backend import legacy_names
 from backend.config import logger
 
 OCC = "php /var/www/html/occ"
@@ -40,13 +41,17 @@ def office_container() -> dict[str, Any] | None:
     """The office suite Kiboto installed: its container name, whether it runs, its web port."""
     from backend.services import docker_client
 
-    query = urllib.parse.quote(json.dumps({"label": ["com.zettnas.managed=1"]}))
-    try:
-        status, found = docker_client.request("GET", f"/containers/json?all=1&filters={query}")
-    except (OSError, ValueError, docker_client.DockerUnavailable):
-        logger.debug("family_dav: containers unknown", exc_info=True)
-        return None
-    if status != 200 or not isinstance(found, list):
+    found: list = []
+    for label in legacy_names.managed_labels():  # made before the rebrand: only the old label
+        query = urllib.parse.quote(json.dumps({"label": [f"{label}=1"]}))
+        try:
+            status, some = docker_client.request("GET", f"/containers/json?all=1&filters={query}")
+        except (OSError, ValueError, docker_client.DockerUnavailable):
+            logger.debug("family_dav: containers unknown", exc_info=True)
+            return None
+        if status == 200 and isinstance(some, list):
+            found += [c for c in some if c.get("Id") not in {f.get("Id") for f in found}]
+    if not found:
         return None
     for c in found:
         if not str(c.get("Image") or "").startswith("nextcloud"):

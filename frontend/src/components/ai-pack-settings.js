@@ -13,7 +13,7 @@ export function stateText(s) {
   if (s.state === 'ready') return s.in_use ? t('aipack.in_use', 'Kiboto uses the AI pack.') : t('aipack.state_ready', 'Ready.');
   if (s.state === 'warming') return t('aipack.state_warming', 'Warming up: {phase}. The first start downloads a few GB.', { phase: s.phase || '…' });
   if (s.state === 'stopped') return t('aipack.state_stopped', 'Stopped while idle; it starts again on the next question.');
-  if (s.state === 'not-ours') return t('aipack.state_not_ours', "A container named zettnas-ai exists that the AI pack didn't make; it is left alone.");
+  if (s.state === 'not-ours') return t('aipack.state_not_ours', "A container named kiboto-ai exists that the AI pack didn't make; it is left alone.");
   return '';
 }
 

@@ -137,6 +137,7 @@ WELL_KNOWN_WEB_PORTS = [
 ]
 
 
+from backend import legacy_names
 from backend.services.docker_client import UnixHTTPConnection  # noqa: E402,F401  (one client, ARCH-3)
 
 
@@ -594,7 +595,7 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
                     "stack": stack,
                     "service": service,
                     "managed_by": managed_by,
-                    "zettnas_app": labels.get("com.zettnas.managed") == "1",  # installed by Kiboto (REL-10)
+                    "zettnas_app": legacy_names.is_managed(labels),  # installed by Kiboto (REL-10)
                     "network_mode": net_mode,
                     "ports": ports,
                     "primary_port": primary_port,

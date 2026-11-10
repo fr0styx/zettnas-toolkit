@@ -348,7 +348,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         },
         "volumes": {"html": "/var/www/html"},
         # its sign-in asks Kiboto's WebDAV by name, on Kiboto's own network
-        "join_zettnas_network": True,
+        "join_kiboto_network": True,
         "after_start": [
             {
                 "label": "Waiting for Nextcloud to finish installing",
@@ -814,7 +814,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "volumes": {"config": "/config", "media": "/media/frigate"},
         "seed_files": {"config": {"config.yml": FRIGATE_YML}},
         # on Kiboto's own network, so Kiboto reads http://frigate:5000 and that port stays unpublished
-        "join_zettnas_network": True,
+        "join_kiboto_network": True,
         "logo": "frigate",
     },
     {
@@ -903,7 +903,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "env": {},
         "volumes": {"conf": "/opt/adguardhome/conf", "work": "/opt/adguardhome/work"},
         # on Kiboto's own network, so the kids' filter (COMP-13) reaches http://adguardhome:3000
-        "join_zettnas_network": True,
+        "join_kiboto_network": True,
         "logo": "adguard-home",
     },
     {
