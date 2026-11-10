@@ -83,7 +83,7 @@ class FakeMedia:
         self.recs = recs or {"models": []}
         self.scans = []
 
-    def get_status(self):
+    def get_status(self, principal=None):
         return {"acceleration": {"tier": "cpu"}, "total_ram_gb": 16, "llm_recommendations": self.recs}
 
     def trigger_scan(self, media_path):

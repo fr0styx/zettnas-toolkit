@@ -1311,7 +1311,7 @@ class MediaEngine:
         self._lock = threading.Lock()
         self._is_scanning = False
 
-    def get_status(self) -> dict[str, Any]:
+    def get_status(self, principal: Any = None) -> dict[str, Any]:
         ram_bytes = read_total_ram_bytes()
         ram_gb = round(ram_bytes / (1024**3), 1)
         is_gated = ram_bytes < MIN_RAM_REQUIRED_BYTES
@@ -1333,7 +1333,9 @@ class MediaEngine:
         sleeping_disks = get_sleeping_disks_list()
         running_disks = get_running_disks_list()
         deferred_queue = rag.get_deferred_queue()
-        learning_results = rag.get_learning_results()
+        # the learning results only for someone asking (counts and failed files they may see);
+        # callers that want the acceleration alone pass nobody and skip the query (SEC-37)
+        learning_results = rag.get_learning_results(principal=principal) if principal is not None else {}
         llm_recs = build_llm_recommendations(
             accel=accel,
             ram_gb=ram_gb,

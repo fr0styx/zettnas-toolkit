@@ -89,6 +89,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   host devices, host networking, privileged mode, a Docker socket (always left out) and companion
   containers that are not imported.
 
+#### Fixes
+
+- **"Retry failed files" retried nothing, and the AI page counted no learned files**: both asked the
+  search index without saying who was asking, which (since a security fix in 1.x) finds nothing. Retry
+  now goes over every failed file, and the AI page counts the files the person looking at it may see.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

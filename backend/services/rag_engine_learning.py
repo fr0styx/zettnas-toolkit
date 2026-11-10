@@ -907,8 +907,11 @@ class RagLearningMixin:
         }
 
     def relearn_failed_files(self) -> dict[str, Any]:
-        """Retries indexing any files that previously failed parsing (without waking sleeping drives)."""
-        res_info = self.get_learning_results()
+        """Retries indexing any files that previously failed parsing (without waking sleeping drives).
+        Maintenance over every file, so it reads them as Kiboto itself (SEC-37: no principal finds none)."""
+        from backend.services.rag_engine_search import SYSTEM_PRINCIPAL
+
+        res_info = self.get_learning_results(principal=SYSTEM_PRINCIPAL)
         failed_list = res_info.get("failed_files") or []
         retried = 0
         recovered = 0
@@ -941,7 +944,7 @@ class RagLearningMixin:
                         conn.commit()
                     finally:
                         conn.close()
-        updated = self.get_learning_results()
+        updated = self.get_learning_results(principal=SYSTEM_PRINCIPAL)
         updated["retried"] = retried
         updated["recovered"] = recovered
         return updated

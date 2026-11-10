@@ -246,9 +246,9 @@ class FolderAuditRequest(BaseModel):
 
 @router.get("/media/status", dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))])
 @router.get("/ai/status", dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))])
-def get_media_status() -> dict[str, Any]:
+def get_media_status(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> dict[str, Any]:
     engine = get_media_engine()
-    status = engine.get_status()
+    status = engine.get_status(principal=principal)
     status["config"] = get_rag_engine().get_config()
     status["reindex_status"] = get_ai_reindex_status()
     return status
