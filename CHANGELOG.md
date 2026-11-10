@@ -174,6 +174,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   this box" on the other: it gets an off-site backup there, encrypted with its own key and append-only,
   so ransomware on it can't wipe the copies. How it works: docs/BACKUP_GUIDE.md.
 
+#### Changed
+
+- **Kiboto's own icon and logo**: the app icon on phones and computers (home screen, installed app,
+  notifications), the browser tab's icon, the mark in the top bar and the icon Unraid shows for the
+  container are Kiboto's new logo instead of the old placeholder.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

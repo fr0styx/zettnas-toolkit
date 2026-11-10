@@ -1,7 +1,7 @@
 /* index.html's first-paint markup (setup wizard, top bar pills, desktop widgets, dialogs, notification
    centre, copy toast): each rule is the inline style it replaced, scoped by the nearest id around it;
    a display that code can switch (on an element with an id, or none) stays inline (NUX-15) */
-#suite-brand-icon { width:16px; height:16px; }
+#suite-brand-icon { width:16px; height:16px; flex: none; background: var(--brand); -webkit-mask: url(/img/kiboto-mark-mono.svg) center/contain no-repeat; mask: url(/img/kiboto-mark-mono.svg) center/contain no-repeat; }
 #unraid-parity-pill .ixupp-span1 { background:var(--accent-cyan,#00f0ff); box-shadow:0 0 6px var(--accent-cyan,#00f0ff); }
 #unraid-mover-pill .ixump-span1 { background:var(--warn,#f5a623); box-shadow:0 0 6px var(--warn,#f5a623); }
 #topbar-ups-pill { cursor:pointer; }
