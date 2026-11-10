@@ -372,6 +372,49 @@ def test_german_shows_no_english(width, height):
     )
 
 
+# SET-00: what a page hid must not be shown again by the phone layout
+HIDDEN_BUT_SHOWN = """() => {
+  const forced = '.btn-pill-toggle, .mgmt-inner-tab, .btn-container-act, .btn-locate-topo, .btn-webui-badge';
+  const name = (el) => (el.id ? '#' + el.id : el.tagName.toLowerCase() + '.' + String(el.className).split(' ')[0]);
+  const shown = (el) => getComputedStyle(el).display !== 'none';
+  const out = [...document.querySelectorAll('[hidden]')].filter(shown).map(name);
+  for (const el of document.querySelectorAll(forced)) {
+    if (el.style.display === 'none' && shown(el)) out.push(name(el) + ' (inline)');
+  }
+  return out;
+}"""
+
+
+def test_hidden_controls_stay_hidden_on_a_phone():
+    from playwright.sync_api import sync_playwright
+
+    found = {}
+    with sync_playwright() as p:
+        browser = _browser(p)
+        page = browser.new_context(viewport={"width": 390, "height": 844}).new_page()
+        _sign_in(page)
+        _close_wizard(page)
+        left = page.evaluate(HIDDEN_BUT_SHOWN)
+        if left:
+            found["launcher"] = left
+        page.evaluate("() => window.openManagementWindow && window.openManagementWindow()")
+        page.wait_for_selector("#management-window", state="attached", timeout=8000)
+        count = page.evaluate("() => document.querySelectorAll('#management-window .mgmt-sidebar-item').length")
+        assert count >= 8, "the Settings sidebar did not load"
+        for i in range(count):
+            label = page.evaluate(
+                """(i) => { const el = document.querySelectorAll('#management-window .mgmt-sidebar-item')[i];
+                  el.click(); return el.dataset.route || el.dataset.mgmtPane || el.dataset.mgmtTarget || el.dataset.mgmtAction || String(i); }""",
+                i,
+            )
+            page.wait_for_timeout(900)
+            left = page.evaluate(HIDDEN_BUT_SHOWN)
+            if left:
+                found[label] = left
+        browser.close()
+    assert not found, "hidden controls are shown at 390 px:\n" + json.dumps(found, indent=1)
+
+
 # NPERF-5: what a fresh browser downloads, as the bytes on the wire (compressed, headers too). A
 # fresh install measured 382 kB for the sign-in page and 337 kB in the 10 s after signing in
 # (3 Nov 2026, after the icon sprite was answered with 304 and the chassis photos were resized).

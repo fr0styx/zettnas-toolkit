@@ -1,5 +1,5 @@
 {
-  "important": 3354,
+  "important": 3357,
   "buttonClasses": 76,
   "inlineStyles": 1427,
   "emojiIcons": 2,
@@ -7,6 +7,7 @@
   "importantPerFile": {
     "frontend/index.html": 64,
     "frontend/src/lcd-direct.css": 299,
+    "frontend/src/styles/00-tokens.css": 3,
     "frontend/src/styles/03-performance-a11y.css": 30,
     "frontend/src/styles/04-yak-theme.css": 11,
     "frontend/src/styles/05-studio-stage.css": 24,

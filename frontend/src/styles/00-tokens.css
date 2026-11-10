@@ -65,6 +65,13 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 
+/* A control marked hidden stays hidden (SET-00). The rule sits in a cascade layer because an
+   !important declaration in a layer wins over every unlayered one, whatever its selector: the phone
+   layout sets display with !important on buttons, tabs and tiles. */
+@layer hidden-attr {
+  [hidden] { display: none !important; }
+}
+
 html {
   height: 100%;
   height: 100dvh;

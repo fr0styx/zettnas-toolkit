@@ -1636,10 +1636,18 @@ body.mobile-mode .mgmt-inner-tab,
 body.mobile-mode .btn-webui-badge {
   min-height: 44px !important;
   min-width: 44px !important;
-  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   touch-action: manipulation !important;
+}
+
+/* not for a control the page hid with an inline style (SET-00) */
+body.mobile-mode .btn-container-act:not([style*="display: none"], [style*="display:none"]),
+body.mobile-mode .btn-pill-toggle:not([style*="display: none"], [style*="display:none"]),
+body.mobile-mode .btn-locate-topo:not([style*="display: none"], [style*="display:none"]),
+body.mobile-mode .mgmt-inner-tab:not([style*="display: none"], [style*="display:none"]),
+body.mobile-mode .btn-webui-badge:not([style*="display: none"], [style*="display:none"]) {
+  display: inline-flex !important;
 }
 
 

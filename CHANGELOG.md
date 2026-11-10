@@ -201,6 +201,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   restore or delete it from the card. ClamAV needs about 1.5 GB of memory (briefly 3 GB). How it works:
   docs/MALWARE_SCAN.md.
 
+#### Fixes
+
+- **Hidden buttons no longer show on a phone**: the phone layout showed buttons, tabs and tiles that a
+  page had hidden: Settings tiles a person may not open, "Create Pool" where another system manages the
+  storage, "Pause" and "Stop" while nothing runs, "Disconnect" while Tailscale is not installed. What a
+  page hides now stays hidden at every width.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 
