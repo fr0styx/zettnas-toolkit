@@ -12,7 +12,7 @@ from backend.hardware.pal.generic_linux import GenericLinuxStorageAdapter
 
 @pytest.fixture
 def clean_env(monkeypatch, tmp_path):
-    for var in ("ZETTNAS_PLATFORM", "ZETTNAS_OBSERVER_ADAPTER", "ZETTNAS_PAL_MODE"):
+    for var in ("KIBOTO_PLATFORM", "KIBOTO_OBSERVER_ADAPTER", "KIBOTO_PAL_MODE"):
         monkeypatch.delenv(var, raising=False)
     monkeypatch.setattr(pal_base, "_find_emhttp_dir", lambda: None)
     proc = tmp_path / "proc"
@@ -35,15 +35,15 @@ def clean_env(monkeypatch, tmp_path):
     ],
 )
 def test_the_platform_can_be_set_by_environment(clean_env, monkeypatch, value, expected):
-    monkeypatch.setenv("ZETTNAS_PLATFORM", value)
+    monkeypatch.setenv("KIBOTO_PLATFORM", value)
     assert StoragePlatformDetector.detect() == expected
 
 
 def test_auto_and_observer_settings(clean_env, monkeypatch):
-    monkeypatch.setenv("ZETTNAS_OBSERVER_ADAPTER", "truenas")
+    monkeypatch.setenv("KIBOTO_OBSERVER_ADAPTER", "truenas")
     assert StoragePlatformDetector.detect() == PlatformType.TRUENAS
-    monkeypatch.setenv("ZETTNAS_OBSERVER_ADAPTER", "auto")
-    monkeypatch.setenv("ZETTNAS_PAL_MODE", "proxmox")
+    monkeypatch.setenv("KIBOTO_OBSERVER_ADAPTER", "auto")
+    monkeypatch.setenv("KIBOTO_PAL_MODE", "proxmox")
     assert StoragePlatformDetector.detect() == PlatformType.PROXMOX
 
 

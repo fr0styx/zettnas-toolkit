@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+#### Kiboto
+
+ZettNAS is becoming **Kiboto**, and its assistant Zetty becomes **Kib**. The rename lands in steps;
+installs made before keep working through it.
+
+- **Settings are named KIBOTO_\***: every `ZETTNAS_*` environment variable is now `KIBOTO_*`
+  (`KIBOTO_DATA_KEY`, `KIBOTO_PLATFORM`, ...). The old names still work until Kiboto 2.2, and a new
+  name set beside an old one wins. The compose files fall back to a `.env` that still uses the old
+  names; the data key's systemd credential is read as `kiboto-data-key` or `zettnas-data-key`.
+  Encrypted databases need nothing: the key derivation is unchanged.
+
 #### Security
 
 - **Dependencies updated**: websockets 17.4, sqlcipher3 0.6.5 and pypdfium2 5.15.0 (the PDF page reader) in the app; the Node build image

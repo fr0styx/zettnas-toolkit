@@ -2,7 +2,9 @@
 
 Environment variables ZettNAS reads at startup. Generated from `backend/settings.py`
 (`python -m backend.settings --markdown > docs/CONFIGURATION.md`); a value that can't be
-used keeps its default, and the log says which variable and why.
+used keeps its default, and the log says which variable and why. Before Kiboto 2.0 the
+`KIBOTO_*` variables were named `ZETTNAS_*`; the old names still work until 2.2, and a new
+name set beside an old one wins.
 
 ## Host
 
@@ -16,12 +18,12 @@ used keeps its default, and the log says which variable and why.
 | `SHOW_OS_DISK` | `on` | Show the operating-system disk in the disk list. |
 | `REMOTES_PATH` | `/mnt/remotes` | Where cloud and network remotes are mounted. |
 | `HOST_ETC` | `/host/etc` | Where the host's /etc is mounted. |
-| `ZETTNAS_OBSERVER_MODE` | `off` | Only watch the host on an unknown system: read-only telemetry, no changes. |
+| `KIBOTO_OBSERVER_MODE` | `off` | Only watch the host on an unknown system: read-only telemetry, no changes. |
 | `SQLITE_VEC_PATH` | `(empty)` | Extra place to look for the sqlite-vec library (vec0.so) for AI search. |
 | `HOST_NET_IFACE` | `(empty)` | Network interface whose traffic the dashboard shows; empty = all physical ones. |
 | `CONTAINERIZED` | `off` | Say ZettNAS runs in a container when it can't tell by itself. |
-| `ZETTNAS_THUMB_CACHE_MB` | `1024` | Size of the preview thumbnail cache, in MB (at least 16). (0–1.04858e+06) |
-| `ZETTNAS_VIDEO_CACHE_MB` | `4096` | Size of the cache of videos converted for browsers that can't play the original, in MB (at least 64). (0–1.04858e+06) |
+| `KIBOTO_THUMB_CACHE_MB` | `1024` | Size of the preview thumbnail cache, in MB (at least 16). (0–1.04858e+06) |
+| `KIBOTO_VIDEO_CACHE_MB` | `4096` | Size of the cache of videos converted for browsers that can't play the original, in MB (at least 64). (0–1.04858e+06) |
 | `SYNC_ROUTE_THREADS` | `40` | Threads for API requests that wait on files, disks or Docker; more serve more people at once and use more memory. (8–256) |
 | `APP_MEMORY_WARN_MB` | `1536` | Warn when ZettNAS itself uses more memory than this, in MB (virtual machines not counted); 0 = off. (0–1.04858e+06) |
 
@@ -29,7 +31,7 @@ used keeps its default, and the log says which variable and why.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `ZETTNAS_PUSH_CONTACT` | `https://github.com/fr0styx/zettnas-toolkit` | Contact address sent to browser push services with each notification. |
+| `KIBOTO_PUSH_CONTACT` | `https://github.com/fr0styx/zettnas-toolkit` | Contact address sent to browser push services with each notification. |
 | `PORT` | `8082` | Port of the web interface. (1–65535) |
 | `TRUSTED_PROXIES` | `127.0.0.1, ::1` | Reverse proxies whose X-Forwarded-For is believed (comma-separated). |
 | `ENABLE_PROXY_SSO` | `off` | Accept a signed-in user from a trusted proxy's header. Since 1.12 the header reaches only accounts the proxy created; other accounts, admins included, sign in with their own password. |
@@ -39,7 +41,7 @@ used keeps its default, and the log says which variable and why.
 | `MAX_BODY_MB` | `16` | Largest request body accepted, in MB (uploads excepted). (1–4096) |
 | `MAX_WALLPAPER_MB` | `10` | Largest wallpaper upload, in MB. (1–1024) |
 | `MAX_UPLOAD_GB` | `64` | Largest file upload, in GB. (1–100000) |
-| `ZETTNAS_TRUSTED_IPS` | `(none)` | Addresses or networks (CIDR) never blocked after failed sign-ins, comma-separated. |
+| `KIBOTO_TRUSTED_IPS` | `(none)` | Addresses or networks (CIDR) never blocked after failed sign-ins, comma-separated. |
 
 ## File services
 
@@ -47,7 +49,7 @@ used keeps its default, and the log says which variable and why.
 |---|---|---|
 | `AUTO_INGEST_ENABLED` | `off` | Copy a card as soon as it is inserted, even when Automatic Slot Ingest is off in the settings. |
 | `SFTP_PORT` | `2222` | Port of the built-in SFTP server. (1–65535) |
-| `ZETTNAS_NAS_NAME` | `(empty)` | The NAS's name on the home network (<name>.local); empty: zettnas. |
+| `KIBOTO_NAS_NAME` | `(empty)` | The NAS's name on the home network (<name>.local); empty: zettnas. |
 | `WEBDAV_PORT` | `8084` | Port of the built-in WebDAV server. (1–65535) |
 
 ## Updates
@@ -56,7 +58,7 @@ used keeps its default, and the log says which variable and why.
 |---|---|---|
 | `UPDATE_CHANNEL` | `stable` | Release channel to follow. (one of `stable`, `beta`, `edge`) |
 | `UPDATE_SIGNATURES` | `enforce` | In-app updates check the image's signature from this project's CI first: enforce (refuse an unsigned or wrongly signed image), warn (log it and install anyway) or off. (one of `enforce`, `warn`, `off`) |
-| `ZETTNAS_IMAGE_VARIANT` | `full` | full ships VMs and the LCD renderer; core leaves them out. (one of `full`, `core`) |
+| `KIBOTO_IMAGE_VARIANT` | `full` | full ships VMs and the LCD renderer; core leaves them out. (one of `full`, `core`) |
 | `HEALTH_SIGNAL_URL` | `(empty)` | Where the opt-in anonymous health report goes; empty uses the project's receiver. |
 | `BUILD_COMMIT` | `(empty)` | The commit the image was built from; set by the image build. |
 | `BUILD_DATE` | `(empty)` | When the image was built; set by the image build. |
@@ -66,15 +68,15 @@ used keeps its default, and the log says which variable and why.
 | Variable | Default | Meaning |
 |---|---|---|
 | `LOG_FORMAT` | `text` | Log lines as plain text, or as one JSON object per line (with a request id) for log collectors. (one of `text`, `json`) |
-| `ZETTNAS_AUDIT_RETENTION_DAYS` | `365` | Days the security audit log keeps an event; 0 keeps everything. (0–36500) |
+| `KIBOTO_AUDIT_RETENTION_DAYS` | `365` | Days the security audit log keeps an event; 0 keeps everything. (0–36500) |
 | `STRUCTURED_LOGS` | `off` | Older name for LOG_FORMAT=json. |
-| `ZETTNAS_LOG_FILE` | `on` | Keep a rotating log file in the data folder for the support bundle. |
+| `KIBOTO_LOG_FILE` | `on` | Keep a rotating log file in the data folder for the support bundle. |
 
 ## Host
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `ZETTNAS_GIL_SWITCH_SECS` | `0.02` | How long a Python thread runs before handing over to another, in seconds; longer means fewer wakeups. (0.001–1) |
+| `KIBOTO_GIL_SWITCH_SECS` | `0.02` | How long a Python thread runs before handing over to another, in seconds; longer means fewer wakeups. (0.001–1) |
 | `LAYOUT_PATH` | `(empty)` | The desktop layout file; empty keeps it in the data folder. |
 | `BACKUP_DIR` | `(empty)` | Where settings backups go; empty keeps them in the data folder. |
 | `VM_ISO_DIR` | `(empty)` | The ISO library for virtual machines; empty keeps it in the data folder. |
@@ -105,7 +107,7 @@ used keeps its default, and the log says which variable and why.
 | `LCD_FORMAT` | `jpeg` | Image format of LCD frames. (one of `jpeg`, `png`) |
 | `LCD_RENDERER` | `auto` | What draws the front LCD: chromium (the web dashboard), pil (drawn directly, no browser) or auto (chromium when installed, otherwise pil). (one of `auto`, `chromium`, `pil`) |
 | `LCD_SLEEP_SEC` | `300` | Seconds without activity before the LCD dims. (0–86400) |
-| `ZETTNAS_LCD_CAPTURE` | `screencast` | How the front LCD gets its frames: pushed when the page changes, or a screenshot every frame. (one of `screencast`, `poll`) |
+| `KIBOTO_LCD_CAPTURE` | `screencast` | How the front LCD gets its frames: pushed when the page changes, or a screenshot every frame. (one of `screencast`, `poll`) |
 | `FRAMEBUFFER` | `(empty)` | The front LCD's framebuffer device, when it isn't /dev/fb0. |
 | `LED_PORT` | `(empty)` | The light bar's serial port, when it isn't found by itself. |
 | `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | `(empty)` | The Chromium that draws the front LCD; empty uses the image's. |
@@ -123,7 +125,7 @@ used keeps its default, and the log says which variable and why.
 | `NVME_WARN_TEMP` | `70` | NVMe temperature that raises a warning, °C. (20–110) |
 | `NVME_CRITICAL_TEMP` | `75` | NVMe temperature that forces full fan speed, °C. (20–110) |
 | `COLLECTOR_WATCHDOG_SECS` | `20` | Seconds without fresh stats before health reports degraded. (5–3600) |
-| `ZETTNAS_STANDBY_UNKNOWN` | `defer` | When it can't tell which disk holds a folder: defer the work (it may be asleep) or check anyway. (one of `defer`, `allow`) |
+| `KIBOTO_STANDBY_UNKNOWN` | `defer` | When it can't tell which disk holds a folder: defer the work (it may be asleep) or check anyway. (one of `defer`, `allow`) |
 
 ## Fans
 
@@ -146,8 +148,8 @@ used keeps its default, and the log says which variable and why.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `ZETTNAS_AI_NUM_CTX` | `0` | Chat context window in tokens; 0 uses the built-in size, values under 2048 are ignored. (0–1.04858e+06) |
-| `ZETTNAS_VIDEO_HWENC` | `auto` | Convert videos with the iGPU when it can (auto) or always in software (off). (one of `auto`, `off`) |
+| `KIBOTO_AI_NUM_CTX` | `0` | Chat context window in tokens; 0 uses the built-in size, values under 2048 are ignored. (0–1.04858e+06) |
+| `KIBOTO_VIDEO_HWENC` | `auto` | Convert videos with the iGPU when it can (auto) or always in software (off). (one of `auto`, `off`) |
 | `OLLAMA_HOST` | `(empty)` | The Ollama server (host, host:port or URL); empty finds it. |
 | `LLM_HOST` | `(empty)` | Older name for OLLAMA_HOST, read when that is empty. |
 
@@ -158,9 +160,9 @@ used keeps its default, and the log says which variable and why.
 | `TRUENAS_VERIFY_TLS` | `on` | Check the TrueNAS certificate; off accepts a self-signed one. |
 | `UNRAID_API_VERIFY_TLS` | `on` | Check the Unraid API certificate; off accepts any. |
 | `UNRAID_EMHTTP_DIR` | `(empty)` | Unraid's emhttp state folder, when it isn't in a usual place. |
-| `ZETTNAS_PLATFORM` | `(empty)` | Which host this is (unraid, truenas, zettos, ...); empty detects it. |
-| `ZETTNAS_OBSERVER_ADAPTER` | `(empty)` | The host to read in observer mode; empty or auto detects it. |
-| `ZETTNAS_PAL_MODE` | `(empty)` | observer, readonly or telemetry: only read the host, never change it. |
+| `KIBOTO_PLATFORM` | `(empty)` | Which host this is (unraid, truenas, zettos, ...); empty detects it. |
+| `KIBOTO_OBSERVER_ADAPTER` | `(empty)` | The host to read in observer mode; empty or auto detects it. |
+| `KIBOTO_PAL_MODE` | `(empty)` | observer, readonly or telemetry: only read the host, never change it. |
 | `TRUENAS_URL` | `(empty)` | The TrueNAS address for its API (https://...). |
 | `TRUENAS_USER` | `(empty)` | The TrueNAS user the API key belongs to (TrueNAS 28 signs in with both). |
 | `UNRAID_API_URL` | `(empty)` | The Unraid API address (https://...). |

@@ -1,7 +1,7 @@
 """
 Encryption at rest for the AI search index and the AI conversation history (AI-20).
 
-With ZETTNAS_DATA_KEY set in the container's environment (the Unraid template or the
+With KIBOTO_DATA_KEY set in the container's environment (the Unraid template or the
 compose file, never the data folder), rag_index.db and ai_conversations.db are SQLCipher
 databases: AES-256 with a per-page HMAC. A copy of the data folder (a config backup, a
 pre-update snapshot, the appdata share, a replicated or stolen cache drive) is then
@@ -27,6 +27,8 @@ import os
 import threading
 from typing import TYPE_CHECKING, Any
 
+from backend import legacy_names
+
 if TYPE_CHECKING:  # SQLCipher's module mirrors the stdlib API; type-check against the stdlib
     import sqlite3
 
@@ -43,13 +45,14 @@ else:
 
 logger = logging.getLogger("ZettNAS")
 
-KEY_ENV = "ZETTNAS_DATA_KEY"
-KEY_FILE_ENV = "ZETTNAS_DATA_KEY_FILE"  # a file holding the key, e.g. a Docker secret
-CREDENTIAL_NAME = "zettnas-data-key"  # systemd: LoadCredentialEncrypted=zettnas-data-key:...
+KEY_ENV = "KIBOTO_DATA_KEY"
+KEY_FILE_ENV = "KIBOTO_DATA_KEY_FILE"  # a file holding the key, e.g. a Docker secret
+CREDENTIAL_NAME = "kiboto-data-key"  # systemd: LoadCredentialEncrypted=kiboto-data-key:...
+OLD_CREDENTIAL_NAME = "zettnas-data-key"  # its name before the rebrand (legacy_names)
 ENCRYPTED_NAMES = ("rag_index.db", "ai_conversations.db")
 SQLITE_HEADER = b"SQLite format 3\x00"
 MIN_KEY_CHARS = 16
-_KDF_SALT = b"zettnas-data-key-v1"
+_KDF_SALT = b"zettnas-data-key-v1"  # never changes: existing databases were keyed with it
 _KDF_ROUNDS = 200_000
 
 _ready: dict[str, threading.Event] = {}
@@ -62,15 +65,14 @@ class DataKeyError(RuntimeError):
 
 
 def _key_text() -> str:
-    """The key from ZETTNAS_DATA_KEY, else the file ZETTNAS_DATA_KEY_FILE names, else the systemd
+    """The key from KIBOTO_DATA_KEY, else the file KIBOTO_DATA_KEY_FILE names, else the systemd
     credential `zettnas-data-key` ($CREDENTIALS_DIRECTORY, e.g. sealed to the TPM with systemd-creds)."""
-    value = os.environ.get(KEY_ENV, "")
+    value = legacy_names.getenv(KEY_ENV, "")
     if value:
         return value
-    path = os.environ.get(KEY_FILE_ENV, "")
-    if not path and os.environ.get("CREDENTIALS_DIRECTORY"):
-        candidate = os.path.join(os.environ["CREDENTIALS_DIRECTORY"], CREDENTIAL_NAME)
-        path = candidate if os.path.exists(candidate) else ""
+    path = legacy_names.getenv(KEY_FILE_ENV, "")
+    if not path:
+        path = _credential_path()
     if not path:
         return ""
     try:
@@ -80,15 +82,18 @@ def _key_text() -> str:
         raise DataKeyError(f"Could not read the data key from {path}: {e}") from None
 
 
+def _credential_path() -> str:
+    """The systemd credential holding the key, under its name or its pre-rebrand one; '' if none."""
+    folder = os.environ.get("CREDENTIALS_DIRECTORY")
+    for name in (CREDENTIAL_NAME, OLD_CREDENTIAL_NAME):
+        candidate = os.path.join(folder, name) if folder else ""
+        if candidate and os.path.exists(candidate):
+            return candidate
+    return ""
+
+
 def enabled() -> bool:
-    return bool(
-        os.environ.get(KEY_ENV)
-        or os.environ.get(KEY_FILE_ENV)
-        or (
-            os.environ.get("CREDENTIALS_DIRECTORY")
-            and os.path.exists(os.path.join(os.environ["CREDENTIALS_DIRECTORY"], CREDENTIAL_NAME))
-        )
-    )
+    return bool(legacy_names.getenv(KEY_ENV) or legacy_names.getenv(KEY_FILE_ENV) or _credential_path())
 
 
 @functools.lru_cache(maxsize=4)

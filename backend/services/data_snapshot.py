@@ -20,6 +20,7 @@ import stat
 import time
 from typing import Any, Optional
 
+from backend import legacy_names
 from backend import settings as _settings
 from backend.fsutil import atomic_write_json, read_json
 
@@ -95,14 +96,14 @@ def snapshot_if_build_changed(data_dir: str, build: str | None = None) -> str | 
     return taken
 
 
-START_ANYWAY = "ZETTNAS_START_WITHOUT_SNAPSHOT"
+START_ANYWAY = "KIBOTO_START_WITHOUT_SNAPSHOT"
 
 
 def refuse_without_snapshot(err: BaseException) -> None:
     """A new build whose safety snapshot failed (a full disk, say) stops before it migrates any
     database, as the in-app updater does, so the previous image still runs on this data. Setting
-    ZETTNAS_START_WITHOUT_SNAPSHOT=1 starts it anyway (NREL-19)."""
-    if os.environ.get(START_ANYWAY, "").strip().lower() in ("1", "true", "yes"):
+    KIBOTO_START_WITHOUT_SNAPSHOT=1 starts it anyway (NREL-19)."""
+    if legacy_names.getenv(START_ANYWAY, "").strip().lower() in ("1", "true", "yes"):
         logger.error(
             "[Main] No snapshot of the data folder for the new build (%s); starting anyway (%s)", err, START_ANYWAY
         )

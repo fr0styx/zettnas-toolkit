@@ -1,7 +1,7 @@
 """Generates backend/models/responses.py: documented response schemas for every API route (ARCH-11).
 
 The schemas come from what the routes really return. The test suite records each JSON
-response (tests/conftest.py, ZETTNAS_RECORD_RESPONSES); routes no test reaches are read
+response (tests/conftest.py, KIBOTO_RECORD_RESPONSES); routes no test reaches are read
 from the dictionary literals they return. Models accept extra fields. A route's top-level
 field is required when every recorded response had it (seen at least twice, never null);
 everything else is optional and nullable (ARC-7). The schemas are attached to the OpenAPI
@@ -10,7 +10,7 @@ against its schema (tests/response_contract.py), so a required field that goes m
 fails a test instead of breaking an API client.
 
     docker compose -f docker-compose.dev.yml --profile test run --rm -v /tmp/rec:/rec \\
-        -e ZETTNAS_RECORD_RESPONSES=/rec/responses.jsonl zettnas-test tests
+        -e KIBOTO_RECORD_RESPONSES=/rec/responses.jsonl zettnas-test tests
     docker compose -f docker-compose.dev.yml --profile test run --rm -v /tmp/rec:/rec \\
         -v $PWD:/out --entrypoint python zettnas-test scripts/gen_response_models.py \\
         /rec/responses.jsonl /out/backend/models/responses.py

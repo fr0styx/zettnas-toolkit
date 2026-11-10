@@ -11,6 +11,7 @@ from backend.settings import test_mode
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("ZettNAS")
 
+from backend import legacy_names
 from backend.settings import load_settings  # noqa: E402
 
 # Typed settings (ARCH-9): unusable values keep their default and are reported here
@@ -150,7 +151,7 @@ def variant_tag(tag: str) -> str:
 
 def docker_sock() -> str:
     """The Docker API socket: the allow-list proxy when it runs (SEC-09), else the raw socket."""
-    return os.environ.get("ZETTNAS_DOCKER_SOCK") or RAW_DOCKER_SOCK
+    return legacy_names.getenv("KIBOTO_DOCKER_SOCK") or RAW_DOCKER_SOCK
 
 
 # No shared default: empty means "generate a first-time password" (users_db bootstrap).
@@ -333,7 +334,7 @@ LOGIN_USER_CHOOSER = SETTINGS.login_user_chooser
 # for reverse proxies that don't pass the original Host. Comma-separated.
 CSRF_TRUSTED_ORIGINS = list(SETTINGS.csrf_trusted_origins)
 
-ENFORCE_PASSWORD_CHANGE = not (test_mode() and os.environ.get("ZETTNAS_ENFORCE_PASSWORD_CHANGE") == "0")
+ENFORCE_PASSWORD_CHANGE = not (test_mode() and legacy_names.getenv("KIBOTO_ENFORCE_PASSWORD_CHANGE") == "0")
 
 
 def initial_password_file() -> str:

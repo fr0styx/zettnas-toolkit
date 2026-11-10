@@ -7,7 +7,7 @@ import re
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 READ = re.compile(
-    r"""os\.(?:environ\.get|getenv|environ\.setdefault)\(\s*["']([A-Z][A-Z0-9_]+)["']|os\.environ\[\s*["']([A-Z][A-Z0-9_]+)["']\s*\]"""
+    r"""(?:os\.(?:environ\.get|getenv|environ\.setdefault)|legacy_names\.getenv)\(\s*["']([A-Z][A-Z0-9_]+)["']|os\.environ\[\s*["']([A-Z][A-Z0-9_]+)["']\s*\]"""
 )
 LEFT = {
     "AI_CONVERSATIONS_DB_PATH",
@@ -31,15 +31,15 @@ LEFT = {
     "UNRAID_API_KEY",
     "USERS_DB_PATH",
     "WEB_PASSWORD",
-    "ZETTNAS_ALLOW_DEFAULT_PASSWORD",
-    "ZETTNAS_AUTH_FAIL_LOG",
-    "ZETTNAS_DATA_HOST_PATHS",
-    "ZETTNAS_DOCKER_PROXY",
-    "ZETTNAS_DOCKER_PROXY_SOCK",
-    "ZETTNAS_DOCKER_SOCK",
-    "ZETTNAS_DOCKER_UPSTREAM",
-    "ZETTNAS_ENFORCE_PASSWORD_CHANGE",
-    "ZETTNAS_THUMB_CACHE_DIR",
+    "KIBOTO_ALLOW_DEFAULT_PASSWORD",
+    "KIBOTO_AUTH_FAIL_LOG",
+    "KIBOTO_DATA_HOST_PATHS",
+    "KIBOTO_DOCKER_PROXY",
+    "KIBOTO_DOCKER_PROXY_SOCK",
+    "KIBOTO_DOCKER_SOCK",
+    "KIBOTO_DOCKER_UPSTREAM",
+    "KIBOTO_ENFORCE_PASSWORD_CHANGE",
+    "KIBOTO_THUMB_CACHE_DIR",
 }
 
 
@@ -80,9 +80,9 @@ def test_the_list_only_goes_down():
 def test_a_typo_no_longer_stops_startup():
     from backend.settings import load_settings
 
-    s, problems = load_settings({"ZETTNAS_AUDIT_RETENTION_DAYS": "a year", "ZETTNAS_GIL_SWITCH_SECS": "fast"})
+    s, problems = load_settings({"KIBOTO_AUDIT_RETENTION_DAYS": "a year", "KIBOTO_GIL_SWITCH_SECS": "fast"})
     assert s.audit_retention_days == 365 and s.gil_switch_secs == 0.02
-    assert len(problems) == 2 and "ZETTNAS_AUDIT_RETENTION_DAYS" in problems[0]
+    assert len(problems) == 2 and "KIBOTO_AUDIT_RETENTION_DAYS" in problems[0]
 
 
 def test_a_setting_read_while_running_follows_the_environment(monkeypatch):

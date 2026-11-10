@@ -45,11 +45,11 @@ os.environ.update(
         "NAS_NAME": "TESTNAS",
         "WEB_PASSWORD": "admin",
         "TESTING": "1",
-        "ZETTNAS_TEST_MODE": "1",
-        "ZETTNAS_FAST_HASH": "1",
+        "KIBOTO_TEST_MODE": "1",
+        "KIBOTO_FAST_HASH": "1",
         # Most tests log in as admin/admin, so the must-change-password gate is
         # off here; tests/test_sec23_password_change.py turns it back on.
-        "ZETTNAS_ENFORCE_PASSWORD_CHANGE": "0",
+        "KIBOTO_ENFORCE_PASSWORD_CHANGE": "0",
         # Never reach a real Ollama during tests: port 9 refuses at once, so
         # embedding calls fail fast and take their fallback path.
         "OLLAMA_HOST": "http://127.0.0.1:9",
@@ -351,7 +351,7 @@ def _fresh_idle_caches():
 
 def _install_response_hook():
     """Every JSON response of the test client goes through one hook (ARCH-11):
-    ZETTNAS_RECORD_RESPONSES=<file> records them for scripts/gen_response_models.py;
+    KIBOTO_RECORD_RESPONSES=<file> records them for scripts/gen_response_models.py;
     otherwise each one is checked against the response schema documented for its route."""
     import json as _json
 
@@ -359,7 +359,7 @@ def _install_response_hook():
 
     if getattr(TestClient, "_zn_response_hook", False):
         return
-    record_to = os.environ.get("ZETTNAS_RECORD_RESPONSES")
+    record_to = os.environ.get("KIBOTO_RECORD_RESPONSES")
     original = TestClient.request
 
     def request(self, method, url, *args, **kwargs):
@@ -524,7 +524,7 @@ def pytest_addoption(parser):
         "--random-order",
         nargs="?",
         const="random",
-        default=os.environ.get("ZETTNAS_RANDOM_ORDER"),
+        default=os.environ.get("KIBOTO_RANDOM_ORDER"),
         help="run the tests in a shuffled order (optionally with a seed) to find order dependencies",
     )
 

@@ -18,7 +18,7 @@ class _Resp(io.BytesIO):
 
 def test_missing_model_is_not_aliased_or_substituted(monkeypatch):
     monkeypatch.setenv("TESTING", "0")
-    monkeypatch.setenv("ZETTNAS_TEST_MODE", "0")
+    monkeypatch.setenv("KIBOTO_TEST_MODE", "0")
     monkeypatch.setattr(ai_chat_agent, "_get_docker_host_ips", lambda: ["10.9.9.9"])
     ai_chat_agent._ACTIVE_ENDPOINT_CACHE.clear()
     calls = []

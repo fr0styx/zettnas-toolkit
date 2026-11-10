@@ -227,7 +227,7 @@ def test_pal_storage_busy_caching(monkeypatch):
 
     # Disable test mode to test real 10s TTL caching behavior
     monkeypatch.delenv("TESTING", raising=False)
-    monkeypatch.delenv("ZETTNAS_TEST_MODE", raising=False)
+    monkeypatch.delenv("KIBOTO_TEST_MODE", raising=False)
 
     call_count = 0
 

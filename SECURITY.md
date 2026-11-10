@@ -44,8 +44,8 @@ See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for what ZettNAS defends agains
 
 ## Encryption at rest for AI data
 
-Set `ZETTNAS_DATA_KEY` (16 or more characters, for example from `openssl rand -base64 32`)
-in the container settings, or point `ZETTNAS_DATA_KEY_FILE` at a file holding it (a Docker
+Set `KIBOTO_DATA_KEY` (16 or more characters, for example from `openssl rand -base64 32`)
+in the container settings, or point `KIBOTO_DATA_KEY_FILE` at a file holding it (a Docker
 secret, for example), to encrypt the AI search index (`rag_index.db`, which holds the
 text of indexed files) and the AI chat history (`ai_conversations.db`) with SQLCipher
 (AES-256, per-page HMAC).
@@ -95,7 +95,7 @@ app and from WebDAV (port 8084 and /webdav), their SFTP connections are closed b
 sign-in, and ZettNAS's Samba denies them. rclone serves WebDAV and SFTP on loopback ports
 only; ZettNAS answers on 8084 and the SFTP port and passes each request on, so the
 addresses clients use stay the same (SEC-34). SFTP sign-ins are counted per account, which
-is locked after repeated failures (shared with WebDAV), not per address. Loopback and the networks in `ZETTNAS_TRUSTED_IPS`
+is locked after repeated failures (shared with WebDAV), not per address. Loopback and the networks in `KIBOTO_TRUSTED_IPS`
 (comma-separated, for example `192.168.1.10,10.0.0.0/24`) are never blocked. If you
 lock yourself out, run
 `docker exec zettnas-toolkit python3 -m backend.services.ip_block --unblock <address>`.
@@ -116,7 +116,7 @@ or a volume that binds one of them) is allowed only from flows you confirm: inst
 a built-in app after its security review, and the updater. Recreating a container keeps
 the access it already had; a change that adds host access, or runs a different image
 with it, needs a superadmin and a confirmation. Each one is logged to
-`data/docker-proxy-audit.log`. Set `ZETTNAS_DOCKER_PROXY=off` to bypass the proxy.
+`data/docker-proxy-audit.log`. Set `KIBOTO_DOCKER_PROXY=off` to bypass the proxy.
 
 **ZettNAS's own data folder** (`users.db`, `secret.key`, backup settings) can't be
 opened, listed, copied, shared or served over WebDAV and SFTP by anyone, even when the

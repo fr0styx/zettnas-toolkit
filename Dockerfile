@@ -77,8 +77,8 @@ ARG DEV_BUILD=0
 # stays inside its download budget (PERF-29)
 RUN --mount=type=cache,target=/root/.cache/pip pip install --no-compile --require-hashes -r requirements.lock \
     && if [ "$DEV_BUILD" = "1" ]; then pip install --no-compile --require-hashes -r requirements-dev.lock; fi
-# ARC-29: in the image people install, the test switches (TESTING, ZETTNAS_TEST_MODE,
-# ZETTNAS_FAST_HASH) do nothing (backend/settings.py: test_mode); the dev build keeps them
+# ARC-29: in the image people install, the test switches (TESTING, KIBOTO_TEST_MODE,
+# KIBOTO_FAST_HASH) do nothing (backend/settings.py: test_mode); the dev build keeps them
 RUN if [ "$DEV_BUILD" != "1" ]; then echo "release image: test switches are off" > /etc/zettnas-release; fi
 
 # Intel Quick Sync for converting videos browsers can't play (iPhone HEVC): the VA-API
@@ -99,7 +99,7 @@ COPY --from=node:26.13.0-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89b
 # smaller image for servers without the LCD that don't run VMs. Published as
 # the -core tags (latest-core, edge-core, …).
 ARG VARIANT=full
-ENV ZETTNAS_IMAGE_VARIANT=${VARIANT}
+ENV KIBOTO_IMAGE_VARIANT=${VARIANT}
 RUN if [ "$VARIANT" = "full" ]; then \
     apt-get update && apt-get install -y --no-install-recommends \
         qemu-system-x86 \

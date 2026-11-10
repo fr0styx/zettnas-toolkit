@@ -5,7 +5,7 @@ fan-control step with the hardware replaced by recorders. Its decisions and ever
 command must match tests/golden/fan_control.json, recorded before fan control moved out of
 the stats collector. Regenerate only for an intended behaviour change:
 
-    ZETTNAS_UPDATE_GOLDEN=1 pytest tests/test_arc5_fan_control_characterization.py
+    KIBOTO_UPDATE_GOLDEN=1 pytest tests/test_arc5_fan_control_characterization.py
 """
 
 import importlib
@@ -119,7 +119,7 @@ def test_fan_control_matches_the_recording(monkeypatch):
     for name, *args in _scenarios():
         with monkeypatch.context() as m:
             got[name] = _run(m, *args)
-    if os.environ.get("ZETTNAS_UPDATE_GOLDEN") == "1":
+    if os.environ.get("KIBOTO_UPDATE_GOLDEN") == "1":
         os.makedirs(os.path.dirname(GOLDEN), exist_ok=True)
         with open(GOLDEN, "w", encoding="utf-8") as fh:
             json.dump(got, fh, indent=1, sort_keys=True)

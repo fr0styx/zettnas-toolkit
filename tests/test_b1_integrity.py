@@ -186,7 +186,7 @@ def test_chat_never_posts_prompts_to_guessed_ports(monkeypatch):
     from backend.services.chat_context import EndpointRegistry
 
     monkeypatch.setenv("TESTING", "0")
-    monkeypatch.setenv("ZETTNAS_TEST_MODE", "0")
+    monkeypatch.setenv("KIBOTO_TEST_MODE", "0")
     monkeypatch.setattr(ai_chat_agent, "_get_docker_host_ips", lambda: ["10.9.9.9"])
     monkeypatch.setattr(ai_chat_agent, "_ENDPOINT_REGISTRY", EndpointRegistry())
     ai_chat_agent._ACTIVE_ENDPOINT_CACHE.clear()

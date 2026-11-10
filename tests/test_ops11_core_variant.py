@@ -12,14 +12,14 @@ def test_dockerfile_installs_vm_and_browser_only_in_full():
     full_block = src.split('if [ "$VARIANT" = "full" ]', 1)[1].split("fi\n", 1)[0]
     for pkg in ("qemu-system-x86", "ovmf", "swtpm", "chromium", "fonts-noto-cjk"):
         assert re.search(rf"\b{re.escape(pkg)}\b", full_block)
-    assert "ENV ZETTNAS_IMAGE_VARIANT=${VARIANT}" in src
+    assert "ENV KIBOTO_IMAGE_VARIANT=${VARIANT}" in src
 
 
 def test_core_image_updates_to_core_tags(monkeypatch):
     from backend import config
 
     saved = dict(config.__dict__)
-    monkeypatch.setenv("ZETTNAS_IMAGE_VARIANT", "core")
+    monkeypatch.setenv("KIBOTO_IMAGE_VARIANT", "core")
     importlib.reload(config)
     try:
         assert config.variant_tag("latest") == "latest-core"
@@ -28,7 +28,7 @@ def test_core_image_updates_to_core_tags(monkeypatch):
     finally:
         # the module exactly as it was, not reloaded again: a reload drops the paths the test
         # setup set on it (found by the random-order nightly)
-        monkeypatch.delenv("ZETTNAS_IMAGE_VARIANT")
+        monkeypatch.delenv("KIBOTO_IMAGE_VARIANT")
         config.__dict__.clear()
         config.__dict__.update(saved)
     assert config.variant_tag("latest") == "latest"

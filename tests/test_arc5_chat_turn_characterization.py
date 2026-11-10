@@ -6,7 +6,7 @@ runs with the model unreachable (the built-in replies), with a fake model that a
 with one that first asks for a tool. The turn's whole result (timings aside) and what the
 model was shown must match the recording. Regenerate only for an intended change:
 
-    ZETTNAS_UPDATE_GOLDEN=1 pytest tests/test_arc5_chat_turn_characterization.py
+    KIBOTO_UPDATE_GOLDEN=1 pytest tests/test_arc5_chat_turn_characterization.py
 """
 
 import copy
@@ -136,7 +136,7 @@ def _run_all(monkeypatch, tools):
 
 
 def test_a_chat_turn_matches_the_recording(monkeypatch):
-    if os.environ.get("ZETTNAS_UPDATE_GOLDEN") == "1":
+    if os.environ.get("KIBOTO_UPDATE_GOLDEN") == "1":
         tools = _record_tools()
         golden = {"tools": tools, "turns": _run_all(monkeypatch, tools)}
         os.makedirs(os.path.dirname(GOLDEN), exist_ok=True)

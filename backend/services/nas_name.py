@@ -41,7 +41,7 @@ def valid(name: str) -> bool:
 
 
 def config() -> dict[str, Any]:
-    """{enabled, name, previous}: what is saved, else off with the default name (or ZETTNAS_NAS_NAME)."""
+    """{enabled, name, previous}: what is saved, else off with the default name (or KIBOTO_NAS_NAME)."""
     from backend import settings
 
     data = read_json(STATE_FILE, {})

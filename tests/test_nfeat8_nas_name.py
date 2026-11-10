@@ -136,7 +136,7 @@ class FakeDocker:
 @pytest.fixture
 def docker(monkeypatch, tmp_path):
     monkeypatch.setattr(nas_name, "STATE_FILE", str(tmp_path / "nas_name.json"))
-    monkeypatch.delenv("ZETTNAS_NAS_NAME", raising=False)
+    monkeypatch.delenv("KIBOTO_NAS_NAME", raising=False)
     fake = FakeDocker()
     monkeypatch.setattr(nas_name, "_docker", fake)
     monkeypatch.setattr(nas_name, "timemachine_shares", lambda: [])

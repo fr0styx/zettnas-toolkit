@@ -175,7 +175,7 @@ def test_proxy_forwards_allowed_and_refuses_the_rest(monkeypatch):
 def test_docker_sock_follows_the_proxy(monkeypatch):
     from backend import config
 
-    monkeypatch.delenv("ZETTNAS_DOCKER_SOCK", raising=False)
+    monkeypatch.delenv("KIBOTO_DOCKER_SOCK", raising=False)
     assert config.docker_sock() == "/var/run/docker.sock"
-    monkeypatch.setenv("ZETTNAS_DOCKER_SOCK", "/run/zettnas/docker.sock")
+    monkeypatch.setenv("KIBOTO_DOCKER_SOCK", "/run/zettnas/docker.sock")
     assert config.docker_sock() == "/run/zettnas/docker.sock"

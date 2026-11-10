@@ -39,7 +39,7 @@ describes what the code does today; the numbers come from `tests/rag_eval`, whic
   Unraid, ZFS, Btrfs, mdadm, LVM/LUKS and plain partitions, checks each with the
   non-waking `smartctl -n standby`, and ignores SSDs. Network and cloud mounts are never
   treated as sleeping. If it can't tell which disk holds a folder, it assumes the disk may
-  be asleep and waits; set `ZETTNAS_STANDBY_UNKNOWN=allow` to index such folders anyway.
+  be asleep and waits; set `KIBOTO_STANDBY_UNKNOWN=allow` to index such folders anyway.
 
 ## Vectors
 
@@ -205,7 +205,7 @@ else searches your files, in any language. Words match as whole words ("ram" is 
 "program"), and "temperature" counts as a hardware question only next to a hardware word.
 If nothing matches, the model answers without system status filling the gap. Tool
 definitions go to the model only when the router found nothing, which keeps prompts
-short. The context window is fixed at 8,192 tokens (`ZETTNAS_AI_NUM_CTX` changes it):
+short. The context window is fixed at 8,192 tokens (`KIBOTO_AI_NUM_CTX` changes it):
 Ollama reloads the model whenever it changes, so the prompt is fitted to the window,
 oldest history first, instead.
 
@@ -243,7 +243,7 @@ model is told not to follow instructions inside it.
 - **Delete chats not used for…** removes unpinned conversations after 7, 30, 90 or 365 days.
 - **Flush index** deletes the whole index.
 - The index and the conversations are encrypted at rest with the install's data key
-  (`ZETTNAS_DATA_KEY`); keep that key and the data folder private, and back the key up:
+  (`KIBOTO_DATA_KEY`); keep that key and the data folder private, and back the key up:
   without it the index has to be rebuilt and old conversations can't be read.
 
 ## Chat models

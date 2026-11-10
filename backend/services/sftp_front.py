@@ -31,7 +31,7 @@ if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
 CHUNK = 256 * 1024
-FAIL_LOG_ENV = "ZETTNAS_AUTH_FAIL_LOG"  # set for the SFTP rclone only, so WebDAV failures aren't counted here
+FAIL_LOG_ENV = "KIBOTO_AUTH_FAIL_LOG"  # set for the SFTP rclone only, so WebDAV failures aren't counted here
 AUTH_WINDOW_S = 30.0  # how long after connecting a client is still signing in
 
 

@@ -42,7 +42,7 @@ def pick_encoder() -> str:
     """h264_qsv (Intel Quick Sync) when the GPU is passed through and works, else libx264.
 
     Quick Sync converted a 1080p iPhone clip at about 11x real time against 5x for
-    libx264, and leaves the CPU free. ZETTNAS_VIDEO_HWENC=off forces software.
+    libx264, and leaves the CPU free. KIBOTO_VIDEO_HWENC=off forces software.
     """
     if "codec" in _encoder_choice:
         return _encoder_choice["codec"]

@@ -112,7 +112,7 @@ def test_fresh_install_gets_a_first_time_password_not_admin(tmp_path, monkeypatc
     from backend.users_db import get_user_by_id, init_users_db, update_user_password
 
     admin_id = "admin-00000000-0000-0000-0000-000000000001"
-    monkeypatch.setenv("ZETTNAS_ALLOW_DEFAULT_PASSWORD", "0")
+    monkeypatch.setenv("KIBOTO_ALLOW_DEFAULT_PASSWORD", "0")
     monkeypatch.setattr(config, "DATA_DIR", str(tmp_path))
     monkeypatch.setattr(config, "SECURITY_FILE", str(tmp_path / "security.json"))
     monkeypatch.setattr(config, "STORED_PASSWORD_HASH", config.STORED_PASSWORD_HASH)

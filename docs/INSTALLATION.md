@@ -318,7 +318,7 @@ For **UGOS (Ugreen NAS OS)**, **FygoOS**, **ZettOS**, or **Proxmox VE**, ZettNAS
          - "8084:8084"
        environment:
          - PORT=8082
-         - ZETTNAS_OBSERVER_ADAPTER=ugos   # Explicitly set adapter or use 'auto'
+         - KIBOTO_OBSERVER_ADAPTER=ugos   # Explicitly set adapter or use 'auto'
          - UPDATE_CHANNEL=stable
        volumes:
          - /proc:/host/proc:ro
@@ -487,7 +487,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | :--- | :--- | :--- |
 | `PORT` | `8082` | HTTP port for the Web Desktop and REST API |
 | `WEB_PASSWORD` | (empty) | First-time admin password. Empty or `admin`: a random one is generated and shown in the log. Ignored once `users.db` exists |
-| `ZETTNAS_DATA_KEY` | *(empty)* | Optional. Encrypts the AI search index and chat history at rest (SQLCipher, 16+ characters, e.g. `openssl rand -base64 32`). Keep it outside the data folder (Unraid template, or `.env` next to the compose file) and in a password manager. See SECURITY.md |
+| `KIBOTO_DATA_KEY` | *(empty)* | Optional. Encrypts the AI search index and chat history at rest (SQLCipher, 16+ characters, e.g. `openssl rand -base64 32`). Keep it outside the data folder (Unraid template, or `.env` next to the compose file) and in a password manager. See SECURITY.md |
 | `LOGIN_USER_CHOOSER` | `0` | Show user tiles on the login screen. Off by default because it lists account names to anyone who can open the login page |
 | `CSRF_TRUSTED_ORIGINS` | *(empty)* | Extra origins (comma-separated, e.g. `https://nas.example.com`) allowed to make changes with the session cookie, for reverse proxies that rewrite the `Host` header |
 | `DATA_DIR` | `/app/data` | Path to persistent database, sessions, tokens, and configuration |
@@ -505,14 +505,14 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `TAILSCALE_STATE_DIR` | `/app/data/tailscale` | State and configuration directory for embedded Tailscale mesh node |
 | `SFTP_PORT` | `2222` | Port for drop-in chrooted SFTP server |
 | `UPDATE_SIGNATURES` | `enforce` | In-app updates install only images this project's CI signed: `enforce`, `warn` (install with a warning) or `off` |
-| `ZETTNAS_DOCKER_PROXY` | `on` | ZettNAS reaches Docker through an allow-list proxy that forwards only the calls it uses; `off` gives it the socket directly |
-| `ZETTNAS_TRUSTED_IPS` | *(empty)* | Comma-separated addresses or networks (CIDR) that are never blocked, neither after failed sign-ins nor by the ransomware guard, so you can always reach the console |
+| `KIBOTO_DOCKER_PROXY` | `on` | ZettNAS reaches Docker through an allow-list proxy that forwards only the calls it uses; `off` gives it the socket directly |
+| `KIBOTO_TRUSTED_IPS` | *(empty)* | Comma-separated addresses or networks (CIDR) that are never blocked, neither after failed sign-ins nor by the ransomware guard, so you can always reach the console |
 | `LCD_RENDERER` | `auto` | What draws the front LCD: `pil` (built in, no browser), `chromium` (the web dashboard) or `auto` (Chromium when the image has it) |
 | `UPDATE_CHANNEL` | `stable` | Update channel: `stable` (releases after a 3-day beta, `:latest`), `beta` (new releases right away, `:beta`) or `edge` (every commit on main); see docs/RELEASING.md |
-| `ZETTNAS_OBSERVER_ADAPTER` | `auto` | Force storage adapter mode (`auto`, `generic`, `fygoos`, `zettos`, `ugos`, `truenas`, `proxmox`, `unraid`) |
-| `ZETTNAS_LCD_CAPTURE` | `screencast` | With the Chromium LCD renderer: `screencast` (a frame only when the screen changes) or `poll` (a screenshot every frame) |
-| `ZETTNAS_VIDEO_HWENC` | `auto` | Convert videos browsers can't play with Intel Quick Sync when `/dev/dri` is passed to the container (`--device /dev/dri`); `off` uses the CPU |
-| `ZETTNAS_THUMB_CACHE_MB` | `1024` | Disk space for photo and video thumbnails (`data/cache/thumbs`); the least recently used are removed first |
+| `KIBOTO_OBSERVER_ADAPTER` | `auto` | Force storage adapter mode (`auto`, `generic`, `fygoos`, `zettos`, `ugos`, `truenas`, `proxmox`, `unraid`) |
+| `KIBOTO_LCD_CAPTURE` | `screencast` | With the Chromium LCD renderer: `screencast` (a frame only when the screen changes) or `poll` (a screenshot every frame) |
+| `KIBOTO_VIDEO_HWENC` | `auto` | Convert videos browsers can't play with Intel Quick Sync when `/dev/dri` is passed to the container (`--device /dev/dri`); `off` uses the CPU |
+| `KIBOTO_THUMB_CACHE_MB` | `1024` | Disk space for photo and video thumbnails (`data/cache/thumbs`); the least recently used are removed first |
 
 ---
 

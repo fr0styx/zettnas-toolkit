@@ -224,9 +224,9 @@ class TestDockerProxy:
         raw.write_text("")
         proxy = tmp_path / "proxy.sock"
         monkeypatch.delenv("TESTING", raising=False)
-        monkeypatch.delenv("ZETTNAS_TEST_MODE", raising=False)  # both are test mode (ARC-29)
-        monkeypatch.setenv("ZETTNAS_DOCKER_PROXY_SOCK", str(proxy))
-        monkeypatch.delenv("ZETTNAS_DOCKER_SOCK", raising=False)
+        monkeypatch.delenv("KIBOTO_TEST_MODE", raising=False)  # both are test mode (ARC-29)
+        monkeypatch.setenv("KIBOTO_DOCKER_PROXY_SOCK", str(proxy))
+        monkeypatch.delenv("KIBOTO_DOCKER_SOCK", raising=False)
         monkeypatch.setattr("backend.config.RAW_DOCKER_SOCK", str(raw))
         supervised = []
 
@@ -235,25 +235,25 @@ class TestDockerProxy:
             proxy.write_text("")  # the proxy comes up
 
         main._start_docker_proxy(supervise)
-        assert supervised == ["DockerProxy"] and os.environ["ZETTNAS_DOCKER_SOCK"] == str(proxy)
+        assert supervised == ["DockerProxy"] and os.environ["KIBOTO_DOCKER_SOCK"] == str(proxy)
 
     def test_falls_back_when_the_proxy_does_not_start(self, tmp_path, monkeypatch):
         raw = tmp_path / "docker.sock"
         raw.write_text("")
         monkeypatch.delenv("TESTING", raising=False)
-        monkeypatch.delenv("ZETTNAS_TEST_MODE", raising=False)  # both are test mode (ARC-29)
-        monkeypatch.setenv("ZETTNAS_DOCKER_PROXY_SOCK", str(tmp_path / "never.sock"))
-        monkeypatch.delenv("ZETTNAS_DOCKER_SOCK", raising=False)
+        monkeypatch.delenv("KIBOTO_TEST_MODE", raising=False)  # both are test mode (ARC-29)
+        monkeypatch.setenv("KIBOTO_DOCKER_PROXY_SOCK", str(tmp_path / "never.sock"))
+        monkeypatch.delenv("KIBOTO_DOCKER_SOCK", raising=False)
         monkeypatch.setattr("backend.config.RAW_DOCKER_SOCK", str(raw))
         monkeypatch.setattr(main.time, "sleep", lambda s: None)
         main._start_docker_proxy(lambda name, fn: None)
-        assert "ZETTNAS_DOCKER_SOCK" not in os.environ
+        assert "KIBOTO_DOCKER_SOCK" not in os.environ
 
     def test_off_or_without_docker(self, tmp_path, monkeypatch):
         called = []
-        monkeypatch.setenv("ZETTNAS_DOCKER_PROXY", "off")
+        monkeypatch.setenv("KIBOTO_DOCKER_PROXY", "off")
         main._start_docker_proxy(lambda name, fn: called.append(name))
-        monkeypatch.delenv("ZETTNAS_DOCKER_PROXY")
+        monkeypatch.delenv("KIBOTO_DOCKER_PROXY")
         monkeypatch.delenv("TESTING", raising=False)
         monkeypatch.setattr("backend.config.RAW_DOCKER_SOCK", str(tmp_path / "none.sock"))
         main._start_docker_proxy(lambda name, fn: called.append(name))

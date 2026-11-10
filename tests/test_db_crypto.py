@@ -139,7 +139,7 @@ def test_index_waits_while_it_is_being_encrypted(tmp_path, monkeypatch):
 
 
 def test_updater_snapshot_without_the_key_copies_encrypted_files_as_they_are(tmp_path, monkeypatch):
-    """The update helper runs without ZETTNAS_DATA_KEY; it must still snapshot and restore."""
+    """The update helper runs without KIBOTO_DATA_KEY; it must still snapshot and restore."""
     from backend.services import data_snapshot
 
     data = tmp_path / "data"

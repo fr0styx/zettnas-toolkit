@@ -104,7 +104,7 @@ def test_listing_containers_outside_test_mode(monkeypatch):
     from backend.hardware import docker_stats
 
     monkeypatch.setenv("TESTING", "0")
-    monkeypatch.setenv("ZETTNAS_TEST_MODE", "0")
+    monkeypatch.setenv("KIBOTO_TEST_MODE", "0")
     monkeypatch.setattr(
         docker_stats,
         "read_docker_containers",

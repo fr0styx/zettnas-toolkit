@@ -64,13 +64,13 @@ def test_the_proxy_writes_failures_only_for_sftp(tmp_path, monkeypatch):
         "TESTING": "1",
         "DATA_DIR": str(tmp_path),
         "USERS_DB_PATH": config.USERS_DB_PATH,
-        "ZETTNAS_AUTH_FAIL_LOG": str(log),
+        "KIBOTO_AUTH_FAIL_LOG": str(log),
     }
     req = json.dumps({"user": "nobody", "pass": "wrong"})
     r = subprocess.run([sys.executable, str(PROXY)], input=req, capture_output=True, text=True, env=env, timeout=60)
     assert r.returncode == 1
     assert json.loads(log.read_text().splitlines()[0])["ts"] > 0
-    env.pop("ZETTNAS_AUTH_FAIL_LOG")
+    env.pop("KIBOTO_AUTH_FAIL_LOG")
     log.unlink()
     subprocess.run([sys.executable, str(PROXY)], input=req, capture_output=True, text=True, env=env, timeout=60)
     assert not log.exists()  # WebDAV's rclone has no log: its own front counts by address
@@ -134,7 +134,7 @@ def test_proxy_notes_wrong_passwords_and_locked_accounts(tmp_path, monkeypatch):
 
     init_users_db()
     log = tmp_path / "f.log"
-    monkeypatch.setenv("ZETTNAS_AUTH_FAIL_LOG", str(log))
+    monkeypatch.setenv("KIBOTO_AUTH_FAIL_LOG", str(log))
     assert _run_proxy(monkeypatch, "nobody", "wrong") == 1
     monkeypatch.setattr(login_lockout, "remaining", lambda key: 30)
     assert _run_proxy(monkeypatch, "nobody", "wrong") == 1
@@ -144,7 +144,7 @@ def test_proxy_notes_wrong_passwords_and_locked_accounts(tmp_path, monkeypatch):
 def test_proxy_note_never_fails_a_sign_in(tmp_path, monkeypatch):
     from backend.services import rclone_auth_proxy as rap
 
-    monkeypatch.setenv("ZETTNAS_AUTH_FAIL_LOG", str(tmp_path / "missing" / "f.log"))
+    monkeypatch.setenv("KIBOTO_AUTH_FAIL_LOG", str(tmp_path / "missing" / "f.log"))
     rap._note_failure()  # an unwritable log is ignored
-    monkeypatch.delenv("ZETTNAS_AUTH_FAIL_LOG")
+    monkeypatch.delenv("KIBOTO_AUTH_FAIL_LOG")
     rap._note_failure()

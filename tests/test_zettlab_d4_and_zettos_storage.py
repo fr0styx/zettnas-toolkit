@@ -110,14 +110,14 @@ def test_storage_platform_detector_identifies_zettos():
     def mock_isfile(p):
         return p == "/etc/zettos-release"
 
-    with patch.dict(os.environ, {"ZETTNAS_PLATFORM": "", "ZETTNAS_OBSERVER_ADAPTER": ""}):
+    with patch.dict(os.environ, {"KIBOTO_PLATFORM": "", "KIBOTO_OBSERVER_ADAPTER": ""}):
         with patch("backend.hardware.pal.base._find_emhttp_dir", return_value=None):
             with patch("os.path.isfile", side_effect=mock_isfile):
                 plat = StoragePlatformDetector.detect()
                 assert plat == PlatformType.ZETTOS
 
     # 2. Via explicit environment override
-    with patch.dict(os.environ, {"ZETTNAS_OBSERVER_ADAPTER": "zettos"}):
+    with patch.dict(os.environ, {"KIBOTO_OBSERVER_ADAPTER": "zettos"}):
         plat = StoragePlatformDetector.detect()
         assert plat == PlatformType.ZETTOS
 

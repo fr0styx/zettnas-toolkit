@@ -209,16 +209,16 @@ jobs:
         env:
           PORT: "8082"
           WEB_PASSWORD: "e2e-Test-Pass-1"  # not the shared default: that one now gets a generated password
-          ZETTNAS_E2E_PASSWORD: "e2e-Test-Pass-1"  # the tests read this (tests/conftest.py resets WEB_PASSWORD)
+          KIBOTO_E2E_PASSWORD: "e2e-Test-Pass-1"  # the tests read this (tests/conftest.py resets WEB_PASSWORD)
           DATA_DIR: "${{ github.workspace }}/data"
           # A browsable folder for the explorer and viewer accessibility checks (sample photos go here)
           # outside the checkout: the folder that holds the data folder and a compose file is the
           # install folder, which ZettNAS hides from every file feature
           POOL_PATH: "${{ runner.temp }}/e2e-pool"
           BROWSE_ROOTS: "${{ runner.temp }}/e2e-pool"
-          ZETTNAS_E2E_MEDIA_DIR: "${{ runner.temp }}/e2e-pool"
+          KIBOTO_E2E_MEDIA_DIR: "${{ runner.temp }}/e2e-pool"
         run: |
-          mkdir -p "$ZETTNAS_E2E_MEDIA_DIR"
+          mkdir -p "$KIBOTO_E2E_MEDIA_DIR"
           annotate() {
             body=$( (echo "$2"; echo '--- server warnings ---'; grep -v 'Auth failed' /tmp/zn-server.log | grep -E 'WARNING|ERROR|CRITICAL|Traceback|Error' | tail -n 25; echo '--- server log ---'; tail -n 15 /tmp/zn-server.log) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=$1::$body"
@@ -250,7 +250,7 @@ jobs:
 
           # Execute full Playwright E2E Integration Suite; skips count as failures here
           set -o pipefail
-          if ! ZETTNAS_E2E_REQUIRED=1 pytest tests/test_e2e_integration.py tests/test_e2e_a11y.py tests/test_e2e_keyboard_german.py tests/test_e2e_journeys.py -v -rfE 2>&1 | tee /tmp/zn-e2e.log; then
+          if ! KIBOTO_E2E_REQUIRED=1 pytest tests/test_e2e_integration.py tests/test_e2e_a11y.py tests/test_e2e_keyboard_german.py tests/test_e2e_journeys.py -v -rfE 2>&1 | tee /tmp/zn-e2e.log; then
             annotate 'E2E tests' "$(grep -E '^(FAILED|ERROR|E  )|Error|assert' /tmp/zn-e2e.log | tail -n 25)"
             exit 1
           fi

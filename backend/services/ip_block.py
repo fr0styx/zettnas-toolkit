@@ -5,7 +5,7 @@ An address is blocked for a while when it keeps failing to sign in (web or WebDA
 or at once when the ransomware guard sees an attack from it. Blocked addresses get
 403 on the web app and WebDAV, and are listed under `hosts deny` in ZettNAS's own
 Samba config, and the WebDAV and SFTP ports refuse them (SEC-34). Loopback and the
-addresses in ZETTNAS_TRUSTED_IPS are never blocked,
+addresses in KIBOTO_TRUSTED_IPS are never blocked,
 so the admin can't lock themselves out of the console.
 """
 

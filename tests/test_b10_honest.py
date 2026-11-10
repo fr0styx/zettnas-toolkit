@@ -31,7 +31,7 @@ class _Run:
 def failsafe(monkeypatch):
     calls = {"cut": 0, "events": [], "notified": []}
     monkeypatch.delenv("TESTING", raising=False)
-    monkeypatch.delenv("ZETTNAS_TEST_MODE", raising=False)
+    monkeypatch.delenv("KIBOTO_TEST_MODE", raising=False)
     monkeypatch.setattr(ups_watchdog, "load_ups_config", lambda: {"poweroff_ups": True})
     monkeypatch.setattr(ups_watchdog, "graceful_docker_teardown", lambda timeout_sec=30: None)
     monkeypatch.setattr(ups_watchdog, "log_ups_event", lambda **kw: None)

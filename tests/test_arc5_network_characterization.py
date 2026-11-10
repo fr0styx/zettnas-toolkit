@@ -9,7 +9,7 @@ forwarding and listening ports. tests/golden/network.json was recorded before th
 became a package; the facade must still provide all of it. Regenerate only for an intended
 change:
 
-    ZETTNAS_UPDATE_GOLDEN=1 pytest tests/test_arc5_network_characterization.py
+    KIBOTO_UPDATE_GOLDEN=1 pytest tests/test_arc5_network_characterization.py
 """
 
 import inspect
@@ -717,7 +717,7 @@ def test_network_api_and_behaviour_match_the_recording(fake_host):
     host, root = fake_host
     got = {"surface": _surface(), "behaviour": _scenario(host, root)}
     got = _norm(got, [(root, "<root>")])
-    if os.environ.get("ZETTNAS_UPDATE_GOLDEN") == "1":
+    if os.environ.get("KIBOTO_UPDATE_GOLDEN") == "1":
         os.makedirs(os.path.dirname(GOLDEN), exist_ok=True)
         with open(GOLDEN, "w", encoding="utf-8") as fh:
             json.dump(got, fh, indent=1, sort_keys=True)

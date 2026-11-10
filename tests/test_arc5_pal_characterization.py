@@ -5,7 +5,7 @@ method signatures, every adapter's capabilities, and what the parsing helpers re
 sample inputs. tests/golden/pal_storage.json was recorded before the module became a
 package; the facade must still provide all of it. Regenerate only for an intended change:
 
-    ZETTNAS_UPDATE_GOLDEN=1 pytest tests/test_arc5_pal_characterization.py
+    KIBOTO_UPDATE_GOLDEN=1 pytest tests/test_arc5_pal_characterization.py
 """
 
 import enum
@@ -110,7 +110,7 @@ def _behaviour(tmp):
 def test_pal_api_and_behaviour_match_the_recording(tmp_path):
     got = {"surface": _surface(), "behaviour": _behaviour(str(tmp_path))}
     got = json.loads(json.dumps(got, sort_keys=True))
-    if os.environ.get("ZETTNAS_UPDATE_GOLDEN") == "1":
+    if os.environ.get("KIBOTO_UPDATE_GOLDEN") == "1":
         os.makedirs(os.path.dirname(GOLDEN), exist_ok=True)
         with open(GOLDEN, "w", encoding="utf-8") as fh:
             json.dump(got, fh, indent=1, sort_keys=True)

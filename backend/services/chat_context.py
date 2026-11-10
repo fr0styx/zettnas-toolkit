@@ -320,7 +320,7 @@ REPLY_TOKENS = 1024
 def _context_window_for(messages: list[dict[str, Any]] | None = None, tools: list[dict[str, Any]] | None = None) -> int:
     """One fixed num_ctx (AI-7). Ollama reloads the model whenever num_ctx changes, and a window
     sized to each prompt grew to 16384 and a 1.8 GiB KV cache on an iGPU; the prompt is fitted to
-    the window instead (see _fit_to_window). ZETTNAS_AI_NUM_CTX overrides it."""
+    the window instead (see _fit_to_window). KIBOTO_AI_NUM_CTX overrides it."""
     from backend import config
 
     override = config.SETTINGS.ai_num_ctx

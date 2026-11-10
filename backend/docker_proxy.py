@@ -16,7 +16,7 @@ capabilities, seccomp/AppArmor disabled, raw block devices, or bind mounts of th
 Docker socket, "/", /etc, /boot, /root, /proc, /sys, /dev, /var/lib/docker, /usr.
 
 Run with `python -m backend.docker_proxy`. backend.main starts it under the
-supervisor and points the app at it via ZETTNAS_DOCKER_SOCK.
+supervisor and points the app at it via KIBOTO_DOCKER_SOCK.
 """
 
 import asyncio
@@ -28,9 +28,11 @@ import time
 import urllib.parse
 from typing import Any
 
+from backend import legacy_names
+
 logger = logging.getLogger("ZettNAS.docker_proxy")
-UPSTREAM = os.environ.get("ZETTNAS_DOCKER_UPSTREAM", "/var/run/docker.sock")
-LISTEN = os.environ.get("ZETTNAS_DOCKER_PROXY_SOCK", "/run/zettnas/docker.sock")
+UPSTREAM = legacy_names.getenv("KIBOTO_DOCKER_UPSTREAM", "/var/run/docker.sock")
+LISTEN = legacy_names.getenv("KIBOTO_DOCKER_PROXY_SOCK", "/run/zettnas/docker.sock")
 ELEVATED_HEADER = "x-zettnas-elevated"
 MAX_HEAD = 64 * 1024
 MAX_POLICY_BODY = 4 * 1024 * 1024

@@ -6,7 +6,7 @@ Photos (including Apple HEIC/HEIF) are decoded with Pillow, videos with PyAV
 are WebP files cached on disk under data/cache/thumbs, keyed by path, size,
 modification time and the requested size, so an edited file gets a fresh
 thumbnail. The cache is trimmed, oldest first, when it grows past
-ZETTNAS_THUMB_CACHE_MB (default 1024 MB). Files that can't be decoded are
+KIBOTO_THUMB_CACHE_MB (default 1024 MB). Files that can't be decoded are
 remembered too, so a broken file isn't retried on every visit.
 """
 
@@ -18,7 +18,7 @@ import threading
 import time
 from typing import Optional
 
-from backend import config
+from backend import config, legacy_names
 
 logger = logging.getLogger("zettnas.thumbs")
 
@@ -50,7 +50,7 @@ def kind(path: str) -> str | None:
 
 
 def cache_dir() -> str:
-    return os.environ.get("ZETTNAS_THUMB_CACHE_DIR") or os.path.join(config.DATA_DIR, "cache", "thumbs")
+    return legacy_names.getenv("KIBOTO_THUMB_CACHE_DIR") or os.path.join(config.DATA_DIR, "cache", "thumbs")
 
 
 def cache_limit_bytes() -> int:

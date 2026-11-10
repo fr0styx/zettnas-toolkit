@@ -37,7 +37,7 @@ def own_db(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "USERS_DB_PATH", db)
     monkeypatch.setattr(config, "SECURITY_FILE", str(tmp_path / "security.json"))
     monkeypatch.setattr(config, "STORED_PASSWORD_HASH", config.STORED_PASSWORD_HASH)
-    monkeypatch.setenv("ZETTNAS_ALLOW_DEFAULT_PASSWORD", "1")
+    monkeypatch.setenv("KIBOTO_ALLOW_DEFAULT_PASSWORD", "1")
     init_users_db(db)
     return db
 

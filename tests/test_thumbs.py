@@ -12,7 +12,7 @@ from backend.services import thumbs
 
 @pytest.fixture(autouse=True)
 def _cache(tmp_path, monkeypatch):
-    monkeypatch.setenv("ZETTNAS_THUMB_CACHE_DIR", str(tmp_path / "cache"))
+    monkeypatch.setenv("KIBOTO_THUMB_CACHE_DIR", str(tmp_path / "cache"))
 
 
 def _webp_size(data):

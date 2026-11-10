@@ -44,7 +44,7 @@ This document serves as your operational blueprint, covering the architecture, d
 ### 1.6 Host Power & Test Execution Isolation Invariant
 - **Never trigger physical host power operations during test execution**:
   - Test suites (`pytest`, `vitest`) must **never** trigger real host power transitions (`reboot`, `powerdown`, `shutdown`).
-  - `trigger_power_action()` in `backend/api/system.py` and `signal_host_powerdown()` in `backend/services/alert_rules.py` / `backend/services/ups_watchdog.py` unconditionally short-circuit if `TESTING == "1"` or `ZETTNAS_TEST_MODE == "1"`.
+  - `trigger_power_action()` in `backend/api/system.py` and `signal_host_powerdown()` in `backend/services/alert_rules.py` / `backend/services/ups_watchdog.py` unconditionally short-circuit if `TESTING == "1"` or `KIBOTO_TEST_MODE == "1"`.
   - All unit/integration tests exercising power endpoints (`/api/system/reboot`, `/api/system/shutdown`) **must** wrap calls in `unittest.mock.patch("backend.api.system.trigger_power_action", return_value=True)`.
 
 ---

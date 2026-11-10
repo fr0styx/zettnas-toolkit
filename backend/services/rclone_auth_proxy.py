@@ -25,7 +25,7 @@ if REPO_ROOT not in sys.path:
 
 import logging
 
-from backend import config
+from backend import config, legacy_names
 from backend.fsutil import safe_serve_root
 from backend.ignored_errors import ignored
 from backend.passwords import verify_password
@@ -50,7 +50,7 @@ def _sftp_password_ok(stored: str, password: str) -> bool:
 
 def _note_failure() -> None:
     """For the SFTP front, which knows the address (NSEC-15): the time of a failed sign-in."""
-    path = os.environ.get("ZETTNAS_AUTH_FAIL_LOG", "")
+    path = legacy_names.getenv("KIBOTO_AUTH_FAIL_LOG", "")
     if not path:
         return
     try:

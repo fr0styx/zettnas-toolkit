@@ -4,12 +4,12 @@ Fails on any "serious" or "critical" WCAG 2.2 A/AA issue, which includes target-
 targets of at least 24px or enough space around them). Covers the main windows, the setup
 wizard, every Settings pane, the light theme, the file explorer with photos, the photo
 viewer and the Docker cleanup dialog, on desktop and on a phone (UX-9). Needs the live test
-server (ZETTNAS_E2E_BASE, default :8082, like test_e2e_integration.py) and
-node_modules/axe-core (npm ci). With ZETTNAS_E2E_MEDIA_DIR set to a folder the server can
+server (KIBOTO_E2E_BASE, default :8082, like test_e2e_integration.py) and
+node_modules/axe-core (npm ci). With KIBOTO_E2E_MEDIA_DIR set to a folder the server can
 browse, sample photos go there.
 
 Issues already known when a view was added are listed in tests/a11y_baseline.json; any other
-issue fails. ZETTNAS_A11Y_UPDATE=1 rewrites that file (only to remove entries, please).
+issue fails. KIBOTO_A11Y_UPDATE=1 rewrites that file (only to remove entries, please).
 """
 
 import json
@@ -19,11 +19,11 @@ import pytest
 
 from tests.test_e2e_integration import _skip_or_fail, is_server_reachable
 
-BASE = os.environ.get("ZETTNAS_E2E_BASE", "http://127.0.0.1:8082")
+BASE = os.environ.get("KIBOTO_E2E_BASE", "http://127.0.0.1:8082")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AXE = os.path.join(ROOT, "node_modules", "axe-core", "axe.min.js")
-REPORT_ONLY = os.environ.get("ZETTNAS_A11Y_REPORT") == "1"
-UPDATE = os.environ.get("ZETTNAS_A11Y_UPDATE") == "1"
+REPORT_ONLY = os.environ.get("KIBOTO_A11Y_REPORT") == "1"
+UPDATE = os.environ.get("KIBOTO_A11Y_UPDATE") == "1"
 BASELINE = os.path.join(ROOT, "tests", "a11y_baseline.json")
 # Transitions and animations off while axe measures: a theme switch fades colours over 150 ms, and
 # a slow runner measured them halfway (3 Nov 2026: the light sidebar at 3.4:1 mid-fade, 7.5:1 after)
@@ -32,13 +32,13 @@ STILL = (
     "s.textContent = '*, *::before, *::after { transition: none !important; animation: none !important }'; "
     "document.documentElement.appendChild(s); })"
 )
-MEDIA_DIR = os.environ.get("ZETTNAS_E2E_MEDIA_DIR", "")
+MEDIA_DIR = os.environ.get("KIBOTO_E2E_MEDIA_DIR", "")
 TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
-# UX-8: moderate issues count too (ZETTNAS_A11Y_IMPACTS narrows it for a quick look)
-IMPACTS = os.environ.get("ZETTNAS_A11Y_IMPACTS", "moderate,serious,critical").split(",")
+# UX-8: moderate issues count too (KIBOTO_A11Y_IMPACTS narrows it for a quick look)
+IMPACTS = os.environ.get("KIBOTO_A11Y_IMPACTS", "moderate,serious,critical").split(",")
 
 pytestmark = pytest.mark.skipif(
-    not is_server_reachable(BASE) and os.environ.get("ZETTNAS_E2E_REQUIRED") != "1",
+    not is_server_reachable(BASE) and os.environ.get("KIBOTO_E2E_REQUIRED") != "1",
     reason="Live ZettNAS Toolkit test server not reachable at http://127.0.0.1:8082",
 )
 
@@ -120,7 +120,7 @@ def _login(page):
         page.click("#login-toggle-manual")
     if page.is_visible("#login-username"):
         page.fill("#login-username", "admin")
-    page.fill("#login-password", os.environ.get("ZETTNAS_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin"))
+    page.fill("#login-password", os.environ.get("KIBOTO_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin"))
     page.click("#login-btn")
     page.wait_for_function("() => localStorage.getItem('zettnas_signed_in') === '1'", timeout=8000)
     page.reload(wait_until="domcontentloaded")

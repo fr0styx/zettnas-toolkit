@@ -168,7 +168,7 @@ class _Broken:
 @pytest.fixture
 def ollama(monkeypatch):
     monkeypatch.setenv("TESTING", "0")
-    monkeypatch.setenv("ZETTNAS_TEST_MODE", "0")
+    monkeypatch.setenv("KIBOTO_TEST_MODE", "0")
     monkeypatch.setattr(ai_chat_agent, "_get_docker_host_ips", lambda: ["10.9.9.1", "10.9.9.2", "10.9.9.3"])
     ai_chat_agent._ACTIVE_ENDPOINT_CACHE.clear()
     ai_chat_agent._ENDPOINT_REGISTRY.__init__() if hasattr(ai_chat_agent._ENDPOINT_REGISTRY, "__init__") else None

@@ -171,7 +171,7 @@ def test_cached_sees_a_thumbnail_or_a_failure_note(monkeypatch, tmp_path):
 
 
 def test_the_cache_is_walked_only_when_it_may_be_full(monkeypatch, tmp_path):
-    monkeypatch.setenv("ZETTNAS_THUMB_CACHE_DIR", str(tmp_path))
+    monkeypatch.setenv("KIBOTO_THUMB_CACHE_DIR", str(tmp_path))
     walks = []
     monkeypatch.setattr(
         thumbs.threading, "Thread", lambda target, **kw: types.SimpleNamespace(start=lambda: walks.append(1))

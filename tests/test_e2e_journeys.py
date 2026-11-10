@@ -19,10 +19,10 @@ from tests.test_e2e_integration import is_server_reachable
 from tests.test_e2e_keyboard_german import PASSWORD, _browser, _sign_in_with_keyboard
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-POOL = os.environ.get("ZETTNAS_E2E_MEDIA_DIR") or os.environ.get("POOL_PATH", "")
+POOL = os.environ.get("KIBOTO_E2E_MEDIA_DIR") or os.environ.get("POOL_PATH", "")
 
 pytestmark = pytest.mark.skipif(
-    not is_server_reachable(BASE) and os.environ.get("ZETTNAS_E2E_REQUIRED") != "1",
+    not is_server_reachable(BASE) and os.environ.get("KIBOTO_E2E_REQUIRED") != "1",
     reason="Live ZettNAS Toolkit test server not reachable",
 )
 
@@ -215,7 +215,7 @@ def test_sign_in_with_a_recovery_code_by_keyboard():
 @pytest.fixture
 def journey_folder():
     if not POOL or not os.path.isdir(POOL):
-        pytest.skip("no browsable pool folder (ZETTNAS_E2E_MEDIA_DIR)")
+        pytest.skip("no browsable pool folder (KIBOTO_E2E_MEDIA_DIR)")
     folder = os.path.join(POOL, "Keyboard Journey")
     os.makedirs(os.path.join(folder, "Inside"), exist_ok=True)
     with open(os.path.join(folder, "Inside", "note.txt"), "w") as f:

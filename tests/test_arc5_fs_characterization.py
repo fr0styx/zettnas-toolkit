@@ -7,7 +7,7 @@ search, trash, previews, downloads, share links and favorites). tests/golden/fs_
 recorded before the module became a package; the facade must still provide all of it.
 Regenerate only for an intended change:
 
-    ZETTNAS_UPDATE_GOLDEN=1 pytest tests/test_arc5_fs_characterization.py
+    KIBOTO_UPDATE_GOLDEN=1 pytest tests/test_arc5_fs_characterization.py
 """
 
 import hashlib
@@ -448,7 +448,7 @@ def test_fs_api_routes_and_behaviour_match_the_recording(client, auth_headers, w
         "session": _session(client, auth_headers, paths["pool"], work, paths["outside"], inbox),
     }
     got = json.loads(json.dumps(got, sort_keys=True, default=str))
-    if os.environ.get("ZETTNAS_UPDATE_GOLDEN") == "1":
+    if os.environ.get("KIBOTO_UPDATE_GOLDEN") == "1":
         os.makedirs(os.path.dirname(GOLDEN), exist_ok=True)
         with open(GOLDEN, "w", encoding="utf-8") as fh:
             json.dump(got, fh, indent=1, sort_keys=True)

@@ -18,24 +18,26 @@ RELEASE_MARKER = "/etc/zettnas-release"
 
 
 def test_mode() -> bool:
-    """TESTING=1 or ZETTNAS_TEST_MODE=1, honoured only outside the released image (ARC-29).
+    """TESTING=1 or KIBOTO_TEST_MODE=1, honoured only outside the released image (ARC-29).
 
     The test switches make password hashing fast, allow the shared default password and turn the
     Docker proxy off, so in the image people install they do nothing, whatever a container
     template sets."""
     if os.path.exists(RELEASE_MARKER):
         return False
-    return os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1"
+    return os.environ.get("TESTING") == "1" or legacy_names.getenv("KIBOTO_TEST_MODE") == "1"
 
 
 def fast_hash() -> bool:
-    """Cheap password hashing for test runs only (ZETTNAS_FAST_HASH=1 or test mode)."""
+    """Cheap password hashing for test runs only (KIBOTO_FAST_HASH=1 or test mode)."""
     if os.path.exists(RELEASE_MARKER):
         return False
-    return test_mode() or os.environ.get("ZETTNAS_FAST_HASH") == "1"
+    return test_mode() or legacy_names.getenv("KIBOTO_FAST_HASH") == "1"
 
 
 from typing import Any
+
+from backend import legacy_names
 
 _TRUE = ("1", "true", "yes", "on")
 _FALSE = ("0", "false", "no", "off", "")
@@ -82,7 +84,7 @@ class Settings:
     remotes_path: str = _s("REMOTES_PATH", "/mnt/remotes", "Where cloud and network remotes are mounted.", group="Host")
     host_etc: str = _s("HOST_ETC", "/host/etc", "Where the host's /etc is mounted.", group="Host")
     observer_mode: bool = _s(
-        "ZETTNAS_OBSERVER_MODE",
+        "KIBOTO_OBSERVER_MODE",
         False,
         "Only watch the host on an unknown system: read-only telemetry, no changes.",
         group="Host",
@@ -100,7 +102,7 @@ class Settings:
         "CONTAINERIZED", False, "Say ZettNAS runs in a container when it can't tell by itself.", group="Host"
     )
     thumb_cache_mb: int = _s(
-        "ZETTNAS_THUMB_CACHE_MB",
+        "KIBOTO_THUMB_CACHE_MB",
         1024,
         "Size of the preview thumbnail cache, in MB (at least 16).",
         lo=0,
@@ -108,7 +110,7 @@ class Settings:
         group="Host",
     )
     video_cache_mb: int = _s(
-        "ZETTNAS_VIDEO_CACHE_MB",
+        "KIBOTO_VIDEO_CACHE_MB",
         4096,
         "Size of the cache of videos converted for browsers that can't play the original, in MB (at least 64).",
         lo=0,
@@ -133,7 +135,7 @@ class Settings:
     )
     # Web server
     push_contact: str = _s(
-        "ZETTNAS_PUSH_CONTACT",
+        "KIBOTO_PUSH_CONTACT",
         "https://github.com/fr0styx/zettnas-toolkit",
         "Contact address sent to browser push services with each notification.",
         group="Web",
@@ -168,7 +170,7 @@ class Settings:
     max_wallpaper_mb: int = _s("MAX_WALLPAPER_MB", 10, "Largest wallpaper upload, in MB.", lo=1, hi=1024, group="Web")
     max_upload_gb: int = _s("MAX_UPLOAD_GB", 64, "Largest file upload, in GB.", lo=1, hi=100000, group="Web")
     trusted_ips: tuple[str, ...] = _s(
-        "ZETTNAS_TRUSTED_IPS",
+        "KIBOTO_TRUSTED_IPS",
         (),
         "Addresses or networks (CIDR) never blocked after failed sign-ins, comma-separated.",
         group="Web",
@@ -182,7 +184,7 @@ class Settings:
     )
     sftp_port: int = _s("SFTP_PORT", 2222, "Port of the built-in SFTP server.", lo=1, hi=65535, group="File services")
     nas_name: str = _s(
-        "ZETTNAS_NAS_NAME",
+        "KIBOTO_NAS_NAME",
         "",
         "The NAS's name on the home network (<name>.local); empty: zettnas.",
         group="File services",
@@ -203,7 +205,7 @@ class Settings:
         group="Updates",
     )
     image_variant: str = _s(
-        "ZETTNAS_IMAGE_VARIANT",
+        "KIBOTO_IMAGE_VARIANT",
         "full",
         "full ships VMs and the LCD renderer; core leaves them out.",
         choices=("full", "core"),
@@ -228,7 +230,7 @@ class Settings:
         group="Logs",
     )
     audit_retention_days: int = _s(
-        "ZETTNAS_AUDIT_RETENTION_DAYS",
+        "KIBOTO_AUDIT_RETENTION_DAYS",
         365,
         "Days the security audit log keeps an event; 0 keeps everything.",
         lo=0,
@@ -237,10 +239,10 @@ class Settings:
     )
     structured_logs: bool = _s("STRUCTURED_LOGS", False, "Older name for LOG_FORMAT=json.", group="Logs")
     log_file: bool = _s(
-        "ZETTNAS_LOG_FILE", True, "Keep a rotating log file in the data folder for the support bundle.", group="Logs"
+        "KIBOTO_LOG_FILE", True, "Keep a rotating log file in the data folder for the support bundle.", group="Logs"
     )
     gil_switch_secs: float = _s(
-        "ZETTNAS_GIL_SWITCH_SECS",
+        "KIBOTO_GIL_SWITCH_SECS",
         0.02,
         "How long a Python thread runs before handing over to another, in seconds; longer means fewer wakeups.",
         lo=0.001,
@@ -305,7 +307,7 @@ class Settings:
         "LCD_SLEEP_SEC", 300, "Seconds without activity before the LCD dims.", lo=0, hi=86400, group="Front panel"
     )
     lcd_capture: str = _s(
-        "ZETTNAS_LCD_CAPTURE",
+        "KIBOTO_LCD_CAPTURE",
         "screencast",
         "How the front LCD gets its frames: pushed when the page changes, or a screenshot every frame.",
         choices=("screencast", "poll"),
@@ -360,7 +362,7 @@ class Settings:
         group="Disks",
     )
     standby_unknown: str = _s(
-        "ZETTNAS_STANDBY_UNKNOWN",
+        "KIBOTO_STANDBY_UNKNOWN",
         "defer",
         "When it can't tell which disk holds a folder: defer the work (it may be asleep) or check anyway.",
         choices=("defer", "allow"),
@@ -435,7 +437,7 @@ class Settings:
     )
     # AI and media
     ai_num_ctx: int = _s(
-        "ZETTNAS_AI_NUM_CTX",
+        "KIBOTO_AI_NUM_CTX",
         0,
         "Chat context window in tokens; 0 uses the built-in size, values under 2048 are ignored.",
         lo=0,
@@ -443,7 +445,7 @@ class Settings:
         group="AI and media",
     )
     video_hwenc: str = _s(
-        "ZETTNAS_VIDEO_HWENC",
+        "KIBOTO_VIDEO_HWENC",
         "auto",
         "Convert videos with the iGPU when it can (auto) or always in software (off).",
         choices=("auto", "off"),
@@ -464,19 +466,19 @@ class Settings:
         "UNRAID_EMHTTP_DIR", "", "Unraid's emhttp state folder, when it isn't in a usual place.", group="Platforms"
     )
     platform: str = _s(
-        "ZETTNAS_PLATFORM",
+        "KIBOTO_PLATFORM",
         "",
         "Which host this is (unraid, truenas, zettos, ...); empty detects it.",
         group="Platforms",
     )
     observer_adapter: str = _s(
-        "ZETTNAS_OBSERVER_ADAPTER",
+        "KIBOTO_OBSERVER_ADAPTER",
         "",
         "The host to read in observer mode; empty or auto detects it.",
         group="Platforms",
     )
     pal_mode: str = _s(
-        "ZETTNAS_PAL_MODE",
+        "KIBOTO_PAL_MODE",
         "",
         "observer, readonly or telemetry: only read the host, never change it.",
         group="Platforms",
@@ -522,6 +524,13 @@ def _convert(raw: str, typ: Any, meta: Mapping[str, Any]) -> Any:
 _FIELD_CACHE: dict[str, Any] = {}
 
 
+def _env_names(meta) -> tuple[str, ...]:
+    """The names a setting is read from, in order: older aliases, its own, then its pre-rebrand
+    ZETTNAS_ name (legacy_names), so a KIBOTO_ value wins over a ZETTNAS_ one."""
+    old = legacy_names.old_env_name(meta["env"])
+    return (*meta["aliases"], meta["env"], *((old,) if old else ()))
+
+
 def current(name: str) -> Any:
     """One setting as the environment holds it now, for the few read while ZettNAS runs (and changed
     by tests while it does); declared, converted and checked like the others."""
@@ -532,7 +541,7 @@ def current(name: str) -> Any:
         _FIELD_CACHE.update({f.name: (f, hints[f.name]) for f in dataclasses.fields(Settings)})
     f, typ = _FIELD_CACHE[name]
     meta = f.metadata
-    key = next((n for n in (*meta["aliases"], meta["env"]) if n in os.environ), None)
+    key = next((n for n in _env_names(meta) if n in os.environ), None)
     if key is None:
         return f.default
     try:
@@ -552,7 +561,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> tuple[Settings, list[
     hints = typing.get_type_hints(Settings)
     for f in dataclasses.fields(Settings):
         meta = f.metadata
-        name = next((n for n in (*meta["aliases"], meta["env"]) if n in env), None)
+        name = next((n for n in _env_names(meta) if n in env), None)
         if name is None:
             continue
         try:
@@ -570,7 +579,9 @@ def markdown() -> str:
         "",
         "Environment variables ZettNAS reads at startup. Generated from `backend/settings.py`",
         "(`python -m backend.settings --markdown > docs/CONFIGURATION.md`); a value that can't be",
-        "used keeps its default, and the log says which variable and why.",
+        "used keeps its default, and the log says which variable and why. Before Kiboto 2.0 the",
+        "`KIBOTO_*` variables were named `ZETTNAS_*`; the old names still work until 2.2, and a new",
+        "name set beside an old one wins.",
     ]
     group = None
     for f in dataclasses.fields(Settings):

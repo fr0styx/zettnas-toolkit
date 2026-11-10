@@ -56,7 +56,7 @@ def test_observer_mode_setting_makes_an_unknown_host_an_observer(monkeypatch):
 
     from backend.hardware.pal import detect
 
-    for var in ("ZETTNAS_PLATFORM", "ZETTNAS_OBSERVER_ADAPTER", "ZETTNAS_PAL_MODE"):
+    for var in ("KIBOTO_PLATFORM", "KIBOTO_OBSERVER_ADAPTER", "KIBOTO_PAL_MODE"):
         monkeypatch.delenv(var, raising=False)
     with (
         patch("backend.hardware.pal.base._find_emhttp_dir", return_value=None),

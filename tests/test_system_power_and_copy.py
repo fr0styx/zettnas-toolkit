@@ -14,7 +14,7 @@ from backend.state import Z_STATE
 def real_power(monkeypatch, tmp_path):
     """Leaves test mode for trigger_power_action, with no real command reachable."""
     monkeypatch.setenv("TESTING", "0")
-    monkeypatch.delenv("ZETTNAS_TEST_MODE", raising=False)
+    monkeypatch.delenv("KIBOTO_TEST_MODE", raising=False)
     started = []
     monkeypatch.setattr(system_api.subprocess, "Popen", lambda cmd, **kw: started.append(cmd))
     monkeypatch.setattr(system_api.shutil, "which", lambda name: None)

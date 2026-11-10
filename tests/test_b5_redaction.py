@@ -55,7 +55,7 @@ SECRETS = [
     (
         "data key",
         "ZmVybmV0LWtleS1zZWNyZXQtMzItYnl0ZXMtbG9uZw==",
-        "ZETTNAS_DATA_KEY=ZmVybmV0LWtleS1zZWNyZXQtMzItYnl0ZXMtbG9uZw==",
+        "KIBOTO_DATA_KEY=ZmVybmV0LWtleS1zZWNyZXQtMzItYnl0ZXMtbG9uZw==",
     ),
 ]
 

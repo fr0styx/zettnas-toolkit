@@ -2,7 +2,7 @@
 
 Needs the live test server, like test_e2e_a11y.py. The German check lists buttons, labels and
 headings whose text is cut off; overflows already known are in tests/german_overflow_baseline.json
-(ZETTNAS_GERMAN_UPDATE=1 rewrites it, to remove entries only, please). ZETTNAS_GERMAN_SHOTS=<dir>
+(KIBOTO_GERMAN_UPDATE=1 rewrites it, to remove entries only, please). KIBOTO_GERMAN_SHOTS=<dir>
 saves a screenshot of each view for a native speaker's review.
 """
 
@@ -16,12 +16,12 @@ from tests.test_e2e_integration import _skip_or_fail, is_server_reachable
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASELINE = os.path.join(ROOT, "tests", "german_overflow_baseline.json")
-UPDATE = os.environ.get("ZETTNAS_GERMAN_UPDATE") == "1"
-SHOTS = os.environ.get("ZETTNAS_GERMAN_SHOTS", "")
-PASSWORD = os.environ.get("ZETTNAS_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin")
+UPDATE = os.environ.get("KIBOTO_GERMAN_UPDATE") == "1"
+SHOTS = os.environ.get("KIBOTO_GERMAN_SHOTS", "")
+PASSWORD = os.environ.get("KIBOTO_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin")
 
 pytestmark = pytest.mark.skipif(
-    not is_server_reachable(BASE) and os.environ.get("ZETTNAS_E2E_REQUIRED") != "1",
+    not is_server_reachable(BASE) and os.environ.get("KIBOTO_E2E_REQUIRED") != "1",
     reason="Live ZettNAS Toolkit test server not reachable",
 )
 

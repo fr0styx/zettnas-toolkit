@@ -38,7 +38,7 @@ class FakeWeb:
 @pytest.fixture
 def live(monkeypatch):
     monkeypatch.delenv("TESTING", raising=False)
-    monkeypatch.delenv("ZETTNAS_TEST_MODE", raising=False)
+    monkeypatch.delenv("KIBOTO_TEST_MODE", raising=False)
     token = web._WEB_ALLOWED.set(True)
     yield monkeypatch
     web._WEB_ALLOWED.reset(token)

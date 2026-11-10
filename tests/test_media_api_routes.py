@@ -298,7 +298,7 @@ def test_folder_on_a_sleeping_disk_is_queued(client, auth_headers, rag, monkeypa
 
 def test_folder_add_starts_learning_outside_tests(client, auth_headers, rag, monkeypatch):
     monkeypatch.setenv("TESTING", "0")
-    monkeypatch.delenv("ZETTNAS_TEST_MODE", raising=False)
+    monkeypatch.delenv("KIBOTO_TEST_MODE", raising=False)
     client.post("/api/ai/folders", json={"action": "add", "path": _dir("learn")}, headers=auth_headers)
     kw = next(c[1] for c in rag.calls if c[0] == "start_background_sync")
     assert kw["paths"][0].endswith("learn") and kw["force_wake"] is False

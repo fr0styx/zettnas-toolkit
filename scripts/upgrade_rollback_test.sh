@@ -83,7 +83,7 @@ docker pull -q "$BROKEN" >/dev/null
 
 echo "== start the old image"
 docker run -d --name "$NAME" -p "$PORT:8082" -e PORT=8082 -e ENABLE_FB=0 -e WEB_PASSWORD="$PW" \
-  -e ZETTNAS_ENFORCE_PASSWORD_CHANGE=0 -v "$DATA":/app/data "$OLD" >/dev/null
+  -e KIBOTO_ENFORCE_PASSWORD_CHANGE=0 -e ZETTNAS_ENFORCE_PASSWORD_CHANGE=0 -v "$DATA":/app/data "$OLD" >/dev/null
 wait_ok || fail "the old image never reported ok"
 in_data "echo '{\"seed\": 42}' > /d/upgrade_marker.json"
 seed

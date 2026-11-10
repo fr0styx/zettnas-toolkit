@@ -19,7 +19,7 @@ import uuid
 from contextlib import contextmanager
 from typing import Any, Optional
 
-from backend import config
+from backend import config, legacy_names
 from backend.config import DATA_DIR, logger
 from backend.ignored_errors import ignored
 from backend.passwords import hash_password, needs_rehash, verify_password
@@ -271,7 +271,7 @@ def init_users_db(db_path: str | None = None) -> None:
 
 def _shared_default_allowed() -> bool:
     """Only the test suite may bootstrap with the published 'admin' password."""
-    return test_mode() and os.environ.get("ZETTNAS_ALLOW_DEFAULT_PASSWORD", "1") == "1"
+    return test_mode() and legacy_names.getenv("KIBOTO_ALLOW_DEFAULT_PASSWORD", "1") == "1"
 
 
 def _first_time_password() -> str:

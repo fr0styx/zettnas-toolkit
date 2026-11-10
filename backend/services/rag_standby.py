@@ -160,7 +160,7 @@ def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False, unkn
     Non-waking check for whether a physical drive or filesystem path is in STANDBY/SLEEP mode.
     Strictly obeys AGENTS.md §1.2 (never wakes sleeping drives; uses -n standby if smartctl is invoked).
     `unknown` says what a path whose disk can't be placed counts as: power_state.DEFER (asleep, the
-    default; ZETTNAS_STANDBY_UNKNOWN=allow makes it CHECK) or power_state.CHECK (awake).
+    default; KIBOTO_STANDBY_UNKNOWN=allow makes it CHECK) or power_state.CHECK (awake).
     """
     if not dev_name:
         return False

@@ -20,7 +20,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 
-from backend import __version__
+from backend import __version__, legacy_names
 from backend.api import api_router
 from backend.api.webdav import proxy_router as webdav_proxy_router
 from backend.auth import auth_middleware, purge_legacy_session_files
@@ -63,22 +63,23 @@ def _start_docker_proxy(supervise) -> None:
 
     from backend.config import RAW_DOCKER_SOCK
 
-    if os.environ.get("ZETTNAS_DOCKER_PROXY", "on") == "off" or test_mode():
+    if legacy_names.getenv("KIBOTO_DOCKER_PROXY", "on") == "off" or test_mode():
         return
     if not os.path.exists(RAW_DOCKER_SOCK):
         return
-    sock = os.environ.get("ZETTNAS_DOCKER_PROXY_SOCK", "/run/zettnas/docker.sock")
+    sock = legacy_names.getenv("KIBOTO_DOCKER_PROXY_SOCK", "/run/zettnas/docker.sock")
 
     def run() -> None:
-        env = {**os.environ, "ZETTNAS_DOCKER_PROXY_SOCK": sock}
-        env.pop("ZETTNAS_DOCKER_SOCK", None)
+        env = {**os.environ, "KIBOTO_DOCKER_PROXY_SOCK": sock}
+        env.pop("KIBOTO_DOCKER_SOCK", None)
+        env.pop(legacy_names.old_env_name("KIBOTO_DOCKER_SOCK") or "", None)
         rc = subprocess.run([sys.executable, "-m", "backend.docker_proxy"], env=env).returncode  # runs until stopped
         raise RuntimeError(f"docker proxy exited with code {rc}")
 
     supervise("DockerProxy", run)
     for _ in range(50):
         if os.path.exists(sock):
-            os.environ["ZETTNAS_DOCKER_SOCK"] = sock
+            os.environ["KIBOTO_DOCKER_SOCK"] = sock
             logger.info("[Main] Docker API calls go through the allow-list proxy at %s", sock)
             return
         time.sleep(0.1)

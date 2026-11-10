@@ -646,7 +646,7 @@ def evaluate(
 
                 # test mode switches the language model off
                 os.environ.pop("TESTING", None)
-                os.environ.pop("ZETTNAS_TEST_MODE", None)
+                os.environ.pop("KIBOTO_TEST_MODE", None)
 
                 # streamed, as the app's chat is: the first token's time is measured (AI-16)
                 sink_token = ai_chat_agent._TOKEN_SINK.set(lambda kind, text: None)

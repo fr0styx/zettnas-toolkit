@@ -16,11 +16,11 @@ import backend.config as config
 from backend.config import STATIC_DIR
 from tests._index_html import with_management_markup
 
-E2E_REQUIRED = os.environ.get("ZETTNAS_E2E_REQUIRED") == "1"
+E2E_REQUIRED = os.environ.get("KIBOTO_E2E_REQUIRED") == "1"
 
 
 def _skip_or_fail(reason):
-    """In CI (ZETTNAS_E2E_REQUIRED=1) a missing server or browser is a failure, not a skip."""
+    """In CI (KIBOTO_E2E_REQUIRED=1) a missing server or browser is a failure, not a skip."""
     if E2E_REQUIRED:
         pytest.fail(reason)
     pytest.skip(reason)
@@ -28,7 +28,7 @@ def _skip_or_fail(reason):
 
 def test_e2e_server_reachable_when_required():
     if E2E_REQUIRED and not is_server_reachable():
-        pytest.fail("ZETTNAS_E2E_REQUIRED=1 but the test server is not reachable on port 8082")
+        pytest.fail("KIBOTO_E2E_REQUIRED=1 but the test server is not reachable on port 8082")
 
 
 def is_server_reachable(base_url="http://127.0.0.1:8082"):
@@ -43,7 +43,7 @@ def get_live_server_auth_token(base_url="http://127.0.0.1:8082"):
     """Obtains a valid session token for the live test server."""
     # 1. Attempt login with environment or default password
     # tests/conftest.py sets WEB_PASSWORD for unit tests; the live server password comes separately
-    for pwd in (os.environ.get("ZETTNAS_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin"), "admin"):
+    for pwd in (os.environ.get("KIBOTO_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin"), "admin"):
         try:
             req = urllib.request.Request(
                 f"{base_url}/api/auth/login",
@@ -198,7 +198,7 @@ def test_e2e_live_desktop_session_and_badge():
             page.click("#login-toggle-manual", timeout=5000)
         if page.is_visible("#login-username"):
             page.fill("#login-username", "admin")
-        page.fill("#login-password", os.environ.get("ZETTNAS_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin"))
+        page.fill("#login-password", os.environ.get("KIBOTO_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin"))
         page.click("#login-btn")
         page.wait_for_function("() => localStorage.getItem('zettnas_signed_in') === '1'", timeout=8000)
 

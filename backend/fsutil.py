@@ -15,6 +15,8 @@ import time
 from collections.abc import Iterable
 from typing import Any
 
+from backend import legacy_names
+
 _JSON_CACHE: dict[str, tuple[float | None, Any, float]] = {}  # mtime None: the file was missing
 
 # Settings files the app writes itself: atomic_write_json refreshes the cached copy, so hot
@@ -285,7 +287,7 @@ def _discover_protected() -> list[str]:
     found = {data_real}
     marker_id = _data_marker(data_real)
     roots = [os.path.realpath(r) for r in (getattr(config, "ALLOWED_BROWSE_ROOTS", None) or [])]
-    candidates = [c for c in os.environ.get("ZETTNAS_DATA_HOST_PATHS", "").split(os.pathsep) if c]
+    candidates = [c for c in legacy_names.getenv("KIBOTO_DATA_HOST_PATHS", "").split(os.pathsep) if c]
     for root in roots:
         # appdata folders sit on fast storage; the share roots themselves are never listed,
         # so finding the alias doesn't wake sleeping disks

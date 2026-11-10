@@ -196,7 +196,7 @@ def log_file_path() -> str:
 
 def _add_file_handler(root_logger: logging.Logger, formatter: logging.Formatter) -> str | None:
     """A rotating log file in the data folder (REL-28): what happened before a restart survives it,
-    and the support bundle can carry it. 2 MB, three older files; ZETTNAS_LOG_FILE=0 turns it off."""
+    and the support bundle can carry it. 2 MB, three older files; KIBOTO_LOG_FILE=0 turns it off."""
     if not _settings.current("log_file") or test_mode():
         return None
     from logging.handlers import RotatingFileHandler

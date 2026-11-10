@@ -99,7 +99,7 @@ def _snapshot_db_bytes(path: str, clear_tables: tuple = ()) -> bytes:
     """Consistent copy of a SQLite database, with some tables emptied in the copy.
 
     An encrypted AI database (AI-20) is copied encrypted, so the backup needs the same
-    ZETTNAS_DATA_KEY to restore and never holds its contents in plain text."""
+    KIBOTO_DATA_KEY to restore and never holds its contents in plain text."""
     from backend import db_crypto
 
     if db_crypto.applies_to(path) and db_crypto.is_encrypted(path):
@@ -240,7 +240,7 @@ def _check_archive_schema(z: "zipfile.ZipFile", names: set) -> None:
                 if db_crypto.applies_to(name) and db_crypto.is_encrypted(tmp.name):
                     if not db_crypto.enabled():
                         raise ValueError(
-                            f"The backup's {name} is encrypted; set the ZETTNAS_DATA_KEY it was made with first"
+                            f"The backup's {name} is encrypted; set the KIBOTO_DATA_KEY it was made with first"
                         )
                     conn = db_crypto.connect_encrypted(tmp.name)
                 else:
