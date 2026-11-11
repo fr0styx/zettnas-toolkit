@@ -100,8 +100,8 @@ describe('VM manager window (NUX-20)', () => {
     expect(web.textContent).toContain('Running');
     expect(web.textContent).toContain('QEMU (1234)');
     expect(web.textContent).toContain('Disk');
-    expect(web.textContent).toContain('vCPU load');
-    expect(web.textContent).toContain('Memory used');
+    expect(web.textContent).not.toContain('vCPU load'); // not measured by the server: no invented 0 % (SET-14)
+    expect(web.textContent).not.toContain('Memory used');
     expect(web.textContent).toContain('Connect to web1');
     expect(web.textContent).toContain('Port 5902');
     expect(web.textContent).toContain('All ways to connect…');
@@ -132,7 +132,7 @@ describe('VM manager window (NUX-20)', () => {
 
     card(grid, 'web1').querySelector('.btn-vm-more-sheet').click();
     expect(labels()).toEqual(expect.arrayContaining(['Restart VM', 'Shut down (ACPI)', 'Turn off now (like pulling the plug)', 'Edit VM settings']));
-    expect(showBottomSheet.mock.calls.at(-1)[0].subtitle).toBe('Running • 4 vCPU • 2048 MB');
+    expect(showBottomSheet.mock.calls.at(-1)[0].subtitle).toBe('Running • 4 vCPU • 4 GB');
 
     api.post.mockResolvedValue({});
     // Restart, Shut down and Turn off now are asked about before anything is sent (SET-07)
@@ -149,7 +149,7 @@ describe('VM manager window (NUX-20)', () => {
     expect(api.post).toHaveBeenCalledTimes(1);
 
     card(grid, 'desk').querySelector('.btn-vm-more-sheet').click();
-    expect(showBottomSheet.mock.calls.at(-1)[0].subtitle).toBe('Running • 2 vCPU • 4096 MB');
+    expect(showBottomSheet.mock.calls.at(-1)[0].subtitle).toBe('Running • 2 vCPU • 2 GB');
 
     card(grid, 'idle').querySelector('.btn-vm-more-sheet').click();
     expect(labels()).toEqual(expect.arrayContaining(['Shut down (ACPI)', 'Turn off now (like pulling the plug)', 'Edit VM settings']));
@@ -160,7 +160,7 @@ describe('VM manager window (NUX-20)', () => {
     const btn = card(grid, 'setup').querySelector('.btn-vm-more-sheet');
     btn.dataset.id = 'gone';
     btn.click();
-    expect(showBottomSheet.mock.calls.at(-1)[0]).toMatchObject({ title: 'Virtual machine', subtitle: 'Stopped • 2 vCPU • 2048 MB' });
+    expect(showBottomSheet.mock.calls.at(-1)[0]).toMatchObject({ title: 'Virtual machine', subtitle: 'Stopped' }); // a machine no longer in the list: no invented figures
   });
 });
 

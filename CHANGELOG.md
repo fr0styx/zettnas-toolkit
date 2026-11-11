@@ -362,6 +362,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   only where the figure is the folder's own (Unraid reports it per share), and otherwise shows the
   free space on its pool.
 
+#### Fixes
+
+- **Virtual machine cards show only real figures.** Every running machine said "vCPU load 0 %" and
+  "Memory used 0.0 / N GB", values Kiboto never measured, and the phone menu always said "2048 MB".
+  The meters now appear only when measured figures exist, and the menu shows the machine's memory.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

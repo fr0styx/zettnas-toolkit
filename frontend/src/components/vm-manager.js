@@ -395,6 +395,11 @@ function vmCardFromHtml(html) {
   return tpl.content.firstElementChild;
 }
 
+/** True when the server sent measured load and memory figures for a machine. */
+export function hasMeasuredLoad(vm) {
+  return vm != null && typeof vm.cpu_usage_pct === 'number' && typeof vm.ram_usage_pct === 'number';
+}
+
 function patchVmCardTelemetry(card, vm) {
   const cpuUsagePct = vm.cpu_usage_pct !== undefined ? vm.cpu_usage_pct : 0.0;
   const ramUsagePct = vm.ram_usage_pct !== undefined ? vm.ram_usage_pct : 0.0;
@@ -518,9 +523,10 @@ function buildVmCardHtml(vm, vms) {
             <div><span class="vmm-muted-2">${t('vm.bridge', 'Bridge')}:</span> <strong class="vmm-strong">${escapeHtml(vm.bridge || 'br0')}</strong></div>
           </div>
 
-          <!-- Real-time Live Resource Telemetry -->
+          <!-- Load and memory in use: only when the server measured them. It never has so far, and the
+               card showed "vCPU load 0 %" and "0.0 / N GB" for every running machine (SET-14, VMs 17) -->
           ${
-            isRunning
+            isRunning && hasMeasuredLoad(vm)
               ? `
             <div class="vm-telemetry-row">
               <div class="vm-telemetry-item">
@@ -803,7 +809,8 @@ function bindVmGridHandlers(grid) {
 
       showBottomSheet({
         title: name,
-        subtitle: `${vmStateLabel(stateStr)} • ${targetVm?.vcpus || 2} vCPU • ${targetVm?.memory_mb || 2048} MB`,
+        // the server sends ram_gb; memory_mb never came, so this said 2048 MB (SET-14, VMs 17)
+        subtitle: targetVm ? `${vmStateLabel(stateStr)} • ${targetVm.vcpus} vCPU • ${targetVm.ram_gb} GB` : vmStateLabel(stateStr),
         items,
       });
     };
