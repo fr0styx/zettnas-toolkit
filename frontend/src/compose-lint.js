@@ -5,6 +5,7 @@
  */
 import { t } from './i18n.js';
 
+/** @type {Array<[RegExp, string, string, string]>} */
 const RULES = [
   [/^\s*privileged:\s*(true|yes|"true"|'true')\s*$/i, 'danger', 'compose_risk.privileged', 'privileged: full access to the host'],
   [/docker\.sock/i, 'danger', 'compose_risk.docker_sock', 'mounts the Docker socket: the container can control every container and the host'],

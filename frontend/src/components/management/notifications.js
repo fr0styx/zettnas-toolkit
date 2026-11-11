@@ -322,7 +322,7 @@ export function openChannelConfigModal(channel) {
       </div>
     `;
   } else if (channel === 'apprise_raw') {
-    if (enableChk) enableChk.checked = cfg.apprise_enabled !== false;
+    if (enableChk) /** @type {HTMLInputElement} */ (enableChk).checked = cfg.apprise_enabled !== false;
     const rawVal = Array.isArray(cfg.apprise_urls) ? cfg.apprise_urls.join('\n') : '';
     formHtml = `
       <div class="ntf-x">

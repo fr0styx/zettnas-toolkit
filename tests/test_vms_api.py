@@ -115,7 +115,7 @@ def test_kvm_status_restricted_when_cgroup_eperm():
         assert "Docker cgroup restricted" in status["badge"]
 
 
-def test_vms_api_crud_and_validation(client, auth_headers):
+def test_vms_api_crud_and_validation(client, auth_headers, monkeypatch):
     # 1. Telemetry endpoint
     res = client.get("/api/vms/telemetry", headers=auth_headers)
     assert res.status_code == 200
@@ -225,7 +225,11 @@ def test_vms_api_crud_and_validation(client, auth_headers):
     assert "download_url" in ubuntu_item
     assert "downloaded" in ubuntu_item
 
-    # Start catalog download task
+    # Start catalog download task: the worker is a stub here, so no real ISO is fetched (the catalog's
+    # addresses now answer, and a real download outlived the test, SET-14)
+    import backend.api.vms as vms_api
+
+    monkeypatch.setattr(vms_api, "_download_iso_worker", lambda *a, **k: None)
     res = client.post("/api/vms/catalog/ubuntu-2404/download", headers=auth_headers)
     assert res.status_code == 200
     dl_res = res.json()
