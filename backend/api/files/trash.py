@@ -134,9 +134,6 @@ async def fs_trash_restore(
         logger.error(f"[FS] Restore failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to restore item") from e
     name = os.path.basename(str(res.get("path") or req.item_id))
-    add_event(
-        "success", "File Explorer", f"Restored {req.item_id} from Recycle Bin", event_text("fm_restored", name=name)
-    )
     await asyncio.to_thread(
         record_activity, "restore", str(res.get("path") or req.item_id), principal, detail="from the Recycle Bin"
     )

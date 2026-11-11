@@ -381,6 +381,15 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   machine started afterwards could fail to start. Each machine now keeps the screen port it was
   given.
 
+#### Security
+
+- **File names no longer go to everyone in the event log**: every upload, delete, move, restore and
+  archive was written to the event log with the file's name, and that log reaches everyone who may
+  look at the system, family members included, also for files in private and encrypted folders.
+  File actions are now only in File activity (Settings → Security), which is for administrators,
+  hides what is inside other people's home folders and leaves out encrypted folders. Making and
+  unpacking an archive and restoring an earlier version of a file are now recorded there too.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

@@ -88,7 +88,6 @@ async def fs_inbox_upload(
     await asyncio.to_thread(record_activity, "upload", target, principal, detail="to the Inbox")
     malware_scan.queue_scan(target, "inbox", getattr(principal, "username", "") or "")  # NFEAT-11
     name = os.path.basename(target)
-    add_event("success", "File Explorer", f"Received {name} in Inbox", event_text("fm_inbox", name=name))
     return {"status": "ok", "path": target, "name": os.path.basename(target)}
 
 
@@ -141,9 +140,6 @@ async def fs_upload(
         os.replace(staging_file, file_path)
         await asyncio.to_thread(record_activity, "upload", file_path, principal)
         malware_scan.queue_scan(file_path, "upload", getattr(principal, "username", "") or "")  # NFEAT-11
-        add_event(
-            "success", "File Explorer", f"Uploaded {filename} to {path}", event_text("fm_uploaded", name=filename)
-        )
         return {"status": "ok", "message": "File uploaded"}
     except QuotaExceeded:
         if os.path.exists(staging_file):
@@ -390,12 +386,6 @@ async def fs_upload_complete(
         final_size = os.path.getsize(final_target)
         await asyncio.to_thread(record_activity, "upload", final_target, principal)
         malware_scan.queue_scan(final_target, "upload", getattr(principal, "username", "") or "")  # NFEAT-11
-        add_event(
-            "success",
-            "File Explorer",
-            f"Completed chunked upload of {filename}",
-            event_text("fm_uploaded", name=filename),
-        )
         return {
             "status": "ok",
             "filename": filename,
