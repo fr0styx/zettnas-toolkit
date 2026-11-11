@@ -502,12 +502,13 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
         It was always called btrfs, and its level was guessed as "raid1" whenever the NAS had two
         drives and btrfs gave no answer, which the page then showed as "parity protected". When
-        the folder is not btrfs, `btrfs filesystem show` was run on it: that looks at every drive,
-        and the statistics collector did it every 30 seconds (SET-09). The level is now what
-        `btrfs filesystem df` says, else empty; another file system is named as it is."""
-        fs_type = self._fs_type_at(self._pool_path)
-        if fs_type not in ("btrfs", "unknown"):
-            return fs_type, ""
+        `btrfs filesystem df` failed, `btrfs filesystem show` was run on the folder: that looks at
+        every drive, and the statistics collector did it every 30 seconds (SET-09).
+
+        btrfs is asked about the folder itself (one call that touches no drive). Where it answers,
+        the pool is btrfs with the level it names. Where it does not, the file system is the one
+        the mount table gives for exactly this folder, else "unknown": the folder may be mapped
+        into the container from another place, so a parent's file system proves nothing."""
         code, out, _ = self._run_cmd(["btrfs", "filesystem", "df", self._pool_path])
         if code == 0 and out.strip():
             for line in out.strip().splitlines():
@@ -515,7 +516,10 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 if match:
                     return "btrfs", match.group(1).lower()
             return "btrfs", ""
-        return fs_type, ""
+        for m in self._parse_mounts():
+            if str(m.get("target") or m.get("mountpoint") or "").rstrip("/") == self._pool_path.rstrip("/"):
+                return str(m.get("fstype") or m.get("fs_type") or "unknown"), ""
+        return "unknown", ""
 
     def list_pools(self) -> list[StoragePool]:
         pools: list[StoragePool] = []

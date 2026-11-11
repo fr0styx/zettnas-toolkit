@@ -37,11 +37,22 @@ def test_no_level_is_guessed_when_btrfs_gives_no_answer(nas):
 
 
 @pytest.mark.parametrize("fs", ["ext4", "xfs", "zfs", "overlay"])
-def test_another_file_system_is_named_and_no_btrfs_command_looks_at_the_drives(nas, fs):
+def test_another_file_system_is_named_and_nothing_looks_at_the_drives(nas, fs):
     adapter, state = nas
     state["fs"] = fs
+    state["df"] = (1, "", "not a btrfs filesystem")
     assert adapter._main_pool_facts() == (fs, "")
-    assert state["ran"] == []
+    assert state["ran"] == [["btrfs", "filesystem", "df", "/mnt/storage"]]  # one call that touches no drive
+
+
+def test_btrfs_answers_for_a_folder_the_mount_table_does_not_know(nas):
+    """A pool folder mapped into the container from another place has no line of its own in the
+    mount table; its parent's file system proves nothing."""
+    adapter, state = nas
+    adapter._parse_mounts = lambda: [{"target": "/", "fstype": "ext4"}]
+    assert adapter._main_pool_facts() == ("btrfs", "raid1")
+    state["df"] = (1, "", "not a btrfs filesystem")
+    assert adapter._main_pool_facts() == ("unknown", "")  # not "ext4": that is the parent's
 
 
 def test_listing_pools_never_runs_the_command_that_scans_every_drive(nas, monkeypatch):

@@ -118,12 +118,22 @@ GlobalReserve, single: total=512.00MiB, used=0.00B
             return 0, sample_df, ""
         return 0, "", ""
 
-    with patch.object(adapter, "_run_cmd", side_effect=mock_run_cmd), patch("shutil.disk_usage") as mock_usage:
+    # the pool folder is on btrfs here, whatever the machine that runs the test has mounted: the
+    # level is asked of btrfs only where the mount table says btrfs (SET-09)
+    btrfs_mount = [{"device": "/dev/sdb1", "mountpoint": "/mnt/storage", "target": "/mnt/storage", "fstype": "btrfs"}]
+    with (
+        patch.object(adapter, "_run_cmd", side_effect=mock_run_cmd),
+        patch.object(adapter, "_parse_mounts", return_value=btrfs_mount),
+        patch.object(adapter, "_is_os_overlay_or_emmc", return_value=False),
+        patch("shutil.disk_usage") as mock_usage,
+    ):
         mock_usage.return_value = MagicMock(total=1000000000, used=500000000, free=500000000)
         with patch.object(DiskDiscoveryHAL, "discover_physical_disks", return_value=[]):
             pools = adapter.list_pools()
 
     assert len(pools) >= 1
+    main = next(p for p in pools if p.id == "default_pool")
+    assert main.fs_profile == "raid1" and main.fs_type == "btrfs"
     assert pools[0].fs_profile == "raid1"
     assert pools[0].parity_protected is True
 
