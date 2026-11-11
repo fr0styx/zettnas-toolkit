@@ -5,16 +5,27 @@ import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { showConfirmToast, showToast } from '../toast.js';
 
-function setLabel(col, text) {
+function setLabel(col, key, fallback) {
   if (!col) return;
+  const label = col.querySelector('.fm-col-label');
+  if (label) { // the key goes with the words, so a language pass keeps "From" in the bin
+    label.setAttribute('data-i18n', key);
+    label.textContent = t(key, fallback);
+    return;
+  }
   const node = [...col.childNodes].find((n) => n.nodeType === 3 && n.nodeValue.trim());
-  if (node) node.nodeValue = `${text} `;
+  if (node) node.nodeValue = `${t(key, fallback)} `;
 }
 
 /** Type → From and Modified → Deleted while the bin is open; back again elsewhere. */
 export function binColumns(fm, inBin) {
-  setLabel(fm.colType, inBin ? t('fm.col_from', 'From') : t('fm.col_type', 'Type'));
-  setLabel(fm.colMtime, inBin ? t('fm.col_deleted', 'Deleted') : t('fm.col_mtime', 'Modified'));
+  if (inBin) {
+    setLabel(fm.colType, 'fm.col_from', 'From');
+    setLabel(fm.colMtime, 'fm.col_deleted', 'Deleted');
+  } else {
+    setLabel(fm.colType, 'fm.col_type', 'Type');
+    setLabel(fm.colMtime, 'fm.col_mtime', 'Modified');
+  }
 }
 
 export function mayEmpty(user) {

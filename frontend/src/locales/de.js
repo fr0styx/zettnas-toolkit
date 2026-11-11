@@ -4710,7 +4710,7 @@ export default {
   "fm.versions_title": "Frühere Versionen von {name}",
   "fm.versions_loading": "Suche nach früheren Versionen…",
   "fm.versions_failed": "Frühere Versionen konnten nicht gesucht werden: {error}",
-  "fm.versions_none": "Keine früheren Versionen von {name}. Sie erscheinen, sobald der Ordner Snapshots hat (Speicher → Snapshots).",
+  "fm.versions_none": "Keine früheren Versionen von {name}. Sie erscheinen, sobald der Ordner Snapshots hat (Backup → Snapshots).",
   "fm.versions_kept": "gesichert {when}",
   "fm.versions_open": "Öffnen",
   "fm.versions_restore_copy": "Als Kopie wiederherstellen",

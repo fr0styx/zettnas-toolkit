@@ -4710,7 +4710,7 @@ export default {
   "fm.versions_title": "Versions précédentes de {name}",
   "fm.versions_loading": "Recherche des versions précédentes…",
   "fm.versions_failed": "Impossible de chercher les versions précédentes : {error}",
-  "fm.versions_none": "Aucune version précédente de {name}. Elles apparaissent quand son dossier a des instantanés (Stockage → Instantanés).",
+  "fm.versions_none": "Aucune version précédente de {name}. Elles apparaissent quand son dossier a des instantanés (Sauvegarde → Instantanés).",
   "fm.versions_kept": "conservée {when}",
   "fm.versions_open": "Ouvrir",
   "fm.versions_restore_copy": "Restaurer une copie",

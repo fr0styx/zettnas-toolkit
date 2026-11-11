@@ -320,10 +320,10 @@ export class FileManagerWindow {
                   ${selectionBarHtml(true)}
                   <div class="fm-header-row">
                     <div class="fm-col fm-col-check"><input type="checkbox" id="fm-select-all-checkbox" class="fm-checkbox fm-select-all-checkbox" title="${t('ui.select_all', 'Select All')}" /></div>
-                    <div class="fm-col fm-col-name" data-i18n="fm.col_name" data-sort="name">${t('fm.col_name', 'Name')} <span class="fm-sort-icon"></span></div>
-                    <div class="fm-col fm-col-type" data-i18n="fm.col_type" data-sort="type">${t('fm.col_type', 'Type')} <span class="fm-sort-icon"></span></div>
-                    <div class="fm-col fm-col-size" data-i18n="fm.col_size" data-sort="size">${t('fm.col_size', 'Size')} <span class="fm-sort-icon"></span></div>
-                    <div class="fm-col fm-col-mtime" data-i18n="fm.col_mtime" data-sort="mtime">${t('fm.col_mtime', 'Modified')} <span class="fm-sort-icon"></span></div>
+                    <div class="fm-col fm-col-name" data-sort="name"><span class="fm-col-label" data-i18n="fm.col_name">${t('fm.col_name', 'Name')}</span><span class="fm-sort-icon"></span></div>
+                    <div class="fm-col fm-col-type" data-sort="type"><span class="fm-col-label" data-i18n="fm.col_type">${t('fm.col_type', 'Type')}</span><span class="fm-sort-icon"></span></div>
+                    <div class="fm-col fm-col-size" data-sort="size"><span class="fm-col-label" data-i18n="fm.col_size">${t('fm.col_size', 'Size')}</span><span class="fm-sort-icon"></span></div>
+                    <div class="fm-col fm-col-mtime" data-sort="mtime"><span class="fm-col-label" data-i18n="fm.col_mtime">${t('fm.col_mtime', 'Modified')}</span><span class="fm-sort-icon"></span></div>
                     <div class="fm-col fm-col-actions" data-i18n="fm.col_actions">${t('fm.col_actions', 'Actions')}</div>
                   </div>
                   <div id="fm-viewport" class="fm-viewport" data-scrollable="true" tabindex="0">
@@ -436,10 +436,10 @@ export class FileManagerWindow {
                   ${selectionBarHtml(false)}
                 <div class="fm-header-row">
                   <div class="fm-col fm-col-check"><input type="checkbox" class="fm-checkbox fm-select-all-checkbox" title="${t('ui.select_all', 'Select All')}" /></div>
-                  <div class="fm-col fm-col-name" data-i18n="fm.col_name" data-sort="name">${t('fm.col_name', 'Name')} <span class="fm-sort-icon"></span></div>
-                  <div class="fm-col fm-col-type" data-i18n="fm.col_type" data-sort="type">${t('fm.col_type', 'Type')} <span class="fm-sort-icon"></span></div>
-                  <div class="fm-col fm-col-size" data-i18n="fm.col_size" data-sort="size">${t('fm.col_size', 'Size')} <span class="fm-sort-icon"></span></div>
-                  <div class="fm-col fm-col-mtime" data-i18n="fm.col_mtime" data-sort="mtime">${t('fm.col_mtime', 'Modified')} <span class="fm-sort-icon"></span></div>
+                  <div class="fm-col fm-col-name" data-sort="name"><span class="fm-col-label" data-i18n="fm.col_name">${t('fm.col_name', 'Name')}</span><span class="fm-sort-icon"></span></div>
+                  <div class="fm-col fm-col-type" data-sort="type"><span class="fm-col-label" data-i18n="fm.col_type">${t('fm.col_type', 'Type')}</span><span class="fm-sort-icon"></span></div>
+                  <div class="fm-col fm-col-size" data-sort="size"><span class="fm-col-label" data-i18n="fm.col_size">${t('fm.col_size', 'Size')}</span><span class="fm-sort-icon"></span></div>
+                  <div class="fm-col fm-col-mtime" data-sort="mtime"><span class="fm-col-label" data-i18n="fm.col_mtime">${t('fm.col_mtime', 'Modified')}</span><span class="fm-sort-icon"></span></div>
                   <div class="fm-col fm-col-actions" data-i18n="fm.col_actions">${t('fm.col_actions', 'Actions')}</div>
                 </div>
                 <div class="fm-viewport" data-scrollable="true" tabindex="0">
@@ -2118,55 +2118,16 @@ export class FileManagerWindow {
         window.DockManager.render();
       }
 
-      // Update Column Headers with sort indicators
-      if (this.colName && this.colSize && this.colType) {
-        const getArrow = (col) => {
-          if (this.currentSortBy !== col) return ' <span class="fm-sort-indicator fmx-x-2">▼</span>';
-          return this.currentSortDir === 'asc'
-            ? ' <span class="fm-sort-indicator" style="opacity: 0.9; color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));">▲</span>'
-            : ' <span class="fm-sort-indicator" style="opacity: 0.9; color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));">▼</span>';
-        };
-        this.colName.innerHTML = t('fm.col_name', 'Name') + getArrow('name');
-        this.colSize.innerHTML = t('fm.col_size', 'Size') + getArrow('size');
-        this.colType.innerHTML = 'Type' + getArrow('type');
-      }
-
       // Render breadcrumbs
       this.renderBreadcrumbs();
 
-      // Sort file list
-      this.fileList = (res.dirs || []).sort((a, b) => {
-        if (a.name === '..') return -1;
-        if (b.name === '..') return 1;
-
-        let nameA = a.name.toLowerCase();
-        let nameB = b.name.toLowerCase();
-        let nameCompare = nameA < nameB ? -1 : (nameA > nameB ? 1 : 0);
-        const getType = (f) => f.is_dir ? 'Folder' : (f.name.includes('.') ? f.name.split('.').pop().toUpperCase() : 'File');
-
-        if (this.currentSortBy === 'size') {
-          let valA = a.size || 0;
-          let valB = b.size || 0;
-          if (valA !== valB) {
-            return this.currentSortDir === 'asc' ? valA - valB : valB - valA;
-          }
-          if (a.is_dir && !b.is_dir) return this.currentSortDir === 'asc' ? -1 : 1;
-          if (!a.is_dir && b.is_dir) return this.currentSortDir === 'asc' ? 1 : -1;
-          return this.currentSortDir === 'asc' ? nameCompare : -nameCompare;
-        } else if (this.currentSortBy === 'type') {
-          let valA = getType(a);
-          let valB = getType(b);
-          if (valA !== valB) {
-            let cmp = valA < valB ? -1 : (valA > valB ? 1 : 0);
-            return this.currentSortDir === 'asc' ? cmp : -cmp;
-          }
-          return this.currentSortDir === 'asc' ? nameCompare : -nameCompare;
-        } else {
-          if (a.is_dir && !b.is_dir) return -1;
-          if (!a.is_dir && b.is_dir) return 1;
-          return this.currentSortDir === 'asc' ? nameCompare : -nameCompare;
-        }
-      });
+      // One sort for a click on a header and for every refresh (SET-05). The refresh had a sort
+      // of its own that did not know "Modified" and fell back to the name, and it rewrote three
+      // headers, which took their arrows away and put the English word "Type" over "From" in
+      // the Recycle Bin.
+      this.fileList = [...(res.dirs || [])];
+      this.applySorting();
+      this.updateSortHeaderUI();
 
       this.rawFileList = [...this.fileList];
       if (this.searchInput) this.searchInput.value = '';
@@ -3308,7 +3269,8 @@ export class FileManagerWindow {
     } else {
       showConfirmToast(
         t('fm.delete_title', '{count, plural, one {Delete # item?} other {Delete # items?}}', { count }),
-        binConfirmText(targets, files), run, null, { okText: t('fm.move_to_bin', 'Move to Recycle Bin') },
+        // it can be undone, so it is not marked dangerous and Enter confirms it, as the key always did
+        binConfirmText(targets, files), run, null, { okText: t('fm.move_to_bin', 'Move to Recycle Bin'), destructive: false },
       );
     }
   }
@@ -3373,16 +3335,21 @@ export class FileManagerWindow {
       if (!el) return;
       const isCurrent = this.currentSortBy === key;
       el.classList.toggle('sorted', isCurrent);
-      const icon = el.querySelector('.fm-sort-icon');
-      if (icon) {
-        icon.textContent = isCurrent ? (this.currentSortDir === 'asc' ? ' ▲' : ' ▼') : '';
-        icon.setAttribute('aria-hidden', 'true'); // the label says it (NUX-7)
+      let icon = el.querySelector('.fm-sort-icon');
+      if (!icon) { // a language pass rewrites the header's words and takes the arrow's place with them
+        icon = document.createElement('span');
+        icon.className = 'fm-sort-icon';
+        el.appendChild(icon);
       }
+      icon.textContent = isCurrent ? (this.currentSortDir === 'asc' ? ' ▲' : ' ▼') : '';
+      icon.setAttribute('aria-hidden', 'true'); // the label says it (NUX-7)
       // a button that sorts, whose name says how: the header row isn't part of a grid, so no
       // columnheader role (axe: aria-required-parent)
       el.setAttribute('role', 'button');
       el.setAttribute('tabindex', '0');
-      const name = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.nodeValue).join('').trim();
+      // the words sit in their own element, so a language pass changes them and leaves the arrow
+      const name = (el.querySelector('.fm-col-label')?.textContent
+        ?? [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.nodeValue).join('')).trim();
       const dir = this.currentSortDir === 'asc' ? t('fm.sort_asc', 'Ascending') : t('fm.sort_desc', 'Descending');
       el.setAttribute('aria-label', isCurrent ? `${name} (${dir})` : name);
       el.setAttribute('aria-pressed', isCurrent ? 'true' : 'false');
@@ -3908,6 +3875,13 @@ export function openMediaOrganizerModal(initialPath = '') {
   modal.onclick = (e) => {
     if (e.target === modal) closeModal();
   };
+  modal.onkeydown = (e) => { // Escape closes it, like every other dialog (SET-05)
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      closeModal();
+    }
+  };
+  if (!modal.hasAttribute('tabindex')) modal.setAttribute('tabindex', '-1');
 
   if (srcInput && (!srcInput.value || initialPath)) {
     srcInput.value = initialPath || '/mnt/user/downloads';

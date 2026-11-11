@@ -307,6 +307,60 @@ def test_delete_and_restore_by_keyboard(journey_folder):
         browser.close()
 
 
+def test_rename_sort_and_the_menu_on_empty_space(journey_folder):
+    """SET-05: rename works (it answered 422 for every way in), the sort by Modified survives a
+    refresh with its arrow, and a right-click on empty space opens a menu while one item is selected."""
+    from playwright.sync_api import sync_playwright
+
+    old, new = os.path.join(journey_folder, "restore-me.txt"), os.path.join(journey_folder, "renamed by F2.txt")
+    os.utime(old, (1_000_000_000, 1_000_000_000))  # the oldest item: last when the newest comes first
+    with sync_playwright() as p:
+        browser = _browser(p)
+        page = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+        _sign_in_with_keyboard(page)
+        _close_wizard(page)
+        _open_files_at(page, journey_folder, "restore-me.txt")
+        _focus_list(page)
+        _select(page, "restore-me.txt")
+
+        # the menu on empty space, with one item selected
+        box = page.locator(".file-manager-window .fm-viewport").last.bounding_box()
+        page.mouse.click(box["x"] + box["width"] - 40, box["y"] + box["height"] - 30, button="right")
+        page.wait_for_selector("#fm-context-menu [data-act=paste]", state="visible", timeout=4000)
+        page.keyboard.press("Escape")
+
+        # rename with F2
+        _focus_list(page)
+        _select(page, "restore-me.txt")
+        page.keyboard.press("F2")
+        page.wait_for_selector(".file-manager-window input.fm-inline-rename-input")
+        page.keyboard.press("Control+a")
+        page.keyboard.type("renamed by F2.txt")
+        page.keyboard.press("Enter")
+        deadline = time.time() + 8
+        while not os.path.exists(new) and time.time() < deadline:
+            time.sleep(0.3)
+        assert os.path.exists(new) and not os.path.exists(old), "F2 did not rename the file"
+        page.wait_for_selector(".file-manager-window >> text=renamed by F2.txt", timeout=6000)
+
+        # sort by Modified, newest first; the folder was written last, the renamed file is the oldest
+        # (through the menu on empty space: the first window is too narrow to show that column)
+        for act in ("sort-mtime", "sort-desc"):
+            page.mouse.click(box["x"] + box["width"] - 40, box["y"] + box["height"] - 30, button="right")
+            page.click(f"#fm-context-menu [data-act={act}]")
+        names = "() => [...[...document.querySelectorAll('.file-manager-window')].pop().querySelectorAll('.fm-row')].map((r) => r.dataset.path.split('/').pop())"
+        assert page.evaluate(names)[-1] == "renamed by F2.txt"
+        page.locator(".file-manager-window .fm-refresh-btn").last.click()
+        page.wait_for_timeout(1200)
+        assert page.evaluate(names)[-1] == "renamed by F2.txt", "the sort was lost at the refresh"
+        head = "(c) => { const el = [...document.querySelectorAll('.file-manager-window .fm-header-row .fm-col-' + c)].pop(); return [el.getAttribute('aria-label'), el.textContent.trim()]; }"
+        assert page.evaluate(head, "mtime") == ["Modified (Descending)", "Modified ▼"], (
+            "the arrow left the column that sorts"
+        )
+        assert page.evaluate(head, "name") == ["Name", "Name"]
+        browser.close()
+
+
 def _strings(lang):
     with open(os.path.join(ROOT, "frontend", "src", "locales", f"{lang}.js"), encoding="utf-8") as f:
         src = f.read()

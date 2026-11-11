@@ -46,7 +46,7 @@ describe('one delete, one question (SET-05)', () => {
     const [title, msg, run, , options] = showConfirmToast.mock.calls[0];
     expect(title).toBe('Delete 1 item?');
     expect(msg).toBe('Move “letter.txt” to the Recycle Bin?');
-    expect(options.okText).toBe('Move to Recycle Bin');
+    expect(options).toEqual({ okText: 'Move to Recycle Bin', destructive: false }); // it can be undone
     await run();
     expect(fm.deleteWithProgress).toHaveBeenCalledWith(['/mnt/user/Docs/letter.txt'], { permanent: false });
   });

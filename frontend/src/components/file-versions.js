@@ -22,7 +22,7 @@ export function versionUrl(path, id) {
 
 export function versionsHtml(name, versions) {
   if (!versions.length) {
-    return `<p class="fm-versions-empty">${escapeHtml(t('fm.versions_none', 'No earlier versions of {name}. They appear once the folder it is in has snapshots (Storage → Snapshots).', { name }))}</p>`;
+    return `<p class="fm-versions-empty">${escapeHtml(t('fm.versions_none', 'No earlier versions of {name}. They appear once the folder it is in has snapshots (Backup → Snapshots).', { name }))}</p>`;
   }
   return `<ul class="fm-versions-list">${versions
     .map(

@@ -146,7 +146,7 @@
  "frontend/src/components/file-manager.js": {
   "buttons": 0,
   "globals": 17,
-  "styles": 34,
+  "styles": 32,
   "templates": 10
  },
  "frontend/src/components/file-preview-modal.js": {

@@ -505,6 +505,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **The right-click menu opens on empty space while one item is selected**: it threw an error
   and nothing opened.
 
+#### Fixes
+
+- **The File Explorer keeps your sort**: after a click on "Modified" the list was sorted by date,
+  the arrow stayed on "Name", and the next refresh, which follows every file operation, put the
+  list back in name order. A refresh now sorts the way the header does, and the arrow sits on the
+  column that sorts, in every language.
+- **In the Recycle Bin the column of old locations is headed "From"** again, in your language. It
+  was overwritten by the English word "Type" on every load.
+- **Escape closes "Organize Media"**, like every other dialog. "No earlier versions" now points
+  to Backup → Snapshots, where the Snapshots card is.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

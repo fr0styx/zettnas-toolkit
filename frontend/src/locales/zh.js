@@ -4710,7 +4710,7 @@ export default {
   "fm.versions_title": "{name} 的以前版本",
   "fm.versions_loading": "正在查找以前的版本…",
   "fm.versions_failed": "无法查找以前的版本：{error}",
-  "fm.versions_none": "{name} 没有以前的版本。所在文件夹有快照后即会出现（存储 → 快照）。",
+  "fm.versions_none": "{name} 没有以前的版本。所在文件夹有快照后即会出现（备份 → 快照）。",
   "fm.versions_kept": "保存于 {when}",
   "fm.versions_open": "打开",
   "fm.versions_restore_copy": "恢复为副本",

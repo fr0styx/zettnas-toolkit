@@ -4710,7 +4710,7 @@ export default {
   "fm.versions_title": "Previous versions of {name}",
   "fm.versions_loading": "Looking for earlier versions…",
   "fm.versions_failed": "Could not look for earlier versions: {error}",
-  "fm.versions_none": "No earlier versions of {name}. They appear once the folder it is in has snapshots (Storage → Snapshots).",
+  "fm.versions_none": "No earlier versions of {name}. They appear once the folder it is in has snapshots (Backup → Snapshots).",
   "fm.versions_kept": "kept {when}",
   "fm.versions_open": "Open",
   "fm.versions_restore_copy": "Restore a copy",
