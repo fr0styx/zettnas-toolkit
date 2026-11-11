@@ -1197,7 +1197,7 @@ function renderEnvTab(details) {
   `;
 
   // Wire secret reveal toggle
-  container.querySelectorAll('.btn-toggle-secret').forEach((btn) => {
+  container.querySelectorAll('.btn-toggle-secret').forEach((/** @type {HTMLElement} */ btn) => {
     btn.addEventListener('click', async () => {
       const idx = parseInt(btn.dataset.idx, 10);
       const entry = envSecretStore.get(idx);
@@ -1217,7 +1217,7 @@ function renderEnvTab(details) {
   });
 
   // Wire copy buttons
-  container.querySelectorAll('.btn-copy-env').forEach((btn) => {
+  container.querySelectorAll('.btn-copy-env').forEach((/** @type {HTMLElement} */ btn) => {
     btn.addEventListener('click', async () => {
       const idx = parseInt(btn.dataset.idx, 10);
       const entry = envSecretStore.get(idx);
@@ -1747,8 +1747,8 @@ async function renderContainerEditTab(cid) {
     row.style.cssText = 'display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px;';
     const srcLabel = m.kind === 'volume' ? t('ci.row_volume', 'Volume:') : t('ci.row_host_path', 'Host path:');
     row.innerHTML = `
-      <span class="ci-xs-muted-6">${srcLabel}</span>
-      <input type="text" class="tz-text-input cie-src-input ci-xs-mono-grow" placeholder="${m.kind === 'volume' ? 'app-data' : '/mnt/user/appdata/app'}" value="${escapeHtml(m.source || '')}">
+      <span class="ci-xs-muted-6">${escapeHtml(srcLabel)}</span>
+      <input type="text" class="tz-text-input cie-src-input ci-xs-mono-grow" placeholder="${escapeHtml(m.kind === 'volume' ? 'app-data' : '/mnt/user/appdata/app')}" value="${escapeHtml(m.source || '')}">
       <span class="ci-muted">➔</span>
       <span class="ci-xs-muted-6">${t('ci.row_container', 'Container:')}</span>
       <input type="text" class="tz-text-input cie-dst-input ci-xs-mono-grow" placeholder="/config" value="${escapeHtml(m.destination || '')}">

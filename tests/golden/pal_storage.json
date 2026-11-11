@@ -301,6 +301,7 @@
     "name",
     "security",
     "total_bytes",
+    "usage_is_own",
     "used_bytes",
     "used_pct"
    ],

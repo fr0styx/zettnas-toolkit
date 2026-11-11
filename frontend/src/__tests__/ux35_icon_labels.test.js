@@ -90,7 +90,7 @@ describe('icons apart from the words', () => {
       resources: {}, ports: [], mounts: [], env: [],
     };
     vi.spyOn(api, 'get').mockImplementation(async (url) =>
-      url.includes('/details') ? details : url.includes('/compose') ? { source: 'disk', compose_yaml: 'services: {}' } : {},
+      url.includes('/details') ? details : url.includes('/compose') ? { source: 'disk', compose_yaml: 'services: {disk: 1}', masked_yaml: 'services: {rebuilt: 1}' } : {},
     );
     let done;
     vi.spyOn(api, 'post').mockImplementation(() => new Promise((r) => { done = r; }));
@@ -101,6 +101,13 @@ describe('icons apart from the words', () => {
     done({ backup: { archive_file: 'pihole.tar.gz' } });
     await vi.waitFor(() => expect(iconAndWords(btn)).toEqual(['💾', '💾 Back up the app now']));
     await cm.switchContainerTab('compose');
-    await vi.waitFor(() => expect(iconAndWords(document.getElementById('ci-compose-source-badge'))).toEqual(['📄', '📄 Read from Disk']));
+    // masked (the default) the file on screen is rebuilt; the badge says so (SET-14)
+    await vi.waitFor(() => expect(iconAndWords(document.getElementById('ci-compose-source-badge'))[0]).toBe('✨'));
+    const mask = document.getElementById('ci-compose-mask-toggle');
+    if (mask) {
+      mask.checked = false;
+      mask.dispatchEvent(new Event('change'));
+      await vi.waitFor(() => expect(iconAndWords(document.getElementById('ci-compose-source-badge'))).toEqual(['📄', '📄 Read from Disk']));
+    }
   });
 });
