@@ -63,7 +63,10 @@ async def post_docker_container_action(container_id: str, req: DockerActionReque
 
 
 class DockerBulkActionRequest(BaseModel):
-    action: str = Field(..., pattern="^(start|stop|restart|pause|unpause|delete)$")
+    # no "delete" here (SET-07): it skipped the server confirmation, the audit entry and the
+    # options of DELETE /docker/containers/{id}, and always forced. The page removes a selection
+    # one app at a time through that route.
+    action: str = Field(..., pattern="^(start|stop|restart|pause|unpause)$")
     container_ids: list[str] = Field(..., min_length=1, max_length=100)
     force: bool = False
 
@@ -80,13 +83,7 @@ async def post_docker_bulk_action(req: DockerBulkActionRequest):
             results[cid] = {"success": False, "error": "Invalid container ID"}
             continue
         try:
-            if req.action == "delete":
-                from backend.services.docker_cleanup import destroy_container
-
-                res = await asyncio.to_thread(destroy_container, cid, force=req.force)
-            else:
-                res = await asyncio.to_thread(fn, cid, req.action)
-            results[cid] = res
+            results[cid] = await asyncio.to_thread(fn, cid, req.action)
         except Exception as e:
             results[cid] = {"success": False, "error": str(e)}
 

@@ -8,7 +8,7 @@ import { escapeHtml } from '../utils.js';
 import { t } from '../i18n.js';
 
 import { api } from '../api.js';
-import { showToast, showConfirmToast } from '../toast.js';
+import { showToast, showConfirmToast, showDangerConfirm } from '../toast.js';
 import { formatFixed } from '../format.js';
 let _selectedContainerIds = new Set();
 
@@ -397,10 +397,14 @@ export async function runBulkContainerAction(action, view) {
   const run = () => _runBulk(action, selectedIds, view);
   const count = selectedIds.length;
   if (action === 'delete') {
-    showConfirmToast(
-      t('docker.bulk_delete_title', 'Delete {count} containers', { count }),
-      t('docker.bulk_delete_confirm', 'Permanently delete the {count} selected containers? This cannot be undone.', { count }),
-      run,
+    // one question that names every app, then each goes through the single delete, with its
+    // archive and its audit entry (SET-07). The bulk route forced every delete and asked for
+    // less than a single one.
+    const names = selectedIds.map(containerName);
+    showDangerConfirm(
+      t('docker.bulk_delete_title', 'Delete {count, plural, one {# container} other {# containers}}', { count }),
+      t('docker.bulk_delete_confirm', 'Remove these apps: {names}? A copy of each app’s set-up and folders is kept under Backup first. Their folders stay where they are.', { names: names.join(', ') }),
+      () => _deleteEach(selectedIds, view),
       null,
       { okText: t('docker.bulk_delete_ok', 'Delete'), cancelText: t('common.cancel', 'Cancel') }
     );
@@ -419,13 +423,38 @@ export async function runBulkContainerAction(action, view) {
   await run();
 }
 
+/** The name of an app in the table, for a question about a selection; its short id when it is not drawn. */
+export function containerName(cid) {
+  const btn = /** @type {HTMLElement | null} */ (document.querySelector(`.btn-container-act[data-id="${CSS.escape(cid)}"][data-name]`));
+  return btn?.dataset.name || String(cid).slice(0, 12);
+}
+
+/** Removes the selected apps one by one, each as a single delete would: stopped first, archived, logged. */
+async function _deleteEach(selectedIds, view) {
+  let done = 0;
+  const failed = [];
+  for (const cid of selectedIds) {
+    const name = containerName(cid);
+    try {
+      await api.delete(`/api/docker/containers/${encodeURIComponent(cid)}?force=true&remove_volumes=false&archive_data=true`, { confirmed: true });
+      done += 1;
+    } catch (err) {
+      failed.push(`${name}: ${err.message}`);
+    }
+  }
+  if (failed.length) showToast(t('docker.bulk_delete_some', '{done} removed. Not removed: {failed}', { done, failed: failed.join('; ') }), 'error');
+  else showToast(t('docker.bulk_delete_done', '{count, plural, one {# app removed.} other {# apps removed.}}', { count: done }), 'success');
+  clearSelectedContainers();
+  await view.refresh();
+  view.updateBar();
+}
+
 async function _runBulk(action, selectedIds, view) {
   try {
     showToast(t('toast.executing_bulk_on_containers', 'Executing bulk {action} on {count} containers...', { action, count: selectedIds.length }), 'info');
     const res = await api.post('/api/docker/containers/bulk-action', {
       action,
       container_ids: selectedIds,
-      force: action === 'delete',
     });
     const successful = res.successful || 0;
     const total = res.total || selectedIds.length;

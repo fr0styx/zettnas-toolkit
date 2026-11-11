@@ -621,6 +621,22 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
                 ignored("backend.hardware.docker_stats.read_docker_containers")
 
 
+def is_kiboto_itself(container_id: str, name: str = "") -> bool:
+    """True for Kiboto's own container: by one of its names, or by its id (a container's hostname
+    is the start of its id unless someone set another)."""
+    import socket
+
+    from backend import legacy_names
+
+    cid, host = str(container_id or ""), socket.gethostname()
+    if legacy_names.is_app_container(name) or legacy_names.is_app_container(cid):
+        return True
+    return len(host) >= 12 and len(cid) >= 12 and (cid.startswith(host) or host.startswith(cid))
+
+
+KIBOTO_ITSELF = "This is Kiboto itself. It is restarted from Settings, not from the list of apps."
+
+
 def container_action(container_id: str, action: str) -> dict[str, Any]:
     global _CACHED_CONTAINERS, _LAST_DOCKER_POLL
     # Sanitize container_id or name: alphanumeric, underscore, hyphen, dot, 1-128 chars
@@ -630,6 +646,11 @@ def container_action(container_id: str, action: str) -> dict[str, Any]:
     action = action.lower().strip()
     if action not in ("start", "stop", "restart", "pause", "unpause"):
         return {"success": False, "error": f"Unsupported action: {action}"}
+    # Stop, restart and pause had no check for Kiboto's own container, for one app, for a
+    # selection ("select all" includes it) or for a stack; a paused Kiboto cannot be resumed from
+    # its own page (SET-07). Delete, update and recreate always refused.
+    if action in ("stop", "restart", "pause") and is_kiboto_itself(container_id):
+        return {"success": False, "error": KIBOTO_ITSELF}
 
     sock_path = docker_sock()
     if not os.path.exists(sock_path):

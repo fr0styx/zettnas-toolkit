@@ -182,7 +182,6 @@ describe('Docker Multi-Select & Floating Bulk Action Subsystem', () => {
     expect(postSpy).toHaveBeenCalledWith('/api/docker/containers/bulk-action', {
       action: 'start',
       container_ids: ['c1', 'c2'],
-      force: false,
     });
     expect(getSelectedContainerIds()).toEqual([]);
   });
@@ -307,8 +306,28 @@ describe('Docker Multi-Select & Floating Bulk Action Subsystem', () => {
       expect(postSpy).toHaveBeenCalledWith('/api/docker/containers/bulk-action', {
         action: 'restart',
         container_ids: ['c1', 'c3'],
-        force: false,
       });
+      expect(getSelectedContainerIds()).toEqual([]);
+    });
+
+    it('a selection does not outlive the filter it was made under, and "select all" takes the rows on screen (SET-07)', async () => {
+      vi.spyOn(api, 'get').mockResolvedValue(mockContainers);
+      await fetchAndRenderDockerContainers();
+      selectAllContainers(['c1', 'c2', 'c3']);
+      updateDockerBulkBar();
+
+      /** @type {HTMLElement} */ (document.querySelector('.docker-filter-btn[data-filter="stopped"]')).click();
+      expect(getSelectedContainerIds()).toEqual([]);
+      expect(document.getElementById('docker-bulk-bar').style.display).toBe('none');
+
+      const selectAll = /** @type {HTMLInputElement} */ (document.getElementById('docker-select-all'));
+      selectAll.checked = true;
+      selectAll.dispatchEvent(new Event('change', { bubbles: true }));
+      expect(getSelectedContainerIds()).toEqual(['c2']);
+
+      const search = /** @type {HTMLInputElement} */ (document.getElementById('docker-search-input'));
+      search.value = 'c-t';
+      search.dispatchEvent(new Event('input', { bubbles: true }));
       expect(getSelectedContainerIds()).toEqual([]);
     });
 

@@ -6260,7 +6260,7 @@
    "DockerBulkActionRequest": {
     "properties": {
      "action": {
-      "pattern": "^(start|stop|restart|pause|unpause|delete)$",
+      "pattern": "^(start|stop|restart|pause|unpause)$",
       "title": "Action",
       "type": "string"
      },

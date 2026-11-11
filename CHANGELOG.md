@@ -665,6 +665,21 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   back. The option is now off, it names the apps it would remove, and removing them is asked
   once more. For scripts: `prune_containers` is `false` unless it is sent.
 
+#### Fixes
+
+- **The list of apps can no longer stop, restart or pause Kiboto itself.** Delete and update
+  always refused it; the other three did not, also for a selection ("select all" includes Kiboto)
+  and for a stack. A paused Kiboto could not be resumed from its own page. A stack that holds
+  Kiboto now acts on its other apps and passes over Kiboto.
+- **Deleting several apps asks once, by name, and treats each like a single delete.** The question
+  named a count only, and the selection was then removed in one forced call that kept no copy of
+  the apps' set-up. Each app now goes through the single delete: a copy is kept under Backup, its
+  folders stay, and the result says which app could not be removed. For scripts: `delete` has left
+  `POST /api/docker/containers/bulk-action`; use `DELETE /api/docker/containers/{id}`.
+- **A selection of apps ends when the filter or the search changes.** Ticked rows that were no
+  longer on screen stayed selected, so "Stop" or "Delete" also acted on apps you could not see. On
+  the Apps page, "select all" now takes the rows on screen instead of every app.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

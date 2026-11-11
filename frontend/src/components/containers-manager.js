@@ -434,7 +434,11 @@ export function initContainersManager() {
       filterBtns.forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       _cwFilter = btn.dataset.filter || 'all';
+      // a selection belongs to the list it was made in: with another filter the ticked rows are
+      // not on screen, and the bar still acted on them (SET-07)
+      clearSelectedContainers();
       renderContainersWindowTable();
+      updateCwBulkBar();
     });
   });
 
@@ -443,7 +447,9 @@ export function initContainersManager() {
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       _cwSearchQuery = (e.target.value || '').trim().toLowerCase();
+      clearSelectedContainers();
       renderContainersWindowTable();
+      updateCwBulkBar();
     });
   }
 

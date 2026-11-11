@@ -38,20 +38,16 @@ def test_docker_bulk_action_start_and_stop(mock_action, auth_client):
 
 
 @patch("backend.services.docker_cleanup.destroy_container")
-def test_docker_bulk_action_delete(mock_destroy, auth_client):
-    mock_destroy.return_value = {"success": True, "deleted": "c1"}
-
+def test_docker_bulk_action_no_longer_deletes(mock_destroy, auth_client):
+    """SET-07: a selection is removed one app at a time through the single delete."""
     payload = {
         "action": "delete",
         "container_ids": ["c1"],
         "force": True,
     }
     response = auth_client.post("/api/docker/containers/bulk-action", json=payload)
-    assert response.status_code == 200
-    data = response.json()
-    assert data["action"] == "delete"
-    assert data["successful"] == 1
-    mock_destroy.assert_called_once_with("c1", force=True)
+    assert response.status_code == 422
+    mock_destroy.assert_not_called()
 
 
 def test_docker_bulk_action_invalid_action(auth_client):

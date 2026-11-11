@@ -22,6 +22,7 @@ from backend.hardware.docker_stats import (
     UnixHTTPConnection,
     _classify_stack,
     _parse_ports_and_webui,
+    is_kiboto_itself,
 )
 from backend.ignored_errors import ignored
 from backend.services.compose_synthesizer import (
@@ -721,6 +722,8 @@ def execute_stack_action(stack_name: str, action: str) -> dict[str, Any]:
         ordered = topological_sort_stack_containers(containers, compose_yaml, reverse=False)
         for c in ordered:
             cid = c["id"]
+            if is_kiboto_itself(cid, c.get("name", "")):
+                continue  # a stack that holds Kiboto restarts the rest of it
             st, _ = _docker_request("POST", f"/containers/{cid}/restart?t=10")
             if st in (204, 200):
                 restarted.append(c["name"])
@@ -741,6 +744,9 @@ def execute_stack_action(stack_name: str, action: str) -> dict[str, Any]:
     results = []
     for c in ordered_containers:
         cid = c["id"]
+        if action in ("restart", "stop") and is_kiboto_itself(cid, c.get("name", "")):
+            results.append({"id": cid, "name": c["name"], "success": True, "skipped": "Kiboto itself"})
+            continue
         if action == "restart":
             st, _ = _docker_request("POST", f"/containers/{cid}/restart?t=10")
         elif action == "stop":

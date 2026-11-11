@@ -286,7 +286,9 @@ function _bindDockerEvents() {
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       _dockerSearchQuery = (e.target.value || '').trim().toLowerCase();
+      clearSelectedContainers(); // a selection belongs to the list it was made in (SET-07)
       renderDockerContainersTable();
+      updateDockerBulkBar();
     });
   }
 
@@ -296,7 +298,9 @@ function _bindDockerEvents() {
       filterBtns.forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       _dockerFilter = btn.dataset.filter || 'all';
+      clearSelectedContainers();
       renderDockerContainersTable();
+      updateDockerBulkBar();
     });
   });
 
@@ -541,7 +545,8 @@ function _bindDockerEvents() {
       const tbody = document.getElementById('docker-containers-tbody');
       if (!tbody) return;
       if (selectAll.checked) {
-        const visibleIds = _dockerContainersList.map((c) => c.id).filter(Boolean);
+        // the rows on screen, not every app: with a filter on, "select all" also took the hidden ones
+        const visibleIds = [...tbody.querySelectorAll('tr')].map((tr) => /** @type {HTMLElement} */ (tr).dataset.id).filter(Boolean);
         selectAllContainers(visibleIds);
       } else {
         clearSelectedContainers();
