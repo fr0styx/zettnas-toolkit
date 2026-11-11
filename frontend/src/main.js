@@ -239,16 +239,6 @@ function desktopFlags() {
   return { lcd: state.isLcdDirect, console: state.isVmConsoleDirect };
 }
 
-/** Runs fn once the page has settled: after ~3 s, when the browser is idle. */
-function idleLoad(fn) {
-  const run = () => fn();
-  if (typeof window.requestIdleCallback === 'function') {
-    setTimeout(() => window.requestIdleCallback(run, { timeout: 5000 }), 3000);
-  } else {
-    setTimeout(run, 4000);
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {  if (window.location.search.includes('mode=lcd') || document.body.classList.contains('lcd-direct')) {
     state.isLcdDirect = true;
     document.body.classList.add('lcd-direct');
@@ -360,7 +350,8 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
       managementReady = true;
     });
   });
-  idleLoad(() => forDesktopUser(() => ensureManagement().then(() => { managementReady = true; }, () => {}), document, desktopFlags()));
+  // Mission Control warms up once the first 10 s have passed (load-when.js: idleLoad, NPERF-5)
+  import('./load-when.js').then((m) => m.idleLoad(() => m.forDesktopUser(() => ensureManagement().then(() => { managementReady = true; }, () => {}), document, desktopFlags()), m.MISSION_CONTROL_WARMUP_MS));
   initCommandPalette();
   initJobsCentre();
   initDriveHealth(); // the drive view: everything that opened the S.M.A.R.T. window opens it

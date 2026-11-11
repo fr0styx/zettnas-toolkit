@@ -31,3 +31,20 @@ export function forDesktopUser(fn, doc = document, flags = {}) {
   obs.observe(doc.body, { attributes: true, attributeFilter: ['class'] });
   return () => obs.disconnect();
 }
+
+/**
+ * Mission Control (about 190 kB with network and the chassis view) warms up after the first 10 s
+ * after signing in, not inside them: at 3 s plus idle time it landed in that window on some runs
+ * and not others (400 to 422 kB, budget 420; NPERF-5). Opened sooner, it loads on demand.
+ */
+export const MISSION_CONTROL_WARMUP_MS = 12000;
+
+/** Runs fn once the page has settled: after `after` ms, when the browser is idle. */
+export function idleLoad(fn, after = 3000, win = window) {
+  const run = () => fn();
+  if (typeof win.requestIdleCallback === 'function') {
+    win.setTimeout(() => win.requestIdleCallback(run, { timeout: 5000 }), after);
+  } else {
+    win.setTimeout(run, after + 1000);
+  }
+}

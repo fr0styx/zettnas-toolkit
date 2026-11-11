@@ -4,7 +4,6 @@ import {
   openNewFileManagerWindow,
   openFileManager,
   handleFmKeydown,
-  ensureFmFocus,
   isFmActive,
   getFmSelectedPaths,
   getFmSelectionState,

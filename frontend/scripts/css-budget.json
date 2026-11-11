@@ -3,7 +3,7 @@
   "buttonClasses": 75,
   "inlineStyles": 1395,
   "emojiIcons": 2,
-  "colours": 3987,
+  "colours": 3981,
   "primitiveUses": 4,
   "importantPerFile": {
     "frontend/index.html": 64,
@@ -51,7 +51,7 @@
   "coloursPerFile": {
     "frontend/index.html": 27,
     "frontend/src/components/auth.js": 11,
-    "frontend/src/components/chassis-visualizer.js": 110,
+    "frontend/src/components/chassis-visualizer.js": 104,
     "frontend/src/components/container-modal.js": 76,
     "frontend/src/components/container-network-map.js": 19,
     "frontend/src/components/containers-manager.js": 7,

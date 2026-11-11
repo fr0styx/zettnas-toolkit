@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { SUBPANE_MAP, updateManagementTelemetry, initManagementWindow } from '../components/management.js';
+import { SUBPANE_MAP, updateManagementTelemetry } from '../components/management.js';
 
 describe('Mission Control Navigation Restructure & Hardware Agnosticism', () => {
   beforeEach(() => {

@@ -1,12 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   getThermalLevel,
-  generateSmartSparklineSvg,
   renderChassisTwin,
   fetchAndRenderChassisTwin,
   openChassisConfigModal,
   triggerLocateDisk,
-  renderStorageTopologyTree,
   renderStructuredPoolsTopology,
   fetchAndRenderStorageTopology,
   fetchAndRenderNetworkShares,
@@ -49,36 +47,6 @@ describe('Phase 2: Thermal Heatmap Level Calculations', () => {
     expect(crit.cls).toBe('crit');
     expect(crit.color).toBe('var(--crit, #f0553b)');
     expect(crit.text).toBe('56°C');
-  });
-});
-
-describe('Phase 2: Zero-Bloat S.M.A.R.T. Velocity Sparkline Generator', () => {
-  it('renders a fallback message when no history points are available', () => {
-    const emptySvg = generateSmartSparklineSvg([], 280, 50);
-    expect(emptySvg).toContain('<svg class="smart-sparkline-svg"');
-    expect(emptySvg).toContain('No historical data recorded');
-  });
-
-  it('generates smooth SVG path geometry with healthy green gradient for stable disks', () => {
-    const points = [
-      { ts: 1000, temp: 34, realloc: 0, pending: 0 },
-      { ts: 2000, temp: 35, realloc: 0, pending: 0 },
-      { ts: 3000, temp: 34, realloc: 0, pending: 0 }
-    ];
-    const svg = generateSmartSparklineSvg(points, 300, 60);
-    expect(svg).toContain('<path');
-    expect(svg).toContain('stroke="#3bf58b"');
-    expect(svg).toContain('<circle');
-  });
-
-  it('highlights warning amber gradient when reallocated/pending sectors exist', () => {
-    const points = [
-      { ts: 1000, temp: 34, realloc: 0, pending: 0 },
-      { ts: 2000, temp: 35, realloc: 2, pending: 0 },
-      { ts: 3000, temp: 36, realloc: 5, pending: 1 }
-    ];
-    const svg = generateSmartSparklineSvg(points, 300, 60);
-    expect(svg).toContain('stroke="#f5b731"');
   });
 });
 
@@ -181,21 +149,6 @@ describe('Phase 2: Parametric Chassis Twin & Locate Strobe', () => {
     expect(slot.classList.contains('strobe-active')).toBe(true);
 
     apiSpy.mockRestore();
-  });
-
-  it('renders hierarchical Storage Topology Tree with parity and data partitions', () => {
-    const testDisks = [
-      { dev: 'sda', role: 'os', temp: 36 },
-      { dev: 'sdb', role: 'data', temp: 38 },
-      { dev: 'nvme0n1', role: 'cache', temp: 41 }
-    ];
-
-    renderStorageTopologyTree(container, testDisks, { state: 'STARTED' });
-
-    expect(container.querySelector('.storage-topology-tree')).not.toBeNull();
-    expect(container.textContent).toContain('PARITY PROTECTION');
-    expect(container.textContent).toContain('DATA ARRAY (');
-    expect(container.textContent).toContain('NVME / SSD CACHE POOL');
   });
 
   it('opens Chassis Slots Mapping modal and saves user customization', async () => {

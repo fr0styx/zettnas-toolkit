@@ -207,14 +207,6 @@ def test_ssrf_guard_public_vs_notification_policies():
 # ============================================================================
 
 
-def test_sqlite_recursive_cte_skip_scan():
-    from backend.db import query_all_smart_velocities
-
-    # Execute query to verify skip_scan_sql executes cleanly without SQLite syntax error
-    summary = query_all_smart_velocities()
-    assert isinstance(summary, dict)
-
-
 # ============================================================================
 # 6. PAL Storage Subprocess TTL Caching
 # ============================================================================

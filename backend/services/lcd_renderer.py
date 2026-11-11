@@ -23,44 +23,6 @@ from backend.ignored_errors import ignored
 from backend.state import Z_STATE
 
 
-def discover_fb_geometry() -> tuple[int, int, int]:
-    """
-    Returns (width, height, stride).
-    Defaults to (172, 640, 704) matching the physical rotated LCD on Zettbox.
-    """
-    default_w = 172
-    default_h = 640
-    default_stride = 704
-
-    bases = ["/sys/class/graphics/fb0", "/host/sys/class/graphics/fb0"]
-    if HOST_SYS and os.path.isdir(os.path.join(HOST_SYS, "class/graphics/fb0")):
-        bases.insert(0, os.path.join(HOST_SYS, "class/graphics/fb0"))
-
-    for base in bases:
-        stride_file = os.path.join(base, "stride")
-        vsize_file = os.path.join(base, "virtual_size")
-        if os.path.exists(stride_file):
-            try:
-                with open(stride_file) as f:
-                    s_val = int(f.read().strip())
-                    if s_val > 0:
-                        default_stride = s_val
-            except (OSError, ValueError):
-                pass
-        if os.path.exists(vsize_file):
-            try:
-                with open(vsize_file) as f:
-                    content = f.read().strip()
-                    parts = [int(p.strip()) for p in content.split(",") if p.strip()]
-                    if len(parts) == 2:
-                        w, h = min(parts), max(parts)
-                        if w > 0 and h > 0:
-                            default_w, default_h = w, h
-            except (OSError, ValueError):
-                pass
-    return default_w, default_h, default_stride
-
-
 def discover_fb_bpp() -> int:
     """
     Discovers bits_per_pixel from sysfs (/sys/class/graphics/fb0/bits_per_pixel).

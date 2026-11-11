@@ -3408,27 +3408,6 @@ export function isFmModalBlocking() {
   return true;
 }
 
-export function ensureFmFocus(targetWin) {
-  if (
-    document.activeElement &&
-    (document.activeElement.tagName === 'INPUT' ||
-     document.activeElement.tagName === 'TEXTAREA' ||
-     document.activeElement.tagName === 'SELECT' ||
-     document.activeElement.isContentEditable)
-  ) {
-    return;
-  }
-  const inst = (targetWin && targetWin.id && _fmInstances.get(targetWin.id)) || getActiveFmInstance();
-  if (inst) {
-    inst.ensureFocus();
-  } else {
-    const viewport = document.getElementById('fm-viewport');
-    if (viewport) {
-      try { viewport.focus({ preventScroll: true }); } catch (_) {}
-    }
-  }
-}
-
 export function scrollIndexIntoView(idx) {
   const inst = getActiveFmInstance();
   if (inst) inst.scrollIndexIntoView(idx);

@@ -93,7 +93,7 @@ def test_an_old_copy_of_the_admin_hash_is_not_a_login(client):
     config.STORED_PASSWORD_HASH = hash_password("Copied-Elsewhere-9")
     r = client.post("/api/auth/login", json={"username": "admin", "password": "Copied-Elsewhere-9"})
     assert r.status_code == 401
-    auth_api.align_admin_password_mirror()
+    auth_api.retire_admin_password_copy()
     assert verify_password("admin", config.STORED_PASSWORD_HASH)
 
 

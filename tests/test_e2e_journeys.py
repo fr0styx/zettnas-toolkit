@@ -814,8 +814,10 @@ def test_settings_navigation_at_every_width():
 # NPERF-5: what a fresh browser downloads, as the bytes on the wire (compressed, headers too). A
 # fresh install measured 382 kB for the sign-in page and 337 kB in the 10 s after signing in
 # (3 Nov 2026, after the icon sprite was answered with 304 and the chassis photos were resized).
+# 12 Nov 2026: 141 to 156 kB once Mission Control warms up after the first 10 s (main.js), so
+# the budget came down from 420 to 200.
 SIGN_IN_PAGE_KB = 450
-FIRST_10S_KB = 420
+FIRST_10S_KB = 200
 
 
 def test_the_first_seconds_stay_within_their_byte_budget():

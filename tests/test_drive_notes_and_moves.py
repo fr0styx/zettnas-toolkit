@@ -114,7 +114,6 @@ def test_a_replaced_drive_starts_fresh_and_the_old_one_comes_back(history):
     _log(t0 + 120, "mvd", "MV-OLD", realloc=8)  # the old one is plugged in again elsewhere
     assert _rows("mvd") == [(t0, "MV-OLD"), (t0 + 120, "MV-OLD")]
     assert _rows("~MV-OLD") == []
-    assert "~MV-OLD" not in db.query_all_smart_velocities()
 
 
 def test_unknown_serials_change_nothing(history):

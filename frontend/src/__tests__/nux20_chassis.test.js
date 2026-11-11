@@ -6,7 +6,6 @@ import {
   renderChassisTwin,
   openChassisConfigModal,
   renderStructuredPoolsTopology,
-  renderStorageTopologyTree,
   buildSftpCardHtml,
   fetchAndRenderNetworkShares,
   fetchAndRenderRemoteStorage,
@@ -62,18 +61,6 @@ describe('chassis and storage text in German (NUX-20)', () => {
     expect(c.querySelector('.btn-pool-scrub').textContent).toContain('Pool prüfen (Scrub)');
     expect(c.querySelector('.btn-pool-destroy').textContent).toContain('Löschen');
     expect(c.querySelector('.topo-free-space').textContent).toMatch(/ frei$/);
-  });
-
-  it('counts the drives of a plain array with a plural', () => {
-    const c = box();
-    renderStorageTopologyTree(c, [{ dev: 'parity', role: 'os' }, { dev: 'sdb', role: 'data' }, { dev: 'nvme0n1', role: 'cache' }]);
-    expect(c.textContent).toContain('SPEICHERPOOLS UND AUFBAU');
-    expect(c.textContent).toContain('PARITÄTSSCHUTZ (1)');
-    expect(c.textContent).toContain('DATEN-ARRAY (1 LAUFWERK)');
-    expect(c.textContent).toContain('NVME-/SSD-CACHE-POOL (1)');
-    renderStorageTopologyTree(c, []);
-    expect(c.textContent).toContain('DATEN-ARRAY (0 LAUFWERKE)');
-    expect(c.textContent).toContain('Keine aktiven Datenlaufwerke');
   });
 
   it('describes the SFTP card', () => {

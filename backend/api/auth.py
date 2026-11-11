@@ -330,10 +330,6 @@ def retire_admin_password_copy() -> None:
         logger.info("[Auth] Removed the old admin password copy from security.json.")
 
 
-def align_admin_password_mirror() -> None:  # the old name, kept for callers
-    retire_admin_password_copy()
-
-
 _MFA_FALLBACK_KEY = os.urandom(32)
 
 

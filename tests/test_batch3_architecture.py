@@ -18,7 +18,7 @@ from backend.hardware.memory import read_mem
 from backend.main import app
 from backend.services.app_backup import restore_app_backup
 from backend.services.backup_engine import execute_backup_job, generate_backup_zip_stream, save_backup_job
-from backend.services.scheduler import start_scheduler, stop_scheduler
+from backend.services.scheduler import stop_scheduler
 from backend.users_db import _SESSION_CACHE, _SESSION_CACHE_LOCK, validate_user_session
 
 
@@ -127,13 +127,6 @@ def test_memory_utilization_zfs_arc_reclaim(tmp_path, monkeypatch):
     # Available = 4 GB + 6 GB ARC = 10 GB. Used = 16 - 10 = 6 GB.
     assert stats["used_gb"] == 6.0
     assert stats["pct"] == 38
-
-
-def test_scheduler_lifecycle_and_tick():
-    start_scheduler()
-    time.sleep(0.1)
-    stop_scheduler()
-    # Scheduler should stop cleanly without hanging
 
 
 def test_router_decomposition_imports():

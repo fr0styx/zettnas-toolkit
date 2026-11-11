@@ -9,36 +9,6 @@ from backend.hardware.screen import (
     set_fb_blank,
     set_screen_brightness,
 )
-from backend.services.lcd_renderer import discover_fb_geometry
-
-
-def test_discover_fb_geometry_default():
-    with patch("os.path.exists", return_value=False):
-        w, h, stride = discover_fb_geometry()
-        assert w == 172
-        assert h == 640
-        assert stride == 704
-
-
-def test_discover_fb_geometry_from_sysfs():
-    def fake_exists(p):
-        return p in [
-            "/sys/class/graphics/fb0/stride",
-            "/sys/class/graphics/fb0/virtual_size",
-        ]
-
-    def fake_open(p, *args, **kwargs):
-        if p == "/sys/class/graphics/fb0/stride":
-            return mock_open(read_data="704\n")()
-        if p == "/sys/class/graphics/fb0/virtual_size":
-            return mock_open(read_data="172,640\n")()
-        return mock_open()()
-
-    with patch("os.path.exists", side_effect=fake_exists), patch("builtins.open", side_effect=fake_open):
-        w, h, stride = discover_fb_geometry()
-        assert w == 172
-        assert h == 640
-        assert stride == 704
 
 
 def test_discover_backlight_dir_fallback():

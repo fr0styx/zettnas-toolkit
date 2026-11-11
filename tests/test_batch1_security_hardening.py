@@ -13,11 +13,9 @@ from backend.api.auth import _clear_failures, _failures, _lockout_remaining, _re
 from backend.api.system import _safe_fs_target, list_tokens
 from backend.api_tokens import (
     TOKENS_FILE,
-    generate_token,
     load_tokens,
     revoke_token,
     save_tokens,
-    validate_api_token,
 )
 from backend.main import app
 from backend.services.backup_engine import (
@@ -27,53 +25,6 @@ from backend.services.backup_engine import (
 )
 
 client = TestClient(app)
-
-
-def test_api_token_hashing_and_uuid_id():
-    """Verify API tokens are stored as SHA-256 hashes and identified by UUIDs."""
-    raw_token = generate_token("audit-service")
-    assert raw_token.startswith("zat_")
-
-    # Validate token
-    assert validate_api_token(raw_token) is True
-    assert validate_api_token("zat_fake_token_123") is False
-
-    # Verify api_tokens.json does NOT contain raw_token in plaintext
-    with open(TOKENS_FILE) as f:
-        stored_content = f.read()
-    assert raw_token not in stored_content, "Raw token must NEVER be stored in plaintext"
-
-    # Verify list_tokens exposes opaque UUID, never raw_token
-    token_list = list_tokens()
-    found = None
-    for item in token_list:
-        if item.get("name") == "audit-service":
-            found = item
-            break
-    assert found is not None
-    assert found["id"] != raw_token
-    assert found["id"] != found["masked_token"]
-    assert len(found["id"]) >= 32  # Valid UUID string
-
-    # Revoke using the opaque UUID
-    assert revoke_token(found["id"]) is True
-    assert validate_api_token(raw_token) is False
-
-
-def test_api_token_legacy_migration():
-    """Verify that legacy api_tokens.json with plaintext keys is auto-migrated."""
-    legacy_token = "zat_legacy_test_secret_token_12345"
-    legacy_data = {legacy_token: {"name": "Old Legacy Token", "created": time.time()}}
-    with open(TOKENS_FILE, "w") as f:
-        json.dump(legacy_data, f)
-
-    # load_tokens should migrate it
-    tokens = load_tokens()
-    assert legacy_token not in tokens, "Legacy plaintext key should be migrated to UUID key"
-    assert validate_api_token(legacy_token) is True, "Migrated token must remain valid"
-
-    # Clean up
-    revoke_token(legacy_token)
 
 
 def test_safe_fs_target_blocks_symlinks_outside_roots(tmp_path):

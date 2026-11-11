@@ -24,7 +24,6 @@ from backend.services.backup_engine import (
     get_backup_jobs,
     prune_job_snapshots,
     save_backup_job,
-    start_backup_scheduler,
     stop_backup_scheduler,
 )
 
@@ -234,13 +233,6 @@ def test_execute_backup_job_local_and_remote(monkeypatch):
     jobs = get_backup_jobs()
     assert jobs[0]["last_status"] == "success"
     assert jobs[0]["last_run_at"] is not None
-
-
-def test_scheduler_lifecycle():
-    start_backup_scheduler()
-    # Call again to test idempotency
-    start_backup_scheduler()
-    stop_backup_scheduler()
 
 
 # =========================================================================

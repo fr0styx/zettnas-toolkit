@@ -1059,18 +1059,6 @@ export async function fetchAndRenderDockerContainers(isBackground = false) {
   }
 }
 
-export async function fetchCatalogSources() {
-  try {
-    const sources = await api.get('/api/docker/catalog/sources');
-    _catalogSources = Array.isArray(sources) ? sources : [];
-    updateCatalogSourcesBadge();
-    return _catalogSources;
-  } catch (err) {
-    console.error('Failed to fetch catalog sources:', err);
-    return [];
-  }
-}
-
 export function updateCatalogSourcesBadge() {
   const badge = document.getElementById('catalog-sources-count-badge');
   if (badge) {

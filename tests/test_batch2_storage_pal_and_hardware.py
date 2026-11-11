@@ -19,7 +19,7 @@ from backend.hardware.pal_storage import (
     TrueNASStorageAdapter,
     get_storage_platform,
 )
-from backend.services.lcd_renderer import discover_fb_bpp, discover_fb_geometry
+from backend.services.lcd_renderer import discover_fb_bpp
 from backend.services.ups_watchdog import graceful_docker_teardown
 
 
@@ -229,7 +229,7 @@ def test_led_speed_and_port_search():
 
 
 def test_lcd_16bpp_framebuffer_support():
-    """Verifies discover_fb_geometry detects 16bpp and returns width, height, stride, and bpp."""
+    """Verifies discover_fb_bpp detects a 16-bit framebuffer."""
 
     def mock_file_open(path, *args, **kwargs):
         content = ""
@@ -249,12 +249,7 @@ def test_lcd_16bpp_framebuffer_support():
         patch("os.path.exists", return_value=True),
         patch("builtins.open", side_effect=mock_file_open),
     ):
-        w, h, stride = discover_fb_geometry()
-        bpp = discover_fb_bpp()
-        assert w == 172
-        assert h == 640
-        assert stride == 704
-        assert bpp == 16
+        assert discover_fb_bpp() == 16
 
 
 def test_ups_watchdog_preserves_orchestrator():

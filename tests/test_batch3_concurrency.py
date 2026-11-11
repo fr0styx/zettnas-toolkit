@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from backend.db import get_db_connection, init_db, query_all_smart_velocities, query_smart_velocity
+from backend.db import get_db_connection, init_db, query_smart_velocity
 from backend.services.broadcaster import broadcaster
 from backend.state import Z_STATE, add_event
 
@@ -55,12 +55,6 @@ def test_query_smart_velocity_connection_reuse():
         assert "shedding_sectors" in res
     finally:
         conn.close()
-
-
-def test_query_all_smart_velocities_single_session():
-    """Verify query_all_smart_velocities executes across all recorded drives without error."""
-    res = query_all_smart_velocities()
-    assert isinstance(res, dict)
 
 
 def test_fs_delete_offload_to_recycle_bin(client, auth_headers, tmp_path):

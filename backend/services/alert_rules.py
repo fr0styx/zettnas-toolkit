@@ -69,16 +69,6 @@ def check_app_memory(now: float | None = None, measure=app_memory_mb) -> None:
         )
 
 
-def get_failsafe_status() -> dict:
-    """The UPS failsafe's state; the failsafe itself is ups_watchdog's (REL-10)."""
-    from backend.services import ups_watchdog
-
-    return {
-        "failsafe_active": ups_watchdog._failsafe_engaged,
-        "copy_paused_by_failsafe": ups_watchdog._copy_paused_by_failsafe,
-    }
-
-
 def reset_failsafe_state() -> None:
     """Reset alert and failsafe state (useful for test suites)."""
     from backend.services import ups_watchdog

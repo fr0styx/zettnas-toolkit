@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 from backend.hardware.ups import _query_nut_socket, read_ups_status
 from backend.services.alert_rules import (
     evaluate_system_alerts,
-    get_failsafe_status,
     reset_failsafe_state,
 )
 from backend.services.copy_engine import (
@@ -109,7 +108,9 @@ class TestBatch5UpsAndMedia(unittest.TestCase):
         self.assertIn("UPS Critical Battery", titles)
         self.assertFalse(Z_STATE.copy_paused)  # pausing is the watchdog's job
         mock_sync.assert_not_called()
-        self.assertFalse(get_failsafe_status()["failsafe_active"])
+        from backend.services import ups_watchdog
+
+        self.assertFalse(ups_watchdog._failsafe_engaged)
         evaluate_system_alerts(unraid_ok, {"available": True, "status": "OL", "battery_charge_pct": 90.0})
 
     # -------------------------------------------------------------------------

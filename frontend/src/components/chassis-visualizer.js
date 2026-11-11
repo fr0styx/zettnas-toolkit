@@ -556,66 +556,6 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
   trapFocus(win, closeModal);
 }
 
-/**
- * Zero-bloat SVG Sparkline Generator for 7d & 30d S.M.A.R.T. Velocity
- */
-export function generateSmartSparklineSvg(points = [], width = 280, height = 50) {
-  if (!points || points.length === 0) {
-    return `
-      <svg class="smart-sparkline-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-        <text x="${width / 2}" y="${height / 2 + 4}" font-size="10" fill="#6c8084" text-anchor="middle">No historical data recorded</text>
-      </svg>
-    `;
-  }
-
-  const values = points.map((p) => (p.realloc || 0) + (p.pending || 0));
-  const maxVal = Math.max(1, Math.max(...values));
-
-  const padX = 6;
-  const padY = 6;
-  const availW = width - padX * 2;
-  const availH = height - padY * 2;
-
-  const coords = points.map((p, idx) => {
-    const x = padX + (idx / Math.max(1, points.length - 1)) * availW;
-    const val = (p.realloc || 0) + (p.pending || 0);
-    const y = padY + availH - (val / maxVal) * availH;
-    return { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, val };
-  });
-
-  const pathD = coords.reduce((acc, c, idx) => `${acc} ${idx === 0 ? 'M' : 'L'} ${c.x} ${c.y}`, '');
-  const areaD = `${pathD} L ${coords[coords.length - 1].x} ${height - padY} L ${coords[0].x} ${height - padY} Z`;
-
-  const hasErrors = values.some((v) => v > 0);
-  const strokeColor = hasErrors ? '#f5b731' : '#3bf58b';
-  const fillColor = hasErrors ? 'rgba(245, 183, 49, 0.15)' : 'rgba(59, 245, 139, 0.08)';
-
-  // For markers: if errors exist, highlight all error points. If healthy (val == 0), render clean start/end points
-  // in theme green rather than dozens of dense white circles that merge into a solid white bar.
-  let circlesHtml = '';
-  if (hasErrors) {
-    circlesHtml = coords
-      .filter((c) => c.val > 0)
-      .map((c) => `<circle cx="${c.x}" cy="${c.y}" r="3" fill="${strokeColor}" stroke="#0c1517" stroke-width="1"/>`)
-      .join('');
-  } else if (coords.length > 0) {
-    const first = coords[0];
-    const last = coords[coords.length - 1];
-    circlesHtml = `
-      <circle cx="${first.x}" cy="${first.y}" r="1.5" fill="${strokeColor}" opacity="0.6"/>
-      <circle cx="${last.x}" cy="${last.y}" r="2" fill="${strokeColor}"/>
-    `;
-  }
-
-  return `
-    <svg class="smart-sparkline-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-      <path d="${areaD}" fill="${fillColor}"/>
-      <path d="${pathD}" fill="none" stroke="${strokeColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      ${circlesHtml}
-    </svg>
-  `;
-}
-
 export function formatBytes(bytes) {
   // Disk capacity is labelled the way disk makers do: powers of 1000.
   return formatSize(bytes, { si: true, fixed: true });
@@ -1618,72 +1558,6 @@ export async function openSftpUsersModal(onSuccess) {
   modal.style.display = 'flex';
   modal.classList.add('open');
   await refreshSftpUI();
-}
-
-/**
- * Fallback Renders Storage Topology Tree (Pool -> VDEVs / Disks -> Datasets)
- */
-export function renderStorageTopologyTree(container, disks = [], unraidData = {}) {
-  if (!container) return;
-
-  const parityDisks = disks.filter((d) => d.role === 'os' || String(d.dev).includes('parity'));
-  const dataDisks = disks.filter((d) => d.role === 'data' || (!String(d.dev).includes('parity') && !String(d.dev).startsWith('nvme')));
-  const cacheDisks = disks.filter((d) => d.role === 'cache' || String(d.dev).startsWith('nvme'));
-
-  const arrayStatus = unraidData.state || 'ACTIVE / ONLINE';
-
-  let parityHtml = parityDisks.map((d) => `
-    <div class="topo-disk-pill role-parity" data-dev="${d.dev || d.name}">
-      <span class="topo-dev">/dev/${d.dev || d.name}</span>
-      <span class="topo-role">PARITY</span>
-      <span class="topo-temp">${d.temp != null ? d.temp + '°C' : '--'}</span>
-    </div>
-  `).join('');
-
-  let dataHtml = dataDisks.map((d, i) => `
-    <div class="topo-disk-pill role-data" data-dev="${d.dev || d.name}">
-      <span class="topo-dev">DISK ${i + 1} (${d.dev || d.name})</span>
-      <span class="topo-temp">${d.temp != null ? d.temp + '°C' : '--'}</span>
-    </div>
-  `).join('');
-
-  let cacheHtml = cacheDisks.map((d) => `
-    <div class="topo-disk-pill role-cache" data-dev="${d.dev || d.name}">
-      <span class="topo-dev">${d.dev || d.name}</span>
-      <span class="topo-role">CACHE</span>
-      <span class="topo-temp">${d.temp != null ? d.temp + '°C' : '--'}</span>
-    </div>
-  `).join('');
-
-  container.innerHTML = `
-    <div class="storage-topology-tree">
-      <div class="topo-root-node">
-        <div class="topo-root-header">
-          <svg viewBox="0 0 24 24" width="16" height="16"><use href="#i-storage"/></svg>
-          <span class="topo-root-title">${t('chassis.topology', 'STORAGE POOLS & LAYOUT')}</span>
-          <span class="topo-root-badge">${escapeHtml(arrayStatus)}</span>
-        </div>
-        <div class="topo-branches">
-          ${parityDisks.length > 0 ? `
-            <div class="topo-branch-group">
-              <div class="topo-branch-label">${t('chassis.parity_count', 'PARITY PROTECTION ({count})', { count: parityDisks.length })}</div>
-              <div class="topo-disk-grid">${parityHtml}</div>
-            </div>
-          ` : ''}
-          <div class="topo-branch-group">
-            <div class="topo-branch-label">${t('chassis.data_array', 'DATA ARRAY ({count, plural, one {# DRIVE} other {# DRIVES}})', { count: dataDisks.length })}</div>
-            <div class="topo-disk-grid">${dataHtml || `<span class="empty-note">${t('chassis.no_data_drives', 'No active data drives')}</span>`}</div>
-          </div>
-          ${cacheDisks.length > 0 ? `
-            <div class="topo-branch-group">
-              <div class="topo-branch-label">${t('chassis.cache_pool_count', 'NVME / SSD CACHE POOL ({count})', { count: cacheDisks.length })}</div>
-              <div class="topo-disk-grid">${cacheHtml}</div>
-            </div>
-          ` : ''}
-        </div>
-      </div>
-    </div>
-  `;
 }
 
 const PROVIDER_ICONS = {

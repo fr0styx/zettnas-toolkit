@@ -33,7 +33,7 @@
   "buttons": 3,
   "globals": 1,
   "styles": 36,
-  "templates": 20
+  "templates": 19
  },
  "frontend/src/components/container-modal.js": {
   "buttons": 0,

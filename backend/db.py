@@ -1206,29 +1206,6 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection | None = None) -> di
         }
 
 
-def query_all_smart_velocities() -> dict:
-    """Returns degradation velocity assessment for all disks with recorded history."""
-    out = {}
-    try:
-        with db_session() as conn:
-            conn.row_factory = sqlite3.Row
-            skip_scan_sql = """
-                WITH RECURSIVE cte AS (
-                    SELECT MIN(dev) AS dev FROM smart_history WHERE dev IS NOT NULL AND dev < '~'
-                    UNION ALL
-                    SELECT (SELECT MIN(dev) FROM smart_history WHERE dev > cte.dev AND dev < '~')
-                    FROM cte WHERE dev IS NOT NULL
-                )
-                SELECT dev FROM cte WHERE dev IS NOT NULL;
-            """
-            devs = [r[0] for r in conn.execute(skip_scan_sql).fetchall()]
-            for d in devs:
-                out[d] = query_smart_velocity(d, conn=conn)
-    except Exception as e:
-        logger.debug(f"[Kiboto] Failed to query all velocities: {e}")
-    return out
-
-
 def log_ups_event(
     event_type: str,
     status: str = "COMPLETED",

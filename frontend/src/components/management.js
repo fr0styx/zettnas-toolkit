@@ -2087,4 +2087,3 @@ export function initManagement() {
   if (typeof restoreHardwareTabsToManagement === "function") restoreHardwareTabsToManagement();
 }
 
-export const initManagementWindow = initManagement;

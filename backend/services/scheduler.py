@@ -370,14 +370,5 @@ def scheduler_daemon():
     _run_scheduled_tasks()
 
 
-def start_scheduler():
-    global _SCHEDULER_THREAD
-    if _SCHEDULER_THREAD and _SCHEDULER_THREAD.is_alive():
-        return
-    _SCHEDULER_STOP_EVENT.clear()
-    _SCHEDULER_THREAD = threading.Thread(target=_run_scheduled_tasks, daemon=True, name="zett_scheduler")
-    _SCHEDULER_THREAD.start()
-
-
 def stop_scheduler():
     _SCHEDULER_STOP_EVENT.set()

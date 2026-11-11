@@ -1110,16 +1110,6 @@ def backup_scheduler_daemon() -> None:
     _backup_scheduler_loop()
 
 
-def start_backup_scheduler() -> None:
-    """Starts the background backup scheduler daemon if not already running."""
-    global _SCHEDULER_RUNNING, _SCHEDULER_THREAD
-    if _SCHEDULER_RUNNING:
-        return
-    _SCHEDULER_RUNNING = True
-    _SCHEDULER_THREAD = threading.Thread(target=_backup_scheduler_loop, daemon=True, name="HyperBackupScheduler")
-    _SCHEDULER_THREAD.start()
-
-
 def stop_backup_scheduler() -> None:
     """Stops the background backup scheduler daemon."""
     global _SCHEDULER_RUNNING

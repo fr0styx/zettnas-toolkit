@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { api } from '../api.js';
 import {
   fetchAndRenderAppCatalog,
-  fetchCatalogSources,
   renderAppCatalogGrid,
   openAppSourcesModal,
   _resetCatalogStateForTesting,
@@ -27,20 +26,6 @@ describe('App Catalog Sources (Portainer v2/v3 & Custom Sources)', () => {
     `;
     vi.restoreAllMocks();
     _resetCatalogStateForTesting();
-  });
-
-  it('fetches catalog sources and updates source badge count', async () => {
-    const mockSources = [
-      { id: 'builtin', name: 'Kiboto Curated Suite', enabled: true, item_count: 25 },
-      { id: 'lissy93', name: 'Lissy93 Templates', enabled: true, item_count: 796 },
-    ];
-    vi.spyOn(api, 'get').mockResolvedValue(mockSources);
-
-    const sources = await fetchCatalogSources();
-    expect(sources).toHaveLength(2);
-
-    const badge = document.getElementById('catalog-sources-count-badge');
-    expect(badge.textContent).toBe('2');
   });
 
   it('renders custom source badges and logos in app catalog grid', async () => {

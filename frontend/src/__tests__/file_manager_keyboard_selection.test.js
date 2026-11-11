@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   initFileManager,
   handleFmKeydown,
-  ensureFmFocus,
   scrollIndexIntoView,
   isFmActive,
   getFmSelectedPaths,
@@ -76,20 +75,6 @@ describe('File Manager Keyboard Navigation & Multi-Selection', () => {
     expect(fmWin.getAttribute('tabindex')).toBe('-1');
     expect(viewport).not.toBeNull();
     expect(viewport.getAttribute('tabindex')).toBe('0');
-  });
-
-  it('ensures focus is directed into #fm-viewport without stealing from text inputs', () => {
-    const viewport = document.getElementById('fm-viewport');
-    const pathInput = document.getElementById('fm-path-input');
-
-    ensureFmFocus();
-    expect(document.activeElement).toBe(viewport);
-
-    // If an input is focused, ensureFmFocus must not steal focus
-    pathInput.focus();
-    expect(document.activeElement).toBe(pathInput);
-    ensureFmFocus();
-    expect(document.activeElement).toBe(pathInput);
   });
 
   it('selects the first selectable item (skipping parent folder ..) on initial ArrowDown', () => {

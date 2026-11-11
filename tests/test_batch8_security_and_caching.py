@@ -5,7 +5,7 @@ import pytest
 import yaml
 from fastapi.testclient import TestClient
 
-from backend.api_tokens import generate_token, revoke_token, validate_api_token
+from backend.api_tokens import revoke_token
 from backend.auth import create_session, revoke_session, validate_session
 from backend.main import app
 
@@ -39,26 +39,6 @@ def test_auth_session_in_memory_cache_zero_disk_read_on_bogus_token():
         assert mock_json_load.call_count == 0
 
     revoke_session(tok)
-
-
-def test_api_token_in_memory_cache_and_constant_time():
-    """Verify API token caching, constant-time validation, and revocation."""
-    raw_token = generate_token("test-service")
-    assert raw_token.startswith("zat_")
-
-    # Fast validation
-    assert validate_api_token(raw_token) is True
-    assert validate_api_token("zat_invalid_token_12345") is False
-
-    # Verify no disk reads during repeated validation
-    with patch("json.load") as mock_json_load:
-        for _ in range(10):
-            assert validate_api_token(raw_token) is True
-        assert mock_json_load.call_count == 0
-
-    # Revoke
-    assert revoke_token(raw_token) is True
-    assert validate_api_token(raw_token) is False
 
 
 def test_docker_compose_no_wildcard_cgroups():

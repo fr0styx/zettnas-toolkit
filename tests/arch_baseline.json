@@ -35,7 +35,7 @@
   "backend.auth": 5,
   "backend.config": 2,
   "backend.confirmations": 1,
-  "backend.db": 19,
+  "backend.db": 16,
   "backend.db_crypto": 3,
   "backend.db_schema": 1,
   "backend.docker_proxy": 1,

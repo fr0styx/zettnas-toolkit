@@ -82,24 +82,6 @@ def save_tokens(tokens: dict) -> None:
                 pass
 
 
-def generate_token(name: str) -> str:
-    """Generate a scoped API token, storing only its SHA-256 hash and returning the raw secret once."""
-    tokens = load_tokens()
-    raw_token = "zat_" + secrets.token_urlsafe(32)
-    token_id = str(uuid.uuid4())
-    token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
-    masked = raw_token[:8] + "..." + raw_token[-4:]
-
-    tokens[token_id] = {
-        "hash": token_hash,
-        "masked_token": masked,
-        "name": name,
-        "created": time.time(),
-    }
-    save_tokens(tokens)
-    return raw_token
-
-
 def revoke_token(token_id_or_raw: str) -> bool:
     """Revoke a token by its UUID identifier or raw secret token."""
     if not token_id_or_raw:
@@ -126,17 +108,4 @@ def revoke_token(token_id_or_raw: str) -> bool:
         del tokens[target_id]
         save_tokens(tokens)
         return True
-    return False
-
-
-def validate_api_token(token: str) -> bool:
-    """Constant-time token validation against stored SHA-256 digests."""
-    if not token or not token.startswith("zat_"):
-        return False
-    tokens = load_tokens()
-    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
-    for item in tokens.values():
-        stored_hash = item.get("hash")
-        if stored_hash and hmac.compare_digest(token_hash, stored_hash):
-            return True
     return False
