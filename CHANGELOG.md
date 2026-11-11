@@ -488,6 +488,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   off" is greyed, with the reason, where it cannot work. The page also says honestly that starting
   again by itself after a power cut is not proven yet.
 
+#### Changes
+
+- **A home without a UPS sees a plain Power page.** Instead of a full green battery ring and live
+  shutdown settings, it says "No battery backup" and offers "Set up a UPS"; the rest of the page
+  opens from there.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

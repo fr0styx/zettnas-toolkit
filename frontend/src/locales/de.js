@@ -7135,6 +7135,7 @@ export default {
   "upx.mains_off": "Stromnetz getrennt",
   "upx.hz": "{hz} Hz Nennwert",
   "upx.nominal": "120 V / 60 Hz Nennwert",
+  "upx.setup_ups": "USV einrichten",
   "upx.cutpower_why": "Nur möglich, wenn Kiboto das NAS selbst ausschaltet und die USV über das Netzwerk (NUT) erreicht.",
   "upx.restart_unproven": "Startet nach einem Stromausfall von selbst wieder: noch nicht nachgewiesen.",
   "upx.no_ups_short": "Keine USV",

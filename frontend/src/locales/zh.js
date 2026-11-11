@@ -7135,6 +7135,7 @@ export default {
   "upx.mains_off": "市电已断开",
   "upx.hz": "额定 {hz} Hz",
   "upx.nominal": "额定 120V / 60Hz",
+  "upx.setup_ups": "设置 UPS",
   "upx.cutpower_why": "仅当 Kiboto 自己关闭 NAS 并通过网络（NUT）连接 UPS 时才可用。",
   "upx.restart_unproven": "停电后自动重新启动：尚未验证。",
   "upx.no_ups_short": "无 UPS",

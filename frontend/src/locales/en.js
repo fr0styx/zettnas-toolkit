@@ -7135,6 +7135,7 @@ export default {
   "upx.mains_off": "AC Mains Disconnected",
   "upx.hz": "{hz} Hz Nominal",
   "upx.nominal": "120V / 60Hz Nominal",
+  "upx.setup_ups": "Set up a UPS",
   "upx.cutpower_why": "Only possible when Kiboto itself switches the NAS off and reaches the UPS over the network (NUT).",
   "upx.restart_unproven": "Starts again by itself after a power cut: not proven yet.",
   "upx.no_ups_short": "No UPS",

@@ -7135,6 +7135,7 @@ export default {
   "upx.mains_off": "Secteur coupé",
   "upx.hz": "{hz} Hz nominal",
   "upx.nominal": "120 V / 60 Hz nominal",
+  "upx.setup_ups": "Configurer un onduleur",
   "upx.cutpower_why": "Possible uniquement quand Kiboto éteint lui-même le NAS et joint l’onduleur par le réseau (NUT).",
   "upx.restart_unproven": "Redémarre tout seul après une coupure : pas encore prouvé.",
   "upx.no_ups_short": "Pas d’onduleur",

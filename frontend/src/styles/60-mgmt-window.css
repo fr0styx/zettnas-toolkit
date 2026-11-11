@@ -204,3 +204,9 @@
 .ups-shutdown-line { margin-top: 6px; font-size: var(--kb-fs-xs); color: var(--kb-text-soft); }
 .ups-shutdown-line.is-bad { color: var(--err, #eb5757); font-weight: 600; }
 .ups-cutpower-why { font-size: var(--kb-fs-xs); color: var(--kb-text-muted); margin: -2px 0 6px; }
+
+/* no UPS: the gauges, settings and history fold away until "Set up a UPS" (SET-15, Power B1) */
+#mgmt-sec-ups[data-ups-state="none"]:not(.ups-show-all) #ups-power-flow-container,
+#mgmt-sec-ups[data-ups-state="none"]:not(.ups-show-all) #ups-cockpit-config-section,
+#mgmt-sec-ups[data-ups-state="none"]:not(.ups-show-all) .ups-events-section { display: none; }
+.ups-show-setup { margin-top: 10px; }

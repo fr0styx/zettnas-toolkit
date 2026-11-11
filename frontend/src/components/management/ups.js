@@ -239,6 +239,21 @@ function renderUpsStatusLine(ups) {
   if (line && state === 'none') line.hidden = true; // nothing to switch off by battery without a UPS
   const restart = document.getElementById('ups-restart-line');
   if (restart) restart.hidden = state === 'none'; // proven only after a real power cut (Power decision 6)
+  // no UPS: one sentence and "Set up a UPS"; the gauges, settings and history wait (SET-15, Power B1)
+  const pane = document.getElementById('mgmt-sec-ups');
+  if (pane) pane.dataset.upsState = state;
+  const setup = document.getElementById('ups-show-setup');
+  if (setup) {
+    setup.hidden = state !== 'none' || Boolean(pane?.classList.contains('ups-show-all'));
+    if (!setup.dataset.bound) {
+      setup.dataset.bound = '1';
+      setup.addEventListener('click', () => {
+        pane?.classList.add('ups-show-all');
+        setup.hidden = true;
+        document.getElementById('ups-cockpit-config-section')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  }
 }
 
 let _upsMode = '';

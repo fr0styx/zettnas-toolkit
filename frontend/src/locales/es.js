@@ -7135,6 +7135,7 @@ export default {
   "upx.mains_off": "Red eléctrica desconectada",
   "upx.hz": "{hz} Hz nominal",
   "upx.nominal": "120 V / 60 Hz nominal",
+  "upx.setup_ups": "Configurar un SAI",
   "upx.cutpower_why": "Solo es posible cuando Kiboto apaga el NAS por sí mismo y llega al SAI por la red (NUT).",
   "upx.restart_unproven": "Vuelve a arrancar solo tras un corte de luz: aún no comprobado.",
   "upx.no_ups_short": "Sin SAI",
