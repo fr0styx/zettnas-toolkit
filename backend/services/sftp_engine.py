@@ -26,6 +26,8 @@ SFTP_DIR = os.path.join(DATA_DIR, "sftp")
 SFTP_CONFIG_FILE = os.path.join(SFTP_DIR, "config.json")
 SFTP_USERS_FILE = os.path.join(SFTP_DIR, "users.json")
 SFTP_CONF_FILE = os.path.join(SFTP_DIR, "sshd_config")
+# what a stored password is shown as; never a password itself
+PASSWORD_MASK = "********"
 FRONT_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sftp_front.py")
 SIDECAR_FRONT = "/app/backend/services/sftp_front.py"
 
@@ -191,15 +193,40 @@ Match Group sftpusers
         raw = read_json(SFTP_USERS_FILE, [])
         if not isinstance(raw, list):
             return []
+        raw = self._clear_damaged_passwords(raw)
         if not mask_passwords:
             return raw
         masked = []
         for u in raw:
             item = dict(u)
             if item.get("password"):
-                item["password"] = "********"
+                item["password"] = PASSWORD_MASK
             masked.append(item)
         return masked
+
+    @staticmethod
+    def _clear_damaged_passwords(raw: list[Any]) -> list[Any]:
+        """An entry whose stored password is the mask has no password (SET-01).
+
+        A delete used to save the list as it is shown, mask included, so the mask became the
+        stored password of every other user. Such an entry is cleared and logged; the person
+        needs a new password.
+        """
+        damaged = [str(u.get("username")) for u in raw if isinstance(u, dict) and u.get("password") == PASSWORD_MASK]
+        if not damaged:
+            return raw
+        for u in raw:
+            if isinstance(u, dict) and u.get("password") == PASSWORD_MASK:
+                u["password"] = None
+        atomic_write_json(SFTP_USERS_FILE, raw)
+        logger.warning("[SFTP] the stored password of %s was damaged and has been cleared; set a new one", damaged)
+        try:
+            from backend.users_db import log_security_event
+
+            log_security_event("sftp.password_cleared", "success", details={"users": damaged})
+        except Exception:
+            ignored("backend.services.sftp_engine.SFTPEngine._clear_damaged_passwords")
+        return raw
 
     def add_user(self, user_data: dict[str, Any]) -> dict[str, Any]:
         username = re.sub(r"[^a-zA-Z0-9_-]+", "", user_data.get("username", "").strip().lower())
@@ -244,11 +271,12 @@ Match Group sftpusers
         atomic_write_json(SFTP_USERS_FILE, users)
         return_entry = dict(user_entry)
         if return_entry.get("password"):
-            return_entry["password"] = "********"
+            return_entry["password"] = PASSWORD_MASK
         return return_entry
 
     def delete_user(self, username: str) -> bool:
-        users = self.list_users()
+        # the stored list, not the one that is shown: what is written back keeps every password
+        users = self.list_users(mask_passwords=False)
         filtered = [u for u in users if u.get("username") != username]
         if len(filtered) == len(users):
             return False

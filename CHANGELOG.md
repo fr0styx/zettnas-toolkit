@@ -231,6 +231,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **"My alerts" loads again**: the card in Settings where each person chooses their own alerts asked
   an address the server does not have, so it showed a heading and no form, for everyone.
 
+#### Security
+
+- **Deleting an SFTP user no longer damages the passwords of the others**: after one SFTP user was
+  deleted, the stored password of every other SFTP user was replaced by a placeholder, and that
+  placeholder then signed in over SFTP and WebDAV. A delete now keeps every other password. A list
+  that was damaged this way is repaired at the next read: the affected users lose their password
+  (the security log names them) and need a new one, by deleting and adding the user again. The
+  placeholder is refused as a password in every case. The list of SFTP sign-in names is now only
+  shown to people who manage shares. If you have deleted an SFTP user in the past, set new SFTP
+  passwords.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

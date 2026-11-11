@@ -41,8 +41,8 @@ def _is_hash(stored: str) -> bool:
 
 def _sftp_password_ok(stored: str, password: str) -> bool:
     """Hashed entries are checked as hashes; plain comparison only for entries saved before hashing."""
-    if not stored or not password:
-        return False
+    if not stored or not password or stored == "********":
+        return False  # the mask a password is shown as is never a password (SET-01)
     if _is_hash(stored):
         return verify_password(password, stored)
     return hmac.compare_digest(stored, password)

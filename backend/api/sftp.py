@@ -70,7 +70,8 @@ async def update_sftp_config(req: SFTPConfig):
 
 @router.get(
     "/sftp/users",
-    dependencies=[Depends(require_scope("shares:read", "storage:admin"))],
+    # the names are sign-in names: only for people who manage shares (SET-01)
+    dependencies=[Depends(require_scope("shares:manage", "storage:admin"))],
 )
 async def list_sftp_users():
     """Lists configured SFTP users, authorized shares, and access levels."""
