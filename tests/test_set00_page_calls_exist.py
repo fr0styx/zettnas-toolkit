@@ -19,7 +19,7 @@ CALL = re.compile(r"\bapi\.(get|post|put|patch|delete|postRaw|upload)\(\s*(['\"`
 METHODS = {"postraw": "POST", "upload": "POST"}
 
 # (method, address as the page writes it): calls that reach no route today
-KNOWN_MISSING = {}
+KNOWN_MISSING: set[tuple[str, str]] = set()
 
 
 def _page_calls():
