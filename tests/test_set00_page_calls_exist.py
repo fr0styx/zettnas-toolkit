@@ -19,9 +19,7 @@ CALL = re.compile(r"\bapi\.(get|post|put|patch|delete|postRaw|upload)\(\s*(['\"`
 METHODS = {"postraw": "POST", "upload": "POST"}
 
 # (method, address as the page writes it): calls that reach no route today
-KNOWN_MISSING = {
-    ("GET", "/api/auth/users"),  # the people list of the "Create share" dialog
-}
+KNOWN_MISSING = {}
 
 
 def _page_calls():
