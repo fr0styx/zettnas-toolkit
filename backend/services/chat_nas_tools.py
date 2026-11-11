@@ -773,8 +773,10 @@ def tool_trigger_ai_sync(action: str = "start", principal: Any = None) -> dict[s
         res = rag.stop_sync()
     else:
         cfg = rag.get_config()
-        watched = cfg.get("watched_paths") or ["/mnt/user"]
-        if test_mode():
+        watched = cfg.get("watched_paths") or []
+        if not watched:  # no folder is chosen: nothing to read, never the whole pool (SET-04)
+            res = {"status": "nothing_to_read", "message": "Kib has no folder to read. Choose one in Settings."}
+        elif test_mode():
             res = {"status": "started", "watched_paths": watched, "respect_standby": True}
         else:
             res = rag.start_background_sync(paths=watched, recursive=True, respect_standby=True)

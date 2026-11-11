@@ -414,6 +414,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   with a look-only role no longer read these either; give such a tool an administrator's token if it
   needs them.
 
+#### Fixes
+
+- **Kib reads only the folders you chose, and none means none**: when the last folder in Kib's
+  list was unticked, Kib quietly went on to read the whole storage. An empty list now means Kib
+  reads nothing, and "Sync" says "Kib has no folder to read. Choose a folder first."
+- **On a new install Kib reads no folder until you choose one**: it used to start reading every
+  shared folder on its own, an hour or more after the first start. An install that already has
+  files in Kib's index keeps the folders it was reading; they are now written down in its
+  settings, so you can see and change them. Until a folder is chosen, the content search in Files
+  (the `?` prefix) finds nothing.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

@@ -163,6 +163,7 @@ export default {
   "ai.add_folder_btn": "Ajouter un dossier",
   "ai.respect_standby_label": "Protection veille et apprentissage auto (Disque actif uniquement)",
   "ai.run_index_btn": "Indexer le chemin",
+  "ai.no_folder_chosen": "Kib n’a aucun dossier à lire. Choisissez d’abord un dossier.",
   "ai.service_switch_label": "Service Kib",
   "ai.model_label": "Modèle :",
   "ai.active_model_label": "Modèle actif :",

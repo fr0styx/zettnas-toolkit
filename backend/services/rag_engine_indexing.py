@@ -337,7 +337,17 @@ class RagIndexingMixin:
         """Indexes multiple folders sequentially while respecting pause/resume/stop and disk standby."""
         clean_paths = [os.path.normpath(p.strip()) for p in (paths or []) if p and str(p).strip()]
         if not clean_paths:
-            clean_paths = self.get_config().get("watched_paths") or ["/mnt/user"]
+            clean_paths = self.get_config().get("watched_paths") or []
+        if not clean_paths:  # no folder is chosen: nothing to read, never the whole pool (SET-04)
+            return {
+                "status": "nothing_to_read",
+                "indexed_files": 0,
+                "skipped_unchanged": 0,
+                "deferred_standby": 0,
+                "errors": 0,
+                "paths": [],
+                "message": "Kib has no folder to read. Choose a folder first.",
+            }
 
         is_spinup = bool(auto_spinup_devs)
         dev_label = ", ".join(f"/dev/{d}" for d in (auto_spinup_devs or []) if d) or "array disk"

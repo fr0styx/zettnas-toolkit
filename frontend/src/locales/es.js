@@ -163,6 +163,7 @@ export default {
   "ai.add_folder_btn": "Agregar carpeta",
   "ai.respect_standby_label": "Auto-aprendizaje seguro en Standby (Solo con disco activo)",
   "ai.run_index_btn": "Indexar Ruta Ahora",
+  "ai.no_folder_chosen": "Kib no tiene ninguna carpeta que leer. Elige primero una carpeta.",
   "ai.service_switch_label": "Servicio Kib",
   "ai.model_label": "Modelo:",
   "ai.active_model_label": "Modelo activo:",

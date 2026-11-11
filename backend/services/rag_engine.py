@@ -960,6 +960,28 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                 return user_shares
         return ["/mnt/user"]
 
+    def _keep_watched_paths_of_an_earlier_install(self, saved: dict[str, Any]) -> list[str]:
+        """The one-time step for an install from before SET-04, where the folders Kib read were a
+        default nobody had written down: every share that is not a system share. Such an install
+        (its index has files in it) gets that list stored once, so it keeps reading what it
+        read. A new install has an empty index and starts with no folder."""
+        earlier = False
+        if os.path.exists(self.db_path):
+            try:
+                conn = self._get_conn(readonly=True)
+                try:
+                    earlier = conn.execute("SELECT 1 FROM indexed_files LIMIT 1").fetchone() is not None
+                finally:
+                    conn.close()
+            except (sqlite3.Error, OSError, RuntimeError):
+                earlier = False
+        paths = self._default_watched_paths() if earlier else []
+        try:
+            atomic_write_json(RAG_CONFIG_PATH, {**saved, "watched_paths": paths})
+        except OSError:
+            logger.debug("[Kib] the watched folders could not be stored", exc_info=True)
+        return paths
+
     def get_config(self) -> dict[str, Any]:
         default_cfg: dict[str, Any] = {
             "enabled": True,
@@ -967,7 +989,9 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             "respect_standby": True,
             "auto_learn_on_spinup": True,
             "compute_preference": "auto",  # "auto" (NPU -> GPU -> CPU), "npu", "gpu", "cpu_eco"
-            "watched_paths": self._default_watched_paths(),
+            # nothing until someone chooses a folder (SET-04); an install from before that keeps
+            # what it read, through _keep_watched_paths_of_an_earlier_install()
+            "watched_paths": [],
             "excluded_paths": [],
             "schedule_enabled": False,
             "schedule_start": "01:00",
@@ -1002,6 +1026,8 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         saved = read_json(RAG_CONFIG_PATH, {})
         if isinstance(saved, dict):
             default_cfg.update(saved)
+            if "watched_paths" not in saved:
+                default_cfg["watched_paths"] = self._keep_watched_paths_of_an_earlier_install(saved)
         # Clean up empty or duplicate watched_paths
         raw_paths = default_cfg.get("watched_paths") or []
         cleaned_paths: list[str] = []
@@ -1009,7 +1035,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             cp = os.path.normpath(str(p or "").strip())
             if cp and cp not in cleaned_paths:
                 cleaned_paths.append(cp)
-        default_cfg["watched_paths"] = cleaned_paths or self._default_watched_paths()
+        default_cfg["watched_paths"] = cleaned_paths  # empty means Kib reads nothing, never "everything"
 
         raw_excl = default_cfg.get("excluded_paths") or []
         cleaned_excl: list[str] = []

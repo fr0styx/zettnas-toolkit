@@ -311,7 +311,8 @@ async def sync_rag_index(
         cfg_watched = rag.get_config().get("watched_paths") or []
         raw_targets = [str(p).strip() for p in cfg_watched if str(p).strip()]
         if not raw_targets:
-            raw_targets = [POOL_PATH or "/mnt/user"]
+            # no folder is chosen: Kib reads nothing. It used to read the whole pool here (SET-04)
+            raise HTTPException(status_code=400, detail="Kib has no folder to read. Choose a folder first.")
 
     validated_paths: list[str] = []
     for raw_t in raw_targets:
@@ -483,8 +484,6 @@ def update_watched_folders(
         target_norm = os.path.normpath(str(req.path).strip())
         current = [p for p in current if p != target_norm]
         rag.remove_deferred_path(target_norm)
-        if not current and list_key == "watched_paths":
-            current = [POOL_PATH or "/mnt/user"]
     elif act == "set":
         raw_list = req.paths if req.paths is not None else ([req.path] if req.path else [])
         validated_list: list[str] = []
@@ -494,9 +493,7 @@ def update_watched_folders(
             vp = _validate_media_path(str(p).strip(), principal, must_exist=False)
             if vp not in validated_list:
                 validated_list.append(vp)
-        if not validated_list and list_key == "watched_paths":
-            raise HTTPException(status_code=400, detail="At least one valid folder path is required.")
-        current = validated_list
+        current = validated_list  # an empty list is allowed: Kib then reads nothing
 
     updated_cfg = rag.update_config({list_key: current})
 

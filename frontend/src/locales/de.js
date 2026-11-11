@@ -163,6 +163,7 @@ export default {
   "ai.add_folder_btn": "Ordner hinzufügen",
   "ai.respect_standby_label": "Standby-Schutz & Auto-Lernen bei aktiver Festplatte",
   "ai.run_index_btn": "Pfad jetzt indexieren",
+  "ai.no_folder_chosen": "Kib hat keinen Ordner zum Lesen. Wählen Sie zuerst einen Ordner.",
   "ai.service_switch_label": "Kib-Dienst",
   "ai.model_label": "Modell:",
   "ai.active_model_label": "Aktives Modell:",

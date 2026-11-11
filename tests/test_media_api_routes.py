@@ -201,13 +201,15 @@ def test_index_several_folders_and_duplicates(client, auth_headers, rag, media):
     assert next(c for c in rag.calls if c[0] == "index_paths")[1] == [os.path.realpath(a), os.path.realpath(b)]
 
 
-def test_index_defaults_to_watched_folders_then_the_pool(client, auth_headers, rag, media):
+def test_index_defaults_to_watched_folders_and_never_to_the_pool(client, auth_headers, rag, media):
     rag.cfg["watched_paths"] = [_dir("watched")]
     client.post("/api/media/index", json={}, headers=auth_headers)
     assert rag.calls[-1][0] == "index_directory" and rag.calls[-1][1].endswith("watched")
     rag.cfg["watched_paths"] = []
-    client.post("/api/media/index", json={}, headers=auth_headers)
-    assert rag.calls[-1][0] == "index_directory"
+    before = len(rag.calls)
+    r = client.post("/api/media/index", json={}, headers=auth_headers)
+    assert r.status_code == 400 and "no folder" in r.json()["detail"]
+    assert not any(c[0].startswith("index_") or c[0] == "start_background_sync" for c in rag.calls[before:])
 
 
 def test_index_in_the_background(client, auth_headers, rag, media):
@@ -272,17 +274,18 @@ def test_folders_add_remove_and_set(client, auth_headers, rag):
 
     client.post("/api/ai/folders", json={"action": "remove", "path": os.path.realpath(a)}, headers=auth_headers)
     assert rag.cfg["watched_paths"] == [os.path.realpath(b)]
-    # removing the last watched folder falls back to the whole pool
+    # removing the last watched folder leaves none: Kib then reads nothing (it was the whole pool)
     client.post("/api/ai/folders", json={"action": "remove", "path": os.path.realpath(b)}, headers=auth_headers)
-    assert len(rag.cfg["watched_paths"]) == 1
+    assert rag.cfg["watched_paths"] == []
     assert ("remove_deferred_path", os.path.realpath(b)) in rag.calls
 
 
 def test_folders_excluded_list_may_be_empty(client, auth_headers, rag):
     r = client.post("/api/ai/folders", json={"action": "set", "target": "excluded", "paths": []}, headers=auth_headers)
     assert r.status_code == 200 and r.json()["excluded_paths"] == []
+    # the watched list too: an empty list means Kib reads nothing (SET-04)
     r = client.post("/api/ai/folders", json={"action": "set", "paths": []}, headers=auth_headers)
-    assert r.status_code == 400
+    assert r.status_code == 200 and r.json()["watched_paths"] == []
 
 
 @pytest.mark.parametrize("action", ["add", "remove"])

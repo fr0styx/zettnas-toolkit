@@ -37,7 +37,7 @@ export let _aiSelectedScene = '';
 let _aiSelectedFileType = 'all';
 let _aiSelectedMatchTab = 'semantic';
 let _aiSelectedSortBy = 'relevance';
-let _aiWatchedPaths = ['/mnt/user'];
+let _aiWatchedPaths = []; // none until the server says which; never the whole pool (SET-04)
 let _aiAvailableFolders = [];
 let _aiSyncPollTimer = null;
 let _aiLastResultsList = [];
@@ -1034,9 +1034,18 @@ export async function removeAiWatchedFolder(folderPath) {
   }
 }
 
+/** No folder is chosen: say so and read nothing. The page used to send the whole pool here. */
+function _noFolderChosen(feedbackEl) {
+  const msg = t('ai.no_folder_chosen', 'Kib has no folder to read. Choose a folder first.');
+  if (feedbackEl) feedbackEl.textContent = msg;
+  showToast(msg, 'warn');
+  return null;
+}
+
 export async function syncAiWatchedFolders(respectStandby = true, background = true) {
   const feedbackEl = document.getElementById('ai-index-run-feedback');
-  const pathsToSync = Array.isArray(_aiWatchedPaths) && _aiWatchedPaths.length > 0 ? _aiWatchedPaths : ['/mnt/user'];
+  const pathsToSync = Array.isArray(_aiWatchedPaths) ? _aiWatchedPaths : [];
+  if (pathsToSync.length === 0) return _noFolderChosen(feedbackEl);
   if (feedbackEl) {
     feedbackEl.textContent = `⏳ ${t('ait.sync_start', 'Starting spindown-safe sync across {count, plural, one {# watched folder} other {# watched folders}}...', { count: pathsToSync.length })}`;
   }
@@ -2052,7 +2061,7 @@ export async function fetchAndRenderAiStatus() {
     updateAiSyncProgressUi(syncProg, res.standby_guard || {}, res.kib_status || res.zettai_status || '');
 
     // Update Watched Folders & Discovered Shares
-    const watchedList = res.watched_paths || res.config?.watched_paths || stats.watched_paths || ['/mnt/user'];
+    const watchedList = res.watched_paths || res.config?.watched_paths || stats.watched_paths || [];
     const availFolders = res.available_folders || [];
     renderAiWatchedFoldersAndShares(watchedList, availFolders);
 
@@ -2651,6 +2660,8 @@ export async function runAiVisualSearch(rawQuery = null) {
 export async function runAiPathIndex(targetPath = null, respectStandby = true) {
   const runBtns = [document.getElementById('btn-ai-run-index'), document.getElementById('btn-ai-run-index-path')].filter(Boolean);
   const feedbackEl = document.getElementById('ai-index-run-feedback');
+  const named = Array.isArray(targetPath) ? targetPath.filter(Boolean).length > 0 : Boolean(typeof targetPath === 'string' && targetPath.trim());
+  if (!named && !(_aiWatchedPaths && _aiWatchedPaths.length > 0)) return _noFolderChosen(feedbackEl);
   runBtns.forEach((b) => {
     b.disabled = true;
     b.innerHTML = '<span aria-hidden="true">⏳</span> <span>' + escapeHtml(t('aiq.indexing', 'Indexing...')) + '</span>';
@@ -2661,10 +2672,8 @@ export async function runAiPathIndex(targetPath = null, respectStandby = true) {
     targets = targetPath.filter(Boolean);
   } else if (typeof targetPath === 'string' && targetPath.trim()) {
     targets = [targetPath.trim()];
-  } else if (_aiWatchedPaths && _aiWatchedPaths.length > 0) {
-    targets = [..._aiWatchedPaths];
   } else {
-    targets = ['/mnt/user'];
+    targets = [..._aiWatchedPaths];
   }
 
   const displayTarget = targets.length === 1 ? targets[0] : `${targets.length} watched folder(s)`;
@@ -2673,7 +2682,7 @@ export async function runAiPathIndex(targetPath = null, respectStandby = true) {
   }
   try {
     const res = await api.post('/api/media/index', {
-      path: targets[0] || '/mnt/user',
+      path: targets[0],
       paths: targets,
       respect_standby: Boolean(respectStandby),
       recursive: true,

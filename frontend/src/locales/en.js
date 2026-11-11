@@ -163,6 +163,7 @@ export default {
   "ai.add_folder_btn": "Add Folder",
   "ai.respect_standby_label": "Standby-Safe Auto-Learn (Only Sync When Disk Running)",
   "ai.run_index_btn": "Index Path Now",
+  "ai.no_folder_chosen": "Kib has no folder to read. Choose a folder first.",
   "ai.service_switch_label": "Kib Service",
   "ai.model_label": "Model:",
   "ai.active_model_label": "Active Model:",

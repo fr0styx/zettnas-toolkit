@@ -163,6 +163,7 @@ export default {
   "ai.add_folder_btn": "添加文件夹",
   "ai.respect_standby_label": "休眠保护与唤醒自动学习（仅在硬盘运行时同步）",
   "ai.run_index_btn": "立即索引路径",
+  "ai.no_folder_chosen": "Kib 没有可读取的文件夹。请先选择一个文件夹。",
   "ai.service_switch_label": "Kib 服务",
   "ai.model_label": "模型：",
   "ai.active_model_label": "当前模型：",
