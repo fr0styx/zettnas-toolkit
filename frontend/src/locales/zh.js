@@ -5979,6 +5979,7 @@ export default {
   "share.sec_private": "私有",
   "share.sec_open_desc": "你网络中的任何人都可以无需密码打开此文件夹。",
   "share.sec_private_desc": "只有你选择的人才能打开此文件夹。",
+  "share.pool_free": "所在存储池剩余 {free}",
   "ci.save_note": "容器将被停止并用新设置重建。卷和文件夹保持不变。",
   "ci.error": "错误：{error}",
   "dk.sorted_asc": "升序排列",

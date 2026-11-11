@@ -374,10 +374,12 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
             # Determine disk usage in bytes
             free_raw = meta.get("free")
             used_raw = meta.get("used")
+            usage_is_own = False
             if free_raw is not None and used_raw is not None and str(free_raw).isdigit() and str(used_raw).isdigit():
                 free_bytes = int(free_raw) * 1024
                 used_bytes = int(used_raw) * 1024
                 total_bytes = free_bytes + used_bytes
+                usage_is_own = True  # Unraid's own figures for this share
             else:
                 try:
                     u = shutil.disk_usage(mount_path if os.path.exists(mount_path) else base_pool_path)
@@ -405,6 +407,7 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
                     cache_pool=cache_pool,
                     mountpoint=mount_path,
                     used_bytes=used_bytes,
+                    usage_is_own=usage_is_own,
                     free_bytes=free_bytes,
                     total_bytes=total_bytes,
                     used_pct=used_pct,

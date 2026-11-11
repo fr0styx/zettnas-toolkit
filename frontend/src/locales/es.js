@@ -5979,6 +5979,7 @@ export default {
   "share.sec_private": "Privada",
   "share.sec_open_desc": "Cualquiera en tu red puede abrir esta carpeta sin contraseña.",
   "share.sec_private_desc": "Solo las personas que elegiste pueden abrir esta carpeta.",
+  "share.pool_free": "{free} libres en su grupo",
   "ci.save_note": "El contenedor se detiene y se vuelve a crear con los ajustes nuevos. Los volúmenes y carpetas se conservan.",
   "ci.error": "Error: {error}",
   "dk.sorted_asc": "Orden ascendente",

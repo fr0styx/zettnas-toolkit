@@ -176,6 +176,9 @@ class NetworkShare(BaseModel):
     free_bytes: int = 0
     total_bytes: int = 0
     used_pct: float = 0.0
+    # True only where the figures are the share's own (Unraid reports them per share); elsewhere
+    # they are the whole pool's, and an empty share showed the pool's "used" (SET-14, Shares 12)
+    usage_is_own: bool = False
     allocator: str = "highwater"
     cow: str = "auto"
 

@@ -355,6 +355,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   "No password" with a warning sign in amber, in your language. "Create Share" no longer opens its
   dialog twice per click.
 
+#### Fixes
+
+- **A shared folder's usage bar is its own.** On systems Kiboto manages, every card showed the whole
+  pool's "used", so a folder made a minute ago looked as full as the others. A card now draws a bar
+  only where the figure is the folder's own (Unraid reports it per share), and otherwise shows the
+  free space on its pool.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

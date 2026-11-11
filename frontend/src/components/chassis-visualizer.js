@@ -1173,6 +1173,11 @@ export function renderProtocolPills({ smb, sftp, webdav } = {}) {
   set('proto-pill-webdav', 'WebDAV', webdav, webdav?.port);
 }
 
+/** Where a share's figures are its pool's, only the pool's free space is shown, not a bar (SET-14, Shares 12). */
+function poolFreeLine(freeStr) {
+  return `<div class="share-usage-wrap"><span class="share-free-text">${escapeHtml(t('share.pool_free', '{free} free on its pool', { free: freeStr }))}</span></div>`;
+}
+
 /** A share's access in words and with an icon: "Private" is the safe state, "No password" the warning (SET-14, Shares 18). */
 export function shareSecurityBadge(security) {
   const open = !security || security === 'public';
@@ -1355,7 +1360,7 @@ function buildShareCardInner(s, canManageShares) {
       ` : ''}
     </div>
 
-    <div class="share-usage-wrap">
+    ${s.usage_is_own === false ? poolFreeLine(freeStr) : `<div class="share-usage-wrap">
       <div class="share-usage-labels">
         <span class="share-usage-text">${usedStr} / ${totalStr}</span>
         <span class="share-free-text">${t('chassis.used_free', '{pct}% used · {free} free', { pct, free: freeStr })}</span>
@@ -1363,7 +1368,7 @@ function buildShareCardInner(s, canManageShares) {
       <div class="share-progress-track">
         <div class="share-progress-fill" style="width: ${Math.min(100, Math.max(0, pct))}%; background: ${barColor};"></div>
       </div>
-    </div>
+    </div>`}
 
     <div class="share-card-actions cv-row-2">
       <button class="btn-share-reveal" data-path="${escapeHtml(s.mountpoint || '')}" title="${t('ui.open_share_in_file_explorer', 'Open share in File Explorer')}">
@@ -1394,7 +1399,11 @@ function updateShareCard(card, s, canManageShares) {
   const usageText = card.querySelector('.share-usage-text');
   if (usageText) usageText.textContent = `${usedStr} / ${totalStr}`;
   const freeText = card.querySelector('.share-free-text');
-  if (freeText) freeText.textContent = t('chassis.used_free', '{pct}% used · {free} free', { pct, free: freeStr });
+  if (freeText) {
+    freeText.textContent = s.usage_is_own === false
+      ? t('share.pool_free', '{free} free on its pool', { free: freeStr })
+      : t('chassis.used_free', '{pct}% used · {free} free', { pct, free: freeStr });
+  }
   const fill = card.querySelector('.share-progress-fill');
   if (fill) {
     fill.style.width = `${Math.min(100, Math.max(0, pct))}%`;

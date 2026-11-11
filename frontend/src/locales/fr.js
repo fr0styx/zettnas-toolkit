@@ -5979,6 +5979,7 @@ export default {
   "share.sec_private": "Privé",
   "share.sec_open_desc": "Toute personne sur votre réseau peut ouvrir ce dossier sans mot de passe.",
   "share.sec_private_desc": "Seules les personnes choisies peuvent ouvrir ce dossier.",
+  "share.pool_free": "{free} libres sur son pool",
   "ci.save_note": "Le conteneur est arrêté et recréé avec les nouveaux réglages. Les volumes et dossiers restent intacts.",
   "ci.error": "Erreur : {error}",
   "dk.sorted_asc": "Tri croissant",

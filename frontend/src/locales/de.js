@@ -5979,6 +5979,7 @@ export default {
   "share.sec_private": "Privat",
   "share.sec_open_desc": "Jeder in Ihrem Netzwerk kann diesen Ordner ohne Passwort öffnen.",
   "share.sec_private_desc": "Nur die ausgewählten Personen können diesen Ordner öffnen.",
+  "share.pool_free": "{free} frei auf seinem Pool",
   "ci.save_note": "Der Container wird gestoppt und mit den neuen Einstellungen neu erstellt. Volumes und Ordner bleiben erhalten.",
   "ci.error": "Fehler: {error}",
   "dk.sorted_asc": "Aufsteigend sortiert",
