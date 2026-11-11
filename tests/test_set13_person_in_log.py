@@ -14,7 +14,7 @@ from backend.services import user_data
 def log(tmp_path, monkeypatch):
     monkeypatch.setattr(db, "DB_PATH", str(tmp_path / "history.db"))
     monkeypatch.setattr(state, "EVENTS_FILE", str(tmp_path / "events.json"))
-    monkeypatch.setattr(event_store, "_state", {"table_in": "", "pruned": 0.0})
+    monkeypatch.setattr(event_store, "_state", {"table_in": "", "pruned": 0.0, "said": 0.0})
     monkeypatch.setattr(state.Z_STATE, "event_log", [])
     state._event_unsaved.clear()
     state._event_recent.clear()
@@ -65,5 +65,5 @@ def test_a_store_that_cannot_be_written_is_reported(log, monkeypatch):
     done = user_data.erase_user_data({"id": "u-1", "username": "marta"}, ("event_log",))
     assert done == {"event_log": {"error": "Could not remove their name from the event log."}}
     monkeypatch.setattr(db, "DB_PATH", "/nonexistent-folder/history.db")
-    monkeypatch.setattr(event_store, "_state", {"table_in": "", "pruned": 0.0})
+    monkeypatch.setattr(event_store, "_state", {"table_in": "", "pruned": 0.0, "said": 0.0})
     assert event_store.for_user("marta") == []

@@ -20,12 +20,23 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
 
-from backend.ignored_errors import ignored
+from backend.config import logger
 
 RETENTION_DAYS = 90
 MAX_LIMIT = 500
 _PRUNE_EVERY = 3600.0
-_state: dict[str, Any] = {"table_in": "", "pruned": 0.0}
+_state: dict[str, Any] = {"table_in": "", "pruned": 0.0, "said": 0.0}
+_SAY_EVERY = 3600.0
+
+
+def _failed(what: str) -> None:
+    """A store that cannot be read or written is said, once an hour and not for every entry: the
+    entries are still in memory and in events.json."""
+    now = time.time()
+    if now - _state.get("said", 0.0) >= _SAY_EVERY:
+        _state["said"] = now
+        logger.warning("[Events] The event store could not be %s; the log goes on in memory", what, exc_info=True)
+
 
 # The place that deals with an event, by the start of its kind. The first match wins. A place is a
 # name the interface can open (frontend/src/router.js); "" means the Event Log itself.
@@ -90,24 +101,6 @@ def link_of(kind: str, details: Any = None) -> str:
     return ""
 
 
-def _table(conn: sqlite3.Connection) -> None:
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS events (
-            id INTEGER PRIMARY KEY,
-            ts INTEGER NOT NULL,
-            last_ts INTEGER NOT NULL,
-            level TEXT NOT NULL,
-            kind TEXT NOT NULL DEFAULT '',
-            link TEXT NOT NULL DEFAULT '',
-            title TEXT NOT NULL,
-            message TEXT NOT NULL DEFAULT '',
-            details TEXT NOT NULL DEFAULT '',
-            count INTEGER NOT NULL DEFAULT 1
-        )
-    """)
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_events_last_ts ON events(last_ts)")
-
-
 @contextmanager
 def _open() -> Iterator[sqlite3.Connection]:
     """A session on history.db with the events table in place (made once per database file)."""
@@ -115,7 +108,7 @@ def _open() -> Iterator[sqlite3.Connection]:
 
     with db.db_session() as conn:
         if _state["table_in"] != db.DB_PATH:
-            _table(conn)
+            db.create_events_table(conn)  # the table is defined with history.db's others (ARC-24)
             _state["table_in"] = db.DB_PATH
         yield conn
 
@@ -149,7 +142,7 @@ def _entry(row: tuple) -> dict[str, Any]:
         try:
             e["details"] = json.loads(details)
         except ValueError:
-            ignored("backend.event_store._entry")
+            e["details"] = {"unreadable": True}  # the row's details were damaged; the entry itself is shown
     if count > 1:
         e["count"] = count
         e["last_ts"] = last_ts
@@ -171,7 +164,7 @@ def save(entries: list[dict[str, Any]]) -> bool:
                 _state["pruned"] = now
                 conn.execute("DELETE FROM events WHERE last_ts < ?", (int(now - RETENTION_DAYS * 86400),))
     except (sqlite3.Error, OSError):
-        ignored("backend.event_store.save")
+        _failed("written")
         return False
     return True
 
@@ -194,7 +187,7 @@ def newest(limit: int = 100, before_id: int | None = None, level: str = "") -> l
         with _open() as conn:
             return [_entry(r) for r in conn.execute(sql, [*args, limit]).fetchall()]
     except (sqlite3.Error, OSError):
-        ignored("backend.event_store.newest")
+        _failed("read")
         return None
 
 
@@ -204,7 +197,7 @@ def last_id() -> int:
         with _open() as conn:
             return int(conn.execute("SELECT COALESCE(MAX(id), 0) FROM events").fetchone()[0])
     except (sqlite3.Error, OSError):
-        ignored("backend.event_store.last_id")
+        _failed("read")
         return 0
 
 
@@ -231,7 +224,7 @@ def clear() -> bool:
         with _open() as conn:
             conn.execute("DELETE FROM events")
     except (sqlite3.Error, OSError):
-        ignored("backend.event_store.clear")
+        _failed("written")
         return False
     return True
 
@@ -316,7 +309,7 @@ def for_user(username: str, limit: int = 5000) -> list[dict[str, Any]]:
         with _open() as conn:
             return _mentioning(conn, username, limit)
     except (sqlite3.Error, OSError):
-        ignored("backend.event_store.for_user")
+        _failed("read")
         return []
 
 

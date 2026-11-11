@@ -16,7 +16,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 def log(tmp_path, monkeypatch):
     monkeypatch.setattr(db, "DB_PATH", str(tmp_path / "history.db"))
     monkeypatch.setattr(state, "EVENTS_FILE", str(tmp_path / "events.json"))
-    monkeypatch.setattr(event_store, "_state", {"table_in": "", "pruned": 0.0})
+    monkeypatch.setattr(event_store, "_state", {"table_in": "", "pruned": 0.0, "said": 0.0})
     monkeypatch.setattr(state.Z_STATE, "event_log", [])
     monkeypatch.setattr(n, "load_notification_config", lambda: {"enabled": False, "push_enabled": False})
     monkeypatch.setattr(n, "_route_to_people", lambda *a, **k: [])

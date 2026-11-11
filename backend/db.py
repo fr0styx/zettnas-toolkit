@@ -110,6 +110,25 @@ def close_history_connection() -> None:
         _HISTORY.update(conn=None, path=None, ino=None)
 
 
+def create_events_table(conn: sqlite3.Connection) -> None:
+    """The event log's entries, kept 90 days (SET-13, backend/event_store.py)."""
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS events (
+            id INTEGER PRIMARY KEY,
+            ts INTEGER NOT NULL,
+            last_ts INTEGER NOT NULL,
+            level TEXT NOT NULL,
+            kind TEXT NOT NULL DEFAULT '',
+            link TEXT NOT NULL DEFAULT '',
+            title TEXT NOT NULL,
+            message TEXT NOT NULL DEFAULT '',
+            details TEXT NOT NULL DEFAULT '',
+            count INTEGER NOT NULL DEFAULT 1
+        )
+    """)
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_events_last_ts ON events(last_ts)")
+
+
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     try:
@@ -256,6 +275,7 @@ def init_db():
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_file_activity_ts ON file_activity(ts)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_file_activity_user ON file_activity(username, id)")
+            create_events_table(conn)
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
 

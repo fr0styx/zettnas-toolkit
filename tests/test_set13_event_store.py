@@ -16,7 +16,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 def log(tmp_path, monkeypatch):
     monkeypatch.setattr(db, "DB_PATH", str(tmp_path / "history.db"))
     monkeypatch.setattr(state, "EVENTS_FILE", str(tmp_path / "events.json"))
-    monkeypatch.setattr(event_store, "_state", {"table_in": "", "pruned": 0.0})
+    monkeypatch.setattr(event_store, "_state", {"table_in": "", "pruned": 0.0, "said": 0.0})
     monkeypatch.setattr(state, "_event_next_id", 1)
     monkeypatch.setattr(state.Z_STATE, "event_log", [])
     clock = {"t": 1_700_000_000}
@@ -118,7 +118,7 @@ def test_the_file_is_the_list_when_the_store_cannot_be_read(log, monkeypatch):
         )
     )
     monkeypatch.setattr(db, "DB_PATH", "/nonexistent-folder/history.db")
-    monkeypatch.setattr(event_store, "_state", {"table_in": "", "pruned": 0.0})
+    monkeypatch.setattr(event_store, "_state", {"table_in": "", "pruned": 0.0, "said": 0.0})
     state._load_events()
     assert [(e["id"], e["title"]) for e in state.events_snapshot()] == [(2, "B"), (1, "A")]
     assert state.add_event("info", "C", "still works") == 3  # recording never fails the caller
