@@ -117,9 +117,11 @@ jobs:
         # OPS-16: coverage may not drop below the floor (raise it as coverage grows); the generated
         # response models are left out (pyproject [tool.coverage.run], NARC-4): ~82.4% on 30 Oct 2026
         # Failing tests are also posted as an annotation, readable without log access
+        # Four parallel workers (pytest-xdist; the runner has 4 cores): about 2 min instead of 6.
+        # Coverage is combined from every worker, so the floor and diff coverage are unchanged.
         run: |
           set -o pipefail
-          if ! pytest --cov=backend --cov=app --cov-report=xml --cov-fail-under=81 -v -rfEs 2>&1 | tee /tmp/kb-unit.log; then
+          if ! pytest -n 4 --cov=backend --cov=app --cov-report=xml --cov-fail-under=81 -v -rfEs 2>&1 | tee /tmp/kb-unit.log; then
             body=$( (grep -E '^(FAILED|ERROR)|^E  |Required test coverage|Coverage failure' /tmp/kb-unit.log | tail -n 40) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=Unit tests::$body"
             exit 1
@@ -205,9 +207,21 @@ jobs:
       - name: ESLint (OPS-24)
         run: npm run lint:js
 
+  # Starts at once, beside the unit tests, in two halves that run side by side (CI speed-up,
+  # 12 Nov 2026). Nothing is published until every test job has passed (publish, below).
   e2e-integration:
-    name: Headless Playwright E2E Integration
-    needs: [lint-and-test, frontend]
+    name: Headless Playwright E2E Integration (${{ matrix.shard }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # the idle-minute check (90 s) goes with the shorter half
+          - shard: "1 of 2"
+            tests: tests/test_e2e_journeys.py
+            idle: false
+          - shard: "2 of 2"
+            tests: tests/test_e2e_integration.py tests/test_e2e_a11y.py tests/test_e2e_keyboard_german.py
+            idle: true
     runs-on: ubuntu-latest
     timeout-minutes: 25  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
     steps:
@@ -250,6 +264,14 @@ jobs:
             fi
             getent hosts security.ubuntu.com archive.ubuntu.com || echo "::warning::ubuntu.com still does not resolve"
           fi
+
+      # The browser download is kept between runs, keyed by the locked Playwright version; the
+      # system packages are still installed every run (they live outside the cache)
+      - name: Cache the Playwright browser
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements-dev.lock') }}
 
       - name: Install Python dependencies & Playwright
         run: |
@@ -303,13 +325,17 @@ jobs:
 
           # PERF-10: one idle minute with nobody using the app. Starting more than 10 processes a
           # minute fails the run; wakeups and CPU are warnings (a shared runner is noisy).
-          HOST_PROC=/proc python3 scripts/hardware_budgets.py --pid "$SERVER_PID" --scope tree --warmup 30 \
-            --seconds 60 --only spawns,wakeups,idle-cpu --strict spawns --show --results /tmp/kb-idle ||
-            { annotate 'Idle minute' 'The idle backend started more than 10 processes a minute'; exit 1; }
+          # Run in one of the two halves (matrix.idle), before any test touches the server.
+          if [ "${{ matrix.idle }}" = "true" ]; then
+            HOST_PROC=/proc python3 scripts/hardware_budgets.py --pid "$SERVER_PID" --scope tree --warmup 30 \
+              --seconds 60 --only spawns,wakeups,idle-cpu --strict spawns --show --results /tmp/kb-idle ||
+              { annotate 'Idle minute' 'The idle backend started more than 10 processes a minute'; exit 1; }
+          fi
 
-          # Execute full Playwright E2E Integration Suite; skips count as failures here
+          # This half of the Playwright E2E suite; skips count as failures here
           set -o pipefail
-          if ! KIBOTO_E2E_REQUIRED=1 pytest tests/test_e2e_integration.py tests/test_e2e_a11y.py tests/test_e2e_keyboard_german.py tests/test_e2e_journeys.py -v -rfE 2>&1 | tee /tmp/kb-e2e.log; then
+          # shellcheck disable=SC2086  # matrix.tests is a list of files
+          if ! KIBOTO_E2E_REQUIRED=1 pytest ${{ matrix.tests }} -v -rfE 2>&1 | tee /tmp/kb-e2e.log; then
             annotate 'E2E tests' "$(grep -E '^(FAILED|ERROR|E  )|Error|assert' /tmp/kb-e2e.log | tail -n 25)"
             exit 1
           fi
@@ -318,7 +344,7 @@ jobs:
           kill $SERVER_PID || true
 
   # After the tests pass: is this commit still the tip of main? If not, a newer commit will
-  # build and publish the images, so this one skips the build (skipped, not failed).
+  # publish the images, so this one skips publishing (skipped, not failed).
   still-latest:
     name: Still the latest commit?
     needs: [lint-and-test, frontend, e2e-integration]
@@ -336,12 +362,15 @@ jobs:
             echo "latest=true" >> "$GITHUB_OUTPUT"
           else
             echo "latest=false" >> "$GITHUB_OUTPUT"
-            echo "main has moved on to ${tip:0:7}; that commit builds the images." >> "$GITHUB_STEP_SUMMARY"
+            echo "main has moved on to ${tip:0:7}; that commit publishes the images." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-  build-and-push:
-    name: Build & Push Multi-Arch GHCR Container (${{ matrix.variant }})
-    needs: [lint-and-test, frontend, e2e-integration, still-latest]
+  # The images are built and checked while the tests run (CI speed-up, 12 Nov 2026): build-image,
+  # then check-image (amd64 start, Trivy, update and rollback) beside smoke-arm64 (a native arm64
+  # runner). Nothing is tagged or signed until all of those and every test job have passed
+  # (publish). An untagged digest of a build that failed stays unreachable: no tag points at it.
+  build-image:
+    name: Build multi-arch image (${{ matrix.variant }})
     # full: the default image. core: no VMs or LCD renderer, published as -core tags (OPS-11)
     strategy:
       fail-fast: false
@@ -351,16 +380,20 @@ jobs:
             suffix: ""
           - variant: core
             suffix: "-core"
-    if: github.event_name == 'push' && needs.still-latest.outputs.latest == 'true' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/tags/stable')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/tags/stable')
     runs-on: ubuntu-latest
     timeout-minutes: 45  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
     permissions:
       contents: read
-      packages: write # push images to GHCR
-      id-token: write # keyless cosign signing (OIDC)
+      packages: write # push the image to GHCR (by digest, no tag)
     env:
       DOCKER_CLIENT_TIMEOUT: "120"
       COMPOSE_HTTP_TIMEOUT: "120"
+      # The build action's clean-up step exported and uploaded a build record and summary, which
+      # took 9 to 11 minutes per image on 11 Nov 2026 (run of b863a41). Nothing reads it; the
+      # provenance and SBOM attestations are part of the image and stay.
+      DOCKER_BUILD_SUMMARY: "false"
+      DOCKER_BUILD_RECORD_UPLOAD: "false"
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -398,6 +431,7 @@ jobs:
           driver-opts: |
             network=host
 
+      # the same metadata as publish below: the image labels (version) come from it
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
@@ -415,8 +449,8 @@ jobs:
             type=semver,pattern={{version}}
             type=sha,format=short
 
-      # Push under the commit tag only; the public tags are added after the scan and signature.
-      # Pushed by digest only: no tag points at it until the smoke test, scan and signing pass (OPS-1)
+      # Pushed by digest only: no tag points at it until the tests, smoke tests, scan and
+      # signing pass (OPS-1)
       - name: Build and push Multi-Arch Docker image (by digest)
         id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
@@ -434,6 +468,70 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.variant }}
           cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
 
+      # The next jobs read the digest from this small file
+      - name: Hand the digest to the checks
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          case "$DIGEST" in sha256:*) ;; *) echo "::error::no image digest from the build"; exit 1;; esac
+          echo "$DIGEST" > digest.txt
+      - name: Upload the digest
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: digest-${{ matrix.variant }}
+          path: digest.txt
+          retention-days: 3
+
+  check-image:
+    name: Check image (amd64, ${{ matrix.variant }})
+    needs: [build-image]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: full
+            suffix: ""
+          - variant: core
+            suffix: "-core"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
+    permissions:
+      contents: read
+      packages: read
+    env:
+      DOCKER_CLIENT_TIMEOUT: "120"
+      COMPOSE_HTTP_TIMEOUT: "120"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Optimize Runner Network (Disable IPv6 & Configure DNS)
+        run: |
+          sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1 || true
+          sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1 || true
+          sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=1 || true
+          sudo mkdir -p /etc/docker
+          echo '{"dns": ["8.8.8.8", "1.1.1.1"]}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker
+          docker logout || true
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download the digest
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: digest-${{ matrix.variant }}
+      - name: Read the digest
+        id: build
+        run: |
+          d=$(cat digest.txt)
+          case "$d" in sha256:*) ;; *) echo "::error::bad digest file"; exit 1;; esac
+          echo "digest=$d" >> "$GITHUB_OUTPUT"
+
       # The image that will be published must start and serve the app (OPS-08).
       # It also must answer within 45 s of starting and stay within its download size (PERF-28, 29).
       # The core budget went from 340 to 345 MB on 30 Oct 2026 for gocryptfs (encrypted folders,
@@ -444,15 +542,6 @@ jobs:
           STARTUP_BUDGET_SECS: "45"
           IMAGE_BUDGET_MB: ${{ matrix.variant == 'core' && '345' || '700' }}
         run: sh scripts/smoke_test.sh "$IMAGE" linux/amd64 18082 120
-
-      # arm64 is built and published, so start it too (under QEMU, hence the longer wait).
-      # Blocking (OPS-10). The script runs the arm64 manifest by its own digest: Docker refuses
-      # a second platform of a digest it already pulled, which made this step fail unseen while
-      # it was continue-on-error.
-      - name: Smoke-test the built image (arm64, emulated, ${{ matrix.variant }})
-        env:
-          IMAGE: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
-        run: sh scripts/smoke_test.sh "$IMAGE" linux/arm64 18083 600
 
       # Release gate (OPS-06): no Critical vulnerability that already has a fix.
       - name: Scan image with Trivy
@@ -482,21 +571,128 @@ jobs:
       # own update helper (data must survive), then to an image that can't start (must roll
       # back). Blocking, and run before any tag is published, so a build that breaks updating or
       # rolling back never reaches edge/main (OPS-9, audit batch 1).
+      # The three run at the same time, each with its own container names, port and data folder.
       - name: Upgrade and rollback test
         run: |
           NEW="${{ env.IMAGE }}@${{ steps.build.outputs.digest }}"
           docker pull -q "$NEW"
+          docker pull -q busybox:1.37.0 >/dev/null
           RECENT=$(git ls-remote --tags --refs "https://github.com/${{ github.repository }}" 'v*' \
             | sed 's#.*refs/tags/v##' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -t. -k1,1n -k2,2n -k3,3n | tail -2)
+          i=0
+          started=""
           for tag in latest $RECENT; do
             OLD="${{ env.OLD_IMAGE }}:$tag${{ matrix.suffix }}"  # core images end in -core (NARC-10)
             docker pull -q "$OLD" || { echo "no image $OLD, skipped"; continue; }
-            echo "### from $tag"
-            if ! sh scripts/upgrade_rollback_test.sh "$OLD" "$NEW"; then
-              echo "::error title=Upgrade and rollback test::failed from $tag, see the step log"
-              exit 1
-            fi
+            i=$((i + 1))
+            KIBOTO_TEST_NAME="kb-upgrade-$i" KIBOTO_TEST_PORT=$((18090 + i)) \
+              sh scripts/upgrade_rollback_test.sh "$OLD" "$NEW" > "/tmp/upgrade-$i.log" 2>&1 &
+            started="$started $i:$!:$tag"
           done
+          failed=""
+          for run in $started; do
+            n=${run%%:*}; rest=${run#*:}; pid=${rest%%:*}; tag=${rest#*:}
+            if wait "$pid"; then status=passed; else status=FAILED; failed="$failed $tag"; fi
+            echo "::group::from $tag ($status)"
+            cat "/tmp/upgrade-$n.log"
+            echo "::endgroup::"
+          done
+          if [ -n "$failed" ]; then
+            echo "::error title=Upgrade and rollback test::failed from$failed, see the step log"
+            exit 1
+          fi
+
+  # arm64 is built and published, so it must start too (OPS-10), here on a native arm64 runner
+  # instead of under QEMU. The script runs the arm64 manifest by its own digest.
+  smoke-arm64:
+    name: Smoke-test image (arm64, ${{ matrix.variant }})
+    needs: [build-image]
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [full, core]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download the digest
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: digest-${{ matrix.variant }}
+      - name: Smoke-test the built image (arm64, ${{ matrix.variant }})
+        run: |
+          d=$(cat digest.txt)
+          case "$d" in sha256:*) ;; *) echo "::error::bad digest file"; exit 1;; esac
+          sh scripts/smoke_test.sh "${{ env.IMAGE }}@$d" linux/arm64 18083 180
+
+  publish:
+    name: Sign & publish image tags (${{ matrix.variant }})
+    needs: [lint-and-test, frontend, e2e-integration, still-latest, build-image, check-image, smoke-arm64]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: full
+            suffix: ""
+          - variant: core
+            suffix: "-core"
+    if: github.event_name == 'push' && needs.still-latest.outputs.latest == 'true' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/tags/stable')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
+    permissions:
+      contents: read
+      packages: write # tag the image in GHCR
+      id-token: write # keyless cosign signing (OIDC)
+    steps:
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+
+      - name: Download the digest
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: digest-${{ matrix.variant }}
+      - name: Read the digest
+        id: build
+        run: |
+          d=$(cat digest.txt)
+          case "$d" in sha256:*) ;; *) echo "::error::bad digest file"; exit 1;; esac
+          echo "digest=$d" >> "$GITHUB_OUTPUT"
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
+        with:
+          images: ${{ env.IMAGE }}
+          flavor: |
+            latest=false
+            suffix=${{ matrix.suffix }},onlatest=true
+          tags: |
+            type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=main,enable=${{ github.ref == 'refs/heads/main' }}
+            # A version tag publishes :beta and the exact version; .github/workflows/promote.yml
+            # moves :latest, :stable and MAJOR.MINOR to it after a 3-day soak (OPS-07)
+            type=raw,value=beta,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=semver,pattern={{version}}
+            type=sha,format=short
 
       - name: Install cosign
         uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
@@ -534,7 +730,7 @@ jobs:
 
   create-release:
     name: GitHub Release & Release Notes
-    needs: [build-and-push]
+    needs: [publish]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     timeout-minutes: 10  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours

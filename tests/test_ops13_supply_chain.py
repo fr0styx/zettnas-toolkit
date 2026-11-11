@@ -33,21 +33,29 @@ def test_linux_compose_caps_container_logs():
 
 
 def test_images_get_tags_only_after_the_gates():
+    # The image is built and checked in its own jobs while the tests run; the tags are added in
+    # the publish job, which needs every check (CI speed-up, 12 Nov 2026)
     jobs = yaml.safe_load(_read(".github/workflows/ci.yml"))["jobs"]
-    steps = jobs["build-and-push"]["steps"]
-    names = [s.get("name", "") for s in steps]
-    build = next(s for s in steps if s.get("id") == "build")
+    build = next(s for s in jobs["build-image"]["steps"] if s.get("id") == "build")
     assert "push-by-digest=true" in build["with"]["outputs"] and "tags" not in build["with"]
+    names = [s.get("name", "") for s in jobs["publish"]["steps"]]
     publish = next(i for i, n in enumerate(names) if n.startswith("Publish tags"))
-    for gate in ("Smoke-test", "Scan image with Trivy", "Sign image digest"):
-        assert next(i for i, n in enumerate(names) if n.startswith(gate)) < publish, gate
+    assert next(i for i, n in enumerate(names) if n.startswith("Sign image digest")) < publish
+    for gate, job in (
+        ("Smoke-test", "check-image"),
+        ("Smoke-test", "smoke-arm64"),
+        ("Scan image with Trivy", "check-image"),
+    ):
+        assert any(s.get("name", "").startswith(gate) for s in jobs[job]["steps"]), (gate, job)
+        assert job in jobs["publish"]["needs"], job
 
 
 def test_arm64_images_are_started_in_ci():
     jobs = yaml.safe_load(_read(".github/workflows/ci.yml"))["jobs"]
     step = next(
-        s for s in jobs["build-and-push"]["steps"] if s.get("name", "").startswith("Smoke-test the built image (arm64")
+        s for s in jobs["smoke-arm64"]["steps"] if s.get("name", "").startswith("Smoke-test the built image (arm64")
     )
+    assert "smoke-arm64" in jobs["publish"]["needs"]
     assert "scripts/smoke_test.sh" in step["run"] and "linux/arm64" in step["run"]
     with open(os.path.join(ROOT, "scripts", "smoke_test.sh"), encoding="utf-8") as f:
         script = f.read()
@@ -56,9 +64,9 @@ def test_arm64_images_are_started_in_ci():
 
 def test_the_update_path_is_exercised_before_publishing():
     jobs = yaml.safe_load(_read(".github/workflows/ci.yml"))["jobs"]
-    steps = jobs["build-and-push"]["steps"]
+    steps = jobs["check-image"]["steps"]
     names = [s.get("name", "") for s in steps]
     test = names.index("Upgrade and rollback test")
-    assert test < next(i for i, n in enumerate(names) if n.startswith("Publish tags"))
+    assert "check-image" in jobs["publish"]["needs"]  # runs before any tag is published
     assert "scripts/upgrade_rollback_test.sh" in steps[test]["run"]
     assert os.path.isfile(os.path.join(ROOT, "scripts", "upgrade_rollback_test.sh"))

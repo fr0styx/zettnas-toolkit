@@ -145,5 +145,9 @@ def test_ci_jobs_get_least_privilege():
     for name in ("lint-and-test", "frontend", "e2e-integration"):
         checkouts = [s for s in jobs[name]["steps"] if str(s.get("uses", "")).startswith("actions/checkout")]
         assert checkouts and all(s.get("with", {}).get("persist-credentials") is False for s in checkouts), name
-    assert jobs["build-and-push"]["permissions"] == {"contents": "read", "packages": "write", "id-token": "write"}
+    # only the build pushes (by digest) and only publish signs; the checks only read the image
+    assert jobs["build-image"]["permissions"] == {"contents": "read", "packages": "write"}
+    for name in ("check-image", "smoke-arm64"):
+        assert jobs[name]["permissions"] == {"contents": "read", "packages": "read"}, name
+    assert jobs["publish"]["permissions"] == {"contents": "read", "packages": "write", "id-token": "write"}
     assert jobs["create-release"]["permissions"] == {"contents": "write"}
