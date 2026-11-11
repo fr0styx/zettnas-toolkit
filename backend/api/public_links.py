@@ -66,9 +66,10 @@ class PublicAppIn(BaseModel):
 
 
 @router.get("/network/public-apps", dependencies=[Depends(require_scope("system:view"))])
-async def get_public_apps() -> dict[str, Any]:
-    """The apps on the internet, the Funnel ports still free and the apps that could go (RES-6)."""
-    return await asyncio.to_thread(public_apps.status)
+async def get_public_apps(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> dict[str, Any]:
+    """The apps on the internet, the Funnel ports still free and the apps that could go (RES-6).
+    A waiting request is only carried out for someone who may change settings (SET-02)."""
+    return await asyncio.to_thread(public_apps.status, principal.has_scope("system:config"))
 
 
 @router.post("/network/public-apps", dependencies=[Depends(require_scope("system:config"))])

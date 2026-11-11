@@ -66,7 +66,7 @@ class FakeFunnel:
 @pytest.fixture
 def funnel(monkeypatch, tmp_path):
     monkeypatch.setattr(pl, "STATE_FILE", str(tmp_path / "public_links.json"))
-    monkeypatch.setattr("backend.services.public_apps._own_port", lambda: 8082)
+    monkeypatch.setattr(pl, "_own_port", lambda: 8082)
     fake = FakeFunnel(
         {
             "Web": {

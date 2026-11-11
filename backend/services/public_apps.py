@@ -123,10 +123,53 @@ def _pending() -> dict[str, Any]:
     return p
 
 
-def status() -> dict[str, Any]:
+# ports whose app was not found at the last look: an app is withdrawn only when it is missing twice
+# in a row, so an update that recreates the container in between does not take it off the internet
+_MISSING: set[str] = set()
+
+
+def withdraw_gone() -> list[str]:
+    """Takes an app off the internet when it is gone, or no longer publishes the port (SET-02).
+
+    The public address belongs to a host port, not to the app: after the app was removed or its
+    port changed, the next app to use that port was on the internet without anyone choosing it.
+    Called once a minute; costs nothing while no app is published. A stopped app keeps its address."""
+    state = _state()
+    if not state:
+        _MISSING.clear()
+        return []
+    containers = _docker("/containers/json?all=1")
+    if containers is None:
+        return []  # Docker did not answer: not the moment to decide
+    by_name = {((c.get("Names") or ["/"])[0]).lstrip("/"): c for c in containers}
+    withdrawn = []
+    for port, entry in sorted(state.items()):
+        c = by_name.get(str(entry.get("name")))
+        ports = {int(p["PublicPort"]) for p in (c or {}).get("Ports") or [] if p.get("PublicPort")}
+        running = bool(c) and str(c.get("State") or "running") == "running"
+        still_there = bool(c) and (not running or int(entry.get("host_port") or 0) in ports)
+        if still_there:
+            _MISSING.discard(port)
+        elif port not in _MISSING:
+            _MISSING.add(port)
+        else:
+            _MISSING.discard(port)
+            try:
+                unpublish(int(port), actor="")
+            except KeyError:
+                continue
+            _audit("public_app.withdrawn", f"{entry.get('name')} gone from :{entry.get('host_port')}, off :{port}", "")
+            logger.warning("[PublicApps] %s is gone: its address on :%s is off the internet", entry.get("name"), port)
+            withdrawn.append(str(entry.get("name")))
+    return withdrawn
+
+
+def status(finish_pending: bool = False) -> dict[str, Any]:
+    """`finish_pending`: a request that waited for the tailnet owner's steps is carried out now.
+    Only for someone who may change settings: reading the card must never publish anything (SET-02)."""
     ready = public_links.funnel_readiness()
     waiting = _pending()
-    if waiting and ready["ready"]:
+    if finish_pending and waiting and ready["ready"]:
         atomic_write_json(PENDING_FILE, {})
         logger.info("[PublicApps] Funnel is allowed now: publishing %s", waiting["name"])
         try:

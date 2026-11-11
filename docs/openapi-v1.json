@@ -60934,7 +60934,7 @@
   },
   "/api/v1/network/public-apps": {
    "get": {
-    "description": "The apps on the internet, the Funnel ports still free and the apps that could go (RES-6).",
+    "description": "The apps on the internet, the Funnel ports still free and the apps that could go (RES-6).\nA waiting request is only carried out for someone who may change settings (SET-02).",
     "operationId": "get_public_apps_api_v1_network_public_apps_get",
     "responses": {
      "200": {

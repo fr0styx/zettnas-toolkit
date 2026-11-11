@@ -56,7 +56,7 @@ def net(monkeypatch, tmp_path):
     monkeypatch.setattr(tailscale, "SETTINGS_FILE", str(tmp_path / "remote_access.json"))
     monkeypatch.setattr(tailscale, "run_cli", fake.cli)
     monkeypatch.setattr(remote_access, "immich_port", lambda: 2283)
-    monkeypatch.setattr("backend.services.public_apps._own_port", lambda: 8082)
+    monkeypatch.setattr(pl, "_own_port", lambda: 8082)
     return fake
 
 

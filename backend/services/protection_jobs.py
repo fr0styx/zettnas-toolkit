@@ -314,6 +314,12 @@ def watch_daemon(stop: threading.Event | None = None, tick: float = WATCH_TICK_S
         except Exception:
             logger.warning("[Protection] protection check failed", exc_info=True)
         try:
+            from backend.services import public_apps
+
+            public_apps.withdraw_gone()  # an app that is gone leaves the internet (SET-02)
+        except (OSError, RuntimeError, ValueError, KeyError):
+            logger.warning("[Protection] published-apps check failed", exc_info=True)
+        try:
             alert_stalled(now)  # a stuck scheduler stops snapshots and backups at once (NREL-18)
         except (OSError, RuntimeError, ValueError):
             logger.warning("[Protection] stalled-service check failed", exc_info=True)

@@ -122,12 +122,16 @@ def _port_state(dns: str) -> tuple[dict[str, Any], bool, bool]:
     return handlers, bool((doc.get("AllowFunnel") or {}).get(host)), True
 
 
+def _own_port() -> int:
+    from backend import settings
+
+    return int(settings.current("port") or 8082)
+
+
 def own_page_ports(dns: str) -> list[int]:
     """The ports on which Kiboto's own page is on the internet. No card publishes it; an older
     switch did (SET-02), and a live setting is shown so it can be taken off."""
     from urllib.parse import urlsplit
-
-    from backend.services import public_apps
 
     code, out = _ts(["funnel", "status", "--json"], timeout=4.0)
     if code != 0 or not dns:
@@ -138,7 +142,7 @@ def own_page_ports(dns: str) -> list[int]:
         return []
     if not isinstance(doc, dict):
         return []
-    own = public_apps._own_port()
+    own = _own_port()
     ports = []
     for host, on in (doc.get("AllowFunnel") or {}).items():
         port = str(host).rsplit(":", 1)[-1]

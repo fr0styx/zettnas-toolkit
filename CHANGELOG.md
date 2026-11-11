@@ -350,6 +350,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Connect" was refused by Kiboto's own safety check for containers that use the NAS's network. Kiboto
   now asks first, and then starts Tailscale.
 
+#### Security
+
+- **An app that is removed leaves the internet**: an app put on the internet with "Apps from
+  anywhere" kept its public address after it was removed or its port was changed, so the next app
+  to use that port was on the internet without anyone choosing it. Kiboto now checks once a minute
+  and takes the address off when the app is gone. A stopped app keeps its address; an update that
+  recreates the app does too.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

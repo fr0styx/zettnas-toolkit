@@ -2110,17 +2110,6 @@
     [
      "run",
      "/usr/bin/tailscale",
-     "funnel",
-     "reset"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
      "serve",
      "status",
      "--json"
@@ -2184,19 +2173,6 @@
     [
      "run",
      "/usr/bin/tailscale",
-     "funnel",
-     "--bg",
-     "--yes",
-     "8082"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
      "serve",
      "status",
      "--json"
@@ -2248,17 +2224,6 @@
      "run",
      "/usr/bin/tailscale",
      "serve",
-     "reset"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "funnel",
      "reset"
     ],
     [
@@ -2912,24 +2877,6 @@
      "exec",
      "tailscale",
      "tailscale",
-     "funnel",
-     "reset"
-    ],
-    [
-     "run",
-     "tailscale",
-     "funnel",
-     "reset"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
      "serve",
      "status",
      "--json"
@@ -3028,32 +2975,6 @@
     [
      "exec",
      "tailscale",
-     "timeout",
-     "3",
-     "tailscale",
-     "funnel",
-     "--bg",
-     "--yes",
-     "8082"
-    ],
-    [
-     "run",
-     "timeout",
-     "3",
-     "tailscale",
-     "funnel",
-     "--bg",
-     "--yes",
-     "8082"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
      "tailscale",
      "serve",
      "status",
@@ -3135,24 +3056,6 @@
      "run",
      "tailscale",
      "serve",
-     "reset"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "funnel",
-     "reset"
-    ],
-    [
-     "run",
-     "tailscale",
-     "funnel",
      "reset"
     ],
     [

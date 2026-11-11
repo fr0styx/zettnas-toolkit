@@ -92,7 +92,8 @@ def test_an_app_asked_for_early_is_published_once_both_steps_are_done(tailnet):
     )  # nothing waits on Tailscale
     assert st["funnel"]["approve_url"].endswith("nTestNode1CNTRL")
     tailnet["doc"] = doc()  # the owner clicked both
-    st = pa.status()
+    assert pa.status()["published"] == []  # reading the card publishes nothing (SET-02)
+    st = pa.status(finish_pending=True)
     assert st["pending"] is None and [p["name"] for p in st["published"]] == ["jellyfin"]
 
 
