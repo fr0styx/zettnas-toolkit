@@ -50,7 +50,7 @@
  "frontend/src/components/containers-manager.js": {
   "buttons": 0,
   "globals": 4,
-  "styles": 16,
+  "styles": 14,
   "templates": 6
  },
  "frontend/src/components/dashboard.js": {
@@ -122,7 +122,7 @@
  "frontend/src/components/docker-table.js": {
   "buttons": 0,
   "globals": 0,
-  "styles": 15,
+  "styles": 12,
   "templates": 1
  },
  "frontend/src/components/events.js": {

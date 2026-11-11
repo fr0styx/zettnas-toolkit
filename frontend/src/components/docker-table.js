@@ -10,6 +10,7 @@ import { t } from '../i18n.js';
 import { api } from '../api.js';
 import { showToast, showConfirmToast, showDangerConfirm } from '../toast.js';
 import { formatFixed } from '../format.js';
+import { bulkSaid, canResume, canStop, conditionView } from './app-condition.js';
 let _selectedContainerIds = new Set();
 
 export function getSelectedContainerIds() {
@@ -51,7 +52,9 @@ export function computeContainerRowSignature(c, updateInfo) {
   const hwSig = (c.hardware_badges || []).map((b) => b.id || '').join(',');
   const stack = c.stack || '';
   const image = c.image || '';
-  return `${c.id || ''}|${c.name || ''}|${c.state || ''}|${hasUpdate}|${c.primary_port || ''}|${portsSig}|${hwSig}|${stack}|${image}`;
+  // the condition and its reason: a row that turns unhealthy or starts crashing is drawn again
+  const condition = `${c.condition || ''}:${c.reason || ''}:${c.exit_code ?? ''}:${c.restart_count || 0}`;
+  return `${c.id || ''}|${c.name || ''}|${c.state || ''}|${hasUpdate}|${c.primary_port || ''}|${portsSig}|${hwSig}|${stack}|${image}|${condition}`;
 }
 
 /**
@@ -59,8 +62,7 @@ export function computeContainerRowSignature(c, updateInfo) {
  */
 export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   const isRunning = c.state === 'running';
-  const badgeColor = isRunning ? 'var(--ok2)' : 'var(--muted)';
-  const badgeBg = isRunning ? 'rgba(51, 205, 184, 0.15)' : 'rgba(255, 255, 255, 0.05)';
+  const view = conditionView(c); // one word with an icon: green was all a running app could be (SET-14)
   const idShort = c.id ? c.id.slice(0, 12) : '';
   const isChecked = _selectedContainerIds.has(c.id);
   const checkedAttr = isChecked ? 'checked' : '';
@@ -118,11 +120,11 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
     portsHtml = portParts.join(' ');
   }
 
-  // Column 6: Status & Uptime
+  // Column 6: the app's condition; why, where the server knows it, else what Docker says
   const statusHtml = `
-    <div style="display:flex; align-items:center; gap:6px;">
-      <span class="docker-state-badge" style="display:inline-block; padding:2px 6px; border-radius:4px; font-size:var(--zn-fs-xs); font-weight:700; background:${badgeBg}; color:${badgeColor}; text-transform:uppercase;">${escapeHtml(c.state)}</span>
-      <span class="docker-status-text" style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.status)}">${escapeHtml(c.status)}</span>
+    <div class="docker-condition is-${view.look}" title="${escapeHtml(c.status || '')}">
+      <span class="docker-state-badge"><span aria-hidden="true">${view.icon}</span> ${escapeHtml(view.word)}</span>
+      <span class="docker-status-text">${escapeHtml(view.why || c.status || '')}</span>
     </div>
   `;
 
@@ -143,13 +145,19 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   const backupBtn = `<button class="btn-container-act btn-docker-backup" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="backup" title="${t('ui.backup_app_data_config', 'Backup App Data & Config')}">💾</button>`;
   const deleteBtn = `<button class="btn-container-act btn-docker-delete" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-image="${escapeHtml(c.image || '')}" data-action="delete" title="${escapeHtml(t('dkt.delete', 'Destroy / Delete {name}', { name: c.name }))}">🗑️</button>`;
   const moreBtn = `<button class="btn-container-act btn-docker-more-sheet" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="more-sheet" title="${t('ui.more_actions', 'More Actions')}">···</button>`;
-  const actions = isRunning
+  // a paused app can be resumed, and an app caught in a restart loop can be stopped: both had
+  // only "Start", which does nothing for them
+  const resumeBtn = canResume(c)
+    ? `<button class="btn-container-act btn-docker-resume" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="unpause" title="${escapeHtml(t('dkt.resume', 'Resume {name}', { name: c.name }))}">▶</button>`
+    : '';
+  const actions = canStop(c)
     ? `
       ${inspectBtn}
       ${editBtn}
       ${stackBtn}
       ${updateBtn}
       ${backupBtn}
+      ${resumeBtn}
       <button class="btn-container-act btn-docker-restart" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="restart" title="${escapeHtml(t('dkt.restart', 'Restart {name}', { name: c.name }))}">🔄</button>
       <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="${escapeHtml(t('dkt.stop', 'Stop {name}', { name: c.name }))}"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="13" rx="2.5"/></svg></button>
       ${deleteBtn}
@@ -265,10 +273,10 @@ export function updateContainerRow(tr, c, currentHost, updateInfo = null) {
   }
 
   const statusText = tr.querySelector('.docker-status-text');
-  if (statusText && statusText.textContent !== c.status) {
-    statusText.textContent = c.status;
-    statusText.title = c.status;
-  }
+  const said = conditionView(c).why || c.status || '';
+  if (statusText && statusText.textContent !== said) statusText.textContent = said;
+  const condition = tr.querySelector('.docker-condition');
+  if (condition && condition.getAttribute('title') !== (c.status || '')) condition.setAttribute('title', c.status || '');
 }
 
 /**
@@ -451,18 +459,18 @@ async function _deleteEach(selectedIds, view) {
 
 async function _runBulk(action, selectedIds, view) {
   try {
-    showToast(t('toast.executing_bulk_on_containers', 'Executing bulk {action} on {count} containers...', { action, count: selectedIds.length }), 'info');
+    showToast(bulkSaid(action, 'doing', { count: selectedIds.length }), 'info');
     const res = await api.post('/api/docker/containers/bulk-action', {
       action,
       container_ids: selectedIds,
     });
     const successful = res.successful || 0;
     const total = res.total || selectedIds.length;
-    showToast(t('toast.bulk_of_succeeded', 'Bulk {action}: {successful} of {total} succeeded.', { action, successful, total }), successful === total ? 'success' : 'warn');
+    showToast(bulkSaid(action, 'done', { successful, total }), successful === total ? 'success' : 'warn');
     clearSelectedContainers();
     await view.refresh();
     view.updateBar();
   } catch (err) {
-    showToast(t('toast.bulk_failed', 'Bulk {action} failed: {error}', { action, error: err.message }), 'error');
+    showToast(bulkSaid(action, 'failed', { error: err.message }), 'error');
   }
 }

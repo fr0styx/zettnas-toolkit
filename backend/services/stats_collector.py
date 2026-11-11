@@ -34,7 +34,7 @@ from backend.fsutil import SETTINGS_RECHECK_SECS, read_json, read_json_cached
 from backend.hardware.chassis import ChassisEngine
 from backend.hardware.cpu import read_cpu_temp, read_cpu_util
 from backend.hardware.disks import poll_all_disks_smart, read_disk_temps_and_io
-from backend.hardware.docker_stats import read_docker_containers
+from backend.hardware.docker_stats import docker_state, read_docker_containers
 from backend.hardware.fans import apply_zone_pwm, calc_curve_pwm, get_hold_remaining, read_fans, set_fan_pwm
 from backend.hardware.host_telemetry import (
     get_cpu_telemetry,
@@ -464,6 +464,7 @@ def _build_payload(
 
 
 def _publish(data, disks, fans, net, now):
+    data["docker_state"] = docker_state()  # whether the list of apps can be trusted (SET-14)
     """Alerts, the UPS watchdog, the cached copy, the SSE broadcast and the 5-minute metrics log."""
     data["lightbar"] = getattr(Z_STATE, "lightbar", None)  # what the light bar shows now, for its picture
     # Evaluate alerts & UPS power watchdog

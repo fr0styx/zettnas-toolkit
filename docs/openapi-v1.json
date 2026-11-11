@@ -50268,6 +50268,37 @@
     ]
    }
   },
+  "/api/v1/docker/status": {
+   "get": {
+    "description": "Whether the list of apps can be trusted: {available, answering, as_of, stale, error}.\nWith no Docker the list is empty; when Docker stops answering, the list is the last one read.",
+    "operationId": "get_docker_status_api_v1_docker_status_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Docker Status",
+    "tags": [
+     "Docker Containers & Stacks"
+    ],
+    "x-required-scopes": [
+     "containers:read",
+     "containers:manage",
+     "system:view"
+    ]
+   }
+  },
   "/api/v1/docker/system/df": {
    "get": {
     "operationId": "get_system_df_api_v1_docker_system_df_get",

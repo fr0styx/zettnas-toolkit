@@ -15,7 +15,7 @@ import time
 from typing import Any, Optional
 
 from backend.config import docker_sock, logger
-from backend.hardware import cgroup_stats
+from backend.hardware import cgroup_stats, docker_condition
 from backend.ignored_errors import ignored
 from backend.state import Z_STATE
 
@@ -23,6 +23,27 @@ _CACHED_CONTAINERS: list[dict[str, Any]] = []
 _LAST_DOCKER_POLL = 0.0
 _DOCKER_CACHE_TTL = 3.0  # while someone watches
 _DOCKER_IDLE_TTL = 30.0  # PERF-5: nobody watching, so the 2 s loop needn't ask dockerd every other tick
+
+
+# What the list is worth right now (SET-14). With no Docker the list was empty, and when Docker
+# stopped answering the last known list was returned: both were drawn as if all was well.
+_DOCKER_STATE: dict[str, Any] = {"available": True, "answering": True, "as_of": 0.0, "error": ""}
+
+
+def docker_state() -> dict[str, Any]:
+    """Whether Docker is there, whether it answered the last question, when the list was last
+    read, and whether the list the pages hold is therefore an old one."""
+    state = dict(_DOCKER_STATE)
+    state["stale"] = bool(state["available"] and not state["answering"] and _CACHED_CONTAINERS)
+    return state
+
+
+def _keys_of(container_id: str) -> tuple[str, ...]:
+    """Every way the list names this app (short id, full id, name), for the record of stops."""
+    for c in _CACHED_CONTAINERS:
+        if container_id in (c.get("id"), c.get("full_id"), c.get("name")):
+            return (str(c.get("id") or ""), str(c.get("full_id") or ""), str(c.get("name") or ""))
+    return (container_id,)
 
 
 def _docker_ttl() -> float:
@@ -512,6 +533,7 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
 
     sock_path = docker_sock()
     if not os.path.exists(sock_path):
+        _DOCKER_STATE.update(available=False, answering=False, error="")
         return []
 
     start_docker_telemetry_collector()
@@ -522,6 +544,7 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
         conn.request("GET", "/containers/json?all=1")
         res = conn.getresponse()
         if res.status != 200:
+            _DOCKER_STATE.update(available=True, answering=False, error=f"HTTP {res.status}")
             return _CACHED_CONTAINERS
 
         raw = json.loads(res.read().decode("utf-8", errors="replace"))
@@ -558,6 +581,11 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
 
             # Inspect data for hardware badges, networking & exposed ports (fast cached query)
             inspect_info = _fetch_container_inspect(cid_short, conn=conn)
+            if (inspect_info.get("State") or {}).get("Status") not in (None, c.get("State")):
+                # it stopped, crashed or started since the cached answer: why it ended is in a new one
+                with _INSPECT_LOCK:
+                    _CONTAINER_INSPECT_CACHE.pop(cid_short, None)
+                inspect_info = _fetch_container_inspect(cid_short, conn=conn)
             devices = inspect_info.get("HostConfig", {}).get("Devices", []) or []
             env = inspect_info.get("Config", {}).get("Env", []) or []
             runtime = inspect_info.get("HostConfig", {}).get("Runtime", "")
@@ -604,14 +632,24 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
                     "hardware_badges": badges,
                     "mounts_count": len(raw_mounts),
                     "appdata_path": appdata_path,
+                    # running, unhealthy, crashed, stopped…: one word, and whether to look (SET-14)
+                    **docker_condition.describe(
+                        c.get("State", "unknown"),
+                        c.get("Status", ""),
+                        docker_condition.stopped_by_kiboto(cid_short, cid_full, name),
+                        inspect_info,
+                    ),
                 }
             )
         out.sort(key=lambda x: (x["state"] != "running", x["name"]))
         _CACHED_CONTAINERS = out
         _LAST_DOCKER_POLL = now
+        _DOCKER_STATE.update(available=True, answering=True, as_of=now, error="")
+        docker_condition.forget_missing({k for c in out for k in (c["id"], c["full_id"], c["name"])})
         return out
     except Exception as e:
         logger.debug("[Docker] Failed to introspect containers: %s", e)
+        _DOCKER_STATE.update(available=True, answering=False, error=str(e)[:200])
         return _CACHED_CONTAINERS
     finally:
         if conn:
@@ -668,6 +706,11 @@ def container_action(container_id: str, action: str) -> dict[str, Any]:
 
         # 204 No Content, 200 OK, or 304 Not Modified
         if res.status in (200, 204, 304):
+            # Kiboto's own stop is remembered: the exit code that follows is not a crash (SET-14)
+            if action == "stop":
+                docker_condition.note_stopped(*_keys_of(container_id))
+            elif action in ("start", "restart"):
+                docker_condition.note_started(*_keys_of(container_id))
             _CACHED_CONTAINERS = []
             _LAST_DOCKER_POLL = 0.0
             with _INSPECT_LOCK:

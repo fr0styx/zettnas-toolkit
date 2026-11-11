@@ -291,8 +291,10 @@ describe('Dedicated Containers Window & Desktop Icon Suite', () => {
 
     const statusChip = document.querySelector('.cw-docker-status-chip');
     expect(statusChip).not.toBeNull();
-    expect(statusChip.textContent).toContain('Docker Socket Active');
-    expect(statusChip.textContent).toContain('Live Sync');
+    // the chip says how the apps are once the list is read (set14_app_condition.test.js); it was
+    // the fixed text "Docker Socket Active • Live Sync"
+    expect(statusChip.textContent).not.toContain('Docker Socket Active');
+    expect(statusChip.getAttribute('role')).toBe('status');
   });
 
   it('btn-cw-stacks handles direct array response from /api/docker/stacks and opens picker modal', async () => {

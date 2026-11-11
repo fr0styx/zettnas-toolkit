@@ -170,6 +170,32 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   activity. `docs/PRIVACY.md` describes the event log: what it holds, for how long, who reads it
   and what is kept out of it.
 
+#### Fixes
+
+- **The list of apps shows how each app really is.** It had two looks: green for "running" and
+  grey for everything else. An app whose health check fails was green; an app that had crashed,
+  or was caught in a restart loop, was the same quiet grey as one somebody had stopped. Each row
+  now says Running, Needs a look, Keeps restarting, Stopped unexpectedly, Stopped or Paused, with
+  an icon and, where the server knows it, why ("It ended by itself with error 1", "It was ended
+  for using more memory than it may"). Kiboto remembers its own stops, so an app you stopped is
+  not reported as crashed.
+- **The line above the list is true.** It read "Docker Socket Active • Live Sync" as fixed text,
+  whatever Docker did. It now says "All 7 apps are running", "1 app needs a look", "1 app stopped
+  unexpectedly", that Docker was not found, or that Docker stopped answering and the list is
+  from an earlier time. A list that could not be read says so; it was drawn as "no containers".
+- **A paused app can be resumed and an app in a restart loop can be stopped** from its row. Both
+  were offered "Start" only.
+- **Messages about an app are sentences in every language**: "jellyfin is stopped." It was
+  'Container "jellyfin" successfully stoped.' in English and "jellyfin: stop erledigt" in German,
+  with the raw action word pasted in; the same for actions on a selection.
+
+#### Changes
+
+- For API users: each entry of `GET /api/docker/containers` gains `condition`, `needs_look`,
+  `health`, `exit_code`, `restart_count` and `reason`, and `GET /api/docker/status` says whether
+  Docker is there and answering and how old the list is. The live stream carries the same as
+  `docker_state`.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

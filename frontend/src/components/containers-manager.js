@@ -11,6 +11,7 @@ import { emptyStateHtml } from './empty-state.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showBottomSheet } from '../toast.js';
 import { t } from '../i18n.js';
+import { actionSaid, appsSummary } from './app-condition.js';
 import '../styles/containers-lazy.css'; // the window's own sheet loads with this code (NUX-15)
 import { makeDraggable, bringToFront } from './dock.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
@@ -34,6 +35,7 @@ const ico = (e) => `<span aria-hidden="true">${e}</span>`;
 
 let containersWindow = null;
 let _cwContainersList = [];
+let _cwDockerState = null; // {available, answering, as_of, stale}: whether the list can be trusted
 let _cwUpdatesCache = null;
 let _cwFilter = 'all';
 let _cwSearchQuery = '';
@@ -93,11 +95,8 @@ export function initContainersManager() {
           <div class="cwm-row">
             <!-- Quick Status Badges -->
             <div class="cwm-row-2">
-              <div class="cw-docker-status-chip" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: var(--zn-fs-xs); font-weight: 600; background: rgba(16,185,129,0.15); color: var(--zn-text-ok); border: 1px solid rgba(16,185,129,0.3);">
-                <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#34d399; box-shadow:0 0 6px #34d399;"></span>
-                <span id="cw-stat-daemon">${t('cw.daemon', 'Docker Socket Active')}</span>
-                <span class="cwm-x">•</span>
-                <span class="cwm-xs-soft">${t('cw.live', 'Live Sync')}</span>
+              <div class="cw-docker-status-chip is-muted" id="cw-status-chip" role="status">
+                <span id="cw-stat-daemon">${t('state.loading', 'Loading…')}</span>
               </div>
               <div class="cwm-row-xs-muted">
                 <span>${t('cw.total', 'Total:')} <strong class="cwm-strong" id="cw-count-all">0</strong></span>
@@ -676,12 +675,27 @@ export function openContainersManager(opts = {}) {
   loadContainersData();
 }
 
+/** The sentence above the list: what is true of the apps and of the list itself (SET-14). It was
+ *  the fixed text "Docker Socket Active • Live Sync", whatever Docker did. */
+export function renderAppsSummary(failed = '') {
+  const chip = document.getElementById('cw-status-chip');
+  const said = document.getElementById('cw-stat-daemon');
+  if (!chip || !said) return;
+  const { look, text } = appsSummary(_cwContainersList, _cwDockerState, failed);
+  chip.className = `cw-docker-status-chip is-${look}`;
+  said.textContent = text;
+}
+
 export async function loadContainersData(isBackground = false) {
   try {
-    const list = await api.get('/api/docker/containers').catch(() => []);
+    // a failed or forbidden request was swallowed here and drawn as "no containers"
+    const [list, docker] = await Promise.all([api.get('/api/docker/containers'), api.get('/api/docker/status').catch(() => null)]);
     _cwContainersList = Array.isArray(list) ? list : [];
+    _cwDockerState = docker && typeof docker === 'object' ? docker : null;
     renderContainersWindowTable(_cwContainersList);
+    renderAppsSummary();
   } catch (err) {
+    renderAppsSummary(err.message || String(err));
     if (!isBackground || _cwContainersList.length === 0) {
       showToast(t('toast.failed_to_load_containers', 'Failed to load containers: {error}', { error: err.message }), 'error');
       const tbody = document.getElementById('cw-docker-containers-tbody');
@@ -812,7 +826,8 @@ export function renderContainersWindowTable(containersList = null) {
   updateCwUpdatesUI(updatesCount);
 
   if (totalCount === 0) {
-    tbody.innerHTML = `<tr><td class="cwm-muted-center" colspan="7">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</td></tr>`;
+    // why the list is empty is said above it (no Docker, Docker not answering, or no apps yet)
+    tbody.innerHTML = `<tr><td class="cwm-muted-center" colspan="7">${escapeHtml(appsSummary(_cwContainersList, _cwDockerState).text)}</td></tr>`;
     const cwStickyScroll = document.getElementById('cw-docker-table-sticky-scroll');
     if (cwStickyScroll) cwStickyScroll.style.display = 'none';
     return;
@@ -1231,14 +1246,14 @@ function bindCwTableEvents(tbody) {
 
       actBtn.disabled = true;
       actBtn.style.opacity = '0.5';
-      showToast(t('toast.request_sent_for', '{act} request sent for {cname}...', { act: act.toUpperCase(), cname: cname }), 'info');
+      showToast(actionSaid(act, 'doing', cname), 'info');
 
       try {
         await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/action`, { action: act });
-        showToast(t('toast.container_successfully_ed', 'Container "{cname}" successfully {act}ed.', { cname: cname, act: act }), 'success');
+        showToast(actionSaid(act, 'done', cname), 'success');
         await loadContainersData();
       } catch (err) {
-        showToast(t('toast.failed_to_container', 'Failed to {act} container: {error}', { act: act, error: err.message }), 'error');
+        showToast(actionSaid(act, 'failed', cname, err.message), 'error');
         actBtn.disabled = false;
         actBtn.style.opacity = '1';
       }

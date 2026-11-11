@@ -53,7 +53,7 @@ describe('Containers window (NUX-20)', () => {
   it('labels the toolbar, the bulk bar and the catalog filters', () => {
     initContainersManager();
     const text = byId('containers-manager-window').textContent;
-    for (const w of ['Docker Socket Active', 'Live Sync', 'Total:', 'Running:', 'Stopped:', 'Updates:', 'Check for updates', 'Update all', 'Compose stacks', 'Clean up', 'selected', 'Pause', 'Resume', 'Smart home', 'Downloaders', 'Loading the app catalog…']) {
+    for (const w of ['Total:', 'Running:', 'Stopped:', 'Updates:', 'Check for updates', 'Update all', 'Compose stacks', 'Clean up', 'selected', 'Pause', 'Resume', 'Smart home', 'Downloaders', 'Loading the app catalog…']) {
       expect(text).toContain(w);
     }
     expect(document.querySelector('[data-bulk="start"]').textContent).toBe('▶ Start');

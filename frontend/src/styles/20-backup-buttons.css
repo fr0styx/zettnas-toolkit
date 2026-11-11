@@ -817,3 +817,16 @@ body.theme-yak .mgmt-back-btn:hover {
 .ai-config-group-desc { margin: 0; font-size: var(--zn-fs-sm); color: var(--muted); }
 .ai-config-card { margin-bottom: 12px; }
 .ai-config-card-title { font-weight: 700; font-size: var(--zn-fs-sm); margin-bottom: 8px; color: var(--text, #e6efef); }
+
+/* SET-14: an app's condition in a word with an icon, and the sentence above the list */
+.docker-condition { display: flex; align-items: center; gap: 6px; }
+.docker-state-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; white-space: nowrap; background: var(--zn-glaze-5); color: var(--muted); }
+.docker-condition.is-ok .docker-state-badge { color: var(--ok2); }
+.docker-condition.is-info .docker-state-badge { color: var(--zn-text-accent); }
+.docker-condition.is-warn .docker-state-badge { color: var(--warn); }
+.docker-condition.is-crit .docker-state-badge { color: var(--crit); }
+.docker-status-text { font-size: var(--zn-fs-xs); color: var(--zn-text-soft); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cw-docker-status-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: var(--zn-fs-xs); font-weight: 600; border: 1px solid var(--zn-line-8); background: var(--zn-glaze-5); color: var(--muted); }
+.cw-docker-status-chip.is-ok { color: var(--ok2); }
+.cw-docker-status-chip.is-warn { color: var(--warn); border-color: var(--warn); }
+.cw-docker-status-chip.is-crit { color: var(--crit); border-color: var(--crit); }

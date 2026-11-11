@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-717 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+718 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -227,6 +227,7 @@ request and response schemas.
 | `GET` | `/api/v1/docker/stacks/{stack_name}` | any of `containers:read`, `containers:manage` | Get Docker Stack Details |
 | `POST` | `/api/v1/docker/stacks/{stack_name}/action` | any of `containers:write`, `containers:manage` | Post Docker Stack Action |
 | `POST` | `/api/v1/docker/stacks/{stack_name}/save` | `containers:manage` | Post Docker Stack Save |
+| `GET` | `/api/v1/docker/status` | any of `containers:read`, `containers:manage`, `system:view` | Whether the list of apps can be trusted: {available, answering, as_of, stale, error} |
 | `GET` | `/api/v1/docker/system/df` | any of `containers:read`, `containers:manage`, `system:view` | Get System Df |
 | `POST` | `/api/v1/docker/system/prune` | `containers:manage` | Post System Prune |
 | `POST` | `/api/v1/docker/system/prune/jobs` | `containers:manage` | Starts the cleanup in the background; poll the job for progress |

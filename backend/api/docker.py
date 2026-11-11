@@ -50,6 +50,18 @@ async def get_docker_containers():
     return await asyncio.to_thread(fn)
 
 
+@router.get(
+    "/docker/status",
+    dependencies=[Depends(require_scope("containers:read", "containers:manage", "system:view"))],
+)
+async def get_docker_status():
+    """Whether the list of apps can be trusted: {available, answering, as_of, stale, error}.
+    With no Docker the list is empty; when Docker stops answering, the list is the last one read."""
+    from backend.hardware.docker_stats import docker_state
+
+    return docker_state()
+
+
 @router.post(
     "/docker/containers/{container_id}/action",
     dependencies=[Depends(require_scope("containers:write", "containers:manage"))],
