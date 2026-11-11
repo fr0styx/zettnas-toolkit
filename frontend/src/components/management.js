@@ -8,7 +8,7 @@ import { setIconLabel } from '../ui/primitives.js';
 import { syncDesktopThemeUI, openDrawer, restoreHardwareTabsToManagement } from './settings.js';
 import { ZettEventBus } from '../event-bus.js';
 import { fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
-import { fetchAndRenderChassisTwin, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, fetchAndRenderRemoteStorage, openNewCloudRemoteModal, openCreateStoragePoolModal, openCreateNetworkShareModal, getThermalLevel } from './chassis-visualizer.js';
+import { fetchAndRenderChassisTwin, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, fetchAndRenderRemoteStorage, openNewCloudRemoteModal, openCreateStoragePoolModal, getThermalLevel } from './chassis-visualizer.js';
 import { bringToFront, DockManager, makeDraggable, saveWindowBounds, saveOpenWindowsState } from './dock.js';
 import { state } from '../state.js';
 import { api } from '../api.js';
@@ -1616,15 +1616,8 @@ export function initManagement() {
     });
   }
 
-  const createShareBtn = document.getElementById('btn-create-network-share');
-  if (createShareBtn) {
-    createShareBtn.addEventListener('click', () => {
-      const mount = document.getElementById('mgmt-storage-shares-mount');
-      openCreateNetworkShareModal(() => {
-        if (mount) fetchAndRenderNetworkShares(mount);
-      });
-    });
-  }
+  // "Create Share" is wired by the share list (chassis-visualizer.js), which also hides it where
+  // shares cannot be made; a second listener here opened the dialog twice per click (SET-14)
 
   // every link shared from this NAS, with "Stop sharing" (SET-01)
   const sharedLinksBtn = document.getElementById('btn-show-shared-links');

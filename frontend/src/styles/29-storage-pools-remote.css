@@ -338,17 +338,18 @@
   letter-spacing: 0.5px;
 }
 
+/* no password is the warning, private the safe state (they were the other way round, SET-14) */
 .share-sec-badge.sec-public {
-  background: var(--lt-b-3bf58b1f, rgba(59, 245, 139, 0.12));
-  color: var(--lt-t-3bf58bff, #3bf58b);
-  border: 1px solid var(--lt-r-3bf58b40, rgba(59, 245, 139, 0.25));
+  background: rgba(245, 166, 35, 0.15);
+  color: var(--lt-t-f5a623ff, #f5a623);
+  border: 1px solid rgba(245, 166, 35, 0.3);
 }
 
 .share-sec-badge.sec-private,
 .share-sec-badge.sec-secure {
-  background: rgba(245, 166, 35, 0.15);
-  color: var(--lt-t-f5a623ff, #f5a623);
-  border: 1px solid rgba(245, 166, 35, 0.3);
+  background: var(--lt-b-3bf58b1f, rgba(59, 245, 139, 0.12));
+  color: var(--lt-t-3bf58bff, #3bf58b);
+  border: 1px solid var(--lt-r-3bf58b40, rgba(59, 245, 139, 0.25));
 }
 
 .share-protocols-row {

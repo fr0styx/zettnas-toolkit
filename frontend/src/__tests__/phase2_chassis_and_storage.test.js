@@ -394,7 +394,7 @@ describe('Sprint 3: Storage Pools Topology & Network Shares', () => {
     expect(badge.textContent).toContain("Managed by Unraid");
     expect(container.textContent).toContain('appdata');
     expect(container.textContent).toContain('application data');
-    expect(container.textContent).toContain('PUBLIC');
+    expect(container.textContent).toContain('No password'); // in words, not the raw value (SET-14)
     expect(container.textContent).toContain('SMB');
     expect(container.textContent).not.toContain('WebDAV :8084'); // no WebDAV tag per share (SET-14)
     expect(container.textContent).toContain('Cache: only (ark)');

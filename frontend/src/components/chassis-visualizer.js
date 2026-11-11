@@ -1173,6 +1173,18 @@ export function renderProtocolPills({ smb, sftp, webdav } = {}) {
   set('proto-pill-webdav', 'WebDAV', webdav, webdav?.port);
 }
 
+/** A share's access in words and with an icon: "Private" is the safe state, "No password" the warning (SET-14, Shares 18). */
+export function shareSecurityBadge(security) {
+  const open = !security || security === 'public';
+  const cls = open ? 'sec-public' : 'sec-private';
+  const icon = open ? '⚠' : '🔒';
+  const word = open ? t('share.sec_open', 'No password') : t('share.sec_private', 'Private');
+  const why = open
+    ? t('share.sec_open_desc', 'Anyone on your network can open this folder without a password.')
+    : t('share.sec_private_desc', 'Only the people you chose can open this folder.');
+  return `<span class="share-sec-badge ${cls}" title="${escapeHtml(why)}"><span aria-hidden="true">${icon}</span> ${escapeHtml(word)}</span>`;
+}
+
 export async function fetchAndRenderNetworkShares(container) {
   if (!container) return;
   container.innerHTML = `
@@ -1333,7 +1345,7 @@ function buildShareCardInner(s, canManageShares) {
           ${s.comment ? `<div class="share-comment">${escapeHtml(s.comment)}</div>` : ''}
         </div>
       </div>
-      <span class="share-sec-badge sec-${s.security || 'public'}">${escapeHtml((s.security || 'public').toUpperCase())}</span>
+      ${shareSecurityBadge(s.security)}
     </div>
 
     <div class="share-protocols-row">

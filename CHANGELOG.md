@@ -348,6 +348,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   folder for it, and saving turned the volume into that plain folder. Volumes now show and save by
   their name.
 
+#### Fixes
+
+- **Shared folder cards show access the right way round.** "PRIVATE" (the safe state) was amber and
+  "PUBLIC" (no password) green, in English capitals. They now read "Private" with a lock in green and
+  "No password" with a warning sign in amber, in your language. "Create Share" no longer opens its
+  dialog twice per click.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
