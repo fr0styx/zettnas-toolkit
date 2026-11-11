@@ -1,3 +1,4 @@
+import { setPowerMatters } from '../advanced.js';
 import { escapeHtml } from '../utils.js';
 /**
  * Kiboto Telemetry Dashboard
@@ -1246,6 +1247,7 @@ export function updateHardwareTelemetry(s) {
   const upsDot = $('topbar-ups-dot');
   const ups = s?.ups || {};
   const hasUps = Boolean(ups.available || ups.connected || (ups.charge != null) || (ups.battery_charge != null) || (ups.battery_charge_pct != null));
+  setPowerMatters(hasUps || Boolean(ups.on_battery)); // Power shows with Advanced off then (SET-15)
 
   if (upsPill) {
     if (hasUps) {

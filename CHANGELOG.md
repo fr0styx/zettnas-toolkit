@@ -469,6 +469,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Kiboto cannot read. Under it, always: who switches the NAS off when the battery runs out, in red
   when nothing can.
 
+#### Changes
+
+- **Power shows when it matters.** With Advanced off, the Power page was hidden even during a power
+  cut. It now appears in Settings, on the phone and on the desktop whenever a UPS is found or the
+  power is out.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

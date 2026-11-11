@@ -8,7 +8,7 @@ import { formatBytes } from '../../format.js';
 import { t } from '../../i18n.js';
 import { escapeHtml } from '../../utils.js';
 import { ROUTES } from '../../router.js';
-import { ADVANCED_SECTIONS, advancedOn, saveAdvanced } from '../../advanced.js';
+import { ADVANCED_SECTIONS, advancedOn, saveAdvanced, isAdvancedSection } from '../../advanced.js';
 import { ZettEventBus } from '../../event-bus.js';
 import { announceChange } from '../../a11y.js';
 import { currentUser } from '../../route-access.js';
@@ -40,7 +40,8 @@ ZettEventBus.on?.('advanced:changed', ({ on } = {}) => applyAdvanced(on));
 export function applyAdvanced(on = advancedOn(), root = document) {
   root.querySelectorAll('.mgmt-sidebar-item, .mgmt-app-card').forEach((el) => {
     // one reason among others: it wrote `hidden` itself and so showed what the person's rights hide
-    if (ADVANCED_SECTIONS.includes(el.dataset.mgmtTarget)) mark(el, ADVANCED_OFF, !on);
+    const s = el.dataset.mgmtTarget;
+    if (ADVANCED_SECTIONS.includes(s)) mark(el, ADVANCED_OFF, !on && isAdvancedSection(s)); // Power while it matters (SET-15)
   });
   tidyHeadings(root);
   const sw = root.getElementById ? root.getElementById('mgmt-advanced-switch') : null;

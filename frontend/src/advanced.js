@@ -54,16 +54,31 @@ export async function saveAdvanced(on, api) {
   }
 }
 
-export const isAdvancedSection = (s) => ADVANCED_SECTIONS.includes(s);
-export const isAdvancedRoute = (r) => ADVANCED_ROUTES.includes(r);
+// A UPS is found or the power is out: Power then shows with Advanced off, because that is when a
+// household needs it (SET-15, Power decision 2)
+let _powerMatters = false;
+
+/** The top bar reports whether power matters here; Power's places follow at once. */
+export function setPowerMatters(value) {
+  const next = Boolean(value);
+  if (next === _powerMatters) return;
+  _powerMatters = next;
+  applyAdvancedEverywhere();
+}
+
+export const isAdvancedSection = (s) => ADVANCED_SECTIONS.includes(s) && !(_powerMatters && s === 'mgmt-sec-ups');
+export const isAdvancedRoute = (r) => ADVANCED_ROUTES.includes(r) && !(_powerMatters && r === 'power');
 
 /** Hides or shows the advanced places that are already on screen, and tells the rest. */
 export function applyAdvancedEverywhere(on = advancedOn(), root = document) {
+  // an advanced place that is shown for now (Power while it matters) loses its mark too
   root.querySelectorAll('[data-advanced-section]').forEach((el) => {
-    if (isAdvancedSection(el.dataset.advancedSection)) mark(el, ADVANCED_OFF, !on);
+    const s = el.dataset.advancedSection;
+    if (ADVANCED_SECTIONS.includes(s)) mark(el, ADVANCED_OFF, !on && isAdvancedSection(s));
   });
   root.querySelectorAll('[data-phone-open]').forEach((el) => {
-    if (isAdvancedRoute(el.dataset.phoneOpen)) mark(el, ADVANCED_OFF, !on); // never over the person's rights
+    const r = el.dataset.phoneOpen;
+    if (ADVANCED_ROUTES.includes(r)) mark(el, ADVANCED_OFF, !on && isAdvancedRoute(r)); // never over the person's rights
   });
   ZettEventBus.emit('advanced:changed', { on });
 }
