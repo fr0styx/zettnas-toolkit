@@ -497,6 +497,26 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         said = f"The check of {pool.name} was {done}." if ok else f"The check of {pool.name} could not be {done}."
         return {**base, "status": done if ok else "error", "output": out or err, "message": said}
 
+    def _main_pool_facts(self) -> tuple[str, str]:
+        """The main pool's file system and its level, as measured: (fs_type, profile).
+
+        It was always called btrfs, and its level was guessed as "raid1" whenever the NAS had two
+        drives and btrfs gave no answer, which the page then showed as "parity protected". When
+        the folder is not btrfs, `btrfs filesystem show` was run on it: that looks at every drive,
+        and the statistics collector did it every 30 seconds (SET-09). The level is now what
+        `btrfs filesystem df` says, else empty; another file system is named as it is."""
+        fs_type = self._fs_type_at(self._pool_path)
+        if fs_type not in ("btrfs", "unknown"):
+            return fs_type, ""
+        code, out, _ = self._run_cmd(["btrfs", "filesystem", "df", self._pool_path])
+        if code == 0 and out.strip():
+            for line in out.strip().splitlines():
+                match = re.search(r"^Data,\s*([A-Za-z0-9_]+):", line)
+                if match:
+                    return "btrfs", match.group(1).lower()
+            return "btrfs", ""
+        return fs_type, ""
+
     def list_pools(self) -> list[StoragePool]:
         pools: list[StoragePool] = []
         is_overlay = self._is_os_overlay_or_emmc(self._pool_path)
@@ -726,27 +746,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
             members = list(hal_disks.values()) if hal_disks else self._discover_hal_disks()
 
-            profile = "raid1" if len(members) >= 2 else "single"
-            code_df, out_df, _ = self._run_cmd(["btrfs", "filesystem", "df", self._pool_path])
-            if code_df == 0 and out_df.strip():
-                for line in out_df.strip().splitlines():
-                    if line.startswith("Data,"):
-                        match = re.search(r"Data,\s*([A-Za-z0-9_]+):", line)
-                        if match:
-                            profile = match.group(1).lower()
-                            break
-            else:
-                code, out, _ = self._run_cmd(["btrfs", "filesystem", "show", self._pool_path])
-                if code == 0:
-                    if "raid10" in out.lower():
-                        profile = "raid10"
-                    elif "raid1" in out.lower():
-                        profile = "raid1"
-                    elif "raid0" in out.lower():
-                        profile = "raid0"
-                    elif "single" in out.lower():
-                        profile = "single"
-
+            fs_type, profile = self._main_pool_facts()
             parity_protected = profile in ("raid1", "raid10", "raid5", "raid6")
 
             if not any(p.mountpoint == self._pool_path for p in pools):
@@ -755,8 +755,8 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     StoragePool(
                         id="default_pool",
                         name="Primary Storage Pool",
-                        pool_type="btrfs_raid" if len(members) >= 2 else "single",
-                        fs_type="btrfs",
+                        pool_type="btrfs_raid" if parity_protected or profile == "raid0" else "single",
+                        fs_type=fs_type,
                         fs_profile=profile,
                         status="HEALTHY",
                         mountpoint=self._pool_path,
@@ -767,7 +767,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                         members=members,
                         parity_protected=parity_protected,
                         autotrim=True,
-                        compression=pool_compression("btrfs", self._pool_path),
+                        compression=pool_compression(fs_type, self._pool_path),
                     ),
                 )
         elif not pools:

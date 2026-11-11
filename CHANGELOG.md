@@ -866,6 +866,15 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   loaded, so it was English whatever the language, and it called the role "ShareUser". It now
   waits for the language and says "Family member", "Kid" or "Guest".
 
+#### Fixes
+
+- **The main pool's kind is measured, not assumed.** It was always shown as btrfs, and with two or
+  more drives as "RAID1" and parity protected whenever btrfs gave no answer. The level is now what
+  btrfs reports, and empty when it reports none; a pool on another file system is named as that.
+- **Listing the pools no longer looks at every drive.** Where the pool folder is not btrfs, a
+  command that reads every drive ran with each listing, which the statistics collector asks for
+  every 30 seconds.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

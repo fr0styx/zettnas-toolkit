@@ -228,6 +228,7 @@
     "_check_is_storage_busy_uncached": "(self) -> bool",
     "_convert_to_dataset": "(self, path: str) -> str",
     "_fs_type_at": "(self, path: str) -> str",
+    "_main_pool_facts": "(self) -> tuple[str, str]",
     "_make_share_dir": "(self, full_path: str) -> str",
     "_must": "(self, cmd: list[str], what: str) -> str",
     "_nested_subvolumes": "(self, path: str) -> bool",
