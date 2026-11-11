@@ -408,24 +408,25 @@ def startup_system():
             import time
 
             time.sleep(3.0)  # Brief pause to allow storage and bridge initialization
-            from backend.api.vms import _get_qemu_vnc_port, _is_qemu_process_alive, _load_vms, _save_vms, _start_qemu
+            from backend.api.vms import _get_qemu_vnc_port, _is_qemu_process_alive, _load_vms, _start_qemu
+            from backend.services import vm_qemu
 
             vms = _load_vms()
-            started_any = False
             for vm in vms:
-                if vm.get("autostart") and vm.get("state") != "running":
-                    vm_id = vm.get("id")
-                    if not vm_id:
+                vm_id = vm.get("id")
+                # "Start with the NAS", and what Kiboto itself shut down for a restart or an update
+                again = bool(vm.get("start_again"))
+                if not vm_id or not (vm.get("autostart") or again):
+                    continue
+                if vm.get("state") != "running" and not _is_qemu_process_alive(vm_id):
+                    vnc_port = _get_qemu_vnc_port(vms, vm_id)
+                    logger.info("[VM Autostart] Starting VM '%s' (ID: %s)...", vm.get("name"), vm_id)
+                    ok, _ = _start_qemu(vm, vnc_port)
+                    if ok:
+                        vm_qemu.save_fields(vm_id, {"state": "running"}, ("start_again", "shutdown_asked_at"))
                         continue
-                    if not _is_qemu_process_alive(vm_id):
-                        vnc_port = _get_qemu_vnc_port(vms, vm_id)
-                        logger.info("[VM Autostart] Starting VM '%s' (ID: %s)...", vm.get("name"), vm_id)
-                        ok, _ = _start_qemu(vm, vnc_port)
-                        if ok:
-                            vm["state"] = "running"
-                            started_any = True
-            if started_any:
-                _save_vms(vms)
+                if again:
+                    vm_qemu.save_fields(vm_id, {}, ("start_again",))  # asked once, not at every start
         except Exception as e:
             logger.warning(f"[VM Autostart] Error starting autostart VMs: {e}")
 
@@ -715,6 +716,30 @@ if os.path.isdir(STATIC_DIR):
     app.mount("/", CompressedStaticFiles(directory=STATIC_DIR, html=True), name="static")
 
 
+_MACHINES_ON_EXIT: threading.Thread | None = None
+
+
+def machines_on_exit() -> None:
+    """Kiboto is being stopped from outside (docker stop, an update of the container by hand, the
+    NAS going down). Running virtual machines end with it, so they are asked to shut down now, in
+    the background, and main() waits for them before it returns. How long Docker lets that take
+    is the container's stop time: ten seconds unless it is raised (SET-07)."""
+    global _MACHINES_ON_EXIT
+    if _MACHINES_ON_EXIT is not None:
+        return
+
+    def work() -> None:
+        try:
+            from backend.services import vm_qemu
+
+            vm_qemu.shut_down_all(turn_off=False)
+        except (OSError, RuntimeError, ValueError) as e:
+            logger.warning("[VMs] could not shut the virtual machines down: %s", e)
+
+    _MACHINES_ON_EXIT = threading.Thread(target=work, name="VmShutdown", daemon=True)
+    _MACHINES_ON_EXIT.start()
+
+
 class ZettServer(uvicorn.Server):
     """Engage the fan failsafe as soon as a stop signal arrives.
 
@@ -727,6 +752,7 @@ class ZettServer(uvicorn.Server):
         Z_STATE.shutting_down = True
         if not Z_STATE.fans_locked:
             _shutdown_fans(f"signal {sig}")
+        machines_on_exit()
         super().handle_exit(sig, frame)
 
 
@@ -749,6 +775,8 @@ def main():
         limit_concurrency=256,
     )
     ZettServer(server_config).run()
+    if _MACHINES_ON_EXIT is not None:
+        _MACHINES_ON_EXIT.join()  # ends when the machines are off, or after the wait they are given
 
 
 if __name__ == "__main__":

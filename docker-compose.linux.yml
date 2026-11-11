@@ -14,6 +14,7 @@ services:
       default:
         aliases: [zettnas-toolkit] # apps set up before the rebrand know this name (until 2.2)
     restart: unless-stopped
+    stop_grace_period: 150s  # running virtual machines are asked to shut down first and get two minutes
     logging:  # keep container logs from filling the disk (OPS-13)
       driver: "json-file"
       options:

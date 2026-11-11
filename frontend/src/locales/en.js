@@ -5442,6 +5442,8 @@ export default {
   "ev.vm_snap_reverted.title": "VM put back",
   "ev.vm_state.msg": "{name}: {action} done.",
   "ev.vm_state.title": "Virtual machine",
+  "ev.vm_turned_off.msg": "{name} did not shut down within {secs} seconds and was turned off.",
+  "ev.vm_turned_off.title": "Virtual machine turned off",
   "ev.vm_updated.msg": "The settings of {name} were saved.",
   "ev.vm_updated.title": "Virtual machine changed",
   "jobs.t.convert": "Make {share} snapshot-ready",

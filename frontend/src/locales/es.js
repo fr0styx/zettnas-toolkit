@@ -5442,6 +5442,8 @@ export default {
   "ev.vm_snap_reverted.title": "VM restaurada",
   "ev.vm_state.msg": "{name}: {action} hecho.",
   "ev.vm_state.title": "Máquina virtual",
+  "ev.vm_turned_off.msg": "{name} no se apagó en {secs} segundos y se desconectó.",
+  "ev.vm_turned_off.title": "Máquina virtual desconectada",
   "ev.vm_updated.msg": "Se guardaron los ajustes de {name}.",
   "ev.vm_updated.title": "Máquina virtual modificada",
   "jobs.t.convert": "Preparar {share} para instantáneas",

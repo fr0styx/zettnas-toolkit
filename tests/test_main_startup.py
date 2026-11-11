@@ -138,18 +138,27 @@ class TestStartup:
             {"id": "a", "name": "A", "autostart": True, "state": "stopped"},
             {"id": "b", "name": "B", "autostart": False, "state": "stopped"},
             {"id": "c", "name": "C", "autostart": True, "state": "stopped"},
+            # shut down by Kiboto itself for a restart or an update: comes back once (SET-07)
+            {"id": "d", "name": "D", "autostart": False, "state": "stopped", "start_again": True},
+            {"id": "e", "name": "E", "autostart": False, "state": "stopped", "start_again": True},
         ]
         saved, started = [], []
         from backend.api import vms as vms_api
+        from backend.services import vm_qemu
 
         monkeypatch.setattr(time, "sleep", lambda s: None)
         monkeypatch.setattr(vms_api, "_load_vms", lambda: vms)
-        monkeypatch.setattr(vms_api, "_save_vms", lambda v: saved.append([x["state"] for x in v]))
-        monkeypatch.setattr(vms_api, "_is_qemu_process_alive", lambda vm_id: vm_id == "c")
+        monkeypatch.setattr(vm_qemu, "save_fields", lambda vm_id, fields, drop=(): saved.append((vm_id, fields, drop)))
+        monkeypatch.setattr(vms_api, "_is_qemu_process_alive", lambda vm_id: vm_id in ("c", "e"))
         monkeypatch.setattr(vms_api, "_get_qemu_vnc_port", lambda v, vm_id: 5901)
         monkeypatch.setattr(vms_api, "_start_qemu", lambda vm, port: (started.append(vm["id"]) or True, None))
         autostart()
-        assert started == ["a"] and saved == [["running", "stopped", "stopped"]]
+        assert started == ["a", "d"]
+        assert saved == [
+            ("a", {"state": "running"}, ("start_again", "shutdown_asked_at")),
+            ("d", {"state": "running"}, ("start_again", "shutdown_asked_at")),
+            ("e", {}, ("start_again",)),  # runs already: the wish is forgotten, not kept for the next start
+        ]
 
 
 class TestFanWatchdog:
@@ -287,9 +296,27 @@ def test_signal_releases_the_fans(monkeypatch):
     monkeypatch.setattr(Z_STATE, "fans_locked", False)
     monkeypatch.setattr(Z_STATE, "shutting_down", False)
     monkeypatch.setattr(main.uvicorn.Server, "handle_exit", lambda self, sig, frame: None)
+    asked = []
+    monkeypatch.setattr(main, "machines_on_exit", lambda: asked.append(True))
     server = main.ZettServer.__new__(main.ZettServer)
     server.handle_exit(15, None)
     assert released == ["signal 15"] and Z_STATE.shutting_down
+    assert asked == [True]  # running virtual machines are asked to shut down (SET-07)
+
+
+def test_machines_are_asked_once_and_main_waits_for_them(monkeypatch):
+    from backend.services import vm_qemu
+
+    calls = []
+    monkeypatch.setattr(main, "_MACHINES_ON_EXIT", None)
+    monkeypatch.setattr(vm_qemu, "shut_down_all", lambda **kw: calls.append(kw))
+    main.machines_on_exit()
+    main.machines_on_exit()  # a second signal
+    main._MACHINES_ON_EXIT.join(5)
+    assert calls == [{"turn_off": False}]  # asked and waited for, never killed: Kiboto's end does that
+    monkeypatch.setattr(main.ZettServer, "__init__", lambda self, cfg: None)
+    monkeypatch.setattr(main.ZettServer, "run", lambda self: None)
+    main.main()  # returns: the thread is done
 
 
 def test_main_configures_uvicorn(monkeypatch):

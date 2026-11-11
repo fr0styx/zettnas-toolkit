@@ -828,3 +828,67 @@ async def async_stop_qemu(vm_id: str, force: bool = False):
                     break
 
     await asyncio.to_thread(_sync_cleanup_qemu_process, vm_id, force=force)
+
+
+def shut_down_all(
+    wait_secs: float = SHUTDOWN_GRACE, come_back: bool = True, turn_off: bool = True
+) -> dict[str, list[str]]:
+    """Asks every running machine to shut down and waits for them, before Kiboto restarts, updates
+    or turns the NAS off. Nothing did: the machines were killed with Kiboto, and only those set to
+    start with the NAS came back (SET-07).
+
+    A machine still running after the wait is turned off, which is written to Activity; with
+    turn_off false it is left to whoever ends Kiboto. With come_back the machines are started again
+    at Kiboto's next start. The answer names the machines that shut down and those turned off."""
+    asked = []
+    for vm in _load_vms():
+        vm_id = vm.get("id")
+        if not vm_id or vm.get("state") not in ALIVE_STATES or not _is_qemu_process_alive(vm_id):
+            continue
+        if vm.get("state") == "paused":
+            _qmp_command(vm_id, "cont")  # a frozen machine hears nothing
+        took = ask_to_shut_down(vm_id)
+        fields: dict[str, Any] = {
+            "state": "shutting_down",
+            "shutdown_asked_at": vm.get("shutdown_asked_at") or time.time(),
+        }
+        if come_back:
+            fields["start_again"] = True
+        save_fields(vm_id, fields)
+        asked.append({"id": vm_id, "name": vm.get("name") or vm_id, "took": took})
+    if not asked:
+        return {"shut_down": [], "turned_off": []}
+
+    deadline = time.monotonic() + wait_secs
+    # a machine that did not take the request will not shut down by waiting
+    while time.monotonic() < deadline and any(m["took"] and _is_qemu_process_alive(m["id"]) for m in asked):
+        time.sleep(1.0)
+
+    done: dict[str, list[str]] = {"shut_down": [], "turned_off": []}
+    for m in asked:
+        if _is_qemu_process_alive(m["id"]):
+            if not turn_off:
+                continue
+            _sync_cleanup_qemu_process(m["id"], force=True)
+            done["turned_off"].append(m["name"])
+            add_event(
+                "warning",
+                "VM Turned Off",
+                f"VM '{m['name']}' did not shut down within {int(wait_secs)} seconds and was turned off.",
+                event_text("vm_turned_off", name=m["name"], secs=int(wait_secs)),
+            )
+        else:
+            _forget_process(m["id"])
+            done["shut_down"].append(m["name"])
+        save_fields(m["id"], {"state": "stopped", "uptime_seconds": 0}, ("shutdown_asked_at",))
+    logger.info("[VMs] before Kiboto ends: shut down %s, turned off %s", done["shut_down"], done["turned_off"])
+    return done
+
+
+def machines_first(come_back: bool = True) -> None:
+    """shut_down_all() for the callers that go on whatever happens: an update, a restart, the
+    power buttons."""
+    try:
+        shut_down_all(come_back=come_back)
+    except (OSError, RuntimeError, ValueError) as e:
+        logger.warning("[VMs] could not shut the virtual machines down first: %s", e)

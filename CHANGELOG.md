@@ -715,6 +715,19 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   name follows the rule for names; a change made while a machine starts or shuts down is no longer
   written over.
 
+#### Fixes
+
+- **Updating or restarting Kiboto no longer kills running virtual machines.** Nothing asked them
+  to shut down: they were ended with Kiboto, and only those set to "Start with the NAS" came back.
+  Before an update, going back to an earlier version, applying a settings backup, and the Restart
+  and Shut down buttons of the NAS, each running machine is now asked to shut down and waited for,
+  up to two minutes. One that has not finished by then is turned off, and Activity says so.
+  Machines that ran before an update or a restart are started again afterwards.
+- **When the Kiboto container is stopped from outside**, running machines are asked to shut down
+  and Kiboto waits for them. Docker gives a container ten seconds unless told otherwise: the
+  Compose files now set `stop_grace_period: 150s`. If you start Kiboto another way, raise the stop
+  time there (`docker stop -t 150`, or the stop time of your template).
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

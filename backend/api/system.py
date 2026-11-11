@@ -912,6 +912,14 @@ def _sysrq_power(action: str) -> bool:
         return False
 
 
+def machines_first(come_back: bool = True) -> None:
+    """Before Kiboto ends itself or the NAS: running virtual machines are asked to shut down and
+    waited for. With come_back they are started again at Kiboto's next start (SET-07)."""
+    from backend.services import vm_qemu
+
+    vm_qemu.machines_first(come_back)
+
+
 def trigger_power_action(action: str) -> bool:
     """
     Triggers host system reboot or shutdown.
@@ -941,6 +949,7 @@ def trigger_power_action(action: str) -> bool:
 async def system_reboot():
     """Trigger system reboot (requires system:power scope)."""
     add_event("warning", "System", "System reboot sequence initiated by authorized user", event_text("reboot"))
+    await asyncio.to_thread(machines_first)
     success = await asyncio.to_thread(trigger_power_action, "reboot")
     return {"status": "ok", "action_dispatched": success, "message": "System reboot sequence initiated"}
 
@@ -952,6 +961,7 @@ async def system_reboot():
 async def system_shutdown():
     """Trigger system poweroff (requires system:power scope)."""
     add_event("warning", "System", "System shutdown sequence initiated by authorized user", event_text("shutdown"))
+    await asyncio.to_thread(machines_first, False)  # after a shutdown only "Start with the NAS" brings one back
     success = await asyncio.to_thread(trigger_power_action, "shutdown")
     return {"status": "ok", "action_dispatched": success, "message": "System shutdown sequence initiated"}
 
@@ -1719,6 +1729,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
         except Exception:
             ignored("backend.api.system.post_apply_system_update")
 
+        await asyncio.to_thread(machines_first)  # the update ends them with the old container
         spawned = await asyncio.to_thread(spawn_self_updater, target_img, target_container, 2.5)
         if spawned:
             return {
@@ -1828,6 +1839,7 @@ async def post_revert_system_update(
         ignored("backend.api.system.post_revert_system_update")
 
     logger.warning("[System Update] Reverting to %s (snapshot %s)", match["version"] or match["image"], match["id"])
+    await asyncio.to_thread(machines_first)
     spawned = await asyncio.to_thread(spawn_self_updater, match["image"], target_container, 2.5, match["id"])
     if not spawned:
         raise HTTPException(status_code=500, detail="Could not start the revert.")

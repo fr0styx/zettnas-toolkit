@@ -211,6 +211,9 @@ def restart_to_apply(delay: float = 2.0) -> dict[str, Any]:
 
     def _later() -> None:
         time.sleep(delay)
+        from backend.services import vm_qemu
+
+        vm_qemu.machines_first()  # running virtual machines end with Kiboto: they are asked first
         logger.warning("[Restore] Restarting to apply the restored settings")
         os.kill(os.getpid(), signal.SIGTERM)
 
