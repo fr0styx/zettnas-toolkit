@@ -421,6 +421,49 @@ def test_an_upload_onto_a_taken_name_asks(journey_folder, tmp_path):
         browser.close()
 
 
+@pytest.mark.parametrize("width,height", [(1440, 900), (390, 844)])
+def test_a_deleted_file_comes_back_from_the_bin_with_one_tap(journey_folder, width, height):
+    """SET-05: the Recycle Bin has a Restore button on each row, on a computer and on a phone, and
+    says how long items stay. Restore was reachable only by right-click."""
+    from playwright.sync_api import sync_playwright
+
+    gone = os.path.join(journey_folder, "restore-me.txt")
+    with sync_playwright() as p:
+        browser = _browser(p)
+        page = browser.new_context(viewport={"width": width, "height": height}).new_page()
+        _sign_in(page)
+        _close_wizard(page)
+        deleted = _post(page, "/api/fs/delete", {"path": gone})
+        assert deleted.status == 200 and not os.path.exists(gone), deleted.text()
+        bins = page.evaluate("() => fetch('/api/fs/trash', {credentials: 'include'}).then((r) => r.json())")
+        mine = next(i for i in bins["items"] if str(i.get("original_path", "")).endswith("/restore-me.txt"))
+        bin_folder = mine["path"][: mine["path"].index("/.RecycleBin") + len("/.RecycleBin")]
+        _open_files_at(page, bin_folder, os.path.basename(mine["path"]))
+
+        window = page.locator(".file-manager-window").last
+        note = window.locator(".fm-bin-note").inner_text()
+        assert "30 days" in note and "10%" in note and "never within a day" in note
+        row = window.locator(
+            f".fm-row[data-path={json.dumps(mine['path'])}], .fm-grid-card[data-path={json.dumps(mine['path'])}]"
+        ).first
+        assert "restore-me.txt" in row.inner_text()  # the name it had, not the stored one
+        acts = row.evaluate(
+            "(r) => [...r.querySelectorAll('.fm-act-btn')].filter((b) => b.getClientRects().length).map((b) => b.dataset.act)"
+        )
+        assert "restore" in acts or "more-sheet" in acts, acts
+        assert not {"download", "share", "rename"} & set(acts), acts
+        if "restore" in acts:
+            row.locator("[data-act=restore]").click()
+        else:  # a phone: the row's "···" opens a sheet with Restore first
+            row.locator("[data-act=more-sheet]").click()
+            page.click(".sheet-action-item:has-text('Restore')")
+        deadline = time.time() + 8
+        while not os.path.exists(gone) and time.time() < deadline:
+            time.sleep(0.3)
+        assert os.path.exists(gone), "Restore did not bring the file back"
+        browser.close()
+
+
 def _strings(lang):
     with open(os.path.join(ROOT, "frontend", "src", "locales", f"{lang}.js"), encoding="utf-8") as f:
         src = f.read()

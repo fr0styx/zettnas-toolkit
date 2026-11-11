@@ -548,6 +548,19 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **"Replace current" in Previous versions keeps the file as it was**: it goes to the Recycle Bin
   before the earlier version takes its place. It was overwritten with no copy.
 
+#### Fixes
+
+- **A deleted file comes back with one click or tap**: in the Recycle Bin every row has a
+  "Restore" button, the selection bar has "Restore", and the phone's "···" sheet starts with it.
+  Restore was reachable only by right-click, while the rows offered Download, Share and Rename,
+  which do not apply to a deleted item. The right-click menu in the bin is down to "Restore",
+  "Get info" and "Delete for good".
+- **The Recycle Bin says both of its rules, and what goes soon**: "Items stay here for 30 days"
+  left out that a bin larger than a tenth of its drive lets its oldest items go sooner. The bar
+  now says both, counts the items that go in the next 7 days, and each of those carries the date
+  it goes.
+- **"Empty all Recycle Bins" is shown to the storage administrator**, who could always do it.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

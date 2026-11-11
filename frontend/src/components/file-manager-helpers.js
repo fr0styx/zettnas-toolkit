@@ -1100,6 +1100,15 @@ export class FmContextMenu {
         hasSelection && it('trash', '🗑️', inBin ? t('fm.delete_for_good', 'Delete for good') : t('fm.ctx_to_bin', 'Move to the Recycle Bin'), t('fm.kbd_delete', 'Delete'), 'text-danger'),
       ]),
     ].join('');
+    if (inBin && fileItem) {
+      // a deleted item: put it back, look at it, or delete it for good. The menu had 16 entries
+      // here, most of which do not apply to it, and its delete said "Move to the Recycle Bin".
+      itemsHtml = [
+        group([it('restore', '↩️', t('fm.restore', 'Restore')), one && it('info', 'ℹ️', t('fm.ctx_info', 'Get info'))]),
+        line,
+        group([it('trash', '🗑️', t('fm.delete_for_good', 'Delete for good'), t('fm.kbd_delete', 'Delete'), 'text-danger')]),
+      ].join('');
+    }
     this._returnFocus = /** @type {HTMLElement | null} */ (document.activeElement);
 
     this.menuEl.innerHTML = itemsHtml;

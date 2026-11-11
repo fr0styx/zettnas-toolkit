@@ -12,7 +12,7 @@ import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showDangerConfirm, showPromptToast, showBottomSheet, showActionToast } from '../toast.js';
 import { t } from '../i18n.js';
 import { setIconLabel } from '../ui/primitives.js';
-import { binColumns, binBar } from './fm-bin-view.js';
+import { binColumns, binBar, goesSoon, goesLabel } from './fm-bin-view.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { openFilePreview as openFilePreviewModal } from '../file-preview-loader.js';
 import { transferCenter } from './transfer-center.js';
@@ -78,9 +78,19 @@ const SEL_ICONS = {
   clear: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
   share: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
   download: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>',
+  restore: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>',
   move: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><polyline points="12 11 15 14 12 17"></polyline><line x1="8" y1="14" x2="15" y2="14"></line></svg>',
   trash: '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>',
 };
+
+/** A row in the Recycle Bin: put it back, or delete it for good. Nothing else applies to a
+ *  deleted item; the row used to offer Download, Share, Rename and a Delete, and no Restore. */
+function binRowActions(escPath) {
+  const restore = escapeHtml(t('fm.restore', 'Restore'));
+  const forGood = escapeHtml(t('fm.delete_for_good', 'Delete for good'));
+  return `<button class="fm-act-btn fm-act-restore" data-act="restore" data-path="${escPath}" title="${restore}" aria-label="${restore}">↩️</button>
+          <button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="${forGood}" aria-label="${forGood}">🗑️</button>`;
+}
 
 /**
  * The selection actions: a pill floating at the bottom of the file area while items are
@@ -95,6 +105,7 @@ function selectionBarHtml(withIds) {
       <button type="button"${id('fm-clear-sel-btn')} class="fm-sel-btn fm-sel-clear fm-clear-sel-btn" title="${escapeHtml(t('fm.clear_selection', 'Clear selection (Esc)'))}" aria-label="${escapeHtml(t('fm.clear_selection', 'Clear selection (Esc)'))}">${SEL_ICONS.clear}</button>
       <span${id('fm-selected-count')} class="fm-selected-count" aria-live="polite">0 selected</span>
       <span class="fm-sel-divider" aria-hidden="true"></span>
+      ${btn('fm-bulk-restore-btn', 'fm-bulk-restore-btn', SEL_ICONS.restore, t('fm.restore', 'Restore'), ' hidden')}
       ${btn('fm-bulk-share-btn', 'fm-bulk-share-btn', SEL_ICONS.share, t('fm.share_link', 'Share link'))}
       ${btn('fm-bulk-zip-btn', 'fm-bulk-zip-btn', SEL_ICONS.download, t('fm.download', 'Download'))}
       ${btn('fm-bulk-move-btn', 'fm-bulk-move-btn', SEL_ICONS.move, t('fm.move_to', 'Move to…'))}
@@ -175,6 +186,7 @@ export class FileManagerWindow {
     this.selectionBar = null;
     this.selectedCount = null;
     this.bulkDeleteBtn = null;
+    this.bulkRestoreBtn = null;
     this.bulkMoveBtn = null;
     this.bulkZipBtn = null;
     this.clearSelBtn = null;
@@ -524,6 +536,7 @@ export class FileManagerWindow {
     this.selectionBar = this.windowEl.querySelector('.fm-selection-bar');
     this.selectedCount = this.windowEl.querySelector('.fm-selected-count');
     this.bulkDeleteBtn = this.windowEl.querySelector('.fm-bulk-delete-btn');
+    this.bulkRestoreBtn = this.windowEl.querySelector('.fm-bulk-restore-btn');
     this.bulkMoveBtn = this.windowEl.querySelector('.fm-bulk-move-btn');
     this.bulkZipBtn = this.windowEl.querySelector('.fm-bulk-zip-btn');
     this.clearSelBtn = this.windowEl.querySelector('.fm-clear-sel-btn');
@@ -1271,6 +1284,7 @@ export class FileManagerWindow {
 
     // Bulk Delete
     this.bulkDeleteBtn?.addEventListener('click', () => this.bulkDelete());
+    this.bulkRestoreBtn?.addEventListener('click', () => this.restoreFromBin(Array.from(this.selectedPaths)));
 
     // Move to…: pick a folder, then move in the background with progress
     this.bulkMoveBtn?.addEventListener('click', () => {
@@ -1705,9 +1719,18 @@ export class FileManagerWindow {
       });
       const label = t('fm.selected_count', '{count} selected', { count: count });
       this.selectedCount.innerHTML = escapeHtml(label) + (totalBytes > 0 ? `<span class="fm-sel-size"> · ${escapeHtml(formatBytes(totalBytes))}</span>` : '');
-      if (this.bulkShareBtn) this.bulkShareBtn.hidden = count !== 1; // a share link is for one item
+      // in the Recycle Bin the bar offers Restore and "Delete for good", and nothing a deleted item can't do
+      const inBin = Boolean(this._inBin);
+      this.bulkRestoreBtn?.toggleAttribute('hidden', !inBin);
+      this.bulkZipBtn?.toggleAttribute('hidden', inBin);
+      this.bulkMoveBtn?.toggleAttribute('hidden', inBin);
+      if (this.bulkShareBtn) this.bulkShareBtn.hidden = inBin || count !== 1; // a share link is for one item
       if (this.bulkDeleteBtn) {
-        const del = count > 1 ? t('fm.bulk_delete', 'Delete ({count})', { count: count }) : t('fm.delete', 'Delete');
+        const del = inBin
+          ? t('fm.delete_for_good', 'Delete for good')
+          : (count > 1 ? t('fm.bulk_delete', 'Delete ({count})', { count: count }) : t('fm.delete', 'Delete'));
+        const label = this.bulkDeleteBtn.querySelector('.fm-sel-label');
+        if (label) label.textContent = inBin ? del : t('fm.delete', 'Delete');
         this.bulkDeleteBtn.title = del;
         this.bulkDeleteBtn.setAttribute('aria-label', del);
       }
@@ -2112,7 +2135,7 @@ export class FileManagerWindow {
       if (this.pathInput) this.pathInput.value = this.currentPath;
       this._inBin = Boolean(res.recycle_bin);
       binColumns(this, this._inBin); // "From" and "Deleted" in the Recycle Bin (NUX-17)
-      binBar(this, this._inBin, () => this.loadPath(this.currentPath, true));
+      binBar(this, this._inBin, () => this.loadPath(this.currentPath, true), { rules: res.bin_rules, soon: res.leaving_soon });
       if (res.recycle_bin && res.bins_asleep > 0 && this._binsAsleepShown !== res.bins_asleep) {
         this._binsAsleepShown = res.bins_asleep;
         showToast(t('fm.bins_asleep', '{count, plural, one {# Recycle Bin is} other {# Recycle Bins are}} on a sleeping disk and not shown, so the disk stays asleep. They appear once it wakes.', { count: res.bins_asleep }), 'info');
@@ -2285,11 +2308,11 @@ export class FileManagerWindow {
             <div class="fm-card-meta">${metaText}</div>
           </div>
           <div class="fm-card-actions">
-            ${(!file.is_dir && file.name !== '..' && isImage) ? `<button class="fm-act-btn" data-act="preview" data-path="${escPath}" title="${t('ui.preview', 'Preview')}">👁️</button>` : ''}
-            ${!file.is_dir && file.name !== '..' ? `<button class="fm-act-btn" data-act="download" data-path="${escPath}" title="${t('preview.download', 'Download')}">⬇️</button>` : ''}
-            ${file.name !== '..' ? `<button class="fm-act-btn" data-act="share" data-path="${escPath}" title="${t('ui.share_via_link', 'Share via Link')}">🔗</button>` : ''}
-            ${file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="${t('mgmt.wallpaper_rename', 'Rename')}">✏️</button>` : ''}
-            ${file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="${t('vm.delete', 'Delete')}">🗑️</button>` : ''}
+            ${this._inBin ? binRowActions(escPath) : ''}${(!this._inBin && !file.is_dir && file.name !== '..' && isImage) ? `<button class="fm-act-btn" data-act="preview" data-path="${escPath}" title="${t('ui.preview', 'Preview')}">👁️</button>` : ''}
+            ${!this._inBin && !file.is_dir && file.name !== '..' ? `<button class="fm-act-btn" data-act="download" data-path="${escPath}" title="${t('preview.download', 'Download')}">⬇️</button>` : ''}
+            ${!this._inBin && file.name !== '..' ? `<button class="fm-act-btn" data-act="share" data-path="${escPath}" title="${t('ui.share_via_link', 'Share via Link')}">🔗</button>` : ''}
+            ${!this._inBin && file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="${t('mgmt.wallpaper_rename', 'Rename')}">✏️</button>` : ''}
+            ${!this._inBin && file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="${t('vm.delete', 'Delete')}">🗑️</button>` : ''}
             ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="${t('ui.more_actions', 'More Actions')}" style="display:none;">···</button>` : ''}
           </div>
         </div>`;
@@ -2365,16 +2388,16 @@ export class FileManagerWindow {
       const subLine = file.name === '..' ? '' : (file.is_dir ? mtimeStr : `${formatBytes(file.size)} · ${mtimeStr}`);
       row.innerHTML = `
         <div class="fm-col fm-col-check">${file.name !== '..' ? `<input type="checkbox" class="fm-checkbox fm-row-checkbox" ${this.selectedPaths.has(file.path) ? 'checked' : ''} data-path="${escPath}" title="${t('ui.select_item', 'Select item')}" />` : ''}</div>
-        <div class="fm-col fm-col-name">${leading} <span class="fm-name-stack"><span class="fm-name-text">${escName}</span><span class="fm-row-sub">${escapeHtml(subLine)}</span></span></div>
+        <div class="fm-col fm-col-name">${leading} <span class="fm-name-stack"><span class="fm-name-text">${escName}</span>${this._inBin && goesSoon(file) ? `<span class="zn-tag zn-tag--warn fm-bin-goes">${escapeHtml(goesLabel(file))}</span>` : ''}<span class="fm-row-sub">${escapeHtml(subLine)}</span></span></div>
         <div class="fm-col fm-col-type">${file.name === '..' ? '--' : escapeHtml(fileType)}</div>
         <div class="fm-col fm-col-size">${file.is_dir ? '--' : formatBytes(file.size)}</div>
         <div class="fm-col fm-col-mtime">${file.name === '..' ? '--' : mtimeStr}</div>
         <div class="fm-col fm-col-actions">
-          ${(!file.is_dir && file.name !== '..' && isImage) ? `<button class="fm-act-btn" data-act="preview" data-path="${escPath}" title="${t('ui.preview', 'Preview')}">👁️</button>` : ''}
-          ${!file.is_dir && file.name !== '..' ? `<button class="fm-act-btn" data-act="download" data-path="${escPath}" title="${t('preview.download', 'Download')}">⬇️</button>` : ''}
-          ${file.name !== '..' ? `<button class="fm-act-btn" data-act="share" data-path="${escPath}" title="${t('ui.share_via_link', 'Share via Link')}">🔗</button>` : ''}
-          ${file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="${t('mgmt.wallpaper_rename', 'Rename')}">✏️</button>` : ''}
-          ${file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="${t('vm.delete', 'Delete')}">🗑️</button>` : ''}
+          ${this._inBin ? binRowActions(escPath) : ''}${(!this._inBin && !file.is_dir && file.name !== '..' && isImage) ? `<button class="fm-act-btn" data-act="preview" data-path="${escPath}" title="${t('ui.preview', 'Preview')}">👁️</button>` : ''}
+          ${!this._inBin && !file.is_dir && file.name !== '..' ? `<button class="fm-act-btn" data-act="download" data-path="${escPath}" title="${t('preview.download', 'Download')}">⬇️</button>` : ''}
+          ${!this._inBin && file.name !== '..' ? `<button class="fm-act-btn" data-act="share" data-path="${escPath}" title="${t('ui.share_via_link', 'Share via Link')}">🔗</button>` : ''}
+          ${!this._inBin && file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="${t('mgmt.wallpaper_rename', 'Rename')}">✏️</button>` : ''}
+          ${!this._inBin && file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="${t('vm.delete', 'Delete')}">🗑️</button>` : ''}
           ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="${t('ui.more_actions', 'More Actions')}" aria-label="${t('ui.more_actions', 'More Actions')}">···</button>` : ''}
         </div>
       `;
@@ -2401,6 +2424,21 @@ export class FileManagerWindow {
   }
 
   async handleAction(act, path, oldName) {
+    if (act === 'restore') {
+      await this.restoreFromBin([path]);
+      return;
+    }
+    if (act === 'more-sheet' && this._inBin) { // the phone's "···" in the bin: the two things a deleted item can do
+      showBottomSheet({
+        title: oldName || path.split('/').pop(),
+        subtitle: t('fm.bin_sheet_sub', 'In the Recycle Bin'),
+        items: [
+          { icon: '↩️', label: t('fm.restore', 'Restore'), onClick: () => this.restoreFromBin([path]) },
+          { icon: '🗑️', label: t('fm.delete_for_good', 'Delete for good'), destructive: true, onClick: () => this.askDelete([path]) },
+        ],
+      });
+      return;
+    }
     if (act === 'more-sheet') {
       const file = this.fileList.find((f) => f.path === path);
       const isDir = Boolean(file?.is_dir);
@@ -3131,24 +3169,49 @@ export class FileManagerWindow {
       totalFiles: targets.length,
     });
     let success = 0;
+    let skipped = 0;
     const errors = [];
     const trashIds = [];
     for (const p of targets) {
       job.progress({ current: p.split('/').pop() });
       try {
-        const res = await api.post('/api/fs/delete', { path: p }); // the server decides: for good only inside a bin
+        let res;
+        try {
+          res = await api.post('/api/fs/delete', { path: p }); // the server decides: for good only inside a bin
+        } catch (err) {
+          // larger than the bin keeps: it would stay a day and then go for good, so the person is asked
+          if (err?.error !== 'too_large_for_bin' || !(await this.askTooLarge(p))) throw err;
+          res = await api.post('/api/fs/delete', { path: p, large_ok: true });
+        }
         if (res?.trash_id) trashIds.push(res.trash_id);
         success++;
       } catch (err) {
-        errors.push(`${p.split('/').pop()}: ${err.message}`);
+        if (err?.error === 'too_large_for_bin') skipped++; // the person said no: it stays where it is
+        else errors.push(`${p.split('/').pop()}: ${err.message}`);
       }
-      job.progress({ files: success + errors.length });
+      job.progress({ files: success + errors.length + skipped });
     }
-    if (errors.length && !success) job.finish('failed', errors[0]);
+    if (skipped && !success && !errors.length) job.finish('cancelled');
+    else if (errors.length && !success) job.finish('failed', errors[0]);
     else job.finish('completed', errors.length ? `${errors.length} item(s) failed: ${errors[0]}` : null);
     this.loadPath(this.currentPath);
     if (trashIds.length) this.offerUndo(trashIds);
     return { success, failed: errors.length };
+  }
+
+  /**
+   * Asks before a delete that is larger than the Recycle Bin keeps (SET-05).
+   * @param {string} path
+   * @returns {Promise<boolean>} true when the person wants it moved to the bin anyway
+   */
+  askTooLarge(path) {
+    return new Promise((resolve) => {
+      showDangerConfirm(
+        t('fm.too_large_title', 'Larger than the Recycle Bin keeps'),
+        t('fm.too_large_msg', '“{name}” is larger than a Recycle Bin keeps, which is a tenth of its drive. In the bin it stays for one day, then it goes for good. Move it there anyway?', { name: shownName(path) }),
+        () => resolve(true), () => resolve(false), { okText: t('fm.move_to_bin', 'Move to Recycle Bin') },
+      );
+    });
   }
 
   /** Puts items from the Recycle Bin view back where they were deleted from. */

@@ -4,6 +4,8 @@
 import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { showConfirmToast, showToast } from '../toast.js';
+import { hasScope } from '../route-access.js';
+import { formatDate } from '../format.js';
 
 function setLabel(col, key, fallback) {
   if (!col) return;
@@ -28,9 +30,45 @@ export function binColumns(fm, inBin) {
   }
 }
 
+/** Who may empty every bin. The rights are read the way the server reads them: the storage
+ *  administrator holds "shares:*", which a look for the exact words missed (SET-05). */
 export function mayEmpty(user) {
   const scopes = (user && user.scopes) || [];
-  return scopes.includes('*') || scopes.includes('shares:manage') || scopes.includes('storage:admin');
+  return hasScope(scopes, 'shares:manage') || hasScope(scopes, 'storage:admin');
+}
+
+const DAY = 86400;
+
+/**
+ * True for an item of the bin that goes for good within the next `days` days.
+ * @param {{ leaves_at?: number }} file
+ */
+export function goesSoon(file, days = 7, now = Date.now() / 1000) {
+  const at = Number(file && file.leaves_at) || 0;
+  return at > 0 && at <= now + days * DAY;
+}
+
+/**
+ * "Goes today" or "Goes 14 Nov": the tag on an item that leaves the bin within a week.
+ * @param {{ leaves_at?: number }} file
+ */
+export function goesLabel(file, now = Date.now() / 1000) {
+  const at = Number(file.leaves_at) || 0;
+  if (at - now < DAY) return t('fm.bin_goes_today', 'Goes within a day');
+  return t('fm.bin_goes', 'Goes {date}', { date: formatDate(at) });
+}
+
+/**
+ * What the bar says: both rules, and how many items go in the next days.
+ * @param {{ keep_days?: number, max_percent_of_disk?: number, soon_days?: number }} rules
+ * @param {number} soon
+ */
+export function binNote(rules = {}, soon = 0) {
+  const days = rules.keep_days || 30;
+  const percent = rules.max_percent_of_disk || 10;
+  const text = t('fm.bin_note', 'Items stay here for {days} days after they are deleted, then they go for good. A bin that grows past {percent}% of its drive lets its oldest items go sooner, but never within a day.', { days, percent });
+  if (!soon) return text;
+  return `${text} ${t('fm.bin_soon', '{count, plural, one {# item goes in the next {days} days.} other {# items go in the next {days} days.}}', { count: soon, days: rules.soon_days || 7 })}`;
 }
 
 export function emptyAll(onDone) {
@@ -52,8 +90,8 @@ export function emptyAll(onDone) {
   );
 }
 
-/** The bar above the list in the bin: how long items stay, and Empty all. */
-export function binBar(fm, inBin, onEmptied) {
+/** The bar above the list in the bin: how long items stay, how many go soon, and Empty all. */
+export function binBar(fm, inBin, onEmptied, info = {}) {
   const header = fm.colMtime && fm.colMtime.closest('.fm-header-row');
   let bar = fm.windowEl && fm.windowEl.querySelector('.fm-bin-bar');
   if (!inBin) {
@@ -74,7 +112,8 @@ export function binBar(fm, inBin, onEmptied) {
   }
   if (!bar) return null;
   bar.hidden = false;
-  bar.querySelector('.fm-bin-note').textContent = t('fm.bin_note', 'Items stay here for 30 days after they are deleted, then they go for good.');
+  bar.querySelector('.fm-bin-note').textContent = binNote(info.rules, info.soon);
+  bar.classList.toggle('has-soon', Boolean(info.soon));
   const btn = /** @type {HTMLButtonElement} */ (bar.querySelector('.fm-bin-empty'));
   btn.textContent = t('fm.empty_bins', 'Empty all Recycle Bins');
   btn.hidden = true; // until the account's rights are known
