@@ -31,13 +31,14 @@ describe('settings words', () => {
       <span id="sec-advisor-score-badge"></span><div id="management-modal-overlay"></div>`;
     vi.spyOn(api, 'get').mockImplementation(async (url) => {
       if (url === '/api/buttons') return { enabled: true };
-      if (url === '/api/security/advisor') return { score: 72, checks: [], issues: [] };
+      if (url === '/api/security/advisor') return { score: 72, checks: [], issues: [], admin_is_disabled: true };
       return {};
     });
     vi.spyOn(api, 'post').mockResolvedValue({});
     settings.initSettings();
     await vi.waitFor(() => expect($('btn-copy-status-text').textContent).toBe('ENABLED'));
-    await vi.waitFor(() => expect($('sec-advisor-score-badge').textContent).toBe('Score: 72/100'));
+    await vi.waitFor(() => expect(api.get).toHaveBeenCalledWith('/api/security/advisor'));
+    expect($('sec-advisor-score-badge').textContent).toBe(''); // management/security.js draws the score (SET-14)
     await setLanguage('de');
     const toggle = $('btn-copy-toggle');
     toggle.checked = false;

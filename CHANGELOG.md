@@ -306,6 +306,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   staging folder an interrupted import left under the old name is still tidied up. A sign-in
   through single sign-on that is in progress during the upgrade has to be started again.
 
+#### Fixes
+
+- **The security check is one list.** Two scripts drew it from two addresses with different checks
+  and colours, and whichever answered last won. The two rows only the older one had (the default
+  "admin" account, a second administrator) are now in the one list as suggestions, without points.
+  Each row says Passed, Suggestion or Needs action in your language.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

@@ -5,6 +5,7 @@ transport encryption, network file sharing, and API credentials.
 Computes a real-time security score (0-100), letter grade (A-F), and actionable remediation plan.
 """
 
+import sqlite3
 import time
 from typing import Any, Optional
 
@@ -265,6 +266,48 @@ def _check_safe_defaults(checks: list[dict[str, Any]], issues: list[dict[str, An
         )
 
 
+def _check_admin_accounts(checks: list[dict[str, Any]]) -> None:
+    """evaluate_security_posture: the default 'admin' account and a second administrator. These
+    two rows were drawn by a second script from a second address (SET-14); they cost no points
+    until the score itself is decided (Settings decision 4)."""
+    from backend.users_db import list_users
+
+    try:
+        users = list_users()
+    except (sqlite3.Error, OSError) as e:
+        logger.debug("[SecurityAdvisor] Failed reading accounts: %s", e)
+        return
+    admin = next((u for u in users if u["username"].lower() == "admin"), None)
+    admin_off = bool(admin and admin.get("status") != "active")
+    owners = [u for u in users if u.get("role_id") == "superadmin" and u.get("status") == "active"]
+    checks.append(
+        {
+            "id": "sec_default_admin",
+            "name": "Default 'admin' account",
+            "category": "Authentication",
+            "passed": admin is None or admin_off,
+            "penalty": 0,
+            "severity": "info" if admin is None or admin_off else "low",
+            "details": "The default 'admin' account is off"
+            if admin is None or admin_off
+            else "The default 'admin' account is still on: turn it off once another administrator exists",
+            "params": {},
+        }
+    )
+    checks.append(
+        {
+            "id": "sec_superadmin_redundancy",
+            "name": "A second administrator",
+            "category": "Authentication",
+            "passed": len(owners) >= 2,
+            "penalty": 0,
+            "severity": "info",
+            "details": f"{len(owners)} administrator account(s) can manage this NAS",
+            "params": {"count": len(owners)},
+        }
+    )
+
+
 def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
     """
     Evaluates the current security posture of the Kiboto instance.
@@ -287,6 +330,7 @@ def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
     _check_stale_tokens(checks, issues, now)
     _check_ai_runtimes(checks, issues)
     _check_safe_defaults(checks, issues)
+    _check_admin_accounts(checks)
 
     # Total Score Calculation
     total_penalty = sum(c["penalty"] for c in checks)

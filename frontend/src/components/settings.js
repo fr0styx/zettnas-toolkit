@@ -699,66 +699,13 @@ export function initSettings() {
     }
   }
 
-  async function fetchSecurityAdvisor() {
+  // The security check's list and score are drawn by management/security.js alone: this script
+  // drew the same box from a second address with other checks and colours, and the later answer
+  // won (SET-14). Here only the "turn off admin" button is set up.
+  async function fetchDefaultAdminState() {
     if (!isAdministrator()) return; // the security check is an administrator's (SET-03)
     try {
       const adv = await api.get('/api/security/advisor');
-      const scoreBadge = $('sec-advisor-score-badge');
-      if (scoreBadge) {
-        scoreBadge.textContent = t('stg.score', 'Score: {score}/100', { score: adv.score });
-        if (adv.score >= 90) {
-          scoreBadge.style.color = 'var(--ok2, #33cdb8)';
-          scoreBadge.style.borderColor = 'rgba(51,205,184,0.4)';
-          scoreBadge.style.background = 'rgba(51,205,184,0.15)';
-        } else if (adv.score >= 70) {
-          scoreBadge.style.color = 'var(--warn, #f5a623)';
-          scoreBadge.style.borderColor = 'rgba(245,166,35,0.4)';
-          scoreBadge.style.background = 'rgba(245,166,35,0.15)';
-        } else {
-          scoreBadge.style.color = 'var(--crit, #ff5c5c)';
-          scoreBadge.style.borderColor = 'rgba(255,92,92,0.4)';
-          scoreBadge.style.background = 'rgba(255,92,92,0.15)';
-        }
-      }
-
-      const itemsEl = $('sec-advisor-items');
-      if (itemsEl && Array.isArray(adv.checks)) {
-        itemsEl.innerHTML = adv.checks.map((chk) => {
-          const icon = chk.status === 'pass' ? '✅' : (chk.status === 'fail' ? '❌' : (chk.status === 'warn' ? '⚠️' : 'ℹ️'));
-          const color = chk.status === 'pass' ? 'var(--ok2, #33cdb8)' : (chk.status === 'fail' ? 'var(--crit, #ff5c5c)' : 'var(--warn, #f5a623)');
-          const isPass = chk.status === 'pass';
-          const actionText = isPass ? t('sec.action_review', 'Review ➔') : t('sec.action_configure', 'Configure ➔');
-          return `
-            <div class="sec-advisor-item ${isPass ? 'passed' : 'needs-action'}" data-check-id="${escapeHtml(chk.id)}" role="button" tabindex="0" title="${t('sec.click_to_configure', 'Click to configure')}" style="padding: 7px 10px; background: ${isPass ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)'}; border: 1px solid ${isPass ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.3)'}; border-radius: 6px;">
-              <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
-                <span>${icon}</span>
-                <div style="min-width:0;">
-                  <span style="font-weight:600; color:var(--kb-text-strong); font-size:var(--kb-fs-xs);">${escapeHtml(chk.title)}: </span>
-                  <span style="color:${color}; font-size:var(--kb-fs-xs);">${escapeHtml(chk.message)}</span>
-                </div>
-              </div>
-              <span class="sec-advisor-action-pill">${actionText}</span>
-            </div>
-          `;
-        }).join('');
-
-        itemsEl.querySelectorAll('.sec-advisor-item').forEach(item => {
-          const checkId = item.dataset.checkId;
-          const trigger = () => {
-            if (typeof window.handleSecurityAdvisorClick === 'function') {
-              window.handleSecurityAdvisorClick(checkId);
-            }
-          };
-          item.addEventListener('click', trigger);
-          item.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              trigger();
-            }
-          });
-        });
-      }
-
       const disableAdminCont = $('sec-disable-admin-container');
       const disableAdminBtn = $('btn-disable-default-admin');
       if (disableAdminCont && disableAdminBtn) {
@@ -778,7 +725,7 @@ export function initSettings() {
         }
       }
     } catch (e) {
-      console.warn('Failed to load security advisor', e);
+      console.warn('Failed to load the default admin state', e);
     }
   }
 
@@ -797,7 +744,7 @@ export function initSettings() {
             }, 1200);
           } else {
             fetchSecurity();
-            fetchSecurityAdvisor();
+            fetchDefaultAdminState();
           }
         } catch (err) {
           showToast(err.message, 'error');
@@ -807,7 +754,7 @@ export function initSettings() {
   }
 
   fetchSecurity();
-  fetchSecurityAdvisor();
+  fetchDefaultAdminState();
 
   const newPwdEl = $('sec-new-pwd');
   const confirmPwdEl = $('sec-confirm-pwd');

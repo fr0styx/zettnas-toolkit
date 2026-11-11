@@ -213,6 +213,17 @@ export function handleSecurityAdvisorClick(checkId) {
   }
 }
 
+/** A row's state: passed, a suggestion (costs no points, e.g. a second administrator), or a finding. */
+export function checkState(c) {
+  if (c.passed) return 'ok';
+  return Number(c.penalty) === 0 ? 'tip' : 'look';
+}
+const STATE_WORD = {
+  ok: () => t('sec.state_ok', 'Passed'),
+  tip: () => t('sec.state_tip', 'Suggestion'),
+  look: () => t('sec.state_look', 'Needs action'),
+};
+
 // the safe-defaults findings that carry a fix of the same name (backend/services/safe_defaults_advisor.py)
 export const FIXABLE = ['share_access_family', 'nfs_open_exports', 'auditor_reads_everything', 'ai_search_family', 'snapshots_off'];
 const PLACES = {
@@ -269,8 +280,9 @@ export async function fetchAndRenderSecurityPosture() {
 
     if (container && Array.isArray(data.checks)) {
       container.innerHTML = data.checks.map(c => {
-        const passIcon = c.passed ? '✔' : '✖';
-        const passColor = c.passed ? 'var(--lt-t-22c55eff, #22c55e)' : 'var(--lt-t-ef4444ff, #ef4444)';
+        const state = checkState(c);
+        const passIcon = { ok: '✔', tip: 'ℹ', look: '✖' }[state];
+        const passColor = { ok: 'var(--lt-t-22c55eff, #22c55e)', tip: 'var(--kb-text-muted)', look: 'var(--lt-t-ef4444ff, #ef4444)' }[state];
         const badgeBg = c.passed ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)';
         const actionText = c.passed ? t('sec.action_review', 'Review ➔') : t('sec.action_configure', 'Configure ➔');
         return `
@@ -283,7 +295,7 @@ export async function fetchAndRenderSecurityPosture() {
               </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-              <span class="sec-advisor-status-badge" style="font-size: var(--kb-fs-xs); font-weight:700; color:${passColor}; text-transform:uppercase; letter-spacing:0.5px;">${c.passed ? 'PASSED' : 'NEEDS ACTION'}</span>
+              <span class="sec-advisor-status-badge" style="font-size: var(--kb-fs-xs); font-weight:700; color:${passColor}; text-transform:uppercase; letter-spacing:0.5px;">${escapeHtml(STATE_WORD[state]())}</span>
               ${c.fix ? `<button type="button" class="sec-advisor-fix-btn btn btn-sm" data-fix="${escapeHtml(c.fix)}">${escapeHtml(t(`sec.fix.${c.fix}`, c.fix_label || t('sec.fix_btn', 'Fix it')))}</button>` : ''}
               <span class="sec-advisor-action-pill">${actionText}</span>
             </div>
