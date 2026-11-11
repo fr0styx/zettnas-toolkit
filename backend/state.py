@@ -387,6 +387,19 @@ def event_text(name: str, /, **params) -> dict:
     return {"title_key": f"ev.{name}.title", "msg_key": f"ev.{name}.msg", "params": params}
 
 
+def forget_person_in_events(username: str, alias: str) -> int:
+    """Erase: the person's name becomes a pseudonym in the event log, in the store, in memory
+    and in events.json. Returns how many stored entries changed."""
+    from backend import event_store
+
+    flush_events()  # what is still waiting is in the store before it is searched
+    changed = event_store.forget_user(username, alias)
+    with Z_STATE.lock:
+        Z_STATE.event_log = [event_store.scrub(e, username, alias) for e in Z_STATE.event_log]
+    flush_events()
+    return changed
+
+
 def _repeated_entry(level, title, message, now: int) -> dict[str, Any] | None:
     """The entry a new report is counted on (called with the lock held): the same level, title and
     message within the hour, or, when one title floods the log, its newest entry."""

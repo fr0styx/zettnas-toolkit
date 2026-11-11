@@ -13,6 +13,7 @@ stays in memory and in the file, and the error is counted (backend.ignored_error
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import time
 from collections.abc import Iterator
@@ -233,3 +234,101 @@ def clear() -> bool:
         ignored("backend.event_store.clear")
         return False
     return True
+
+
+# ---- one person's entries: handed over with "export my data", renamed when the account is erased
+
+
+def _word(username: str) -> re.Pattern[str]:
+    return re.compile(r"(?<![\w.@-])" + re.escape(username) + r"(?![\w@-])", re.IGNORECASE)
+
+
+def _param_names(value: Any, username: str) -> bool:
+    if isinstance(value, str):
+        return value.lower() == username.lower()
+    if isinstance(value, dict):
+        return any(_param_names(v, username) for v in value.values())
+    if isinstance(value, list):
+        return any(_param_names(v, username) for v in value)
+    return False
+
+
+def names(entry: dict[str, Any], username: str) -> bool:
+    """Whether an entry is about this person: one of its values is their name, or its text has
+    the name as a word. A name shorter than four letters counts only as a value ("al" is in
+    "alert")."""
+    if not username:
+        return False
+    details = entry.get("details")
+    if isinstance(details, dict) and _param_names(details.get("params"), username):
+        return True
+    if len(username) < 4:
+        return False
+    word = _word(username)
+    return bool(word.search(str(entry.get("title") or "")) or word.search(str(entry.get("message") or "")))
+
+
+def _renamed(value: Any, username: str, alias: str) -> Any:
+    if isinstance(value, str):
+        return alias if value.lower() == username.lower() else value
+    if isinstance(value, dict):
+        return {k: _renamed(v, username, alias) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_renamed(v, username, alias) for v in value]
+    return value
+
+
+def scrub(entry: dict[str, Any], username: str, alias: str) -> dict[str, Any]:
+    """The entry with the person's name replaced by a pseudonym; the entry itself stays, as the
+    server's record of what happened."""
+    if not names(entry, username):
+        return entry
+    word = _word(username)
+    out = {
+        **entry,
+        "title": word.sub(alias, str(entry.get("title") or "")),
+        "message": word.sub(alias, str(entry.get("message") or "")),
+    }
+    if isinstance(entry.get("details"), dict):
+        out["details"] = {**entry["details"], "params": _renamed(entry["details"].get("params"), username, alias)}
+    return out
+
+
+def _like(username: str) -> str:
+    return "%" + username.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+
+
+def _mentioning(conn: sqlite3.Connection, username: str, limit: int) -> list[dict[str, Any]]:
+    like = _like(username)
+    rows = conn.execute(
+        "SELECT " + _COLUMNS + " FROM events WHERE title LIKE ? ESCAPE '\\' OR message LIKE ? ESCAPE '\\'"
+        " OR details LIKE ? ESCAPE '\\' ORDER BY last_ts DESC, id DESC LIMIT ?",
+        (like, like, like, limit),
+    ).fetchall()
+    return [e for e in (_entry(r) for r in rows) if names(e, username)]
+
+
+def for_user(username: str, limit: int = 5000) -> list[dict[str, Any]]:
+    """The entries that are about one person, the most recent first (export)."""
+    if not username:
+        return []
+    try:
+        with _open() as conn:
+            return _mentioning(conn, username, limit)
+    except (sqlite3.Error, OSError):
+        ignored("backend.event_store.for_user")
+        return []
+
+
+def forget_user(username: str, alias: str) -> int:
+    """Erase: the person's name becomes a pseudonym in every entry about them. Returns how many
+    entries changed; raises sqlite3.Error or OSError when the store cannot be written."""
+    if not username:
+        return 0
+    with _open() as conn:
+        found = _mentioning(conn, username, MAX_LIMIT * 20)
+        conn.executemany(
+            "INSERT OR REPLACE INTO events (" + _COLUMNS + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [_row(scrub(e, username, alias)) for e in found],
+        )
+    return len(found)

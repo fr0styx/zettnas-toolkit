@@ -11,9 +11,10 @@ const AVERAGED = { '7d': 30, '30d': 120 }; // minutes each point stands for
 
 /** The time under a point: the hour for a day or less, the day and hour beyond. */
 export function pointLabel(ts, range) {
-  return AVERAGED[range]
-    ? formatDateTime(ts, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }, '')
-    : formatTime(ts, undefined, '');
+  if (!AVERAGED[range]) return formatTime(ts, undefined, '');
+  /** @type {any} */
+  const dayAndHour = { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+  return formatDateTime(ts, dayAndHour, '');
 }
 
 /** The names of the drives in the data, sorted. */

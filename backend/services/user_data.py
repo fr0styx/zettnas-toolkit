@@ -11,9 +11,10 @@ Erase, each part on its own:
 - index: what search learned from their own folder, which is then not learned again
   (rag forget_folder). Their files themselves are not touched.
 
-Deleting an account erases all three. The security log and the file activity log keep their
-entries, as the server's record of what happened, but under a pseudonym and without the
-person's address (file_activity: file names in their home folder go too, NSEC-13).
+Deleting an account erases all three. The security log, the file activity log and the event
+log keep their entries, as the server's record of what happened, but under a pseudonym and
+without the person's address (file_activity: file names in their home folder go too, NSEC-13;
+event_log: SET-13).
 """
 
 from __future__ import annotations
@@ -26,7 +27,7 @@ from typing import Any
 from backend.config import logger
 
 FORMAT = 1
-PARTS = ("chats", "ai_log", "index", "security_log", "file_activity")
+PARTS = ("chats", "ai_log", "index", "security_log", "file_activity", "event_log")
 MAX_INDEX_FILES = 20000
 MAX_EVENTS = 5000
 
@@ -181,6 +182,15 @@ def _file_activity(user: dict[str, Any]) -> list[dict[str, Any]]:
     return file_activity.for_user(str(user.get("username") or ""))
 
 
+def _event_log(user: dict[str, Any]) -> list[dict[str, Any]]:
+    """The entries of the event log that name them (SET-13)."""
+    from backend import event_store
+    from backend.state import flush_events
+
+    flush_events()
+    return event_store.for_user(str(user.get("username") or ""), MAX_EVENTS)
+
+
 def _immich(user: dict[str, Any]) -> dict[str, Any]:
     from backend.services import immich_photos
 
@@ -208,6 +218,7 @@ STORES = (
     "alert_route",
     "immich",
     "file_activity",
+    "event_log",
 )
 
 
@@ -235,6 +246,7 @@ def export_user(user: dict[str, Any]) -> dict[str, Any]:
         "alert_route": _part("alert_route", _alert_route, user),
         "immich": _part("immich", _immich, user),
         "file_activity": _part("file_activity", _file_activity, user),
+        "event_log": _part("event_log", _event_log, user),
     }
 
 
@@ -291,4 +303,16 @@ def erase_user_data(user: dict[str, Any], parts: tuple[str, ...] = PARTS) -> dic
         except (sqlite3.Error, OSError, ValueError):
             logger.warning("[UserData] Could not erase the file activity of %s", user.get("username"), exc_info=True)
             done["file_activity"] = {"error": "Could not remove their name from the file activity log."}
+    if "event_log" in parts:
+        try:
+            import hashlib
+            import sqlite3
+
+            from backend.state import forget_person_in_events
+
+            alias = "erased-" + hashlib.sha256(str(user.get("id") or "").encode()).hexdigest()[:10]
+            done["event_log"] = forget_person_in_events(str(user.get("username") or ""), alias)
+        except (sqlite3.Error, OSError, ValueError):
+            logger.warning("[UserData] Could not erase the event log of %s", user.get("username"), exc_info=True)
+            done["event_log"] = {"error": "Could not remove their name from the event log."}
     return done

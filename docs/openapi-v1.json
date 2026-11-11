@@ -6812,7 +6812,7 @@
       "items": {
        "type": "string"
       },
-      "maxItems": 5,
+      "maxItems": 6,
       "title": "Parts",
       "type": "array"
      }

@@ -14,6 +14,11 @@ If something here is wrong, please open an issue.
   at most 896 pixels on the long side, and nowhere else.
 - Hardware readings, logs and settings, and the file activity log (who changed which file,
   kept 90 days).
+- The event log: alerts, finished and failed backups, power, app and hardware events, kept 90
+  days. Everyone who may view the system reads it, so it holds no file names, no camera alerts
+  and no sign-ins; when the malware scan moves a file to quarantine it names the threat, not
+  the file. Which entries you have seen is saved with your account. **Export my data** includes
+  the entries that name you, and erasing an account replaces its name in them with a pseudonym.
 
 Kiboto has no analytics and does not phone home. The one exception is the anonymous weekly
 health report below, which is off unless you turn it on.

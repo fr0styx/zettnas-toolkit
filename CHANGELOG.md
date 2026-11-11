@@ -163,6 +163,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   items to /folder"), and the Activity card on the Overview no longer promises live readings and
   card copies, which that page does not have.
 
+#### Changes
+
+- **"Export my data" includes the event-log entries that name you**, and erasing an account
+  replaces its name in them with a pseudonym, as it does in the security log and in File
+  activity. `docs/PRIVACY.md` describes the event log: what it holds, for how long, who reads it
+  and what is kept out of it.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
