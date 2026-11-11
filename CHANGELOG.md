@@ -216,6 +216,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **The message after removing an app is true.** Every removal read "permanently destroyed", also
   when a copy had been kept; it now says where the copy is, and when the app's image was kept.
 
+#### Fixes
+
+- **The stack editor says what its buttons do.** "Redeploy" and "Save and redeploy" promised to
+  apply the Compose file; the server restarts the stack's apps as they are and never applies a
+  file (a deliberate security choice). The hint now says that saving changes the file only,
+  "Redeploy" is gone because it was "Restart" under another name, and "Save and redeploy" is
+  "Save and restart". A Compose file written by Kib is shown with the truth: Kiboto can save it
+  but cannot start a new stack from a file yet.
+- A stack's Start, Stop and Restart answer in sentences ("The apps of this stack are stopped.")
+  instead of 'Stack action 'stop' completed!'.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

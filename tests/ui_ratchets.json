@@ -368,7 +368,7 @@
  "frontend/src/components/stack-modal.js": {
   "buttons": 0,
   "globals": 1,
-  "styles": 28,
+  "styles": 27,
   "templates": 2
  },
  "frontend/src/components/storage-analyzer.js": {

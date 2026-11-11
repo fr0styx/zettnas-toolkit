@@ -50,7 +50,8 @@ describe('stack inspector (NUX-20)', () => {
     const services = byId('stack-services-list').textContent;
     for (const w of ['● Running', '● Stopped', 'Host network / none', 'Ports:', 'Web UI', 'Container details']) expect(services).toContain(w);
     const win = byId('stack-inspector-window').textContent;
-    for (const w of ['Compose file (compose.yaml)', 'Environment (.env)', 'Services', 'Copy YAML', 'Save and redeploy', 'Redeploy']) expect(win).toContain(w);
+    for (const w of ['Compose file (compose.yaml)', 'Environment (.env)', 'Services', 'Copy YAML', 'Save and restart']) expect(win).toContain(w);
+    expect(byId('stack-action-redeploy')).toBeNull(); // it was a restart under another name (SET-14)
   });
 
   it('says where a stack without a file came from, or that it could not load', async () => {
@@ -74,7 +75,7 @@ describe('stack inspector (NUX-20)', () => {
     await flush();
     expect(byId('stack-header-title').textContent).toBe('Deploy stack: app');
     expect(byId('stack-header-origin').textContent).toBe('AI template');
-    expect(byId('stack-modal-msg').textContent).toBe('Loaded an AI-written Compose file. Review it, then click “Save and redeploy”.');
+    expect(byId('stack-modal-msg').textContent).toContain('it cannot start a new stack from a file yet');
 
     deployComposeStackSnippet('services:\n  tool:\n    image: x\n    privileged: true\n');
     await flush();
@@ -110,22 +111,22 @@ describe('stack inspector (NUX-20)', () => {
     await openStackModal('web');
     const post = vi.spyOn(api, 'post').mockResolvedValue({ success: false, error: 'busy' });
     byId('stack-action-restart').click();
-    expect(byId('stack-modal-msg').textContent).toBe('Running “restart”…');
+    expect(byId('stack-modal-msg').textContent).toBe('Restarting the apps of this stack…');
     await flush();
-    expect(byId('stack-modal-msg').textContent).toBe('“restart” failed: busy');
+    expect(byId('stack-modal-msg').textContent).toBe('The apps of this stack could not be restarted: busy');
     post.mockResolvedValue({ success: false });
     byId('stack-action-stop').click();
     await flush();
-    expect(showToast).toHaveBeenLastCalledWith('“stop” failed', 'error');
+    expect(showToast).toHaveBeenLastCalledWith('The apps of this stack could not be stopped.', 'error');
     post.mockRejectedValue(new Error('down'));
     byId('stack-action-start').click();
     await flush();
-    expect(byId('stack-modal-msg').textContent).toBe('“start” failed: down');
+    expect(byId('stack-modal-msg').textContent).toBe('The apps of this stack could not be started: down');
     post.mockResolvedValue({ success: true });
-    byId('stack-action-redeploy').click();
+    byId('stack-action-restart').click();
     await flush();
     await flush();
-    expect(showToast).toHaveBeenCalledWith("Stack action 'redeploy' completed!", 'success');
+    expect(showToast).toHaveBeenCalledWith('The apps of this stack were restarted.', 'success');
     expect(byId('stack-modal-msg').textContent).toBe('Loaded from the Compose file on disk');
   });
 });

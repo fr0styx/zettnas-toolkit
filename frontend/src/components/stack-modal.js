@@ -12,6 +12,7 @@ import { openContainerModal } from './container-modal.js';
 import { lintCompose, composeRiskSummary } from '../compose-lint.js';
 
 import { t } from '../i18n.js';
+import { stackSaid } from './app-condition.js';
 import '../styles/stack-lazy.css'; // the inspector's own sheet loads with this code (NUX-15)
 
 // An icon next to translated words: screen readers skip it (UX-35)
@@ -52,7 +53,6 @@ export function initStackModal() {
             <button class="btn-pill-toggle is-small" id="stack-action-start" style="color: var(--ok2, #10b981);">${ico('▶')} ${t('vm.start', 'Start')}</button>
             <button class="btn-pill-toggle is-danger is-small" id="stack-action-stop">${ico('⏹')} ${t('stk.stop', 'Stop')}</button>
             <button class="btn-pill-toggle is-small" id="stack-action-restart">${ico('↻')} ${t('vmm.restart', 'Restart')}</button>
-            <button class="btn-pill-toggle is-small" id="stack-action-redeploy" style="background: rgba(51,205,184,0.2); border-color: rgba(79,216,196,0.4); color: var(--zn-text-accent);">${ico('⬆️')} ${t('stk.redeploy', 'Redeploy')}</button>
           </div>
         </div>
 
@@ -69,7 +69,7 @@ export function initStackModal() {
           <!-- 1. Compose Tab -->
           <div id="stack-pane-compose" class="stack-pane stk-grow" style="display: flex;">
             <div class="stk-row-3">
-              <span class="stk-xs-muted">${t('stk.compose_hint', 'Edit the Compose file. Changes apply when you save or redeploy.')}</span>
+              <span class="stk-xs-muted">${t('stk.compose_hint', 'Saving changes the file only. The apps keep running as they were installed; “Restart” restarts them and does not apply the file.')}</span>
               <div class="stk-row-4">
                 <button class="btn-pill-toggle" id="stack-compose-copy-btn">${ico('📋')} ${t('stk.copy_yaml', 'Copy YAML')}</button>
                 <button class="btn-pill-toggle" id="stack-compose-reset-btn">${ico('↺')} ${t('stk.reload', 'Reload')}</button>
@@ -105,7 +105,7 @@ export function initStackModal() {
             <button class="btn-pill-toggle" id="stack-cancel-btn">${t('common.cancel', 'Cancel')}</button>
             <button class="btn-pill-toggle stk-box" id="stack-secrets-btn" aria-pressed="false">${t('stk.show_secrets', 'Show secrets')}</button>
             <button class="btn-pill-toggle stk-box" id="stack-save-btn">${t('stk.save', 'Save')}</button>
-            <button class="btn-pill-toggle is-primary" id="stack-save-redeploy-btn">${t('stk.save_redeploy', 'Save and redeploy')}</button>
+            <button class="btn-pill-toggle is-primary" id="stack-save-redeploy-btn">${t('stk.save_redeploy', 'Save and restart')}</button>
           </div>
         </div>
       </div>
@@ -200,7 +200,6 @@ export function initStackModal() {
   document.getElementById('stack-action-start')?.addEventListener('click', () => triggerStackAction('start'));
   document.getElementById('stack-action-stop')?.addEventListener('click', () => triggerStackAction('stop'));
   document.getElementById('stack-action-restart')?.addEventListener('click', () => triggerStackAction('restart'));
-  document.getElementById('stack-action-redeploy')?.addEventListener('click', () => triggerStackAction('redeploy'));
 
   // Save buttons
   document.getElementById('stack-secrets-btn')?.addEventListener('click', () => toggleStackSecrets());
@@ -296,7 +295,7 @@ export async function openStackModal(stackName, initialYaml = null) {
     if (msgEl) {
       msgEl.textContent = risks.length
         ? t('stk.review_risky', 'Review before deploying. This AI-written stack asks for host access:\n{risks}', { risks: composeRiskSummary(risks) })
-        : t('stk.review', 'Loaded an AI-written Compose file. Review it, then click “Save and redeploy”.');
+        : t('stk.review', 'Loaded an AI-written Compose file. Kiboto can save it, but it cannot start a new stack from a file yet: install the app from the catalog, or start the file with Docker Compose on the server.');
       msgEl.style.whiteSpace = 'pre-line';
       msgEl.style.color = risks.some((r) => r.level === 'danger') ? '#fca5a5' : '';
     }
@@ -511,7 +510,7 @@ async function saveStack(redeployAfterSave = false) {
       if (msgEl) msgEl.textContent = t('ui.configuration_saved', 'Configuration saved');
 
       if (redeployAfterSave) {
-        await triggerStackAction('redeploy');
+        await triggerStackAction('restart'); // "redeploy" was a restart under another name (SET-14)
       }
     } else {
       if (msgEl) msgEl.textContent = t('viso.error', 'Error: {error}', { error: res.error });
@@ -527,26 +526,24 @@ async function triggerStackAction(action) {
   if (!_activeStackName) return;
 
   const msgEl = document.getElementById('stack-modal-msg');
-  if (action === 'redeploy' || action === 'stop') {
-    showToast(t('toast.executing_stack', 'Executing stack {action}...', { action: action }), 'info');
-  }
+  if (action === 'restart' || action === 'stop') showToast(stackSaid(action, 'doing'), 'info');
 
-  if (msgEl) msgEl.textContent = t('stk.doing', 'Running “{action}”…', { action });
+  if (msgEl) msgEl.textContent = stackSaid(action, 'doing');
 
   try {
     const res = await api.post(`/api/docker/stacks/${encodeURIComponent(_activeStackName)}/action`, { action });
     if (res.success) {
-      showToast(t('toast.stack_action_completed', 'Stack action \'{action}\' completed!', { action: action }), 'success');
-      if (msgEl) msgEl.textContent = t('stk.done', '“{action}” done', { action });
+      showToast(stackSaid(action, 'done'), 'success');
+      if (msgEl) msgEl.textContent = stackSaid(action, 'done');
       // Refresh stack details
       await openStackModal(_activeStackName);
     } else {
-      if (msgEl) msgEl.textContent = t('stk.failed', '“{action}” failed: {error}', { action, error: res.error });
-      showToast(res.error || t('stk.failed_short', '“{action}” failed', { action }), 'error');
+      if (msgEl) msgEl.textContent = stackSaid(action, 'failed', res.error);
+      showToast(stackSaid(action, 'failed', res.error), 'error');
     }
   } catch (err) {
-    if (msgEl) msgEl.textContent = t('stk.failed', '“{action}” failed: {error}', { action, error: err.message });
-    showToast(t('toast.stack_action_failed', 'Stack action failed: {error}', { error: err.message }), 'error');
+    if (msgEl) msgEl.textContent = stackSaid(action, 'failed', err.message);
+    showToast(stackSaid(action, 'failed', err.message), 'error');
   }
 }
 

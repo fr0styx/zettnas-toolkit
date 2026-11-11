@@ -230,3 +230,17 @@ def test_the_update_check_says_when_it_did_not_find_out(monkeypatch):
     res = du.check_all_container_updates(force=True)
     assert res["checked"] is True and res["unchecked"] == ["ghost", "immich"] and res["updates_available_count"] == 1
     assert du.get_cached_update_status()["unchecked"] == ["ghost", "immich"]
+
+
+def test_a_stack_stopped_here_is_remembered_too(stops, monkeypatch):
+    from backend.services import docker_stacks
+
+    apps = [{"id": "s1", "name": "web"}, {"id": "s2", "name": "db"}]
+    monkeypatch.setattr(docker_stacks, "get_stack_details", lambda _n: {"containers": apps, "compose_yaml": ""})
+    monkeypatch.setattr(docker_stacks, "topological_sort_stack_containers", lambda c, _y, reverse=False: list(c))
+    monkeypatch.setattr(docker_stacks, "is_kiboto_itself", lambda *_a: False)
+    monkeypatch.setattr(docker_stacks, "_docker_request", lambda *_a, **_k: (204, {}))
+    assert docker_stacks.execute_stack_action("shop", "stop")["success"] is True
+    assert dc.stopped_by_kiboto("web") and dc.stopped_by_kiboto("s2")
+    docker_stacks.execute_stack_action("shop", "start")
+    assert not dc.stopped_by_kiboto("web", "s1", "db", "s2")

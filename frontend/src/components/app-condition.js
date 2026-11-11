@@ -124,3 +124,19 @@ export function bulkSaid(action, phase, values = {}) {
   const [key, english] = (BULK[action] || BULK.restart)[phase === 'done' ? 1 : 0];
   return t(key, english, values);
 }
+
+// and for the apps of one stack
+const STACK = {
+  start: [['stkact.start_doing', 'Starting the apps of this stack…'], ['stkact.start_done', 'The apps of this stack are running.'], ['stkact.start_failed', 'The apps of this stack could not be started']],
+  stop: [['stkact.stop_doing', 'Stopping the apps of this stack…'], ['stkact.stop_done', 'The apps of this stack are stopped.'], ['stkact.stop_failed', 'The apps of this stack could not be stopped']],
+  restart: [['stkact.restart_doing', 'Restarting the apps of this stack…'], ['stkact.restart_done', 'The apps of this stack were restarted.'], ['stkact.restart_failed', 'The apps of this stack could not be restarted']],
+};
+
+/** The message for an action on a stack: 'Stack action \'redeploy\' completed!' and '“stop”
+ *  failed' pasted the action word into every language. */
+export function stackSaid(action, phase, error = '') {
+  const texts = STACK[action] || STACK.restart;
+  const [key, english] = texts[{ doing: 0, done: 1, failed: 2 }[phase] ?? 0];
+  const said = t(key, english);
+  return phase === 'failed' ? (error ? `${said}: ${error}` : `${said}.`) : said;
+}

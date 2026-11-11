@@ -1,7 +1,7 @@
 // SET-14: the list of apps says what state each app is in, and what the list itself is worth.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { setLanguage } from '../i18n.js';
-import { actionSaid, appsSummary, bulkSaid, canResume, canRestart, canStart, canStop, conditionOf, conditionView, needsLook } from '../components/app-condition.js';
+import { actionSaid, appsSummary, bulkSaid, canResume, canRestart, canStart, canStop, conditionOf, conditionView, needsLook, stackSaid } from '../components/app-condition.js';
 import { buildContainerRowInner, computeContainerRowSignature } from '../components/docker-table.js';
 import { initContainersManager, loadContainersData, stopCwAutoRefresh, _resetCwAutoRefreshForTesting } from '../components/containers-manager.js';
 import { DockManager } from '../components/dock.js';
@@ -110,6 +110,11 @@ describe('what an action says', () => {
     expect(bulkSaid('stop', 'doing', { count: 3 })).toBe('Stopping 3 apps…'); // "Executing bulk stop on 3 containers..."
     expect(bulkSaid('pause', 'done', { successful: 2, total: 3 })).toBe('2 of 3 paused.');
     expect(bulkSaid('stop', 'failed', { error: 'no' })).toBe('That did not work: no');
+    expect(stackSaid('stop', 'doing')).toBe('Stopping the apps of this stack…'); // "Executing stack stop..."
+    expect(stackSaid('restart', 'done')).toBe('The apps of this stack were restarted.'); // "Stack action 'redeploy' completed!"
+    expect(stackSaid('start', 'failed', 'port in use')).toBe('The apps of this stack could not be started: port in use');
+    expect(stackSaid('start', 'failed')).toBe('The apps of this stack could not be started.');
+    expect(stackSaid('other', 'done')).toBe('The apps of this stack were restarted.');
     await setLanguage('de');
     expect(actionSaid('stop', 'done', 'jellyfin')).toBe('jellyfin ist gestoppt.'); // "jellyfin: stop erledigt"
     expect(bulkSaid('start', 'doing', { count: 1 })).toBe('1 App wird gestartet…');

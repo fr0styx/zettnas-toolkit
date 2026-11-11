@@ -18,6 +18,7 @@ import yaml
 
 from backend.config import docker_sock, logger
 from backend.fsutil import atomic_write_text
+from backend.hardware import docker_condition
 from backend.hardware.docker_stats import (
     UnixHTTPConnection,
     _classify_stack,
@@ -754,6 +755,9 @@ def execute_stack_action(stack_name: str, action: str) -> dict[str, Any]:
         elif action == "start":
             st, _ = _docker_request("POST", f"/containers/{cid}/start")
 
+        if st in (204, 200, 304):
+            # a stack stopped here is "stopped", not "crashed", in the list of apps (SET-14)
+            (docker_condition.note_stopped if action == "stop" else docker_condition.note_started)(cid, c["name"])
         results.append(
             {
                 "id": cid,
