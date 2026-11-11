@@ -41,6 +41,7 @@ ACTIONS: dict[str, str] = {
     "users.export_data": "Download the chats, Kib log and search data of user {target}. They are told",
     "docker.container.delete": "Delete container {target}",
     "vm.delete": "Delete virtual machine {target}",
+    "vm.restore": "Restore backup {target} over its virtual machine, replacing its disks and settings",
     "backup.delete": "Delete backup {target}",
     "system.restore": "Restore system settings from a backup, replacing the current ones",
     "system.apply_restore": "Restart Kiboto now and apply the settings backup that is waiting. It replaces people, passwords, shares and cloud keys",

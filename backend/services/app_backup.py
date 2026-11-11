@@ -11,6 +11,7 @@ Handles:
 import io
 import json
 import os
+import shutil
 import tarfile
 import time
 import uuid
@@ -794,6 +795,26 @@ def _inside(path: str, folder: str) -> bool:
     return real.startswith(root.rstrip(os.sep) + os.sep)
 
 
+class VmIsRunning(Exception):
+    """A backup is not restored over a machine that runs or is paused (SET-14, VMs 13)."""
+
+
+def _copy_member(tar: tarfile.TarFile, member: tarfile.TarInfo, dest_path: str) -> None:
+    """Writes one archive file in pieces into a temporary file, then puts it in place: a disk image
+    was read into memory whole, and a failure left a half-written disk behind (SET-14, VMs 13)."""
+    src = tar.extractfile(member)
+    if src is None:
+        return
+    tmp = f"{dest_path}.restoring"
+    try:
+        with open(tmp, "wb") as out_f:
+            shutil.copyfileobj(src, out_f, 4 * 1024 * 1024)
+        os.replace(tmp, dest_path)
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+
+
 def restore_vm_backup(backup_id: str) -> dict[str, Any]:
     """
     Restores a VM configuration and disk files from a backup archive.
@@ -815,6 +836,10 @@ def restore_vm_backup(backup_id: str) -> dict[str, Any]:
         manifest = json.loads(f.read().decode("utf-8")) if f else {}
 
         vm_id, vm_dir, vm_config = _checked_vm_restore(manifest.get("vm_config") or {}, record)
+        from backend.services.vm_qemu import is_machine_running
+
+        if is_machine_running(vm_id):
+            raise VmIsRunning(vm_id)
         os.makedirs(vm_dir, exist_ok=True)
 
         for member in tar.getmembers():
@@ -830,11 +855,7 @@ def restore_vm_backup(backup_id: str) -> dict[str, Any]:
                         logger.warning("[VM Restore] Skipping file outside the VM folder: %s", member.name)
                     continue
                 os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-                if member.isfile():
-                    extracted_file = tar.extractfile(member)
-                    if extracted_file:
-                        with open(dest_path, "wb") as out_f:
-                            out_f.write(extracted_file.read())
+                _copy_member(tar, member, dest_path)
 
     # Ensure VM is in vms.json
     if vm_config:

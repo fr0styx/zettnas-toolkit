@@ -123,6 +123,11 @@ def _on_qmp_event(vm_id: str, event: str, data: dict[str, Any]) -> None:
     add_event(level, title, message.format(name=name, reason=reason), event_text(key, name=name, reason=reason))
 
 
+def is_machine_running(vm_id: str) -> bool:
+    """True while the machine's process lives (running or paused)."""
+    return _is_qemu_process_alive(vm_id)
+
+
 def _qmp_socket_path(vm_id: str) -> str:
     return f"/tmp/{vm_id}-qmp.sock"
 

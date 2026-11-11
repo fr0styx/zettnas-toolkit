@@ -384,6 +384,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   folder too, which can wake sleeping drives; they are now read only when a dialog that lists
   installers opens.
 
+#### Fixes
+
+- **Restoring a virtual machine backup is safe.** It read each file, the whole disk image included,
+  into memory at once, ran over a running machine, and the server never asked. The disk is now
+  copied in pieces and put in place only when complete, a running or paused machine is refused
+  with "shut it down first", and the server asks for confirmation.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

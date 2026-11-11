@@ -3389,6 +3389,8 @@ export default {
   "confirm.docker_container_delete.msg": "要删除容器 {target} 吗？",
   "confirm.vm_delete.title": "删除虚拟机",
   "confirm.vm_delete.msg": "要删除虚拟机 {target} 吗？",
+  "confirm.vm_restore.title": "恢复备份",
+  "confirm.vm_restore.msg": "恢复备份 {target}？虚拟机的磁盘和设置将被备份中的内容替换。",
   "confirm.backup_delete.title": "删除备份",
   "confirm.backup_delete.msg": "要删除备份 {target} 吗？",
   "confirm.system_restore.title": "恢复设置",

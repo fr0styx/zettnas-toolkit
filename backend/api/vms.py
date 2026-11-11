@@ -769,15 +769,23 @@ async def list_all_virtual_machine_backups():
 
 @router.post(
     "/backups/{backup_id}/restore",
-    dependencies=[Depends(require_scope("vms:manage", "system:config"))],
+    dependencies=[
+        Depends(require_scope("vms:manage", "system:config")),
+        Depends(require_confirmation("vm.restore")),
+    ],
 )
 async def restore_virtual_machine_backup(backup_id: str):
     """Restores VM configuration and disk images from backup archive."""
-    from backend.services.app_backup import restore_vm_backup
+    from backend.services.app_backup import VmIsRunning, restore_vm_backup
 
     try:
         res = await asyncio.to_thread(restore_vm_backup, backup_id)
         return {"status": "ok", "result": res}
+    except VmIsRunning as e:
+        raise HTTPException(
+            status_code=409,
+            detail="The machine is running or paused. Shut it down first, then restore the backup.",
+        ) from e
     except ValueError as ve:
         raise HTTPException(status_code=404, detail=str(ve)) from ve
     except FileNotFoundError as fe:

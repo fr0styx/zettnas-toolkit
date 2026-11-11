@@ -15,6 +15,7 @@ const ACTIONS = {
   'users.export_data': ['Download their data', 'Download the chats, Kib log and search data of {target}? They are told.', false],
   'docker.container.delete': ['Delete the app', 'Delete the container {target}?', true],
   'vm.delete': ['Delete the VM', 'Delete the virtual machine {target}?', true],
+  'vm.restore': ['Restore the backup', 'Restore the backup {target}? The machine’s disks and settings are replaced by the backup’s.', true],
   'backup.delete': ['Delete the backup', 'Delete the backup {target}?', true],
   'system.restore': ['Restore settings', 'Restore the system settings from a backup? They replace the current ones.', true],
   'offsite.restore_all': ['Bring back the files', 'Put every folder of backup {target} back where it was? Files that are already there stay as they are.', false],

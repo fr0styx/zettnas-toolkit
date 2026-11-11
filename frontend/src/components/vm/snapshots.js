@@ -352,7 +352,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
             t('vsn.restore_q', 'Restore {name} from the backup “{id}”? Its disks and settings are replaced by the backup’s.', { name: targetVm.name, id: bId }),
             async () => {
               try {
-                await api.post(`/api/vms/backups/${encodeURIComponent(bId)}/restore`);
+                await api.post(`/api/vms/backups/${encodeURIComponent(bId)}/restore`, {}, { confirmed: true }); // asked just above
                 showToast(t('toast.restored_vm_from_backup', 'Restored VM \'{name}\' from backup \'{bId}\'.', { name: targetVm.name, bId: bId }), 'success');
                 loadBackupsList();
                 loadVmDashboard();

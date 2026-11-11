@@ -3389,6 +3389,8 @@ export default {
   "confirm.docker_container_delete.msg": "Den Container {target} löschen?",
   "confirm.vm_delete.title": "VM löschen",
   "confirm.vm_delete.msg": "Die virtuelle Maschine {target} löschen?",
+  "confirm.vm_restore.title": "Sicherung wiederherstellen",
+  "confirm.vm_restore.msg": "Sicherung {target} wiederherstellen? Datenträger und Einstellungen der Maschine werden durch die der Sicherung ersetzt.",
   "confirm.backup_delete.title": "Sicherung löschen",
   "confirm.backup_delete.msg": "Die Sicherung {target} löschen?",
   "confirm.system_restore.title": "Einstellungen wiederherstellen",
