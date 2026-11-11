@@ -397,6 +397,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   log, the bell and the event dialog with the plain "i" of an information line, and the bell's
   "Errors" filter left them out. They are drawn as errors now.
 
+#### Security
+
+- **The Apps window reads only Compose files in the storage folders**: the Compose tab of an app's
+  details read whatever file the app's own label named. It now reads a Compose file only where a
+  stack's file may live. And **an app's terminal needs the right to run commands**, the same right
+  the "run a command" route asks for; opening a terminal is written to the security log.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

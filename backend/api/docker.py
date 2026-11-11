@@ -684,9 +684,8 @@ async def post_docker_container_exec(container_id: str, req: ContainerExecReques
     return res
 
 
-async def _authenticate_ws(
-    websocket: WebSocket, required_scopes: tuple = ("containers:exec", "containers:manage")
-) -> bool:
+async def _authenticate_ws(websocket: WebSocket, required_scopes: tuple = ("containers:exec",)) -> Any:
+    """The signed-in person when they hold one of the scopes; None otherwise."""
     from backend.auth import query_credential_allowed
 
     query_token = query_credential_allowed(
@@ -699,7 +698,7 @@ async def _authenticate_ws(
         or websocket.cookies.get("zat_token")
     )
     if not token:
-        return False
+        return None
 
     is_cookie_auth = not query_token and bool(
         session_cookie(websocket.cookies)
@@ -713,7 +712,7 @@ async def _authenticate_ws(
     )
 
     if not validate_websocket_origin(websocket, is_cookie_auth=is_cookie_auth):
-        return False
+        return None
 
     from backend.users_db import validate_scoped_api_token, validate_user_session
 
@@ -731,10 +730,10 @@ async def _authenticate_ws(
                 "is_api_token": True,
             }
     if not sess:
-        return False
+        return None
 
     principal = AuthenticatedPrincipal(sess)
-    return principal.has_any_scope(*required_scopes)
+    return principal if principal.has_any_scope(*required_scopes) else None
 
 
 @router.websocket("/docker/containers/{container_id}/terminal/ws")
@@ -749,12 +748,25 @@ async def websocket_docker_terminal(websocket: WebSocket, container_id: str):
         await websocket.close(code=1008, reason="Invalid container ID or name")
         return
 
-    if not await _authenticate_ws(websocket, ("containers:exec", "containers:manage")):
+    # the same right as the command route: a terminal is a way to run commands (SET-03)
+    principal = await _authenticate_ws(websocket, ("containers:exec",))
+    if not principal:
         await websocket.close(code=1008, reason="Unauthorized")
         return
 
     await websocket.accept()
     from backend.services.docker_terminal import stream_container_terminal
+    from backend.users_db import log_security_event
+
+    await asyncio.to_thread(
+        log_security_event,
+        "container.terminal",
+        "success",
+        actor_id=principal.user_id,
+        actor_username=principal.username,
+        actor_ip=websocket.client.host if websocket.client else "",
+        details={"container": container_id},
+    )
 
     shell = websocket.query_params.get("shell") or "/bin/sh"
     await stream_container_terminal(websocket, container_id, shell=shell)

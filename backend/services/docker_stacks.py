@@ -26,6 +26,7 @@ from backend.hardware.docker_stats import (
 from backend.ignored_errors import ignored
 from backend.services.compose_synthesizer import (
     fetch_container_raw_inspect,
+    stack_path_ok,
     synthesize_compose_spec,
 )
 
@@ -222,31 +223,6 @@ def topological_sort_stack_containers(
         ordered_containers.reverse()
 
     return ordered_containers
-
-
-_COMPOSE_NAMES = {"docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"}
-_EXTRA_STACK_ROOTS = ("/boot/config/plugins/compose.manager/projects",)  # Unraid Compose Manager
-
-
-def stack_path_ok(path: str, kind: str) -> bool:
-    """A stack file path taken from container labels is used only if it is a compose file
-    ("compose"), an env file ("env") or a folder ("dir") inside the storage folders, and not
-    in Kiboto's own data folder."""
-    from backend import config
-
-    if not path or not os.path.isabs(path) or "," in path:
-        return False
-    real = os.path.realpath(path)
-    name = os.path.basename(real)
-    if kind == "compose" and not (name in _COMPOSE_NAMES or name.endswith((".yml", ".yaml"))):
-        return False
-    if kind == "env" and not (name == ".env" or name.endswith(".env")):
-        return False
-    data = os.path.realpath(getattr(config, "DATA_DIR", "/app/data"))
-    if real == data or real.startswith(data + "/"):
-        return False
-    roots = [os.path.realpath(r) for r in [*(getattr(config, "ALLOWED_BROWSE_ROOTS", []) or []), *_EXTRA_STACK_ROOTS]]
-    return any(real == r or real.startswith(r.rstrip("/") + "/") for r in roots if r)
 
 
 def list_all_stacks() -> list[dict[str, Any]]:

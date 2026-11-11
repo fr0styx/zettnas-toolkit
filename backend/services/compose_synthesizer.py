@@ -229,6 +229,31 @@ def format_compose_yaml(service_name: str, spec: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+_COMPOSE_NAMES = {"docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"}
+_EXTRA_STACK_ROOTS = ("/boot/config/plugins/compose.manager/projects",)  # Unraid Compose Manager
+
+
+def stack_path_ok(path: str, kind: str) -> bool:
+    """A stack file path taken from container labels is used only if it is a compose file
+    ("compose"), an env file ("env") or a folder ("dir") inside the storage folders, and not
+    in Kiboto's own data folder."""
+    from backend import config
+
+    if not path or not os.path.isabs(path) or "," in path:
+        return False
+    real = os.path.realpath(path)
+    name = os.path.basename(real)
+    if kind == "compose" and not (name in _COMPOSE_NAMES or name.endswith((".yml", ".yaml"))):
+        return False
+    if kind == "env" and not (name == ".env" or name.endswith(".env")):
+        return False
+    data = os.path.realpath(getattr(config, "DATA_DIR", "/app/data"))
+    if real == data or real.startswith(data + "/"):
+        return False
+    roots = [os.path.realpath(r) for r in [*(getattr(config, "ALLOWED_BROWSE_ROOTS", []) or []), *_EXTRA_STACK_ROOTS]]
+    return any(real == r or real.startswith(r.rstrip("/") + "/") for r in roots if r)
+
+
 def get_container_compose_data(cid_or_name: str, allow_unmasked: bool = False) -> dict[str, Any]:
     """
     Returns Compose definition for a container, including both unmasked and masked YAML.
@@ -245,7 +270,10 @@ def get_container_compose_data(cid_or_name: str, allow_unmasked: bool = False) -
     disk_content = None
     source = "synthesized"
 
-    if compose_path and os.path.exists(compose_path) and os.path.isfile(compose_path):
+    # the path comes from a container label, which whoever created the container chose: it is read
+    # only where a stack's Compose file may live (the storage folders, never Kiboto's own data),
+    # the check the stack editor already makes (SET-03)
+    if compose_path and stack_path_ok(compose_path, "compose") and os.path.isfile(compose_path):
         try:
             with open(compose_path, encoding="utf-8") as f:
                 disk_content = f.read()
