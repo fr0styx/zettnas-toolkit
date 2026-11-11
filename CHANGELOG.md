@@ -438,6 +438,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   buttons inside, which screen readers cannot reach. "Review" and "Configure" are now real buttons,
   named after their row, beside the one-click fix.
 
+#### Fixes
+
+- **The Power page shows only what the UPS reports.** With no reading it showed "120.0 V", a full
+  green battery ring and "120V / 60Hz Nominal"; the watt figure assumed a 900 W UPS; the top bar and
+  the widget said "100 %" for an unknown charge. Unknown values now say so.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

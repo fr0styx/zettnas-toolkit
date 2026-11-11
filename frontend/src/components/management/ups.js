@@ -96,11 +96,19 @@ export function renderUpsTelemetry(ups) {
     }
   }
 
-  if (twinLinev) twinLinev.textContent = ups.line_volts != null ? `${ups.line_volts} V` : (ups.output_volts != null ? `${ups.output_volts} V` : (ups.available ? '120.0 V' : '-- V'));
+  if (twinLinev) twinLinev.textContent = ups.line_volts != null ? `${ups.line_volts} V` : (ups.output_volts != null ? `${ups.output_volts} V` : '-- V');
   if (twinGridStatus) {
-    twinGridStatus.textContent = ups.on_battery ? t('upx.mains_off', 'AC Mains Disconnected') : (ups.line_freq_hz ? t('upx.hz', '{hz} Hz Nominal', { hz: ups.line_freq_hz }) : t('upx.nominal', '120V / 60Hz Nominal'));
+    // only what the UPS reported: "120V / 60Hz Nominal" was shown with no reading at all (SET-15, B5)
+    twinGridStatus.textContent = ups.on_battery
+      ? t('upx.mains_off', 'AC Mains Disconnected')
+      : (ups.line_freq_hz ? t('upx.hz', '{hz} Hz Nominal', { hz: ups.line_freq_hz }) : (ups.available && ups.line_volts != null ? t('upx.mains_on', 'On mains power') : t('upx.no_reading', 'No reading')));
   }
-  if (twinWatts) twinWatts.textContent = ups.power_watts != null ? `${ups.power_watts} W` : (ups.load_pct != null ? `${Math.round(ups.load_pct * ((ups.nominal_power_watts || 900) / 100))} W` : '-- W');
+  if (twinWatts) {
+    // watts only when measured or worked out from a known capacity; else the load as the UPS gives it
+    twinWatts.textContent = ups.power_watts != null
+      ? `${ups.power_watts} W`
+      : (ups.load_pct != null && ups.nominal_power_watts ? `${Math.round(ups.load_pct * (ups.nominal_power_watts / 100))} W` : (ups.load_pct != null ? t('upx.load_pct', '{pct} % load', { pct: ups.load_pct }) : '-- W'));
+  }
   if (twinBattVolts) {
     const vStr = ups.battery_volts != null ? `${ups.battery_volts} V` : '-- V';
     const tStr = ups.battery_temp_c != null ? `${ups.battery_temp_c}°C` : '--°C';
@@ -109,10 +117,12 @@ export function renderUpsTelemetry(ups) {
 
   // Radial progress ring (circumference for r=28 is 175.93)
   if (radialFill) {
-    const pct = Math.max(0, Math.min(100, ups.battery_charge_pct != null ? ups.battery_charge_pct : 100));
+    // an unknown charge is an empty, grey ring, not a full green one (SET-15, B5)
+    const known = ups.battery_charge_pct != null;
+    const pct = known ? Math.max(0, Math.min(100, ups.battery_charge_pct)) : 0;
     const offset = 175.93 * (1 - pct / 100);
     radialFill.style.strokeDashoffset = offset;
-    radialFill.style.stroke = pct <= 20 ? 'var(--err, #eb5757)' : (pct <= 40 ? 'var(--warn, #f5a623)' : 'var(--ok2, #33cdb8)');
+    radialFill.style.stroke = !known ? 'var(--muted, #8a9a9c)' : (pct <= 20 ? 'var(--err, #eb5757)' : (pct <= 40 ? 'var(--warn, #f5a623)' : 'var(--ok2, #33cdb8)'));
   }
 
   if (flowContainer) {

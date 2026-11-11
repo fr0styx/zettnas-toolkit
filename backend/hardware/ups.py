@@ -1611,10 +1611,7 @@ def read_ups_status(force: bool = False, reprobe: bool = False) -> dict[str, Any
             nom_power = 150.0
         elif "w120" in model_str:
             nom_power = 120.0
-        elif effective_out_v is not None and effective_out_v <= 60.0:
-            nom_power = 180.0
-        else:
-            nom_power = 900.0
+        # no guess beyond the models above: a made-up 900 W turned the load into invented watts (SET-15, B5)
 
     power_watts = None
     if direct_power is not None and direct_power >= 0:

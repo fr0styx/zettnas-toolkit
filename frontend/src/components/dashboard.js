@@ -1250,14 +1250,14 @@ export function updateHardwareTelemetry(s) {
   if (upsPill) {
     if (hasUps) {
       upsPill.classList.remove('hidden');
-      const charge = ups.battery_charge_pct ?? ups.battery_charge ?? ups.charge ?? 100;
-      if (upsText) upsText.textContent = `${charge}%`;
+      const charge = ups.battery_charge_pct ?? ups.battery_charge ?? ups.charge ?? null; // unknown is not 100 % (SET-15)
+      if (upsText) upsText.textContent = charge != null ? `${charge}%` : t('upx.short', 'UPS');
       if (upsDot) {
         const onBatt = Boolean(ups.on_battery || (ups.status && (ups.status.includes('OB') || ups.status.includes('BATT'))));
         if (onBatt) {
           upsDot.style.background = 'var(--warn, #f5a623)';
           upsDot.style.boxShadow = '0 0 6px var(--warn, #f5a623)';
-        } else if (charge <= 20) {
+        } else if (charge != null && charge <= 20) {
           upsDot.style.background = 'var(--err, #eb5757)';
           upsDot.style.boxShadow = '0 0 6px var(--err, #eb5757)';
         } else {

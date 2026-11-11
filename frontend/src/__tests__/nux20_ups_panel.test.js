@@ -54,7 +54,7 @@ describe('UPS panel words (NUX-20)', () => {
     expect(byId('mgmt-ups-policy').textContent).toBe('Policy: battery_pct');
     expect(byId('ups-twin-grid-status').textContent).toBe('50 Hz Nominal');
     renderUpsTelemetry({ available: true });
-    expect(byId('ups-twin-grid-status').textContent).toBe('120V / 60Hz Nominal');
+    expect(byId('ups-twin-grid-status').textContent).toBe('No reading'); // nothing reported: no invented 120 V / 60 Hz (SET-15)
 
     document.body.innerHTML = '';
     expect(() => renderUpsTelemetry({ available: true, on_battery: true })).not.toThrow();
