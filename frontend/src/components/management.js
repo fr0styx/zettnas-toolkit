@@ -1905,7 +1905,7 @@ export function initManagement() {
   if (sendTestAlertBtn) {
     sendTestAlertBtn.addEventListener('click', testAllNotificationChannels);
   }
-  const saveNotifBtn = document.getElementById('btn-save-notifications');
+  const saveNotifBtn = document.getElementById('btn-save-notifications'); // gone: the fields save themselves (SET-14)
   if (saveNotifBtn) {
     saveNotifBtn.addEventListener('click', saveNotificationsConfig);
   }

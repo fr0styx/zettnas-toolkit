@@ -248,6 +248,8 @@ export default {
   "notif.badge.active": "Activo",
   "notif.badge.disabled": "Deshabilitado",
   "notif.saved_ok": "¡Configuración de notificaciones guardada con éxito!",
+  "notif.saved_short": "Guardado.",
+  "notif.saved_at_once": "Los cambios aquí se guardan al momento.",
   "time.just_now": "Hace un momento",
   "dock.recycle_bin": "Papelera de reciclaje",
   "modal.smart_abort_test": "Cancelar prueba",

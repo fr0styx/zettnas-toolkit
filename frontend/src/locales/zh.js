@@ -248,6 +248,8 @@ export default {
   "notif.badge.active": "已启用",
   "notif.badge.disabled": "已禁用",
   "notif.saved_ok": "通知设置已成功保存！",
+  "notif.saved_short": "已保存。",
+  "notif.saved_at_once": "此处的更改会立即保存。",
   "time.just_now": "刚刚",
   "dock.recycle_bin": "回收站",
   "modal.smart_abort_test": "中止测试",

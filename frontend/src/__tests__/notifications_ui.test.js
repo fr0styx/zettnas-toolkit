@@ -23,7 +23,8 @@ describe('Notifications & Multi-Channel Alerting UI Integration', () => {
     expect(html).toContain('id="notif-master-enabled"');
     expect(html).toContain('id="notif-master-status-badge"');
     expect(html).toContain('id="btn-send-test-alert"');
-    expect(html).toContain('id="btn-save-notifications"');
+    expect(html).not.toContain('id="btn-save-notifications"'); // the fields save themselves (SET-14)
+    expect(html).not.toContain('id="notif-toggle-container"'); // no code sends that kind of alert
 
     // All 6 channels
     expect(html).toContain('data-channel="discord"');
@@ -48,7 +49,6 @@ describe('Notifications & Multi-Channel Alerting UI Integration', () => {
     expect(html).toContain('id="notif-toggle-ups"');
     expect(html).toContain('id="notif-toggle-fan"');
     expect(html).toContain('id="notif-toggle-copy"');
-    expect(html).toContain('id="notif-toggle-container"');
     expect(html).toContain('id="notif-toggle-backup"');
 
     expect(html).toContain('id="notif-input-hdd-temp"');

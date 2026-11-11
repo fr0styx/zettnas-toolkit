@@ -276,6 +276,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **"Stop sharing" says that the folder and its files stay.** The question only asked 'Remove the
   share "x"?' and made you type the name.
 
+#### Fixes
+
+- **Alert settings are saved as you change them.** The master switch, the kinds of alert, the
+  limits, the daily summary and the language waited for "Save Settings" at the top of the page,
+  and leaving the page lost the change without a word. Each change is now saved at once and says
+  "Saved."; a save that fails says so. The "Container crashes" box is gone: no code sends that
+  kind of alert.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

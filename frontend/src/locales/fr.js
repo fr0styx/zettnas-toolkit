@@ -258,6 +258,8 @@ export default {
   "notif.badge.active": "Actif",
   "notif.badge.disabled": "Désactivé",
   "notif.saved_ok": "Paramètres de notification enregistrés avec succès !",
+  "notif.saved_short": "Enregistré.",
+  "notif.saved_at_once": "Les modifications ici sont enregistrées au fur et à mesure.",
   "time.just_now": "À l'instant",
   "dock.recycle_bin": "Corbeille",
   "modal.smart_abort_test": "Interrompre le test",

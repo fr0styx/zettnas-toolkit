@@ -220,6 +220,8 @@ export default {
   "notif.badge.active": "Active",
   "notif.badge.disabled": "Disabled",
   "notif.saved_ok": "Notification settings saved successfully!",
+  "notif.saved_short": "Saved.",
+  "notif.saved_at_once": "Changes here are saved as you make them.",
   "time.just_now": "Just now",
   "dock.recycle_bin": "Recycle Bin",
   "modal.smart_abort_test": "Abort Test",

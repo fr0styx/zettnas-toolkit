@@ -44,6 +44,7 @@ export function renderNotificationConfigUI() {
     lang.value = cfg.language || 'en';
   }
   renderMyAlerts(document.getElementById('my-alerts-mount'));
+  installSaveAtOnce();
   const frigate = document.getElementById('frigate-events-mount');
   if (frigate) import('../frigate-events.js').then((m) => m.renderFrigateEvents(frigate)); // COMP-11
 
@@ -87,7 +88,6 @@ export function renderNotificationConfigUI() {
   setChk('notif-toggle-temp', cfg.notify_on_temp);
   setChk('notif-toggle-fan', cfg.notify_on_fan);
   setChk('notif-toggle-copy', cfg.notify_on_copy);
-  setChk('notif-toggle-container', cfg.notify_on_container);
   setChk('notif-toggle-backup', cfg.notify_on_backup);
 
   // Thresholds
@@ -100,7 +100,40 @@ export function renderNotificationConfigUI() {
   setVal('notif-input-cooldown', Math.round((cfg.cooldown_seconds ?? 1800) / 60));
 }
 
-export async function saveNotificationsConfig() {
+// the fields that save themselves when they change (SET-14): they waited for "Save Settings" at
+// the top of the page, and leaving the page lost the change without a word
+export const SAVED_AT_ONCE = [
+  'notif-master-enabled',
+  'notif-toggle-smart',
+  'notif-toggle-ups',
+  'notif-toggle-temp',
+  'notif-toggle-fan',
+  'notif-toggle-copy',
+  'notif-toggle-backup',
+  'notif-input-hdd-temp',
+  'notif-input-cpu-temp',
+  'notif-input-cooldown',
+  'notif-digest-mode',
+  'notif-digest-hour',
+  'notif-weekly-report',
+  'notif-language',
+];
+let _saveTimer = null;
+
+/** Each field saves the settings when it changes; numbers once typing has paused. */
+export function installSaveAtOnce(root = document, wait = 500) {
+  for (const id of SAVED_AT_ONCE) {
+    const el = root.getElementById ? root.getElementById(id) : null;
+    if (!el || el.dataset.savesAtOnce) continue;
+    el.dataset.savesAtOnce = '1';
+    el.addEventListener('change', () => {
+      clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(() => saveNotificationsConfig({ quiet: true }), wait);
+    });
+  }
+}
+
+export async function saveNotificationsConfig({ quiet = false } = {}) {
   if (!_notificationConfig) _notificationConfig = {};
   const cfg = _notificationConfig;
 
@@ -110,7 +143,6 @@ export async function saveNotificationsConfig() {
   cfg.notify_on_temp = !!document.getElementById('notif-toggle-temp')?.checked;
   cfg.notify_on_fan = !!document.getElementById('notif-toggle-fan')?.checked;
   cfg.notify_on_copy = !!document.getElementById('notif-toggle-copy')?.checked;
-  cfg.notify_on_container = !!document.getElementById('notif-toggle-container')?.checked;
   cfg.notify_on_backup = !!document.getElementById('notif-toggle-backup')?.checked;
 
   const hdd = parseInt(document.getElementById('notif-input-hdd-temp')?.value, 10);
@@ -134,7 +166,7 @@ export async function saveNotificationsConfig() {
     const res = await api.post('/api/notifications/config', cfg);
     _notificationConfig = res.config || cfg;
     renderNotificationConfigUI();
-    showToast(t('notif.saved_ok', 'Notification settings saved successfully!'), 'success');
+    showToast(quiet ? t('notif.saved_short', 'Saved.') : t('notif.saved_ok', 'Notification settings saved successfully!'), 'success');
   } catch (err) {
     console.error('Failed to save notification settings:', err);
     showToast(err.message || t('notif.save_fail', 'Failed to save the notification settings'), 'error');
