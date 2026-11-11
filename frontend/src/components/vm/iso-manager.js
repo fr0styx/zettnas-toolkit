@@ -28,7 +28,7 @@ export const OFFICIAL_ISO_CATALOG = [
     size_formatted: '2.6 GB',
     arch: 'x86_64',
     kernel: 'Linux 6.8',
-    url: 'https://releases.ubuntu.com/24.04.1/ubuntu-24.04.1-live-server-amd64.iso',
+    url: 'https://old-releases.ubuntu.com/releases/24.04.1/ubuntu-24.04.1-live-server-amd64.iso',
     filename: 'ubuntu-24.04.1-live-server-amd64.iso',
     desc: 'Enterprise grade cloud & container host. Pre-configured with cloud-init and OpenSSH.'
   },
@@ -67,7 +67,7 @@ export const OFFICIAL_ISO_CATALOG = [
     size_formatted: '2.5 GB',
     arch: 'x86_64',
     kernel: 'Linux 6.8',
-    url: 'https://download.fedoraproject.org/pub/fedora/linux/releases/40/Server/x86_64/iso/Fedora-Server-dvd-x86_64-40-1.14.iso',
+    url: 'https://archives.fedoraproject.org/pub/archive/fedora/linux/releases/40/Server/x86_64/iso/Fedora-Server-dvd-x86_64-40-1.14.iso',
     filename: 'Fedora-Server-dvd-x86_64-40-1.14.iso',
     desc: 'Leading-edge Linux platform with native systemd-nspawn, Podman, and Cockpit integration.'
   },
@@ -93,8 +93,8 @@ export const OFFICIAL_ISO_CATALOG = [
     size_formatted: '650 MB',
     arch: 'x86_64 / x86',
     kernel: 'WHQL Signed',
-    url: 'https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso',
-    filename: 'virtio-win-stable.iso',
+    url: 'https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.262-2/virtio-win-0.1.262.iso',
+    filename: 'virtio-win-0.1.262.iso',
     desc: 'Essential Red Hat signed VirtIO storage (viostor), network (NetKVM), and memory balloon drivers.'
   },
   {
