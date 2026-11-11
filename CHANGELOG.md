@@ -450,6 +450,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   "Done" and wrote a test into the history. It now says the test was not sent and why; when the UPS
   accepts it, the history says "sent", because the result is shown on the UPS itself.
 
+#### Fixes
+
+- **The power-cut practice run no longer writes a power cut into the history.** After the run, the
+  history said "Mains power restored" for a cut that never happened. A real cut during a practice
+  run is still recorded.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

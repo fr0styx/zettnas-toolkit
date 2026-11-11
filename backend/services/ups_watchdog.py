@@ -34,6 +34,7 @@ _failsafe_engaged = False
 _host_shutdown_started = False
 _silent_alerted = False
 _simulation_active = False
+_outage_is_drill = False  # the current "outage" is the practice run, not the mains (SET-15, Power B4)
 _simulation_end_ts = 0.0
 _copy_paused_by_failsafe = False
 HOST_OWNED = {"unraid": "Unraid", "truenas": "TrueNAS"}
@@ -516,7 +517,13 @@ def _ups_fell_silent(now: float) -> None:
 
 def check_ups_power_watchdog(ups_data: dict[str, Any], now: float):
     """Called every stats collection tick to evaluate UPS state, log events, and enforce policies."""
-    global _outage_start_ts, _outage_start_charge, _outage_start_volts, _failsafe_engaged, _silent_alerted
+    global \
+        _outage_start_ts, \
+        _outage_start_charge, \
+        _outage_start_volts, \
+        _failsafe_engaged, \
+        _silent_alerted, \
+        _outage_is_drill
 
     if not ups_data or not ups_data.get("available"):
         _ups_fell_silent(now)
@@ -541,6 +548,9 @@ def check_ups_power_watchdog(ups_data: dict[str, Any], now: float):
             _outage_start_ts = now
             _outage_start_charge = charge
             _outage_start_volts = line_v
+            _outage_is_drill = state != ups_state.ON_BATTERY
+        elif state == ups_state.ON_BATTERY:
+            _outage_is_drill = False  # the mains really went during the practice run
 
         elapsed = now - _outage_start_ts
 
@@ -572,8 +582,9 @@ def check_ups_power_watchdog(ups_data: dict[str, Any], now: float):
         # Power restored
         if _outage_start_ts is not None:
             duration = round(now - _outage_start_ts, 1)
-            # Only record if the outage lasted at least 3 seconds
-            if duration >= 3.0:
+            # Only record if the outage lasted at least 3 seconds; a practice run is no outage: it wrote
+            # "Mains power restored" into the history for a cut that never happened (SET-15, Power B4)
+            if duration >= 3.0 and not _outage_is_drill:
                 log_ups_event(
                     event_type="OUTAGE_RECOVERED",
                     status="RESOLVED",
@@ -594,6 +605,7 @@ def check_ups_power_watchdog(ups_data: dict[str, Any], now: float):
             _outage_start_ts = None
             _outage_start_charge = None
             _outage_start_volts = None
+            _outage_is_drill = False
             _silent_alerted = False
             if _host_shutdown_started:
                 # the NAS is going down: starting the apps again would start them into a shutdown
