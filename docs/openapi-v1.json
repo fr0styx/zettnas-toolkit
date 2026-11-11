@@ -6475,7 +6475,7 @@
       "type": "boolean"
      },
      "prune_containers": {
-      "default": true,
+      "default": false,
       "title": "Prune Containers",
       "type": "boolean"
      },

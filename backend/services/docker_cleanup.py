@@ -222,6 +222,10 @@ def get_docker_system_df(timeout: float = 15.0) -> dict[str, Any]:
         "containers": {
             "total_count": len(containers),
             "stopped_count": len(stopped_containers),
+            # their names: "Clean up" names the apps it would remove (SET-07)
+            "stopped_names": sorted(
+                ((c.get("Names") or [""])[0].lstrip("/") or str(c.get("Id", ""))[:12]) for c in stopped_containers
+            ),
             "size_rw_bytes": total_containers_size,
             "size_rw_human": _format_bytes(total_containers_size),
         },
@@ -245,7 +249,7 @@ def get_docker_system_df(timeout: float = 15.0) -> dict[str, Any]:
 
 
 def prune_docker_system(
-    prune_containers: bool = True,
+    prune_containers: bool = False,  # a stopped app is never removed unless asked for (SET-07)
     prune_images: bool = True,
     all_images: bool = False,
     prune_volumes: bool = False,
@@ -418,7 +422,7 @@ def cancel_prune_job(job_id: str) -> bool:
 
 
 def start_prune_job(
-    prune_containers: bool = True,
+    prune_containers: bool = False,  # a stopped app is never removed unless asked for (SET-07)
     prune_images: bool = True,
     all_images: bool = False,
     prune_volumes: bool = False,

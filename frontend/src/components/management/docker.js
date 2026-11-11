@@ -9,7 +9,7 @@ import { ZettEventBus } from '../../event-bus.js';
 import { clearSelectedContainers, createContainerRow, getSelectedContainerIds, initSynchronizedTableScrollbars, isContainerSelected, runBulkContainerAction, selectAllContainers, toggleContainerSelected, updateContainerRow } from '../docker-table.js';
 import { bringToFront, DockManager, makeDraggable, showDockToast } from '../dock.js';
 import { api } from '../../api.js';
-import { showToast, showConfirmToast, showBottomSheet } from '../../toast.js';
+import { showToast, showConfirmToast, showDangerConfirm, showBottomSheet } from '../../toast.js';
 import { escapeHtml, copyTextToClipboard, reconcileKeyedTable, copyText } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { formatBytes as formatSize } from '../../format.js';
@@ -2114,6 +2114,46 @@ export async function openAppDeployModal(appId) {
   }
 }
 
+/** @type {string[]} the apps that are not running, as the clean-up dialog last read them */
+let _stoppedApps = [];
+
+/**
+ * Says which apps "Remove stopped apps" would remove; with none, the option cannot be ticked.
+ * @param {string[]} names
+ */
+export function showStoppedApps(names) {
+  _stoppedApps = names;
+  const box = /** @type {HTMLInputElement | null} */ (document.getElementById('dpm-opt-containers'));
+  const title = document.getElementById('dpm-opt-containers-title');
+  const desc = document.getElementById('dpm-opt-containers-desc');
+  if (title) title.textContent = t('dk.p_containers_n', '{count, plural, one {Remove # stopped app} other {Remove # stopped apps}}', { count: names.length });
+  if (desc) {
+    desc.textContent = names.length
+      ? t('dk.p_containers_names', 'These are not running and would be removed, with their set-up: {names}. Their folders stay. Leave this off unless you know every one of them.', { names: names.join(', ') })
+      : t('dk.p_containers_none', 'Every app is running: nothing to remove.');
+  }
+  if (box) {
+    box.disabled = names.length === 0;
+    if (!names.length) box.checked = false;
+  }
+}
+
+/**
+ * The second question before stopped apps are removed.
+ * @param {string[]} names
+ * @returns {Promise<boolean>}
+ */
+export function askRemoveStopped(names) {
+  return new Promise((resolve) => {
+    showDangerConfirm(
+      t('dk.remove_stopped_title', '{count, plural, one {Remove # stopped app?} other {Remove # stopped apps?}}', { count: names.length }),
+      t('dk.remove_stopped_msg', 'These apps and their set-up are removed for good: {names}. Their folders stay where they are. An app you stopped on purpose is gone as well.', { names: names.join(', ') }),
+      () => resolve(true), () => resolve(false),
+      { okText: t('dk.remove_stopped_ok', 'Remove them') },
+    );
+  });
+}
+
 export async function openDockerPruneModal() {
   let modal = document.getElementById('docker-prune-modal-overlay');
   if (!modal) {
@@ -2155,10 +2195,10 @@ export async function openDockerPruneModal() {
             <!-- Prune Options -->
             <div class="dpm-opts dkd-col-box">
               <label class="dkd-row-xs">
-                <input class="dkd-x-5" type="checkbox" id="dpm-opt-containers" checked>
+                <input class="dkd-x-5" type="checkbox" id="dpm-opt-containers">
                 <div>
-                  <strong>${t('dk.p_containers', 'Remove stopped containers')}</strong>
-                  <div class="dkd-xs-muted-2">${t('dk.p_containers_d', 'Deletes every exited, stopped or dead container.')}</div>
+                  <strong id="dpm-opt-containers-title">${t('dk.p_containers', 'Remove stopped apps')}</strong>
+                  <div class="dkd-xs-muted-2" id="dpm-opt-containers-desc">${t('dk.p_containers_d', 'Removes apps that are not running, with their set-up. Their folders stay. Leave this off unless you know every one of them.')}</div>
                 </div>
               </label>
               <label class="dkd-row-xs">
@@ -2255,6 +2295,7 @@ export async function openDockerPruneModal() {
 
     if (imgEl && df.images) imgEl.textContent = `${df.images.total_count} (${df.images.unused_count} unused)`;
     if (cntEl && df.containers) cntEl.textContent = `${df.containers.total_count} (${df.containers.stopped_count} stopped)`;
+    showStoppedApps((df.containers && df.containers.stopped_names) || []);
     if (volEl && df.volumes) volEl.textContent = `${df.volumes.total_count} (${df.volumes.unused_count} unused)`;
     if (recEl) recEl.textContent = df.total_reclaimable_human || '0 B';
   } catch (err) {
@@ -2273,10 +2314,13 @@ export async function openDockerPruneModal() {
     }
     const allImages = document.getElementById('dpm-opt-all-images').checked;
     const pruneBuildCache = document.getElementById('dpm-opt-buildcache').checked;
+    const removeStopped = document.getElementById('dpm-opt-containers').checked && _stoppedApps.length > 0;
+    // removing apps is asked once more, by name: the one button used to start it at once
+    if (removeStopped && !(await askRemoveStopped(_stoppedApps))) return;
     confirmBtn.disabled = true;
     try {
       const res = await api.post('/api/docker/system/prune/jobs', {
-        prune_containers: document.getElementById('dpm-opt-containers').checked,
+        prune_containers: removeStopped,
         prune_images: document.getElementById('dpm-opt-images').checked || allImages,
         all_images: allImages,
         prune_volumes: document.getElementById('dpm-opt-volumes').checked,

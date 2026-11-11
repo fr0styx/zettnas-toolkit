@@ -657,6 +657,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   example) went into the new app as `••••••••`. The form now always starts from the real
   values, and a value that still holds the dots is refused before anything is touched.
 
+#### Changes
+
+- **"Clean up" no longer removes stopped apps unless you ask it to.** "Remove stopped containers"
+  was ticked by default, and the dialog's one button removed every app that was not running,
+  without naming them: an app you had stopped on purpose, and the copy an edit keeps for going
+  back. The option is now off, it names the apps it would remove, and removing them is asked
+  once more. For scripts: `prune_containers` is `false` unless it is sent.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

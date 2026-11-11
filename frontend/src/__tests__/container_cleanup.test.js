@@ -117,7 +117,7 @@ describe('Container Deletion and Docker Prune Subsystem', () => {
     await confirmBtn.onclick();
 
     expect(postSpy).toHaveBeenCalledWith('/api/docker/system/prune/jobs', {
-      prune_containers: true,
+      prune_containers: false, // stopped apps stay unless the option is ticked (SET-07)
       prune_images: true,
       all_images: false,
       prune_volumes: false,
@@ -163,7 +163,7 @@ describe('Container Deletion and Docker Prune Subsystem', () => {
     await confirmBtn.onclick();
 
     expect(postSpy).toHaveBeenCalledWith('/api/docker/system/prune/jobs', {
-      prune_containers: true,
+      prune_containers: false, // stopped apps stay unless the option is ticked (SET-07)
       prune_images: true,
       all_images: true,
       prune_volumes: false,

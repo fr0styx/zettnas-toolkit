@@ -801,7 +801,9 @@ async def get_system_df():
 
 
 class DockerPruneRequest(BaseModel):
-    prune_containers: bool = True
+    # off unless it is sent: "Clean up" removed every stopped app by default, also the copy an
+    # edit keeps for going back (SET-07, the owner's decision S22)
+    prune_containers: bool = False
     prune_images: bool = True
     all_images: bool = False
     prune_volumes: bool = False
