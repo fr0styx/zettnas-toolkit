@@ -409,6 +409,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   will only be able to set it up. "Lift the freeze" uses Kiboto's own dialog, "Unblock" says whether
   it worked, and "Turn off admin" says that it signs you out when you are "admin".
 
+#### Fixes
+
+- **About & Updates fits a phone.** The update channel buttons and "Check for Updates" stood in one
+  row wider than the screen, which pushed the cards past its left edge. They now wrap.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

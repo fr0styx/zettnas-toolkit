@@ -73,8 +73,9 @@
 #mgmt-pane-about .ab-box-2 { padding: 18px; background: var(--kb-glaze-3); border-radius: 8px; border: 1px solid var(--kb-line-8); }
 #mgmt-pane-about .ab-row-4 { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px; }
 #mgmt-pane-about .ab-fs14-bold-strong { font-weight: 700; font-size: 14px; color: var(--kb-text-strong); display: block; margin-bottom: 2px; }
-#mgmt-pane-about .ab-row-5 { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-#mgmt-pane-about .ab-row-xs-box { display: inline-flex; align-items: center; background: var(--kb-shade-35); padding: 2px; border-radius: 6px; border: 1px solid var(--kb-line-10); font-size: var(--kb-fs-xs); flex-shrink: 0; white-space: nowrap; }
+/* the channel chooser and Check for updates wrap on a phone: the row was 519 px wide and pushed the cards past the screen (SET-14) */
+#mgmt-pane-about .ab-row-5 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+#mgmt-pane-about .ab-row-xs-box { display: inline-flex; flex-wrap: wrap; max-width: 100%; align-items: center; background: var(--kb-shade-35); padding: 2px; border-radius: 6px; border: 1px solid var(--kb-line-10); font-size: var(--kb-fs-xs); flex-shrink: 0; white-space: nowrap; }
 #mgmt-pane-about .ab-semi-muted-box { padding: 5px 12px; border-radius: 4px; border: none; background: transparent; color: var(--muted); font-weight: 600; cursor: pointer; white-space: nowrap; }
 #mgmt-pane-about .ab-size { min-width: 152px; text-align: center; box-sizing: border-box; }
 #mgmt-pane-about .ab-box-3 { padding: 14px; background: var(--kb-shade-25); border: 1px solid var(--kb-line-6); border-radius: 8px; }
