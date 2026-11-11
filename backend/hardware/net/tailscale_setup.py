@@ -257,7 +257,11 @@ def deploy_tailscale_container(
     create_body = _tailscale_devices(env_vars, image_name, state_dir)
 
     # 6. Create container
-    st_create, res_create = _docker_request("POST", "/containers/create?name=tailscale", body=create_body)
+    # the host's network and the right to change it: Kiboto's own Docker guard refuses that unless
+    # the request says a person agreed (the routes ask first: network.tailscale_install, SET-02)
+    st_create, res_create = _docker_request(
+        "POST", "/containers/create?name=tailscale", body=create_body, headers={"X-Kiboto-Elevated": "1"}
+    )
     if st_create != 201:
         err_msg = res_create.get("message") if isinstance(res_create, dict) else str(res_create)
         return {"status": "error", "message": f"Failed to create Tailscale container: {err_msg}"}

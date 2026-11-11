@@ -228,7 +228,7 @@ def test_deploy_tailscale_container_existing_running():
 
 
 def test_deploy_tailscale_container_new_flow(tmp_path):
-    def fake_docker_req(method, path, body=None):
+    def fake_docker_req(method, path, body=None, headers=None):
         if method == "GET" and path == "/containers/tailscale/json":
             return 404, {}
         if method == "GET" and path == "/images/tailscale/tailscale:stable/json":

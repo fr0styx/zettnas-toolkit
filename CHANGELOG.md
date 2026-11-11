@@ -344,6 +344,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Kiboto was open at its secure address, the button saved that page's port (443) as Kiboto's own, and
   the address away from home pointed at the wrong local port from then on.
 
+#### Fixes
+
+- **The first "Connect" to Tailscale works**: on a NAS that had no Tailscale yet, "Use from anywhere →
+  Connect" was refused by Kiboto's own safety check for containers that use the NAS's network. Kiboto
+  now asks first, and then starts Tailscale.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

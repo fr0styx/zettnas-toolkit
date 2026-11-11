@@ -3232,6 +3232,8 @@ export default {
   "confirm.network_public_links.msg": "Let anyone who has a share link open it from the internet, through Tailscale Funnel on port {target}? Only share links are reachable that way; the rest of the NAS stays private.",
   "confirm.network_public_links_move_immich.title": "Publish and move Immich",
   "confirm.network_public_links_move_immich.msg": "Publish share links, and move Immich to {target}? Share links need the port Immich’s secure address uses now, and a port on the internet must carry nothing else. Phones and browsers that open Immich at the old address need the new one. If the family signs in to Immich with one account, connect Immich again in Users.",
+  "confirm.network_tailscale_install.title": "Start Tailscale",
+  "confirm.network_tailscale_install.msg": "Start Tailscale in {target}, a container on this NAS’s own network that may change its network settings? Tailscale needs that to connect your devices. Nothing is opened on your router.",
   "offsite.plain_http": "This address is outside your network and uses plain http: the backup password travels in the clear. Reach it over Tailscale, or use rest:https://.",
   "fm.bins_asleep": "{count, plural, one {# Recycle Bin is} other {# Recycle Bins are}} on a sleeping disk and not shown, so the disk stays asleep. They appear once it wakes.",
   "updates.busy_title": "Some work is still running",

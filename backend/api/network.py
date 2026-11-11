@@ -7,7 +7,7 @@ friendly interface aliases, and Docker network management.
 import asyncio
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
@@ -310,10 +310,26 @@ async def get_remote_access(principal: AuthenticatedPrincipal = Depends(get_curr
     return st if _may_change(principal) else {**st, "auth_url": ""}
 
 
+def _ask_before_installing_tailscale(request: Request, principal: AuthenticatedPrincipal) -> None:
+    """Putting Tailscale on the NAS means a container on the host's network that may change its
+    network settings: asked on the server, once, before it is created (SET-02)."""
+    from backend.confirmations import confirm_or_raise
+    from backend.hardware.net import tailscale
+
+    if not tailscale.installed():
+        confirm_or_raise(request, principal, "network.tailscale_install", "tailscale")
+
+
 @router.post("/network/remote-access/connect", dependencies=[Depends(require_scope("system:config"))])
-async def post_remote_access_connect(req: RemoteAccessConnectRequest):
+async def post_remote_access_connect(
+    req: RemoteAccessConnectRequest,
+    request: Request,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
     """Joins Tailscale, or a Headscale server; answers with the sign-in link when one is needed."""
     from backend.services import remote_access
+
+    _ask_before_installing_tailscale(request, principal)
 
     return await asyncio.to_thread(_remote, remote_access.connect, req.login_server, req.auth_key)
 
@@ -379,9 +395,15 @@ async def post_tailscale_down():
 
 
 @router.post("/network/mesh-vpn/tailscale/deploy", dependencies=[Depends(require_scope("system:config"))])
-async def post_tailscale_deploy(req: TailscaleDeployRequest):
+async def post_tailscale_deploy(
+    req: TailscaleDeployRequest,
+    request: Request,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
     """1-Click turnkey provisioning of the official Tailscale Docker container."""
     from backend.hardware.network import deploy_tailscale_container
+
+    _ask_before_installing_tailscale(request, principal)
 
     res = await asyncio.to_thread(
         deploy_tailscale_container,
