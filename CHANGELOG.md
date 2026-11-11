@@ -331,6 +331,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   under the previous one's, and on a stopped app the last lines came again every few seconds. The
   log now starts fresh for each app and says when it has ended.
 
+#### Fixes
+
+- **An app's hidden settings show and copy their real value.** On the Environment tab, the eye and
+  the copy button used the dots of the mask. They now fetch the value, for people who manage apps;
+  others are told they may not see it, and nothing is copied.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

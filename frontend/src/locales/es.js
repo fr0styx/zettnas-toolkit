@@ -5937,6 +5937,7 @@ export default {
   "ci.compose_failed": "No se pudo crear el archivo compose: {error}",
   "ci.connecting": "Conectando con el registro en vivo…",
   "ci.log_ended": "El registro en directo ha terminado: la aplicación no se está ejecutando.",
+  "ci.secret_not_allowed": "Solo las personas que gestionan aplicaciones pueden ver este valor.",
   "ci.logs_failed": "No se pudieron leer los registros: {error}",
   "ci.no_logs": "No hay líneas de registro en este periodo.",
   "ci.delete_q": "¿Eliminar para siempre el contenedor {name} ({id})?",

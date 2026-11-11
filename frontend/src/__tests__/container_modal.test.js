@@ -203,9 +203,9 @@ describe('Container Inspector & Docker Compose Viewer - Phase 2', () => {
     const toggleSecretBtn = envContent.querySelector('.btn-toggle-secret');
     expect(toggleSecretBtn).not.toBeNull();
     toggleSecretBtn.click();
-    expect(secretSpan.textContent).toBe('secret_api_token_xyz999');
+    await vi.waitFor(() => expect(secretSpan.textContent).toBe('secret_api_token_xyz999'));
     toggleSecretBtn.click();
-    expect(secretSpan.textContent).toBe('••••••••');
+    await vi.waitFor(() => expect(secretSpan.textContent).toBe('••••••••'));
   });
 
   it('switches to Compose tab, fetches compose data, and toggles secret masking', async () => {

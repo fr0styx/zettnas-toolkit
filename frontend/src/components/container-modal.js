@@ -1133,11 +1133,34 @@ function renderEnvTab(details) {
   const envSecretStore = new Map();
   envs.forEach((e, idx) => {
     envSecretStore.set(idx, {
+      key: e.key,
       raw: e.value,
       masked: e.masked_value,
       isSecret: e.is_secret,
     });
   });
+  // The details come masked: "show" and "copy" put the mask on screen and on the clipboard
+  // (SET-14, Apps 26). The real values are asked for once, on the first show or copy; the server
+  // gives them only to people who manage apps.
+  const cid = details.cid || _activeCid;
+  let unmasked = null;
+  const realValue = async (entry) => {
+    if (entry.raw !== entry.masked) return entry.raw;
+    if (!unmasked) {
+      unmasked = new Map();
+      try {
+        const full = await api.get(`/api/docker/containers/${encodeURIComponent(cid)}/details?unmask=true`);
+        for (const e of full?.env || []) unmasked.set(e.key, e.value);
+      } catch (_) {}
+    }
+    const value = unmasked.has(entry.key) ? unmasked.get(entry.key) : entry.raw;
+    if (entry.isSecret && value === entry.masked) {
+      showToast(t('ci.secret_not_allowed', 'Only people who manage apps can see this value.'), 'warning');
+      return null;
+    }
+    entry.raw = value;
+    return value;
+  };
 
   container.innerHTML = `
     <div class="ci-box-4">
@@ -1175,23 +1198,31 @@ function renderEnvTab(details) {
 
   // Wire secret reveal toggle
   container.querySelectorAll('.btn-toggle-secret').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const idx = parseInt(btn.dataset.idx, 10);
       const entry = envSecretStore.get(idx);
       const span = document.getElementById(`env-val-${idx}`);
       if (!span || !entry) return;
-      const isCurrentlyMasked = span.textContent === entry.masked;
-      span.textContent = isCurrentlyMasked ? entry.raw : entry.masked;
+      const isCurrentlyMasked = btn.dataset.shown !== '1';
+      if (isCurrentlyMasked) {
+        const value = await realValue(entry);
+        if (value === null) return;
+        span.textContent = value;
+      } else {
+        span.textContent = entry.masked;
+      }
+      btn.dataset.shown = isCurrentlyMasked ? '1' : '';
       btn.textContent = isCurrentlyMasked ? '🔒' : '👁️';
     });
   });
 
   // Wire copy buttons
   container.querySelectorAll('.btn-copy-env').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const idx = parseInt(btn.dataset.idx, 10);
       const entry = envSecretStore.get(idx);
-      const val = entry ? entry.raw : '';
+      if (!entry) return;
+      const val = await realValue(entry);
       if (!val) return;
       copyText(val).then(() => {
         showToast(t('toast.value_copied_to_clipboard', 'Value copied to clipboard.'), 'success');
