@@ -156,12 +156,22 @@ export async function offerRecoveryKit(repo, onSaved = null) {
       downloadText(kit.filename || `kiboto-recovery-${repo.id}.txt`, kit.text);
       await saved();
     },
-    async () => {
-      await copyTextToClipboard(kit.text);
-      showToast(t('offsite.kit_copied', 'Recovery kit copied. Paste it into your password manager.'), 'info');
-      await saved();
-    },
-    { okText: t('offsite.kit_download', 'Download recovery kit'), cancelText: t('offsite.kit_copy_all', 'Copy the kit') }
+    // Closing the window (its Cancel slot, Escape, the × and a click outside) saves nothing and
+    // marks nothing (SET-06). "Copy the kit" sat in that slot, so each of them copied the kit,
+    // marked it saved, and the Overview stopped reminding.
+    null,
+    {
+      okText: t('offsite.kit_download', 'Download recovery kit'),
+      cancelText: t('offsite.kit_later', 'Not now'),
+      ejectText: escapeHtml(t('offsite.kit_copy_all', 'Copy the kit')),
+      ejectClass: 'btn-pill-toggle is-small',
+      destructive: false,
+      onEject: async () => {
+        await copyTextToClipboard(kit.text);
+        showToast(t('offsite.kit_copied', 'Recovery kit copied. Paste it into your password manager.'), 'info');
+        await saved();
+      },
+    }
   );
 }
 

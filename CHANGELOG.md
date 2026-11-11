@@ -571,6 +571,21 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **The snapshot browser, the restore window and a backup's versions open in the middle of the
   screen**, not in its top-left corner.
 
+#### Fixes
+
+- **Closing the recovery-kit window no longer marks the kit as saved**: Escape, the ×, "Cancel"
+  and a click outside all copied the kit to the clipboard and recorded it as saved, so the
+  reminder stopped. "Copy the kit" is now its own button; closing the window does nothing, and
+  the reminder stays until you download or copy the kit.
+- **The list of app backups survives a look**: opening the Backup page while the storage was not
+  mounted dropped every backup whose file was not there at that moment, for good. Such a backup
+  now stays in the list, marked "The file is not there right now". The table also shows each
+  backup's real file name, size and date, and a download keeps its name.
+- **Changing a snapshot schedule keeps what you did not change**: a new share keeps one snapshot
+  a day for 30 days besides its hourly ones. The form did not show that or send it, so any save
+  set it to 0 days and reset the lock. The form now shows the share's schedule, has a field for
+  the daily tier, and the list names it.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

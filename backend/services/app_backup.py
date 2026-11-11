@@ -399,23 +399,23 @@ def create_app_backup(
 
 def list_app_backups(app_name: str | None = None) -> list[dict[str, Any]]:
     """
-    Returns a sorted list of application backups.
-    Validates file presence on disk and prunes missing files.
+    Returns a sorted list of application backups. A record whose file is not there right now is
+    marked "missing" and kept (SET-06): reading the list used to drop it and save the shorter
+    list, so opening the page while the pool was not mounted erased the list for good.
     """
     records = get_app_backups_registry()
     valid_records: list[dict[str, Any]] = []
 
     for r in records:
         fpath = r.get("filepath", "")
+        r = dict(r)
         if fpath and os.path.exists(fpath):
-            # Refresh size if modified
             r["size_bytes"] = os.path.getsize(fpath)
             r["size_human"] = _format_bytes(r["size_bytes"])
-            valid_records.append(r)
-
-    # If records were pruned, update registry
-    if len(valid_records) != len(records):
-        atomic_write_json(APP_BACKUPS_REGISTRY_FILE, valid_records)
+            r["missing"] = False
+        else:
+            r["missing"] = True
+        valid_records.append(r)
 
     if app_name:
         target_name = app_name.strip().lstrip("/").lower()

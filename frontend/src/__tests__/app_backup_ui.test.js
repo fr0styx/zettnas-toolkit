@@ -42,10 +42,10 @@ describe('Application Backups & Recovery UI (21a, 21b, 21c)', () => {
         image: 'louislam/uptime-kuma:latest',
         stack: 'monitoring',
         reason: 'uninstall',
-        archive_file: 'app_uptimekuma_20261010_120000.tar.gz',
-        archive_size_formatted: '15.4 MB',
+        filename: 'app_uptimekuma_20261010_120000.tar.gz',
+        size_human: '15.4 MB',
         mounts_count: 1,
-        created_at_epoch: 1791650000,
+        created_at: 1791650000,
       },
       {
         id: 'app_plex_20261010_130000',
@@ -54,10 +54,10 @@ describe('Application Backups & Recovery UI (21a, 21b, 21c)', () => {
         image: 'linuxserver/plex:latest',
         stack: '',
         reason: 'on_demand',
-        archive_file: 'app_plex_20261010_130000.tar.gz',
-        archive_size_formatted: '2.1 MB',
+        filename: 'app_plex_20261010_130000.tar.gz',
+        size_human: '2.1 MB',
         mounts_count: 2,
-        created_at_epoch: 1791653600,
+        created_at: 1791653600,
       },
     ];
 
@@ -101,7 +101,7 @@ describe('Application Backups & Recovery UI (21a, 21b, 21c)', () => {
       {
         id: 'app_test_123',
         container_name: 'test-app',
-        archive_file: 'app_test_123.tar.gz',
+        filename: 'app_test_123.tar.gz',
         reason: 'on_demand',
       },
     ];

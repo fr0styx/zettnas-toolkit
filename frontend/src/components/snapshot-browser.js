@@ -21,6 +21,8 @@ export function schedulesHtml(schedules, shares, convertible = []) {
           (s) => `<li class="snap-sched-row">
       <span class="snap-sched-share">${escapeHtml(s.share)}</span>
       <span>${escapeHtml(every[s.every] || s.every)} · ${escapeHtml(t('snap.keep_n', 'keep {n}', { n: s.keep }))}${
+            s.keep_daily ? ` · ${escapeHtml(t('snap.keep_daily_n', 'plus one a day for {n} days', { n: s.keep_daily }))}` : ''
+          }${
             s.immutable_days ? ` · <svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg> ${escapeHtml(t('snap.locked_days', 'locked {n} days', { n: s.immutable_days }))}` : ''
           }</span>
       <span class="snap-sched-last">${s.last_run ? escapeHtml(formatDateTime(s.last_run * 1000)) : escapeHtml(t('snap.not_yet', 'not run yet'))}${
@@ -46,11 +48,29 @@ export function schedulesHtml(schedules, shares, convertible = []) {
         .map(([k, v]) => `<option value="${k}"${k === 'daily' ? ' selected' : ''}>${escapeHtml(v)}</option>`)
         .join('')}</select></label>
       <label>${escapeHtml(t('snap.keep', 'Keep'))}<input name="keep" type="number" min="1" max="1000" value="14"></label>
+      <label title="${escapeHtml(t('snap.keep_daily_help', 'Besides the ones above, one snapshot a day is kept for this many days. 0 keeps none.'))}">${escapeHtml(
+        t('snap.keep_daily', 'One a day for days'),
+      )}<input name="keep_daily" type="number" min="0" max="3650" value="0"></label>
       <label title="${escapeHtml(t('snap.lock_help', 'Days each snapshot cannot be deleted, even by an administrator; protects against ransomware.'))}">${escapeHtml(
         t('snap.lock', 'Lock for days'),
       )}<input name="immutable_days" type="number" min="0" max="3650" value="0"></label>
       <button type="submit" class="btn-pill-toggle is-primary">${escapeHtml(t('snap.add_schedule', 'Snapshot this share'))}</button>
     </form>`;
+}
+
+/**
+ * Puts the chosen share's schedule into the form; a share without one gets the form's defaults.
+ * @param {HTMLFormElement | null} form
+ * @param {any[]} schedules
+ */
+export function fillScheduleForm(form, schedules) {
+  if (!form) return;
+  const field = (name) => /** @type {HTMLInputElement | HTMLSelectElement | null} */ (form.elements.namedItem(name));
+  const s = schedules.find((x) => x.share === field('share')?.value) || { every: 'daily', keep: 14, keep_daily: 0, immutable_days: 0 };
+  for (const name of ['every', 'keep', 'keep_daily', 'immutable_days']) {
+    const el = field(name);
+    if (el) el.value = String(s[name] ?? 0);
+  }
 }
 
 export async function renderSnapshotSchedules(mount) {
@@ -74,14 +94,20 @@ export async function renderSnapshotSchedules(mount) {
   }
   mount.innerHTML = schedulesHtml(schedules, shares, convertible);
   mount.querySelectorAll('[data-snap-convert]').forEach((b) => b.addEventListener('click', () => convertShare(b.dataset.snapConvert, () => renderSnapshotSchedules(mount))));
-  mount.querySelector('[data-snap-form]')?.addEventListener('submit', async (e) => {
+  const form = /** @type {HTMLFormElement | null} */ (mount.querySelector('[data-snap-form]'));
+  // a share that has a schedule shows it in the form, so a save changes what you changed (SET-06)
+  const fill = () => fillScheduleForm(form, schedules);
+  form?.querySelector('[name="share"]')?.addEventListener('change', fill);
+  fill();
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const f = new FormData(e.target);
+    const f = new FormData(/** @type {HTMLFormElement} */ (e.target));
     try {
       await api.put('/api/snapshots/schedules', {
         share: f.get('share'),
         every: f.get('every'),
         keep: Number(f.get('keep')),
+        keep_daily: Number(f.get('keep_daily')),
         immutable_days: Number(f.get('immutable_days')),
       });
       showToast(t('snap.saved', 'Snapshots scheduled.'), 'success');

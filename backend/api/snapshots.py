@@ -16,8 +16,9 @@ class ScheduleIn(BaseModel):
     share: str = Field(min_length=1, max_length=128)
     every: Literal["hourly", "daily", "weekly"] = "daily"
     keep: int = Field(default=14, ge=1, le=1000)
-    keep_daily: int = Field(default=0, ge=0, le=3650, description="Also keep one a day for this many days")
-    immutable_days: int = Field(default=0, ge=0, le=3650, description="Days each snapshot can't be deleted")
+    # left out: the schedule keeps what it has (0 for a new one)
+    keep_daily: int | None = Field(default=None, ge=0, le=3650, description="Also keep one a day for this many days")
+    immutable_days: int | None = Field(default=None, ge=0, le=3650, description="Days each snapshot can't be deleted")
 
 
 class RestoreIn(BaseModel):

@@ -435,6 +435,8 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   if (options.onEject && ejectBtn) {
     ejectBtn.style.display = "block";
     ejectBtn.innerHTML = options.ejectText || `⏏ ${escapeHtml(t('toast.eject', 'Eject'))}`;
+    // the third button is red for "Eject"; a caller with another third answer says how it looks
+    ejectBtn.className = options.ejectClass || "btn-pill-toggle is-danger is-small";
   } else if (ejectBtn) {
     ejectBtn.style.display = "none";
   }

@@ -70,10 +70,12 @@ def save_schedule(
     share: str,
     every: str,
     keep: int,
-    immutable_days: int = 0,
+    immutable_days: int | None = None,
     pool_id: str | None = None,
-    keep_daily: int = 0,
+    keep_daily: int | None = None,
 ) -> dict[str, Any]:
+    """Saves a share's schedule. What the caller leaves out (None) stays as it was (SET-06): the
+    form sent no daily number, so a save stored 0 days for a share that kept one a day for 30."""
     if not share or "/" in share or share.startswith(".") or "@" in share:
         raise ValueError("Pick a share by its name.")
     if every not in EVERY:
@@ -82,12 +84,14 @@ def save_schedule(
     if not ok:
         raise ValueError(why)
     keep = max(1, min(int(keep), 1000))
-    keep_daily = max(0, min(int(keep_daily), 3650))
-    immutable_days = max(0, min(int(immutable_days), 3650))
     with _LOCK:
         data = read_json(SCHEDULES_FILE, {}) or {}
         sched = data.setdefault("schedules", {})
         old = sched.get(share, {})
+        keep_daily = max(0, min(int(old.get("keep_daily", 0) if keep_daily is None else keep_daily), 3650))
+        immutable_days = max(
+            0, min(int(old.get("immutable_days", 0) if immutable_days is None else immutable_days), 3650)
+        )
         sched[share] = {
             "share": share,
             "every": every,

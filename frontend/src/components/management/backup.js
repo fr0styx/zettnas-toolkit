@@ -332,8 +332,13 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
         ? `<span class="badge zn-tag zn-tag--crit">⚠️ ${escapeHtml(t('backup.app_reason_uninstall', 'When removed'))}</span>`
         : `<span class="badge zn-tag zn-tag--warn">💾 ${escapeHtml(t('backup.app_reason_manual', 'By hand'))}</span>`;
 
-      const createdDate = formatDateTime(b.created_at_epoch || b.created_at, undefined, 'N/A');
-      const sizeStr = b.archive_size_formatted || (b.archive_size_bytes ? formatBytes(b.archive_size_bytes) : '--');
+      const createdDate = formatDateTime(b.created_at ?? b.created_at_iso, undefined, 'N/A');
+      // the record's own fields: the table read names the server never sent, so the file column
+      // showed the id, the size "--", and every download was called app_backup.tar.gz (SET-06)
+      const fileName = b.filename || b.id;
+      const sizeStr = b.size_human || b.size_formatted || (b.size_bytes ? formatBytes(b.size_bytes) : '--');
+      const appName = b.container_name || b.vm_name || b.app_name || b.id;
+      const missingHtml = b.missing ? `<div class="zn-sub is-spaced"><span class="zn-tag zn-tag--warn">${escapeHtml(t('backup.app_missing', 'The file is not there right now'))}</span></div>` : '';
       const stackHtml = b.stack ? `<span class="zn-sub" style="margin-left:6px;">(${escapeHtml(t('backup.app_stack', 'Stack:'))} <code>${escapeHtml(b.stack)}</code>)</span>` : '';
       const mountsCount = b.mounts_count || (b.mounts ? b.mounts.length : 0);
 
@@ -342,7 +347,7 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
           <td class="is-strong">
             <div class="zn-inline">
               <span aria-hidden="true">📦</span>
-              <strong>${escapeHtml(b.container_name || b.id)}</strong>
+              <strong>${escapeHtml(appName)}</strong>
               ${stackHtml}
             </div>
             <div class="zn-sub is-spaced">
@@ -351,23 +356,24 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
           </td>
           <td>${reasonBadge}</td>
           <td>
-            <div class="is-mono zn-sub" style="color: var(--zn-text);">${escapeHtml(b.archive_file || b.id)}</div>
+            <div class="is-mono zn-sub" style="color: var(--zn-text);">${escapeHtml(fileName)}</div>
             <div class="zn-sub is-spaced">
-              ${sizeStr} • ${escapeHtml(t('backup.app_volumes', '{count, plural, one {# volume} other {# volumes}}', { count: mountsCount }))}
+              ${escapeHtml(sizeStr)} • ${escapeHtml(t('backup.app_volumes', '{count, plural, one {# volume} other {# volumes}}', { count: mountsCount }))}
             </div>
+            ${missingHtml}
           </td>
           <td class="is-muted">
             ${createdDate}
           </td>
           <td class="is-end">
             <div class="zn-actions">
-              <button class="btn-rect btn-download-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(b.archive_file || 'app_backup.tar.gz')}" title="${t('ui.download_archive_tar_gz', 'Download Archive (.tar.gz)')}">
+              <button class="btn-rect btn-download-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(fileName)}"${b.missing ? ' disabled' : ''} title="${t('ui.download_archive_tar_gz', 'Download Archive (.tar.gz)')}">
                 <span aria-hidden="true">⬇️</span> ${escapeHtml(t('backup.download', 'Download'))}
               </button>
-              <button class="btn-rect btn-restore-app-backup" data-backup-id="${escapeHtml(b.id)}" data-app-name="${escapeHtml(b.container_name || b.id)}" title="${t('ui.restore_configuration_data', 'Restore Configuration & Data')}">
+              <button class="btn-rect btn-restore-app-backup" data-backup-id="${escapeHtml(b.id)}" data-app-name="${escapeHtml(appName)}"${b.missing ? ' disabled' : ''} title="${t('ui.restore_configuration_data', 'Restore Configuration & Data')}">
                 <span aria-hidden="true">🔄</span> ${escapeHtml(t('backup.restore', 'Restore'))}
               </button>
-              <button class="btn-rect danger btn-delete-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(b.archive_file || b.id)}" title="${t('ui.delete_backup_archive', 'Delete Backup Archive')}">
+              <button class="btn-rect danger btn-delete-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(fileName)}" title="${t('ui.delete_backup_archive', 'Delete Backup Archive')}">
                 🗑️
               </button>
             </div>

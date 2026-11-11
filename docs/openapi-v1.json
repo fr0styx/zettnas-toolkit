@@ -36065,12 +36065,18 @@
       "type": "string"
      },
      "immutable_days": {
-      "default": 0,
+      "anyOf": [
+       {
+        "maximum": 3650.0,
+        "minimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
       "description": "Days each snapshot can't be deleted",
-      "maximum": 3650.0,
-      "minimum": 0.0,
-      "title": "Immutable Days",
-      "type": "integer"
+      "title": "Immutable Days"
      },
      "keep": {
       "default": 14,
@@ -36080,12 +36086,18 @@
       "type": "integer"
      },
      "keep_daily": {
-      "default": 0,
+      "anyOf": [
+       {
+        "maximum": 3650.0,
+        "minimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
       "description": "Also keep one a day for this many days",
-      "maximum": 3650.0,
-      "minimum": 0.0,
-      "title": "Keep Daily",
-      "type": "integer"
+      "title": "Keep Daily"
      },
      "share": {
       "maxLength": 128,
