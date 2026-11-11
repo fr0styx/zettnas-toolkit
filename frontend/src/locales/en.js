@@ -3437,6 +3437,7 @@ export default {
   "dh.h_steady": "{name}: steady at {b}",
   "dh.h_clean": "No error counter has moved in this time.",
   "dh.sched_off": "Automatic self-tests are off.",
+  "dh.sched_unknown": "The schedule of the automatic tests could not be read.",
   "dh.every_day": "every day",
   "dh.every_week": "every week",
   "dh.every_month": "every month",

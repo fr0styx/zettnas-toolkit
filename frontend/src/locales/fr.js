@@ -3437,6 +3437,7 @@ export default {
   "dh.h_steady": "{name} : stable à {b}",
   "dh.h_clean": "Aucun compteur d'erreurs n'a bougé sur cette période.",
   "dh.sched_off": "Les tests automatiques sont désactivés.",
+  "dh.sched_unknown": "Le calendrier des tests automatiques n’a pas pu être lu.",
   "dh.every_day": "chaque jour",
   "dh.every_week": "chaque semaine",
   "dh.every_month": "chaque mois",

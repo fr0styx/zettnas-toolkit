@@ -26,7 +26,11 @@ from backend.state import Z_STATE
 
 router = APIRouter(tags=["Drive Health"])
 
-CACHE_SECS = 30  # a reading this young is shown as current
+# A reading this young is shown as current. It was 30 seconds while the open window asks every
+# 60: every poll then started a fresh read of every awake drive (three smartctl runs per SATA
+# drive), for as long as the window stayed open, also in a background tab (SET-09). The SMART
+# poller takes a reading every 30 minutes; "Refresh" on the page still reads at once.
+CACHE_SECS = 30 * 60
 STALE_SECS = 2 * 3600  # a reading this young is shown at once while a fresh one is taken
 MAX_PARALLEL = 4
 ORDER = {"now": 0, "soon": 1, "watch": 2, "unknown": 3, "ok": 4}

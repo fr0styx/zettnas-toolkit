@@ -409,8 +409,14 @@ export async function openDriveHealth(dev = null) {
   if (_selected) await loadDetail(_selected);
   clearInterval(_listTimer);
   _listTimer = setInterval(() => {
-    if (_win && !_win.hidden && _win.style.display !== 'none') loadDrives();
+    if (shouldPoll(_win, document)) loadDrives();
   }, LIST_POLL_MS);
+}
+
+/** The list is read again only while someone can see it: not in a closed window, and not in a
+ *  browser tab that is in the background. The answer comes from stored readings (SET-09). */
+export function shouldPoll(win, doc) {
+  return !!win && !win.hidden && win.style.display !== 'none' && !doc.hidden;
 }
 
 export function closeDriveHealth() {
@@ -589,16 +595,18 @@ function editNotes() {
   });
 }
 
-/** "Automatic tests: …" from /api/smart/schedule. */
+/** "Automatic tests: …" from /api/storage/smart/schedule. The server calls the long test
+ *  "extended"; the page read "long_test_*", which the server never sends (SET-09). */
 export function scheduleText(cfg) {
   if (!cfg) return '';
   if (cfg.enabled === false) return t('dh.sched_off', 'Automatic self-tests are off.');
   const part = (kind) => {
-    const every = cfg[`${kind}_test_interval`];
+    const field = kind === 'long' ? 'extended' : kind;
+    const every = cfg[`${field}_test_interval`];
     if (!every || every === 'disabled') return null;
     const name = kind === 'long' ? t('dh.test_long', 'Long test') : t('dh.test_short', 'Short test');
     const freq = { daily: t('dh.every_day', 'every day'), weekly: t('dh.every_week', 'every week'), monthly: t('dh.every_month', 'every month') }[every] || every;
-    return `${name} ${freq}, ${String(cfg[`${kind}_test_hour`] ?? 2).padStart(2, '0')}:00`;
+    return `${name} ${freq}, ${String(cfg[`${field}_test_hour`] ?? 2).padStart(2, '0')}:00`;
   };
   const parts = [part('short'), part('long')].filter(Boolean);
   return parts.length ? t('dh.sched', 'Automatic tests: {list}. Sleeping drives are skipped.', { list: parts.join(' · ') }) : t('dh.sched_off', 'Automatic self-tests are off.');
@@ -610,9 +618,10 @@ async function loadExtras(dev, id) {
   const pane = _win?.querySelector('#dh-detail');
   if (!pane) return;
   try {
-    if (!_schedule) _schedule = await api.get('/api/smart/schedule').catch(() => ({}));
+    // the address was /api/smart/schedule, which no route answers: the line always said "off"
+    if (!_schedule) _schedule = await api.get('/api/storage/smart/schedule').catch(() => null);
     const sched = pane.querySelector('#dh-schedule');
-    if (sched) sched.textContent = scheduleText(_schedule);
+    if (sched) sched.textContent = _schedule ? scheduleText(_schedule) : t('dh.sched_unknown', 'The schedule of the automatic tests could not be read.');
     const data = await api.get(`/api/drives/history?dev=${encodeURIComponent(dev)}&days=30`);
     if (_selected !== dev) return;
     const about = pane.querySelector('#dh-about');

@@ -3437,6 +3437,7 @@ export default {
   "dh.h_steady": "{name}：保持在 {b}",
   "dh.h_clean": "这段时间内没有错误计数变化。",
   "dh.sched_off": "自动自检已关闭。",
+  "dh.sched_unknown": "无法读取自动检测的计划。",
   "dh.every_day": "每天",
   "dh.every_week": "每周",
   "dh.every_month": "每月",

@@ -3437,6 +3437,7 @@ export default {
   "dh.h_steady": "{name}: estable en {b}",
   "dh.h_clean": "Ningún contador de errores se ha movido en este tiempo.",
   "dh.sched_off": "Las pruebas automáticas están desactivadas.",
+  "dh.sched_unknown": "No se ha podido leer la programación de las pruebas automáticas.",
   "dh.every_day": "cada día",
   "dh.every_week": "cada semana",
   "dh.every_month": "cada mes",

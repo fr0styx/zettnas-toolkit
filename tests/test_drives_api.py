@@ -190,6 +190,14 @@ def test_older_readings_show_at_once_marked_stale_and_refresh_reads_anew(client,
     n = len(fake_drives)
     for dev, (ts, det) in list(disks._DETAIL_CACHE.items()):
         disks._DETAIL_CACHE[dev] = (ts - 600, det)  # ten minutes old
+    # SET-09: an open window asks every minute. Between the half-hourly readings that starts no
+    # drive read (it started one per awake drive on every poll).
+    for _ in range(5):
+        r = client.get("/api/drives/health", headers=auth_headers).json()
+        assert r["stale"] is False
+    assert len(fake_drives) == n
+    for dev, (ts, det) in list(disks._DETAIL_CACHE.items()):
+        disks._DETAIL_CACHE[dev] = (ts - 1800, det)  # forty minutes old by now
     r = client.get("/api/drives/health", headers=auth_headers).json()
     assert r["stale"] is True and {d["dev"] for d in r["drives"]} >= {"sda", "nvme0n1"}
     fresh = client.get("/api/drives/health?refresh=1", headers=auth_headers).json()

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fleetHtml, kindText, aboutHtml, historyBody, scheduleText, reportCsv } from '../components/drive-health.js';
+import { fleetHtml, kindText, aboutHtml, historyBody, scheduleText, shouldPoll, reportCsv } from '../components/drive-health.js';
 import { scale, lineChart } from '../components/drive-charts.js';
 
 describe('Drive Health revamp', () => {
@@ -55,11 +55,22 @@ describe('Drive Health revamp', () => {
     expect(lineChart([[1, 1], [2, 2]], { label: 'x' }).querySelector('path')).not.toBeNull();
   });
 
+  it('reads the list again only while someone can see it (SET-09)', () => {
+    const win = { hidden: false, style: { display: 'flex' } };
+    expect(shouldPoll(win, { hidden: false })).toBe(true);
+    expect(shouldPoll(win, { hidden: true })).toBe(false); // a background browser tab
+    expect(shouldPoll({ hidden: true, style: { display: 'flex' } }, { hidden: false })).toBe(false);
+    expect(shouldPoll({ hidden: false, style: { display: 'none' } }, { hidden: false })).toBe(false);
+    expect(shouldPoll(null, { hidden: false })).toBe(false);
+  });
+
   it('says the schedule', () => {
     expect(scheduleText({ enabled: false })).toContain('off');
-    expect(scheduleText({ short_test_interval: 'monthly', short_test_hour: 2, long_test_interval: 'disabled' })).toBe('Automatic tests: Short test every month, 02:00. Sleeping drives are skipped.');
+    expect(scheduleText({ short_test_interval: 'monthly', short_test_hour: 2, extended_test_interval: 'disabled' })).toBe('Automatic tests: Short test every month, 02:00. Sleeping drives are skipped.');
     expect(scheduleText(null)).toBe('');
-    expect(scheduleText({ short_test_interval: 'disabled', long_test_interval: 'disabled' })).toContain('off');
+    // the long test is "extended" in the server's answer; it never showed (SET-09)
+    expect(scheduleText({ short_test_interval: 'disabled', extended_test_interval: 'monthly', extended_test_hour: 3 })).toBe('Automatic tests: Long test every month, 03:00. Sleeping drives are skipped.');
+    expect(scheduleText({ short_test_interval: 'disabled', extended_test_interval: 'disabled' })).toContain('off');
   });
 
   it('writes a CSV report', () => {

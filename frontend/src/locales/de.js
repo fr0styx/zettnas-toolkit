@@ -3437,6 +3437,7 @@ export default {
   "dh.h_steady": "{name}: gleichbleibend bei {b}",
   "dh.h_clean": "Kein Fehlerzähler hat sich in dieser Zeit bewegt.",
   "dh.sched_off": "Automatische Selbsttests sind aus.",
+  "dh.sched_unknown": "Der Zeitplan der automatischen Tests konnte nicht gelesen werden.",
   "dh.every_day": "täglich",
   "dh.every_week": "wöchentlich",
   "dh.every_month": "monatlich",

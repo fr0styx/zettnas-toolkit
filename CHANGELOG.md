@@ -778,6 +778,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   undid a mode chosen elsewhere. A change the server refuses is now said, and the controls go
   back to what is really set.
 
+#### Fixes
+
+- **Drive Health no longer says "Automatic self-tests are off" when they are on.** The page asked
+  an address no route answers and read the long test under a name the server does not send. It now
+  shows the real schedule, and says so when the schedule cannot be read.
+- **An open Drive Health window no longer reads every awake drive once a minute.** The window asks
+  every minute, and a reading counted as current for only 30 seconds, so each time started a new
+  read of every awake drive, also from a browser tab in the background. The list is now answered
+  from the readings Kiboto takes every 30 minutes, the window stops asking while its tab is in the
+  background, and "Refresh" still reads at once.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 
