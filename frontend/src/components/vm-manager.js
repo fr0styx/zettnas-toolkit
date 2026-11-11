@@ -242,16 +242,15 @@ export function initVmManager() {
 
 export async function loadVmDashboard() {
   try {
-    const [tel, list, isos, bridges] = await Promise.all([
+    // the installer list is read by the dialogs that show it (vm/isos.js, SET-14)
+    const [tel, list, bridges] = await Promise.all([
       api.get('/api/vms/telemetry'),
       api.get('/api/vms'),
-      api.get('/api/vms/isos'),
       api.get('/api/vms/bridges'),
     ]);
 
     vmState.telemetry = tel;
     vmState.list = list || [];
-    vmState.isos = isos || [];
     vmState.bridges = bridges || ['br0'];
 
     renderTelemetry(tel);

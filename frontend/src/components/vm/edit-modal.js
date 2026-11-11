@@ -11,6 +11,7 @@ import { t } from '../../i18n.js';
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
 import { makeDraggable, bringToFront } from '../dock.js';
 import { vmState } from './state.js';
+import { loadIsos, fillIsoSelect } from './isos.js';
 import { openKvmDiagnosticsModal } from './connect-modal.js';
 import { vtpmBadgeHtml } from './shared.js';
 import { openVmSnapshotsModal } from './snapshots.js';
@@ -949,13 +950,14 @@ export function openVmEditModal(vmId, vmObj = null) {
   if (targetVm) {
     if (!vmState.list.some((v) => v.id === targetVm.id)) vmState.list.push(targetVm);
     renderModal(targetVm);
+    loadIsos().then(() => fillIsoSelect(document.getElementById('vm-edit-iso'), targetVm.iso_path || ''));
     return;
   }
 
   // Graceful auto-fetch when called outside of standalone VM Manager window
   Promise.all([
     api.get(`/api/vms/${vmId}`).catch(() => null),
-    (!vmState.isos || vmState.isos.length === 0) ? api.get('/api/vms/isos').catch(() => []) : Promise.resolve(vmState.isos),
+    loadIsos(),
     !vmState.telemetry ? api.get('/api/vms/telemetry').catch(() => null) : Promise.resolve(vmState.telemetry),
   ])
     .then(([direct, isos, tel]) => {

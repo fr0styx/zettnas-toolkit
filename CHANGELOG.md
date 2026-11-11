@@ -376,6 +376,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   vendors' own lists, and the driver disc is a fixed release (0.1.262). The Windows Server trial is
   still unavailable from Microsoft's old address.
 
+#### Fixes
+
+- **Installer images can be deleted, and the drives stay asleep for the machine list.** Images
+  downloaded or uploaded to the default installer folder could not be deleted. And opening the
+  virtual machines window, Refresh and every finished action read the installer folders, a pool
+  folder too, which can wake sleeping drives; they are now read only when a dialog that lists
+  installers opens.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

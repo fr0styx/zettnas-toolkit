@@ -7,6 +7,7 @@ import { showToast, showConfirmToast } from '../../toast.js';
 import { t } from '../../i18n.js';
 import { makeDraggable, bringToFront } from '../dock.js';
 import { vmState } from './state.js';
+import { loadIsos } from './isos.js';
 import { openVmCreateModal } from './create-modal.js';
 import { loadVmDashboard } from '../vm-manager.js';
 import { formatFixed } from '../../format.js';
@@ -308,7 +309,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
     }
 
     modal.querySelector('#btn-refresh-local-isos')?.addEventListener('click', async () => {
-      await loadVmDashboard();
+      await Promise.all([loadVmDashboard(), loadIsos()]);
       renderLocalIsoList();
       renderCatalogCards();
       showToast(t('toast.iso_list_refreshed', 'ISO list refreshed.'), 'info');
@@ -352,7 +353,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
         if (progBar) progBar.style.width = '100%';
         if (progRate) progRate.textContent = t('ui.upload_complete', 'Upload Complete');
         showToast(t('toast.iso_uploaded_successfully_to_mnt_user', 'ISO \'{name}\' uploaded successfully to /mnt/user/isos', { name: file.name }), 'success');
-        await loadVmDashboard();
+        await Promise.all([loadVmDashboard(), loadIsos()]);
         renderLocalIsoList();
         renderCatalogCards();
         document.getElementById('fm-refresh-btn')?.click();
@@ -425,7 +426,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
               try {
                 await api.delete(`/api/vms/isos?path=${encodeURIComponent(path)}`);
                 showToast(t('toast.iso_deleted_successfully', 'ISO \'{name}\' deleted successfully.', { name: name }), 'info');
-                await loadVmDashboard();
+                await Promise.all([loadVmDashboard(), loadIsos()]);
                 renderLocalIsoList();
                 renderCatalogCards();
                 document.getElementById('fm-refresh-btn')?.click();
@@ -484,7 +485,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
             btn.style.color = '#34d399';
           }
           showToast(t('toast.downloaded_to_mnt_user_isos', 'Downloaded \'{name}\' to /mnt/user/isos', { name: task.name || catalogId }), 'success');
-          await loadVmDashboard();
+          await Promise.all([loadVmDashboard(), loadIsos()]);
           renderCatalogCards();
           renderLocalIsoList();
           document.getElementById('fm-refresh-btn')?.click();
@@ -581,7 +582,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           const res = await api.post(`/api/vms/catalog/${id}/download`);
           if (res && res.status === 'already_present') {
             showToast(t('toast.iso_already_exists_in_mnt_user', `ISO already exists in /mnt/user/isos`), 'info');
-            await loadVmDashboard();
+            await Promise.all([loadVmDashboard(), loadIsos()]);
             renderCatalogCards();
             renderLocalIsoList();
             return;
@@ -659,9 +660,13 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
     }
   });
 
-  // Load and render both tabs
+  // Load and render both tabs: what is known now, then the installer folders read once
   renderLocalIsoList();
   renderCatalogCards();
+  loadIsos().then(() => {
+    renderLocalIsoList();
+    renderCatalogCards();
+  });
 
   // Fetch live catalog and active tasks from backend
   try {

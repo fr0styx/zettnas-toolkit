@@ -503,14 +503,9 @@ def delete_iso_image(
     path: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    allowed_dirs = [
-        "/mnt/user/isos",
-        "/mnt/user/system/isos",
-        "/mnt/storage/isos",
-        os.path.join(POOL_PATH, "isos"),
-        os.path.join(DATA_DIR, "isos"),
-    ]
-    real_path = resolve_within(path, allowed_dirs)
+    from backend.services.vm_host import iso_dirs
+
+    real_path = resolve_within(path, iso_dirs())
     if not real_path:
         raise HTTPException(status_code=400, detail="Invalid ISO path outside authorized repositories.")
 

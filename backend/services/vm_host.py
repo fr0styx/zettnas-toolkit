@@ -330,24 +330,31 @@ def _get_target_iso_dir() -> str:
     return fallback
 
 
-def scan_isos() -> list[dict[str, Any]]:
-    """Discovers bootable ISO and raw disk images in storage shares."""
-    iso_dirs = []
-    if VM_ISO_DIR and VM_ISO_DIR not in iso_dirs:
-        iso_dirs.append(VM_ISO_DIR)
+def iso_dirs() -> list[str]:
+    """Every folder installer images are kept in: the scan reads these and a delete may act in them.
+    The delete check had its own list without VM_ISO_DIR, where downloads and uploads go by
+    default, so those images could not be deleted (SET-14, VMs 13)."""
+    dirs: list[str] = []
     for d in [
+        VM_ISO_DIR,
         "/mnt/user/isos",
         "/mnt/user/system/isos",
         "/mnt/storage/isos",
         os.path.join(POOL_PATH, "isos"),
         os.path.join(DATA_DIR, "isos"),
     ]:
-        if d not in iso_dirs:
-            iso_dirs.append(d)
+        if d and d not in dirs:
+            dirs.append(d)
+    return dirs
+
+
+def scan_isos() -> list[dict[str, Any]]:
+    """Discovers bootable ISO and raw disk images in storage shares."""
+    iso_dirs_list = iso_dirs()
     discovered = []
     seen = set()
 
-    for d in iso_dirs:
+    for d in iso_dirs_list:
         if os.path.isdir(d):
             try:
                 for root, _, files in os.walk(d):

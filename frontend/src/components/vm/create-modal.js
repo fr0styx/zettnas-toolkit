@@ -11,6 +11,7 @@ import { t } from '../../i18n.js';
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
 import { makeDraggable, bringToFront } from '../dock.js';
 import { vmState } from './state.js';
+import { loadIsos, fillIsoSelect } from './isos.js';
 import { openIsoManagerModal } from './iso-manager.js';
 import { vtpmBadgeHtml } from './shared.js';
 import { loadVmDashboard } from '../vm-manager.js';
@@ -753,6 +754,7 @@ export function openVmCreateModal() {
   modal.classList.remove('window-minimized');
   modal.style.removeProperty('display');
   modal.style.display = 'flex';
+  loadIsos().then(() => fillIsoSelect(modal.querySelector('#vm-create-iso')));
   modal.classList.add('open');
   if (modalWin) {
     modalWin.classList.remove('window-minimized');

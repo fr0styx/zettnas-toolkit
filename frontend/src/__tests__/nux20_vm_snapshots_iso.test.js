@@ -129,7 +129,10 @@ describe('ISO library (NUX-20)', () => {
 
   it('marks an image already on the NAS and asks before deleting it', async () => {
     vmState.isos = [{ name: first.filename, path: `/mnt/user/isos/${first.filename}`, size_formatted: '2.6 GB' }];
+    // the library reads the installer folders when it opens (SET-14): the server answers with the same image
+    api.get.mockImplementation(async (url) => (url === '/api/vms/isos' ? vmState.isos : []));
     await openIsoManagerModal('local');
+    await new Promise((r) => setTimeout(r, 0));
     const modal = document.getElementById('modal-iso-manager');
     const card = modal.querySelector(`.btn-dl-catalog[data-id="${first.id}"]`).closest('.catalog-card');
     expect(card.textContent).toContain('✓ On this NAS');
