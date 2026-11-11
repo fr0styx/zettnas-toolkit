@@ -58,7 +58,8 @@ def test_destroy_container_success():
         return 400, {}
 
     with patch("backend.services.docker_cleanup._docker_request", side_effect=mock_docker):
-        res = destroy_container("c123", force=False, remove_volumes=True, remove_image=True)
+        # without the copy: one that cannot be made now stops the delete (test_set14_app_delete.py)
+        res = destroy_container("c123", force=False, remove_volumes=True, remove_image=True, archive_data=False)
         assert res["success"] is True
         assert res["name"] == "uptime-kuma"
         assert res["volumes_removed"] is True
@@ -83,7 +84,7 @@ def test_delete_container_api_endpoint(client, auth_headers):
 
     with patch("backend.services.docker_cleanup._docker_request", side_effect=mock_docker):
         res = client.delete(
-            "/api/docker/containers/testapp123456?force=true&remove_volumes=true&remove_image=false",
+            "/api/docker/containers/testapp123456?force=true&remove_volumes=true&remove_image=false&archive_data=false",
             headers=auth_headers,
         )
         assert res.status_code == 200

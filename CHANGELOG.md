@@ -204,6 +204,18 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **"Update all" says what was updated and what was not.** It always answered "All container
   updates dispatched.", whatever failed.
 
+#### Fixes
+
+- **Removing an app: a copy that cannot be made stops the removal.** The dialog offers to keep a
+  copy of the app's set-up and data folders first. When that copy failed, the app was removed all
+  the same and nobody was told. The app now stays, with the reason, and can be removed without a
+  copy by unticking it. For API users: `DELETE /api/docker/containers/{id}` answers 409 in that
+  case.
+- **"Stop the container first" stops it.** It ended the app at once, with no time to finish what
+  it was writing; it now gets the usual ten seconds.
+- **The message after removing an app is true.** Every removal read "permanently destroyed", also
+  when a copy had been kept; it now says where the copy is, and when the app's image was kept.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

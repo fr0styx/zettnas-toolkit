@@ -776,7 +776,7 @@ async def delete_docker_container(
 ):
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
         raise HTTPException(status_code=400, detail="Invalid container ID or name")
-    from backend.services.docker_cleanup import destroy_container
+    from backend.services.docker_cleanup import CopyFailed, destroy_container
 
     try:
         res = await asyncio.to_thread(
@@ -790,6 +790,8 @@ async def delete_docker_container(
         return res
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+    except CopyFailed as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e  # nothing was removed
     except Exception as e:
         logger.error(f"[Docker Cleanup] Failed to delete container {container_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e

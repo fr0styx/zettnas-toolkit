@@ -48,6 +48,10 @@ def is_self_container(cid: str, name: str = "") -> bool:
     return bool(self_hostname and cid and (cid.startswith(self_hostname) or self_hostname.startswith(cid)))
 
 
+class CopyFailed(RuntimeError):
+    """The copy of an app's set-up, asked for before removing it, could not be made."""
+
+
 def destroy_container(
     container_id: str,
     force: bool = False,
@@ -96,7 +100,18 @@ def destroy_container(
                 archive_record.get("filename"),
             )
         except Exception as e:
+            # The copy was asked for and could not be made: the app stays. It was removed all the
+            # same, and nobody was told that there was no copy (SET-14).
             logger.warning("[Docker Cleanup] Could not auto-archive '%s' prior to uninstall: %s", cname, e)
+            raise CopyFailed(
+                f"The copy of {cname}'s set-up could not be made, so {cname} was not removed: {e}. "
+                "Untick the copy to remove it without one."
+            ) from e
+
+    # 2c. "Stop it first" is a stop: Docker's own force is a kill, which gives the app no time to
+    # finish what it is writing
+    if force and (inspect_data.get("State") or {}).get("Running"):
+        _docker_request("POST", f"/containers/{container_id}/stop?t=10", timeout=timeout + 15)
 
     # 3. Delete the container
     v_param = "true" if remove_volumes else "false"

@@ -1359,6 +1359,18 @@ function renderLogsOutput() {
   }
 }
 
+/** What a finished delete says. The message about the copy looked for a field the server does
+ *  not send, so every delete read "permanently destroyed", also when a copy had been made. */
+export function removedSaid(res, name, imageAsked = false) {
+  const said = res?.archived
+    ? t('ci.removed_copy', '{name} was removed. A copy of its set-up and data folders is under Backup.', { name })
+    : t('ci.removed', '{name} was removed.', { name });
+  if (imageAsked && res && !res.image_removed) {
+    return `${said} ${t('ci.image_kept', 'Its image was kept: {why}', { why: res.image_error || t('ci.image_in_use', 'another app uses it') })}`;
+  }
+  return said;
+}
+
 export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = null) {
   let modal = document.getElementById('container-delete-modal-overlay');
   if (!modal) {
@@ -1457,11 +1469,7 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
     try {
       const url = `/api/docker/containers/${encodeURIComponent(cid)}?force=${force}&remove_volumes=${removeVolumes}&remove_image=${removeImage}&archive_data=${archiveData}`;
       const res = await api.delete(url, { confirmed: true });
-      if (res?.archived && res?.archive) {
-        showToast(t('toast.container_destroyed_app_data_config_safely', 'Container "{cname}" destroyed. App data & config safely archived!', { cname: cname }), 'success');
-      } else {
-        showToast(t('toast.container_permanently_destroyed', 'Container "{cname}" permanently destroyed.', { cname: cname }), 'success');
-      }
+      showToast(removedSaid(res, cname, removeImage), 'success');
       modal.classList.remove('open');
       modal.style.display = 'none';
 

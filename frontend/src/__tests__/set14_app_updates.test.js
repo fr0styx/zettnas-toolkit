@@ -29,3 +29,16 @@ describe('the update check', () => {
     expect(updateAllSaid(undefined)).toEqual(['Nothing was updated.', 'info']);
   });
 });
+
+describe('what a finished delete says', () => {
+  it('says that a copy was kept when one was', async () => {
+    const { removedSaid } = await import('../components/container-modal.js');
+    // the page looked for `archive`, which the server never sent: every delete read "permanently destroyed"
+    expect(removedSaid({ archived: true, archive_record: { filename: 'plex.tar.gz' } }, 'plex')).toBe('plex was removed. A copy of its set-up and data folders is under Backup.');
+    expect(removedSaid({ archived: false }, 'plex')).toBe('plex was removed.');
+    expect(removedSaid({ archived: false, image_removed: false, image_error: 'Image in use by another container' }, 'plex', true)).toBe('plex was removed. Its image was kept: Image in use by another container');
+    expect(removedSaid({ archived: false, image_removed: false }, 'plex', true)).toBe('plex was removed. Its image was kept: another app uses it');
+    expect(removedSaid({ archived: false, image_removed: true }, 'plex', true)).toBe('plex was removed.');
+    expect(removedSaid(null, 'plex')).toBe('plex was removed.');
+  });
+});
