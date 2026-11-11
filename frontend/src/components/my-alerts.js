@@ -45,7 +45,8 @@ export function myAlertsHtml(route, events) {
 export async function renderMyAlerts(mount) {
   if (!mount) return;
   try {
-    const { route, events } = await api.get('/api/notifications/me');
+    // the router is mounted at /notifications and names its route /notifications/me
+    const { route, events } = await api.get('/api/notifications/notifications/me');
     mount.innerHTML = myAlertsHtml(route, events);
   } catch (e) {
     mount.hidden = true;
@@ -55,7 +56,7 @@ export async function renderMyAlerts(mount) {
     e.preventDefault();
     const f = new FormData(e.target);
     try {
-      await api.put('/api/notifications/me', {
+      await api.put('/api/notifications/notifications/me', {
         ntfy_topic: f.get('ntfy_topic'),
         email: f.get('email'),
         min_level: f.get('min_level'),

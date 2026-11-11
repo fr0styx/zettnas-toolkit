@@ -21,8 +21,6 @@ METHODS = {"postraw": "POST", "upload": "POST"}
 # (method, address as the page writes it): calls that reach no route today
 KNOWN_MISSING = {
     ("GET", "/api/auth/users"),  # the people list of the "Create share" dialog
-    ("GET", "/api/notifications/me"),  # "My alerts": the route is /api/notifications/notifications/me
-    ("PUT", "/api/notifications/me"),
     ("GET", "/api/smart/schedule"),  # Drive Health: the route is /api/storage/smart/schedule
 }
 
