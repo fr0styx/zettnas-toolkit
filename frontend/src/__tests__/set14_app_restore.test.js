@@ -17,3 +17,14 @@ describe('what a restored app backup says', () => {
     expect(restoredSaid(null, 'plex')[1]).toBe('warn');
   });
 });
+
+describe('the small things in Apps', () => {
+  it('a stack\'s Web UI link names this server, not "[HOST]"', async () => {
+    const { readFileSync } = await import('node:fs');
+    const code = readFileSync('frontend/src/components/stack-modal.js', 'utf8');
+    expect(code).toContain("c.webui_url.replace('[HOST]', window.location.hostname)");
+    for (const f of ['frontend/src/components/container-modal.js', 'frontend/src/components/containers-manager.js']) {
+      expect(readFileSync(f, 'utf8'), f).toContain('res?.backup?.filename');
+    }
+  });
+});

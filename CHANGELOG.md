@@ -245,6 +245,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   more, in which case its Compose file is kept for installing it again. The question before it no
   longer promises a ".pre_restore" copy that was never made.
 
+#### Fixes
+
+- **Smaller repairs in Apps.** The clean-up figures stayed on "Loading…" for ever when they could
+  not be read; they say "Not known" now, and their words are translated. A stack's "Web UI" links
+  pointed at the literal address "[HOST]". The message after backing up an app always named the
+  file "archive.tar.gz"; it names the real file and its size.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

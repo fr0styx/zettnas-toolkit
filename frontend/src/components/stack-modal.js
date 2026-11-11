@@ -434,7 +434,7 @@ function renderServicesList(containers) {
         </div>
 
         <div class="stk-row-7">
-          ${c.webui_url ? `<a href="${escapeHtml(c.webui_url)}" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size:var(--zn-fs-xs); padding:2px 8px; text-decoration:none; color:var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));">${ico('🌐')} ${t('stk.webui', 'Web UI')}</a>` : ''}
+          ${c.webui_url ? `<a href="${escapeHtml(c.webui_url.replace('[HOST]', window.location.hostname))}" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size:var(--zn-fs-xs); padding:2px 8px; text-decoration:none; color:var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));">${ico('🌐')} ${t('stk.webui', 'Web UI')}</a>` : ''}
           <button class="btn-pill-toggle stack-inspect-container-btn is-small" data-cid="${escapeHtml(c.id)}">${ico('🔍')} ${t('stk.inspect', 'Container details')}</button>
         </div>
       </div>

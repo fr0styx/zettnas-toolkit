@@ -1222,8 +1222,9 @@ function bindCwTableEvents(tbody) {
         showToast(t('toast.creating_backup_for_2', 'Creating backup for {cname}...', { cname: cname }), 'info');
         try {
           const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/backup`);
-          const archiveName = res?.backup?.archive_file || 'archive.tar.gz';
-          const sizeStr = res?.backup?.archive_size_formatted || '';
+          // the server names the file `filename` and its size `size_human`: every message said "archive.tar.gz" (SET-14)
+          const archiveName = res?.backup?.filename || res?.backup?.archive_file || 'archive.tar.gz';
+          const sizeStr = res?.backup?.size_human || res?.backup?.archive_size_formatted || '';
           showToast(t('toast.app_backed_up', 'App "{name}" backed up ({archive}).', { name: cname, archive: sizeStr ? `${archiveName}, ${sizeStr}` : archiveName }), 'success');
         } catch (err) {
           showToast(t('toast.backup_failed', 'Backup failed: {error}', { error: err.message }), 'error');

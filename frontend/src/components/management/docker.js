@@ -2298,13 +2298,18 @@ export async function openDockerPruneModal() {
     const volEl = document.getElementById('dpm-df-volumes');
     const recEl = document.getElementById('dpm-df-reclaimable');
 
-    if (imgEl && df.images) imgEl.textContent = `${df.images.total_count} (${df.images.unused_count} unused)`;
-    if (cntEl && df.containers) cntEl.textContent = `${df.containers.total_count} (${df.containers.stopped_count} stopped)`;
+    if (imgEl && df.images) imgEl.textContent = t('dkd.df_images', '{total} ({unused} unused)', { total: df.images.total_count, unused: df.images.unused_count });
+    if (cntEl && df.containers) cntEl.textContent = t('dkd.df_containers', '{total} ({stopped} stopped)', { total: df.containers.total_count, stopped: df.containers.stopped_count });
     showStoppedApps((df.containers && df.containers.stopped_names) || []);
-    if (volEl && df.volumes) volEl.textContent = `${df.volumes.total_count} (${df.volumes.unused_count} unused)`;
+    if (volEl && df.volumes) volEl.textContent = t('dkd.df_images', '{total} ({unused} unused)', { total: df.volumes.total_count, unused: df.volumes.unused_count });
     if (recEl) recEl.textContent = df.total_reclaimable_human || '0 B';
   } catch (err) {
+    // the tiles stayed on "Loading…" for ever next to an empty bar (SET-14)
     console.warn('Failed to load system df:', err);
+    for (const id of ['dpm-df-images', 'dpm-df-containers', 'dpm-df-volumes', 'dpm-df-reclaimable']) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = t('dkd.df_unknown', 'Not known');
+    }
   }
 
   const confirmBtn = document.getElementById('dpm-confirm-btn');
