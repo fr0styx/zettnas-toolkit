@@ -340,7 +340,7 @@
   "backend.services.ai_chat_agent.stream_agentic_chat": 191,
   "backend.services.app_backup.create_app_backup": 159,
   "backend.services.app_catalog.sideload_app_manifest": 165,
-  "backend.services.app_catalog.stream_deploy_catalog_app": 449,
+  "backend.services.app_catalog.stream_deploy_catalog_app": 384,
   "backend.services.backup_engine._execute_backup_job": 200,
   "backend.services.chat_llm_runtime._try_local_llm_completion": 337,
   "backend.services.chat_nas_tools.tool_search_nas_knowledge": 224,

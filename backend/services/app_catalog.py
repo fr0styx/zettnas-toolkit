@@ -1435,6 +1435,109 @@ def _log_deployed(name: str, port: object) -> None:
     )
 
 
+ASIDE_SUFFIX = ".replaced"
+
+
+def _err(message: str, error: str) -> dict[str, Any]:
+    return {"step": "error", "percent": 0, "message": message, "error": error, "done": True}
+
+
+def _set_aside(service_name: str, old_c: dict[str, Any]) -> dict[str, Any] | None:
+    """Stops the app that is being replaced and renames it: its name and ports are free for the new
+    one, and it can come back. None when Docker would not rename it (it is then started again)."""
+    aside = service_name + ASIDE_SUFFIX
+    st, _ = _docker_request("GET", f"/containers/{aside}/json")
+    if st == 200:
+        # an earlier replace was cut off: what it set aside is the app to bring back, and the
+        # container under the name is its unfinished successor
+        _docker_request("DELETE", f"/containers/{service_name}?force=true&v=false")
+        return {"name": aside, "was_running": True}
+    was_running = bool(old_c.get("State", {}).get("Running"))
+    if was_running:
+        _docker_request("POST", f"/containers/{service_name}/stop?t=5")
+    st, _ = _docker_request("POST", f"/containers/{service_name}/rename?name={aside}")
+    if st not in (200, 204):
+        if was_running:
+            _docker_request("POST", f"/containers/{service_name}/start")
+        return None
+    return {"name": aside, "was_running": was_running}
+
+
+def _put_back(service_name: str, aside: dict[str, Any] | None, new_cid: str | None) -> None:
+    """Undoes a replace that did not work: the new container goes, the old one gets its name back
+    and is started if it ran before. Without an old app nothing is touched."""
+    if not aside:
+        return
+    if new_cid:
+        _docker_request("DELETE", f"/containers/{new_cid}?force=true&v=false")
+    _docker_request("POST", f"/containers/{aside['name']}/rename?name={service_name}")
+    if aside["was_running"]:
+        _docker_request("POST", f"/containers/{service_name}/start")
+    logger.warning("app_catalog: replacing %s did not work, the previous app is back", service_name)
+
+
+def _swap_in(
+    service_name: str, create_body: dict[str, Any], elevated: bool, old_c: dict[str, Any] | None
+) -> Iterator[dict[str, Any]]:
+    """Creates and starts the app and returns (container id, runs). An app that is being replaced
+    is set aside first and removed only once the new one runs; it comes back when the new one can
+    not be created or started, stops at once, or the install is abandoned in between (SET-07: it
+    used to be deleted before the download, so a failed download left no app at all)."""
+    back = " The previous app is back." if old_c else ""
+    aside = None
+    if old_c:
+        yield {
+            "step": "clean",
+            "percent": 78,
+            "message": f"Setting the existing '{service_name}' aside. It comes back if the new one does not start.",
+            "done": False,
+        }
+        aside = _set_aside(service_name, old_c)
+        if not aside:
+            yield _err(f"'{service_name}' could not be set aside, so nothing was replaced.", "Rename failed")
+            return None
+    st, create_resp = _docker_request(
+        "POST",
+        f"/containers/create?name={service_name}",
+        body=create_body,
+        headers={"X-Kiboto-Elevated": "1"} if elevated else {},
+    )
+    cid = create_resp.get("Id") if st == 201 and isinstance(create_resp, dict) else None
+    if not cid:
+        _put_back(service_name, aside, None)
+        if st != 201:
+            yield _err(f"Container creation failed: {create_resp}.{back}", str(create_resp))
+        else:
+            yield _err(f"Docker did not return container ID: {create_resp}.{back}", "Missing container ID")
+        return None
+    try:
+        yield {
+            "step": "create",
+            "percent": 88,
+            "message": f"Container created successfully (ID: {cid[:12]}).",
+            "done": False,
+        }
+        yield {"step": "start", "percent": 92, "message": f"Starting container '{service_name}'...", "done": False}
+    except GeneratorExit:
+        _put_back(service_name, aside, cid)  # the window was closed between create and start
+        raise
+    st, start_resp = _docker_request("POST", f"/containers/{cid}/start")
+    if st not in (204, 304):
+        _put_back(service_name, aside, cid)
+        yield _err(f"Failed to start container '{service_name}': {start_resp}.{back}", str(start_resp))
+        return None
+    time.sleep(0.5)
+    st, inspect_resp = _docker_request("GET", f"/containers/{cid}/json")
+    is_running = inspect_resp.get("State", {}).get("Running", False) if st == 200 else False
+    if aside and st == 200 and not is_running:
+        _put_back(service_name, aside, cid)
+        yield _err(f"The new '{service_name}' stopped right after it started.{back}", "Stopped at once")
+        return None
+    if aside:
+        _docker_request("DELETE", f"/containers/{aside['name']}?v=false")
+    return cid, is_running
+
+
 def stream_deploy_catalog_app(
     app_id: str,
     host_port: int | None = None,
@@ -1593,21 +1696,6 @@ def stream_deploy_catalog_app(
                 "done": True,
             }
             return
-
-    # 2. Check and clean up existing container with same name if any
-    if has_existing and replace_existing:
-        try:
-            yield {
-                "step": "clean",
-                "percent": 25,
-                "message": f"Found existing container '{service_name}'. Stopping and replacing...",
-                "done": False,
-            }
-            if old_c.get("State", {}).get("Running"):
-                _docker_request("POST", f"/containers/{service_name}/stop?t=5")
-            _docker_request("DELETE", f"/containers/{service_name}?v=false")
-        except Exception as e:
-            logger.warning(f"Notice during old container cleanup for {service_name}: {e}")
 
     # 3. Pull image with streaming progress
     yield {
@@ -1798,63 +1886,13 @@ def stream_deploy_catalog_app(
     if refusal:
         yield refusal
         return
-    st, create_resp = _docker_request(
-        "POST",
-        f"/containers/create?name={service_name}",
-        body=create_body,
-        headers={"X-Kiboto-Elevated": "1"} if reasons else {},
-    )
-    if st != 201:
-        yield {
-            "step": "error",
-            "percent": 0,
-            "message": f"Container creation failed: {create_resp}",
-            "error": str(create_resp),
-            "done": True,
-        }
+    # Create, start, check. An app that is being replaced is set aside only now, after the
+    # download, and comes back if the new one does not start (SET-07).
+    replaced = old_c if (has_existing and replace_existing) else None
+    swapped = yield from _swap_in(service_name, create_body, bool(reasons), replaced)
+    if not swapped:
         return
-
-    cid = create_resp.get("Id")
-    if not cid:
-        yield {
-            "step": "error",
-            "percent": 0,
-            "message": f"Docker did not return container ID: {create_resp}",
-            "error": "Missing container ID",
-            "done": True,
-        }
-        return
-
-    yield {
-        "step": "create",
-        "percent": 88,
-        "message": f"Container created successfully (ID: {cid[:12]}).",
-        "done": False,
-    }
-
-    # 5. Start container
-    yield {
-        "step": "start",
-        "percent": 92,
-        "message": f"Starting container '{service_name}'...",
-        "done": False,
-    }
-
-    st, start_resp = _docker_request("POST", f"/containers/{cid}/start")
-    if st not in (204, 304):
-        yield {
-            "step": "error",
-            "percent": 0,
-            "message": f"Failed to start container '{service_name}': {start_resp}",
-            "error": str(start_resp),
-            "done": True,
-        }
-        return
-
-    # 6. Verify running state
-    time.sleep(0.5)
-    st, inspect_resp = _docker_request("GET", f"/containers/{cid}/json")
-    is_running = inspect_resp.get("State", {}).get("Running", False) if st == 200 else False
+    cid, is_running = swapped
 
     try:
         _log_deployed(app["name"], port)

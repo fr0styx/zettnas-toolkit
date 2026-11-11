@@ -362,4 +362,4 @@ def test_stream_deploy_catalog_app_replace_existing_proceeds(tmp_path):
         )
         clean_events = [e for e in events if e.get("step") == "clean"]
         assert len(clean_events) == 1
-        assert "Stopping and replacing" in clean_events[0]["message"]
+        assert "aside" in clean_events[0]["message"]

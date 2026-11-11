@@ -680,6 +680,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   longer on screen stayed selected, so "Stop" or "Delete" also acted on apps you could not see. On
   the Apps page, "select all" now takes the rows on screen instead of every app.
 
+#### Fixes
+
+- **"Replace" on install no longer takes the old app away before the new one is there.** The old
+  app was stopped and deleted first; when the download or the start then failed, no app was left.
+  The new app is downloaded first. The old one is then set aside, and comes back by itself when
+  the new one cannot be created or started, stops at once, or the window is closed in between. It
+  is removed only once the new one runs.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 
