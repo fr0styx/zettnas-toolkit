@@ -493,6 +493,11 @@ def _say_shutdown_starts(reason: str, charge: float | None, runtime: float | Non
     )
 
 
+def ups_went_silent() -> bool:
+    """The UPS stopped answering during a power cut and has not answered since (for the Overview)."""
+    return bool(_silent_alerted and _outage_start_ts is not None)
+
+
 def _ups_fell_silent(now: float) -> None:
     """The UPS gives no reading. During a power cut that is said once, loudly: the watchdog used to
     stop looking, and a network UPS that answered with an error was taken for "online", which

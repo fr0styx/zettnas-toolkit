@@ -494,6 +494,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   shutdown settings, it says "No battery backup" and offers "Set up a UPS"; the rest of the page
   opens from there.
 
+#### Changes
+
+- **The Overview says more about power.** Besides a power cut, it now says when a UPS is found but
+  cannot be read, when the UPS stopped answering during a power cut, and when nothing can switch the
+  NAS off once the battery runs out.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

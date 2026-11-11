@@ -158,8 +158,24 @@ def _frozen() -> list[dict[str, Any]]:
     return []
 
 
+_PATH_CACHE: dict[str, Any] = {"at": -1e9, "ok": True}
+
+
+def _nothing_switches_off() -> bool:
+    """No way to switch the NAS off when the battery runs out; asked at most every five minutes,
+    because it may look for the host's UPS service over the network."""
+    import time as _time
+
+    if _time.time() - _PATH_CACHE["at"] > 300:
+        from backend.services.ups_watchdog import shutdown_path_report
+
+        _PATH_CACHE.update(at=_time.time(), ok=bool(shutdown_path_report().get("ok")))
+    return not _PATH_CACHE["ok"]
+
+
 def _power() -> list[dict[str, Any]]:
     from backend.hardware.ups import read_ups_status
+    from backend.services.ups_watchdog import ups_went_silent
     from backend.state import Z_STATE
 
     out = []
@@ -169,6 +185,15 @@ def _power() -> list[dict[str, Any]]:
     # every connection type: Overview knew one spelling ("OB") and missed a power cut on the others
     if ups_state.power_state(ups.get("status")) == ups_state.ON_BATTERY:
         out.append({"id": "ups:battery", "level": "warning", "kind": "on_battery", "subject": "", "open": "power"})
+    # three more a household should see without opening Power (SET-15, Power 2)
+    if ups_went_silent():
+        out.append({"id": "ups:silent", "level": "critical", "kind": "ups_silent", "subject": "", "open": "power"})
+    elif ups.get("unreadable") or ups.get("permission_error"):
+        out.append(
+            {"id": "ups:unreadable", "level": "warning", "kind": "ups_unreadable", "subject": "", "open": "power"}
+        )
+    if ups.get("available") and _nothing_switches_off():
+        out.append({"id": "ups:nobody", "level": "critical", "kind": "power_nobody", "subject": "", "open": "power"})
     if getattr(Z_STATE, "critical_temp_active", False):
         # "too hot" opened the Event Log; the fans and the temperatures are on Hardware
         out.append({"id": "temp:critical", "level": "critical", "kind": "too_hot", "subject": "", "open": "hardware"})
