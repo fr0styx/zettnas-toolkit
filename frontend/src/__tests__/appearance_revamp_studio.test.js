@@ -265,14 +265,14 @@ describe('Appearance Studio & Desktop Personalization Revamp Suite', () => {
 
     restoreAppearanceDefaultsWithUndo();
 
-    // Verify factory defaults applied
-    expect(state.desktopTheme).toBe('cyber');
+    // Verify factory defaults applied (APP-B: Lagoon)
+    expect(state.desktopTheme).toBe('lagoon');
     expect(state.desktopCustomAccent).toBe('');
     expect(capturedUndoAction).toBeTypeOf('function');
 
     // Trigger Undo
     capturedUndoAction();
-    expect(state.desktopTheme).toBe('crimson');
+    expect(state.desktopTheme).toBe('canyon'); // a Crimson saved before APP-B is Canyon now
     expect(state.desktopCustomAccent).toBe('#f43f5e');
   });
 

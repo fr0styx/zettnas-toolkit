@@ -62,18 +62,19 @@ describe('Batch 9: Frontend Hardening & Architecture', () => {
   });
 
   describe('Multi-Theme Switching Engine', () => {
-    it('correctly toggles amber, emerald, light, and yak themes', () => {
-      applyTheme('amber');
-      expect(document.body.classList.contains('theme-amber')).toBe(true);
+    it('correctly toggles themes, light mode and the yak theme', () => {
+      applyTheme('fjord');
+      expect(document.body.classList.contains('kb-theme-fjord')).toBe(true);
       expect(document.body.classList.contains('theme-yak')).toBe(false);
 
-      applyTheme('emerald');
-      expect(document.body.classList.contains('theme-emerald')).toBe(true);
-      expect(document.body.classList.contains('theme-amber')).toBe(false);
+      applyTheme('emerald'); // saved before APP-B: Moss
+      expect(document.body.classList.contains('kb-theme-moss')).toBe(true);
+      expect(document.body.classList.contains('kb-theme-fjord')).toBe(false);
 
-      applyTheme('light');
+      applyTheme('light'); // saved before APP-B: Lagoon in light mode
       expect(document.body.classList.contains('theme-light')).toBe(true);
-      expect(document.body.classList.contains('theme-emerald')).toBe(false);
+      expect(document.body.classList.contains('kb-theme-lagoon')).toBe(true);
+      expect(document.body.classList.contains('kb-theme-moss')).toBe(false);
 
       applyTheme('yak');
       expect(document.body.classList.contains('theme-yak')).toBe(true);

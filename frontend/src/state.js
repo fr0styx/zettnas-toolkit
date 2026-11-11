@@ -3,6 +3,16 @@
  * Centralizes UI configuration, hardware telemetry caches, and layout preferences.
  */
 import { ZettEventBus } from './event-bus.js';
+import { loadLook } from './look.js';
+
+/** Whether the hidden Yak theme is on (kept across reloads, apart from the look). */
+function _yakOn() {
+  try {
+    return localStorage.getItem('kiboto_yak') === '1' || localStorage.getItem('desktop_theme') === 'yak';
+  } catch {
+    return false;
+  }
+}
 
 export const defaultDashOrder = [
   'metric-storage',
@@ -87,8 +97,9 @@ export function mergeNewEvents(s, current) {
 export const state = {
   isLcdDirect: typeof window !== 'undefined' && (window.location.search.includes('mode=lcd') || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct'))),
   isVmConsoleDirect: typeof window !== 'undefined' && (window.location.search.includes('mode=vm-console') || (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct'))),
-  desktopTheme: (typeof localStorage !== 'undefined' && localStorage.getItem('desktop_theme')) || 'cyber',
-  desktopCustomAccent: (typeof localStorage !== 'undefined' && localStorage.getItem('desktop_custom_accent')) || '',
+  // APP-B: the person's look (look.js); the hidden Yak theme is kept on its own
+  desktopTheme: _yakOn() ? 'yak' : loadLook().theme,
+  desktopCustomAccent: loadLook().accent,
   lcdTheme: (typeof localStorage !== 'undefined' && localStorage.getItem('lcd_theme')) || 'cyber',
   lcdCustomAccent: (typeof localStorage !== 'undefined' && localStorage.getItem('lcd_custom_accent')) || '',
   lcdTextClarity: typeof localStorage !== 'undefined' ? localStorage.getItem('lcd_text_clarity') !== 'false' : true,
@@ -152,10 +163,14 @@ export const state = {
 
   setDesktopTheme(theme, customAccent = null) {
     this.desktopTheme = theme;
-    if (typeof localStorage !== 'undefined') localStorage.setItem('desktop_theme', theme);
+    // the look itself is saved by look.js; desktop_theme and desktop_custom_accent, saved before
+    // APP-B, are left as they were so an older cached page keeps working
+    try {
+      if (theme === 'yak') localStorage.setItem('kiboto_yak', '1');
+      else localStorage.removeItem('kiboto_yak');
+    } catch {}
     if (customAccent !== null) {
       this.desktopCustomAccent = customAccent;
-      if (typeof localStorage !== 'undefined') localStorage.setItem('desktop_custom_accent', customAccent);
     }
     ZettEventBus.emit('desktop_theme:changed', {
       theme: this.desktopTheme,

@@ -33,7 +33,7 @@ export function initStackModal() {
           <div class="stk-row">
             <span class="stk-fs16">📁</span>
             <span class="stk-fs135-bold-strong" id="stack-header-title">${t('stk.title', 'Stack Inspector')}</span>
-            <span id="stack-header-origin" class="ci-badge" style="font-size:var(--kb-fs-xs); padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(51,205,184,0.15); color:var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); border:1px solid rgba(79,216,196,0.3);">${t('stk.badge', 'Compose stack')}</span>
+            <span id="stack-header-origin" class="ci-badge" style="font-size:var(--kb-fs-xs); padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(51,205,184,0.15); color:var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border:1px solid rgba(79,216,196,0.3);">${t('stk.badge', 'Compose stack')}</span>
             <span id="stack-header-status" class="ci-state-pill" style="display:none;"></span>
           </div>
           <div class="os-window-controls stk-row-2">
@@ -434,7 +434,7 @@ function renderServicesList(containers) {
         </div>
 
         <div class="stk-row-7">
-          ${c.webui_url ? `<a href="${escapeHtml(c.webui_url.replace('[HOST]', window.location.hostname))}" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size:var(--kb-fs-xs); padding:2px 8px; text-decoration:none; color:var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));">${ico('🌐')} ${t('stk.webui', 'Web UI')}</a>` : ''}
+          ${c.webui_url ? `<a href="${escapeHtml(c.webui_url.replace('[HOST]', window.location.hostname))}" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size:var(--kb-fs-xs); padding:2px 8px; text-decoration:none; color:var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4));">${ico('🌐')} ${t('stk.webui', 'Web UI')}</a>` : ''}
           <button class="btn-pill-toggle stack-inspect-container-btn is-small" data-cid="${escapeHtml(c.id)}">${ico('🔍')} ${t('stk.inspect', 'Container details')}</button>
         </div>
       </div>
@@ -572,7 +572,7 @@ export async function openStackPickerModal(stacksInput = null) {
           <div class="stk-row-9">
             <span class="stk-fs16">📁</span>
             <span class="stk-fs135-bold-strong-2">${t('stk.picker_title', 'Docker Compose stacks')}</span>
-            <span id="stack-picker-badge" class="ci-badge" style="font-size:var(--kb-fs-xs); padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(51,205,184,0.15); color:var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); border:1px solid rgba(79,216,196,0.3);">${t('stk.count', '{count, plural, one {# Stack} other {# Stacks}}', { count: 0 })}</span>
+            <span id="stack-picker-badge" class="ci-badge" style="font-size:var(--kb-fs-xs); padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(51,205,184,0.15); color:var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border:1px solid rgba(79,216,196,0.3);">${t('stk.count', '{count, plural, one {# Stack} other {# Stacks}}', { count: 0 })}</span>
           </div>
           <div class="os-window-controls">
             <button class="win-btn close-btn" id="stack-picker-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
@@ -671,7 +671,7 @@ export async function openStackPickerModal(stacksInput = null) {
             <div class="stk-row">
               <span class="stk-fs14">📁</span>
               <strong class="stk-fs135-strong">${escapeHtml(s.name)}</strong>
-              <span class="ci-badge" style="font-size:var(--kb-fs-xs); padding:1px 5px; border-radius:3px; background:rgba(51,205,184,0.12); color:var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); border:1px solid rgba(79,216,196,0.25); text-transform:uppercase;">${escapeHtml(s.origin || 'Compose')}</span>
+              <span class="ci-badge" style="font-size:var(--kb-fs-xs); padding:1px 5px; border-radius:3px; background:rgba(51,205,184,0.12); color:var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border:1px solid rgba(79,216,196,0.25); text-transform:uppercase;">${escapeHtml(s.origin || 'Compose')}</span>
             </div>
             ${statusPill}
           </div>

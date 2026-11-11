@@ -35,10 +35,10 @@ describe('Yak Wallpaper Switch, Card Reordering, and Dynamic Hardware Settings S
       expect(wp.style.backgroundSize).toBe('contain');
       expect(wp.style.display).toBe('block');
 
-      // 2. Switch away from Yak Theme to Amber
-      applyDesktopTheme('amber');
+      // 2. Switch away from Yak Theme to Canyon
+      applyDesktopTheme('canyon');
       expect(document.body.classList.contains('theme-yak')).toBe(false);
-      expect(document.body.classList.contains('theme-amber')).toBe(true);
+      expect(document.body.classList.contains('kb-theme-canyon')).toBe(true);
       expect(wp.style.backgroundImage).toContain('/wallpapers/bahia.jpg');
       expect(wp.style.backgroundSize).toBe('');
     });

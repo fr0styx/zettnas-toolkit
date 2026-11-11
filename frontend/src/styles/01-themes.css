@@ -1,6 +1,7 @@
-/* UX-33: accent themes change the accent (--brand), never the status colours: OK, warning and
-   critical stay green, amber and red in every dark theme (styles/00-tokens.css); the light theme
-   has its own darker set. b16_themes.test.js checks contrast and hue over every theme. */
+/* The five themes (APP-B: Lagoon, Fjord, Moss, Heather, Canyon) are generated into styles/themes/
+   by scripts/themes.py and load when chosen; this file keeps light mode, True black (body.theme-oled,
+   Lagoon's; the other themes bring their own) and the theme cards' miniatures. Status colours are
+   the same in every theme (UX-33, APP-B). */
 
 /* =========================================================================
    LIGHT THEME: HIGH-CONTRAST CLEAN MODERN DESKTOP (WCAG 2.2 AA)
@@ -28,89 +29,11 @@ body.theme-light {
   color: var(--fg);
 }
 
-/* =========================================================================
-   AMBER THEME: RETRO PHOSPHOR CRT TERMINAL
-   ========================================================================= */
-body.theme-amber {
-  --bg: #120d04;
-  --card: #1f1708;
-  --card-hi: #2b200b;
-  --fg: #fef3c7;
-  --muted: #a67c29;
-  --track: #2a1f0a;
-  --brand: #ffbe40;
-  --focus-ring: #ffbe40;
-  --focus-shadow: 0 0 0 3px rgba(255, 190, 64, 0.35);
-  background: radial-gradient(circle at 50% 50%, #241a09 0%, #0d0903 70%);
-  color: var(--fg);
-}
-
-/* =========================================================================
-   EMERALD THEME: GREEN CYBERPUNK MATRIX TERMINAL
-   ========================================================================= */
-body.theme-emerald {
-  --bg: #04120a;
-  --card: #082012;
-  --card-hi: #0c2e1a;
-  --fg: #e6fced;
-  --muted: #34c776;
-  --track: #0e331f;
-  --brand: #3bf58b;
-  --focus-ring: #3bf58b;
-  --focus-shadow: 0 0 0 3px rgba(59, 245, 139, 0.35);
-  background: radial-gradient(circle at 50% 50%, #0b2917 0%, #030d07 70%);
-  color: var(--fg);
-}
-
-/* =========================================================================
-   SAPPHIRE THEME: NORDIC ICE BLUE GLOW
-   ========================================================================= */
-body.theme-sapphire {
-  --bg: #070e17;
-  --card: #0c1929;
-  --card-hi: #132438;
-  --fg: #f0f7ff;
-  --muted: #6e8db4;
-  --track: #15263d;
-  --brand: #38bdf8;
-  --focus-ring: #38bdf8;
-  --focus-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
-  background: radial-gradient(circle at 50% 50%, #0e1e33 0%, #040810 70%);
-  color: var(--fg);
-}
-
-/* =========================================================================
-   AMETHYST THEME: SYNTHWAVE CYBER VIOLET
-   ========================================================================= */
-body.theme-amethyst {
-  --bg: #0e0717;
-  --card: #180e28;
-  --card-hi: #24153b;
-  --fg: #fbf7ff;
-  --muted: #b399cf;
-  --track: #26163d;
-  --brand: #c084fc;
-  --focus-ring: #c084fc;
-  --focus-shadow: 0 0 0 3px rgba(192, 132, 252, 0.35);
-  background: radial-gradient(circle at 50% 50%, #1e1133 0%, #080310 70%);
-  color: var(--fg);
-}
-
-/* =========================================================================
-   CRIMSON THEME: HIGH-ENERGY CORAL RED
-   ========================================================================= */
-body.theme-crimson {
-  --bg: #14070a;
-  --card: #220c12;
-  --card-hi: #30131b;
-  --fg: #fff1f2;
-  --muted: #c48995;
-  --track: #36141e;
-  --brand: #f43f5e;
-  --focus-ring: #f43f5e;
-  --focus-shadow: 0 0 0 3px rgba(244, 63, 94, 0.35);
-  background: radial-gradient(circle at 50% 50%, #2e0e17 0%, #0d0305 70%);
-  color: var(--fg);
+/* The page behind the desktop in light mode. 00-tokens.css sets the dark page on
+   body.studio-workbench:not(.lcd-direct), which outranks body.theme-light above, so Lagoon light kept
+   the dark page under its light glass (seen at the APP-B gate; the other themes set their own). */
+body.theme-light:not(.lcd-direct) {
+  background: radial-gradient(circle at 50% 50%, #f9fbfb 0%, #e3eaea 70%);
 }
 
 /* =========================================================================
@@ -130,3 +53,10 @@ body.theme-oled {
   color: var(--fg);
 }
 
+/* The theme cards' miniatures: each theme's panel in dark and light, with its main colour on each
+   (scripts/theme_palettes.json: surface-raised and primary). */
+.theme-mini[data-theme-id="lagoon"] { --m-dark: #1a2629; --m-light: #e8eeee; --m-p: #33cdb8; --m-pl: #0a7a70; }
+.theme-mini[data-theme-id="fjord"] { --m-dark: #1c242f; --m-light: #e7eef6; --m-p: #64bdf8; --m-pl: #0971a5; }
+.theme-mini[data-theme-id="moss"] { --m-dark: #1d2620; --m-light: #e7efe8; --m-p: #98c275; --m-pl: #52762f; }
+.theme-mini[data-theme-id="heather"] { --m-dark: #25222c; --m-light: #eeebf4; --m-p: #c69ef4; --m-pl: #7a55a1; }
+.theme-mini[data-theme-id="canyon"] { --m-dark: #292318; --m-light: #f9eada; --m-p: #f39a66; --m-pl: #9d522c; }

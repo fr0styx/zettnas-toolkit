@@ -1,9 +1,9 @@
 {
   "important": 3345,
   "buttonClasses": 75,
-  "inlineStyles": 1395,
+  "inlineStyles": 1386,
   "emojiIcons": 2,
-  "colours": 3981,
+  "colours": 3951,
   "primitiveUses": 4,
   "importantPerFile": {
     "frontend/index.html": 64,
@@ -55,7 +55,7 @@
     "frontend/src/components/container-modal.js": 76,
     "frontend/src/components/container-network-map.js": 19,
     "frontend/src/components/containers-manager.js": 7,
-    "frontend/src/components/dashboard.js": 46,
+    "frontend/src/components/dashboard.js": 38,
     "frontend/src/components/desktop-shortcuts.js": 32,
     "frontend/src/components/dock/dock-manager.js": 2,
     "frontend/src/components/dock/notifications.js": 15,
@@ -83,7 +83,7 @@
     "frontend/src/components/phone-backup.js": 2,
     "frontend/src/components/remote-access.js": 2,
     "frontend/src/components/screensaver.js": 6,
-    "frontend/src/components/settings.js": 63,
+    "frontend/src/components/settings.js": 48,
     "frontend/src/components/setup-wizard.js": 4,
     "frontend/src/components/stack-modal.js": 45,
     "frontend/src/components/terminal-view.js": 22,
@@ -99,6 +99,7 @@
     "frontend/src/components/vm/snapshots.js": 11,
     "frontend/src/components/widgets.js": 20,
     "frontend/src/folder-browser.js": 4,
+    "frontend/src/look.js": 20,
     "frontend/src/modals.js": 16,
     "frontend/src/styles/03-performance-a11y.css": 95,
     "frontend/src/styles/05-studio-stage.css": 84,
@@ -159,6 +160,6 @@
     "frontend/src/utils.js": 1,
     "frontend/src/vm-console-direct.css": 2,
     "frontend/src/windows/drawer.html": 116,
-    "frontend/src/windows/management-window.html": 535
+    "frontend/src/windows/management-window.html": 508
   }
 }

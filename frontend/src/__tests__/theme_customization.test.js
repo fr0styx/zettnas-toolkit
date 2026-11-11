@@ -26,12 +26,16 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
     expect(html).toContain('id="mgmt-pane-theme"');
     expect(html).toContain('id="desktop-theme-active-badge"');
 
-    // 9 Theme presets in Mission Control
-    const themes = ['cyber', 'amber', 'emerald', 'sapphire', 'amethyst', 'crimson', 'oled', 'light', 'yak'];
+    // The five themes, mode, True black and the tint (APP-B); Yak stays hidden
+    const themes = ['lagoon', 'fjord', 'moss', 'heather', 'canyon'];
     themes.forEach((tId) => {
       expect(html).toContain(`desktop-theme-preset theme-preset-card`);
       expect(html).toContain(`data-theme-id="${tId}"`);
     });
+    for (const id of ['data-look-mode="dark"', 'data-look-mode="light"', 'data-look-mode="auto"', 'id="look-true-black"', 'id="look-tint"']) {
+      expect(html).toContain(id);
+    }
+    expect(html).not.toContain('desktop-theme-preset theme-preset-card" data-theme-id="yak"');
 
     // Custom desktop color picker and chips
     expect(html).toContain('id="desktop-custom-color-picker"');
@@ -95,16 +99,16 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
     const storageTitle = document.querySelector('.card-storage .card-title-txt');
     const lightbar = document.getElementById('virtual-chassis-lightbar');
 
-    // 1. Apply Amber Desktop Theme
+    // 1. Apply a desktop theme saved before APP-B (Amber: Canyon now)
     applyDesktopTheme('amber', '#ffbe40');
     // the badge beside KIBOTO and in the drawer says Beta while 2.0 is a beta
     expect(document.getElementById('suite-brand-badge').textContent).toBe('Beta');
     expect(document.getElementById('drawer-sub-badge').textContent).toBe('Beta');
 
     // Desktop body is themed
-    expect(document.body.classList.contains('theme-amber')).toBe(true);
+    expect(document.body.classList.contains('kb-theme-canyon')).toBe(true);
     expect(document.documentElement.style.getPropertyValue('--brand')).toBe('#ffbe40');
-    expect(state.desktopTheme).toBe('amber');
+    expect(state.desktopTheme).toBe('canyon');
     expect(state.desktopCustomAccent).toBe('#ffbe40');
 
     // LCD screen, mini preview, and console window are UNTOUCHED by desktop theme
@@ -125,8 +129,9 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
     expect(storageTitle.textContent).toBe('STORAGE');
     expect(lightbar.style.background).toBe('');
 
-    // Stored in desktop preference
-    expect(localStorage.getItem('desktop_theme')).toBe('yak');
+    // Remembered on its own (APP-B); the theme saved before APP-B is left as it was
+    expect(localStorage.getItem('kiboto_yak')).toBe('1');
+    expect(localStorage.getItem('desktop_theme')).not.toBe('canyon');
   });
 
   it('strictly isolates LCD Screen Theme: applyLcdTheme modifies screen/mini canvas/console window, NEVER touches body', () => {
@@ -191,34 +196,35 @@ describe('Desktop Theme & LCD Screen Themer Isolation Suite', () => {
       <div id="screen"></div>
       <div id="mini-lcd-canvas"></div>
     `;
-    applyTheme('emerald', '#3bf58b', false);
+    applyTheme('emerald', '#3bf58b', false); // saved before APP-B: Moss
 
-    expect(state.currentTheme).toBe('emerald');
-    expect(document.body.classList.contains('theme-emerald')).toBe(true);
-    expect(state.desktopTheme).toBe('emerald');
+    expect(state.currentTheme).toBe('moss');
+    expect(document.body.classList.contains('kb-theme-moss')).toBe(true);
+    expect(state.desktopTheme).toBe('moss');
   });
 
   it('syncDesktopThemeUI correctly updates desktop controls in Mission Control', () => {
     document.body.innerHTML = `
       <div id="mgmt-pane-theme">
         <span id="desktop-theme-active-badge"></span>
-        <button class="desktop-theme-preset" data-theme-id="cyber"></button>
-        <button class="desktop-theme-preset" data-theme-id="amethyst"></button>
+        <button class="desktop-theme-preset" data-theme-id="lagoon"></button>
+        <button class="desktop-theme-preset" data-theme-id="heather"></button>
         <input type="color" id="desktop-custom-color-picker" value="#00f0ff">
         <span id="desktop-custom-hex-val"></span>
         <button class="desktop-color-chip" data-color="#c084fc"></button>
       </div>
     `;
 
-    state.setDesktopTheme('amethyst', '#c084fc');
+    localStorage.removeItem('kiboto_look');
+    state.setDesktopTheme('heather', '#c084fc');
     syncDesktopThemeUI();
 
     const activeCard = document.querySelector('.desktop-theme-preset.active');
     expect(activeCard).not.toBeNull();
-    expect(activeCard.dataset.themeId).toBe('amethyst');
+    expect(activeCard.dataset.themeId).toBe('heather');
 
     const badge = document.getElementById('desktop-theme-active-badge');
-    expect(badge.textContent).toBe('AMETHYST VIOLET');
+    expect(badge.textContent).toBe('Dark · Heather');
 
     const picker = document.getElementById('desktop-custom-color-picker');
     expect(picker.value).toBe('#c084fc');

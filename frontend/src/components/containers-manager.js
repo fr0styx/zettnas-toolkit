@@ -117,7 +117,7 @@ export function initContainersManager() {
               <button id="btn-cw-update-all" class="btn-pill-toggle" style="display: none; color: var(--kb-text-warn); border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="${t('ui.update_all_containers_with_available', 'Update all containers with available image updates')}">
                 <span aria-hidden="true">↑</span> <span>${t('cw.update_all', 'Update all')} (<span id="cw-updates-count-badge">0</span>)</span>
               </button>
-              <button id="btn-cw-stacks" class="btn-pill-toggle" title="${t('ui.manage_docker_compose_stacks', 'Manage Docker Compose Stacks')}" style="color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));">
+              <button id="btn-cw-stacks" class="btn-pill-toggle" title="${t('ui.manage_docker_compose_stacks', 'Manage Docker Compose Stacks')}" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4));">
                 <span aria-hidden="true">📁</span> <span>${t('cw.stacks', 'Compose stacks')}</span>
               </button>
               <button id="btn-cw-netmap" class="btn-pill-toggle" title="${t('cw.netmap_title', 'Container Network Map')}">

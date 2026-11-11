@@ -305,7 +305,7 @@
 }
 .btn-docker-stack {
   background: rgba(var(--c-primary-text-rgb), 0.1);
-  color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));
+  color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4));
   border-color: rgba(var(--c-primary-text-rgb), 0.3);
 }
 .btn-docker-stack:hover:not(:disabled) {

@@ -469,79 +469,56 @@
             </div>
             <div class="mgmt-detail-body">
               <div class="drawer-card thm-box">
-                <div class="thm-xs-bold-muted" data-i18n="mgmt.theme_presets_label">Color presets</div>
-                <div class="theme-palette-grid" role="radiogroup" aria-label="Desktop Theme Presets" data-i18n-aria-label="ui.desktop_theme_presets">
-                  <button class="desktop-theme-preset theme-preset-card active" data-theme-id="cyber" role="radio" aria-checked="true" aria-label="Lagoon: teal on deep blue-green" data-i18n-aria-label="ui.cyber_teal_signature_cyan_obsidian">
-                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #33cdb8 50%, #f6b44c 50%); border: 2px solid #33cdb8;"></div>
-                    <div class="theme-preset-info">
-                      <span class="theme-preset-name" data-i18n="settings.theme_cyber">Lagoon</span>
-                      <span class="theme-preset-desc" data-i18n="settings.theme_cyber_desc">Teal on deep blue-green</span>
-                    </div>
+                <!-- APP-B: the look is the person's own (look.js): mode, theme, tint and True black -->
+                <div class="thm-xs-bold-muted" id="look-mode-label" data-i18n="look.mode">Mode</div>
+                <div class="look-mode" role="radiogroup" aria-labelledby="look-mode-label">
+                  <button class="look-mode-btn active" data-look-mode="dark" role="radio" aria-checked="true" data-i18n="look.mode_dark">Dark</button>
+                  <button class="look-mode-btn" data-look-mode="light" role="radio" aria-checked="false" data-i18n="look.mode_light">Light</button>
+                  <button class="look-mode-btn" data-look-mode="auto" role="radio" aria-checked="false" data-i18n="look.mode_auto">Auto</button>
+                </div>
+                <label class="look-true-black"><input type="checkbox" id="look-true-black"> <span data-i18n="look.true_black">True black (dark mode)</span></label>
+                <div class="thm-xs-bold-muted" id="look-theme-label" data-i18n="look.theme">Theme</div>
+                <div class="theme-palette-grid" role="radiogroup" aria-labelledby="look-theme-label">
+                  <button class="desktop-theme-preset theme-preset-card active" data-theme-id="lagoon" role="radio" aria-checked="true">
+                    <span class="theme-mini" data-theme-id="lagoon" aria-hidden="true"></span>
+                    <span class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="look.theme_lagoon">Lagoon</span>
+                      <span class="theme-preset-desc" data-i18n="look.theme_lagoon_desc">Teal and blue-green</span>
+                    </span>
                   </button>
-
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="amber" role="radio" aria-checked="false" aria-label="Amber Gold: Retro Phosphor CRT" data-i18n-aria-label="ui.amber_gold_retro_phosphor_crt">
-                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #ffbe40 50%, #e09b20 50%); border: 2px solid #ffbe40;"></div>
-                    <div class="theme-preset-info">
-                      <span class="theme-preset-name" data-i18n="settings.theme_amber">Amber Gold</span>
-                      <span class="theme-preset-desc" data-i18n="settings.theme_amber_desc">Retro Phosphor CRT</span>
-                    </div>
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="fjord" role="radio" aria-checked="false">
+                    <span class="theme-mini" data-theme-id="fjord" aria-hidden="true"></span>
+                    <span class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="look.theme_fjord">Fjord</span>
+                      <span class="theme-preset-desc" data-i18n="look.theme_fjord_desc">Cool blue and slate</span>
+                    </span>
                   </button>
-
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="emerald" role="radio" aria-checked="false" aria-label="Emerald Matrix: Cyber Terminal Green" data-i18n-aria-label="ui.emerald_matrix_cyber_terminal_green">
-                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #3bf58b 50%, #24d673 50%); border: 2px solid #3bf58b;"></div>
-                    <div class="theme-preset-info">
-                      <span class="theme-preset-name" data-i18n="settings.theme_emerald">Emerald Matrix</span>
-                      <span class="theme-preset-desc" data-i18n="settings.theme_emerald_desc">Cyber Terminal Green</span>
-                    </div>
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="moss" role="radio" aria-checked="false">
+                    <span class="theme-mini" data-theme-id="moss" aria-hidden="true"></span>
+                    <span class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="look.theme_moss">Moss</span>
+                      <span class="theme-preset-desc" data-i18n="look.theme_moss_desc">Soft green and pine</span>
+                    </span>
                   </button>
-
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="sapphire" role="radio" aria-checked="false" aria-label="Sapphire Ice: Nordic Ice Blue Glow" data-i18n-aria-label="ui.sapphire_ice_nordic_ice_blue">
-                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #38bdf8 50%, #0284c7 50%); border: 2px solid #38bdf8;"></div>
-                    <div class="theme-preset-info">
-                      <span class="theme-preset-name" data-i18n="settings.theme_sapphire">Sapphire Ice</span>
-                      <span class="theme-preset-desc" data-i18n="settings.theme_sapphire_desc">Nordic Ice Blue Glow</span>
-                    </div>
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="heather" role="radio" aria-checked="false">
+                    <span class="theme-mini" data-theme-id="heather" aria-hidden="true"></span>
+                    <span class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="look.theme_heather">Heather</span>
+                      <span class="theme-preset-desc" data-i18n="look.theme_heather_desc">Soft violet and plum</span>
+                    </span>
                   </button>
-
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="amethyst" role="radio" aria-checked="false" aria-label="Amethyst Violet: Synthwave Neon Purple" data-i18n-aria-label="ui.amethyst_violet_synthwave_neon_purple">
-                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #c084fc 50%, #a855f7 50%); border: 2px solid #c084fc;"></div>
-                    <div class="theme-preset-info">
-                      <span class="theme-preset-name" data-i18n="settings.theme_amethyst">Amethyst Violet</span>
-                      <span class="theme-preset-desc" data-i18n="settings.theme_amethyst_desc">Synthwave Neon Purple</span>
-                    </div>
+                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="canyon" role="radio" aria-checked="false">
+                    <span class="theme-mini" data-theme-id="canyon" aria-hidden="true"></span>
+                    <span class="theme-preset-info">
+                      <span class="theme-preset-name" data-i18n="look.theme_canyon">Canyon</span>
+                      <span class="theme-preset-desc" data-i18n="look.theme_canyon_desc">Terracotta and sand</span>
+                    </span>
                   </button>
-
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="crimson" role="radio" aria-checked="false" aria-label="Crimson Ruby: High-Energy Coral Red" data-i18n-aria-label="ui.crimson_ruby_high_energy_coral">
-                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #fb7185 50%, #f43f5e 50%); border: 2px solid #fb7185;"></div>
-                    <div class="theme-preset-info">
-                      <span class="theme-preset-name" data-i18n="settings.theme_crimson">Crimson Ruby</span>
-                      <span class="theme-preset-desc" data-i18n="settings.theme_crimson_desc">High-Energy Coral Red</span>
-                    </div>
-                  </button>
-
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="light" role="radio" aria-checked="false" aria-label="Daylight White: Clean Light Desktop" data-i18n-aria-label="ui.daylight_white_clean_light_desktop">
-                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #f8fafc 50%, #cbd5e1 50%); border: 2px solid #64748b;"></div>
-                    <div class="theme-preset-info">
-                      <span class="theme-preset-name" data-i18n="settings.theme_light">Daylight White</span>
-                      <span class="theme-preset-desc" data-i18n="settings.theme_light_desc">Clean Light Desktop</span>
-                    </div>
-                  </button>
-
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="oled" role="radio" aria-checked="false" aria-label="Pure OLED Black: Deep Zero-Emission Contrast" data-i18n-aria-label="ui.pure_oled_black_deep_zero">
-                    <div class="theme-swatch-circle" style="background: var(--lt-b-000000ff, #000000); border: 2px solid var(--lt-r-ffffff66, rgba(255,255,255,0.4)); box-shadow: 0 0 8px rgba(51,205,184,0.2);"></div>
-                    <div class="theme-preset-info">
-                      <span class="theme-preset-name" data-i18n="settings.theme_oled">Pure OLED Black</span>
-                      <span class="theme-preset-desc" data-i18n="settings.theme_oled_desc">Deep Zero-Emission Contrast</span>
-                    </div>
-                  </button>
-
-                  <button class="desktop-theme-preset theme-preset-card" data-theme-id="yak" role="radio" aria-checked="false" aria-label="Yak Bronze: Warm Toastie Meadow" data-i18n-aria-label="ui.yak_bronze_warm_toastie_meadow">
-                    <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #d48a37 50%, #e6a254 50%); border: 2px solid #d48a37;"></div>
-                    <div class="theme-preset-info">
-                      <span class="theme-preset-name" data-i18n="settings.theme_yak">Yak Bronze</span>
-                      <span class="theme-preset-desc" data-i18n="settings.theme_yak_desc">Warm Toastie Meadow</span>
-                    </div>
-                  </button>
+                </div>
+                <div class="look-tint">
+                  <label class="thm-xs-bold-muted" for="look-tint" data-i18n="look.tint">Tint</label>
+                  <input type="range" id="look-tint" min="0" max="100" step="5" value="0" aria-describedby="look-tint-ends">
+                  <div class="look-tint-ends" id="look-tint-ends"><span data-i18n="look.tint_subtle">Subtle</span><span data-i18n="look.tint_strong">Strong</span></div>
                 </div>
 
                 <!-- Custom Desktop Accent Color -->
@@ -1589,7 +1566,7 @@
                   <div class="network-kpi-card" id="net-kpi-ip-card">
                     <div class="net-row-3">
                       <div class="network-kpi-label" data-i18n="mw.primary_host_ip">Primary Host IP</div>
-                      <button class="btn-pill-toggle is-small" id="btn-open-host-ip-modal" style="color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); border-color: rgba(79, 216, 196, 0.35); text-transform: none; margin-top: -2px;"><span aria-hidden="true">⚙️</span> <span data-i18n="net.host_cfg_btn">Configure</span></button>
+                      <button class="btn-pill-toggle is-small" id="btn-open-host-ip-modal" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border-color: rgba(79, 216, 196, 0.35); text-transform: none; margin-top: -2px;"><span aria-hidden="true">⚙️</span> <span data-i18n="net.host_cfg_btn">Configure</span></button>
                     </div>
                     <div class="network-kpi-val" id="net-kpi-ip">--</div>
                     <div class="network-kpi-sub" id="net-kpi-iface">--</div>
@@ -1659,7 +1636,7 @@
                 <!-- 802.1Q VLAN Sub-Interfaces -->
                 <div class="network-section-header net-row-4">
                   <span class="network-section-title" data-i18n="mw.vlan_sub_interfaces_802_1q_tagging">VLAN SUB-INTERFACES (802.1Q TAGGING)</span>
-                  <button class="btn-pill-toggle is-small" id="btn-open-create-vlan-modal" style="color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); border-color: rgba(79, 216, 196, 0.4);" data-i18n="net.create_vlan_btn">+ Add VLAN</button>
+                  <button class="btn-pill-toggle is-small" id="btn-open-create-vlan-modal" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border-color: rgba(79, 216, 196, 0.4);" data-i18n="net.create_vlan_btn">+ Add VLAN</button>
                 </div>
                 <div class="network-table-wrap" id="network-vlan-table-wrap" tabindex="0">
                   <table class="copy-history-table">
@@ -1702,7 +1679,7 @@
                     <button class="btn-pill-toggle" data-mesh-filter="tailscale">Tailscale</button>
                     <button class="btn-pill-toggle" data-mesh-filter="wireguard" translate="no">WireGuard</button>
                   </div>
-                  <button class="btn-pill-toggle" id="btn-wg-gen-client-config" style="color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); border-color: rgba(79, 216, 196, 0.4);"><span aria-hidden="true">🔑</span> <span data-i18n="ui.generate_client_conf">Generate Client .conf</span></button>
+                  <button class="btn-pill-toggle" id="btn-wg-gen-client-config" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border-color: rgba(79, 216, 196, 0.4);"><span aria-hidden="true">🔑</span> <span data-i18n="ui.generate_client_conf">Generate Client .conf</span></button>
                   <button class="btn-pill-toggle" id="btn-refresh-wireguard" title="Refresh Mesh VPN Status" data-i18n-title="ui.refresh_mesh_vpn_status"><span aria-hidden="true">🔄</span> <span data-i18n="vm.refresh">Refresh</span></button>
                 </div>
               </div>
@@ -1739,7 +1716,7 @@
                       </div>
                       <div class="wgd-row-box-2">
                         <span class="wgd-muted" data-i18n="mw.connected_mesh_peers">Connected Mesh Peers:</span>
-                        <span id="ts-peers-display" style="font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));">0 peers</span>
+                        <span id="ts-peers-display" style="font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4));">0 peers</span>
                       </div>
                       <div class="wgd-row-5" id="ts-key-expiry-row">
                         <span class="wgd-muted" data-i18n="net.tailscale_key_expiry">Node Key Expiry:</span>
@@ -1803,7 +1780,7 @@
                           </div>
                           <div class="wgd-row-8">
                             <label class="wgd-row-xs">
-                              <input type="checkbox" id="ts-accept-routes-input" style="accent-color:var(--accent-cyan, #4fd8c4);" />
+                              <input type="checkbox" id="ts-accept-routes-input" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
                               <span data-i18n="mw.accept_routes">Accept Routes</span>
                             </label>
                             <div class="wgd-xs-muted" id="ts-route-conflict" role="status" hidden></div>
@@ -1827,7 +1804,7 @@
                         <div class="wgd-col-box">
                           <div class="wgd-row-5">
                             <label class="wgd-row-xs-bold-strong">
-                              <input type="checkbox" id="ts-subnet-router-toggle" style="accent-color:var(--accent-cyan, #4fd8c4);" />
+                              <input type="checkbox" id="ts-subnet-router-toggle" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
                               <span data-i18n="net.tailscale_subnet_router">Subnet Router Gateway (--advertise-routes)</span>
                             </label>
                             <button class="btn-pill-toggle is-small" id="btn-ts-save-routes" data-i18n="net.tailscale_save_routes">Save Subnets</button>
@@ -1842,7 +1819,7 @@
                         <div class="wgd-col-box-2">
                           <div class="wgd-row-5">
                             <label class="wgd-row-xs-bold-strong">
-                              <input type="checkbox" id="ts-exit-node-toggle" style="accent-color:var(--accent-cyan, #4fd8c4);" />
+                              <input type="checkbox" id="ts-exit-node-toggle" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
                               <span data-i18n="net.tailscale_exit_node">Exit Node Gateway (--advertise-exit-node)</span>
                             </label>
                             <span class="mgmt-app-pill wgd-xs-5" id="ts-exit-node-pill" data-sample>—</span>
@@ -1859,7 +1836,7 @@
                         <div class="wgd-col-box-2">
                           <div class="wgd-row-5">
                             <label class="wgd-row-xs-bold-strong">
-                              <input type="checkbox" id="ts-ssh-toggle" style="accent-color:var(--accent-cyan, #4fd8c4);" />
+                              <input type="checkbox" id="ts-ssh-toggle" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
                               <span data-i18n="net.tailscale_ssh">Tailscale SSH (--ssh)</span>
                             </label>
                             <span class="mgmt-app-pill wgd-xs-5" id="ts-ssh-pill" data-sample>—</span>
@@ -1884,7 +1861,7 @@
                     <div class="wgd-col-xs">
                       <div class="wgd-row-5">
                         <label class="wgd-row-bold-strong">
-                          <input type="checkbox" id="ts-serve-toggle" style="accent-color:var(--accent-cyan, #4fd8c4);" />
+                          <input type="checkbox" id="ts-serve-toggle" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
                           <span data-i18n="net.tailscale_enable_serve">Enable HTTPS on Tailnet (tailscale serve)</span>
                         </label>
                       </div>
@@ -2014,7 +1991,7 @@
                   </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
-                  <button class="btn-pill-toggle" id="btn-create-docker-net" style="color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); border-color: rgba(79, 216, 196, 0.4);" data-i18n="net.create_docker_net">+ Create Network</button>
+                  <button class="btn-pill-toggle" id="btn-create-docker-net" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border-color: rgba(79, 216, 196, 0.4);" data-i18n="net.create_docker_net">+ Create Network</button>
                 </div>
               </div>
 
@@ -2214,7 +2191,7 @@
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="standalone"><span data-i18n="mgmt.docker_filter_standalone">Standalone</span> <span id="docker-count-standalone" class="docker-count-badge">0</span></button>
                     </div>
                     <div class="app-row-5">
-                      <button class="btn-pill-toggle" id="btn-docker-stacks-menu" style="color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));" title="View & Edit Docker Compose Stacks" data-i18n-title="ui.view_edit_docker_compose_stacks">
+                      <button class="btn-pill-toggle" id="btn-docker-stacks-menu" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4));" title="View & Edit Docker Compose Stacks" data-i18n-title="ui.view_edit_docker_compose_stacks">
                         <span aria-hidden="true">📁</span> <span data-i18n="mw.manage_stacks">Manage Stacks</span>
                       </button>
                       <button class="btn-pill-toggle" id="btn-docker-check-updates" title="Check remote registries for container image updates" data-i18n-title="ui.check_remote_registries_for_container">
@@ -3387,7 +3364,7 @@
                   <div class="sec-sm-bold-strong"><span aria-hidden="true">🛡️</span> <span data-i18n="mw.two_factor_2fa">Two-Factor Authentication (2FA)</span></div>
                   <div class="sec-xs-muted-4" data-i18n="mw.protect_your_account_with_rfc_6238">Protect your account with RFC 6238 TOTP authenticator app verification.</div>
                 </div>
-                <button type="button" class="btn-pill-toggle" id="btn-jump-to-2fa" style="color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); border-color: rgba(79,216,196,0.4);" data-i18n="sec.configure_2fa">Set up two-step sign-in →</button>
+                <button type="button" class="btn-pill-toggle" id="btn-jump-to-2fa" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border-color: rgba(79,216,196,0.4);" data-i18n="sec.configure_2fa">Set up two-step sign-in →</button>
               </div>
             </div>
           </div>
@@ -4870,7 +4847,7 @@
     <div class="smart-modal-header pcfg-x">
       <span class="smart-modal-title pcfg-row" id="net-port-cfg-title">
         <span id="net-port-cfg-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok2, #3bf58b);"></span>
-        <span data-i18n="net.port_cfg_title">Port Configuration</span>: <strong id="net-port-cfg-iface" style="color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); font-family: var(--font-mono, monospace);">ETH0</strong>
+        <span data-i18n="net.port_cfg_title">Port Configuration</span>: <strong id="net-port-cfg-iface" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); font-family: var(--font-mono, monospace);">ETH0</strong>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="net-port-cfg-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
@@ -4958,7 +4935,7 @@
   <div class="smart-modal-window" style="max-width: 460px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(79, 216, 196, 0.15); border: 1px solid var(--kb-line-14);">
     <div class="smart-modal-header ndc-x">
       <span class="smart-modal-title ndc-row" id="net-docker-create-title">
-        <svg class="ic" style="width: 15px; height: 15px; color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); fill: currentColor;"><use href="#i-chip"/></svg>
+        <svg class="ic" style="width: 15px; height: 15px; color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); fill: currentColor;"><use href="#i-chip"/></svg>
         <span data-i18n="net.create_docker_title">Create Docker Network</span>
       </span>
       <div class="os-window-controls">
@@ -5004,7 +4981,7 @@
   <div class="smart-modal-window" style="max-width: 520px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(79, 216, 196, 0.18); border: 1px solid var(--kb-line-14);">
     <div class="smart-modal-header hcfg-x">
       <span class="smart-modal-title hcfg-row" id="net-host-cfg-title">
-        <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); fill: currentColor;"><use href="#i-net"/></svg>
+        <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); fill: currentColor;"><use href="#i-net"/></svg>
         <span data-i18n="net.host_cfg_title">Host IP & DNS Configuration</span>
       </span>
       <div class="os-window-controls">
@@ -5123,7 +5100,7 @@
       <!-- Target Address Box -->
       <div class="can-xs-box" id="net-canary-dest-card">
         <div class="can-xs-muted" data-i18n="net.canary_redirect_hint">If host IP changed, open the new address in a new tab to confirm:</div>
-        <div style="display: flex; justify-content: center; align-items: center; gap: 8px; font-family: var(--font-mono, monospace); font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); font-size: 13px;">
+        <div style="display: flex; justify-content: center; align-items: center; gap: 8px; font-family: var(--font-mono, monospace); font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); font-size: 13px;">
           <span id="net-canary-target-url">http://--:8082</span>
           <a id="net-canary-open-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size: var(--kb-fs-xs); padding: 2px 8px; color: var(--lt-ink-brand, var(--accent-cyan)); border-color: rgba(79,216,196,0.4);"><span data-i18n="overview.open">Open</span> <span aria-hidden="true">↗</span></a>
         </div>
@@ -5148,7 +5125,7 @@
   <div class="smart-modal-window" style="max-width: 520px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(79, 216, 196, 0.18); border: 1px solid var(--kb-line-14);">
     <div class="smart-modal-header bond-x">
       <span class="smart-modal-title bond-row" id="net-bond-cfg-title">
-        <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); fill: currentColor;"><use href="#i-net"/></svg>
+        <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); fill: currentColor;"><use href="#i-net"/></svg>
         <span data-i18n="net.bond_cfg_title">Bonding & Link Aggregation</span>
         <span class="switch-speed-pill speed-10g bond-x-2" id="net-bond-target-badge">bond0</span>
       </span>
@@ -5212,7 +5189,7 @@
   <div class="smart-modal-window" style="max-width: 500px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(79, 216, 196, 0.18); border: 1px solid var(--kb-line-14);">
     <div class="smart-modal-header brg-x">
       <span class="smart-modal-title brg-row" id="net-bridge-cfg-title">
-        <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); fill: currentColor;"><use href="#i-net"/></svg>
+        <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); fill: currentColor;"><use href="#i-net"/></svg>
         <span data-i18n="net.bridge_cfg_title">Virtual Bridge Tuning</span>
         <span class="switch-speed-pill speed-10g brg-x-2" id="net-bridge-target-badge">br0</span>
       </span>
@@ -5265,7 +5242,7 @@
   <div class="smart-modal-window" style="max-width: 480px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(79, 216, 196, 0.18); border: 1px solid var(--kb-line-14);">
     <div class="smart-modal-header vlan-x">
       <span class="smart-modal-title vlan-row" id="net-vlan-create-title">
-        <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); fill: currentColor;"><use href="#i-net"/></svg>
+        <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); fill: currentColor;"><use href="#i-net"/></svg>
         <span data-i18n="net.create_vlan_title">Create 802.1Q VLAN Sub-Interface</span>
       </span>
       <div class="os-window-controls">
@@ -5567,7 +5544,7 @@
 
       <!-- Collapsible NFS Options Section -->
       <div class="nshare-box" id="create-share-nfs-opts" style="display: none;">
-        <div style="font-size: var(--kb-fs-xs); font-weight: 800; color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="storage.nfs_config_title">NFS Kernel Server & Root Squash Settings</div>
+        <div style="font-size: var(--kb-fs-xs); font-weight: 800; color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="storage.nfs_config_title">NFS Kernel Server & Root Squash Settings</div>
         
         <div class="nshare-grid-2">
           <div>

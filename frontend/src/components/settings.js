@@ -18,6 +18,7 @@ import { applyGlassSettings, applyWallpaperReadability } from './wallpapers.js';
 import { applyDockSettings } from './dock.js';
 import { initGlassTimePickers } from './time-picker.js';
 import { setIconLabel } from '../ui/primitives.js';
+import { DEFAULT_LOOK, THEMES, hasOwnLook, loadLook, lookColour, normalizeLook, saveLookToAccount, storeLook } from '../look.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -233,7 +234,7 @@ export function initSettings() {
   const yakEggBtn = $('yak-easter-egg-btn');
   if (yakEggBtn) {
     yakEggBtn.addEventListener('click', () => {
-      applyTheme(state.currentTheme === 'yak' ? 'cyber' : 'yak');
+      applyTheme(state.currentTheme === 'yak' ? loadLook().theme : 'yak');
     });
   }
 
@@ -915,7 +916,7 @@ export function initSettings() {
       ZettEventBus.emit('modal:smart:close');
       closeDrawer();
     } else if (e.key === 'y' || e.key === 'Y') {
-      applyTheme(state.currentTheme === 'yak' ? 'cyber' : 'yak');
+      applyTheme(state.currentTheme === 'yak' ? loadLook().theme : 'yak');
     } else if (e.key === 't' || e.key === 'T' || e.key === 'd' || e.key === 'D') {
       if (toggleBtn && (toggleBtn.classList.contains('hidden') || toggleBtn.style.display === 'none')) {
         return;
@@ -957,19 +958,10 @@ export async function saveLcdThemeToServer(theme, customAccent, textClarity) {
   }, 150);
 }
 
-let saveDesktopDebounce = null;
-export async function saveDesktopThemeToServer(theme, customAccent) {
-  clearTimeout(saveDesktopDebounce);
-  saveDesktopDebounce = setTimeout(async () => {
-    try {
-      await api.post('/api/system/client-preferences', {
-        desktop_theme: theme,
-        desktop_custom_accent: customAccent || ''
-      });
-    } catch (e) {
-      console.warn('[DESKTOP THEME] Failed syncing desktop theme to server:', e);
-    }
-  }, 150);
+/** Saves the desktop's look on the person's account (APP-B: a look belongs to the person; the
+ *  household's desktop_theme stays the default for people who have no look yet). */
+export function saveDesktopThemeToServer(_theme, _customAccent) {
+  return saveLookToAccount(loadLook());
 }
 
 export async function saveThemeToServer(theme, customAccent, textClarity) {
@@ -979,22 +971,51 @@ export async function saveThemeToServer(theme, customAccent, textClarity) {
   }
 }
 
-const THEME_NAMES = {
-  cyber: 'CYBER TEAL',
-  amber: 'AMBER GOLD',
-  emerald: 'EMERALD MATRIX',
-  sapphire: 'SAPPHIRE ICE',
-  amethyst: 'AMETHYST VIOLET',
-  crimson: 'CRIMSON RUBY',
-  oled: 'PURE OLED BLACK',
-  light: 'DAYLIGHT WHITE',
-  yak: 'YAK BRONZE'
-};
+const THEME_NAMES = { lagoon: 'Lagoon', fjord: 'Fjord', moss: 'Moss', heather: 'Heather', canyon: 'Canyon' };
+const MODE_NAMES = { dark: 'Dark', light: 'Light', auto: 'Auto' };
+
+/** "Dark · Fjord": what the Appearance pane says the look is. */
+export function lookCaption(look) {
+  const l = normalizeLook(look);
+  return t('look.caption', '{mode} · {theme}', {
+    mode: t('look.mode_' + l.mode, MODE_NAMES[l.mode]),
+    theme: t('look.theme_' + l.theme, THEME_NAMES[l.theme]),
+  });
+}
+
+/** Changes part of the look, puts it on the page and saves it on the person's account. */
+export function updateLook(patch) {
+  const look = normalizeLook({ ...loadLook(), ...patch });
+  storeLook(look);
+  applyDesktopTheme(look.theme, look.accent);
+  saveLookToAccount(look);
+  syncDesktopThemeUI();
+  return look;
+}
 
 // --- Desktop Theme Workstation (Mission Control -> Appearance) ---
 export function syncDesktopThemeUI() {
-  const curTheme = state.desktopTheme || 'cyber';
-  const curAccent = state.desktopCustomAccent || '';
+  const stored = loadLook();
+  const look = normalizeLook({
+    ...stored,
+    theme: THEMES.includes(state.desktopTheme) ? state.desktopTheme : stored.theme,
+    accent: typeof state.desktopCustomAccent === 'string' ? state.desktopCustomAccent : stored.accent,
+  });
+  const curTheme = look.theme;
+  const curAccent = look.accent;
+
+  document.querySelectorAll('[data-look-mode]').forEach((btn) => {
+    const on = btn.getAttribute('data-look-mode') === look.mode;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-checked', on ? 'true' : 'false');
+  });
+  const trueBlack = /** @type {HTMLInputElement | null} */ ($('look-true-black'));
+  if (trueBlack) {
+    trueBlack.checked = look.trueBlack;
+    trueBlack.disabled = look.mode === 'light'; // True black is a dark-mode option
+  }
+  const tint = /** @type {HTMLInputElement | null} */ ($('look-tint'));
+  if (tint && document.activeElement !== tint) tint.value = String(Math.round(look.tint * 100));
 
   document.querySelectorAll('.desktop-theme-preset').forEach((card) => {
     const isThis = card.dataset.themeId === curTheme;
@@ -1009,11 +1030,9 @@ export function syncDesktopThemeUI() {
 
   const badge = $('desktop-theme-active-badge');
   if (badge) {
-    const localized = t('settings.theme_' + curTheme, THEME_NAMES[curTheme] || curTheme.toUpperCase());
-    badge.textContent = localized.toUpperCase();
-    const themeBrandColor = curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#f43f5e' : curTheme === 'yak' ? '#d48a37' : curTheme === 'oled' ? '#33cdb8' : '#33cdb8';
-    badge.style.color = curAccent || themeBrandColor;
-    badge.style.borderColor = curAccent || themeBrandColor;
+    badge.textContent = lookCaption(look);
+    badge.style.color = lookColour(look);
+    badge.style.borderColor = lookColour(look);
   }
 
   const picker = $('desktop-custom-color-picker');
@@ -1021,7 +1040,7 @@ export function syncDesktopThemeUI() {
   if (picker && curAccent) {
     picker.value = curAccent;
   }
-  const currentAccentOrBrand = curAccent || (curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#fb7185' : curTheme === 'yak' ? '#d48a37' : '#33cdb8');
+  const currentAccentOrBrand = lookColour(look);
   if (hexVal) {
     hexVal.textContent = currentAccentOrBrand.toUpperCase();
   }
@@ -1030,7 +1049,7 @@ export function syncDesktopThemeUI() {
   const contrastBadge = $('desktop-contrast-badge');
   if (contrastBadge) {
     const rgb = hexToRgb(currentAccentOrBrand);
-    const bg = curTheme === 'oled' ? [0, 0, 0] : [15, 23, 42];
+    const bg = look.trueBlack ? [0, 0, 0] : [15, 23, 42];
     const ratio = rgb ? getContrastRatio(rgb, bg) : 4.5;
     if (ratio >= 7.0) {
       contrastBadge.textContent = t('stg.aaa', 'AAA PASS');
@@ -1203,8 +1222,9 @@ export function exportThemeBundle() {
     format: 'kiboto-theme',
     version: 1,
     exported_at: new Date().toISOString(),
-    theme: state.desktopTheme || 'cyber',
+    theme: state.desktopTheme || 'lagoon',
     custom_accent: state.desktopCustomAccent || '',
+    look: loadLook(), // APP-B; an older Kiboto reads theme and custom_accent
     glass: {
       blur: savedBlur,
       opacity: savedOpacity,
@@ -1231,7 +1251,7 @@ export function exportThemeBundle() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `kiboto-theme-${state.desktopTheme || 'cyber'}-${Date.now().toString(36)}.kiboto-theme.json`;
+  a.download = `kiboto-theme-${state.desktopTheme || 'lagoon'}-${Date.now().toString(36)}.kiboto-theme.json`;
   document.body.appendChild(a);
   a.click();
   URL.revokeObjectURL(url);
@@ -1253,8 +1273,9 @@ export function importThemeBundle(file) {
       takeAppearanceSnapshot();
 
       // Apply theme
-      const targetTheme = data.theme || 'cyber';
+      const targetTheme = data.look?.theme || data.theme || 'lagoon';
       const targetAccent = data.custom_accent !== undefined ? data.custom_accent : '';
+      if (data.look) storeLook(normalizeLook(data.look));
       applyDesktopTheme(targetTheme, targetAccent);
       saveDesktopThemeToServer(targetTheme, targetAccent);
 
@@ -1299,7 +1320,8 @@ export function importThemeBundle(file) {
 function takeAppearanceSnapshot() {
   try {
     _appearanceUndoSnapshot = {
-      theme: state.desktopTheme || 'cyber',
+      look: loadLook(),
+      theme: state.desktopTheme || 'lagoon',
       customAccent: state.desktopCustomAccent || '',
       glassBlur: localStorage.getItem('kiboto_glass_blur'),
       glassOpacity: localStorage.getItem('kiboto_glass_opacity'),
@@ -1320,9 +1342,10 @@ function takeAppearanceSnapshot() {
 export function restoreAppearanceDefaultsWithUndo() {
   takeAppearanceSnapshot();
 
-  // 1. Reset theme to cyber
-  applyDesktopTheme('cyber', '');
-  saveDesktopThemeToServer('cyber', '');
+  // 1. Reset the look: Lagoon, dark, Subtle, the theme's own colour
+  storeLook(DEFAULT_LOOK);
+  applyDesktopTheme(DEFAULT_LOOK.theme, '');
+  saveLookToAccount(DEFAULT_LOOK);
 
   // 2. Reset glass
   applyGlassSettings(24, 72, '12px', false, true);
@@ -1341,7 +1364,7 @@ export function restoreAppearanceDefaultsWithUndo() {
 
   syncDesktopThemeUI();
   if (typeof window.syncDesktopTwinPreview === 'function') {
-    window.syncDesktopTwinPreview({ theme: 'cyber', accent: '', wallpaperDim: 15, wallpaperBlur: 0, dockPos: 'bottom' });
+    window.syncDesktopTwinPreview({ theme: 'lagoon', accent: '', wallpaperDim: 15, wallpaperBlur: 0, dockPos: 'bottom' });
   }
 
   // Show 10s undo toast
@@ -1349,6 +1372,7 @@ export function restoreAppearanceDefaultsWithUndo() {
   showActionToast(t('settings.appearance_reset', 'Appearance reset to factory defaults'), `↺ ${t('settings.undo_10s', 'Undo (10 s)')}`, () => {
     if (!_appearanceUndoSnapshot) return;
     const snap = _appearanceUndoSnapshot;
+    if (snap.look) storeLook(snap.look);
     applyDesktopTheme(snap.theme, snap.customAccent);
     saveDesktopThemeToServer(snap.theme, snap.customAccent);
 
@@ -1384,6 +1408,17 @@ export function restoreAppearanceDefaultsWithUndo() {
   }, 10000);
 }
 
+/** Choosing a theme gives back the theme's own colour; a person's own accent comes back with Undo. */
+export function chooseTheme(themeId) {
+  const before = loadLook();
+  updateLook({ theme: themeId, accent: '' });
+  if (before.accent) {
+    showActionToast(t('look.accent_reset', 'Using {theme}\u2019s own colour', { theme: t('look.theme_' + themeId, THEME_NAMES[themeId] || themeId) }), t('look.undo', 'Undo'), () => {
+      updateLook({ accent: before.accent });
+    });
+  }
+}
+
 export function initDesktopThemeControls() {
   const container = $('mgmt-pane-theme');
   if (!container) return;
@@ -1393,9 +1428,7 @@ export function initDesktopThemeControls() {
     btn.addEventListener('click', () => {
       const themeId = btn.dataset.themeId;
       if (!themeId) return;
-      applyDesktopTheme(themeId, state.desktopCustomAccent);
-      saveDesktopThemeToServer(themeId, state.desktopCustomAccent);
-      syncDesktopThemeUI();
+      chooseTheme(themeId);
     });
 
     btn.addEventListener('keydown', (e) => {
@@ -1413,6 +1446,13 @@ export function initDesktopThemeControls() {
       }
     });
   });
+
+  container.querySelectorAll('[data-look-mode]').forEach((btn) => {
+    btn.addEventListener('click', () => updateLook({ mode: btn.getAttribute('data-look-mode') }));
+  });
+  $('look-true-black')?.addEventListener('change', (e) => updateLook({ trueBlack: /** @type {HTMLInputElement} */ (e.target).checked }));
+  const tint = /** @type {HTMLInputElement | null} */ ($('look-tint'));
+  tint?.addEventListener('input', () => updateLook({ tint: Number(tint.value) / 100 }));
 
   const picker = $('desktop-custom-color-picker');
   if (picker) {
@@ -1686,7 +1726,7 @@ export async function syncClientPreferencesFromServerIfEmpty() {
         const data = await res.json();
         if (data.preferences && Object.keys(data.preferences).length > 0) {
           applyClientPreferences(data.preferences);
-          if (data.preferences.desktop_theme || data.preferences.desktop_custom_accent !== undefined) {
+          if (!hasOwnLook() && (data.preferences.desktop_theme || data.preferences.desktop_custom_accent !== undefined)) {
             applyDesktopTheme(
               data.preferences.desktop_theme || state.desktopTheme,
               data.preferences.desktop_custom_accent !== undefined ? data.preferences.desktop_custom_accent : state.desktopCustomAccent

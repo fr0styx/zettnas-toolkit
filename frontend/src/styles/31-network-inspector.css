@@ -133,7 +133,7 @@
   font-size: var(--kb-fs-xs);
   font-weight: 600;
   font-family: inherit;
-  color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));
+  color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4));
   background: rgba(var(--c-primary-text-rgb), 0.12);
   border: 1px solid rgba(var(--c-primary-text-rgb), 0.25);
   padding: 1px 6px;

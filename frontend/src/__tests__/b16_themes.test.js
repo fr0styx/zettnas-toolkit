@@ -9,6 +9,14 @@ const themes = { default: { ...root } };
 for (const m of fs.readFileSync(path.join(STYLES, '01-themes.css'), 'utf8').matchAll(/body\.theme-([a-z]+)\s*\{([^}]*)\}/g)) {
   themes[m[1]] = { ...root, ...hexes(m[2]) };
 }
+// APP-B: the five themes (styles/themes/, scripts/themes.py), each in dark and light
+for (const id of ['fjord', 'moss', 'heather', 'canyon']) {
+  const css = fs.readFileSync(path.join(STYLES, 'themes', `${id}.css`), 'utf8');
+  const dark = css.match(new RegExp(`body\\.kb-theme-${id}:not\\(\\.theme-light\\):not\\(\\.lcd-direct\\)\\s*\\{([^}]*)\\}`))[1];
+  const light = css.match(new RegExp(`body\\.kb-theme-${id}\\.theme-light:not\\(\\.lcd-direct\\)\\s*\\{([^}]*)\\}`))[1];
+  themes[id] = { ...root, ...hexes(dark) };
+  themes[`${id}-light`] = { ...themes.light, ...hexes(light) };
+}
 
 function lum(h) {
   const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
@@ -27,7 +35,7 @@ const hueGap = (a, b) => { const d = Math.abs(hue(a) - hue(b)); return Math.min(
 
 describe('UX-33: every theme is readable and its status colours mean the same', () => {
   it('found the themes', () => {
-    expect(Object.keys(themes)).toEqual(expect.arrayContaining(['default', 'light', 'crimson', 'sapphire', 'amber']));
+    expect(Object.keys(themes)).toEqual(expect.arrayContaining(['default', 'light', 'oled', 'fjord', 'moss-light', 'heather', 'canyon-light']));
   });
 
   for (const [name, t] of Object.entries(themes)) {
@@ -49,10 +57,13 @@ describe('UX-33: every theme is readable and its status colours mean the same', 
     });
   }
 
-  it('accent themes keep the standard status colours', () => {
+  it('every theme keeps the standard status colours', () => {
     for (const [name, t] of Object.entries(themes)) {
       if (name === 'light' || name === 'default') continue;
-      expect([t.ok, t.ok2, t.warn, t.crit]).toEqual([root.ok, root.ok2, root.warn, root.crit]); // NUX-4: ok2 too
+      const std = name.endsWith('-light') ? themes.light : root; // light mode has its own darker set
+      expect([t.ok, t.warn, t.crit]).toEqual([std.ok, std.warn, std.crit]);
+      // ok2 ("healthy", and the accent in most places) may take the theme's main colour (owner,
+      // 10 Nov 2026); the hue check above keeps it clear of red in every theme (NUX-4)
     }
   });
 

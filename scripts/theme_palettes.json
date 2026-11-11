@@ -1,0 +1,721 @@
+{
+  "themes": {
+    "lagoon": {
+      "name": "Lagoon",
+      "description": "Teal and blue-green",
+      "dark": {
+        "bg": "#0a1113",
+        "surface": "#121b1e",
+        "surface-raised": "#1a2629",
+        "surface-overlay": "#1d2a2e",
+        "line": "#223035",
+        "border": "#5d7175",
+        "text": "#e6efef",
+        "text-muted": "#95a8ab",
+        "primary": "#33cdb8",
+        "primary-hover": "#4fd8c4",
+        "primary-text": "#4fd8c4",
+        "on-primary": "#04201c",
+        "primary-soft": "#0f2a28",
+        "accent": "#f6b44c",
+        "accent-text": "#f8c470",
+        "on-accent": "#2a1a04",
+        "focus": "#4fd8c4",
+        "success": "#46c776",
+        "success-text": "#62d68b",
+        "success-soft": "#11281b",
+        "on-success": "#05210f",
+        "warning": "#f2b237",
+        "warning-text": "#f6c35e",
+        "warning-soft": "#2b2210",
+        "on-warning": "#2a1a04",
+        "danger": "#f26b5e",
+        "danger-text": "#ff8a7e",
+        "danger-soft": "#2f1715",
+        "on-danger": "#2a0806",
+        "info": "#6f9cf5",
+        "info-text": "#8db1ff",
+        "info-soft": "#141f36",
+        "on-info": "#071533",
+        "display": "#0a1113",
+        "display-glow": "#4fd8c4",
+        "glass-tint": "#0e1b1d"
+      },
+      "light": {
+        "bg": "#f3f6f6",
+        "surface": "#ffffff",
+        "surface-raised": "#e8eeee",
+        "surface-overlay": "#ffffff",
+        "line": "#d6dfe0",
+        "border": "#778b8e",
+        "text": "#0e1c1e",
+        "text-muted": "#4a5c60",
+        "primary": "#0a7a70",
+        "primary-hover": "#08695f",
+        "primary-text": "#08695f",
+        "on-primary": "#ffffff",
+        "primary-soft": "#e0f4f1",
+        "accent": "#f2a93b",
+        "accent-text": "#9a4d05",
+        "on-accent": "#2a1a04",
+        "focus": "#0a7a70",
+        "success": "#1d7a3e",
+        "success-text": "#17663a",
+        "success-soft": "#e3f3e8",
+        "on-success": "#ffffff",
+        "warning": "#e7a320",
+        "warning-text": "#8a4b06",
+        "warning-soft": "#fdf1d8",
+        "on-warning": "#2a1a04",
+        "danger": "#c8322b",
+        "danger-text": "#a52521",
+        "danger-soft": "#fbe5e3",
+        "on-danger": "#ffffff",
+        "info": "#2b62c9",
+        "info-text": "#2152ad",
+        "info-soft": "#e3ebfa",
+        "on-info": "#ffffff",
+        "display": "#0e1c1e",
+        "display-glow": "#4fd8c4",
+        "glass-tint": "#f9fbfb"
+      },
+      "trueBlack": {
+        "bg": "#000000",
+        "display": "#000000",
+        "surface": "#040c0e",
+        "surface-raised": "#0b171a",
+        "surface-overlay": "#0f1c1f",
+        "line": "#18252a",
+        "glass-tint": "#01090b"
+      }
+    },
+    "fjord": {
+      "name": "Fjord",
+      "description": "Cool blue and slate",
+      "dark": {
+        "bg": "#0b1016",
+        "surface": "#141a22",
+        "surface-raised": "#1c242f",
+        "surface-overlay": "#202833",
+        "line": "#252e3b",
+        "border": "#606f7f",
+        "text": "#e6eef5",
+        "text-muted": "#98a6b5",
+        "primary": "#64bdf8",
+        "primary-hover": "#78c8ff",
+        "primary-text": "#78c8ff",
+        "on-primary": "#0b1d29",
+        "primary-soft": "#172733",
+        "accent": "#f6b44c",
+        "accent-text": "#f8c470",
+        "on-accent": "#2a1a04",
+        "focus": "#78c8ff",
+        "success": "#46c776",
+        "success-text": "#62d68b",
+        "success-soft": "#11281b",
+        "on-success": "#05210f",
+        "warning": "#f2b237",
+        "warning-text": "#f6c35e",
+        "warning-soft": "#2b2210",
+        "on-warning": "#2a1a04",
+        "danger": "#f26b5e",
+        "danger-text": "#ff8a7e",
+        "danger-soft": "#2f1715",
+        "on-danger": "#2a0806",
+        "info": "#8595f4",
+        "info-text": "#9fabfe",
+        "info-soft": "#1a1d36",
+        "on-info": "#0f1333",
+        "display": "#0b1016",
+        "display-glow": "#78c8ff",
+        "glass-tint": "#101923"
+      },
+      "light": {
+        "bg": "#f2f6fa",
+        "surface": "#ffffff",
+        "surface-raised": "#e7eef6",
+        "surface-overlay": "#ffffff",
+        "line": "#d3deec",
+        "border": "#7d8895",
+        "text": "#131a23",
+        "text-muted": "#4f5965",
+        "primary": "#0971a5",
+        "primary-hover": "#06618f",
+        "primary-text": "#06618f",
+        "on-primary": "#ffffff",
+        "primary-soft": "#e1f2ff",
+        "accent": "#f2a93b",
+        "accent-text": "#9a4d05",
+        "on-accent": "#2a1a04",
+        "focus": "#0971a5",
+        "success": "#1d7a3e",
+        "success-text": "#17663a",
+        "success-soft": "#e3f3e8",
+        "on-success": "#ffffff",
+        "warning": "#e7a320",
+        "warning-text": "#8a4b06",
+        "warning-soft": "#fdf1d8",
+        "on-warning": "#2a1a04",
+        "danger": "#c8322b",
+        "danger-text": "#a52521",
+        "danger-soft": "#fbe5e3",
+        "on-danger": "#ffffff",
+        "info": "#4c5ac9",
+        "info-text": "#3f4bad",
+        "info-soft": "#e6eafa",
+        "on-info": "#ffffff",
+        "display": "#131a23",
+        "display-glow": "#78c8ff",
+        "glass-tint": "#f7faff"
+      },
+      "trueBlack": {
+        "bg": "#000000",
+        "display": "#000000",
+        "surface": "#060a12",
+        "surface-raised": "#0e1520",
+        "surface-overlay": "#121a24",
+        "line": "#1b2330",
+        "glass-tint": "#020810"
+      }
+    },
+    "moss": {
+      "name": "Moss",
+      "description": "Soft green and pine",
+      "dark": {
+        "bg": "#0c110d",
+        "surface": "#141b17",
+        "surface-raised": "#1d2620",
+        "surface-overlay": "#202b24",
+        "line": "#253129",
+        "border": "#637165",
+        "text": "#e9efe9",
+        "text-muted": "#9ba89d",
+        "primary": "#98c275",
+        "primary-hover": "#a5ce83",
+        "primary-text": "#a5ce83",
+        "on-primary": "#151e0e",
+        "primary-soft": "#1e281a",
+        "accent": "#f6b44c",
+        "accent-text": "#f8c470",
+        "on-accent": "#2a1a04",
+        "focus": "#a5ce83",
+        "success": "#00c98b",
+        "success-text": "#42d89e",
+        "success-soft": "#0d281f",
+        "on-success": "#002114",
+        "warning": "#f2b237",
+        "warning-text": "#f6c35e",
+        "warning-soft": "#2b2210",
+        "on-warning": "#2a1a04",
+        "danger": "#f26b5e",
+        "danger-text": "#ff8a7e",
+        "danger-soft": "#2f1715",
+        "on-danger": "#2a0806",
+        "info": "#6f9cf5",
+        "info-text": "#8db1ff",
+        "info-soft": "#141f36",
+        "on-info": "#071533",
+        "display": "#0c110d",
+        "display-glow": "#a5ce83",
+        "glass-tint": "#121b14"
+      },
+      "light": {
+        "bg": "#f2f7f3",
+        "surface": "#ffffff",
+        "surface-raised": "#e7efe8",
+        "surface-overlay": "#ffffff",
+        "line": "#d4e1d5",
+        "border": "#7e8b7f",
+        "text": "#131c14",
+        "text-muted": "#505c51",
+        "primary": "#52762f",
+        "primary-hover": "#466628",
+        "primary-text": "#466628",
+        "on-primary": "#ffffff",
+        "primary-soft": "#e8f3e3",
+        "accent": "#f2a93b",
+        "accent-text": "#9a4d05",
+        "on-accent": "#2a1a04",
+        "focus": "#52762f",
+        "success": "#007a50",
+        "success-text": "#006647",
+        "success-soft": "#e1f3eb",
+        "on-success": "#ffffff",
+        "warning": "#e7a320",
+        "warning-text": "#8a4b06",
+        "warning-soft": "#fdf1d8",
+        "on-warning": "#2a1a04",
+        "danger": "#c8322b",
+        "danger-text": "#a52521",
+        "danger-soft": "#fbe5e3",
+        "on-danger": "#ffffff",
+        "info": "#2b62c9",
+        "info-text": "#2152ad",
+        "info-soft": "#e3ebfa",
+        "on-info": "#ffffff",
+        "display": "#131c14",
+        "display-glow": "#a5ce83",
+        "glass-tint": "#f7fbf8"
+      },
+      "trueBlack": {
+        "bg": "#000000",
+        "display": "#000000",
+        "surface": "#060c08",
+        "surface-raised": "#0f1712",
+        "surface-overlay": "#121c16",
+        "line": "#1a261e",
+        "glass-tint": "#030904"
+      }
+    },
+    "heather": {
+      "name": "Heather",
+      "description": "Soft violet and plum",
+      "dark": {
+        "bg": "#100e15",
+        "surface": "#1a1820",
+        "surface-raised": "#25222c",
+        "surface-overlay": "#292531",
+        "line": "#2f2b38",
+        "border": "#6f697b",
+        "text": "#eeebf3",
+        "text-muted": "#a6a1b1",
+        "primary": "#c69ef4",
+        "primary-hover": "#d1aafd",
+        "primary-text": "#d1aafd",
+        "on-primary": "#1f1728",
+        "primary-soft": "#282132",
+        "accent": "#f6b44c",
+        "accent-text": "#f8c470",
+        "on-accent": "#2a1a04",
+        "focus": "#d1aafd",
+        "success": "#46c776",
+        "success-text": "#62d68b",
+        "success-soft": "#11281b",
+        "on-success": "#05210f",
+        "warning": "#f2b237",
+        "warning-text": "#f6c35e",
+        "warning-soft": "#2b2210",
+        "on-warning": "#2a1a04",
+        "danger": "#f26b5e",
+        "danger-text": "#ff8a7e",
+        "danger-soft": "#2f1715",
+        "on-danger": "#2a0806",
+        "info": "#6f9cf5",
+        "info-text": "#8db1ff",
+        "info-soft": "#141f36",
+        "on-info": "#071533",
+        "display": "#100e15",
+        "display-glow": "#d1aafd",
+        "glass-tint": "#1a1621"
+      },
+      "light": {
+        "bg": "#f6f4f9",
+        "surface": "#ffffff",
+        "surface-raised": "#eeebf4",
+        "surface-overlay": "#ffffff",
+        "line": "#dfdaea",
+        "border": "#898493",
+        "text": "#1b1721",
+        "text-muted": "#5a5663",
+        "primary": "#7a55a1",
+        "primary-hover": "#69498b",
+        "primary-text": "#69498b",
+        "on-primary": "#ffffff",
+        "primary-soft": "#f3ebff",
+        "accent": "#f2a93b",
+        "accent-text": "#9a4d05",
+        "on-accent": "#2a1a04",
+        "focus": "#7a55a1",
+        "success": "#1d7a3e",
+        "success-text": "#17663a",
+        "success-soft": "#e3f3e8",
+        "on-success": "#ffffff",
+        "warning": "#e7a320",
+        "warning-text": "#8a4b06",
+        "warning-soft": "#fdf1d8",
+        "on-warning": "#2a1a04",
+        "danger": "#c8322b",
+        "danger-text": "#a52521",
+        "danger-soft": "#fbe5e3",
+        "on-danger": "#ffffff",
+        "info": "#2b62c9",
+        "info-text": "#2152ad",
+        "info-soft": "#e3ebfa",
+        "on-info": "#ffffff",
+        "display": "#1b1721",
+        "display-glow": "#d1aafd",
+        "glass-tint": "#fbf9fe"
+      },
+      "trueBlack": {
+        "bg": "#000000",
+        "display": "#000000",
+        "surface": "#0b0910",
+        "surface-raised": "#16131c",
+        "surface-overlay": "#1b1722",
+        "line": "#24202d",
+        "glass-tint": "#09060f"
+      }
+    },
+    "canyon": {
+      "name": "Canyon",
+      "description": "Terracotta and sand",
+      "dark": {
+        "bg": "#130f09",
+        "surface": "#1e1911",
+        "surface-raised": "#292318",
+        "surface-overlay": "#2e261c",
+        "line": "#342c20",
+        "border": "#786a5b",
+        "text": "#f3ebe5",
+        "text-muted": "#aea293",
+        "primary": "#f39a66",
+        "primary-hover": "#fda776",
+        "primary-text": "#fda776",
+        "on-primary": "#28160b",
+        "primary-soft": "#312015",
+        "accent": "#33cdb8",
+        "accent-text": "#4fd8c4",
+        "on-accent": "#04201c",
+        "focus": "#fda776",
+        "success": "#46c776",
+        "success-text": "#62d68b",
+        "success-soft": "#11281b",
+        "on-success": "#05210f",
+        "warning": "#e8b833",
+        "warning-text": "#edc85d",
+        "warning-soft": "#292310",
+        "on-warning": "#281b03",
+        "danger": "#f16878",
+        "danger-text": "#fe8893",
+        "danger-soft": "#2f1719",
+        "on-danger": "#2a070c",
+        "info": "#6f9cf5",
+        "info-text": "#8db1ff",
+        "info-soft": "#141f36",
+        "on-info": "#071533",
+        "display": "#130f09",
+        "display-glow": "#fda776",
+        "glass-tint": "#1f170d"
+      },
+      "light": {
+        "bg": "#fcf4ec",
+        "surface": "#ffffff",
+        "surface-raised": "#f9eada",
+        "surface-overlay": "#ffffff",
+        "line": "#f1d9be",
+        "border": "#908578",
+        "text": "#1f180f",
+        "text-muted": "#61564b",
+        "primary": "#9d522c",
+        "primary-hover": "#884624",
+        "primary-text": "#884624",
+        "on-primary": "#ffffff",
+        "primary-soft": "#feebdf",
+        "accent": "#2dc6b2",
+        "accent-text": "#08695f",
+        "on-accent": "#04201c",
+        "focus": "#9d522c",
+        "success": "#1d7a3e",
+        "success-text": "#17663a",
+        "success-soft": "#e3f3e8",
+        "on-success": "#ffffff",
+        "warning": "#dea916",
+        "warning-text": "#785700",
+        "warning-soft": "#faf2d8",
+        "on-warning": "#281b03",
+        "danger": "#c72e4b",
+        "danger-text": "#a4223c",
+        "danger-soft": "#fbe5e6",
+        "on-danger": "#ffffff",
+        "info": "#2b62c9",
+        "info-text": "#2152ad",
+        "info-soft": "#e3ebfa",
+        "on-info": "#ffffff",
+        "display": "#1f180f",
+        "display-glow": "#fda776",
+        "glass-tint": "#fff9f3"
+      },
+      "trueBlack": {
+        "bg": "#000000",
+        "display": "#000000",
+        "surface": "#0e0904",
+        "surface-raised": "#1a140a",
+        "surface-overlay": "#1f180e",
+        "line": "#292116",
+        "glass-tint": "#0d0601"
+      }
+    }
+  },
+  "method": "One OKLCH ladder, measured from Lagoon, shared by every theme. Each token has a fixed lightness and chroma (e.g. dark bg L .171 C .012, surface .215/.014, raised .259/.018, overlay .275/.019, line .299/.021, border .534/.025, text .945/.010, muted .718/.022, glass-tint .211/.019, primary .766/.127, primary-hover = primary-text = focus .803/.121, on-primary .221/.035, primary-soft .263/.033; light bg .971/.003, raised .945/.006, line .897/.010, border .622/.023, text .215/.020, muted .461/.023, glass-tint .985/.003, primary = focus .522/.090, primary-hover = primary-text .469/.081, primary-soft .952/.021, surface = overlay = on-primary = #ffffff). A theme is a set of seeds: primary hue hp (optionally hp_light), neutral hue hn, accent family (brand amber, or Lagoon teal when the primary is warm), chroma multipliers set by eye (nc_dark, nc_light for neutrals; pc_dark, pc_light for the primary), and hue offsets for any semantic colour that would sit within 28 degrees of the primary. Hues: bg/surface/raised/overlay/line use hn; border, muted, glass-tint and all light neutrals use hn moved 1/4 of the way to hp; dark text uses the midpoint; primary-soft uses hp moved 1/5 of the way to hn. Colours outside sRGB are brought in by reducing chroma only. A solver then raises or lowers lightness until every WCAG 2.1 pair passes (it had nothing to do for these seeds). True black replaces bg with #000000 and drops surface/raised/overlay/line/glass-tint to L .145/.195/.215/.255/.130 at the same hue and chroma. Lagoon is kept verbatim from kiboto-brand-tokens.css; the generator reproduces it within OKLab dE 0.005. display = dark bg (dark) or text (light); display-glow = dark primary-text. glass-tint is new: the colour laid over the wallpaper at --glass-opacity.",
+  "default": "lagoon",
+  "modes": [
+    "light",
+    "dark",
+    "auto"
+  ],
+  "seeds": {
+    "lagoon": {
+      "hp": 181.5,
+      "hn": 217,
+      "accent": "amber"
+    },
+    "fjord": {
+      "hp": 240,
+      "hn": 255,
+      "accent": "amber",
+      "nc_dark": 1.25,
+      "nc_light": 2.2,
+      "pc_dark": 0.95,
+      "sem": {
+        "info": 12
+      },
+      "pc_light": 1.3
+    },
+    "moss": {
+      "hp": 132,
+      "hn": 155,
+      "accent": "amber",
+      "nc_dark": 1.0,
+      "nc_light": 2.2,
+      "pc_dark": 0.9,
+      "sem": {
+        "success": 10
+      },
+      "pc_light": 1.2
+    },
+    "heather": {
+      "hp": 305,
+      "hn": 300,
+      "accent": "amber",
+      "nc_dark": 1.1,
+      "nc_light": 2.2,
+      "pc_dark": 1.0,
+      "pc_light": 1.35
+    },
+    "canyon": {
+      "hp": 50,
+      "hp_light": 46,
+      "hn": 78,
+      "accent": "teal",
+      "nc_dark": 1.15,
+      "nc_light": 4.5,
+      "pc_dark": 1.0,
+      "sem": {
+        "danger": -12,
+        "warning": 8
+      },
+      "sem_light": {
+        "warning-text": 24
+      },
+      "pc_light": 1.25
+    }
+  },
+  "ladder": {
+    "dark": {
+      "bg": {
+        "L": 0.171,
+        "C": 0.012,
+        "hue": "n"
+      },
+      "surface": {
+        "L": 0.215,
+        "C": 0.014,
+        "hue": "n"
+      },
+      "surface-raised": {
+        "L": 0.259,
+        "C": 0.018,
+        "hue": "n"
+      },
+      "surface-overlay": {
+        "L": 0.275,
+        "C": 0.019,
+        "hue": "n"
+      },
+      "line": {
+        "L": 0.299,
+        "C": 0.021,
+        "hue": "n"
+      },
+      "border": {
+        "L": 0.534,
+        "C": 0.025,
+        "hue": "nm"
+      },
+      "text": {
+        "L": 0.945,
+        "C": 0.01,
+        "hue": "nt"
+      },
+      "text-muted": {
+        "L": 0.718,
+        "C": 0.022,
+        "hue": "nm"
+      },
+      "glass-tint": {
+        "L": 0.211,
+        "C": 0.019,
+        "hue": "nm"
+      },
+      "primary": {
+        "L": 0.766,
+        "C": 0.127,
+        "hue": "p"
+      },
+      "primary-hover": {
+        "L": 0.803,
+        "C": 0.121,
+        "hue": "p"
+      },
+      "primary-text": {
+        "L": 0.803,
+        "C": 0.121,
+        "hue": "p"
+      },
+      "on-primary": {
+        "L": 0.221,
+        "C": 0.035,
+        "hue": "p"
+      },
+      "primary-soft": {
+        "L": 0.263,
+        "C": 0.033,
+        "hue": "ps"
+      },
+      "focus": {
+        "L": 0.803,
+        "C": 0.121,
+        "hue": "p"
+      }
+    },
+    "light": {
+      "bg": {
+        "L": 0.971,
+        "C": 0.003,
+        "hue": "nm"
+      },
+      "surface": {
+        "L": 1,
+        "C": 0,
+        "hue": "n"
+      },
+      "surface-raised": {
+        "L": 0.945,
+        "C": 0.006,
+        "hue": "nm"
+      },
+      "surface-overlay": {
+        "L": 1,
+        "C": 0,
+        "hue": "n"
+      },
+      "line": {
+        "L": 0.897,
+        "C": 0.01,
+        "hue": "nm"
+      },
+      "border": {
+        "L": 0.622,
+        "C": 0.023,
+        "hue": "nm"
+      },
+      "text": {
+        "L": 0.215,
+        "C": 0.02,
+        "hue": "nm"
+      },
+      "text-muted": {
+        "L": 0.461,
+        "C": 0.023,
+        "hue": "nm"
+      },
+      "glass-tint": {
+        "L": 0.985,
+        "C": 0.003,
+        "hue": "nm"
+      },
+      "primary": {
+        "L": 0.522,
+        "C": 0.09,
+        "hue": "p"
+      },
+      "primary-hover": {
+        "L": 0.469,
+        "C": 0.081,
+        "hue": "p"
+      },
+      "primary-text": {
+        "L": 0.469,
+        "C": 0.081,
+        "hue": "p"
+      },
+      "on-primary": {
+        "L": 1,
+        "C": 0,
+        "hue": "p"
+      },
+      "primary-soft": {
+        "L": 0.952,
+        "C": 0.021,
+        "hue": "ps"
+      },
+      "focus": {
+        "L": 0.522,
+        "C": 0.09,
+        "hue": "p"
+      }
+    },
+    "trueBlackL": {
+      "surface": 0.145,
+      "surface-raised": 0.195,
+      "surface-overlay": 0.215,
+      "line": 0.255,
+      "glass-tint": 0.13
+    },
+    "hueRoles": {
+      "n": "hn",
+      "nm": "hn moved 1/4 toward hp",
+      "nt": "midpoint of hn and hp",
+      "p": "hp",
+      "ps": "hp moved 1/5 toward hn"
+    }
+  },
+  "migration": {
+    "cyber": {
+      "theme": "lagoon"
+    },
+    "amber": {
+      "theme": "canyon"
+    },
+    "crimson": {
+      "theme": "canyon"
+    },
+    "emerald": {
+      "theme": "moss"
+    },
+    "sapphire": {
+      "theme": "fjord"
+    },
+    "amethyst": {
+      "theme": "heather"
+    },
+    "light": {
+      "theme": "lagoon",
+      "mode": "light"
+    },
+    "oled": {
+      "theme": "lagoon",
+      "mode": "dark",
+      "trueBlack": true
+    },
+    "auto": {
+      "theme": "lagoon",
+      "mode": "auto"
+    },
+    "system": {
+      "theme": "lagoon",
+      "mode": "auto"
+    },
+    "yak": "unchanged (hidden easter egg, outside the family)"
+  }
+}

@@ -505,6 +505,19 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Light mode picks up more of its own colours.** Some teal accents, grey text and panel shades
   that stayed dark-mode colours in light mode now use the light palette. Dark mode looks the same.
 
+#### Changes
+
+- **Five themes, each in dark and light.** Appearance → Desktop Theme now offers Lagoon, Fjord
+  (cool blue and slate), Moss (soft green and pine), Heather (soft violet and plum) and Canyon
+  (terracotta and sand). Every theme comes in Dark, Light and Auto (which follows your device), and
+  True black is an option for dark mode. A Tint slider sets how strongly the theme colours the
+  panels, from Subtle to Strong. Status colours stay the same in every theme.
+- **Your look follows you.** Mode, theme, tint, True black and your own accent are saved with your
+  account, so they appear on every device you sign in on. A theme chosen before this update is
+  carried over: Sapphire becomes Fjord, Emerald becomes Moss, Amethyst becomes Heather, Amber and
+  Crimson become Canyon, Daylight becomes Light mode and Pure OLED Black becomes True black.
+- Light mode's page behind the desktop is light again (it showed a dark page under the windows).
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

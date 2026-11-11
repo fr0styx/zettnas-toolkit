@@ -48,9 +48,9 @@ describe('Batch 2: Glassmorphism, Wallpaper Readability, OLED Theme & Specular G
     expect(html).toContain('data-radius="12px"');
     expect(html).toContain('data-radius="20px"');
 
-    // 4. Pure OLED Black theme preset
-    expect(html).toContain('data-theme-id="oled"');
-    expect(html).toContain('settings.theme_oled');
+    // 4. Pure OLED Black is True black now, a dark-mode option (APP-B)
+    expect(html).toContain('id="look-true-black"');
+    expect(html).toContain('look.true_black');
   });
 
   it('applyWallpaperReadability updates CSS variables and persists to localStorage', () => {

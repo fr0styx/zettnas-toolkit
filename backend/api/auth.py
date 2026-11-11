@@ -971,8 +971,19 @@ def advanced_for(user: dict[str, Any]) -> bool:
     return bool(since and float(user.get("created_at") or 0) < since)
 
 
+class LookPreference(BaseModel):
+    """The person's look (APP-B): it follows their account to every device."""
+
+    mode: Literal["dark", "light", "auto"] = "dark"
+    theme: Literal["lagoon", "fjord", "moss", "heather", "canyon"] = "lagoon"
+    tint: float = Field(default=0, ge=0, le=1)  # 0 = Subtle, 1 = Strong
+    trueBlack: bool = False  # noqa: N815 (the browser's own name for it)
+    accent: str = Field(default="", pattern=r"^(#[0-9a-fA-F]{6})?$")  # '' = the theme's own colour
+
+
 class MyPreferences(BaseModel):
     advanced: bool | None = None
+    look: LookPreference | None = None
     # the person's own clock, on every device: "auto" (their browser's zone) or a zone name
     timezone: str | None = Field(default=None, max_length=64)
     clock_format: Literal["12", "24"] | None = None

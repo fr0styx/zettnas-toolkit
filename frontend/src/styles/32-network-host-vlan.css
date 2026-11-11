@@ -126,7 +126,7 @@
 }
 
 .network-member-checkbox-list input[type="checkbox"] {
-  accent-color: var(--accent-cyan, #4fd8c4);
+  accent-color: var(--accent-cyan-hi, #4fd8c4);
   width: 14px;
   height: 14px;
   cursor: pointer;

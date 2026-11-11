@@ -14,7 +14,7 @@ describe('Theme files after the Kiboto rebrand', () => {
   });
   afterEach(() => vi.restoreAllMocks());
 
-  it('exports a .kiboto-theme.json named after the theme (cyber when none is set)', () => {
+  it('exports a .kiboto-theme.json named after the theme (lagoon when none is set)', () => {
     const names = [];
     const real = document.createElement.bind(document);
     vi.spyOn(document, 'createElement').mockImplementation((tag) => {
@@ -24,7 +24,7 @@ describe('Theme files after the Kiboto rebrand', () => {
     });
     state.desktopTheme = '';
     exportThemeBundle();
-    expect(names[0]).toMatch(/^kiboto-theme-cyber-[0-9a-z]+\.kiboto-theme\.json$/);
+    expect(names[0]).toMatch(/^kiboto-theme-lagoon-[0-9a-z]+\.kiboto-theme\.json$/);
   });
 
   it('imports new and old theme files and refuses anything else', async () => {

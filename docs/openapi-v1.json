@@ -26386,6 +26386,53 @@
     "title": "LogoutResponse",
     "type": "object"
    },
+   "LookPreference": {
+    "description": "The person's look (APP-B): it follows their account to every device.",
+    "properties": {
+     "accent": {
+      "default": "",
+      "pattern": "^(#[0-9a-fA-F]{6})?$",
+      "title": "Accent",
+      "type": "string"
+     },
+     "mode": {
+      "default": "dark",
+      "enum": [
+       "dark",
+       "light",
+       "auto"
+      ],
+      "title": "Mode",
+      "type": "string"
+     },
+     "theme": {
+      "default": "lagoon",
+      "enum": [
+       "lagoon",
+       "fjord",
+       "moss",
+       "heather",
+       "canyon"
+      ],
+      "title": "Theme",
+      "type": "string"
+     },
+     "tint": {
+      "default": 0,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Tint",
+      "type": "number"
+     },
+     "trueBlack": {
+      "default": false,
+      "title": "Trueblack",
+      "type": "boolean"
+     }
+    },
+    "title": "LookPreference",
+    "type": "object"
+   },
    "McpEndpointResponse": {
     "additionalProperties": true,
     "description": "POST /mcp",
@@ -28526,6 +28573,16 @@
        }
       ],
       "title": "Events Seen"
+     },
+     "look": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/LookPreference"
+       },
+       {
+        "type": "null"
+       }
+      ]
      },
      "timezone": {
       "anyOf": [

@@ -17,6 +17,7 @@ import { checkAndTriggerSetupWizard } from './setup-wizard-gate.js';
 import { t } from '../i18n.js';
 import { renderLightbar } from './led-control.js';
 import { formatFixed } from '../format.js';
+import { applyLook, clearLook, fromLegacy, loadLook, lookColour, lookFromAccount, normalizeLook, storeLook } from '../look.js';
 
 const $ = (id) => document.getElementById(id);
 const FAN_LABELS = ['D1', 'D2', 'CPU', 'SYS'];
@@ -399,33 +400,28 @@ function _restoreNonYakWallpaper(wpLayer) {
   wpLayer.style.removeProperty('background-color');
 }
 
-let _systemThemeMatcher = null;
-
+/**
+ * The desktop's look (APP-B). themeName is one of the five themes (lagoon, fjord, moss, heather,
+ * canyon), a name saved before APP-B (cyber, sapphire, light, oled, auto, …: translated, keeping
+ * the rest of the look), or "yak", the hidden theme. customAccent: a colour, '' for the theme's
+ * own, or null to keep the current one.
+ */
 export function applyDesktopTheme(themeName, customAccent = null) {
-  if (customAccent === undefined || customAccent === null) {
-    customAccent = state.desktopCustomAccent || (typeof localStorage !== 'undefined' ? localStorage.getItem('desktop_custom_accent') : '') || '';
-  }
+  const current = loadLook();
+  const look = themeName === 'yak' ? current : normalizeLook({
+    ...fromLegacy(themeName, current),
+    accent: customAccent === undefined || customAccent === null ? current.accent : customAccent,
+  });
+  customAccent = look.accent;
+  if (themeName !== 'yak') storeLook(look);
 
-  state.setDesktopTheme(themeName, customAccent);
+  state.setDesktopTheme(themeName === 'yak' ? 'yak' : look.theme, customAccent);
 
   if (typeof document !== 'undefined' && document.body) {
-    document.body.classList.remove('theme-light', 'theme-yak', 'theme-amber', 'theme-emerald', 'theme-sapphire', 'theme-amethyst', 'theme-crimson', 'theme-oled');
-
     const wpLayer = document.getElementById('desktop-wallpaper');
 
-    if (themeName === 'auto' || themeName === 'system') {
-      if (!_systemThemeMatcher && typeof window !== 'undefined' && window.matchMedia) {
-        _systemThemeMatcher = window.matchMedia('(prefers-color-scheme: dark)');
-        _systemThemeMatcher.addEventListener('change', () => {
-          if (state.desktopTheme === 'auto' || state.desktopTheme === 'system') {
-            applyDesktopTheme('auto');
-          }
-        });
-      }
-      const isDark = _systemThemeMatcher ? _systemThemeMatcher.matches : true;
-      document.body.classList.toggle('theme-light', !isDark);
-      if (wpLayer) _restoreNonYakWallpaper(wpLayer);
-    } else if (themeName === 'yak') {
+    if (themeName === 'yak') {
+      clearLook(document);
       // the hidden Yak theme loads only when it is chosen (first-load budget); a stylesheet has no types
       // @ts-ignore
       import('../styles/04-yak-theme.css').catch(() => null);
@@ -442,21 +438,7 @@ export function applyDesktopTheme(themeName, customAccent = null) {
         wpLayer.style.display = 'block';
       }
     } else {
-      if (themeName === 'amber') {
-        document.body.classList.add('theme-amber');
-      } else if (themeName === 'emerald') {
-        document.body.classList.add('theme-emerald');
-      } else if (themeName === 'sapphire') {
-        document.body.classList.add('theme-sapphire');
-      } else if (themeName === 'amethyst') {
-        document.body.classList.add('theme-amethyst');
-      } else if (themeName === 'crimson') {
-        document.body.classList.add('theme-crimson');
-      } else if (themeName === 'oled') {
-        document.body.classList.add('theme-oled');
-      } else if (themeName === 'light') {
-        document.body.classList.add('theme-light');
-      }
+      applyLook(look, document);
       if (wpLayer) _restoreNonYakWallpaper(wpLayer);
     }
   }
@@ -562,10 +544,9 @@ export function syncDesktopTwinPreview(overrides = {}) {
   const vp = document.getElementById('desktop-twin-viewport');
   if (!vp) return;
 
-  const curTheme = overrides.theme || state.desktopTheme || 'cyber';
+  const curTheme = overrides.theme || state.desktopTheme || 'lagoon';
   const curAccent = overrides.accent !== undefined ? overrides.accent : (state.desktopCustomAccent || '');
-  const themeBrandColor = curTheme === 'amber' ? '#ffbe40' : curTheme === 'emerald' ? '#3bf58b' : curTheme === 'sapphire' ? '#38bdf8' : curTheme === 'amethyst' ? '#c084fc' : curTheme === 'crimson' ? '#f43f5e' : curTheme === 'yak' ? '#d48a37' : curTheme === 'oled' ? '#33cdb8' : curTheme === 'light' ? '#0284c7' : '#33cdb8';
-  const activeColor = curAccent || themeBrandColor;
+  const activeColor = curTheme === 'yak' ? '#d48a37' : lookColour({ ...loadLook(), theme: curTheme, accent: curAccent });
   const rgb = hexToRgb(activeColor);
 
   const badge = document.getElementById('dt-theme-badge');
@@ -718,6 +699,16 @@ export function applyLcdTheme(themeName, customAccent = null, textClarity = null
     renderDisks(state.latestStats.disks);
   }
 }
+
+/** At sign-in: the look saved on the person's account, on this device too (APP-B). */
+export function adoptAccountLook(user) {
+  const look = lookFromAccount(user);
+  if (!look || state.desktopTheme === 'yak') return false;
+  storeLook(look);
+  applyDesktopTheme(look.theme, look.accent);
+  return true;
+}
+ZettEventBus.on?.('session:user', adoptAccountLook);
 
 // Backward-compatible alias
 export function applyTheme(themeName, customAccent = null, textClarity = null) {

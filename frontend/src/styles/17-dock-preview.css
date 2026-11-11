@@ -140,7 +140,7 @@
 
 .dock-tooltip-status.pinned {
   background: rgba(var(--c-primary-text-rgb), 0.15);
-  color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));
+  color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4));
   border: 1px solid rgba(var(--c-primary-text-rgb), 0.3);
 }
 

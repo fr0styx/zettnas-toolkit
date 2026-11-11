@@ -81,14 +81,15 @@ describe('Batch 1: Accessibility, Form Label Linking & ARIA Radiogroups', () => 
     const grid = htmlDoc.querySelector('.theme-palette-grid');
     expect(grid).not.toBeNull();
     expect(grid.getAttribute('role')).toBe('radiogroup');
-    expect(grid.getAttribute('aria-label')).toBeTruthy();
+    const labelledBy = grid.getAttribute('aria-labelledby');
+    expect(grid.getAttribute('aria-label') || (labelledBy && htmlDoc.getElementById(labelledBy)?.textContent.trim())).toBeTruthy();
 
     const presets = grid.querySelectorAll('.desktop-theme-preset');
-    expect(presets.length).toBeGreaterThanOrEqual(8);
+    expect(presets.length).toBe(5); // APP-B: Lagoon, Fjord, Moss, Heather, Canyon
     presets.forEach((btn) => {
       expect(btn.getAttribute('role')).toBe('radio');
       expect(btn.hasAttribute('aria-checked')).toBe(true);
-      expect(btn.hasAttribute('aria-label')).toBe(true);
+      expect(btn.querySelector('.theme-preset-name').textContent.trim()).toBeTruthy(); // its name
     });
   });
 
@@ -96,19 +97,19 @@ describe('Batch 1: Accessibility, Form Label Linking & ARIA Radiogroups', () => 
     document.body.innerHTML = `
       <div id="mgmt-pane-theme">
         <div class="theme-palette-grid" role="radiogroup">
-          <button class="desktop-theme-preset" data-theme-id="cyber" role="radio" aria-checked="false"></button>
-          <button class="desktop-theme-preset" data-theme-id="amber" role="radio" aria-checked="false"></button>
-          <button class="desktop-theme-preset" data-theme-id="emerald" role="radio" aria-checked="false"></button>
+          <button class="desktop-theme-preset" data-theme-id="lagoon" role="radio" aria-checked="false"></button>
+          <button class="desktop-theme-preset" data-theme-id="canyon" role="radio" aria-checked="false"></button>
+          <button class="desktop-theme-preset" data-theme-id="moss" role="radio" aria-checked="false"></button>
         </div>
         <span id="desktop-theme-active-badge"></span>
       </div>
     `;
 
-    state.desktopTheme = 'amber';
+    state.desktopTheme = 'canyon';
     syncDesktopThemeUI();
 
-    const amberBtn = document.querySelector('.desktop-theme-preset[data-theme-id="amber"]');
-    const cyberBtn = document.querySelector('.desktop-theme-preset[data-theme-id="cyber"]');
+    const amberBtn = document.querySelector('.desktop-theme-preset[data-theme-id="canyon"]');
+    const cyberBtn = document.querySelector('.desktop-theme-preset[data-theme-id="lagoon"]');
 
     expect(amberBtn.classList.contains('active')).toBe(true);
     expect(amberBtn.getAttribute('aria-checked')).toBe('true');
@@ -120,9 +121,9 @@ describe('Batch 1: Accessibility, Form Label Linking & ARIA Radiogroups', () => 
     document.body.innerHTML = `
       <div id="mgmt-pane-theme">
         <div class="theme-palette-grid" role="radiogroup">
-          <button class="desktop-theme-preset active" data-theme-id="cyber" role="radio" aria-checked="true"></button>
-          <button class="desktop-theme-preset" data-theme-id="amber" role="radio" aria-checked="false"></button>
-          <button class="desktop-theme-preset" data-theme-id="emerald" role="radio" aria-checked="false"></button>
+          <button class="desktop-theme-preset active" data-theme-id="lagoon" role="radio" aria-checked="true"></button>
+          <button class="desktop-theme-preset" data-theme-id="canyon" role="radio" aria-checked="false"></button>
+          <button class="desktop-theme-preset" data-theme-id="moss" role="radio" aria-checked="false"></button>
         </div>
         <span id="desktop-theme-active-badge"></span>
       </div>
@@ -130,14 +131,14 @@ describe('Batch 1: Accessibility, Form Label Linking & ARIA Radiogroups', () => 
 
     initDesktopThemeControls();
 
-    const cyberBtn = document.querySelector('.desktop-theme-preset[data-theme-id="cyber"]');
-    const amberBtn = document.querySelector('.desktop-theme-preset[data-theme-id="amber"]');
+    const cyberBtn = document.querySelector('.desktop-theme-preset[data-theme-id="lagoon"]');
+    const amberBtn = document.querySelector('.desktop-theme-preset[data-theme-id="canyon"]');
 
     // Simulate ArrowRight on cyberBtn
     const arrowRightEvent = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true });
     cyberBtn.dispatchEvent(arrowRightEvent);
 
-    expect(state.desktopTheme).toBe('amber');
+    expect(state.desktopTheme).toBe('canyon');
     expect(amberBtn.classList.contains('active')).toBe(true);
     expect(amberBtn.getAttribute('aria-checked')).toBe('true');
   });

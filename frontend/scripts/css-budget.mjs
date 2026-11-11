@@ -37,7 +37,7 @@ let primitiveUses = 0;
 let colours = 0;
 const coloursPerFile = {};
 const COLOUR = /#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?(?:[0-9a-fA-F]{2})?\b|\b(?:rgba?|hsla?)\((?!\s*var\()/g; // rgba(var(--token-rgb), a) is a token
-const COLOUR_HOMES = /(?:00-tokens|01-themes|light-theme|light-palette|yak-theme|lcd[^/]*)\.(?:css|js)$|\/lcd[^/]*\//;
+const COLOUR_HOMES = /(?:00-tokens|01-themes|light-theme|light-palette|yak-theme|lcd[^/]*)\.(?:css|js)$|\/lcd[^/]*\/|\/styles\/themes\//;
 for (const f of files) {
   const src = readFileSync(f, 'utf8');
   const rel = f.replaceAll('\\', '/');
