@@ -162,7 +162,7 @@ export async function openAlertsPage() {
       if (e.target.closest('.phone-alerts-close')) {
         page.hidden = true;
       } else if (e.target.closest('[data-phone-log]')) {
-        ROUTES.activity?.();
+        ROUTES.events?.(); // the Event Log: "activity" is the page of that name now
       } else {
         const open = e.target.closest('[data-ov-open]');
         if (open && ROUTES[open.dataset.ovOpen]) ROUTES[open.dataset.ovOpen]();

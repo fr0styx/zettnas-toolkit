@@ -37,6 +37,6 @@ def test_a_storage_admin_can_open_drive_items():
 def test_summary_and_api_use_the_person(client, auth_headers, monkeypatch):
     monkeypatch.setattr(ss, "CHECKS", (lambda: [dict(ITEMS[1])],))
     assert ss.summary()["items"][0]["kind"] == "default_password"
-    assert ss.summary(can(["system:view"])) == {"ok": True, "items": []}
+    assert ss.summary(can(["system:view"])) == {"ok": True, "items": [], "unchecked": []}
     r = client.get("/api/system/status-summary", headers=auth_headers)
     assert r.status_code == 200 and r.json()["items"][0]["kind"] == "default_password"  # the admin

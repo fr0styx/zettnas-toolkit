@@ -161,3 +161,14 @@ body.phone-shell .ai-chat-composer-row #ai-chat-input { flex: 1 0 100%; min-widt
 .ef-recovery { display: flex; flex-direction: column; gap: 6px; padding: 12px; border: 1px solid var(--warn); border-radius: 8px; font-size: var(--zn-fs-xs); }
 .ef-key { font-family: var(--font-mono); word-break: break-all; padding: 6px 8px; background: var(--card-hi); border-radius: 6px; user-select: all; }
 @media (max-width: 600px) { .ef-row { grid-template-columns: 1fr; } .ef-actions { grid-column: 1; grid-row: auto; justify-content: flex-start; } .ef-field { grid-template-columns: 1fr; } }
+
+/* SET-12: the status box says its state with an icon and a word, and keeps its place while it checks */
+.mgmt-status-summary { min-height: 68px; }
+.ov-neutral strong { color: var(--muted); }
+.ov-unknown strong { color: var(--warn); }
+.ov-problem strong { color: var(--crit); }
+.ov-missed { color: var(--warn); }
+.ov-word { flex-shrink: 0; font-weight: 700; white-space: nowrap; color: var(--warn); }
+.ov-status .ov-crit .ov-word { color: var(--crit); }
+.ov-text { flex: 1; min-width: 0; }
+.ov-status .ov-item .ov-text { color: var(--zn-text-strong, inherit); }

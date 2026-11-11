@@ -4,13 +4,15 @@
  */
 import { api } from '../../api.js';
 import { html } from '../../html.js';
-import { formatBytes, formatDateTime } from '../../format.js';
+import { formatBytes } from '../../format.js';
 import { t } from '../../i18n.js';
 import { escapeHtml } from '../../utils.js';
 import { ROUTES } from '../../router.js';
 import { ADVANCED_SECTIONS, advancedOn, saveAdvanced } from '../../advanced.js';
 import { ZettEventBus } from '../../event-bus.js';
 import { announceChange } from '../../a11y.js';
+import { currentUser } from '../../route-access.js';
+import { statusBoxHtml, statusSaid, statusState } from './status-box.js';
 
 export { ADVANCED_SECTIONS, advancedOn };
 
@@ -92,50 +94,33 @@ export function itemText(i) {
   return i.tell_admin ? `${text} ${t('overview.tell_admin', 'Tell the person who manages Kiboto.')}` : text;
 }
 
-export function statusHtml(summary) {
-  if (!summary || summary.ok || !(summary.items || []).length) {
-    return `<div class="ov-status ov-ok"><strong>✓ ${escapeHtml(t('overview.all_good', 'Everything is fine'))}</strong>
-      <span>${escapeHtml(t('overview.all_good_desc', 'Nothing needs your attention.'))}</span></div>`;
-  }
-  const rows = summary.items
-    .map((i) => {
-      const text = itemText(i);
-      const open = ROUTES[i.open] ? `<button type="button" class="btn-pill-toggle" data-ov-open="${escapeHtml(i.open)}" aria-label="${escapeHtml(t('overview.open_for', 'Open: {what}', { what: text }))}">${escapeHtml(t('overview.open', 'Open'))}</button>` : '';
-      return `<li class="ov-item ov-${i.level === 'critical' ? 'crit' : 'warn'}"><span>${escapeHtml(text)}</span>${open}</li>`;
-    })
-    .join('');
-  return `<div class="ov-status ov-attention"><strong>${escapeHtml(t('overview.attention', '{n, plural, one {# thing needs your attention} other {# things need your attention}}', { n: summary.items.length }))}</strong><ul>${rows}</ul></div>`;
+/** The status box as markup: one box for the alerts and the copy outside the NAS (status-box.js). */
+export function statusHtml(summary, protection = null, user = currentUser()) {
+  return statusBoxHtml(statusState({ summary, protection, user, rowText: itemText, canOpen: (place) => Boolean(ROUTES[place]) }));
 }
 
-/** FEAT-01: the copies outside this NAS, and a way to make one when there is none lately. */
+/** REL-15: what the Recycle Bins hold, from the index (no disk is read). The copies outside the
+ *  NAS are part of the status box now: they were a second box that could contradict the first. */
 export function protectionHtml(p) {
-  if (!p || !p.level) return '';
-  return html`${protectionTile(p)}${recycleLine(p)}`;
-}
-
-/** REL-15: what the Recycle Bins hold, from the index (no disk is read). */
-function recycleLine(p) {
-  if (!p.recycle_bytes) return '';
+  if (!p || !p.recycle_bytes) return '';
   return html`<p class="offsite-meta">${t('protect.recycle', 'The Recycle Bins hold {size}; each item goes after 30 days.', { size: formatBytes(p.recycle_bytes) })}</p>`;
 }
 
-function protectionTile(p) {
-  const when = p.last_good ? formatDateTime(p.last_good * 1000) : '';
-  if (p.level === 'good') {
-    return html`<div class="ov-status ov-ok"><strong>🛡 ${t('protect.good', '{n, plural, one {# current copy} other {# current copies}} outside this NAS', { n: p.copies })}</strong>
-      <span>${t('protect.newest', 'The newest is from {when}.', { when })}</span></div>`;
-  }
-  const text = p.level === 'none' ? t('protect.none', 'No copy of your files outside this NAS yet.') : t('protect.stale', 'Your newest copy outside this NAS is from {when}.', { when: when || '?' });
-  return html`<div class="ov-status ov-attention"><strong>${text}</strong>
-    <button type="button" class="btn-pill-toggle" data-ov-protect>${t('protect.title', 'Protect this NAS')}</button></div>`;
+/** The status in one sentence, for screen readers (UX-28). */
+export function statusSentence(summary, protection = null, user = currentUser()) {
+  return statusSaid(statusState({ summary, protection, user, rowText: itemText }));
 }
 
-/** The status in one sentence, for screen readers (UX-28). */
-export function statusSentence(summary) {
-  const n = ((summary && summary.items) || []).length;
-  return n
-    ? t('a11y.status_items', '{n, plural, one {# thing needs attention} other {# things need attention}}', { n })
-    : t('a11y.status_ok', 'All is well.');
+const STATUS_EVERY_MS = 60000;
+let _statusTimer = null;
+
+/** The box is read again once a minute while the Overview is on screen (it was read once per visit). */
+function keepStatusCurrent(root) {
+  if (_statusTimer || typeof setInterval !== 'function') return;
+  _statusTimer = setInterval(() => {
+    const hub = root.getElementById('management-hub-view');
+    if (hub && hub.offsetParent !== null && !document.hidden) renderStatusSummary(root);
+  }, STATUS_EVERY_MS);
 }
 
 export async function renderStatusSummary(root = document) {
@@ -153,15 +138,27 @@ export async function renderStatusSummary(root = document) {
         import('../protect-nas.js').then((m) => m.openProtectGuide()).catch(() => {});
         return;
       }
+      if (/** @type {Element} */ (e.target).closest('[data-ov-retry]')) {
+        renderStatusSummary(root);
+        return;
+      }
       const btn = e.target.closest('[data-ov-open]');
       if (btn && ROUTES[btn.dataset.ovOpen]) ROUTES[btn.dataset.ovOpen]();
     });
   }
+  // "checking" stands where the answer will: the page no longer jumps when it arrives
+  if (!box.dataset.read) box.innerHTML = statusBoxHtml(statusState({}));
+  box.hidden = false;
+  keepStatusCurrent(root);
   let summary;
   try {
     summary = await api.get('/api/system/status-summary');
-  } catch {
-    box.hidden = true; // not allowed or not reachable: the Overview still works
+  } catch (err) {
+    // no box read as "nothing wrong": it now says that the status is not known, and why
+    const state = statusState({ error: err });
+    box.innerHTML = statusBoxHtml(state);
+    delete box.dataset.read;
+    announceChange('status-summary', statusSaid(state));
     return null;
   }
   let protection = null;
@@ -170,8 +167,8 @@ export async function renderStatusSummary(root = document) {
   } catch {
     // not allowed or not reachable: the status alone still shows
   }
-  box.hidden = false;
-  box.innerHTML = statusHtml(summary) + protectionHtml(protection);
-  announceChange('status-summary', statusSentence(summary)); // UX-28: only when it changes
+  box.dataset.read = '1';
+  box.innerHTML = statusHtml(summary, protection) + protectionHtml(protection);
+  announceChange('status-summary', statusSentence(summary, protection)); // UX-28: only when it changes
   return summary;
 }

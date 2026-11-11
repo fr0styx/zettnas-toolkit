@@ -33,7 +33,7 @@ def quiet(monkeypatch):
 
 
 def test_a_healthy_server_has_nothing_to_report(quiet):
-    assert status_summary.summary() == {"ok": True, "items": []}
+    assert status_summary.summary() == {"ok": True, "items": [], "unchecked": []}  # every check ran (SET-12)
 
 
 def test_problems_are_listed_worst_first(quiet):

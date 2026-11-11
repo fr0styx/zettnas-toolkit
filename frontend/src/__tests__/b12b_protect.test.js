@@ -109,13 +109,21 @@ describe('B12b (FEAT-01): Protect this NAS', () => {
   });
 
   it('the Overview says how protected this NAS is', () => {
+    // one box (SET-12): the copies are part of the status, not a second box under it
     expect(ov.protectionHtml(null)).toBe('');
-    const good = String(ov.protectionHtml({ level: 'good', copies: 2, last_good: 1793091600 }));
+    const fine = { ok: true, items: [] };
+    const good = ov.statusHtml(fine, { level: 'good', copies: 2, last_good: 1793091600 });
+    expect(good).toContain('Everything is fine');
     expect(good).toContain('2 current copies outside this NAS');
-    const none = String(ov.protectionHtml({ level: 'none', copies: 0 }));
+    const none = ov.statusHtml(fine, { level: 'none', copies: 0 });
+    expect(none).not.toContain('Everything is fine'); // it said so above "No copy … yet"
     expect(none).toContain('No copy of your files outside this NAS yet.');
     expect(none).toContain('data-ov-protect');
-    expect(String(ov.protectionHtml({ level: 'stale', copies: 0, last_good: null }))).toContain('from ?');
+    expect(ov.statusHtml(fine, { level: 'stale', copies: 0, last_good: null })).toContain('from ?');
+    // someone who cannot set a backup up is told who can, and gets no button that answers "Permission denied"
+    const family = ov.statusHtml(fine, { level: 'none', copies: 0 }, { scopes: ['files:read'] });
+    expect(family).not.toContain('data-ov-protect');
+    expect(family).toContain('Tell the person who manages Kiboto.');
   });
 
   it('the Overview shows it under the status and opens the guide', async () => {

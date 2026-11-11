@@ -28,6 +28,28 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   was made (which text, with which values) beside its English form, and every error message on
   screen uses that when it is there.
 
+#### Fixes
+
+- **The Overview no longer says "Everything is fine" when it does not know.** A check that failed
+  on the server was dropped without a word and the rest was drawn as green; a request that failed
+  removed the box, which reads as "nothing wrong". The box now has a state for "checking" and one
+  for "Kiboto could not check how things are", with the reason and "Try again", and it says when
+  some checks did not run. While an account still has to change its password, the box says so
+  instead of staying empty.
+- **One status box instead of two that could disagree.** A green "Everything is fine" sat above an
+  amber "No copy of your files outside this NAS yet". A missing or old copy is now one of the
+  things to look at, in the same list.
+- **Status rows say "Problem" or "Needs a look" in words, with an icon.** A failing drive and a
+  late backup differed only by the colour of a thin border, and the headline was amber for both.
+- **"Protect this NAS" is offered only to someone who can set a backup up.** A family member got
+  the button and then "Permission denied"; they are now told to tell the person who manages
+  Kiboto.
+- **"The server is too hot" opens Hardware**, not the Event Log. The addresses `#/hardware`,
+  `#/appearance` and `#/overview` open their pages, `#/activity` opens Activity, and the Event Log
+  is `#/events`.
+- **The status is read again once a minute while the Overview is open**, and the page no longer
+  jumps when the answer arrives.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

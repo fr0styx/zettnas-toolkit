@@ -55,10 +55,17 @@ describe('Overview and Advanced (UX-1, UX-2)', () => {
     expect(box.querySelector('[data-ov-open="nowhere"]')).toBeNull();
   });
 
-  it('stays out of the way when the summary cannot be read', async () => {
-    api.get.mockRejectedValueOnce(new Error('403'));
+  it('says that the status is not known when it cannot be read, and offers to try again (SET-12)', async () => {
+    api.get.mockRejectedValueOnce(new Error('Change your password first.'));
     expect(await ov.renderStatusSummary()).toBeNull();
-    expect(document.getElementById('mgmt-status-summary').hidden).toBe(true);
+    const box = document.getElementById('mgmt-status-summary');
+    expect(box.hidden).toBe(false); // no box read as "nothing wrong"
+    expect(box.textContent).toContain('Kiboto could not check how things are');
+    expect(box.textContent).toContain('Change your password first.');
+    expect(box.textContent).not.toContain('Everything is fine');
+    api.get.mockResolvedValue({ ok: true, items: [] });
+    box.querySelector('[data-ov-retry]').click();
+    await vi.waitFor(() => expect(box.textContent).toContain('Everything is fine'));
     document.body.innerHTML = '';
     expect(await ov.renderStatusSummary()).toBeNull();
   });

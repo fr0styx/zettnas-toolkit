@@ -20,8 +20,19 @@ export const ROUTES = {
   settings: () => window.openManagementSection?.('mgmt-sec-system-group'),
   time: () => import('./components/widgets.js').then((m) => m.openTimezoneModal()),
   alerts: () => window.openManagementSection?.('mgmt-pane-notifications'),
-  activity: () => window.openManagementSection?.('mgmt-pane-events'),
+  // "activity" is the page of that name in the sidebar; the Event Log has its own word. A link
+  // called activity opened the Event Log, and Hardware, Appearance and Overview had no link (SET-12)
+  activity: () => section('mgmt-sec-activity'),
+  events: () => section('mgmt-pane-events'),
+  hardware: () => section('mgmt-sec-hardware'),
+  appearance: () => section('mgmt-sec-wallpaper'),
+  overview: () => section('management-hub-view'),
 };
+
+/** Opens a section of the Settings window by its id. */
+function section(id) {
+  return /** @type {any} */ (window).openManagementSection?.(id);
+}
 
 export function routeFromHash(hash) {
   const m = /^#\/([a-z]+(?:\/[a-z]+)?)\/?$/.exec(hash || '');

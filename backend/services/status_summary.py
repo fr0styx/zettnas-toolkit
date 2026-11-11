@@ -9,12 +9,14 @@ from backend.config import logger
 STORAGE_FULL_PCT = 90
 
 
-def _safe(check: Callable[[], list[dict[str, Any]]]) -> list[dict[str, Any]]:
+def _safe(check: Callable[[], list[dict[str, Any]]]) -> list[dict[str, Any]] | None:
+    """The check's items, or None when it failed. A failed check used to count as "found nothing",
+    at debug level, so the Overview said "Everything is fine" without having looked (SET-12)."""
     try:
         return check() or []
     except Exception:
-        logger.debug("[StatusSummary] check failed", exc_info=True)
-        return []
+        logger.warning("[StatusSummary] the check %s failed", getattr(check, "__name__", "?"), exc_info=True)
+        return None
 
 
 VERDICT_MAX_AGE = 7200  # the poller refreshes verdicts every 30 minutes
@@ -143,7 +145,7 @@ def _stalled() -> list[dict[str, Any]]:
     from backend.services.supervisor import stalled
 
     return [
-        {"id": f"daemon:{n}", "level": "warning", "kind": "service_stalled", "subject": n, "open": "activity"}
+        {"id": f"daemon:{n}", "level": "warning", "kind": "service_stalled", "subject": n, "open": "events"}
         for n in stalled()
     ]
 
@@ -168,7 +170,8 @@ def _power() -> list[dict[str, Any]]:
     if ups_state.power_state(ups.get("status")) == ups_state.ON_BATTERY:
         out.append({"id": "ups:battery", "level": "warning", "kind": "on_battery", "subject": "", "open": "power"})
     if getattr(Z_STATE, "critical_temp_active", False):
-        out.append({"id": "temp:critical", "level": "critical", "kind": "too_hot", "subject": "", "open": "activity"})
+        # "too hot" opened the Event Log; the fans and the temperatures are on Hardware
+        out.append({"id": "temp:critical", "level": "critical", "kind": "too_hot", "subject": "", "open": "hardware"})
     return out
 
 
@@ -207,6 +210,8 @@ ACT_SCOPES = {
     "storage": ("storage:admin", "storage:write"),
     "backup": ("backup:manage", "backup:write"),
     "activity": ("system:config",),
+    "events": ("system:config",),
+    "hardware": ("hardware:fans", "system:config"),
     "settings": ("system:config",),
     "power": ("system:power", "system:config"),
     "time": ("system:config",),
@@ -230,9 +235,15 @@ def for_viewer(items: list[dict[str, Any]], can: Any) -> list[dict[str, Any]]:
 
 def summary(can: Any = None) -> dict[str, Any]:
     items: list[dict[str, Any]] = []
+    unchecked: list[str] = []
     for check in CHECKS:
-        items.extend(_safe(check))
+        found = _safe(check)
+        if found is None:
+            unchecked.append(check.__name__.lstrip("_"))
+        else:
+            items.extend(found)
     if can is not None:
         items = for_viewer(items, can)
     items.sort(key=lambda i: 0 if i["level"] == "critical" else 1)
-    return {"ok": not items, "items": items}
+    # "ok" only when every check ran and found nothing: what was not checked is not fine
+    return {"ok": not items and not unchecked, "items": items, "unchecked": unchecked}
