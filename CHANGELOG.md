@@ -414,6 +414,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **About & Updates fits a phone.** The update channel buttons and "Check for Updates" stood in one
   row wider than the screen, which pushed the cards past its left edge. They now wrap.
 
+#### Fixes
+
+- **The Compose safety check and the app terminal speak your language.** The twelve warnings about
+  settings that give an app power over the NAS, and the terminal's own lines, were English in every
+  language.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

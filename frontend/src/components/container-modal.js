@@ -35,7 +35,8 @@ let _activeDetails = null;
 let _activeTermWs = null;
 let _termView = null;
 let _termViewCid = null;
-const TERM_READY_MSG = '# Interactive Container Terminal Ready. Type commands below (e.g. ls -la, uname -a, ps aux)...';
+// the terminal's own lines, in the reader's language (SET-14)
+const termReady = () => t('ci.term_ready', '# Container terminal ready. Type a command below (for example ls -la, uname -a, ps aux).');
 
 export function initContainerModal() {
   if (document.getElementById('container-inspector-overlay')) return;
@@ -437,7 +438,7 @@ function ensureContainerTermView() {
     },
     onResize: (cols, rows) => sendTermResize(cols, rows),
   });
-  _termView.writeln(`\x1b[90m${TERM_READY_MSG}\x1b[0m`);
+  _termView.writeln(`\x1b[90m${termReady()}\x1b[0m`);
   return _termView;
 }
 
@@ -452,7 +453,7 @@ export function connectContainerTerminalWs(cid) {
   if (!view || !cid) return;
   if (_termViewCid !== cid) {
     view.clear();
-    view.writeln(`\x1b[90m${TERM_READY_MSG}\x1b[0m`);
+    view.writeln(`\x1b[90m${termReady()}\x1b[0m`);
     _termViewCid = cid;
   }
 
@@ -482,7 +483,7 @@ export function connectContainerTerminalWs(cid) {
     ws.onclose = () => {
       if (_activeTermWs === ws) {
         _activeTermWs = null;
-        view.writeln('\r\n\x1b[90m[terminal session closed]\x1b[0m');
+        view.writeln(`\r\n\x1b[90m${t('ci.term_closed', '[terminal session closed]')}\x1b[0m`);
       }
     };
   } catch (e) {
@@ -544,10 +545,10 @@ export async function executeTerminalCmd() {
   view.writeln(`\x1b[90m[${timestamp}]\x1b[0m \x1b[32;1m$\x1b[0m ${cmd}`);
   try {
     const res = await api.post(`/api/docker/containers/${_activeCid}/exec`, { cmd });
-    view.write(String(res.output || '(No output)').replace(/\r?\n/g, '\r\n'));
+    view.write(String(res.output || t('ci.term_no_output', '(no output)')).replace(/\r?\n/g, '\r\n'));
     view.write('\r\n');
   } catch (err) {
-    view.writeln(`\x1b[31mError: ${err.message || err}\x1b[0m`);
+    view.writeln(`\x1b[31m${t('ci.term_error', 'Error: {error}', { error: err.message || err })}\x1b[0m`);
   }
 }
 
@@ -555,7 +556,7 @@ export function clearTerminal() {
   const view = ensureContainerTermView();
   if (view) {
     view.clear();
-    view.writeln(`\x1b[90m${TERM_READY_MSG}\x1b[0m`);
+    view.writeln(`\x1b[90m${termReady()}\x1b[0m`);
   }
 }
 
