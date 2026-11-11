@@ -2,6 +2,7 @@
  * Mission Control: Disk inventory table.
  * Split out of management.js (ARCH-1); management.js re-exports everything here.
  */
+import { isNvmeDrive } from '../temp-rule.js';
 import { ZettEventBus } from '../../event-bus.js';
 import { triggerLocateDisk, getThermalLevel } from '../chassis-visualizer.js';
 import { state } from '../../state.js';
@@ -53,7 +54,7 @@ export async function fetchAndRenderDisksInventory() {
 function buildDiskRowInner(d) {
   const devName = d.dev || d.name || 'unknown';
   const isStandby = Boolean(d.standby || d.health === 'standby');
-  const thermal = getThermalLevel(d.temp, isStandby);
+  const thermal = getThermalLevel(d.temp, isStandby, isNvmeDrive(d));
   const modelStr = d.model || 'Generic Disk';
   const serialStr = d.serial && d.serial !== 'Unknown' ? d.serial : '--';
   const transportStr = (d.transport || (devName.startsWith('nvme') ? 'nvme' : 'sata')).toUpperCase();
@@ -116,7 +117,7 @@ function updateDiskRow(row, d) {
   }
 
   const isStandby = Boolean(d.standby || d.health === 'standby');
-  const thermal = getThermalLevel(d.temp, isStandby);
+  const thermal = getThermalLevel(d.temp, isStandby, isNvmeDrive(d));
   const healthStr = isStandby ? 'STANDBY' : (d.health ? String(d.health).toUpperCase() : 'OK');
 
   const healthTag = row.querySelector('.bay-health-tag');

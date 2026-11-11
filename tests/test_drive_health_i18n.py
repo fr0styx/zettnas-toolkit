@@ -73,7 +73,7 @@ def every_finding():
                     188: ("Command_Timeout", 5, 100),
                     199: ("UDMA_CRC_Error_Count", 4, 200),
                 },
-                temp=55,
+                temp=53,  # warm: 55 is too hot now, where the fans go to full speed
             ),
             grew_all,
             None,

@@ -38,13 +38,13 @@ describe('Phase 2: Thermal Heatmap Level Calculations', () => {
     expect(ok.color).toBe('var(--ok, #3bf58b)');
     expect(ok.text).toBe('38°C');
 
-    // Warm drive (46 - 52C)
-    const warn = getThermalLevel(49, false);
+    // Warm drive (50 - 54C): the limits the alerts and the fans use (SET-09)
+    const warn = getThermalLevel(52, false);
     expect(warn.cls).toBe('warn');
     expect(warn.color).toBe('var(--warn, #f5b731)');
-    expect(warn.text).toBe('49°C');
+    expect(warn.text).toBe('52°C');
 
-    // Critical hot drive (>= 53C)
+    // Too hot (>= 55C)
     const crit = getThermalLevel(56, false);
     expect(crit.cls).toBe('crit');
     expect(crit.color).toBe('var(--crit, #f0553b)');

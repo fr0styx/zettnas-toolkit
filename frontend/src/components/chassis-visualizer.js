@@ -1,4 +1,5 @@
 import { escapeHtml, trapFocus, copyTextToClipboard, reconcileKeyedTable } from '../utils.js';
+import { isNvmeDrive, tempLevel } from './temp-rule.js';
 import { showReadError } from './refresh-say.js';
 import { locateSaid } from './locate-text.js';
 import { api } from '../api.js';
@@ -93,7 +94,7 @@ export async function triggerLocateDisk(devName, targetElement = null) {
 /**
  * Computes color and status token for thermal heatmap
  */
-export function getThermalLevel(tempC, isStandby = false) {
+export function getThermalLevel(tempC, isStandby = false, isNvme = false) {
   if (isStandby || tempC == null) {
     return {
       cls: 'standby',
@@ -103,10 +104,12 @@ export function getThermalLevel(tempC, isStandby = false) {
       toString() { return this.cls; }
     };
   }
-  if (tempC >= 53) {
+  // one rule for every place that colours a temperature (temp-rule.js): it was 46 and 53 °C here
+  const level = tempLevel(tempC, isNvme);
+  if (level === 'hot') {
     return { cls: 'crit', color: 'var(--crit, #f0553b)', glow: 'rgba(240, 85, 59, 0.45)', text: `${tempC}°C`, toString() { return this.cls; } };
   }
-  if (tempC >= 46) {
+  if (level === 'warm') {
     return { cls: 'warn', color: 'var(--warn, #f5b731)', glow: 'rgba(245, 183, 49, 0.45)', text: `${tempC}°C`, toString() { return this.cls; } };
   }
   if (tempC >= 35) {
@@ -216,7 +219,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
       const d = bay.disk;
       const devName = d.dev || d.name || `sd${String.fromCharCode(96 + slotNum)}`;
       const isStandby = Boolean(d.standby || d.health === 'standby');
-      const thermal = getThermalLevel(d.temp, isStandby);
+      const thermal = getThermalLevel(d.temp, isStandby, isNvmeDrive(d));
       const modelStr = d.model ? d.model.slice(0, 14) : devName;
       const sizeStr = d.size_formatted || d.size || '';
       const transportStr = d.transport ? d.transport.toUpperCase() : 'SATA';
@@ -264,7 +267,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
     nvmes.forEach((nv, idx) => {
       const devName = nv.name || nv.dev || `nvme${idx}n1`;
       const isStandby = Boolean(nv.standby);
-      const thermal = getThermalLevel(nv.temp, isStandby);
+      const thermal = getThermalLevel(nv.temp, isStandby, true);
       const wear = nv.percentage_used != null ? `${nv.percentage_used}%` : nv.wear != null ? `${nv.wear}%` : '--';
       m2Html += `
         <div class="m2-slot-card ${thermal.cls}" data-dev="${devName}" role="button" tabindex="0">
@@ -697,7 +700,7 @@ function buildPoolBlockInner(pool, isObserver, can = { scrub: true }) {
   const membersHtml = (pool.members || []).map((m) => {
     const isStandby = m.spundown || m.status === 'STANDBY';
     const tempDisplay = isStandby ? '🌙 Standby' : (m.temp_c != null ? `${m.temp_c}°C` : '--');
-    const tempLevel = isStandby ? 'standby' : (m.temp_c != null ? getThermalLevel(m.temp_c).cls : 'cool');
+    const tempLevel = isStandby ? 'standby' : (m.temp_c != null ? getThermalLevel(m.temp_c, false, isNvmeDrive(m)).cls : 'cool');
     const readsStr = m.num_reads ? formatNumber(m.num_reads) : '0';
     const writesStr = m.num_writes ? formatNumber(m.num_writes) : '0';
 

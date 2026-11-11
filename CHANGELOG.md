@@ -875,6 +875,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   command that reads every drive ran with each listing, which the statistics collector asks for
   every 30 seconds.
 
+#### Fixes
+
+- **One rule for "warm" and "too hot".** The picture of the drive bays turned amber at 46 °C and
+  red at 53 °C for every drive, Drive Health used 50 and 60 °C for hard drives and 70 and 80 °C
+  for NVMe, and the alerts and the fans act at 50 and 55, 70 and 75. The same drive could be
+  amber in one place and fine in the next. Every place now uses the limits of the alerts and the
+  fans, by the drive's kind. A hard drive at 56 °C is "too hot" in Drive Health, as it is for the
+  fans.
+- **Drive Health uses three colours.** "Replace soon" was orange, a fourth colour; it is amber
+  like "watch", with its own words.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

@@ -23,8 +23,25 @@ ORDER = {OK: 0, WATCH: 1, SOON: 2, NOW: 3}
 # What a finding asks for: replacing the drive, or something around it
 REPLACE, COOLING, CABLE, TEST, INFO = "replace", "cooling", "cable", "test", "info"
 
-HDD_HOT_C, HDD_CRITICAL_C = 50, 60
-NVME_HOT_C, NVME_CRITICAL_C = 70, 80
+# Fallbacks only: the limits are the ones the alerts and the fans act on (settings: warn and
+# critical temperature per kind). Drive Health had its own, 60 and 80 °C for "too hot", so a drive
+# the fans already ran at full speed for was still "warm" here (SET-09).
+HDD_HOT_C, HDD_CRITICAL_C = 50, 55
+NVME_HOT_C, NVME_CRITICAL_C = 70, 75
+
+
+def usual_limits(nvme: bool) -> tuple[int, int]:
+    """(warm, too hot) for a kind of drive, from the settings the alerts and the fans use."""
+    from backend.config import SETTINGS
+
+    try:
+        if nvme:
+            return int(SETTINGS.nvme_warn_temp), int(SETTINGS.nvme_critical_temp)
+        return int(SETTINGS.hdd_warn_temp), int(SETTINGS.hdd_critical_temp)
+    except (AttributeError, TypeError, ValueError):
+        return (NVME_HOT_C, NVME_CRITICAL_C) if nvme else (HDD_HOT_C, HDD_CRITICAL_C)
+
+
 OLD_HDD_HOURS = 5 * 365 * 24  # five years powered on
 TREND_DAYS = 30
 TEST_STALE_DAYS = 35  # no self-test for longer than this (a monthly schedule plus slack)
@@ -256,7 +273,7 @@ def temp_limits(r: dict[str, Any], nvme: bool) -> tuple[int, int]:
     own = r.get("temp_limit")
     if isinstance(own, int) and 30 <= own <= 90:
         return own, own + 10
-    return (NVME_HOT_C, NVME_CRITICAL_C) if nvme else (HDD_HOT_C, HDD_CRITICAL_C)
+    return usual_limits(nvme)
 
 
 def _rules_own_verdict(out: list[dict[str, Any]], r: dict[str, Any]) -> None:

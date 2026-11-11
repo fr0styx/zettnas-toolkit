@@ -19,10 +19,11 @@
 .dh-pill { padding: 2px 10px; border-radius: 999px; font-size: var(--zn-fs-xs); font-weight: 700; white-space: nowrap; background: var(--track); }
 .is-ok .dh-dot, .dh-pill.is-ok, .is-ok > .dh-pill { background: var(--ok2, #10b981); }
 .is-watch .dh-dot, .dh-pill.is-watch, .is-watch > .dh-pill { background: var(--warn); }
-.is-soon .dh-dot, .dh-pill.is-soon, .is-soon > .dh-pill { background: var(--orange, #f97316); }
+/* three colours, with the word beside them: "replace soon" is amber like "watch" (SET-09) */
+.is-soon .dh-dot, .dh-pill.is-soon, .is-soon > .dh-pill { background: var(--warn); }
 .is-now .dh-dot, .dh-pill.is-now, .is-now > .dh-pill { background: var(--crit); }
-.dh-pill.is-ok, .is-ok > .dh-pill, .dh-pill.is-watch, .is-watch > .dh-pill { color: #111; }
-.dh-pill.is-soon, .is-soon > .dh-pill, .dh-pill.is-now, .is-now > .dh-pill { color: var(--zn-text-strong); }
+.dh-pill.is-ok, .is-ok > .dh-pill, .dh-pill.is-watch, .is-watch > .dh-pill, .dh-pill.is-soon, .is-soon > .dh-pill { color: #111; }
+.dh-pill.is-now, .is-now > .dh-pill { color: var(--zn-text-strong); }
 .dh-overall { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--card); border-left: 4px solid var(--muted); font-weight: 700; }
 .dh-overall.is-ok { border-left-color: var(--ok2, #10b981); }
 .dh-overall.is-watch { border-left-color: var(--warn); }

@@ -1,4 +1,5 @@
 import { syncWidgetSettingsUI } from './widgets.js';
+import { isNvmeDrive } from './temp-rule.js';
 import { refreshAndSay } from './refresh-say.js';
 import { askPower, isShuttingDown, powerToast } from './vm/power.js';
 import { loadSecurityPane, loadNotificationsPane } from './management/admin-panes.js';
@@ -418,7 +419,7 @@ export function updateManagementTelemetry(stats) {
           const row = diskTbody.querySelector(`tr[data-dev="${devName}"]`);
           if (row) {
             const isStandby = Boolean(d.standby || d.health === 'standby');
-            const thermal = getThermalLevel(d.temp, isStandby);
+            const thermal = getThermalLevel(d.temp, isStandby, isNvmeDrive(d));
             const healthStr = isStandby ? 'STANDBY' : (d.health ? String(d.health).toUpperCase() : 'OK');
             
             const healthTag = row.querySelector('.bay-health-tag');

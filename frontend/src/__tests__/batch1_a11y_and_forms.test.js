@@ -152,7 +152,7 @@ describe('Batch 1: Accessibility, Form Label Linking & ARIA Radiogroups', () => 
     expect(ok.color).toBe('var(--ok, #3bf58b)');
     expect(ok.cls).toBe('ok');
 
-    const warn = getThermalLevel(48, false);
+    const warn = getThermalLevel(52, false); // warm from 50 °C, as the alerts say (SET-09)
     expect(warn.color).toBe('var(--warn, #f5b731)');
     expect(warn.cls).toBe('warn');
 
