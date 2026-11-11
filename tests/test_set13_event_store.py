@@ -21,11 +21,22 @@ def log(tmp_path, monkeypatch):
     monkeypatch.setattr(state.Z_STATE, "event_log", [])
     clock = {"t": 1_700_000_000}
     monkeypatch.setattr(state.time, "time", lambda: clock["t"])
+    _stop_flush_timer()
     state._event_unsaved.clear()
     state._event_recent.clear()
     yield clock
+    _stop_flush_timer()
     state._event_unsaved.clear()
     state._event_recent.clear()
+
+
+def _stop_flush_timer():
+    """A debounced flush left by an earlier test fired during the next one on a shared parallel worker."""
+    with state._event_flush_lock:
+        timer = state._event_flush_timer
+        state._event_flush_timer = None
+    if timer is not None:
+        timer.cancel()
 
 
 def test_an_entry_has_an_id_a_kind_and_the_place_that_deals_with_it(log):

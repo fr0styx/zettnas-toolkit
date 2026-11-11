@@ -127,6 +127,7 @@ def _dir(name):
 @pytest.mark.parametrize(
     ("path", "code"),
     [("", 400), ("bad\x00path", 400), (f"{POOL_DIR}/../etc", 403), ("/etc", 403)],
+    ids=["empty", "nul-byte", "out-of-the-pool", "system-folder"],  # no sandbox path in the id (parallel workers)
 )
 def test_validate_media_path_refuses_bad_paths(rag, path, code):
     with pytest.raises(media_api.HTTPException) as e:

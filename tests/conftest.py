@@ -18,7 +18,9 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 worker_id = os.environ.get("PYTEST_XDIST_WORKER", "")
-prefix = f"zettnas-tests-{worker_id}-" if worker_id else "zettnas-tests-"
+# one length whether the tests run alone or on a parallel worker (gw0_ … gw99), so a recording
+# of sizes that include a path is the same everywhere (CI speed-up, pytest-xdist)
+prefix = f"zettnas-tests-{(worker_id or 'gw').ljust(4, '_')}-"
 SANDBOX = tempfile.mkdtemp(prefix=prefix)
 DATA_DIR = os.path.join(SANDBOX, "data")
 POOL_DIR = os.path.join(SANDBOX, "pool")

@@ -8,6 +8,7 @@
 pytest==9.2.0
 pytest-asyncio==1.4.1.post1
 pytest-cov==7.1.0
+pytest-xdist==3.8.0  # parallel test workers in CI and the release gate
 ruff==0.17.4
 pip-audit==2.10.1
 pyright==1.1.414
