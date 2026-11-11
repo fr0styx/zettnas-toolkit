@@ -4,6 +4,9 @@
 // drawn as icons by icons.js; any other emoji in the sources, translations included, counts. Run with --update after lowering them to record the new baseline.
 // UX-32: !important is also held per file (a new file starts at zero), and the number of places
 // that build markup with the UI primitives (uiButton, uiField, uiCard, uiPaneHeader) may only go up.
+// APP-A: hard-coded colours (#hex, rgb(), hsl()) are counted the same way, in total and per file, so
+// the theme conversion only moves one way. The files that define the tokens and themes, and the
+// front LCD's own styles (they keep their own themes), are where colours belong and are not counted.
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -31,8 +34,18 @@ const ICONS = JSON.parse(readFileSync(join(ROOT, 'src', 'icons', 'emoji-icons.js
 const buttonClasses = new Set();
 const importantPerFile = {};
 let primitiveUses = 0;
+let colours = 0;
+const coloursPerFile = {};
+const COLOUR = /#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?(?:[0-9a-fA-F]{2})?\b|\b(?:rgba?|hsla?)\(/g;
+const COLOUR_HOMES = /(?:00-tokens|01-themes|light-theme|light-palette|yak-theme|lcd[^/]*)\.(?:css|js)$|\/lcd[^/]*\//;
 for (const f of files) {
   const src = readFileSync(f, 'utf8');
+  const rel = f.replaceAll('\\', '/');
+  if (!COLOUR_HOMES.test(rel)) {
+    const c = (src.match(COLOUR) || []).length;
+    colours += c;
+    if (c) coloursPerFile[rel] = c;
+  }
   const imp = (src.match(/!important/g) || []).length;
   important += imp;
   if (imp) importantPerFile[f.replaceAll('\\', '/')] = imp;
@@ -47,10 +60,11 @@ for (const f of files) {
     for (const m of src.matchAll(/\.((?:btn|button)[-_][\w-]+)/g)) buttonClasses.add(m[1]);
   }
 }
-const now = { important, buttonClasses: buttonClasses.size, inlineStyles, emojiIcons };
+const now = { important, buttonClasses: buttonClasses.size, inlineStyles, emojiIcons, colours };
 if (process.argv.includes('--update')) {
   const sorted = Object.fromEntries(Object.entries(importantPerFile).sort(([a], [b]) => a.localeCompare(b)));
-  writeFileSync(BASELINE, JSON.stringify({ ...now, primitiveUses, importantPerFile: sorted }, null, 2) + '\n');
+  const coloursSorted = Object.fromEntries(Object.entries(coloursPerFile).sort(([a], [b]) => a.localeCompare(b)));
+  writeFileSync(BASELINE, JSON.stringify({ ...now, primitiveUses, importantPerFile: sorted, coloursPerFile: coloursSorted }, null, 2) + '\n');
   console.log('css budget baseline updated:', { ...now, primitiveUses });
   process.exit(0);
 }
@@ -64,6 +78,14 @@ if (base.importantPerFile) {
     }
     if (n > (base.importantPerFile[f] ?? 0)) {
       console.error(`✗ ${f}: ${n} !important (budget ${base.importantPerFile[f] ?? 0}). Use a more specific selector or a token instead.`);
+      failed = true;
+    }
+  }
+}
+if (base.coloursPerFile) {
+  for (const [f, n] of Object.entries(coloursPerFile)) {
+    if (n > (base.coloursPerFile[f] ?? 0)) {
+      console.error(`✗ ${f}: ${n} hard-coded colours (budget ${base.coloursPerFile[f] ?? 0}). Use a colour token (var(--...)) instead.`);
       failed = true;
     }
   }
