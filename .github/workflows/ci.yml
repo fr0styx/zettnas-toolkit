@@ -26,8 +26,57 @@ env:
   OLD_IMAGE: ghcr.io/fr0styx/zettnas-toolkit
 
 jobs:
+  # The lint, type and supply-chain checks run beside the unit tests, not before them (CI speed-up)
+  lint:
+    name: Python lint, types & supply chain
+    runs-on: ubuntu-latest
+    timeout-minutes: 15  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --require-hashes -r requirements.lock
+          pip install --require-hashes -r requirements-dev.lock
+          python scripts/check_lock_versions.py
+
+      - name: Known vulnerabilities in the Python dependencies (ARC-32)
+        run: pip-audit -r requirements.lock --no-deps --disable-pip --progress-spinner off
+
+      - name: Secrets in the tree (ARC-32)
+        # .gitleaks.toml allows test data; a checked false positive carries a gitleaks:allow comment
+        run: >-
+          docker run --rm -v "$PWD:/repo:ro"
+          ghcr.io/gitleaks/gitleaks@sha256:cdbb7c955abce02001a9f6c9f602fb195b7fadc1e812065883f695d1eeaba854
+          dir /repo --no-banner --redact --config /repo/.gitleaks.toml
+
+      - name: Run Ruff Lint
+        run: ruff check app.py backend tests scripts
+
+      - name: Pyright type check, no file may get worse (OPS-24)
+        run: python scripts/pyright_ratchet.py
+        env:
+          # a fixed Node for pyright: nodeenv cannot read the newest entries in Node's release list
+          PYRIGHT_PYTHON_NODE_VERSION: "24.11.1"
+
+      - name: Silent except/pass may not grow (ARC-01)
+        run: python scripts/silent_except.py
+
+      - name: Run Ruff Format Check
+        run: ruff format --check app.py backend tests scripts
+
   lint-and-test:
-    name: Lint & Pytest Unit Suite
+    name: Pytest Unit Suite
     runs-on: ubuntu-latest
     timeout-minutes: 25  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
     steps:
@@ -87,31 +136,6 @@ jobs:
             restic version && rclone version | head -1
           fi
           python scripts/check_lock_versions.py
-
-      - name: Known vulnerabilities in the Python dependencies (ARC-32)
-        run: pip-audit -r requirements.lock --no-deps --disable-pip --progress-spinner off
-
-      - name: Secrets in the tree (ARC-32)
-        # .gitleaks.toml allows test data; a checked false positive carries a gitleaks:allow comment
-        run: >-
-          docker run --rm -v "$PWD:/repo:ro"
-          ghcr.io/gitleaks/gitleaks@sha256:cdbb7c955abce02001a9f6c9f602fb195b7fadc1e812065883f695d1eeaba854
-          dir /repo --no-banner --redact --config /repo/.gitleaks.toml
-
-      - name: Run Ruff Lint
-        run: ruff check app.py backend tests scripts
-
-      - name: Pyright type check, no file may get worse (OPS-24)
-        run: python scripts/pyright_ratchet.py
-        env:
-          # a fixed Node for pyright: nodeenv cannot read the newest entries in Node's release list
-          PYRIGHT_PYTHON_NODE_VERSION: "24.11.1"
-
-      - name: Silent except/pass may not grow (ARC-01)
-        run: python scripts/silent_except.py
-
-      - name: Run Ruff Format Check
-        run: ruff format --check app.py backend tests scripts
 
       - name: Run Pytest Suite with Coverage
         # OPS-16: coverage may not drop below the floor (raise it as coverage grows); the generated
@@ -215,12 +239,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # the idle-minute check (90 s) goes with the shorter half
           - shard: "1 of 2"
             tests: tests/test_e2e_journeys.py
             idle: false
           - shard: "2 of 2"
             tests: tests/test_e2e_integration.py tests/test_e2e_a11y.py tests/test_e2e_keyboard_german.py
+            idle: false
+          # the idle minute (PERF-10, 90 s) beside the two halves, on the same server setup
+          - shard: "idle minute"
+            tests: ""
             idle: true
     runs-on: ubuntu-latest
     timeout-minutes: 25  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
@@ -325,7 +352,7 @@ jobs:
 
           # PERF-10: one idle minute with nobody using the app. Starting more than 10 processes a
           # minute fails the run; wakeups and CPU are warnings (a shared runner is noisy).
-          # Run in one of the two halves (matrix.idle), before any test touches the server.
+          # Its own matrix entry (matrix.idle), on a server no test has touched.
           if [ "${{ matrix.idle }}" = "true" ]; then
             HOST_PROC=/proc python3 scripts/hardware_budgets.py --pid "$SERVER_PID" --scope tree --warmup 30 \
               --seconds 60 --only spawns,wakeups,idle-cpu --strict spawns --show --results /tmp/kb-idle ||
@@ -334,6 +361,7 @@ jobs:
 
           # This half of the Playwright E2E suite; skips count as failures here
           set -o pipefail
+          if [ -z "${{ matrix.tests }}" ]; then kill $SERVER_PID || true; exit 0; fi
           # shellcheck disable=SC2086  # matrix.tests is a list of files
           if ! KIBOTO_E2E_REQUIRED=1 pytest ${{ matrix.tests }} -v -rfE 2>&1 | tee /tmp/kb-e2e.log; then
             annotate 'E2E tests' "$(grep -E '^(FAILED|ERROR|E  )|Error|assert' /tmp/kb-e2e.log | tail -n 25)"
@@ -347,7 +375,7 @@ jobs:
   # publish the images, so this one skips publishing (skipped, not failed).
   still-latest:
     name: Still the latest commit?
-    needs: [lint-and-test, frontend, e2e-integration]
+    needs: [lint, lint-and-test, frontend, e2e-integration]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 5  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
@@ -366,8 +394,8 @@ jobs:
           fi
 
   # The images are built and checked while the tests run (CI speed-up, 12 Nov 2026): build-image,
-  # then check-image (amd64 start, Trivy, update and rollback) beside smoke-arm64 (a native arm64
-  # runner). Nothing is tagged or signed until all of those and every test job have passed
+  # then check-image (amd64 start, Trivy), update-test and smoke-arm64 (a native arm64 runner)
+  # side by side. Nothing is tagged or signed until all of those and every test job have passed
   # (publish). An untagged digest of a build that failed stays unreachable: no tag points at it.
   build-image:
     name: Build multi-arch image (${{ matrix.variant }})
@@ -566,6 +594,57 @@ jobs:
           exit-code: "0"
           format: table
 
+  # The update and rollback test in its own job, beside the smoke test and the scan (CI speed-up)
+  update-test:
+    name: Update and rollback test (${{ matrix.variant }})
+    needs: [build-image]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: full
+            suffix: ""
+          - variant: core
+            suffix: "-core"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
+    permissions:
+      contents: read
+      packages: read
+    env:
+      DOCKER_CLIENT_TIMEOUT: "120"
+      COMPOSE_HTTP_TIMEOUT: "120"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Optimize Runner Network (Disable IPv6 & Configure DNS)
+        run: |
+          sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1 || true
+          sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1 || true
+          sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=1 || true
+          sudo mkdir -p /etc/docker
+          echo '{"dns": ["8.8.8.8", "1.1.1.1"]}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker
+          docker logout || true
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download the digest
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: digest-${{ matrix.variant }}
+      - name: Read the digest
+        id: build
+        run: |
+          d=$(cat digest.txt)
+          case "$d" in sha256:*) ;; *) echo "::error::bad digest file"; exit 1;; esac
+          echo "digest=$d" >> "$GITHUB_OUTPUT"
+
       # The real update path, end to end: Stable and the two newest releases, each on fresh data
       # with an account and a backup job made through its own API, updated to this build by its
       # own update helper (data must survive), then to an image that can't start (must roll
@@ -583,16 +662,20 @@ jobs:
           started=""
           for tag in latest $RECENT; do
             OLD="${{ env.OLD_IMAGE }}:$tag${{ matrix.suffix }}"  # core images end in -core (NARC-10)
-            docker pull -q "$OLD" || { echo "no image $OLD, skipped"; continue; }
             i=$((i + 1))
-            KIBOTO_TEST_NAME="kb-upgrade-$i" KIBOTO_TEST_PORT=$((18090 + i)) \
-              sh scripts/upgrade_rollback_test.sh "$OLD" "$NEW" > "/tmp/upgrade-$i.log" 2>&1 &
+            # each run pulls its own old image, so the three downloads overlap too
+            ( docker pull -q "$OLD" >/dev/null || exit 77
+              KIBOTO_TEST_NAME="kb-upgrade-$i" KIBOTO_TEST_PORT=$((18090 + i)) \
+                sh scripts/upgrade_rollback_test.sh "$OLD" "$NEW" ) > "/tmp/upgrade-$i.log" 2>&1 &
             started="$started $i:$!:$tag"
           done
           failed=""
           for run in $started; do
             n=${run%%:*}; rest=${run#*:}; pid=${rest%%:*}; tag=${rest#*:}
-            if wait "$pid"; then status=passed; else status=FAILED; failed="$failed $tag"; fi
+            rc=0; wait "$pid" || rc=$?
+            if [ "$rc" = 0 ]; then status=passed
+            elif [ "$rc" = 77 ]; then status="skipped (no image for $tag)"
+            else status=FAILED; failed="$failed $tag"; fi
             echo "::group::from $tag ($status)"
             cat "/tmp/upgrade-$n.log"
             echo "::endgroup::"
@@ -639,7 +722,7 @@ jobs:
 
   publish:
     name: Sign & publish image tags (${{ matrix.variant }})
-    needs: [lint-and-test, frontend, e2e-integration, still-latest, build-image, check-image, smoke-arm64]
+    needs: [lint, lint-and-test, frontend, e2e-integration, still-latest, build-image, check-image, update-test, smoke-arm64]
     strategy:
       fail-fast: false
       matrix:

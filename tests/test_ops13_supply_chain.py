@@ -64,9 +64,9 @@ def test_arm64_images_are_started_in_ci():
 
 def test_the_update_path_is_exercised_before_publishing():
     jobs = yaml.safe_load(_read(".github/workflows/ci.yml"))["jobs"]
-    steps = jobs["check-image"]["steps"]
+    steps = jobs["update-test"]["steps"]
     names = [s.get("name", "") for s in steps]
     test = names.index("Upgrade and rollback test")
-    assert "check-image" in jobs["publish"]["needs"]  # runs before any tag is published
+    assert "update-test" in jobs["publish"]["needs"]  # runs before any tag is published
     assert "scripts/upgrade_rollback_test.sh" in steps[test]["run"]
     assert os.path.isfile(os.path.join(ROOT, "scripts", "upgrade_rollback_test.sh"))

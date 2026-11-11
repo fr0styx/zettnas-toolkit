@@ -23,7 +23,7 @@ def test_lock_parsing_and_drift_detection():
 def test_ci_installs_the_lock_with_hashes_and_checks_it():
     with open(os.path.join(ROOT, ".github/workflows/ci.yml"), encoding="utf-8") as f:
         jobs = yaml.safe_load(f)["jobs"]
-    for job in ("lint-and-test", "e2e-integration"):
+    for job in ("lint", "lint-and-test", "e2e-integration"):
         runs = "\n".join(s.get("run", "") for s in jobs[job]["steps"])
         assert "pip install --require-hashes -r requirements.lock" in runs, job
         assert "scripts/check_lock_versions.py" in runs, job

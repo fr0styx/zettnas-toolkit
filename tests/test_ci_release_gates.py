@@ -26,7 +26,7 @@ GATES = {
     "Smoke-test the built image (amd64": "check-image",
     "Smoke-test the built image (arm64": "smoke-arm64",
     "Scan image with Trivy": "check-image",
-    "Upgrade and rollback test": "check-image",
+    "Upgrade and rollback test": "update-test",
 }
 
 
@@ -45,7 +45,11 @@ def test_every_gate_runs_before_the_image_is_signed_and_tagged():
     assert _index(steps, "Sign image digest") < _index(steps, "Publish tags")
     needs = set(jobs["publish"]["needs"])
     # every test job and every image check must pass before anything is signed or tagged
-    assert {"lint-and-test", "frontend", "e2e-integration", "still-latest", "build-image"} <= needs
+    assert {"lint", "lint-and-test", "frontend", "e2e-integration", "still-latest", "build-image"} <= needs
+    assert "lint" in jobs["still-latest"]["needs"]
+    # the idle minute (PERF-10) is still one of the browser-test jobs
+    e2e = jobs["e2e-integration"]["strategy"]["matrix"]["include"]
+    assert any(e["idle"] is True for e in e2e) and all(e["tests"] for e in e2e if not e["idle"])
     for prefix, job in GATES.items():
         assert job in needs, prefix
         _index(jobs[job]["steps"], prefix)  # the gate is really in that job

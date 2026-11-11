@@ -70,17 +70,6 @@ ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/lib/chromium/chromium-headless-shel
 
 WORKDIR /app
 
-COPY requirements.txt requirements.lock requirements-dev.txt requirements-dev.lock ./
-ARG DEV_BUILD=0
-# --no-compile: no __pycache__ in the layer people download (about 40 MB): Python writes each module's
-# bytecode on its first import instead (a fraction of a second, once per container), and the image
-# stays inside its download budget (PERF-29)
-RUN --mount=type=cache,target=/root/.cache/pip pip install --no-compile --require-hashes -r requirements.lock \
-    && if [ "$DEV_BUILD" = "1" ]; then pip install --no-compile --require-hashes -r requirements-dev.lock; fi
-# ARC-29: in the image people install, the test switches (TESTING, KIBOTO_TEST_MODE,
-# KIBOTO_FAST_HASH) do nothing (backend/settings.py: test_mode); the dev build keeps them
-RUN if [ "$DEV_BUILD" != "1" ]; then echo "release image: test switches are off" > /etc/kiboto-release; fi
-
 # Intel Quick Sync for converting videos browsers can't play (iPhone HEVC): the VA-API
 # driver and the oneVPL GPU runtime. Used only when /dev/dri is passed to the container.
 ARG TARGETARCH
@@ -89,10 +78,6 @@ RUN if [ "$TARGETARCH" = "amd64" ]; then \
       && apt-get update && apt-get install -y --no-install-recommends intel-media-va-driver-non-free libmfx-gen1.2 libvpl2 \
       && rm -rf /var/lib/apt/lists/*; \
     fi
-
-# Playwright (LCD renderer) ships its own Node.js, which lags behind security releases.
-# Replace it with the patched official build so no vulnerable copy stays in the image.
-COPY --from=node:26.13.0-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39 /usr/local/bin/node /usr/local/lib/python3.12/site-packages/playwright/driver/node
 
 # VARIANT=full (default) adds virtual machines (QEMU, OVMF, swtpm) and the front
 # LCD renderer (headless Chromium and fonts). VARIANT=core leaves them out: a
@@ -144,6 +129,25 @@ RUN if [ "$VARIANT" = "full" ]; then \
     && apt-get update && apt-get install -y --no-install-recommends -t trixie-backports zfsutils-linux \
     && rm -rf /var/lib/apt/lists/*; \
     fi
+
+# The Python packages come after every system package, and the dev lock (test tools, not in the
+# release image) after the runtime install: a test-tool bump then rebuilds only the last cheap
+# layers, not the QEMU, Chromium and ZFS installs, which run emulated for arm64 (9 min on 11 Nov 2026)
+COPY requirements.txt requirements.lock ./
+ARG DEV_BUILD=0
+# --no-compile: no __pycache__ in the layer people download (about 40 MB): Python writes each module's
+# bytecode on its first import instead (a fraction of a second, once per container), and the image
+# stays inside its download budget (PERF-29)
+RUN --mount=type=cache,target=/root/.cache/pip pip install --no-compile --require-hashes -r requirements.lock
+COPY requirements-dev.txt requirements-dev.lock ./
+RUN --mount=type=cache,target=/root/.cache/pip if [ "$DEV_BUILD" = "1" ]; then pip install --no-compile --require-hashes -r requirements-dev.lock; fi
+# ARC-29: in the image people install, the test switches (TESTING, KIBOTO_TEST_MODE,
+# KIBOTO_FAST_HASH) do nothing (backend/settings.py: test_mode); the dev build keeps them
+RUN if [ "$DEV_BUILD" != "1" ]; then echo "release image: test switches are off" > /etc/kiboto-release; fi
+
+# Playwright (LCD renderer) ships its own Node.js, which lags behind security releases.
+# Replace it with the patched official build so no vulnerable copy stays in the image.
+COPY --from=node:26.13.0-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39 /usr/local/bin/node /usr/local/lib/python3.12/site-packages/playwright/driver/node
 
 # Build metadata arguments injected by CI
 ARG BUILD_COMMIT=""
