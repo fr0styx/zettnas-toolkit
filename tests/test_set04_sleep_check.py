@@ -19,7 +19,9 @@ from backend.users_db import create_user, delete_user, get_user_by_username
 
 class FakeRag:
     def __init__(self, respect=True):
-        self.cfg = {"watched_paths": [], "excluded_paths": [], "enabled": True, "respect_standby": respect}
+        # the folder of these tests is one Kib reads (the list is a limit for a family member)
+        watched = [os.path.join(POOL_DIR, "set04_sleep")]
+        self.cfg = {"watched_paths": watched, "excluded_paths": [], "enabled": True, "respect_standby": respect}
         self.calls = []
 
     def get_config(self):

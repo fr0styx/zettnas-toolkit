@@ -183,6 +183,60 @@ class RagConfigUpdateRequest(BaseModel):
     photo_vector_model: str | None = Field(default=None, max_length=128)
 
 
+def _only_folders_kib_reads(paths: list[str], principal: Any, cfg: dict[str, Any]) -> None:
+    """The list of folders is a limit (SET-04). Anyone who may write to a share could have Kib
+    read any folder they can open, on the list or not, forgotten or not. A folder Kib was told to
+    forget is refused for everyone; a folder outside the list only an administrator may add."""
+    from backend.services.rag_engine_indexing import folder_inside
+
+    for path in paths:
+        forgotten = folder_inside(path, cfg.get("excluded_paths") or [])
+        if forgotten:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Kib was told to forget {forgotten} and does not read it. Add the folder again first.",
+            )
+    if principal.is_system or principal.has_any_scope("storage:admin", "system:config"):
+        return
+    for path in paths:
+        if not folder_inside(path, cfg.get("watched_paths") or []):
+            raise HTTPException(
+                status_code=403,
+                detail="Kib reads only the folders chosen in its settings. An administrator can add this one.",
+            )
+
+
+def _unforget(rag: Any, cfg: dict[str, Any], path: str) -> str:
+    """Adding a folder again that Kib was told to forget takes it off the forgotten list, so the
+    two lists never disagree (the folder was read at once, skipped by the next pass, and wiped
+    again by a watched parent). Inside a forgotten parent it is refused, naming the parent."""
+    from backend.services.rag_engine_indexing import folder_inside
+
+    excluded = [os.path.normpath(str(p)) for p in (cfg.get("excluded_paths") or []) if str(p).strip()]
+    parent = folder_inside(path, [p for p in excluded if p != path])
+    if parent:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Kib was told to forget {parent}, which holds this folder. Add {parent} again first.",
+        )
+    if path in excluded:
+        rag.update_config({"excluded_paths": [p for p in excluded if p != path]})
+    return path
+
+
+def _checked_folder_list(paths: list[str], principal: Any) -> list[str]:
+    """A folder list sent to the settings route: each one passes the same check as a folder
+    added on the page (inside the storage folders, one the sender may open), once."""
+    out: list[str] = []
+    for raw in paths:
+        if not str(raw or "").strip():
+            continue
+        vp = _validate_media_path(str(raw).strip(), principal, must_exist=False)
+        if vp not in out:
+            out.append(vp)
+    return out
+
+
 def _reading_without_the_sleep_check(http_request: Request, principal: Any, rag: Any, target: str) -> None:
     """Reading with the sleep check off walks sleeping drives, so it is a deliberate wake (SET-04):
     an administrator, and the same kind of confirmation. Nothing is asked where an administrator
@@ -381,6 +435,7 @@ async def sync_rag_index(
         vp = _validate_media_path(t, principal, must_exist=False)
         if vp not in validated_paths:
             validated_paths.append(vp)
+    _only_folders_kib_reads(validated_paths, principal, rag.get_config())
 
     if req.background:
         res = rag.start_background_sync(
@@ -537,6 +592,8 @@ def update_watched_folders(
         if vp not in current:
             current.append(vp)
         added_vp = vp
+        if list_key == "watched_paths":
+            added_vp = _unforget(rag, cfg, vp)
     elif act == "remove":
         if not req.path or not str(req.path).strip():
             raise HTTPException(status_code=400, detail="Folder path is required for 'remove'.")
@@ -1555,6 +1612,9 @@ def update_rag_config(
         if not endpoint_ok(req.photo_vector_host):
             raise HTTPException(status_code=400, detail="The photo vector server must be an http(s) URL.")
     updates = {k: v for k, v in req.model_dump().items() if v is not None}
+    for key in ("watched_paths", "excluded_paths"):  # they were stored as sent, with no check
+        if key in updates:
+            updates[key] = _checked_folder_list(updates[key], principal)
     return get_rag_engine().update_config(updates)
 
 

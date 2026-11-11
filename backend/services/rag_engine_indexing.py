@@ -78,6 +78,16 @@ def in_encrypted(path: str) -> bool:
     return path.startswith(ENCRYPTED_ROOT + os.sep)
 
 
+def folder_inside(path: str, folders: list[str]) -> str:
+    """The folder of `folders` that `path` is, or lies in; "" when there is none."""
+    norm = os.path.normpath(str(path or ""))
+    for folder in folders:
+        f = os.path.normpath(str(folder or "").strip())
+        if f and f != "." and (norm == f or norm.startswith(f.rstrip("/") + "/")):
+            return f
+    return ""
+
+
 class RagIndexingMixin:
     """Indexing files and folders, forgetting and flushing for RagSearchEngine (split out of rag_engine.py, ARCH-1)."""
 
@@ -504,6 +514,17 @@ class RagIndexingMixin:
                 "deferred_standby": 0,
                 "errors": 0,
                 "message": "Kib service is disabled — learning paused.",
+            }
+        forgotten = folder_inside(norm_root, cfg.get("excluded_paths") or [])
+        if forgotten:  # "Forget" holds for every way in, not only for the walk below it (SET-04)
+            return {
+                "status": "excluded",
+                "path": norm_root,
+                "indexed_files": 0,
+                "skipped_unchanged": 0,
+                "deferred_standby": 0,
+                "errors": 0,
+                "message": f"Kib was told to forget {forgotten} and does not read it.",
             }
 
         if _reset_control_flags:

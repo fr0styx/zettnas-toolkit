@@ -473,6 +473,15 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   counts. Opening the page could also start a reading job; it no longer does. The page's status
   timer stops when Settings is closed or shows another section.
 
+#### Security
+
+- **The folders you chose for Kib are a limit, and "Forget" holds**: anyone who may write to a
+  shared folder could have Kib read any folder they can open, whether it was on Kib's list or
+  not, and even one Kib had been told to forget. Only an administrator can now have Kib read a
+  folder outside the list. A forgotten folder is refused for everyone until it is added again,
+  and adding it again takes it off the forgotten list, so the two never disagree. Folder lists
+  sent to the settings are checked like a folder added on the page.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 
