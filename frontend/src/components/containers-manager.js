@@ -12,6 +12,7 @@ import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showBottomSheet } from '../toast.js';
 import { t } from '../i18n.js';
 import { actionSaid, appsSummary } from './app-condition.js';
+import { checkSaid, updateAllSaid } from './app-updates-said.js';
 import '../styles/containers-lazy.css'; // the window's own sheet loads with this code (NUX-15)
 import { makeDraggable, bringToFront } from './dock.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
@@ -303,11 +304,7 @@ export function initContainersManager() {
         _cwUpdatesCache = res;
         const count = res.updates_available_count || 0;
         updateCwUpdatesUI(count);
-        if (count > 0) {
-          showToast(t('toast.container_updates_available', 'Update check complete: {count} container update(s) available!', { count }), 'warn');
-        } else {
-          showToast(t('toast.all_containers_are_up_to_date', 'All containers are up to date!'), 'success');
-        }
+        showToast(...checkSaid(res)); // "up to date" only when every check answered (SET-14)
         await loadContainersData();
       } catch (err) {
         showToast(t('toast.update_check_failed', 'Update check failed: {error}', { error: err.message }), 'error');
@@ -328,8 +325,8 @@ export function initContainersManager() {
           btnUpdateAll.disabled = true;
           showToast(t('toast.batch_container_update_initiated', 'Batch container update initiated...'), 'info');
           try {
-            await api.post('/api/docker/updates/apply-all');
-            showToast(t('toast.all_container_updates_dispatched', 'All container updates dispatched.'), 'success');
+            const done = await api.post('/api/docker/updates/apply-all');
+            showToast(...updateAllSaid(done)); // what was updated and what was not
             await Promise.all([refreshCwUpdatesStatus(), loadContainersData()]);
             renderContainersWindowTable(_cwContainersList);
           } catch (err) {

@@ -201,3 +201,32 @@ def test_the_status_route_and_the_stream(client, auth_headers, monkeypatch):
         except (KeyError, TypeError, AttributeError):
             pass  # the rest of the payload is not this test's
     assert data["docker_state"]["available"] is False
+
+
+def test_the_update_check_says_when_it_did_not_find_out(monkeypatch):
+    from backend.services import docker_updates as du
+
+    monkeypatch.setattr(
+        du, "_update_cache", {"checked_at": 5, "total_containers": 1, "updates_available_count": 0, "containers": {}}
+    )
+    monkeypatch.setattr(du, "_docker_request", lambda *a, **k: (500, None))
+    res = du.check_all_container_updates(force=True)
+    assert res["checked"] is False and res["reason"] == "docker" and res["updates_available_count"] == 0
+
+    def boom(*_a, **_k):
+        raise OSError("no socket")
+
+    monkeypatch.setattr(du, "_docker_request", boom)
+    assert du.check_all_container_updates(force=True)["checked"] is False
+
+    answers = {
+        "plex": {"name": "plex", "id": "p1", "status": "up_to_date", "has_update": False},
+        "immich": {"name": "immich", "id": "i1", "status": "error", "has_update": False, "error": "timeout"},
+        "ghost": {"name": "ghost", "id": "g1", "status": "auth_required", "has_update": False},
+        "web": {"name": "web", "id": "w1", "status": "update_available", "has_update": True},
+    }
+    monkeypatch.setattr(du, "_docker_request", lambda *a, **k: (200, [{"Names": ["/" + n]} for n in answers]))
+    monkeypatch.setattr(du, "_check_container_image_update", lambda c: dict(answers[c["Names"][0].lstrip("/")]))
+    res = du.check_all_container_updates(force=True)
+    assert res["checked"] is True and res["unchecked"] == ["ghost", "immich"] and res["updates_available_count"] == 1
+    assert du.get_cached_update_status()["unchecked"] == ["ghost", "immich"]

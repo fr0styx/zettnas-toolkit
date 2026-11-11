@@ -196,6 +196,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Docker is there and answering and how old the list is. The live stream carries the same as
   `docker_state`.
 
+#### Fixes
+
+- **"Check for updates" says "up to date" only when it found out.** It answered "All containers
+  are up to date!" when Docker did not answer, and also when the place an image comes from could
+  not be reached. It now says that the check could not run, or names the apps it could not check.
+- **"Update all" says what was updated and what was not.** It always answered "All container
+  updates dispatched.", whatever failed.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

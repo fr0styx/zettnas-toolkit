@@ -307,6 +307,10 @@ def _check_container_image_update(c: dict) -> dict[str, Any]:
     return res
 
 
+# what a registry check ends in when it did not find out: no answer, not allowed, not found
+_NO_ANSWER = ("error", "unknown", "auth_required", "not_found")
+
+
 def get_cached_update_status() -> dict[str, Any]:
     """Returns the current cached update status without making remote calls."""
     with _update_lock:
@@ -328,7 +332,9 @@ def check_all_container_updates(force: bool = False) -> dict[str, Any]:
     try:
         status, containers = _docker_request("GET", "/containers/json?all=1", timeout=10.0)
         if status != 200 or not isinstance(containers, list):
-            return dict(_update_cache)
+            # nothing was checked: the old answer is returned, marked as that. The page read
+            # "0 updates" from it and said "all up to date" (SET-14)
+            return {**_update_cache, "checked": False, "reason": "docker"}
 
         # Check containers concurrently with up to 8 threads
         with ThreadPoolExecutor(max_workers=8) as executor:
@@ -353,18 +359,22 @@ def check_all_container_updates(force: bool = False) -> dict[str, Any]:
             if r.get("has_update"):
                 updates_count += 1
 
+        # the apps whose registry gave no answer: "up to date" is not known for them
+        unchecked = sorted({r["name"] for r in results if r.get("name") and r.get("status") in _NO_ANSWER})
         with _update_lock:
             _update_cache = {
                 "checked_at": int(now),
                 "total_containers": len(containers),
                 "updates_available_count": updates_count,
                 "containers": container_map,
+                "checked": True,
+                "unchecked": unchecked,
             }
             return dict(_update_cache)
 
     except Exception as exc:
         logger.error(f"[Docker Updates] Error checking container updates: {exc}")
-        return dict(_update_cache)
+        return {**_update_cache, "checked": False, "reason": "docker"}
 
 
 def _update_target(img: str) -> str:
