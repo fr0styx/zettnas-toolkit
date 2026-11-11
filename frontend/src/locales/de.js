@@ -3230,6 +3230,8 @@ export default {
   "confirm.network_nas_name.msg": "Soll das NAS im Heimnetz auf {target} antworten? Ein kleiner Helfer im Netzwerk des Hosts übernimmt das und beantwortet nur Namensanfragen.",
   "confirm.network_public_links.title": "Freigabelinks veröffentlichen",
   "confirm.network_public_links.msg": "Sollen alle, die einen Freigabelink haben, ihn über das Internet öffnen können, über Tailscale Funnel auf Port {target}? Nur Freigabelinks sind so erreichbar, der Rest des NAS bleibt privat.",
+  "confirm.network_public_links_move_immich.title": "Veröffentlichen und Immich verschieben",
+  "confirm.network_public_links_move_immich.msg": "Freigabelinks veröffentlichen und Immich nach {target} verschieben? Freigabelinks brauchen den Port, den die sichere Adresse von Immich bisher nutzt, und ein Port im Internet darf nichts anderes bereitstellen. Telefone und Browser, die Immich unter der alten Adresse öffnen, brauchen die neue. Wenn sich die Familie mit einem Konto bei Immich anmeldet, verbinden Sie Immich unter „Benutzer“ erneut.",
   "offsite.plain_http": "Diese Adresse liegt außerhalb Ihres Netzwerks und nutzt einfaches http: Das Sicherungspasswort wird unverschlüsselt übertragen. Erreichen Sie sie über Tailscale oder nutzen Sie rest:https://.",
   "fm.bins_asleep": "{count, plural, one {# Papierkorb liegt auf einer schlafenden Festplatte und wird nicht angezeigt, damit sie nicht aufwacht.} other {# Papierkörbe liegen auf einer schlafenden Festplatte und werden nicht angezeigt, damit sie nicht aufwacht.}} Sie erscheinen, sobald die Festplatte wach ist.",
   "updates.busy_title": "Es läuft noch etwas",

@@ -152,6 +152,27 @@ def own_page_ports(dns: str) -> list[int]:
     return sorted(set(ports))
 
 
+def immich_to_move(dns: str | None = None) -> str:
+    """Immich's new address, when its HTTPS address is the only other thing on the share links'
+    port and so stands in their way; "" when nothing has to move (SET-02, the owner's decision S7:
+    Immich moves only when someone turns share links on, after a question that shows this address)."""
+    from urllib.parse import urlsplit
+
+    from backend.services import remote_access
+
+    dns = _dns_name() if dns is None else dns
+    handlers, _public, _read = _port_state(dns)
+    others = _others(handlers)
+    port = remote_access.immich_port()
+    if not others or not port:
+        return ""
+    for path in others:
+        target = urlsplit(str((handlers[path] or {}).get("Proxy") or ""))
+        if target.port != port or target.hostname not in ("127.0.0.1", "localhost"):
+            return ""  # something else is there too: that is not Kiboto's to move
+    return f"https://{dns}:{port + remote_access.APP_HTTPS_OFFSET}/"
+
+
 def _links_served(handlers: dict[str, Any]) -> bool:
     return any(p.rstrip("/") == PATH for p in handlers)
 
@@ -176,7 +197,7 @@ def status(finish_pending: bool = False) -> dict[str, Any]:
     waiting = bool(pending) and time.time() - float(pending.get("since") or 0) < PENDING_SECONDS
     if finish_pending and waiting and ready["ready"]:
         logger.info("[PublicLinks] Funnel is allowed now: finishing the waiting request")
-        return enable(int(pending.get("web_port") or 8082))
+        return enable(int(pending.get("web_port") or 8082), bool(pending.get("move_immich")))
     dns = _dns_name()
     on = bool(st.get("enabled"))
     handlers, public, _read = _port_state(dns)
@@ -196,17 +217,28 @@ def status(finish_pending: bool = False) -> dict[str, Any]:
     }
 
 
-def enable(web_port: int) -> dict[str, Any]:
-    """Publishes the share links' path; Tailscale may first want Funnel allowed (approval link)."""
+def enable(web_port: int, move_immich: bool = False) -> dict[str, Any]:
+    """Publishes the share links' path; Tailscale may first want Funnel allowed (approval link).
+    `move_immich`: the person agreed that Immich's HTTPS address leaves this port first."""
     dns = _dns_name()
     if not dns:
         atomic_write_json(STATE_FILE, {"enabled": False, "error": "Tailscale isn't connected on this NAS."})
         return status()
     if not funnel_readiness()["ready"]:
         # the owner's steps aren't done: remember the request; status() finishes it once they are
-        atomic_write_json(STATE_FILE, {"enabled": False, "pending": {"web_port": web_port, "since": time.time()}})
+        waiting = {"web_port": web_port, "since": time.time(), "move_immich": bool(move_immich)}
+        atomic_write_json(STATE_FILE, {"enabled": False, "pending": waiting})
         return status()
     handlers, _public, _read = _port_state(dns)
+    if move_immich and immich_to_move(dns):
+        from backend.services import remote_access
+
+        try:
+            remote_access.move_immich()
+        except remote_access.RemoteAccessError as e:
+            atomic_write_json(STATE_FILE, {"enabled": False, "error": f"Immich could not be moved: {e}"})
+            return status()
+        handlers, _public, _read = _port_state(dns)
     if _others(handlers):
         atomic_write_json(STATE_FILE, {"enabled": False, "error": OTHERS_ON_PORT})
         logger.warning("[PublicLinks] not published: port %s also serves %s", FUNNEL_PORT, _others(handlers))

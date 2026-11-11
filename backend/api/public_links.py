@@ -50,8 +50,13 @@ async def put_public_links(
     """Turns public share links on (confirmed first: 428 until then) or off."""
     if not req.enabled:
         return await asyncio.to_thread(public_links.disable)
-    confirm_or_raise(request, principal, "network.public_links", f":{public_links.FUNNEL_PORT}")
-    return await asyncio.to_thread(public_links.enable, int(settings.current("port") or 8082))
+    # Immich's HTTPS address is on that port: the question shows where it moves to (SET-02)
+    moves_to = await asyncio.to_thread(public_links.immich_to_move)
+    if moves_to:
+        confirm_or_raise(request, principal, "network.public_links_move_immich", moves_to)
+    else:
+        confirm_or_raise(request, principal, "network.public_links", f":{public_links.FUNNEL_PORT}")
+    return await asyncio.to_thread(public_links.enable, int(settings.current("port") or 8082), bool(moves_to))
 
 
 class PublicAppIn(BaseModel):

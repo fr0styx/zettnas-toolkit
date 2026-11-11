@@ -3230,6 +3230,8 @@ export default {
   "confirm.network_nas_name.msg": "Laisser le NAS répondre à {target} sur le réseau de la maison ? Un petit assistant sur le réseau de l'hôte s'en charge et ne répond qu'aux recherches de nom.",
   "confirm.network_public_links.title": "Publier les liens de partage",
   "confirm.network_public_links.msg": "Permettre à toute personne ayant un lien de partage de l'ouvrir depuis internet, via Tailscale Funnel sur le port {target} ? Seuls les liens de partage sont accessibles ainsi ; le reste du NAS reste privé.",
+  "confirm.network_public_links_move_immich.title": "Publier et déplacer Immich",
+  "confirm.network_public_links_move_immich.msg": "Publier les liens de partage et déplacer Immich vers {target} ? Les liens de partage ont besoin du port qu’utilise aujourd’hui l’adresse sécurisée d’Immich, et un port ouvert sur Internet ne doit rien servir d’autre. Les téléphones et navigateurs qui ouvrent Immich à l’ancienne adresse ont besoin de la nouvelle. Si la famille se connecte à Immich avec un seul compte, reconnectez Immich dans Utilisateurs.",
   "offsite.plain_http": "Cette adresse est hors de votre réseau et utilise http simple : le mot de passe de la sauvegarde circule en clair. Passez par Tailscale ou utilisez rest:https://.",
   "fm.bins_asleep": "{count, plural, one {# corbeille se trouve} other {# corbeilles se trouvent}} sur un disque en veille et {count, plural, one {n'est pas affichée} other {ne sont pas affichées}}, pour ne pas le réveiller. Elles apparaîtront à son réveil.",
   "updates.busy_title": "Des tâches sont encore en cours",

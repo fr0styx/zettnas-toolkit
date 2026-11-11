@@ -3230,6 +3230,8 @@ export default {
   "confirm.network_nas_name.msg": "¿Dejar que el NAS responda a {target} en la red de casa? Un pequeño ayudante en la red del host lo hace y solo responde a consultas de nombre.",
   "confirm.network_public_links.title": "Publicar enlaces compartidos",
   "confirm.network_public_links.msg": "¿Permitir que cualquiera con un enlace compartido lo abra desde internet, mediante Tailscale Funnel en el puerto {target}? Solo los enlaces compartidos son accesibles así; el resto del NAS sigue siendo privado.",
+  "confirm.network_public_links_move_immich.title": "Publicar y mover Immich",
+  "confirm.network_public_links_move_immich.msg": "¿Publicar los enlaces compartidos y mover Immich a {target}? Los enlaces compartidos necesitan el puerto que hoy usa la dirección segura de Immich, y un puerto en internet no debe servir nada más. Los teléfonos y navegadores que abren Immich en la dirección antigua necesitan la nueva. Si la familia entra en Immich con una sola cuenta, vuelve a conectar Immich en Usuarios.",
   "offsite.plain_http": "Esta dirección está fuera de tu red y usa http sin cifrar: la contraseña de la copia viaja en claro. Accede a ella por Tailscale o usa rest:https://.",
   "fm.bins_asleep": "{count, plural, one {# papelera está en un disco en reposo y no se muestra, para no despertarlo.} other {# papeleras están en un disco en reposo y no se muestran, para no despertarlo.}} Aparecerán cuando despierte.",
   "updates.busy_title": "Todavía hay tareas en marcha",

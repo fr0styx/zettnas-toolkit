@@ -60,6 +60,7 @@ ACTIONS: dict[str, str] = {
     "pool.scrub_schedule": "Check pool {target} for errors once a month. Its disks spin up for the check",
     "security.advisor_fix": "Apply the Security Advisor fix '{target}'. People may lose access they had before",
     "network.public_links": "Let anyone who has a share link open it from the internet, through Tailscale Funnel on port {target}. Only share links are reachable that way; the rest of the NAS stays private",
+    "network.public_links_move_immich": "Publish share links, and move Immich to {target}. Share links need the port Immich's secure address uses now, and a port on the internet must carry nothing else. Phones and browsers that open Immich at the old address need the new one",
     "security.malware_scan": "Start ClamAV in {target} to scan files that arrive from outside. It needs about 1.5 GB of memory, briefly up to 3 GB, and downloads its signatures first",
     "security.malware_restore": "Put {target} back where it came from although ClamAV flagged it as malware",
     "security.malware_delete": "Delete {target} from quarantine for good",

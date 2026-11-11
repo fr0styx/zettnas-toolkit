@@ -320,6 +320,15 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   refuses the request. If it is still on, the "Share links from anywhere" card shows a red alert
   with a "Take off the internet" button.
 
+#### Remote access
+
+- **Share links and Immich no longer share a port**: where Immich has a secure address on the port
+  that share links need, turning on "Share links from anywhere" now asks first and shows Immich's
+  new address (its own port); with your yes Immich moves and the share links are published alone.
+  Phones and browsers that open Immich at the old address need the new one, and an Immich that the
+  family signs in to with one account must be connected again in Users. Until someone turns share
+  links on, nothing changes.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

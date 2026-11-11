@@ -3230,6 +3230,8 @@ export default {
   "confirm.network_nas_name.msg": "让 NAS 在家庭网络中响应 {target}？一个运行在主机网络上的小助手负责这件事，只回答名称查询。",
   "confirm.network_public_links.title": "公开分享链接",
   "confirm.network_public_links.msg": "允许任何拿到分享链接的人通过 Tailscale Funnel（端口 {target}）从互联网打开它？只有分享链接可以这样访问，NAS 的其他部分保持私密。",
+  "confirm.network_public_links_move_immich.title": "发布并迁移 Immich",
+  "confirm.network_public_links_move_immich.msg": "发布分享链接并将 Immich 迁移到 {target}？分享链接需要使用 Immich 安全地址目前占用的端口，而暴露在互联网上的端口不能再提供其他内容。通过旧地址打开 Immich 的手机和浏览器需要改用新地址。如果家人使用同一账户登录 Immich，请在“用户”中重新连接 Immich。",
   "offsite.plain_http": "此地址在你的网络之外，且使用未加密的 http：备份密码会以明文传输。请通过 Tailscale 访问，或使用 rest:https://。",
   "fm.bins_asleep": "有 {count} 个回收站位于休眠的磁盘上，为了不唤醒磁盘暂不显示。磁盘唤醒后即会出现。",
   "updates.busy_title": "仍有任务在运行",

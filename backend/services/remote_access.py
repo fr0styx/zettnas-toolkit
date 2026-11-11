@@ -56,6 +56,30 @@ def immich_port() -> int | None:
     return int(port) if port else None
 
 
+def immich_https_port() -> int:
+    """The port of Immich's HTTPS address in the tailnet: 8443, or its own port once it was moved
+    out of the share links' way (SET-02)."""
+    return int(tailscale.settings().get("immich_https_port") or IMMICH_HTTPS_PORT)
+
+
+def move_immich() -> int | None:
+    """Moves Immich's HTTPS address off the share links' port to a port of its own (its host port
+    plus 10000, like every other app). The port it leaves is free for the share links; phones and
+    browsers need the new address. Returns the new port, or None when Immich isn't here."""
+    port = immich_port()
+    if not port:
+        return None
+    new = port + APP_HTTPS_OFFSET
+    tailscale.run_cli(["serve", f"--https={IMMICH_HTTPS_PORT}", "off"], timeout=10.0)
+    tailscale.update_settings(immich_https_port=new)
+    code, out = tailscale.run_cli(
+        ["serve", "--bg", "--yes", f"--https={new}", f"http://127.0.0.1:{port}"], timeout=10.0
+    )
+    if code != 0:
+        raise RemoteAccessError((out or "tailscale serve failed").strip().splitlines()[-1][:300])
+    return new
+
+
 def _app_port() -> int:
     return int(tailscale.settings().get("app_port") or DEFAULT_APP_PORT)
 
@@ -103,11 +127,8 @@ def addresses(name: str, ips: list[str], https: bool, served: set[int]) -> dict[
     }
     port = immich_port()
     if port:
-        out["immich"] = (
-            f"https://{name}:{IMMICH_HTTPS_PORT}/"
-            if https and IMMICH_HTTPS_PORT in served
-            else f"http://{host}:{port}/"
-        )
+        secure = immich_https_port()
+        out["immich"] = f"https://{name}:{secure}/" if https and secure in served else f"http://{host}:{port}/"
     apps = _app_addresses(name, host, https, served)
     if apps:
         out["apps"] = apps
@@ -166,7 +187,7 @@ def publish(app_port: int | None = None) -> dict[str, Any]:
     targets = [(443, _app_port())]
     port = immich_port()
     if port:
-        targets.append((IMMICH_HTTPS_PORT, port))
+        targets.append((immich_https_port(), port))
     targets += [(app["port"] + APP_HTTPS_OFFSET, app["port"]) for app in web_apps()]
     _drop_gone_apps({public for public, _local in targets})
     approval = ""
