@@ -3221,6 +3221,8 @@ export default {
   "confirm.docker_container_recreate_elevated.msg": "Recréer le conteneur {target} avec un accès au système hôte ?",
   "confirm.disk_wake.title": "Réveiller le disque",
   "confirm.disk_wake.msg": "Réveiller le disque en veille {target} ? Il démarre maintenant et se remettra en veille tout seul plus tard.",
+  "confirm.ai_read_sleeping.title": "Lire les disques en veille",
+  "confirm.ai_read_sleeping.msg": "Laisser Kib lire les dossiers des disques en veille ? Ils démarrent pour cela, maintenant et à chaque lecture suivante tant que ce réglage est actif.",
   "confirm.snapshot_rollback.title": "Revenir en arrière",
   "confirm.snapshot_rollback.msg": "Remettre tout le partage tel qu'il était dans l'instantané {target} ? L'état actuel est d'abord gardé en instantané.",
   "confirm.pool_scrub_schedule.title": "Vérifier chaque mois",

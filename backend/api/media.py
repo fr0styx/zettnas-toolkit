@@ -183,6 +183,21 @@ class RagConfigUpdateRequest(BaseModel):
     photo_vector_model: str | None = Field(default=None, max_length=128)
 
 
+def _reading_without_the_sleep_check(http_request: Request, principal: Any, rag: Any, target: str) -> None:
+    """Reading with the sleep check off walks sleeping drives, so it is a deliberate wake (SET-04):
+    an administrator, and the same kind of confirmation. Nothing is asked where an administrator
+    has already turned the check off in the settings; that was confirmed then."""
+    if not rag.get_config().get("respect_standby", True):
+        return
+    if not principal.has_any_scope("storage:admin", "system:config", "*"):
+        raise HTTPException(
+            status_code=403, detail="Reading folders on sleeping drives needs an administrator. Nothing was read."
+        )
+    from backend.confirmations import confirm_or_raise
+
+    confirm_or_raise(http_request, principal, "ai.read_sleeping", target)
+
+
 class ModelSelectRequest(BaseModel):
     model: str | None = Field(default=None, max_length=256)
     model_id: str | None = Field(default=None, max_length=256)
@@ -302,6 +317,8 @@ async def sync_rag_index(
         confirm_or_raise(http_request, principal, "disk.wake", "indexing")
 
     rag = get_rag_engine()
+    if not req.respect_standby and not req.force_wake:
+        _reading_without_the_sleep_check(http_request, principal, rag, "indexing")
     raw_targets: list[str] = []
     if req.paths and len(req.paths) > 0:
         raw_targets = [str(p).strip() for p in req.paths if str(p).strip()]
@@ -1450,7 +1467,18 @@ def get_ai_requests(
     "/ai/config",
     dependencies=[Depends(require_scope("system:config", "storage:admin"))],
 )
-def update_rag_config(req: RagConfigUpdateRequest) -> dict[str, Any]:
+def update_rag_config(
+    req: RagConfigUpdateRequest,
+    http_request: Request,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+) -> dict[str, Any]:
+    # the two fields are one switch (update_config ties them): either one, sent as false, turns
+    # the sleep check off for every later reading
+    turns_check_off = req.respect_standby is False or (
+        req.respect_standby is None and req.auto_learn_on_spinup is False
+    )
+    if turns_check_off:
+        _reading_without_the_sleep_check(http_request, principal, get_rag_engine(), "settings")
     if req.llm_endpoint is not None and req.llm_endpoint.strip():
         parsed = urllib.parse.urlparse(req.llm_endpoint.strip())
         if parsed.scheme not in ("http", "https") or not parsed.hostname:

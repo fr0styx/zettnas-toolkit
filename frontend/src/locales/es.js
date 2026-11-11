@@ -3221,6 +3221,8 @@ export default {
   "confirm.docker_container_recreate_elevated.msg": "¿Volver a crear el contenedor {target} con acceso al sistema host?",
   "confirm.disk_wake.title": "Despertar el disco",
   "confirm.disk_wake.msg": "¿Despertar el disco en reposo {target}? Arranca ahora y vuelve a reposar solo más tarde.",
+  "confirm.ai_read_sleeping.title": "Leer discos en reposo",
+  "confirm.ai_read_sleeping.msg": "¿Dejar que Kib lea carpetas en discos en reposo? Arrancan para ello, ahora y en cada lectura posterior mientras esto esté activado.",
   "confirm.snapshot_rollback.title": "Volver atrás",
   "confirm.snapshot_rollback.msg": "¿Dejar toda la carpeta compartida como estaba en la instantánea {target}? Su estado actual se guarda antes como instantánea.",
   "confirm.pool_scrub_schedule.title": "Revisar cada mes",

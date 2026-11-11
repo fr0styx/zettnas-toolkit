@@ -84,7 +84,9 @@ def test_the_chat_tool_reads_nothing_without_a_folder(monkeypatch):
     monkeypatch.setattr(
         chat_nas_tools,
         "_core",
-        lambda: type("C", (), {"get_rag_engine": staticmethod(Rag), "_has_write_permission": staticmethod(lambda p, s: True)}),
+        lambda: type(
+            "C", (), {"get_rag_engine": staticmethod(Rag), "_has_write_permission": staticmethod(lambda p, s: True)}
+        ),
     )
     monkeypatch.setattr(chat_nas_tools, "test_mode", lambda: False)
     fn = next(getattr(chat_nas_tools, n) for n in dir(chat_nas_tools) if n.endswith("trigger_ai_sync"))

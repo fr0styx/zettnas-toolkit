@@ -3221,6 +3221,8 @@ export default {
   "confirm.docker_container_recreate_elevated.msg": "Recreate the container {target} with access to the host system?",
   "confirm.disk_wake.title": "Wake the drive",
   "confirm.disk_wake.msg": "Wake the sleeping drive {target}? It spins up now and goes back to sleep on its own later.",
+  "confirm.ai_read_sleeping.title": "Read sleeping drives",
+  "confirm.ai_read_sleeping.msg": "Let Kib read folders on sleeping drives? They spin up for it, now and for every later reading while this is on.",
   "confirm.snapshot_rollback.title": "Roll back",
   "confirm.snapshot_rollback.msg": "Put the whole share back as it was in the snapshot {target}? How it is now is kept as a snapshot first.",
   "confirm.pool_scrub_schedule.title": "Check monthly",

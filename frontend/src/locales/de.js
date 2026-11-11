@@ -3221,6 +3221,8 @@ export default {
   "confirm.docker_container_recreate_elevated.msg": "Den Container {target} mit Zugriff auf das Hostsystem neu erstellen?",
   "confirm.disk_wake.title": "Festplatte wecken",
   "confirm.disk_wake.msg": "Die schlafende Festplatte {target} wecken? Sie läuft jetzt an und schläft später von selbst wieder ein.",
+  "confirm.ai_read_sleeping.title": "Schlafende Laufwerke lesen",
+  "confirm.ai_read_sleeping.msg": "Soll Kib Ordner auf schlafenden Laufwerken lesen? Sie laufen dafür an, jetzt und bei jedem späteren Lesen, solange dies eingeschaltet ist.",
   "confirm.snapshot_rollback.title": "Zurücksetzen",
   "confirm.snapshot_rollback.msg": "Die ganze Freigabe so zurücksetzen, wie sie im Snapshot {target} war? Der jetzige Stand wird zuerst als Snapshot behalten.",
   "confirm.pool_scrub_schedule.title": "Monatlich prüfen",

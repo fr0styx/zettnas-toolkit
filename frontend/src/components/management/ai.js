@@ -564,7 +564,7 @@ export async function updateAiServiceConfig(partialConfig = {}) {
     await fetchAndRenderAiStatus();
     return res;
   } catch (err) {
-    showToast(t('toast.failed_to_update_kib_configuration', 'Failed to update Kib configuration: {error}', { error: err.message }), 'error');
+    if (err?.error !== 'cancelled') showToast(t('toast.failed_to_update_kib_configuration', 'Failed to update Kib configuration: {error}', { error: err.message }), 'error');
     return null;
   }
 }
@@ -1583,10 +1583,13 @@ export function initAiKnowledgeEngine() {
     respectStandbyCb.dataset.bound = '1';
     respectStandbyCb.addEventListener('change', async () => {
       const enabled = Boolean(respectStandbyCb.checked);
-      await updateAiServiceConfig({
+      const saved = await updateAiServiceConfig({
         respect_standby: enabled,
         auto_learn_on_spinup: enabled,
       });
+      // not saved (refused, or the question was answered with No): the box goes back, so that
+      // "Sync", which reads it, cannot run with a setting the server never took (SET-04)
+      if (!saved) { respectStandbyCb.checked = !enabled; return; }
       showToast(
         enabled
           ? t('ai.auto_learn_spinup_on', '⚡ Standby-Safe Auto-Learn enabled — sleeping drives are protected and automatically sync when they spin up.')
@@ -1600,10 +1603,11 @@ export function initAiKnowledgeEngine() {
     autoLearnSpinupCb.dataset.bound = '1';
     autoLearnSpinupCb.addEventListener('change', async () => {
       const auto_learn_on_spinup = Boolean(autoLearnSpinupCb.checked);
-      await updateAiServiceConfig({
+      const saved = await updateAiServiceConfig({
         respect_standby: auto_learn_on_spinup,
         auto_learn_on_spinup,
       });
+      if (!saved) autoLearnSpinupCb.checked = !auto_learn_on_spinup;
     });
   }
 

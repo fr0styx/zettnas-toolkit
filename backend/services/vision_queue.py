@@ -278,6 +278,14 @@ def system_idle() -> bool:
         return False
 
 
+def _asleep(path: str) -> bool:
+    """True when the file's drive is asleep. Captions and scanned-PDF reading never wake one,
+    also where reading with the sleep check off is allowed (SET-04)."""
+    from backend.services.rag_standby import is_backing_disk_in_standby, resolve_path_backing_dev
+
+    return bool(is_backing_disk_in_standby(resolve_path_backing_dev(path)))
+
+
 def merged_caption(base: str, caption: str, text: str) -> str:
     out = caption.rstrip(".")
     if text:
@@ -402,11 +410,8 @@ class VisionQueue:
             if not model:
                 return "no-model"
             path = row["canonical_path"]
-            if cfg.get("respect_standby", True):
-                from backend.services.rag_standby import is_backing_disk_in_standby, resolve_path_backing_dev
-
-                if is_backing_disk_in_standby(resolve_path_backing_dev(path)):
-                    return "standby"
+            if _asleep(path):  # captions never wake a drive, whatever the reading setting says (SET-04)
+                return "standby"
             key = row["sha256_hash"]
             try:
                 from backend.services import rag_lang
@@ -451,11 +456,8 @@ class VisionQueue:
         if not row:
             return "empty"
         path, mtime_ns = row["canonical_path"], int(row["mtime_ns"])
-        if cfg.get("respect_standby", True):
-            from backend.services.rag_standby import is_backing_disk_in_standby, resolve_path_backing_dev
-
-            if is_backing_disk_in_standby(resolve_path_backing_dev(path)):
-                return "standby"
+        if _asleep(path):
+            return "standby"
         pages = pdf_page_images(path)  # 'no-images' rows, from before pages were drawn, are tried again
         text, status = "", "no-pages"
         if pages:
@@ -482,7 +484,7 @@ class VisionQueue:
                 int(row["size_bytes"]),
                 mtime_ns,
                 None,
-                respect_standby=bool(cfg.get("respect_standby", True)),
+                respect_standby=True,
                 force_wake=False,
             )
             return "done"

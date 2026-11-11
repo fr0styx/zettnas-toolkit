@@ -3221,6 +3221,8 @@ export default {
   "confirm.docker_container_recreate_elevated.msg": "要以访问主机系统的权限重新创建容器 {target} 吗？",
   "confirm.disk_wake.title": "唤醒磁盘",
   "confirm.disk_wake.msg": "要唤醒休眠的磁盘 {target} 吗？它会立即转起来，稍后会自行再次休眠。",
+  "confirm.ai_read_sleeping.title": "读取休眠的硬盘",
+  "confirm.ai_read_sleeping.msg": "让 Kib 读取休眠硬盘上的文件夹吗？硬盘会为此启动，现在如此，只要此项开启，之后每次读取也如此。",
   "confirm.snapshot_rollback.title": "回滚",
   "confirm.snapshot_rollback.msg": "要将整个共享恢复到快照 {target} 时的状态吗？当前状态会先保存为快照。",
   "confirm.pool_scrub_schedule.title": "每月检查",

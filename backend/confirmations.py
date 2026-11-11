@@ -53,6 +53,7 @@ ACTIONS: dict[str, str] = {
     "webdav.config": "Change who can reach files over WebDAV and which folder it shares",
     "security.rotate_key": "Replace the install's secret key; everyone signs in to WebDAV and two-factor again",
     "docker.container.recreate.elevated": "Recreate container {target} with access to the host system",
+    "ai.read_sleeping": "Let Kib read folders on sleeping drives. They spin up for it, and for every later reading while this is on",
     "disk.wake": "Wake sleeping drive {target}. It spins up now and goes back to sleep on its own later",
     "folder.wake": "Open {target}: its disk is asleep and spins up to show it, then goes back to sleep on its own later",
     "snapshot.rollback": "Put the whole share back as it was in snapshot {target}. How it is now is kept as a snapshot first",

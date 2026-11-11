@@ -425,6 +425,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   settings, so you can see and change them. Until a folder is chosen, the content search in Files
   (the `?` prefix) finds nothing.
 
+#### Fixes
+
+- **Kib no longer wakes sleeping drives without asking**: unticking "Standby-Safe Auto-Learn" and
+  pressing "Sync" made Kib read folders on sleeping drives, with no question, and a family member
+  could do it too. With the tick off, photo captions also stopped looking at whether a drive
+  sleeps. Reading with the sleep check off is now treated like waking a drive on purpose: it needs
+  an administrator and a confirmation, once when the setting is turned off or each time for a
+  single reading. Photo captions and the reading of scanned PDFs never wake a drive, whatever the
+  setting says. A switch the server refused goes back to where it was.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 
