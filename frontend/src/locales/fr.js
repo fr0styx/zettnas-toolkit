@@ -7135,6 +7135,7 @@ export default {
   "upx.mains_off": "Secteur coupé",
   "upx.hz": "{hz} Hz nominal",
   "upx.nominal": "120 V / 60 Hz nominal",
+  "upx.selftest_accepted": "L’onduleur a accepté le test de batterie. Le résultat s’affiche sur l’onduleur lui-même.",
   "upx.mains_on": "Sur secteur",
   "upx.no_reading": "Aucune mesure",
   "upx.load_pct": "{pct} % de charge",

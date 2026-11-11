@@ -60,9 +60,7 @@ describe('UPS drawer buttons (UX-35)', () => {
     expect(msg).toContain('about 10 seconds');
     const post = vi.spyOn(api, 'post').mockResolvedValueOnce({});
     await onOk();
-    expect(showToast.mock.calls.at(-1)).toEqual(['Battery self-test started.', 'success']);
-    post.mockResolvedValueOnce({ message: 'Self-test running' });
-    await onOk();
-    expect(showToast.mock.calls.at(-1)).toEqual(['Self-test running', 'success']);
+    // the result is not read back, so the page says the UPS accepted it (SET-15)
+    expect(showToast.mock.calls.at(-1)).toEqual(['The UPS accepted the battery test. Its result shows on the UPS itself.', 'success']);
   });
 });

@@ -1292,8 +1292,14 @@ def test_ups_connection(
     }
 
 
+class SelfTestNotSent(Exception):
+    """No connection could send the battery test (SET-15, Power B3)."""
+
+
 def run_ups_self_test() -> dict[str, Any]:
-    """Issues battery diagnostics self-test command to the configured UPS and logs event."""
+    """Issues battery diagnostics self-test command to the configured UPS and logs event. Raises
+    SelfTestNotSent when nothing accepted it: it answered "done" and wrote a history row for a test
+    that was never sent (SET-15, Power B3). The result is not read back, so an accepted test is "sent"."""
     cfg = load_ups_config()
     host = cfg.get("host", "127.0.0.1")
     port = cfg.get("port", 3551)
@@ -1354,6 +1360,9 @@ def run_ups_self_test() -> dict[str, Any]:
             except Exception:
                 continue
 
+    if not test_executed:
+        raise SelfTestNotSent(mode)
+
     # Record the self-test event in SQLite
     current_status = read_ups_status(force=True)
     curr_charge = current_status.get("battery_charge_pct")
@@ -1362,7 +1371,7 @@ def run_ups_self_test() -> dict[str, Any]:
 
     log_ups_event(
         event_type="SELF_TEST",
-        status="PASSED" if test_executed else "COMPLETED",
+        status="SENT",
         duration_sec=10.0,
         start_battery_pct=curr_charge,
         end_battery_pct=curr_charge,
@@ -1375,8 +1384,9 @@ def run_ups_self_test() -> dict[str, Any]:
     return {
         "success": True,
         "message": result_msg,
+        "text": {"msg_key": "upx.selftest_accepted", "params": {}},
         "battery_charge_pct": curr_charge,
-        "status": current_status.get("status", "ONLINE"),
+        "status": current_status.get("status", ""),
     }
 
 

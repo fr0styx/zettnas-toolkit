@@ -408,5 +408,7 @@ def test_self_test_over_nut(monkeypatch):
         r = ups.run_ups_self_test()
     finally:
         srv.close()
-    assert r["success"] and "accepted" in r["message"] and logged[0]["status"] == "PASSED"
+    assert (
+        r["success"] and "accepted" in r["message"] and logged[0]["status"] == "SENT"
+    )  # sent, its result is not read (SET-15)
     assert any(c.startswith("INSTCMD myups test.battery.start.quick") for c in srv.received)

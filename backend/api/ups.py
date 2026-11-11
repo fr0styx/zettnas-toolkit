@@ -172,8 +172,15 @@ async def post_ups_test_connection(req: UpsTestConnectionRequest):
 @router.post("/ups/self-test", dependencies=[Depends(require_scope("system:config"))])
 async def post_ups_self_test():
     """Issues 10-second battery self-test diagnostic command to the configured UPS."""
-    res = await asyncio.to_thread(run_ups_self_test)
-    return res
+    from backend.hardware.ups import SelfTestNotSent
+
+    try:
+        return await asyncio.to_thread(run_ups_self_test)
+    except SelfTestNotSent as e:
+        raise HTTPException(
+            status_code=409,
+            detail="The battery test was not sent: only a UPS reached over the network (NUT) takes this command, and none accepted it.",
+        ) from e
 
 
 @router.get("/ups/events", dependencies=[Depends(require_scope("hardware:read", "system:view"))])

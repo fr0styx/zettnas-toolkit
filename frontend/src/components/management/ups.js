@@ -802,7 +802,7 @@ export function initUpsDrawerControls() {
         try {
           showToast(t('toast.initiating_battery_self_test', 'Initiating battery self-test...'), 'info');
           const res = await api.post('/api/ups/self-test');
-          showToast(res.message || t('ups.selftest_sent', 'Battery self-test started.'), 'success');
+          showToast(t('upx.selftest_accepted', 'The UPS accepted the battery test. Its result shows on the UPS itself.'), 'success');
           fetchAndRenderUpsTelemetry();
         } catch (err) {
           showToast(t('toast.self_test_failed', 'Self-test failed: {error}', { error: err.message }), 'error');

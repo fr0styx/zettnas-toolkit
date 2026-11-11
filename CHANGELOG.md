@@ -444,6 +444,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   green battery ring and "120V / 60Hz Nominal"; the watt figure assumed a 900 W UPS; the top bar and
   the widget said "100 %" for an unknown charge. Unknown values now say so.
 
+#### Fixes
+
+- **The battery test says whether it was sent.** With no UPS that takes the command it answered
+  "Done" and wrote a test into the history. It now says the test was not sent and why; when the UPS
+  accepts it, the history says "sent", because the result is shown on the UPS itself.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
