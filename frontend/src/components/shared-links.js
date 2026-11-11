@@ -48,23 +48,23 @@ export async function renderSharedLinks(mount, { me = '' } = {}) {
   try {
     links = await api.get('/api/fs/share-links');
   } catch (err) {
-    mount.innerHTML = emptyStateHtml({
+    mount.innerHTML = emptyStateHtml(/** @type {any} */ ({
       title: t('links.load_failed', 'The links could not be loaded.'),
       body: err?.message || '',
       action: { id: 'shared-links-retry', label: t('links.try_again', 'Try again') },
       compact: true,
-    });
+    }));
     mount.querySelector('#shared-links-retry')?.addEventListener('click', () => renderSharedLinks(mount, { me }));
     return;
   }
   const list = Array.isArray(links) ? links : [];
   if (!list.length) {
-    mount.innerHTML = emptyStateHtml({
+    mount.innerHTML = emptyStateHtml(/** @type {any} */ ({
       icon: '🔗',
       title: t('links.empty', 'No shared links.'),
       body: t('links.empty_body', 'A file or folder you share from the File Explorer shows up here.'),
       compact: true,
-    });
+    }));
     return;
   }
   mount.innerHTML = list.map((link) => rowHtml(link, me)).join('');
@@ -99,7 +99,7 @@ export async function renderSharedLinks(mount, { me = '' } = {}) {
 /** The list in its own dialog. `everyone` only changes the title: the server decides what a person sees. */
 export function openSharedLinks({ everyone = false, me = '' } = {}) {
   document.getElementById('shared-links-modal')?.remove();
-  const opener = document.activeElement;
+  const opener = /** @type {HTMLElement | null} */ (document.activeElement);
   const backdrop = document.createElement('div');
   backdrop.id = 'shared-links-modal';
   backdrop.className = 'smart-modal-backdrop open';
@@ -130,6 +130,6 @@ export function openSharedLinks({ everyone = false, me = '' } = {}) {
   document.addEventListener('keydown', onKey, true);
   backdrop.querySelector('#shared-links-close').addEventListener('click', close);
   backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
-  backdrop.querySelector('#shared-links-close').focus();
+  /** @type {HTMLElement} */ (backdrop.querySelector('#shared-links-close')).focus();
   return renderSharedLinks(backdrop.querySelector('#shared-links-list'), { me });
 }

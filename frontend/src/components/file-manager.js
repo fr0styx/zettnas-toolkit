@@ -4149,7 +4149,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
   const cancelBtn = modal.querySelector('#fm-share-cancel');
   if (cancelBtn) cancelBtn.onclick = closeModal;
 
-  const mineBtn = modal.querySelector('#fm-share-mine');
+  const mineBtn = /** @type {HTMLButtonElement | null} */ (modal.querySelector('#fm-share-mine'));
   if (mineBtn) mineBtn.onclick = () => import('./shared-links.js').then((m) => m.openSharedLinks());
 
   const submitBtn = modal.querySelector('#fm-share-submit');
@@ -4162,7 +4162,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
       if (!(expHours > 0) && !pwd) {
         // the server refuses it too (SET-01): say so here, where the password can be typed
         showToast(t('links.always_needs_password', 'A link that never ends needs a password.'), 'error');
-        pwdInput?.focus();
+        /** @type {HTMLElement | null} */ (pwdInput)?.focus();
         return;
       }
       submitBtn.disabled = true;
