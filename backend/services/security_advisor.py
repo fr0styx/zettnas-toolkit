@@ -22,6 +22,7 @@ def _check_default_password(checks: list[dict[str, Any]], issues: list[dict[str,
     checks.append(
         {
             "id": "default_password",
+            "params": {},
             "name": "Default Administrator Password",
             "category": "Authentication",
             "passed": not def_pwd_active,
@@ -62,6 +63,7 @@ def _check_admin_2fa(checks: list[dict[str, Any]], issues: list[dict[str, Any]])
     checks.append(
         {
             "id": "admin_mfa",
+            "params": {},
             "name": "Administrator Two-Factor Authentication (2FA)",
             "category": "Authentication",
             "passed": admin_mfa_active,
@@ -98,6 +100,7 @@ def _check_https(checks: list[dict[str, Any]], issues: list[dict[str, Any]], req
     checks.append(
         {
             "id": "https_transport",
+            "params": {},
             "name": "HTTPS Transport Encryption",
             "category": "Network",
             "passed": is_https,
@@ -139,6 +142,7 @@ def _check_guest_shares(checks: list[dict[str, Any]], issues: list[dict[str, Any
     checks.append(
         {
             "id": "smb_guest_access",
+            "params": {"shares": ", ".join(guest_share_names)},
             "name": "SMB Network Share Guest Access",
             "category": "Storage & Shares",
             "passed": not has_guest_shares,
@@ -183,6 +187,7 @@ def _check_stale_tokens(checks: list[dict[str, Any]], issues: list[dict[str, Any
     checks.append(
         {
             "id": "stale_api_tokens",
+            "params": {"count": stale_token_count},
             "name": "API Token Hygiene",
             "category": "Credentials",
             "passed": stale_token_count == 0,
@@ -212,6 +217,7 @@ def _check_ai_runtimes(checks: list[dict[str, Any]], issues: list[dict[str, Any]
     checks.append(
         {
             "id": "ai_runtime_exposure",
+            "params": {"names": ", ".join(exposed)},
             "name": "AI Runtime Network Exposure",
             "category": "AI",
             "passed": not exposed,
@@ -251,6 +257,7 @@ def _check_safe_defaults(checks: list[dict[str, Any]], issues: list[dict[str, An
                 "penalty": f["penalty"],
                 "severity": f["severity"],
                 "details": f["details"],
+                **({"params": f["params"]} if "params" in f else {}),
                 **({"fix": f["fix"], "fix_label": f["fix_label"]} if f.get("fix") else {}),
             }
         )

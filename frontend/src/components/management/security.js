@@ -218,6 +218,17 @@ export function checkState(c) {
   if (c.passed) return 'ok';
   return Number(c.penalty) === 0 ? 'tip' : 'look';
 }
+/** A row's name in the reader's language (the server's English when there is no text for it). */
+export function checkName(c) {
+  return t(`sec.check.${c.id}`, c.name || '');
+}
+
+/** A row's sentence: translated when the server said what goes into it (`params`), else its own. */
+export function checkDetails(c) {
+  if (!c.params || typeof c.params !== 'object') return c.details || '';
+  return t(`sec.check.${c.id}.${c.passed ? 'ok' : 'look'}`, c.details || '', c.params);
+}
+
 const STATE_WORD = {
   ok: () => t('sec.state_ok', 'Passed'),
   tip: () => t('sec.state_tip', 'Suggestion'),
@@ -290,8 +301,8 @@ export async function fetchAndRenderSecurityPosture() {
             <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
               <span class="sec-advisor-item-icon" style="color:${passColor}; font-weight:800; font-size: var(--kb-fs-sm); line-height:1;">${passIcon}</span>
               <div style="min-width:0;">
-                <div style="font-weight:600; color:var(--lt-t-f5f9f9ff, #f5f9f9); font-size: var(--kb-fs-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
-                <div style="font-size: var(--kb-fs-xs); color:${c.passed ? 'var(--kb-text-muted)' : 'var(--lt-t-fca5a5ff, #fca5a5)'}; margin-top:2px;">${escapeHtml(c.details || '')}</div>
+                <div style="font-weight:600; color:var(--lt-t-f5f9f9ff, #f5f9f9); font-size: var(--kb-fs-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(checkName(c))}</div>
+                <div style="font-size: var(--kb-fs-xs); color:${c.passed ? 'var(--kb-text-muted)' : 'var(--lt-t-fca5a5ff, #fca5a5)'}; margin-top:2px;">${escapeHtml(checkDetails(c))}</div>
               </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">

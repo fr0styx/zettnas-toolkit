@@ -41,6 +41,7 @@ def _share_access_finding() -> dict[str, Any] | None:
         return None
     return {
         "id": "share_access_family",
+        "params": {"people": ", ".join(sorted(people))},
         "name": "Kids and guests can open every shared folder",
         "penalty": 10,
         "severity": "medium",
@@ -147,6 +148,7 @@ def _auditor_finding() -> dict[str, Any] | None:
         return None
     return {
         "id": "auditor_reads_everything",
+        "params": {},
         "name": "The Auditor role can read everyone's files and chats",
         "penalty": 5,
         "severity": "low",
@@ -178,6 +180,7 @@ def _ai_search_finding() -> dict[str, Any] | None:
         return None
     return {
         "id": "ai_search_family",
+        "params": {},
         "name": "Kids and guests can use AI search",
         "penalty": 5,
         "severity": "low",
@@ -299,6 +302,7 @@ def _snapshots_finding() -> dict[str, Any] | None:
         return None
     return {
         "id": "snapshots_off",
+        "params": {"folders": ", ".join(missing)},
         "name": "Some shared folders have no snapshots",
         "penalty": 5,
         "severity": "low",

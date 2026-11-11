@@ -313,6 +313,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   "admin" account, a second administrator) are now in the one list as suggestions, without points.
   Each row says Passed, Suggestion or Needs action in your language.
 
+#### Fixes
+
+- **The security check speaks your language.** Its rows were English in every language. Each row's
+  name, and the sentence under it where Kiboto knows what goes into it, now come in English,
+  German, Spanish, French and Chinese.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
