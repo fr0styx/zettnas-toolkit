@@ -204,9 +204,9 @@ export function handleSecurityAdvisorClick(checkId) {
       // server asks first), the others open the place where they are dealt with
       if (FIXABLE.includes(checkId)) {
         applySecurityFix(checkId);
-      } else if (typeof window.openManagementWindow === 'function') {
+      } else {
         const [section, pane] = PLACES[checkId] || ['mgmt-sec-system-group', 'mgmt-pane-security'];
-        window.openManagementWindow(section, pane);
+        /** @type {any} */ (window).openManagementWindow?.(section, pane);
       }
       break;
     }
