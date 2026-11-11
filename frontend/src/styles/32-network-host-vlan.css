@@ -79,9 +79,9 @@
 
 .net-cidr-preset.active,
 .net-dns-preset.active {
-  background: rgba(79, 216, 196, 0.2);
+  background: rgba(var(--c-primary-text-rgb), 0.2);
   color: var(--kb-text-accent);
-  border-color: rgba(79, 216, 196, 0.5);
+  border-color: rgba(var(--c-primary-text-rgb), 0.5);
 }
 
 /* =========================================================================

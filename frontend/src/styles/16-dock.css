@@ -301,7 +301,7 @@
   transform: translateY(-4px) scale(1.05);
 }
 .dock-item.active-window svg {
-  color: #0a1113;
+  color: var(--c-bg);
   filter: none;
 }
 .dock-item.active-window::after {

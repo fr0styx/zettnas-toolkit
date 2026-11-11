@@ -11,4 +11,4 @@
 .zi-dot-orange { background: #f97316; }
 .zi-dot-purple { background: #a855f7; }
 .zi-dot-blue { background: #3b82f6; }
-.zi-dot-grey { background: #95a8ab; }
+.zi-dot-grey { background: var(--c-muted); }

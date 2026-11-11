@@ -585,7 +585,7 @@
 
 .remote-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(79, 216, 196, 0.3);
+  border-color: rgba(var(--c-primary-text-rgb), 0.3);
 }
 
 .remote-card-header {
@@ -616,9 +616,9 @@
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(79, 216, 196, 0.12);
+  background: rgba(var(--c-primary-text-rgb), 0.12);
   color: var(--kb-text-accent);
-  border: 1px solid rgba(79, 216, 196, 0.25);
+  border: 1px solid rgba(var(--c-primary-text-rgb), 0.25);
   text-transform: uppercase;
 }
 

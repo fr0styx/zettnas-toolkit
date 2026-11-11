@@ -14,13 +14,13 @@
 #space-modal .space-tone-5 { fill: color-mix(in srgb, var(--accent, #3bf58b) 9%, transparent); }
 #space-modal .space-kinds { width: 100%; height: 14px; display: block; border-radius: 4px; overflow: hidden; }
 #space-modal .space-kind-video { fill: #7c6cf0; }
-#space-modal .space-kind-photo { fill: #33cdb8; }
+#space-modal .space-kind-photo { fill: var(--c-primary); }
 #space-modal .space-kind-audio { fill: #f59e0b; }
 #space-modal .space-kind-document { fill: #3b82f6; }
 #space-modal .space-kind-archive { fill: #a16207; }
 #space-modal .space-kind-disk_image { fill: #ef4444; }
 #space-modal .space-kind-backup { fill: #6c8084; }
-#space-modal .space-kind-other { fill: #95a8ab; }
+#space-modal .space-kind-other { fill: var(--c-muted); }
 #space-modal .space-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--kb-space-2) var(--kb-space-3); font-size: var(--kb-fs-xs); }
 #space-modal .space-legend li { display: flex; align-items: center; gap: 6px; }
 #space-modal .space-swatch { width: 10px; height: 10px; }

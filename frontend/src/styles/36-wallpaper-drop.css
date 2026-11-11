@@ -26,7 +26,7 @@
   border-radius: 20px;
   padding: 48px 56px;
   text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(51, 205, 184, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(var(--c-primary-rgb), 0.25);
   animation: dropCardPulse 2s infinite ease-in-out;
   max-width: 480px;
   width: 90%;
@@ -40,7 +40,7 @@
   50% {
     transform: scale(1.02);
     border-color: var(--ok2);
-    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 50px rgba(51, 205, 184, 0.35);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 50px rgba(var(--c-primary-rgb), 0.35);
   }
 }
 

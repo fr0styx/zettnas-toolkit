@@ -50,7 +50,7 @@
   border-radius: 6px; font-size: var(--kb-fs-xs); font-weight: 700; padding: 4px 9px; cursor: pointer; transition: all 0.15s ease;
 }
 .btn-lock-toggle:hover { background: var(--lt-b-2a4247ff, #2a4247); color: var(--kb-text-strong); }
-.btn-lock-toggle.unlocked { background: rgba(51, 205, 184, 0.15); color: var(--ok2); border-color: var(--ok2); }
+.btn-lock-toggle.unlocked { background: rgba(var(--c-primary-rgb), 0.15); color: var(--ok2); border-color: var(--ok2); }
 
 .drawer-sub { font-size: var(--kb-fs-xs); font-weight: 800; letter-spacing: 0.12em; color: var(--ok2); }
 .drawer-title { margin: 4px 0 2px 0; font-size: 21px; font-weight: 800; color: var(--kb-text-strong); }
@@ -122,8 +122,8 @@
   font-size: var(--kb-fs-xs);
   font-weight: 800;
   color: var(--ok2);
-  background: rgba(51, 205, 184, 0.12);
-  border: 1px solid rgba(51, 205, 184, 0.25);
+  background: rgba(var(--c-primary-rgb), 0.12);
+  border: 1px solid rgba(var(--c-primary-rgb), 0.25);
   border-radius: 4px;
   padding: 1px 6px;
   font-variant-numeric: tabular-nums;
@@ -182,13 +182,13 @@
 }
 .preset-btn-card:hover {
   background: var(--lt-b-1d363bff, #1d363b);
-  border-color: rgba(51, 205, 184, 0.4);
+  border-color: rgba(var(--c-primary-rgb), 0.4);
   transform: translateY(-1px);
 }
 .preset-btn-card.active {
-  background: rgba(51, 205, 184, 0.15);
+  background: rgba(var(--c-primary-rgb), 0.15);
   border-color: var(--ok2);
-  box-shadow: 0 0 12px rgba(51, 205, 184, 0.3);
+  box-shadow: 0 0 12px rgba(var(--c-primary-rgb), 0.3);
 }
 .preset-icon { font-size: 16px; flex-shrink: 0; }
 .preset-info { display: flex; flex-direction: column; text-align: left; }

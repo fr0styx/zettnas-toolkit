@@ -27,11 +27,11 @@
 .profile-pill:hover { background: var(--lt-b-274045ff, #274045); color: var(--kb-text-strong); }
 
 .profile-pill.active {
-  background: rgba(51, 205, 184, 0.15);
+  background: rgba(var(--c-primary-rgb), 0.15);
   color: var(--ok2);
   font-weight: 800;
   border-color: var(--ok2);
-  box-shadow: 0 0 8px rgba(51, 205, 184, 0.25);
+  box-shadow: 0 0 8px rgba(var(--c-primary-rgb), 0.25);
 }
 
 /* Custom Fan Presets Sub-bar */
@@ -93,13 +93,13 @@ select.fan-preset-select {
 }
 
 select.fan-preset-select:hover {
-  border-color: rgba(51, 205, 184, 0.45);
+  border-color: rgba(var(--c-primary-rgb), 0.45);
   background-color: var(--lt-b-172c31ff, #172c31);
 }
 
 select.fan-preset-select:focus {
   border-color: var(--ok2);
-  box-shadow: 0 0 8px rgba(51, 205, 184, 0.35);
+  box-shadow: 0 0 8px rgba(var(--c-primary-rgb), 0.35);
   outline: none;
 }
 
@@ -148,15 +148,15 @@ select.fan-preset-select:focus {
 }
 
 .btn-fan-apply {
-  background: rgba(51, 205, 184, 0.16);
+  background: rgba(var(--c-primary-rgb), 0.16);
   color: var(--ok2);
-  border: 1px solid rgba(51, 205, 184, 0.4);
+  border: 1px solid rgba(var(--c-primary-rgb), 0.4);
 }
 
 .btn-fan-apply:hover:not(:disabled) {
-  background: rgba(51, 205, 184, 0.28);
+  background: rgba(var(--c-primary-rgb), 0.28);
   border-color: var(--ok2);
-  box-shadow: 0 0 10px rgba(51, 205, 184, 0.35);
+  box-shadow: 0 0 10px rgba(var(--c-primary-rgb), 0.35);
   color: var(--kb-text-strong);
 }
 
@@ -247,7 +247,7 @@ body.theme-yak select.fan-preset-select:focus {
   background: var(--lt-b-1f3337ff, #1f3337); color: var(--kb-text-muted); border: 1px solid var(--kb-line-8); border-radius: 8px; height: 34px; font-size: var(--kb-fs-xs); font-weight: 700; cursor: pointer; transition: all 0.15s ease;
 }
 .effect-btn:hover { background: var(--lt-b-274045ff, #274045); color: var(--kb-text-strong); }
-.effect-btn.active { background: rgba(51, 205, 184, 0.15); color: var(--ok2); border-color: var(--ok2); box-shadow: 0 0 8px rgba(51, 205, 184, 0.25); }
+.effect-btn.active { background: rgba(var(--c-primary-rgb), 0.15); color: var(--ok2); border-color: var(--ok2); box-shadow: 0 0 8px rgba(var(--c-primary-rgb), 0.25); }
 
 /* The system button (UX-6): secondary by default; .is-primary, .is-danger, .is-ghost;
    .is-small for dense rows; .is-block to fill the row. Sizes come from 50-components. */
@@ -303,7 +303,7 @@ body.theme-yak select.fan-preset-select:focus {
   border: 2px solid transparent; border-radius: 8px; height: 34px; font-size: var(--kb-fs-xs); font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.15s ease, border-color 0.15s ease; position: relative; overflow: hidden;
 }
 .color-chip:hover, .color-chip2:hover { transform: scale(1.04); }
-.color-chip.active, .color-chip2.active { border-color: #fff; box-shadow: 0 0 10px rgba(51, 205, 184, 0.5); }
+.color-chip.active, .color-chip2.active { border-color: #fff; box-shadow: 0 0 10px rgba(var(--c-primary-rgb), 0.5); }
 .color-chip2.active { box-shadow: 0 0 10px rgba(255, 0, 85, 0.5); }
 
 .custom-picker-chip { background: linear-gradient(135deg, #ff0055, #ffaa00, #00ff88, #0099ff, #cc00ff); color: #fff; text-shadow: var(--lt-text-shadow, 0 1px 3px rgba(0,0,0,0.8)); cursor: pointer; }
@@ -315,8 +315,8 @@ body.theme-yak select.fan-preset-select:focus {
   position: absolute; cursor: pointer; inset: 0; background-color: var(--lt-b-253c40ff, #253c40); transition: .25s; border-radius: 20px; border: 1px solid var(--kb-line-10);
 }
 .toggle-slider:before {
-  position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; background-color: #95a8ab; transition: .25s; border-radius: 50%;
+  position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; background-color: var(--c-muted); transition: .25s; border-radius: 50%;
 }
-input:checked + .toggle-slider { background-color: rgba(51, 205, 184, 0.25); border-color: var(--ok2); }
+input:checked + .toggle-slider { background-color: rgba(var(--c-primary-rgb), 0.25); border-color: var(--ok2); }
 input:checked + .toggle-slider:before { transform: translateX(18px); background-color: var(--ok2); box-shadow: 0 0 6px var(--ok2); }
 

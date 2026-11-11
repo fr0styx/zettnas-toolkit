@@ -6,7 +6,7 @@
   border-radius: 14px;
   background: var(--lt-b-33cdb814, rgba(51, 205, 184, 0.08));
   border: 2px dashed var(--focus-ring);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(51, 205, 184, 0.18) inset;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(var(--c-primary-rgb), 0.18) inset;
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   pointer-events: none;
@@ -130,6 +130,6 @@
 #mobile-view-toggle-btn.active {
   background: var(--accent);
   color: #0b1f1a;
-  box-shadow: 0 0 10px rgba(51, 205, 184, 0.4);
+  box-shadow: 0 0 10px rgba(var(--c-primary-rgb), 0.4);
 }
 

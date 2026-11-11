@@ -14,7 +14,7 @@
   background: var(--lt-b-0e1c1ebf, rgba(14, 28, 30, 0.75));
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(79, 216, 196, 0.28);
+  border: 1px solid rgba(var(--c-primary-text-rgb), 0.28);
   color: var(--text, var(--lt-t-f5f9f9ff, #f5f9f9));
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: var(--kb-fs-xs);
@@ -58,7 +58,7 @@
   background: var(--lt-b-0e1c1ef0, rgba(14, 28, 30, 0.94));
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(79, 216, 196, 0.32);
+  border: 1px solid rgba(var(--c-primary-text-rgb), 0.32);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(var(--brand-rgb), 0.18);
   padding: 12px;
   color: var(--lt-t-f5f9f9ff, #f5f9f9);
@@ -161,7 +161,7 @@
   max-height: 140px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(79, 216, 196, 0.3) transparent;
+  scrollbar-color: rgba(var(--c-primary-text-rgb), 0.3) transparent;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -176,7 +176,7 @@
 }
 
 .gtp-scroll-list::-webkit-scrollbar-thumb {
-  background: rgba(79, 216, 196, 0.3);
+  background: rgba(var(--c-primary-text-rgb), 0.3);
   border-radius: 4px;
 }
 

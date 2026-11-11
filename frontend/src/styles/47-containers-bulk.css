@@ -2,7 +2,7 @@
    Docker Containers Multi-Select & Floating Bulk Action Bar
    ========================================================================== */
 tr.docker-row-selected {
-  background: rgba(51, 205, 184, 0.09) !important;
+  background: rgba(var(--c-primary-rgb), 0.09) !important;
   box-shadow: inset 2px 0 0 var(--brand);
 }
 
@@ -20,7 +20,7 @@ tr.docker-row-selected {
   backdrop-filter: blur(16px);
   border: 1px solid var(--lt-r-ffffff29, rgba(255, 255, 255, 0.16));
   border-radius: 9999px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 18px rgba(51, 205, 184, 0.25);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 18px rgba(var(--c-primary-rgb), 0.25);
   z-index: 50;
   margin: 12px auto 4px auto;
   width: fit-content;
@@ -243,7 +243,7 @@ tr.docker-row-selected {
 
 
 /* Single sign-on button on the login screen (M6) */
-.login-sso-btn { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; margin-top: 10px; background: rgba(79,216,196,0.12); }
+.login-sso-btn { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; margin-top: 10px; background: rgba(var(--c-primary-text-rgb), 0.12); }
 .login-sso-error { margin: 10px 0 0; font-size: var(--kb-fs-xs); color: var(--lt-t-fca5a5ff, #fca5a5); }
 
 /* Docker cleanup progress */

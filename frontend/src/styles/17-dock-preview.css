@@ -139,9 +139,9 @@
 }
 
 .dock-tooltip-status.pinned {
-  background: rgba(79, 216, 196, 0.15);
+  background: rgba(var(--c-primary-text-rgb), 0.15);
   color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));
-  border: 1px solid rgba(79, 216, 196, 0.3);
+  border: 1px solid rgba(var(--c-primary-text-rgb), 0.3);
 }
 
 .dock-tooltip-close-btn {
@@ -266,7 +266,7 @@
   justify-content: center;
   text-align: center;
   box-sizing: border-box;
-  background: radial-gradient(circle at 50% 30%, rgba(51, 205, 184, 0.12) 0%, var(--lt-b-0a1314f2, rgba(10, 19, 20, 0.95)) 75%);
+  background: radial-gradient(circle at 50% 30%, rgba(var(--c-primary-rgb), 0.12) 0%, var(--lt-b-0a1314f2, rgba(10, 19, 20, 0.95)) 75%);
   gap: 8px;
 }
 

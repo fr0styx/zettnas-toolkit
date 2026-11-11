@@ -11,15 +11,15 @@
 
 @keyframes elementFocusPulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(79, 216, 196, 0.7);
-    outline: 2px solid rgba(79, 216, 196, 0.9);
+    box-shadow: 0 0 0 0 rgba(var(--c-primary-text-rgb), 0.7);
+    outline: 2px solid rgba(var(--c-primary-text-rgb), 0.9);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(79, 216, 196, 0.25);
-    outline: 2px solid rgba(79, 216, 196, 1);
+    box-shadow: 0 0 0 8px rgba(var(--c-primary-text-rgb), 0.25);
+    outline: 2px solid rgba(var(--c-primary-text-rgb), 1);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(79, 216, 196, 0);
+    box-shadow: 0 0 0 0 rgba(var(--c-primary-text-rgb), 0);
     outline: 2px solid transparent;
   }
 }
@@ -50,7 +50,7 @@
   50% {
     opacity: 1;
     transform: scale(1.03);
-    filter: drop-shadow(0 0 5px rgba(79, 216, 196, 0.55));
+    filter: drop-shadow(0 0 5px rgba(var(--c-primary-text-rgb), 0.55));
   }
 }
 

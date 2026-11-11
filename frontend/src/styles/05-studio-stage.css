@@ -42,11 +42,11 @@
 .suite-badge {
   font-size: var(--kb-fs-xs);
   font-weight: 800;
-  background: rgba(51, 205, 184, 0.15);
+  background: rgba(var(--c-primary-rgb), 0.15);
   color: var(--ok2);
   padding: 2px 7px;
   border-radius: 4px;
-  border: 1px solid rgba(51, 205, 184, 0.35);
+  border: 1px solid rgba(var(--c-primary-rgb), 0.35);
   letter-spacing: 1px;
   white-space: nowrap;
   display: inline-flex;
@@ -107,7 +107,7 @@ body.theme-yak .yak-egg-btn {
 
 .suite-toolkit-btn {
   background: linear-gradient(135deg, var(--lt-b-20373bff, #20373b), var(--lt-b-15282cff, #15282c));
-  border: 1px solid rgba(51, 205, 184, 0.4);
+  border: 1px solid rgba(var(--c-primary-rgb), 0.4);
   color: var(--ok2);
   padding: 6px 14px;
   border-radius: 8px;
@@ -119,7 +119,7 @@ body.theme-yak .yak-egg-btn {
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 .suite-toolkit-btn:hover {
-  background: rgba(51, 205, 184, 0.2);
+  background: rgba(var(--c-primary-rgb), 0.2);
   border-color: var(--ok2);
   color: var(--kb-text-strong);
   transform: translateY(-1px);
@@ -170,8 +170,8 @@ body.drawer-is-open .chassis-workbench-stage {
   cursor: grabbing !important;
   z-index: 99 !important;
   transform: scale(1.05) !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 20px rgba(51, 205, 184, 0.4) !important;
-  border-color: rgba(51, 205, 184, 0.6) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 20px rgba(var(--c-primary-rgb), 0.4) !important;
+  border-color: rgba(var(--c-primary-rgb), 0.6) !important;
   transition: none !important;
 }
 
@@ -212,8 +212,8 @@ body.drawer-is-open .chassis-workbench-stage {
 .management-desktop-icon:hover {
   transform: translateY(-3px) scale(1.04);
   background: var(--lt-b-152629bf, rgba(21, 38, 41, 0.75));
-  border-color: rgba(51, 205, 184, 0.55);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65), 0 0 16px rgba(51, 205, 184, 0.3);
+  border-color: rgba(var(--c-primary-rgb), 0.55);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65), 0 0 16px rgba(var(--c-primary-rgb), 0.3);
 }
 
 .chassis-hero-box.chassis-desktop-icon:active,
@@ -242,25 +242,25 @@ body.drawer-is-open .chassis-workbench-stage {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--lt-b-33cdb81f, rgba(51, 205, 184, 0.12)) 0%, rgba(51, 205, 184, 0.08) 100%);
+  background: linear-gradient(135deg, var(--lt-b-33cdb81f, rgba(51, 205, 184, 0.12)) 0%, rgba(var(--c-primary-rgb), 0.08) 100%);
   border: 1px solid var(--lt-r-33cdb84c, rgba(51, 205, 184, 0.3));
   border-radius: 8px;
   color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));
-  box-shadow: inset 0 0 12px rgba(51, 205, 184, 0.08);
+  box-shadow: inset 0 0 12px rgba(var(--c-primary-rgb), 0.08);
   transition: all 0.2s ease;
 }
 
 .chassis-hero-box:hover .console-hero-box {
-  background: linear-gradient(135deg, var(--lt-b-33cdb833, rgba(51, 205, 184, 0.2)) 0%, rgba(51, 205, 184, 0.14) 100%);
-  border-color: rgba(51, 205, 184, 0.6);
-  box-shadow: inset 0 0 16px rgba(51, 205, 184, 0.2);
+  background: linear-gradient(135deg, var(--lt-b-33cdb833, rgba(51, 205, 184, 0.2)) 0%, rgba(var(--c-primary-rgb), 0.14) 100%);
+  border-color: rgba(var(--c-primary-rgb), 0.6);
+  box-shadow: inset 0 0 16px rgba(var(--c-primary-rgb), 0.2);
 }
 
 .console-hero-icon {
   width: 30px;
   height: 30px;
   color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));
-  filter: drop-shadow(0 2px 6px rgba(51, 205, 184, 0.4));
+  filter: drop-shadow(0 2px 6px rgba(var(--c-primary-rgb), 0.4));
 }
 
 .desktop-icon-label {
@@ -378,8 +378,8 @@ body.drawer-is-open .chassis-workbench-stage {
 }
 
 @keyframes windowFocusPulse {
-  0% { box-shadow: 0 0 0 0 rgba(51, 205, 184, 0.7); }
-  40% { box-shadow: 0 0 35px rgba(51, 205, 184, 0.8), 0 25px 60px rgba(0, 0, 0, 0.85); }
+  0% { box-shadow: 0 0 0 0 rgba(var(--c-primary-rgb), 0.7); }
+  40% { box-shadow: 0 0 35px rgba(var(--c-primary-rgb), 0.8), 0 25px 60px rgba(0, 0, 0, 0.85); }
   100% { box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); }
 }
 
@@ -503,10 +503,10 @@ body.drawer-is-open .chassis-workbench-stage {
   width: 100%;
   height: 8px;
   border-radius: 4px;
-  background: #33cdb8;
+  background: var(--c-primary);
   box-shadow: 
-    0 0 10px #33cdb8,
-    0 0 24px rgba(51, 205, 184, 0.65);
+    0 0 10px var(--c-primary),
+    0 0 24px rgba(var(--c-primary-rgb), 0.65);
   transition: background 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
   position: relative;
   z-index: 2;

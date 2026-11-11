@@ -160,8 +160,8 @@
 }
 
 .mgmt-sidebar-item.active {
-  background: rgba(51, 205, 184, 0.14);
-  border-color: rgba(51, 205, 184, 0.35);
+  background: rgba(var(--c-primary-rgb), 0.14);
+  border-color: rgba(var(--c-primary-rgb), 0.35);
   color: var(--kb-text-strong);
   font-weight: 700;
 }
@@ -304,15 +304,15 @@
   box-shadow: 0 0 10px rgba(244, 63, 94, 0.4);
 }
 .btn-docker-stack {
-  background: rgba(79, 216, 196, 0.1);
+  background: rgba(var(--c-primary-text-rgb), 0.1);
   color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));
-  border-color: rgba(79, 216, 196, 0.3);
+  border-color: rgba(var(--c-primary-text-rgb), 0.3);
 }
 .btn-docker-stack:hover:not(:disabled) {
-  background: rgba(79, 216, 196, 0.25);
-  border-color: #4fd8c4;
+  background: rgba(var(--c-primary-text-rgb), 0.25);
+  border-color: var(--c-primary-text);
   color: var(--kb-text-strong);
-  box-shadow: 0 0 10px rgba(79, 216, 196, 0.35);
+  box-shadow: 0 0 10px rgba(var(--c-primary-text-rgb), 0.35);
 }
 .btn-docker-update-single {
   background: rgba(245, 158, 11, 0.14);
@@ -395,33 +395,33 @@
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
 .btn-docker-restart {
-  background: rgba(79, 216, 196, 0.12);
+  background: rgba(var(--c-primary-text-rgb), 0.12);
   color: var(--kb-text-accent);
-  border-color: rgba(79, 216, 196, 0.3);
+  border-color: rgba(var(--c-primary-text-rgb), 0.3);
   vertical-align: middle !important;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
 .btn-docker-restart:hover:not(:disabled) {
-  background: rgba(79, 216, 196, 0.25);
+  background: rgba(var(--c-primary-text-rgb), 0.25);
   border-color: #0a7a70;
   color: var(--kb-text-strong);
-  box-shadow: 0 0 10px rgba(79, 216, 196, 0.4);
+  box-shadow: 0 0 10px rgba(var(--c-primary-text-rgb), 0.4);
 }
 .btn-docker-start {
-  background: rgba(51, 205, 184, 0.12);
+  background: rgba(var(--c-primary-rgb), 0.12);
   color: var(--ok2);
-  border-color: rgba(51, 205, 184, 0.3);
+  border-color: rgba(var(--c-primary-rgb), 0.3);
   vertical-align: middle !important;
   padding: 0 !important;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
 .btn-docker-start:hover:not(:disabled) {
-  background: rgba(51, 205, 184, 0.25);
+  background: rgba(var(--c-primary-rgb), 0.25);
   border-color: var(--ok2);
   color: var(--kb-text-strong);
-  box-shadow: 0 0 10px rgba(51, 205, 184, 0.4);
+  box-shadow: 0 0 10px rgba(var(--c-primary-rgb), 0.4);
 }
 .btn-container-act:disabled {
   opacity: 0.6;

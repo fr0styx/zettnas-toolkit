@@ -173,7 +173,7 @@
   transform: translateX(-50%);
   display: flex; align-items: center; gap: 2px;
   max-width: calc(100% - 24px); padding: 4px 6px;
-  background: var(--lt-b-0e1c1ef5, rgba(14, 28, 30, 0.96)); border: 1px solid rgba(79, 216, 196, 0.35);
+  background: var(--lt-b-0e1c1ef5, rgba(14, 28, 30, 0.96)); border: 1px solid rgba(var(--c-primary-text-rgb), 0.35);
   border-radius: 999px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);   animation: fm-sel-in 0.16s ease-out;
@@ -216,7 +216,7 @@
   text-align: left; cursor: pointer;
 }
 .fm-loc-item:hover, .fm-loc-item:focus-visible { background: var(--kb-glaze-8); outline: none; }
-.fm-loc-item.is-current { background: rgba(51, 205, 184, 0.12); }
+.fm-loc-item.is-current { background: rgba(var(--c-primary-rgb), 0.12); }
 .fm-loc-icon { width: 20px; text-align: center; font-size: 15px; flex-shrink: 0; }
 .fm-loc-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .fm-loc-name { font-size: var(--kb-fs-xs); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

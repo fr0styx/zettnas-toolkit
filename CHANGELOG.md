@@ -500,6 +500,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   cannot be read, when the UPS stopped answering during a power cut, and when nothing can switch the
   NAS off once the battery runs out.
 
+#### Changes
+
+- **Light mode picks up more of its own colours.** Some teal accents, grey text and panel shades
+  that stayed dark-mode colours in light mode now use the light palette. Dark mode looks the same.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

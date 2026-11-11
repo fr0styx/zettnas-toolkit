@@ -54,7 +54,7 @@
   height: 32px;
   font-size: var(--kb-fs-xs);
   font-weight: 700;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(51, 205, 184, 0.25)) !important;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(var(--c-primary-rgb), 0.25)) !important;
   border: 1px solid var(--border, rgba(99, 102, 241, 0.5)) !important;
   color: var(--kb-text-strong) !important;
   border-radius: 6px;
@@ -67,7 +67,7 @@
 }
 
 .btn-ai-new-chat:hover {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(51, 205, 184, 0.4)) !important;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(var(--c-primary-rgb), 0.4)) !important;
   transform: translateY(-1px);
 }
 

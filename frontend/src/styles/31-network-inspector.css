@@ -21,7 +21,7 @@
 }
 
 .network-kpi-card:hover {
-  border-color: rgba(79, 216, 196, 0.3);
+  border-color: rgba(var(--c-primary-text-rgb), 0.3);
   transform: translateY(-1px);
 }
 
@@ -125,8 +125,8 @@
 
 .switch-port-jack.clickable:hover {
   transform: translateY(-2px);
-  border-color: rgba(79, 216, 196, 0.5);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 14px rgba(79, 216, 196, 0.18);
+  border-color: rgba(var(--c-primary-text-rgb), 0.5);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 14px rgba(var(--c-primary-text-rgb), 0.18);
 }
 
 .switch-port-alias-tag {
@@ -134,8 +134,8 @@
   font-weight: 600;
   font-family: inherit;
   color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));
-  background: rgba(79, 216, 196, 0.12);
-  border: 1px solid rgba(79, 216, 196, 0.25);
+  background: rgba(var(--c-primary-text-rgb), 0.12);
+  border: 1px solid rgba(var(--c-primary-text-rgb), 0.25);
   padding: 1px 6px;
   border-radius: 4px;
   max-width: 140px;
@@ -212,8 +212,8 @@
 }
 
 .switch-led-dot.led-speed-10g {
-  background: #4fd8c4;
-  box-shadow: 0 0 8px #4fd8c4, inset 0 0 2px #fff;
+  background: var(--c-primary-text);
+  box-shadow: 0 0 8px var(--c-primary-text), inset 0 0 2px #fff;
   animation: pulseLed 1.2s infinite alternate;
 }
 
@@ -265,9 +265,9 @@
   font-size: var(--kb-fs-xs);
   font-weight: 700;
   font-family: var(--font-mono);
-  background: rgba(79, 216, 196, 0.12);
+  background: rgba(var(--c-primary-text-rgb), 0.12);
   color: var(--kb-text-accent);
-  border: 1px solid rgba(79, 216, 196, 0.25);
+  border: 1px solid rgba(var(--c-primary-text-rgb), 0.25);
 }
 
 .switch-speed-pill.speed-10g {
@@ -410,9 +410,9 @@
   font-size: var(--kb-fs-xs);
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(79, 216, 196, 0.1);
+  background: rgba(var(--c-primary-text-rgb), 0.1);
   color: var(--kb-text-accent);
-  border: 1px solid rgba(79, 216, 196, 0.2);
+  border: 1px solid rgba(var(--c-primary-text-rgb), 0.2);
   text-transform: uppercase;
 }
 

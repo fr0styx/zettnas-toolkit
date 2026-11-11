@@ -197,7 +197,7 @@
 .ai-typing-dot {
   width: 6px;
   height: 6px;
-  background: #4fd8c4;
+  background: var(--c-primary-text);
   border-radius: 50%;
   display: inline-block;
   animation: aiTypingBounce 1.4s infinite ease-in-out both;

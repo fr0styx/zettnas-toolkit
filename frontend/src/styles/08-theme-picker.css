@@ -28,7 +28,7 @@
 .theme-preset-card.active {
   background: var(--lt-b-33cdb81f, rgba(51, 205, 184, 0.12));
   border-color: var(--brand);
-  box-shadow: 0 0 12px rgba(51, 205, 184, 0.25);
+  box-shadow: 0 0 12px rgba(var(--c-primary-rgb), 0.25);
 }
 .theme-swatch-circle {
   width: 22px;
