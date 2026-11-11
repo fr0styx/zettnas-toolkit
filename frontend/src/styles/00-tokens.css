@@ -26,6 +26,7 @@
   --c-primary-text: #4fd8c4; --c-primary-text-rgb: 79, 216, 196;
   --c-success: #46c776; --c-info-text: #8db1ff; --c-accent: #f6b44c;
   --c-neutral: #95a8ab; --c-neutral-soft: #1a2629;
+  --c-border: #5d7175; /* a field's edge: 3:1 or more on every surface (APP-A) */
 
   /* Chromatic Base & Dynamic Contrast Tokens */
   --brand-rgb: 51, 205, 184;
@@ -125,4 +126,5 @@ body.theme-light:not(.lcd-direct) {
      selected rows grey on white (seen at the APP-A gate); stage B tunes washes per theme */
   --c-success: #1d7a3e; --c-info-text: #2152ad; --c-accent: #f2a93b;
   --c-neutral: #4a5c60; --c-neutral-soft: #e8eeee;
+  --c-border: #778b8e;
 }

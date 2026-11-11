@@ -112,7 +112,7 @@
 
 .tz-controls-row { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
 .tz-select-input, .tz-text-input {
-  background: var(--lt-b-111822ff, #111822); border: 1px solid var(--kb-line-12); border-radius: 8px; color: var(--lt-t-eaf1f8ff, #eaf1f8); font-size: 12px; font-weight: 600; padding: 8px 10px; outline: none; width: 100%;
+  background: var(--lt-b-111822ff, #111822); border: 1px solid var(--c-border); border-radius: 8px; /* 3:1 edge (APP-A); it was about 1.4:1 */ color: var(--lt-t-eaf1f8ff, #eaf1f8); font-size: 12px; font-weight: 600; padding: 8px 10px; outline: none; width: 100%;
 }
 .tz-select-input:focus, .tz-text-input:focus { border-color: var(--ok2); box-shadow: 0 0 6px rgba(37, 194, 160, 0.3); }
 
