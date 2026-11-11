@@ -61,11 +61,16 @@ def test_a_blanked_lcd_is_not_woken_by_stats(pub, monkeypatch):
 def test_nobody_listening_skips_the_delta_and_a_listener_gets_everything(pub, monkeypatch):
     monkeypatch.setattr(Z_STATE, "lcd_blanked", False, raising=False)
     monkeypatch.setattr(Z_STATE, "lightbar", None, raising=False)
+    monkeypatch.setattr(sc, "docker_state", lambda: None)  # SET-14 adds it to every payload
     monkeypatch.setattr(sc.broadcaster, "get_subscriber_count", lambda: 0)
     sc._publish(_data(40), [], [], {}, time.time())
-    assert pub[-1] == {**_data(40), "lightbar": None}
+    assert pub[-1] == {**_data(40), "lightbar": None, "docker_state": None}
     monkeypatch.setattr(sc.broadcaster, "get_subscriber_count", lambda: 1)
     sc._publish(_data(40), [], [], {}, time.time())
-    assert pub[-1] == {**_data(40), "lightbar": None}  # the encoder started over: a full message, not an empty delta
+    assert pub[-1] == {
+        **_data(40),
+        "lightbar": None,
+        "docker_state": None,
+    }  # the encoder started over: a full message, not an empty delta
     sc._publish(_data(41), [], [], {}, time.time())
     assert pub[-1] == {"cpu": {"temp": 41}}
