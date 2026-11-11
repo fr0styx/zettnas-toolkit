@@ -1,6 +1,7 @@
 // DockManager: the dock's items, pinned apps and window registry.
 // Part of dock.js, split out by ARC-5.
 
+import { eventLook } from '../../event-level.js';
 import { escapeHtml } from '../../utils.js';
 import { state } from '../../state.js';
 import { t } from '../../i18n.js';
@@ -494,9 +495,10 @@ export const DockManager = {
         const itemsHtml = events.slice(0, 2).map((ev) => {
           let nIcon = 'ℹ️';
           let col = '#93c5fd';
-          if (ev.level === 'error') { nIcon = '❌'; col = 'var(--crit, #ff5c5c)'; }
-          else if (ev.level === 'warning') { nIcon = '⚠️'; col = 'var(--warn, #f5a623)'; }
-          else if (ev.level === 'success') { nIcon = '✅'; col = 'var(--ok2, #33cdb8)'; }
+          const look = eventLook(ev.level);
+          if (look === 'error') { nIcon = '❌'; col = 'var(--crit, #ff5c5c)'; }
+          else if (look === 'warning') { nIcon = '⚠️'; col = 'var(--warn, #f5a623)'; }
+          else if (look === 'success') { nIcon = '✅'; col = 'var(--ok2, #33cdb8)'; }
           const timeStr = formatTime(ev.ts, undefined, '');
           return `
             <div class="dock-notif-feed-item">

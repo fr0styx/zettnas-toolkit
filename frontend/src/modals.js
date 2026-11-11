@@ -1,4 +1,5 @@
 import { showToast } from "./toast.js";
+import { eventLook } from './event-level.js';
 import { ZettEventBus } from './event-bus.js';
 import { DockManager, bringToFront, makeDraggable } from './components/dock.js';
 import { copyText, trapFocus } from './utils.js';
@@ -312,7 +313,7 @@ export function openEventDetailModal(ev) {
   const rawEl = document.getElementById("event-detail-raw");
   const contextBtn = document.getElementById("event-detail-context-btn");
 
-  const lvl = (ev.level || "info").toLowerCase();
+  const lvl = eventLook(ev.level);
   let icon = "ℹ️";
   let badgeColor = "#4fd8c4";
   let badgeBg = "rgba(51, 205, 184, 0.2)";

@@ -390,6 +390,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   hides what is inside other people's home folders and leaves out encrypted folders. Making and
   unpacking an archive and restoring an earlier version of a file are now recorded there too.
 
+#### Fixes
+
+- **The most serious events look serious**: a drive losing sectors, the ransomware guard pausing all
+  changes, and a UPS battery that is critically low or shutting the NAS down were shown in the event
+  log, the bell and the event dialog with the plain "i" of an information line, and the bell's
+  "Errors" filter left them out. They are drawn as errors now.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

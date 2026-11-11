@@ -2,6 +2,7 @@
  * Kiboto Hardware Events Logger
  * Renders system alerts, diagnostic events, and handles event log clearing.
  */
+import { eventLook } from '../event-level.js';
 import { eventText } from '../event-text.js';
 import { api } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
@@ -48,9 +49,10 @@ export function renderEventLog(events) {
     const timeStr = formatDateTime(dt);
     let color = 'var(--zn-text)';
     let icon = 'ℹ️';
-    if (e.level === 'error') { color = 'var(--crit)'; icon = '❌'; }
-    else if (e.level === 'warning') { color = 'var(--warn)'; icon = '⚠️'; }
-    else if (e.level === 'success') { color = 'var(--ok2)'; icon = '✅'; }
+    const look = eventLook(e.level);
+    if (look === 'error') { color = 'var(--crit)'; icon = '❌'; }
+    else if (look === 'warning') { color = 'var(--warn)'; icon = '⚠️'; }
+    else if (look === 'success') { color = 'var(--ok2)'; icon = '✅'; }
 
     const row = document.createElement('div');
     row.style.cssText = 'padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 8px; cursor: pointer;';

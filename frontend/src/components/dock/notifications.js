@@ -1,6 +1,7 @@
 // Notifications: which events were read, checked or cleared, the dock toast and the notification centre.
 // Part of dock.js, split out by ARC-5.
 
+import { eventLook } from '../../event-level.js';
 import { escapeHtml } from '../../utils.js';
 import { state } from '../../state.js';
 import { t } from '../../i18n.js';
@@ -217,11 +218,11 @@ export function renderNotificationCenter() {
     .sort((a,b) => b.ts - a.ts);
 
   if (currentNotifFilter === 'error') {
-    events = events.filter(e => e.level === 'error');
+    events = events.filter(e => eventLook(e.level) === 'error');
   } else if (currentNotifFilter === 'warning') {
-    events = events.filter(e => e.level === 'warning');
+    events = events.filter(e => eventLook(e.level) === 'warning');
   } else if (currentNotifFilter === 'info') {
-    events = events.filter(e => e.level === 'info' || e.level === 'success' || !e.level);
+    events = events.filter(e => ['info', 'success'].includes(eventLook(e.level)));
   }
   
   if (events.length === 0) {
@@ -272,9 +273,10 @@ export function renderNotificationCenter() {
     const dt = new Date(e.ts * 1000);
     let color = '#c9d6d7';
     let icon = 'ℹ️';
-    if (e.level === 'error') { color = 'var(--crit)'; icon = '❌'; }
-    else if (e.level === 'warning') { color = 'var(--warn)'; icon = '⚠️'; }
-    else if (e.level === 'success') { color = 'var(--ok2)'; icon = '✅'; }
+    const look = eventLook(e.level);
+    if (look === 'error') { color = 'var(--crit)'; icon = '❌'; }
+    else if (look === 'warning') { color = 'var(--warn)'; icon = '⚠️'; }
+    else if (look === 'success') { color = 'var(--ok2)'; icon = '✅'; }
     
     const row = document.createElement('div');
     row.className = 'notif-center-item' + (isChecked ? ' notif-event-checked' : '');
