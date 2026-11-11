@@ -13,7 +13,8 @@ ALLOWED = {
     "backend/services/photo_import.py": {'".kb-import", "." + "zn-import"'},  # an old staging folder is tidied
 }
 SKIP_DIRS = {".git", "node_modules", "static", "__pycache__", ".venv", "dist", "coverage"}
-SKIP_FILES = {"CHANGELOG.md", "package-lock.json", "tests/test_no_zn_names.py"}
+# the two tests that name the old values on purpose
+SKIP_FILES = {"CHANGELOG.md", "package-lock.json", "tests/test_no_zn_names.py", "tests/test_kb_rename_compat.py"}
 TEXT = {
     ".py",
     ".js",
