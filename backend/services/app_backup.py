@@ -454,6 +454,30 @@ def delete_app_backup(backup_id: str) -> bool:
     return True
 
 
+def _hold_app(name: str) -> dict[str, Any]:
+    """Before its folders are written: whether the app still exists, and if it runs, it is
+    stopped. The archive was unpacked over the live folders of a running app (SET-14)."""
+    if not name:
+        return {"exists": False, "was_running": False}
+    status, info = _docker_request("GET", f"/containers/{name}/json")
+    if status != 200 or not isinstance(info, dict):
+        return {"exists": False, "was_running": False}
+    running = bool((info.get("State") or {}).get("Running"))
+    if running:
+        _docker_request("POST", f"/containers/{name}/stop?t=10", timeout=30.0)
+    return {"exists": True, "was_running": running}
+
+
+def _release_app(name: str, held: dict[str, Any]) -> str:
+    """After the folders are written: what became of the app."""
+    if not held.get("exists"):
+        return "files_only"  # the app itself is gone: its folders are back, it must be installed again
+    if not held.get("was_running"):
+        return "stopped_kept"
+    status, _ = _docker_request("POST", f"/containers/{name}/start", timeout=30.0)
+    return "running_again" if status in (200, 204, 304) else "start_failed"
+
+
 def restore_app_backup(
     backup_id: str,
     recreate_container: bool = True,
@@ -491,6 +515,7 @@ def restore_app_backup(
 
         if not manifest:
             raise ValueError("Corrupt backup archive: Missing manifest.json.")
+        held = _hold_app(str(manifest.get("container_name") or "")) if recreate_container else {"exists": False}
 
         mounts = manifest.get("mounts", [])
         for m in mounts:
@@ -530,22 +555,19 @@ def restore_app_backup(
     app_name = manifest.get("app_name", "app")
     logger.info("[App Backup] Restored data for '%s' from backup '%s'.", app_name, backup_id)
 
-    app_recreated = False
-    if recreate_container and compose_yaml:
-        try:
-            from backend.config import DATA_DIR
-            from backend.services.docker_stacks import deploy_stack
+    # The app is not created again from the archive: Kiboto cannot start a Compose file (SET-14).
+    # It was "re-deployed" through a restart of containers that no longer existed, and the answer
+    # said it was recreated. Its Compose file is kept where it can be started by hand.
+    compose_path = ""
+    if compose_yaml:
+        from backend.config import DATA_DIR
 
-            stack_dir = os.path.join(DATA_DIR, "stacks", app_name)
-            os.makedirs(stack_dir, exist_ok=True)
-            compose_path = os.path.join(stack_dir, "docker-compose.yml")
-            with open(compose_path, "w", encoding="utf-8") as f:
-                f.write(compose_yaml)
-            deploy_stack(app_name, compose_yaml)
-            app_recreated = True
-            logger.info(f"[App Backup] Re-deployed app '{app_name}' from backup compose spec.")
-        except Exception as e:
-            logger.warning(f"[App Backup] Could not automatically recreate container for '{app_name}': {e}")
+        stack_dir = os.path.join(DATA_DIR, "stacks", app_name)
+        os.makedirs(stack_dir, exist_ok=True)
+        compose_path = os.path.join(stack_dir, "docker-compose.yml")
+        with open(compose_path, "w", encoding="utf-8") as f:
+            f.write(compose_yaml)
+    outcome = _release_app(str(manifest.get("container_name") or ""), held) if recreate_container else "files_only"
 
     return {
         "success": True,
@@ -554,8 +576,10 @@ def restore_app_backup(
         "restored_mounts": extracted_mounts,
         "has_compose": bool(compose_yaml),
         "recreate_requested": recreate_container,
-        "recreated": app_recreated,
-        "message": f"Successfully restored {len(extracted_mounts)} data volume(s) for '{app_name}'.",
+        "recreated": False,
+        "outcome": outcome,  # running_again, stopped_kept, start_failed, files_only
+        "compose_path": compose_path,
+        "message": f"Restored {len(extracted_mounts)} folder(s) for '{app_name}' ({outcome}).",
     }
 
 

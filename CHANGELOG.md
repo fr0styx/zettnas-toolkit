@@ -235,6 +235,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   means). "Network Map" was a network adapter in German and French; the Spanish column title
   "Estado y Tiempo" is "Estado y tiempo en marcha".
 
+#### Fixes
+
+- **Restoring an app backup says what became of the app.** It said "successfully restored (0
+  paths restored)" every time, and the server reported the app as recreated when nothing had
+  started. A running app is now stopped while its folders are written back and started again
+  afterwards (the archive was unpacked over the folders of a running app). The message says how
+  many folders came back and whether the app runs again, stays stopped, or is not installed any
+  more, in which case its Compose file is kept for installing it again. The question before it no
+  longer promises a ".pre_restore" copy that was never made.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

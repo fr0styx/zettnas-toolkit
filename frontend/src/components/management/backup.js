@@ -6,6 +6,7 @@ import { api } from '../../api.js';
 import { showToast, showConfirmToast, showDangerConfirm } from '../../toast.js';
 import { escapeHtml } from '../../utils.js';
 import { t } from '../../i18n.js';
+import { restoredSaid } from './app-restore-said.js';
 import { formatBytes, formatDateTime } from '../../format.js';
 import { emptyStateHtml } from '../empty-state.js';
 import { openSnapshotBrowser, renderSnapshotSchedules } from '../snapshot-browser.js';
@@ -406,7 +407,7 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
             try {
               showToast(t('toast.restoring', 'Restoring {appName}...', { appName: appName }), 'info');
               const res = await api.post(`/api/backup/apps/${encodeURIComponent(backupId)}/restore`);
-              showToast(t('toast.app_successfully_restored_paths_restored', 'App "{appName}" successfully restored ({extracted_count} paths restored)!', { appName: appName, extracted_count: res.extracted_count || 0 }), 'success');
+              showToast(...restoredSaid(res?.result || res, appName));
               fetchAndRenderAppBackups(mount, document.getElementById('app-backups-filter-app')?.value || '');
             } catch (err) {
               showToast(t('toast.restore_failed', 'Restore failed: {error}', { error: err.message }), 'error');

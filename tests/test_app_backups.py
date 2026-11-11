@@ -260,3 +260,52 @@ def test_app_backups_api_endpoints(client, auth_headers, tmp_path, mock_containe
         assert del_data["success"] is True
         assert del_data["archived"] is True
         assert del_data["archive_record"]["reason"] == "uninstall"
+
+
+def test_restore_stops_a_running_app_and_starts_it_again(tmp_path, mock_container_inspect):
+    """SET-14: the archive was unpacked over the folders of a running app, and the answer said the
+    app was recreated when nothing had started."""
+    appdata_dir = tmp_path / "appdata" / "test-app"
+    appdata_dir.mkdir(parents=True)
+    (appdata_dir / "kuma.db").write_text("good")
+    mock_container_inspect["Mounts"][0]["Source"] = str(appdata_dir)
+    backup_base = tmp_path / "backups"
+    backup_base.mkdir()
+    calls = []
+    state = {"exists": True, "running": True}
+
+    def docker(method, path, **kwargs):
+        calls.append((method, path.split("?")[0]))
+        if method == "GET":
+            if not state["exists"]:
+                return 404, {"message": "No such container"}
+            return 200, {**mock_container_inspect, "State": {"Running": state["running"]}}
+        return 204, {}
+
+    with (
+        patch("backend.services.app_backup.get_app_backup_base_dir", return_value=str(backup_base)),
+        patch("backend.services.app_backup.APP_BACKUPS_REGISTRY_FILE", str(tmp_path / "reg.json")),
+        patch("backend.services.app_backup._docker_request", side_effect=docker),
+        patch("backend.config.DATA_DIR", str(tmp_path / "data")),
+    ):
+        record = create_app_backup("test-app", reason="on-demand")
+        with tarfile.open(record["filepath"]) as tar:
+            name = json.loads(tar.extractfile("manifest.json").read())["container_name"]
+        (appdata_dir / "kuma.db").write_text("broken")
+        calls.clear()
+        res = restore_app_backup(record["id"])
+        assert res["outcome"] == "running_again" and res["recreated"] is False
+        assert (appdata_dir / "kuma.db").read_text() == "good"
+        assert ("POST", f"/containers/{name}/stop") in calls and calls[-1] == ("POST", f"/containers/{name}/start")
+        assert calls.index(("POST", f"/containers/{name}/stop")) < calls.index(("POST", f"/containers/{name}/start"))
+
+        state["running"] = False
+        calls.clear()
+        assert restore_app_backup(record["id"])["outcome"] == "stopped_kept"
+        assert not any(m == "POST" for m, _ in calls)
+
+        state["exists"] = False
+        res = restore_app_backup(record["id"])
+        assert res["outcome"] == "files_only" and res["compose_path"].endswith("stacks/test-app/docker-compose.yml")
+        assert os.path.exists(res["compose_path"])
+        assert restore_app_backup(record["id"], recreate_container=False)["outcome"] == "files_only"
