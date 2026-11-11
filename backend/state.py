@@ -272,24 +272,56 @@ class ZettState:
 Z_STATE = ZettState()
 
 
-def _load_events():
+def _read_events_file() -> list[dict[str, Any]]:
     try:
         if os.path.exists(EVENTS_FILE):
             with open(EVENTS_FILE) as f:
-                Z_STATE.event_log = json.load(f)
+                data = json.load(f)
+            return [e for e in data if isinstance(e, dict)] if isinstance(data, list) else []
     except (json.JSONDecodeError, OSError) as e:
         logger.warning(f"Failed to load events: {e}")
+    return []
 
 
-_event_dedup_cache = {}
+def _load_events():
+    """The newest entries, from the store (SET-13). What events.json holds without an id was
+    written before the store existed, or by an older build since: it is carried over once. When
+    the store cannot be read, the file is the list, as it always was."""
+    global _event_next_id
+    from backend import event_store
+
+    old = _read_events_file()
+    stored = event_store.newest(EVENT_KEEP)
+    if stored is None:
+        entries = [{**e, "id": n} for n, e in enumerate(reversed(old[:EVENT_KEEP]), 1)][::-1]
+        top = len(entries)
+    else:
+        top = event_store.last_id()
+        fresh = event_store.carry_over(old, top + 1)
+        entries = sorted(fresh + stored, key=lambda e: (e.get("last_ts") or e.get("ts") or 0, e["id"]), reverse=True)
+        top += len(fresh)
+    with Z_STATE.lock:
+        Z_STATE.event_log = entries[:EVENT_KEEP]
+        _event_next_id = max([top] + [int(e.get("id") or 0) for e in entries]) + 1
+        _event_unsaved.clear()
+        _event_recent.clear()
 
 
-# The event file is written at most every few seconds, not on every event, and an unchanged
-# condition (same level, title and message) is logged again only after an hour (PERF-27).
+# The event file is written at most every few seconds, not on every event (PERF-27). An unchanged
+# condition (same level, title and message) within an hour is counted on its entry instead of
+# written again; a changed count alone waits longer before it is written, so a fault that is
+# reported every few seconds does not write to the disk every few seconds.
 EVENT_FLUSH_SECS = 0.0 if test_mode() else 5.0
+EVENT_COUNT_FLUSH_SECS = 0.0 if test_mode() else 300.0
 EVENT_REPEAT_SECS = 3600
-_event_last_message: dict[tuple, str] = {}
+EVENT_KEEP = 100  # entries held in memory, for the live stream and events.json
+EVENT_FLOOD = 30  # more new entries than this under one title in a minute are counted into the last
+_EVENT_UNSAVED_MAX = 500
+_event_next_id = 1
+_event_unsaved: dict[int, dict[str, Any]] = {}  # entries the store does not have yet, or has with an older count
+_event_recent: dict[tuple, list[int]] = {}  # (level, title) -> when its newest entries were made
 _event_flush_timer: threading.Timer | None = None
+_event_flush_due = 0.0
 _event_flush_lock = threading.Lock()
 
 
@@ -300,32 +332,50 @@ def events_snapshot() -> list[dict[str, Any]]:
 
 
 def clear_events() -> None:
+    from backend import event_store
+
     with Z_STATE.lock:
         Z_STATE.event_log = []
+        _event_unsaved.clear()
+        _event_recent.clear()  # a fault that continues is written again at once, not an hour later
+    event_store.clear()
 
 
 def flush_events() -> None:
-    """Writes the event log now (the debounce timer, shutdown)."""
+    """Writes the event log now (the debounce timer, shutdown): what is new or changed to the
+    store, the list in memory to events.json."""
     global _event_flush_timer
+    from backend import event_store
+
     with _event_flush_lock:
         _event_flush_timer = None
     with Z_STATE.lock:
         events = list(Z_STATE.event_log)
+        unsaved = list(_event_unsaved.values())
+        _event_unsaved.clear()
+    if not event_store.save(unsaved):
+        with Z_STATE.lock:  # tried again with the next write; bounded, the file below has them too
+            for e in unsaved[-_EVENT_UNSAVED_MAX:]:
+                _event_unsaved.setdefault(e["id"], e)
     try:
         atomic_write_json(EVENTS_FILE, events)
     except OSError as e:
         logger.warning(f"Failed to save events: {e}")
 
 
-def _persist_events_soon() -> None:
-    global _event_flush_timer
-    if EVENT_FLUSH_SECS <= 0:
+def _persist_events_soon(wait: float = EVENT_FLUSH_SECS) -> None:
+    global _event_flush_timer, _event_flush_due
+    if wait <= 0:
         flush_events()
         return
+    due = time.monotonic() + wait
     with _event_flush_lock:
         if _event_flush_timer is not None:
-            return
-        _event_flush_timer = threading.Timer(EVENT_FLUSH_SECS, flush_events)
+            if due >= _event_flush_due:
+                return
+            _event_flush_timer.cancel()  # a new entry does not wait for a count's slower write
+        _event_flush_due = due
+        _event_flush_timer = threading.Timer(wait, flush_events)
         _event_flush_timer.daemon = True
         _event_flush_timer.start()
 
@@ -337,33 +387,61 @@ def event_text(name: str, /, **params) -> dict:
     return {"title_key": f"ev.{name}.title", "msg_key": f"ev.{name}.msg", "params": params}
 
 
+def _repeated_entry(level, title, message, now: int) -> dict[str, Any] | None:
+    """The entry a new report is counted on (called with the lock held): the same level, title and
+    message within the hour, or, when one title floods the log, its newest entry."""
+    key = (level, title)
+    same_title = None
+    for e in Z_STATE.event_log:
+        if e.get("level") != level or e.get("title") != title:
+            continue
+        if now - int(e.get("last_ts") or e.get("ts") or 0) >= EVENT_REPEAT_SECS:
+            continue
+        if e.get("message") == message:
+            return e
+        same_title = same_title or e
+    made = [t for t in _event_recent.get(key, []) if now - t < 60]
+    _event_recent[key] = made
+    if len(made) >= EVENT_FLOOD and same_title is not None:
+        return same_title
+    made.append(now)
+    if len(_event_recent) > 200:
+        for k in [k for k, v in _event_recent.items() if not v or now - v[-1] >= 60]:
+            _event_recent.pop(k, None)
+    return None
+
+
 def add_event(level, title, message, details=None):
-    global _event_dedup_cache
+    """Adds an entry to the event log. Every entry has an id, and where its text has a name, a
+    kind and the place that deals with it (SET-13). A repeat is counted on its entry, not dropped:
+    two different messages under one title within a minute used to lose the second."""
+    global _event_next_id
+    from backend import event_store
+
     now = int(time.time())
-    events_to_persist = None
     with Z_STATE.lock:
-        dedup_key = (level, title)
-        last_seen = _event_dedup_cache.get(dedup_key, 0)
-        quiet = EVENT_REPEAT_SECS if _event_last_message.get(dedup_key) == message else 60
-        if now - last_seen < quiet:
-            return
-        _event_dedup_cache[dedup_key] = now
-        _event_last_message[dedup_key] = message
-        if len(_event_dedup_cache) > 200:
-            _event_dedup_cache = {k: v for k, v in _event_dedup_cache.items() if now - v < EVENT_REPEAT_SECS}
-            for k in list(_event_last_message):
-                if k not in _event_dedup_cache:
-                    _event_last_message.pop(k, None)
-
-        entry = {"ts": now, "level": level, "title": title, "message": message}
-        if details is not None:
-            entry["details"] = details
-        Z_STATE.event_log.insert(0, entry)
-        Z_STATE.event_log = Z_STATE.event_log[:100]
-        events_to_persist = list(Z_STATE.event_log)
-
-    if events_to_persist is not None:
-        _persist_events_soon()
+        old = _repeated_entry(level, title, message, now)
+        if old is not None:
+            entry = {**old, "count": int(old.get("count") or 1) + 1, "last_ts": now}
+            rest = [e for e in Z_STATE.event_log if e is not old]
+            wait = EVENT_COUNT_FLUSH_SECS
+        else:
+            entry = {"id": _event_next_id, "ts": now, "level": level, "title": title, "message": message}
+            _event_next_id += 1
+            kind = event_store.kind_of(details)
+            link = event_store.link_of(kind, details)
+            if kind:
+                entry["kind"] = kind
+            if link:
+                entry["link"] = link
+            if details is not None:
+                entry["details"] = details
+            rest = Z_STATE.event_log
+            wait = EVENT_FLUSH_SECS
+        Z_STATE.event_log = [entry, *rest][:EVENT_KEEP]
+        _event_unsaved[entry["id"]] = entry
+    _persist_events_soon(wait)
+    return entry["id"]
 
 
 def _record_damaged_file(path: str, dest: str) -> None:

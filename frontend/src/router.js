@@ -20,6 +20,8 @@ export const ROUTES = {
   settings: () => window.openManagementSection?.('mgmt-sec-system-group'),
   time: () => import('./components/widgets.js').then((m) => m.openTimezoneModal()),
   alerts: () => window.openManagementSection?.('mgmt-pane-notifications'),
+  // the copy button and the card slots: where an entry about a card copy leads (SET-13)
+  cards: () => /** @type {any} */ (window).openDrawer?.('tab-buttons'),
   // "activity" is the page of that name in the sidebar; the Event Log has its own word. A link
   // called activity opened the Event Log, and Hardware, Appearance and Overview had no link (SET-12)
   activity: () => section('mgmt-sec-activity'),

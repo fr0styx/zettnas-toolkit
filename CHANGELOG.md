@@ -72,6 +72,21 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Advanced switch and the role; and after a change of language the Advanced caption, the phone's
   tiles and Spotlight stayed in the old one.
 
+#### Fixes
+
+- **The event log keeps what happened.** It held the 100 newest entries, so a busy day pushed a
+  failed backup out of the list. Entries are now kept for 90 days, like File activity. What the
+  log held before the update is carried over.
+- **Two things that happen within a minute are both recorded.** A second entry with the same
+  title within a minute was dropped: a second blocked address, a second failed copy. An
+  unchanged report within the hour is now counted on its entry ("3 times") instead of dropped,
+  and a fault that continues is written again right after the log was cleared.
+
+#### Changes
+
+- Every event has an id, the name of its kind and the place that deals with it. The bell, read
+  marks and links to an entry build on these in the next steps.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

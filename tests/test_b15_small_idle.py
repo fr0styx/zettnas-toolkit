@@ -101,8 +101,7 @@ def test_events_are_written_in_batches_and_unchanged_ones_not_repeated(monkeypat
     writes = []
     real = state.atomic_write_json
     monkeypatch.setattr(state, "atomic_write_json", lambda p, d: writes.append(len(d)) or real(p, d))
-    monkeypatch.setattr(state, "_event_dedup_cache", {})
-    monkeypatch.setattr(state, "_event_last_message", {})
+    state._event_recent.clear()
     clock = {"t": 1_000_000}
     monkeypatch.setattr(state.time, "time", lambda: clock["t"])
     with state.Z_STATE.lock:
