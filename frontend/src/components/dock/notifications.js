@@ -2,9 +2,12 @@
 // Part of dock.js, split out by ARC-5.
 
 import { eventLook } from '../../event-level.js';
+import { eventView, eventWhen, needsALook } from '../../event-view.js';
+import { api } from '../../api.js';
+import { ROUTES } from '../../router.js';
 import { escapeHtml } from '../../utils.js';
 import { state } from '../../state.js';
-import { t } from '../../i18n.js';
+import { t, getLanguage } from '../../i18n.js';
 import { ZettEventBus } from '../../event-bus.js';
 import { formatDateTime } from '../../format.js';
 import { _dockPosition } from './dock-settings.js';
@@ -13,8 +16,55 @@ import { bringToFront } from './window-drag.js';
 import { applySavedBounds, loadSavedWindowBounds, saveOpenWindowsState } from './window-state.js';
 
 let lastReadEventTs = parseFloat(localStorage.getItem('kiboto_last_read_event_ts_v2') || '0');
-export let clearedEventsTs = parseFloat(localStorage.getItem('kiboto_cleared_events_ts') || '0');
 let currentNotifFilter = 'all';
+const READER_KEY = 'kiboto_events_reader'; // gitleaks:allow (a storage key name)
+
+/** What the bell shows: the entries that ask for attention, the newest report first (SET-13).
+ *  It listed everything, so a made zip and an emptied Recycle Bin counted as unread. The whole
+ *  log is one click away, in the Event Log. */
+export function bellEvents(events = state.latestStats?.events) {
+  return (Array.isArray(events) ? events : []).filter(needsALook).sort((a, b) => eventWhen(b) - eventWhen(a));
+}
+
+/** Read marks follow the person (SET-13): they were this browser's, so the next person on it
+ *  inherited them, and what was read on the laptop was unread on the phone. "Seen up to" is
+ *  saved with the account; a different person on this browser starts from their own. */
+export function followReader(user) {
+  const name = user?.username || '';
+  if (!name) return;
+  try {
+    if (localStorage.getItem(READER_KEY) !== name) {
+      resetCheckedEventsState();
+      localStorage.setItem(READER_KEY, name);
+    }
+  } catch {
+    /* private window */
+  }
+  const seen = Number(user?.preferences?.events_seen) || 0;
+  if (seen > lastReadEventTs) lastReadEventTs = seen;
+  updateNotificationBadge();
+}
+ZettEventBus.on?.('session:user', followReader);
+if (typeof window !== 'undefined') {
+  window.addEventListener('kiboto:lang-changed', () => {
+    updateNotificationBadge();
+    renderNotificationCenter(); // its signature carries the language
+  });
+}
+
+/** "Mark all read": everything up to the newest report, saved with the account. */
+export function markAllRead(events = state.latestStats?.events) {
+  const list = Array.isArray(events) ? events : [];
+  if (!list.length) return 0;
+  lastReadEventTs = Math.max(lastReadEventTs, ...list.map(eventWhen));
+  try {
+    localStorage.setItem('kiboto_last_read_event_ts_v2', lastReadEventTs.toString());
+  } catch {
+    /* private window */
+  }
+  api.put('/api/auth/me/preferences', { events_seen: lastReadEventTs }).catch((e) => console.warn('[Kiboto] read marks were not saved to the account', e));
+  return lastReadEventTs;
+}
 
 export const CHECKED_EVENTS_KEY = 'kiboto_checked_events_v1'; // gitleaks:allow (a storage key name)
 export const DOCK_PINNED_KEY = 'kiboto_dock_pinned_apps_v1'; // a storage key name, not a secret: gitleaks:allow
@@ -32,7 +82,6 @@ try {
 export function resetCheckedEventsState() {
   checkedEventKeys.clear();
   lastReadEventTs = 0;
-  clearedEventsTs = 0;
   try {
     localStorage.removeItem(CHECKED_EVENTS_KEY);
     localStorage.removeItem('kiboto_last_read_event_ts');
@@ -43,14 +92,15 @@ export function resetCheckedEventsState() {
 
 export function getEventKey(e) {
   if (!e) return '';
-  return e.id || `${e.ts || 0}_${e.title || ''}_${e.level || ''}`;
+  // an entry that is reported again is news again: its key carries when it was last reported
+  return e.id ? `${e.id}:${e.last_ts || ''}` : `${e.ts || 0}_${e.title || ''}_${e.level || ''}`;
 }
 
 export function isEventChecked(e) {
   if (!e) return false;
   const key = getEventKey(e);
   if (checkedEventKeys.has(key)) return true;
-  if (lastReadEventTs > 0 && e.ts && e.ts <= lastReadEventTs) return true;
+  if (lastReadEventTs > 0 && eventWhen(e) && eventWhen(e) <= lastReadEventTs) return true;
   return false;
 }
 
@@ -154,8 +204,7 @@ export function updateNotificationBadge() {
   const badge = document.getElementById('dock-notif-badge');
   if (!badge || !state.latestStats || !state.latestStats.events) return;
   
-  const events = state.latestStats.events;
-  const unreadCount = events.filter((e) => !isEventChecked(e) && e.ts > clearedEventsTs).length;
+  const unreadCount = bellEvents().filter((e) => !isEventChecked(e)).length;
   
   if (unreadCount > 0) {
     badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
@@ -213,23 +262,16 @@ export function renderNotificationCenter() {
   const list = document.getElementById('notif-center-list');
   if (!list || !state.latestStats || !state.latestStats.events) return;
   
-  let events = [...state.latestStats.events]
-    .filter(e => e.ts > clearedEventsTs)
-    .sort((a,b) => b.ts - a.ts);
-
-  if (currentNotifFilter === 'error') {
-    events = events.filter(e => eventLook(e.level) === 'error');
-  } else if (currentNotifFilter === 'warning') {
-    events = events.filter(e => eventLook(e.level) === 'warning');
-  } else if (currentNotifFilter === 'info') {
-    events = events.filter(e => ['info', 'success'].includes(eventLook(e.level)));
+  let events = bellEvents();
+  if (currentNotifFilter === 'error' || currentNotifFilter === 'warning') {
+    events = events.filter((e) => eventLook(e.level) === currentNotifFilter);
   }
   
   if (events.length === 0) {
     const emptyMsg = currentNotifFilter === 'all'
       ? t('notif.empty', 'No recent notifications.')
       : t('notif.no_matching', 'No notifications matching filter.');
-    const emptySig = `empty_${currentNotifFilter}_${clearedEventsTs}`;
+    const emptySig = `empty_${currentNotifFilter}_${getLanguage()}`;
     if (list._lastRenderedSignature === emptySig) return;
     list._lastRenderedSignature = emptySig;
     list.innerHTML = `<div style="padding:28px 16px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);">${escapeHtml(emptyMsg)}</div>`;
@@ -238,7 +280,7 @@ export function renderNotificationCenter() {
   
   const visibleEvents = events.slice(0, 50);
   const sigParts = visibleEvents.map(e => `${getEventKey(e)}:${isEventChecked(e) ? '1' : '0'}`);
-  const currentSignature = `${currentNotifFilter}_${clearedEventsTs}_${visibleEvents.length}_${sigParts.join(';')}`;
+  const currentSignature = `${currentNotifFilter}_${getLanguage()}_${visibleEvents.length}_${sigParts.join(';')}`;
 
   // If signature has not changed, do not touch innerHTML so hover state, transitions, and active clicks aren't lost
   if (list._lastRenderedSignature === currentSignature) {
@@ -270,14 +312,10 @@ export function renderNotificationCenter() {
   list.innerHTML = '';
   visibleEvents.forEach(e => {
     const isChecked = isEventChecked(e);
-    const dt = new Date(e.ts * 1000);
-    let color = '#c9d6d7';
-    let icon = 'ℹ️';
-    const look = eventLook(e.level);
-    if (look === 'error') { color = 'var(--crit)'; icon = '❌'; }
-    else if (look === 'warning') { color = 'var(--warn)'; icon = '⚠️'; }
-    else if (look === 'success') { color = 'var(--ok2)'; icon = '✅'; }
-    
+    const view = eventView(e); // the reader's language: the bell showed the server's English (SET-13)
+    const dt = new Date(view.when * 1000);
+    const { color, icon } = view;
+
     const row = document.createElement('div');
     row.className = 'notif-center-item' + (isChecked ? ' notif-event-checked' : '');
     row.dataset.eventKey = getEventKey(e);
@@ -287,11 +325,11 @@ export function renderNotificationCenter() {
       <span class="notif-center-icon" style="font-size: 14px; margin-top:2px; flex-shrink:0;">${icon}</span>
       <div style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div class="notif-center-title" style="font-size:var(--zn-fs-xs); font-weight:700; color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${isChecked ? 'opacity:0.75;' : ''}">${escapeHtml(e.title)}</div>
+          <div class="notif-center-title" style="font-size:var(--zn-fs-xs); font-weight:700; color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${isChecked ? 'opacity:0.75;' : ''}">${escapeHtml(view.title)}</div>
           <span style="font-size:var(--zn-fs-xs); color:var(--muted); opacity:0.8; margin-left:6px; flex-shrink:0;">🔍</span>
         </div>
-        <div class="notif-center-msg" style="font-size:var(--zn-fs-xs); color:${isChecked ? 'var(--muted)' : '#fff'}; line-height:1.4; word-break:break-word;">${escapeHtml(e.message)}</div>
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">${formatDateTime(dt)}</div>
+        <div class="notif-center-msg" style="font-size:var(--zn-fs-xs); color:${isChecked ? 'var(--muted)' : '#fff'}; line-height:1.4; word-break:break-word;">${escapeHtml(view.message)}</div>
+        <div class="notif-center-when">${escapeHtml([formatDateTime(dt), view.repeated].filter(Boolean).join(' · '))}</div>
       </div>
       ${!isChecked ? `<div class="notif-unread-dot" style="width:6px; height:6px; border-radius:50%; background:var(--brand, #33cdb8); margin-left:auto; margin-top:6px; flex-shrink:0;"></div>` : ''}
     `;
@@ -304,25 +342,22 @@ document.addEventListener('DOMContentLoaded', () => {
   if (markReadBtn) {
     markReadBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (state.latestStats && state.latestStats.events && state.latestStats.events.length > 0) {
-        state.latestStats.events.forEach(ev => markEventChecked(ev, false));
-        saveCheckedEvents();
-        lastReadEventTs = Math.max(...state.latestStats.events.map(ev => ev.ts));
-        localStorage.setItem('kiboto_last_read_event_ts_v2', lastReadEventTs.toString());
+      if (markAllRead()) {
         updateNotificationBadge();
         renderNotificationCenter();
       }
     });
   }
 
-  const clearAllBtn = document.getElementById('notif-clear-all');
-  if (clearAllBtn) {
-    clearAllBtn.addEventListener('click', (e) => {
+  // "Clear all" is gone (SET-13): it hid the entries on this device only and the log kept them
+  const seeAll = document.getElementById('notif-see-all');
+  if (seeAll) {
+    seeAll.addEventListener('click', (e) => {
       e.stopPropagation();
-      clearedEventsTs = Math.floor(Date.now() / 1000);
-      localStorage.setItem('kiboto_cleared_events_ts', clearedEventsTs.toString());
-      updateNotificationBadge();
-      renderNotificationCenter();
+      const panel = document.getElementById('notif-center-panel');
+      if (panel) panel.style.display = 'none';
+      saveOpenWindowsState();
+      ROUTES.events?.();
     });
   }
 
@@ -333,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         b.classList.remove('active');
         b.style.background = 'transparent';
         b.style.borderColor = 'transparent';
-        b.style.color = b.dataset.filter === 'error' ? 'var(--crit, #ff5c5c)' : (b.dataset.filter === 'warning' ? 'var(--warn, #f5a623)' : (b.dataset.filter === 'info' ? '#93c5fd' : '#c9d6d7'));
+        b.style.color = b.dataset.filter === 'error' ? 'var(--crit, #ff5c5c)' : (b.dataset.filter === 'warning' ? 'var(--warn, #f5a623)' : '#c9d6d7');
       });
       btn.classList.add('active');
       btn.style.background = 'rgba(255,255,255,0.1)';

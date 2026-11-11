@@ -114,71 +114,53 @@ describe('detail windows (modals.js)', () => {
     expect(DockManager.unregister).toHaveBeenCalledWith('smart');
   });
 
+  // SET-13: the page comes from the entry's link. It was guessed from English words in the title,
+  // and these cases pinned the guesses ("SD card inserted" → MEDIA & INGEST).
   const CASES = [
-    ['SD card inserted', 'MEDIA & INGEST', 'drawer', 'tab-buttons'],
-    ['Night mode on the LED lightbar', 'ARGB LIGHTBAR', 'drawer', 'tab-led'],
-    ['Fan curve changed', 'THERMAL & FANS', 'drawer', 'tab-fans'],
-    ['Dashboard layout saved', 'DASHBOARD LAYOUT', 'drawer', 'tab-layout'],
-    ['Failed login for bob', 'SECURITY & ACCESS', 'mgmt', 'mgmt-pane-security'],
-    ['UPS on battery', 'POWER & UPS', 'mgmt', 'mgmt-sec-ups'],
-    ['Docker container exited', 'DOCKER CONTAINERS', 'mgmt', 'mgmt-pane-docker'],
-    ['Parity check finished', 'UNRAID OS & ARRAY', 'mgmt', 'mgmt-pane-unraid'],
-    ['Wallpaper changed', 'APPEARANCE & THEME', 'mgmt', 'mgmt-pane-wallpaper'],
-    ['Metrics history trimmed', 'SYSTEM METRICS', 'mgmt', 'mgmt-pane-metrics'],
-    ['Nightly job done', 'SYSTEM LOG', 'mgmt', 'mgmt-pane-events'],
+    ['cards', 'Card copies', 'openDrawer', 'tab-buttons'],
+    ['hardware', 'Hardware', 'openManagementSection', 'mgmt-sec-hardware'],
+    ['power', 'Power', 'openManagementSection', 'mgmt-sec-ups'],
+    ['backup', 'Backup', 'openManagementSection', 'mgmt-pane-backups'],
+    ['storage', 'Storage', 'openManagementSection', 'mgmt-sec-storage'],
+    ['users', 'Users', 'openManagementSection', 'mgmt-pane-users'],
+    ['network', 'Network', 'openManagementSection', 'mgmt-sec-network'],
+    ['vms', 'Virtual machines', 'openManagementSection', 'mgmt-sec-vms'],
+    ['settings', 'Settings', 'openManagementSection', 'mgmt-sec-system-group'],
+    ['alerts', 'Notifications', 'openManagementSection', 'mgmt-pane-notifications'],
+    [undefined, 'Event Log', 'openManagementSection', 'mgmt-pane-events'],
   ];
 
-  it.each(CASES)('"%s" belongs to %s and opens the right place', (title, subsystem, kind, target) => {
-    window.openDrawer = vi.fn();
-    window.openManagementWindow = vi.fn();
-    modals.openEventDetailModal({ title, level: 'info', ts: Math.floor(Date.now() / 1000) });
-    expect(byId('event-detail-subsystem').textContent).toBe(subsystem);
+  it.each(CASES)('an entry that leads to "%s" is filed under %s and opens it', (link, place, opener, target) => {
+    window[opener] = vi.fn();
+    // the title says something else on purpose: words in it no longer decide
+    modals.openEventDetailModal({ title: 'SD card inserted while the fan curve changed', level: 'info', link, ts: Math.floor(Date.now() / 1000) });
+    expect(byId('event-detail-subsystem').textContent).toBe(place);
+    expect(byId('event-detail-context-btn').textContent).toBe(`Open ${place}`);
     byId('event-detail-context-btn').click();
     expect(byId('event-detail-modal-overlay').style.display).toBe('none');
-    const fn = kind === 'drawer' ? window.openDrawer : window.openManagementWindow;
-    expect(fn).toHaveBeenCalledWith(target);
-    delete window.openDrawer;
-    delete window.openManagementWindow;
+    expect(window[opener]).toHaveBeenCalledWith(target);
+    delete window[opener];
   });
 
-  it('without the drawer opener, clicks the drawer button and its tab', () => {
-    document.body.insertAdjacentHTML('beforeend',
-      '<button id="drawer-toggle-btn"></button>' +
-      ['tab-buttons', 'tab-led', 'tab-fans', 'tab-layout'].map((t) => `<button class="drawer-tab-btn" data-tab="${t}"></button>`).join(''));
-    const clicks = [];
-    document.querySelectorAll('#drawer-toggle-btn, .drawer-tab-btn').forEach((b) => b.addEventListener('click', () => clicks.push(b.dataset.tab || 'drawer')));
-    for (const title of ['SD card inserted', 'LED off', 'Fan stopped', 'Widget added']) {
-      modals.openEventDetailModal({ title });
-      byId('event-detail-context-btn').click();
-    }
-    expect(clicks).toEqual(['drawer', 'tab-buttons', 'drawer', 'tab-led', 'drawer', 'tab-fans', 'drawer', 'tab-layout']);
-  });
+  it('files, apps and drives open their own windows', () => {
+    window.openFileManager = vi.fn();
+    modals.openEventDetailModal({ title: 'Recycle Bin emptied', link: 'files' });
+    byId('event-detail-context-btn').click();
+    expect(window.openFileManager).toHaveBeenCalled();
+    delete window.openFileManager;
 
-  it('files, the recycle bin, drives and the console', () => {
-    const opened = vi.fn();
-    ZettEventBus.on('window:open', opened);
-    modals.openEventDetailModal({ title: 'File uploaded' });
+    window.openContainersManager = vi.fn();
+    modals.openEventDetailModal({ title: 'App installed', link: 'apps' });
     byId('event-detail-context-btn').click();
-    expect(opened.mock.calls[0][0]).toEqual({ id: 'file-manager-window' });
-    window.openRecycleBin = vi.fn();
-    modals.openEventDetailModal({ title: 'Moved to the Recycle Bin' });
-    byId('event-detail-context-btn').click();
-    expect(window.openRecycleBin).toHaveBeenCalled();
-    delete window.openRecycleBin;
+    expect(window.openContainersManager).toHaveBeenCalled();
+    delete window.openContainersManager;
 
     const smart = vi.fn();
     ZettEventBus.on('modal:smart:open', smart);
-    modals.openEventDetailModal({ title: 'Drive health', message: 'sdb has reallocated sectors' });
+    modals.openEventDetailModal({ title: 'Drive sdb: replace soon', link: 'drives' });
+    expect(byId('event-detail-subsystem').textContent).toBe('Drive Health');
     byId('event-detail-context-btn').click();
-    modals.openEventDetailModal({ title: 'NVMe wear', details: { dev: 'nvme0n1' } });
-    byId('event-detail-context-btn').click();
-    expect(smart.mock.calls.map((c) => c[0])).toEqual(['sdb', 'nvme0n1']);
-
-    window.openConsoleWindow = vi.fn();
-    modals.openEventDetailModal({ title: 'Shell session ended' });
-    byId('event-detail-context-btn').click();
-    expect(window.openConsoleWindow).toHaveBeenCalled();
-    delete window.openConsoleWindow;
+    expect(smart).toHaveBeenCalledTimes(1);
   });
 
   it('shows the level, the time and the raw event', () => {
@@ -189,13 +171,13 @@ describe('detail windows (modals.js)', () => {
     }
     expect(byId('event-detail-reltime').textContent).toBe('Just now');
     modals.openEventDetailModal({ ts: now - 120 });
-    expect(byId('event-detail-reltime').textContent).toBe('2m ago');
+    expect(byId('event-detail-reltime').textContent).toBe('2 minutes ago');
     expect(byId('event-detail-event-title').textContent).toBe('System Notification');
     expect(byId('event-detail-event-message').textContent).toBe('--');
     modals.openEventDetailModal({ ts: now - 7200 });
-    expect(byId('event-detail-reltime').textContent).toBe('2h ago');
+    expect(byId('event-detail-reltime').textContent).toBe('2 hours ago');
     modals.openEventDetailModal({ ts: now - 3 * 86400, details: { report_markdown: '# Report' } });
-    expect(byId('event-detail-reltime').textContent).toBe('3d ago');
+    expect(byId('event-detail-reltime').textContent).toBe('3 days ago');
     expect(byId('event-detail-raw').textContent).toBe('# Report');
     modals.openEventDetailModal(null);
     window.dispatchEvent(new Event('kiboto:lang-changed'));

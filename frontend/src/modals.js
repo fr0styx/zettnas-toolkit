@@ -1,5 +1,7 @@
 import { showToast } from "./toast.js";
 import { eventLook } from './event-level.js';
+import { agoText, eventView } from './event-view.js';
+import { eventPlace } from './event-view.js';
 import { ZettEventBus } from './event-bus.js';
 import { DockManager, bringToFront, makeDraggable } from './components/dock.js';
 import { copyText, trapFocus } from './utils.js';
@@ -314,6 +316,7 @@ export function openEventDetailModal(ev) {
   const contextBtn = document.getElementById("event-detail-context-btn");
 
   const lvl = eventLook(ev.level);
+  const view = eventView(ev); // the reader's language: the dialog showed the server's English
   let icon = "ℹ️";
   let badgeColor = "#4fd8c4";
   let badgeBg = "rgba(51, 205, 184, 0.2)";
@@ -338,212 +341,35 @@ export function openEventDetailModal(ev) {
 
   if (headerIcon) headerIcon.textContent = icon;
   if (badgeIcon) badgeIcon.textContent = icon;
-  if (badgeText) badgeText.textContent = lvl.toUpperCase();
+  if (badgeText) badgeText.textContent = view.word;
   if (badgeEl) {
     badgeEl.style.color = badgeColor;
     badgeEl.style.background = badgeBg;
     badgeEl.style.border = `1px solid ${badgeBorder}`;
   }
 
-  const searchStr = `${ev.title || ""} ${ev.message || ""}`.toLowerCase();
-  let subsystem;
-  let actionLabel;
-  let actionFn;
-
-  // 1. SD Card / TF Card / Media Slots / Ingest / Copy Button
-  if (/sd card|tf card|microsd|\bsd\b|\bslot\b|media slot|media ingest|auto-ingest|ingest|card reader|card eject|card insert|copy button|\bcopy\b/.test(searchStr)) {
-    subsystem = "MEDIA & INGEST";
-    actionLabel = t("event_detail.action_media_card", "Open Media Card Settings");
-    actionFn = () => {
-      closeEventDetailModal();
-      if (typeof window.openDrawer === "function") {
-        window.openDrawer("tab-buttons");
-      } else {
-        const drawerBtn = document.getElementById("drawer-toggle-btn") || document.getElementById("suite-toolkit-btn");
-        if (drawerBtn) drawerBtn.click();
-        const tabBtn = document.querySelector('.drawer-tab-btn[data-tab="tab-buttons"]');
-        if (tabBtn) tabBtn.click();
-      }
-    };
-  }
-  // 2. LED Strip / Lightbar / Night Mode
-  else if (/\bled\b|lightbar|argb|\brgb\b|lighting|night mode|blackout/.test(searchStr)) {
-    subsystem = "ARGB LIGHTBAR";
-    actionLabel = t("event_detail.action_led", "Open LED Controls");
-    actionFn = () => {
-      closeEventDetailModal();
-      if (typeof window.openDrawer === "function") {
-        window.openDrawer("tab-led");
-      } else {
-        const drawerBtn = document.getElementById("drawer-toggle-btn") || document.getElementById("suite-toolkit-btn");
-        if (drawerBtn) drawerBtn.click();
-        const tabBtn = document.querySelector('.drawer-tab-btn[data-tab="tab-led"]');
-        if (tabBtn) tabBtn.click();
-      }
-    };
-  }
-  // 3. Thermal & Fans
-  else if (/\bfans?\b|thermal|\btemps?\b|temperature|\brpm\b|\bpwm\b|fan curve|cooling|\bcpu\b|zero[ -]?rpm|tachometer|hysteresis/.test(searchStr)) {
-    subsystem = "THERMAL & FANS";
-    actionLabel = t("event_detail.action_thermal", "Open Fan Control");
-    actionFn = () => {
-      closeEventDetailModal();
-      if (typeof window.openDrawer === "function") {
-        window.openDrawer("tab-fans");
-      } else {
-        const drawerBtn = document.getElementById("drawer-toggle-btn") || document.getElementById("suite-toolkit-btn");
-        if (drawerBtn) drawerBtn.click();
-        const fanTab = document.querySelector('.drawer-tab-btn[data-tab="tab-fans"]');
-        if (fanTab) fanTab.click();
-      }
-    };
-  }
-  // 4. File Explorer & Recycle Bin
-  else if (/file explorer|recycle bin|file deleted|file uploaded|fs_upload|\btrash\b/.test(searchStr)) {
-    subsystem = "FILE EXPLORER";
-    actionLabel = t("event_detail.action_files", "Open File Explorer");
-    actionFn = () => {
-      closeEventDetailModal();
-      if (/recycle bin|trash/.test(searchStr) && typeof window.openRecycleBin === "function") {
-        window.openRecycleBin();
-      } else {
-        ZettEventBus.emit('window:open', { id: 'file-manager-window' });
-      }
-    };
-  }
-  // 5. Security & Access
-  else if (/security|\btokens?\b|api token|password|\bauth\b|login|unauthorized|credential|permission/.test(searchStr)) {
-    subsystem = "SECURITY & ACCESS";
-    actionLabel = t("event_detail.action_security", "Open Security Settings");
-    actionFn = () => {
-      closeEventDetailModal();
-      if (typeof window.openManagementWindow === "function") {
-        window.openManagementWindow("mgmt-pane-security");
-      }
-    };
-  }
-  // 6. Power & UPS
-  else if (/\bups\b|battery|\bpower\b|\bnut\b|apcupsd|charge|runtime|on-battery|on battery/.test(searchStr)) {
-    subsystem = "POWER & UPS";
-    actionLabel = t("event_detail.action_ups", "Open Power & UPS");
-    actionFn = () => {
-      closeEventDetailModal();
-      if (typeof window.openManagementWindow === "function") {
-        window.openManagementWindow("mgmt-sec-ups");
-      }
-    };
-  }
-  // 7. Storage & S.M.A.R.T. Disks
-  else if (/smart|\bdisks?\b|\bnvme\b|\bdrives?\b|tbw|sectors?|storage|zpool|btrfs|\bata\b|drive health|degradation/.test(searchStr)) {
-    subsystem = "STORAGE & S.M.A.R.T.";
-    actionLabel = t("event_detail.action_smart", "Open Drive Health");
-    actionFn = () => {
-      closeEventDetailModal();
-      const dev = ev.details?.dev || (searchStr.match(/\b(sd[a-z]|nvme\d+n\d+)\b/) || [])[1];
-      ZettEventBus.emit('modal:smart:open', dev || null);
-    };
-  }
-  // 8. Docker Containers
-  else if (/\bdocker\b|\bcontainers?\b|compose|cgroup/.test(searchStr)) {
-    subsystem = "DOCKER CONTAINERS";
-    actionLabel = t("event_detail.action_docker", "Open the app");
-    actionFn = () => {
-      closeEventDetailModal();
-      if (typeof window.openManagementWindow === "function") {
-        window.openManagementWindow("mgmt-pane-docker");
-      }
-    };
-  }
-  // 9. Unraid OS & Array
-  else if (/unraid|\barray\b|parity|mover|disks\.ini|var\.ini/.test(searchStr)) {
-    subsystem = "UNRAID OS & ARRAY";
-    actionLabel = t("event_detail.action_unraid", "Open Array Status");
-    actionFn = () => {
-      closeEventDetailModal();
-      if (typeof window.openManagementWindow === "function") {
-        window.openManagementWindow("mgmt-pane-unraid");
-      }
-    };
-  }
-  // 10. Dashboard Layout & Widgets
-  else if (/layout|\bwidgets?\b|dashboard layout|tachometer card/.test(searchStr)) {
-    subsystem = "DASHBOARD LAYOUT";
-    actionLabel = t("event_detail.action_layout", "Customize Dashboard");
-    actionFn = () => {
-      closeEventDetailModal();
-      if (typeof window.openDrawer === "function") {
-        window.openDrawer("tab-layout");
-      } else {
-        const drawerBtn = document.getElementById("drawer-toggle-btn") || document.getElementById("suite-toolkit-btn");
-        if (drawerBtn) drawerBtn.click();
-        const tabBtn = document.querySelector('.drawer-tab-btn[data-tab="tab-layout"]');
-        if (tabBtn) tabBtn.click();
-      }
-    };
-  }
-  // 11. System Console
-  else if (/console|terminal|\bpty\b|\bshell\b|stdout|stderr/.test(searchStr)) {
-    subsystem = "SYSTEM CONSOLE";
-    actionLabel = t("event_detail.action_console", "Open System Console");
-    actionFn = () => {
-      closeEventDetailModal();
-      if (typeof window.openConsoleWindow === "function") {
-        window.openConsoleWindow();
-      }
-    };
-  }
-  // 12. Appearance & Wallpaper
-  else if (/wallpaper|\btheme\b|appearance|dark mode/.test(searchStr)) {
-    subsystem = "APPEARANCE & THEME";
-    actionLabel = t("event_detail.action_wallpaper", "Open Wallpaper Settings");
-    actionFn = () => {
-      closeEventDetailModal();
-      if (typeof window.openManagementWindow === "function") {
-        window.openManagementWindow("mgmt-pane-wallpaper");
-      }
-    };
-  }
-  // 13. System Metrics & Telemetry
-  else if (/metrics|telemetry|load average|ram usage|memory usage|network bandwidth/.test(searchStr)) {
-    subsystem = "SYSTEM METRICS";
-    actionLabel = t("event_detail.action_metrics", "Open Activity Monitor");
-    actionFn = () => {
-      closeEventDetailModal();
-      if (typeof window.openManagementWindow === "function") {
-        window.openManagementWindow("mgmt-pane-metrics");
-      }
-    };
-  }
-  // 14. Fallback: Full Event Log
-  else {
-    subsystem = "SYSTEM LOG";
-    actionLabel = t("event_detail.action_events", "Open Full Event Log");
-    actionFn = () => {
-      closeEventDetailModal();
-      if (typeof window.openManagementWindow === "function") {
-        window.openManagementWindow("mgmt-pane-events");
-      }
-    };
-  }
-
-  if (subsystemEl) subsystemEl.textContent = subsystem;
+  // The page that deals with the entry comes from the entry itself (SET-13). It was guessed from
+  // English words in the text, the first of fourteen patterns winning: a failed backup that
+  // "could not copy" was filed under the card slots.
+  const place = eventPlace(ev);
+  const actionLabel = place.label;
+  const actionFn = () => {
+    closeEventDetailModal();
+    place.open();
+  };
+  if (subsystemEl) subsystemEl.textContent = place.name;
 
   const ts = ev.ts || Math.floor(Date.now() / 1000);
   const now = Math.floor(Date.now() / 1000);
-  const diff = Math.max(0, now - ts);
-  let relText;
-  if (diff < 10) relText = t("time.just_now", "Just now");
-  else if (diff < 3600) relText = `${Math.floor(diff / 60)}m ago`;
-  else if (diff < 86400) relText = `${Math.floor(diff / 3600)}h ago`;
-  else relText = `${Math.floor(diff / 86400)}d ago`;
+  const relText = [agoText(ts, now), view.repeated].filter(Boolean).join(' · ');
 
   const dt = new Date(ts * 1000);
   if (relTimeEl) relTimeEl.textContent = relText;
   if (localTimeEl) localTimeEl.textContent = formatDateTime(dt);
   if (epochEl) epochEl.textContent = `${ts} (${dt.toISOString()})`;
 
-  if (headlineEl) headlineEl.textContent = ev.title || t('mdx.notification', 'System Notification');
-  if (messageEl) messageEl.textContent = ev.message || "--";
+  if (headlineEl) headlineEl.textContent = view.title || t('mdx.notification', 'System Notification');
+  if (messageEl) messageEl.textContent = view.message || "--";
 
   if (rawEl) {
     if (ev.details && ev.details.report_markdown) {

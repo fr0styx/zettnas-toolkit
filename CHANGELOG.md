@@ -109,6 +109,35 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   to merge into `events` by `id`; `events` itself is still sent in full with every keyframe and
   when the log was cleared. `/api/stats` is unchanged.
 
+#### Fixes
+
+- **The bell and the entry window speak your language.** The Event Log showed an entry in the
+  reader's language while the bell, its preview in the dock and the window that opens for an
+  entry showed the server's English ("Power is back" in the log, "Utility Power Restored" in
+  the bell). All four now draw an entry the same way, and follow a change of language at once.
+  "10m ago" is "10 minutes ago" in the person's language.
+- **An entry opens the page that deals with it.** The entry window guessed the page from English
+  words in the text, the first of fourteen patterns winning: a backup that "could not copy" was
+  filed under the card slots, with a button to the card settings. The page now comes from the
+  entry itself.
+- **An entry that is reported again says so**: "3 times, the last at 14:02", and it counts as
+  unread again.
+
+#### Changes
+
+- **The bell shows what needs a look.** It listed every entry, so a made zip and an emptied
+  Recycle Bin counted as unread. It now lists problems and things to look at; everything else is
+  one click away in the Event Log, from a link under the list. The "Info" filter is gone.
+- **Read marks follow the person.** They belonged to the browser: read on the laptop was unread
+  on the phone, and the next person on the same browser inherited them. "Mark all read" is saved
+  with the account.
+- **"Clear all" and "Clear Event Log" are gone.** "Clear all" in the bell hid entries on that
+  device only while the log kept them. "Clear Event Log" deleted the log for everyone, with no
+  undo and no record of who did it. Entries leave by themselves after 90 days. For scripts,
+  `DELETE /api/events/clear` still works and now leaves an entry that says who cleared the log.
+- The Event Log is called "Event Log" (it was "System Event & Audit Log"), and its description
+  no longer promises drive wake-ups and sign-ins, which it never recorded.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

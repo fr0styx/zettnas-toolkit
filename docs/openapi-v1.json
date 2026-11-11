@@ -28514,6 +28514,19 @@
       ],
       "title": "Clock Format"
      },
+     "events_seen": {
+      "anyOf": [
+       {
+        "maximum": 40000000000.0,
+        "minimum": 0.0,
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Events Seen"
+     },
      "timezone": {
       "anyOf": [
        {
@@ -51509,6 +51522,7 @@
   },
   "/api/v1/events/clear": {
    "delete": {
+    "description": "Empties the event log for everyone. The pages no longer offer it (entries leave after 90\ndays); a script that still calls it leaves an entry that says who did (SET-13).",
     "operationId": "clear_events_api_v1_events_clear_delete",
     "responses": {
      "200": {

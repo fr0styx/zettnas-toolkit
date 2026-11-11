@@ -104,7 +104,7 @@
  "frontend/src/components/dock/notifications.js": {
   "buttons": 0,
   "globals": 1,
-  "styles": 9,
+  "styles": 8,
   "templates": 2
  },
  "frontend/src/components/dock/snap-assist.js": {

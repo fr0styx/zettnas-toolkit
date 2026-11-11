@@ -837,7 +837,7 @@ request and response schemas.
 | `GET` | `/api/v1/disk/smart_tests` | any of `storage:read`, `hardware:read`, `system:view` | Returns persistent historical self-test runs and latest diagnostic report |
 | `GET` | `/api/v1/disk_detail` | any of `storage:read`, `system:view` | Disk Detail |
 | `POST` | `/api/v1/disk_wake` | any of `storage:write`, `storage:admin` | Disk Wake |
-| `DELETE` | `/api/v1/events/clear` | `system:config` | Clear Events |
+| `DELETE` | `/api/v1/events/clear` | `system:config` | Empties the event log for everyone |
 | `GET` | `/api/v1/health` | public | Public health probe (no secrets) for Docker HEALTHCHECK, the updater and monitoring |
 | `GET` | `/api/v1/layout` | signed in | Get Layout |
 | `POST` | `/api/v1/layout` | any of `system:config`, `shares:user_write` | Post Layout |

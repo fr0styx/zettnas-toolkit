@@ -980,6 +980,9 @@ class MyPreferences(BaseModel):
     # the person's own clock, on every device: "auto" (their browser's zone) or a zone name
     timezone: str | None = Field(default=None, max_length=64)
     clock_format: Literal["12", "24"] | None = None
+    # when the newest event-log entry the person has seen was reported: read marks follow the
+    # account, not the browser (SET-13)
+    events_seen: float | None = Field(default=None, ge=0, le=4e10)
 
 
 @router.put("/auth/me/preferences", response_model=None)

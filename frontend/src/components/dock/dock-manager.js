@@ -1,7 +1,7 @@
 // DockManager: the dock's items, pinned apps and window registry.
 // Part of dock.js, split out by ARC-5.
 
-import { eventLook } from '../../event-level.js';
+import { eventView } from '../../event-view.js';
 import { escapeHtml } from '../../utils.js';
 import { state } from '../../state.js';
 import { t } from '../../i18n.js';
@@ -10,7 +10,7 @@ import { formatTime } from '../../format.js';
 import { KNOWN_APPS, showDockItemContextMenu, toggleFmWindowSwitcher } from './apps.js';
 import { ADVANCED_DOCK_APPS, advancedOn } from '../../advanced.js';
 import { _dockPosition } from './dock-settings.js';
-import { DOCK_PINNED_KEY, clearedEventsTs, isEventChecked, showDockToast, updateNotificationBadge } from './notifications.js';
+import { DOCK_PINNED_KEY, bellEvents, isEventChecked, showDockToast, updateNotificationBadge } from './notifications.js';
 import { bringToFront, keyboardFocused } from './window-drag.js';
 import { applySavedBounds, saveOpenWindowsState } from './window-state.js';
 
@@ -477,9 +477,7 @@ export const DockManager = {
           if (window.toggleNotificationCenter) window.toggleNotificationCenter();
         });
 
-        const events = (state.latestStats && Array.isArray(state.latestStats.events))
-          ? [...state.latestStats.events].filter((e) => e.ts > clearedEventsTs).sort((a, b) => b.ts - a.ts)
-          : [];
+        const events = bellEvents(); // what asks for attention, as in the bell itself (SET-13)
 
         if (events.length === 0) {
           container.innerHTML = `
@@ -493,22 +491,19 @@ export const DockManager = {
         }
 
         const itemsHtml = events.slice(0, 2).map((ev) => {
-          let nIcon = 'ℹ️';
-          let col = '#93c5fd';
-          const look = eventLook(ev.level);
-          if (look === 'error') { nIcon = '❌'; col = 'var(--crit, #ff5c5c)'; }
-          else if (look === 'warning') { nIcon = '⚠️'; col = 'var(--warn, #f5a623)'; }
-          else if (look === 'success') { nIcon = '✅'; col = 'var(--ok2, #33cdb8)'; }
-          const timeStr = formatTime(ev.ts, undefined, '');
+          const view = eventView(ev);
+          const nIcon = view.icon;
+          const col = view.color;
+          const timeStr = formatTime(view.when, undefined, '');
           return `
             <div class="dock-notif-feed-item">
               <span class="dkp-ico">${nIcon}</span>
               <div class="dkp-body">
                 <div class="dkp-row">
-                  <strong class="dock-notif-feed-item-title" style="color:${col};">${escapeHtml(ev.title || t('dock.alert_untitled', 'Alert'))}</strong>
+                  <strong class="dock-notif-feed-item-title" style="color:${col};">${escapeHtml(view.title || t('dock.alert_untitled', 'Alert'))}</strong>
                   <span class="dkp-time">${timeStr}</span>
                 </div>
-                <div class="dock-notif-feed-item-msg">${escapeHtml(ev.message || '')}</div>
+                <div class="dock-notif-feed-item-msg">${escapeHtml(view.message || '')}</div>
               </div>
             </div>
           `;
@@ -719,10 +714,9 @@ export const DockManager = {
           badgeEl.textContent = t('ui.desktop', 'Desktop');
           badgeEl.className = 'dock-tooltip-status active';
         } else if (id === 'notif') {
-          const events = (state.latestStats && Array.isArray(state.latestStats.events)) ? state.latestStats.events : [];
-          const unreadCount = events.filter((e) => !isEventChecked(e) && e.ts > clearedEventsTs).length;
+          const unreadCount = bellEvents().filter((e) => !isEventChecked(e)).length;
           if (unreadCount > 0) {
-            badgeEl.textContent = `${unreadCount > 99 ? '99+' : unreadCount} UNREAD`;
+            badgeEl.textContent = t('dock.badge_unread', '{count} unread', { count: unreadCount > 99 ? '99+' : unreadCount }).toLocaleUpperCase();
             badgeEl.className = 'dock-tooltip-status alert';
           } else {
             badgeEl.textContent = t('dock.badge_clear', 'All caught up').toLocaleUpperCase();

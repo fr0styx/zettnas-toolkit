@@ -206,7 +206,7 @@ describe('Revamped Dock App Hover Preview Engine', () => {
     expect(notifFeed).not.toBeNull();
     expect(notifFeed.textContent).toContain('Drive Warning');
     expect(notifFeed.textContent).toContain('Temp elevated');
-    expect(notifFeed.querySelector('.dkp-head-count').textContent).toBe('2 in all');
+    expect(notifFeed.querySelector('.dkp-head-count').textContent).toBe('1 in all'); // the finished backup is in the Event Log, not the bell
   });
 
   it('dynamically computes arrow offset --arrow-x to point directly at dock items', () => {

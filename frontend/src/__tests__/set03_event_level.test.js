@@ -20,7 +20,7 @@ describe('the most serious events are drawn as errors (SET-03)', () => {
   it('is the one list the log, the bell, its preview and the event dialog use', () => {
     for (const file of ['components/events.js', 'components/dock/notifications.js', 'components/dock/dock-manager.js', 'modals.js']) {
       const code = src(file);
-      expect(code, file).toContain('eventLook(');
+      expect(code, file).toMatch(/eventLook\(|eventView\(/); // eventView() draws from eventLook() (SET-13)
       expect(code, file).not.toMatch(/\.level === 'error'/);
     }
   });

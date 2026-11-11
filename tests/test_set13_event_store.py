@@ -161,7 +161,7 @@ def test_kinds_and_links():
 
 
 # kinds that have no page of their own: their entry opens in the Event Log
-NO_PLACE = {"reboot", "shutdown"}
+NO_PLACE = {"reboot", "shutdown", "log_cleared"}
 
 
 def test_every_kind_the_server_writes_has_a_place_the_interface_can_open():

@@ -1972,7 +1972,6 @@
     <div class="ncp-row-2">
       <button class="ncp-xs-muted-box" id="notif-settings-btn" style="display: inline-flex;" title="Configure Alert Channels" data-i18n-title="notif.configure_channels" aria-label="Configure Alert Channels" data-i18n-aria-label="notif.configure_channels">⚙️</button>
       <button id="notif-mark-read" data-i18n="notif.mark_all_read">Mark all read</button>
-      <button class="ncp-xs-semi-muted-box" id="notif-clear-all" title="Clear notifications" data-i18n-title="ui.clear_notifications" data-i18n="notif.clear_all">Clear all</button>
       <div class="os-window-controls ncp-row-3">
         <button class="win-btn close-btn" id="notif-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
@@ -1980,13 +1979,13 @@
   </div>
   <div class="ncp-box-2" id="notif-filter-bar" style="display: flex;">
     <button class="notif-filter-btn active ncp-xs-bold-strong-box" data-filter="all" data-i18n="notif.filter_all">All</button>
-    <button class="notif-filter-btn ixnfb-button1" data-filter="error" data-i18n="notif.filter_errors">Errors</button>
-    <button class="notif-filter-btn ixnfb-button2" data-filter="warning" data-i18n="notif.filter_warnings">Warnings</button>
-    <button class="notif-filter-btn ixnfb-button3" data-filter="info" data-i18n="notif.filter_info">Info</button>
+    <button class="notif-filter-btn ixnfb-button1" data-filter="error" data-i18n="overview.word_problem">Problem</button>
+    <button class="notif-filter-btn ixnfb-button2" data-filter="warning" data-i18n="overview.word_look">Needs a look</button>
   </div>
   <div class="ncp-grow" id="notif-center-list" data-scrollable="true">
-    <div class="ncp-xs-muted-center" data-i18n="notif.empty">No recent notifications.</div>
+    <div class="ncp-xs-muted-center" data-i18n="notif.empty">Nothing needs a look.</div>
   </div>
+  <button type="button" class="notif-see-all" id="notif-see-all" data-i18n="notif.see_all">Everything that happened: the Event Log</button>
   <div id="notif-center-resizer" class="window-resizer-grip" title="Drag to resize window" data-i18n-title="ui.drag_to_resize_window" aria-label="Drag to resize window" data-i18n-aria-label="ui.drag_to_resize_window"></div>
 </div>
 

@@ -271,7 +271,8 @@ def test_e2e_batch3_dom_elements():
 
     assert 'id="notif-center-panel"' in html
     assert 'id="notif-filter-bar"' in html
-    assert 'id="notif-clear-all"' in html
+    assert 'id="notif-see-all"' in html  # "Clear all" went with SET-13; the link to the Event Log came
+    assert 'id="notif-clear-all"' not in html
     assert 'data-filter="all"' in html
     assert 'data-filter="error"' in html
     assert 'data-scrollable="true"' in html

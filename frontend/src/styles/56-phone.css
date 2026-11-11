@@ -148,6 +148,9 @@ body.phone-shell .ai-chat-composer-row #ai-chat-input { flex: 1 0 100%; min-widt
 .mgmt-advanced-row:has(input:checked) .mgmt-advanced-icon { color: var(--ok2); }
 .mgmt-advanced-row small { display: block; color: var(--muted); font-size: var(--zn-fs-xs); line-height: 1.35; margin-top: 2px; }
 .mgmt-sidebar-item[hidden], .mgmt-app-card[hidden] { display: none; }
+.notif-center-when { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px; }
+.notif-see-all { flex-shrink: 0; margin: 0; padding: 8px 12px; border: 0; border-top: 1px solid var(--track); background: none; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 600; text-align: left; cursor: pointer; }
+.notif-see-all:hover, .notif-see-all:focus-visible { text-decoration: underline; }
 
 /* FEAT-13: encrypted folders */
 .ef-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }

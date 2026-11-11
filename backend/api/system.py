@@ -523,15 +523,14 @@ def post_buttons(req: ButtonConfigRequest):
 
 
 @router.delete("/events/clear", dependencies=[Depends(require_scope("system:config"))])
-def clear_events():
+def clear_events(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Empties the event log for everyone. The pages no longer offer it (entries leave after 90
+    days); a script that still calls it leaves an entry that says who did (SET-13)."""
     from backend.state import clear_events as _clear
 
     _clear()
-    if os.path.exists(EVENTS_FILE):
-        try:
-            os.remove(EVENTS_FILE)
-        except OSError:
-            pass
+    who = str(getattr(principal, "username", "") or "an API token")
+    add_event("warning", "Event log cleared", f"{who} cleared the event log.", event_text("log_cleared", who=who))
     return {"status": "ok"}
 
 

@@ -137,6 +137,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
       level: 'warning',
       title: 'CPU Fan Speed High',
       message: 'PWM duty reached 85% at 68°C',
+      link: 'hardware',
       details: { fan_idx: 1, rpm: 2250, target_rpm: 2300 }
     };
 
@@ -147,10 +148,10 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     expect(overlay.style.display).toBe('flex');
 
     const badgeText = document.getElementById('event-detail-badge-text');
-    expect(badgeText.textContent).toBe('WARNING');
+    expect(badgeText.textContent).toBe('Needs a look');
 
     const subsystem = document.getElementById('event-detail-subsystem');
-    expect(subsystem.textContent).toBe('THERMAL & FANS');
+    expect(subsystem.textContent).toBe('Hardware');
 
     const title = document.getElementById('event-detail-event-title');
     expect(title.textContent).toBe('CPU Fan Speed High');
@@ -163,7 +164,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
 
     const contextBtn = document.getElementById('event-detail-context-btn');
     expect(contextBtn.style.display).toBe('inline-block');
-    expect(contextBtn.textContent).toBe('Open Fan Control');
+    expect(contextBtn.textContent).toBe('Open Hardware');
   });
 
   it('populates and opens Event Detail Modal for a SMART disk error event', () => {
@@ -172,6 +173,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
       level: 'error',
       title: 'Drive Health Degradation Alert',
       message: 'Uncorrectable pending sectors detected on sda',
+      link: 'drives',
       details: { dev: 'sda', pending_sectors: 16 }
     };
 
@@ -181,10 +183,10 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     expect(overlay.classList.contains('open')).toBe(true);
 
     const badgeText = document.getElementById('event-detail-badge-text');
-    expect(badgeText.textContent).toBe('ERROR');
+    expect(badgeText.textContent).toBe('Problem');
 
     const subsystem = document.getElementById('event-detail-subsystem');
-    expect(subsystem.textContent).toBe('STORAGE & S.M.A.R.T.');
+    expect(subsystem.textContent).toBe('Drive Health');
 
     const contextBtn = document.getElementById('event-detail-context-btn');
     expect(contextBtn.style.display).toBe('inline-block');
@@ -229,10 +231,10 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     resetCheckedEventsState();
 
     // 4 events sorted newest to oldest (event1 is newest, event4 is oldest)
-    const event1 = { ts: 1791394300, level: 'info', title: 'Backup Finished', message: 'Backup job done' };
+    const event1 = { ts: 1791394300, level: 'warning', title: 'Backup Overdue', message: 'No backup for three days' };
     const event2 = { ts: 1791394200, level: 'error', title: 'CPU Thermal Critical', message: 'Core temp exceeded 90C' };
     const event3 = { ts: 1791394100, level: 'warning', title: 'Disk Pool Warning', message: 'Disk space above 85%' };
-    const event4 = { ts: 1791394000, level: 'info', title: 'Network Link Up', message: 'eth0 negotiated 10Gbps' };
+    const event4 = { ts: 1791394000, level: 'error', title: 'Network Link Down', message: 'eth0 lost its link' };
 
     // Initially all are unread
     expect(isEventChecked(event1)).toBe(false);
@@ -396,135 +398,6 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     expect(dock.querySelector('[data-window-id="console"]').classList.contains('pinned-closed')).toBe(false);
   });
 
-  it('action button in Event Detail Modal triggers openDrawer for thermal events and closes modal', () => {
-    window.openDrawer = vi.fn();
-    const mockEvent = {
-      ts: 1791393000,
-      level: 'warning',
-      title: 'CPU Fan Speed High',
-      message: 'PWM duty reached 85% at 68°C',
-      details: { fan_idx: 1, rpm: 2250 }
-    };
-
-    openEventDetailModal(mockEvent);
-    const overlay = document.getElementById('event-detail-modal-overlay');
-    expect(overlay.classList.contains('open')).toBe(true);
-
-    const contextBtn = document.getElementById('event-detail-context-btn');
-    expect(contextBtn.style.display).toBe('inline-block');
-    expect(contextBtn.textContent).toBe('Open Fan Control');
-
-    contextBtn.click();
-    expect(window.openDrawer).toHaveBeenCalledWith('tab-fans');
-    expect(overlay.classList.contains('open')).toBe(false);
-  });
-
-  it('action button in Event Detail Modal triggers openManagementWindow for container events', () => {
-    window.openManagementWindow = vi.fn();
-    const mockEvent = {
-      ts: 1791393200,
-      level: 'info',
-      title: 'Docker Container Alert',
-      message: 'Container plex high memory usage',
-      details: { container: 'plex' }
-    };
-
-    openEventDetailModal(mockEvent);
-    const overlay = document.getElementById('event-detail-modal-overlay');
-    expect(overlay.classList.contains('open')).toBe(true);
-
-    const contextBtn = document.getElementById('event-detail-context-btn');
-    expect(contextBtn.textContent).toBe('Open the app');
-
-    contextBtn.click();
-    expect(window.openManagementWindow).toHaveBeenCalledWith('mgmt-pane-docker');
-    expect(overlay.classList.contains('open')).toBe(false);
-  });
-
-  it('action button in Event Detail Modal triggers openDrawer for SD Card events and sets MEDIA & INGEST subsystem', () => {
-    window.openDrawer = vi.fn();
-    const mockEvent = {
-      ts: 1791409981,
-      level: 'info',
-      title: 'SD Card Ejected',
-      message: 'SD Card was safely unmounted and ejected. You can now physically remove it.'
-    };
-
-    openEventDetailModal(mockEvent);
-    const overlay = document.getElementById('event-detail-modal-overlay');
-    expect(overlay.classList.contains('open')).toBe(true);
-
-    const subsystemEl = document.getElementById('event-detail-subsystem');
-    expect(subsystemEl.textContent).toBe('MEDIA & INGEST');
-
-    const contextBtn = document.getElementById('event-detail-context-btn');
-    expect(contextBtn.textContent).toBe('Open Media Card Settings');
-
-    contextBtn.click();
-    expect(window.openDrawer).toHaveBeenCalledWith('tab-buttons');
-    expect(overlay.classList.contains('open')).toBe(false);
-  });
-
-  it('action button in Event Detail Modal triggers openDrawer for LED events', () => {
-    window.openDrawer = vi.fn();
-    const mockEvent = {
-      ts: 1791409990,
-      level: 'info',
-      title: 'LED Mode Changed',
-      message: 'Applied Cyber Cyan ARGB lightbar profile'
-    };
-
-    openEventDetailModal(mockEvent);
-    const subsystemEl = document.getElementById('event-detail-subsystem');
-    expect(subsystemEl.textContent).toBe('ARGB LIGHTBAR');
-
-    const contextBtn = document.getElementById('event-detail-context-btn');
-    expect(contextBtn.textContent).toBe('Open LED Controls');
-
-    contextBtn.click();
-    expect(window.openDrawer).toHaveBeenCalledWith('tab-led');
-  });
-
-  it('action button in Event Detail Modal triggers openManagementWindow for Security events', () => {
-    window.openManagementWindow = vi.fn();
-    const mockEvent = {
-      ts: 1791410000,
-      level: 'success',
-      title: 'Security',
-      message: 'Generated new API token: Grafana'
-    };
-
-    openEventDetailModal(mockEvent);
-    const subsystemEl = document.getElementById('event-detail-subsystem');
-    expect(subsystemEl.textContent).toBe('SECURITY & ACCESS');
-
-    const contextBtn = document.getElementById('event-detail-context-btn');
-    expect(contextBtn.textContent).toBe('Open Security Settings');
-
-    contextBtn.click();
-    expect(window.openManagementWindow).toHaveBeenCalledWith('mgmt-pane-security');
-  });
-
-  it('action button in Event Detail Modal triggers openManagementWindow for UPS events', () => {
-    window.openManagementWindow = vi.fn();
-    const mockEvent = {
-      ts: 1791410010,
-      level: 'warning',
-      title: 'UPS On Battery',
-      message: 'Mains power disconnected. Estimated runtime: 18 min.'
-    };
-
-    openEventDetailModal(mockEvent);
-    const subsystemEl = document.getElementById('event-detail-subsystem');
-    expect(subsystemEl.textContent).toBe('POWER & UPS');
-
-    const contextBtn = document.getElementById('event-detail-context-btn');
-    expect(contextBtn.textContent).toBe('Open Power & UPS');
-
-    contextBtn.click();
-    expect(window.openManagementWindow).toHaveBeenCalledWith('mgmt-sec-ups');
-  });
-
   it('toggles console window maximize and restore with proportional scaling transform and restores previous position', () => {
     const consoleOverlay = document.createElement('div');
     consoleOverlay.id = 'console-modal-overlay';
@@ -579,7 +452,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     state.latestStats = {
       events: [
         { ts: 1791395000, level: 'warning', title: 'Fan Alert', message: 'Fan 1 duty 90%' },
-        { ts: 1791394900, level: 'info', title: 'System Boot', message: 'All services up' }
+        { ts: 1791394900, level: 'error', title: 'Service Stalled', message: 'The indexer stopped answering' }
       ]
     };
 
@@ -867,7 +740,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
 
     state.latestStats = {
       events: [
-        { ts: Math.floor(Date.now() / 1000), level: 'info', title: 'System Healthy', message: 'All checks passed' }
+        { ts: Math.floor(Date.now() / 1000), level: 'warning', title: 'Backup Overdue', message: 'No backup for three days' }
       ]
     };
 
@@ -901,7 +774,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
 
     // Verify preview content updated cleanly
     const previewEl = document.getElementById('dock-tooltip-preview-content');
-    expect(previewEl.textContent).toContain('System Healthy');
+    expect(previewEl.textContent).toContain('Backup Overdue');
   });
 });
 

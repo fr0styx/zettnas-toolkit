@@ -2,13 +2,10 @@
  * Kiboto Hardware Events Logger
  * Renders system alerts, diagnostic events, and handles event log clearing.
  */
-import { eventLook } from '../event-level.js';
-import { eventText } from '../event-text.js';
-import { api } from '../api.js';
-import { showToast, showConfirmToast } from '../toast.js';
+import { eventView, eventWhen } from '../event-view.js';
 import { escapeHtml } from '../utils.js';
 
-import { t } from '../i18n.js';
+import { t, getLanguage } from '../i18n.js';
 import { formatDateTime } from '../format.js';
 import { emptyStateHtml } from './empty-state.js';
 import { state } from '../state.js';
@@ -20,7 +17,9 @@ export function renderEventLog(events) {
   const list = document.getElementById('events-list');
   if (!list) return;
 
-  const currentHash = events ? `${events.length}-${events[0] ? events[0].ts : 0}-${_currentFilter}` : 'empty';
+  // a counted repeat changes neither the length nor the first time: the hash carries both, and the language
+  const top = events && events[0];
+  const currentHash = events ? `${events.length}-${top ? `${top.id}-${eventWhen(top)}-${top.count || 1}` : 0}-${_currentFilter}-${getLanguage()}` : 'empty';
   if (_lastEventHash === currentHash) return;
   _lastEventHash = currentHash;
 
@@ -28,7 +27,7 @@ export function renderEventLog(events) {
     list.innerHTML = emptyStateHtml({
       compact: true,
       title: t('events.none_title', 'Nothing has happened yet'),
-      body: t('events.none_desc', 'Disk, power, app and sign-in events appear here as they happen.'),
+      body: t('events.none_desc', 'Alerts, backups, power, app and hardware events appear here as they happen.'),
     });
     return;
   }
@@ -45,14 +44,9 @@ export function renderEventLog(events) {
   list.innerHTML = '';
 
   filtered.forEach((e) => {
-    const dt = new Date(e.ts * 1000);
-    const timeStr = formatDateTime(dt);
-    let color = 'var(--zn-text)';
-    let icon = 'ℹ️';
-    const look = eventLook(e.level);
-    if (look === 'error') { color = 'var(--crit)'; icon = '❌'; }
-    else if (look === 'warning') { color = 'var(--warn)'; icon = '⚠️'; }
-    else if (look === 'success') { color = 'var(--ok2)'; icon = '✅'; }
+    const text = eventView(e); // one view for the log, the bell and the dialog (SET-13)
+    const { color, icon } = text;
+    const timeStr = [formatDateTime(new Date(text.when * 1000)), text.repeated].filter(Boolean).join(' · ');
 
     const row = document.createElement('div');
     row.style.cssText = 'padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 8px; cursor: pointer;';
@@ -60,7 +54,6 @@ export function renderEventLog(events) {
     row.onmouseover = () => { row.style.background = 'rgba(255,255,255,0.02)'; };
     row.onmouseout = () => { row.style.background = 'transparent'; };
 
-    const text = eventText(e); // in the reader's language when the entry says how (NUX-3)
     const topHtml = `
       <div style="display: flex; gap: 10px; align-items: flex-start;">
         <span style="font-size: 14px; margin-top: 2px;">${icon}</span>
@@ -119,20 +112,9 @@ export function initEvents() {
   // draw the ones the page already has
   _lastEventHash = '';
   if (state.latestStats?.events) renderEventLog(state.latestStats.events);
-  const clearBtn = document.querySelector('.btn-pill-toggle[title="Clear Logs"]') || document.getElementById('btn-clear-events');
-  if (clearBtn) {
-    clearBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      showConfirmToast(t('events.clear_title', 'Clear the activity log'), t('events.clear_msg', 'Remove every entry from the activity log? This can\'t be undone.'), async () => {
-        try {
-          await api.delete('/api/events/clear');
-          _lastEventHash = '';
-          renderEventLog([]);
-          showToast(t('toast.event_log_cleared', 'Event log cleared'), 'success');
-        } catch (err) {
-          showToast(t('toast.failed_to_clear_events', 'Failed to clear events: {error}', { error: err.message }), 'error');
-        }
-      });
-    });
-  }
+  // "Clear Event Log" is gone (SET-13): it deleted for everyone, with no undo and no record of
+  // who did it. Entries leave by themselves after 90 days.
+  window.addEventListener('kiboto:lang-changed', () => {
+    if (state.latestStats?.events) renderEventLog(state.latestStats.events); // the open log kept the old language
+  });
 }
