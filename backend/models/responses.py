@@ -1790,38 +1790,6 @@ class BrowseResponse3(_Doc):
     snapshot: Any | None = None
 
 
-class GetSnmpConfigResponse(_Doc):
-    """GET /snmp/config"""
-
-    community_masked: str
-    contact: str
-    enabled: bool
-    location: str
-    port: float
-    v3_auth_protocol: str
-    v3_priv_protocol: str
-    v3_security_level: str
-    v3_user: str
-    version: str
-
-
-class GetEvaluatedOidsResponseItem(_Doc):
-    name: str | None = None
-    type: str | None = None
-    value: str | float | None = None
-
-
-class GetSnmpStatusResponse(_Doc):
-    """GET /snmp/status"""
-
-    enabled: bool | None = None
-    engine_active: bool | None = None
-    enterprise_oid: str | None = None
-    poll_response_latency_ms: float | None = None
-    port: float | None = None
-    version: str | None = None
-
-
 class GetStatsResponseClientPreferences(_Doc):
     lcd_theme: str | None = None
 
@@ -4483,12 +4451,6 @@ class RollbackResponse(_Doc):
     share: str | None = None
 
 
-class UpdateSnmpConfigResponse(_Doc):
-    """POST /snmp/config"""
-
-    status: str | None = None
-
-
 class PostStateResponse(_Doc):
     """POST /state"""
 
@@ -5293,9 +5255,6 @@ ROUTE_RESPONSES: dict[str, Any] = {
     "GET /share-links": list[Any],
     "GET /snapshots/schedules": GetSchedulesResponse,
     "GET /snapshots/{name}/browse": BrowseResponse3,
-    "GET /snmp/config": GetSnmpConfigResponse,
-    "GET /snmp/oids": dict[str, GetEvaluatedOidsResponseItem],
-    "GET /snmp/status": GetSnmpStatusResponse,
     "GET /stats": GetStatsResponse,
     "GET /system/about": GetSystemAboutResponse,
     "GET /system/client-preferences": GetClientPreferencesResponse,
@@ -5463,7 +5422,6 @@ ROUTE_RESPONSES: dict[str, Any] = {
     "POST /snapshots/schedules/{share}/run": RunNowResponse,
     "POST /snapshots/{name}/restore": RestoreResponse2,
     "POST /snapshots/{name}/rollback": RollbackResponse,
-    "POST /snmp/config": UpdateSnmpConfigResponse,
     "POST /state": PostStateResponse,
     "POST /system/client-preferences": SaveClientPreferencesResponse,
     "POST /system/profile": SetSystemProfileResponse,

@@ -414,8 +414,6 @@ _PUBLIC_API_PATHS = {
     "/api/v1/fleet/peer/unpair",
     "/api/remotes/oauth/mobile-page",
     "/api/remotes/oauth/mobile-exchange",
-    "/redfish/v1",
-    "/redfish/v1/",
 }
 
 

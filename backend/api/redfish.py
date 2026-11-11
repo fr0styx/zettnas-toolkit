@@ -6,12 +6,26 @@ served directly from in-memory system state without blocking disk or subprocess 
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 
 from backend import __version__
+from backend.auth import require_scope
 from backend.state import Z_STATE
 
-router = APIRouter(tags=["Redfish"])
+
+def _redfish_on() -> None:
+    """Redfish answers only where an administrator turned it on (SET-01)."""
+    from backend.services import redfish_access
+
+    if not redfish_access.enabled():
+        raise HTTPException(status_code=404, detail="Redfish is turned off on this NAS.")
+
+
+# every route, the service root included: turned on, and a signed-in account that may read the system
+router = APIRouter(
+    tags=["Redfish"],
+    dependencies=[Depends(_redfish_on), Depends(require_scope("system:view", "storage:read"))],
+)
 
 REDFISH_HEADERS = {
     "OData-Version": "4.0",

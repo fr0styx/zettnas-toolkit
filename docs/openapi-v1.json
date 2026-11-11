@@ -15853,49 +15853,6 @@
     "title": "GetDockerUpdatePoliciesResponse",
     "type": "object"
    },
-   "GetEvaluatedOidsResponseItem": {
-    "additionalProperties": true,
-    "properties": {
-     "name": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Name"
-     },
-     "type": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Type"
-     },
-     "value": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Value"
-     }
-    },
-    "title": "GetEvaluatedOidsResponseItem",
-    "type": "object"
-   },
    "GetFanPresetsResponse": {
     "additionalProperties": true,
     "description": "GET /fans/presets",
@@ -19044,140 +19001,6 @@
      }
     },
     "title": "GetServerIdentityResponse",
-    "type": "object"
-   },
-   "GetSnmpConfigResponse": {
-    "additionalProperties": true,
-    "description": "GET /snmp/config",
-    "properties": {
-     "community_masked": {
-      "title": "Community Masked",
-      "type": "string"
-     },
-     "contact": {
-      "title": "Contact",
-      "type": "string"
-     },
-     "enabled": {
-      "title": "Enabled",
-      "type": "boolean"
-     },
-     "location": {
-      "title": "Location",
-      "type": "string"
-     },
-     "port": {
-      "title": "Port",
-      "type": "number"
-     },
-     "v3_auth_protocol": {
-      "title": "V3 Auth Protocol",
-      "type": "string"
-     },
-     "v3_priv_protocol": {
-      "title": "V3 Priv Protocol",
-      "type": "string"
-     },
-     "v3_security_level": {
-      "title": "V3 Security Level",
-      "type": "string"
-     },
-     "v3_user": {
-      "title": "V3 User",
-      "type": "string"
-     },
-     "version": {
-      "title": "Version",
-      "type": "string"
-     }
-    },
-    "required": [
-     "community_masked",
-     "contact",
-     "enabled",
-     "location",
-     "port",
-     "v3_auth_protocol",
-     "v3_priv_protocol",
-     "v3_security_level",
-     "v3_user",
-     "version"
-    ],
-    "title": "GetSnmpConfigResponse",
-    "type": "object"
-   },
-   "GetSnmpStatusResponse": {
-    "additionalProperties": true,
-    "description": "GET /snmp/status",
-    "properties": {
-     "enabled": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Enabled"
-     },
-     "engine_active": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Engine Active"
-     },
-     "enterprise_oid": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Enterprise Oid"
-     },
-     "poll_response_latency_ms": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Poll Response Latency Ms"
-     },
-     "port": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Port"
-     },
-     "version": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Version"
-     }
-    },
-    "title": "GetSnmpStatusResponse",
     "type": "object"
    },
    "GetStatsResponse": {
@@ -34233,6 +34056,19 @@
     "title": "RagWatchedFoldersRequest",
     "type": "object"
    },
+   "RedfishSwitch": {
+    "properties": {
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "enabled"
+    ],
+    "title": "RedfishSwitch",
+    "type": "object"
+   },
    "RegisterIn": {
     "properties": {
      "credential": {
@@ -36780,120 +36616,6 @@
      "snapshot_name"
     ],
     "title": "SnapshotRestoreModel",
-    "type": "object"
-   },
-   "SnmpConfigRequest": {
-    "properties": {
-     "community": {
-      "anyOf": [
-       {
-        "maxLength": 64,
-        "minLength": 1,
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Community"
-     },
-     "contact": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": "admin@kiboto.local",
-      "title": "Contact"
-     },
-     "enabled": {
-      "default": true,
-      "title": "Enabled",
-      "type": "boolean"
-     },
-     "location": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": "Homelab Rack",
-      "title": "Location"
-     },
-     "port": {
-      "default": 161,
-      "maximum": 65535.0,
-      "minimum": 1.0,
-      "title": "Port",
-      "type": "integer"
-     },
-     "v3_auth_protocol": {
-      "anyOf": [
-       {
-        "pattern": "^(MD5|SHA|SHA-256)$",
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": "SHA-256",
-      "title": "V3 Auth Protocol"
-     },
-     "v3_priv_protocol": {
-      "anyOf": [
-       {
-        "pattern": "^(DES|AES|AES-128)$",
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": "AES-128",
-      "title": "V3 Priv Protocol"
-     },
-     "v3_security_level": {
-      "anyOf": [
-       {
-        "pattern": "^(noAuthNoPriv|authNoPriv|authPriv)$",
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": "authPriv",
-      "title": "V3 Security Level"
-     },
-     "v3_user": {
-      "anyOf": [
-       {
-        "maxLength": 64,
-        "minLength": 1,
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": "kiboto_admin",
-      "title": "V3 User"
-     },
-     "version": {
-      "default": "v2c",
-      "pattern": "^(v2c|v3|both)$",
-      "title": "Version",
-      "type": "string"
-     }
-    },
-    "title": "SnmpConfigRequest",
     "type": "object"
    },
    "StackActionRequest": {
@@ -39748,25 +39470,6 @@
      }
     },
     "title": "UpdateSftpConfigResponse",
-    "type": "object"
-   },
-   "UpdateSnmpConfigResponse": {
-    "additionalProperties": true,
-    "description": "POST /snmp/config",
-    "properties": {
-     "status": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Status"
-     }
-    },
-    "title": "UpdateSnmpConfigResponse",
     "type": "object"
    },
    "UpdateUserEndpointResponse": {
@@ -65935,178 +65638,6 @@
     ]
    }
   },
-  "/api/v1/snmp/config": {
-   "get": {
-    "description": "Returns current SNMP configuration with masked credentials.",
-    "operationId": "get_snmp_config_api_v1_snmp_config_get",
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/GetSnmpConfigResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "401": {
-      "$ref": "#/components/responses/Unauthorized"
-     },
-     "403": {
-      "$ref": "#/components/responses/Forbidden"
-     }
-    },
-    "summary": "Get Snmp Config",
-    "tags": [
-     "SNMP Monitoring"
-    ],
-    "x-required-scopes": [
-     "system:view",
-     "system:config"
-    ]
-   },
-   "post": {
-    "description": "Updates SNMP daemon configuration.",
-    "operationId": "update_snmp_config_api_v1_snmp_config_post",
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/SnmpConfigRequest"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/UpdateSnmpConfigResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "401": {
-      "$ref": "#/components/responses/Unauthorized"
-     },
-     "403": {
-      "$ref": "#/components/responses/Forbidden"
-     },
-     "422": {
-      "$ref": "#/components/responses/ValidationFailed"
-     }
-    },
-    "summary": "Update Snmp Config",
-    "tags": [
-     "SNMP Monitoring"
-    ],
-    "x-required-scopes": [
-     "system:config"
-    ]
-   }
-  },
-  "/api/v1/snmp/mib": {
-   "get": {
-    "description": "Returns downloadable SMIv2 ZETTLAB-KIBOTO-MIB file.",
-    "operationId": "download_mib_file_api_v1_snmp_mib_get",
-    "responses": {
-     "200": {
-      "content": {
-       "text/plain": {
-        "schema": {
-         "type": "string"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "401": {
-      "$ref": "#/components/responses/Unauthorized"
-     },
-     "403": {
-      "$ref": "#/components/responses/Forbidden"
-     }
-    },
-    "summary": "Download Mib File",
-    "tags": [
-     "SNMP Monitoring"
-    ],
-    "x-required-scopes": [
-     "system:view"
-    ]
-   }
-  },
-  "/api/v1/snmp/oids": {
-   "get": {
-    "description": "Evaluates live enterprise OIDs directly from in-memory state.",
-    "operationId": "get_evaluated_oids_api_v1_snmp_oids_get",
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "additionalProperties": {
-          "$ref": "#/components/schemas/GetEvaluatedOidsResponseItem"
-         },
-         "title": "Response 200 Get Evaluated Oids Api V1 Snmp Oids Get",
-         "type": "object"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "401": {
-      "$ref": "#/components/responses/Unauthorized"
-     },
-     "403": {
-      "$ref": "#/components/responses/Forbidden"
-     }
-    },
-    "summary": "Get Evaluated Oids",
-    "tags": [
-     "SNMP Monitoring"
-    ],
-    "x-required-scopes": [
-     "system:view"
-    ]
-   }
-  },
-  "/api/v1/snmp/status": {
-   "get": {
-    "description": "Returns SNMP daemon running status and protocol capabilities.",
-    "operationId": "get_snmp_status_api_v1_snmp_status_get",
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/GetSnmpStatusResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "401": {
-      "$ref": "#/components/responses/Unauthorized"
-     },
-     "403": {
-      "$ref": "#/components/responses/Forbidden"
-     }
-    },
-    "summary": "Get Snmp Status",
-    "tags": [
-     "SNMP Monitoring"
-    ],
-    "x-required-scopes": [
-     "system:view",
-     "storage:read"
-    ]
-   }
-  },
   "/api/v1/state": {
    "post": {
     "operationId": "post_state_api_v1_state_post",
@@ -68769,6 +68300,82 @@
     ],
     "x-required-scopes": [
      "system:power"
+    ]
+   }
+  },
+  "/api/v1/system/redfish": {
+   "get": {
+    "description": "Whether the Redfish interface for monitoring tools answers (off by default, SET-01).",
+    "operationId": "get_redfish_switch_api_v1_system_redfish_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Redfish Switch Api V1 System Redfish Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Redfish Switch",
+    "tags": [
+     "System & Storage"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   },
+   "put": {
+    "operationId": "put_redfish_switch_api_v1_system_redfish_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RedfishSwitch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Redfish Switch Api V1 System Redfish Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Redfish Switch",
+    "tags": [
+     "System & Storage"
+    ],
+    "x-required-scopes": [
+     "system:config"
     ]
    }
   },
@@ -72685,6 +72292,10 @@
     "summary": "Get Service Root",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -72711,6 +72322,10 @@
     "summary": "Get Service Root",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -72737,6 +72352,10 @@
     "summary": "List Chassis",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -72763,6 +72382,10 @@
     "summary": "List Chassis",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -72789,6 +72412,10 @@
     "summary": "Get Chassis Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -72815,6 +72442,10 @@
     "summary": "Get Chassis Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -72841,6 +72472,10 @@
     "summary": "Get Thermal Telemetry",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -72867,6 +72502,10 @@
     "summary": "Get Thermal Telemetry",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -72893,6 +72532,10 @@
     "summary": "List Storage",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -72919,6 +72562,10 @@
     "summary": "List Storage",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -72945,6 +72592,10 @@
     "summary": "Get Storage Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -72971,6 +72622,10 @@
     "summary": "Get Storage Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73014,6 +72669,10 @@
     "summary": "Get Drive Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73040,6 +72699,10 @@
     "summary": "List Systems",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73066,6 +72729,10 @@
     "summary": "List Systems",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73092,6 +72759,10 @@
     "summary": "Get System Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73118,6 +72789,10 @@
     "summary": "Get System Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73133,12 +72808,21 @@
        }
       },
       "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
      }
     },
-    "security": [],
     "summary": "Get Service Root",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73154,12 +72838,21 @@
        }
       },
       "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
      }
     },
-    "security": [],
     "summary": "Get Service Root",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73186,6 +72879,10 @@
     "summary": "List Chassis",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73212,6 +72909,10 @@
     "summary": "List Chassis",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73238,6 +72939,10 @@
     "summary": "Get Chassis Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73264,6 +72969,10 @@
     "summary": "Get Chassis Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73290,6 +72999,10 @@
     "summary": "Get Thermal Telemetry",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73316,6 +73029,10 @@
     "summary": "Get Thermal Telemetry",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73342,6 +73059,10 @@
     "summary": "List Storage",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73368,6 +73089,10 @@
     "summary": "List Storage",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73394,6 +73119,10 @@
     "summary": "Get Storage Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73420,6 +73149,10 @@
     "summary": "Get Storage Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73463,6 +73196,10 @@
     "summary": "Get Drive Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73489,6 +73226,10 @@
     "summary": "List Systems",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73515,6 +73256,10 @@
     "summary": "List Systems",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73541,6 +73286,10 @@
     "summary": "Get System Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   },
@@ -73567,6 +73316,10 @@
     "summary": "Get System Detail",
     "tags": [
      "Redfish"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "storage:read"
     ]
    }
   }

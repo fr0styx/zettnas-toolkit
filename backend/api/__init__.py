@@ -52,7 +52,6 @@ from backend.api.security import router as security_router
 from backend.api.setup import router as setup_router  # noqa: E402
 from backend.api.sftp import router as sftp_router
 from backend.api.snapshots import router as snapshots_router  # noqa: E402
-from backend.api.snmp import router as snmp_router
 from backend.api.stats import router as stats_router
 from backend.api.storage import router as storage_router
 from backend.api.system import router as system_router
@@ -114,7 +113,6 @@ api_router.include_router(home_assistant_router)  # RES-5
 api_router.include_router(hw_helper_router)
 api_router.include_router(sftp_router)
 api_router.include_router(vms_router)
-api_router.include_router(snmp_router)
 api_router.include_router(ai_conversations_router)
 api_router.include_router(ai_apps_router)  # COMP-07
 api_router.include_router(ai_pack_router)  # AI-40
@@ -157,7 +155,6 @@ __all__ = [
     "home_assistant_router",
     "sftp_router",
     "vms_router",
-    "snmp_router",
     "ai_apps_router",
     "ai_pack_router",
     "ai_conversations_router",

@@ -282,6 +282,21 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   links in Settings → Shares → "Links shared from this NAS". Until now a link could be made and never
   be seen or stopped again. The share dialog says at once when "Always" needs a password.
 
+#### Security
+
+- **Redfish is off until you turn it on**: the Redfish interface for monitoring tools answered on
+  every install: its first page to anyone without sign-in, and the hardware inventory and readings
+  to every signed-in account. It is now off by default, and when on every page needs a signed-in
+  account that may read the system. An administrator turns it on with `PUT /api/v1/system/redfish`
+  (`{"enabled": true}`); a switch in Settings follows. If a monitoring tool of yours reads Redfish,
+  turn it on after this update.
+
+#### Removed
+
+- **The SNMP routes**: `/api/v1/snmp/status`, `/snmp/config`, `/snmp/oids` and `/snmp/mib` are gone.
+  No SNMP agent ever existed behind them: nothing listened on the port, while the status answered
+  "engine active". A real SNMP agent is planned as its own feature.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

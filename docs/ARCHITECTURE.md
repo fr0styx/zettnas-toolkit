@@ -86,11 +86,10 @@ The application starts four persistent background daemon threads upon startup vi
   3. Supervises guest VNC ports and provides authenticated WebSocket tunnels for `@novnc/novnc` browser console rendering.
   4. Manages official ISO catalog downloads with SHA-256 integrity checks and background download queuing.
 
-### 2.6 Enterprise Standards: DMTF Redfish & SNMP
-- **Standards**: DMTF Redfish 1.16+ and SNMP v2c/v3.
+### 2.6 Monitoring tools: DMTF Redfish
+- **Standards**: DMTF Redfish 1.15, read-only. Off until an administrator turns it on (`PUT /api/v1/system/redfish`); every route then needs a signed-in account that may read the system.
 - **Responsibilities**:
   1. Exposes standard in-memory Redfish endpoints (`/redfish/v1/Chassis/1/Thermal`, `/redfish/v1/Systems/1`, `/redfish/v1/Storage/1`) backed directly by the live telemetry state cache with zero subprocess forks.
-  2. Implements standard MIB counters for automated ingestion into homelab and enterprise infrastructure monitoring tools.
 
 ### 2.7 Storage Platform Abstraction Layer (PAL) & Observer Mode
 - **Adapters**: Unraid Array, Btrfs Active Provisioner, OpenZFS Engine, and Non-Intrusive Observer Mode adapters for FygoOS, ZettOS, UGOS (Ugreen NAS), TrueNAS SCALE, Proxmox VE, and Generic Linux.

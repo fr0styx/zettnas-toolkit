@@ -1132,6 +1132,37 @@ class HealthSignalIn(BaseModel):
     enabled: bool
 
 
+class RedfishSwitch(BaseModel):
+    enabled: bool
+
+
+@router.get("/system/redfish", dependencies=[Depends(require_scope("system:config"))])
+def get_redfish_switch() -> dict[str, Any]:
+    """Whether the Redfish interface for monitoring tools answers (off by default, SET-01)."""
+    from backend.services import redfish_access
+
+    return {"enabled": redfish_access.enabled()}
+
+
+@router.put("/system/redfish", dependencies=[Depends(require_scope("system:config"))])
+def put_redfish_switch(
+    req: RedfishSwitch, request: Request, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+) -> dict[str, Any]:
+    from backend.auth import client_ip
+    from backend.services import redfish_access
+    from backend.users_db import log_security_event
+
+    on = redfish_access.set_enabled(req.enabled)
+    log_security_event(
+        "redfish.enabled" if on else "redfish.disabled",
+        "success",
+        actor_id=principal.user_id,
+        actor_username=principal.username,
+        actor_ip=client_ip(request),
+    )
+    return {"enabled": on}
+
+
 @router.get("/system/health-signal", dependencies=[Depends(require_scope("system:view"))])
 def get_health_signal():
     """The opt-in anonymous weekly report: whether it is on, and exactly what it sends."""

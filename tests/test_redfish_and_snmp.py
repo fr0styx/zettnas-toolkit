@@ -1,5 +1,5 @@
 """
-Tests for Phase 3: DMTF Redfish REST API and SNMP v2c/v3 Monitoring & MIB Management.
+Tests for the DMTF Redfish REST API (the SNMP routes were removed in SET-01: no agent existed).
 """
 
 import pytest
@@ -7,8 +7,8 @@ import pytest
 from backend.state import Z_STATE
 
 
-def test_redfish_service_root(client):
-    res = client.get("/redfish/v1/")
+def test_redfish_service_root(client, auth_headers):
+    res = client.get("/redfish/v1/", headers=auth_headers)
     assert res.status_code == 200
     data = res.json()
     assert data["RedfishVersion"] == "1.15.0"
@@ -31,9 +31,14 @@ SEEDED_STATS = {
 
 
 @pytest.fixture(autouse=True)
-def _seeded_stats(monkeypatch):
-    """Each test sees the same stats, whatever ran before it (ARC-13)."""
+def _seeded_stats(monkeypatch, tmp_path):
+    """Each test sees the same stats, whatever ran before it (ARC-13); Redfish is turned on."""
     import copy
+
+    from backend.services import redfish_access
+
+    monkeypatch.setattr(redfish_access, "SETTINGS_FILE", str(tmp_path / "redfish.json"))
+    redfish_access.set_enabled(True)
 
     monkeypatch.setattr(Z_STATE, "cached_stats", copy.deepcopy(SEEDED_STATS))
 
@@ -98,57 +103,3 @@ def test_redfish_systems_and_storage(client, auth_headers):
     assert drive["Id"] == "sda"
     assert drive["MediaType"] == "HDD"
     assert drive["Protocol"] == "SATA"
-
-
-def test_snmp_api_suite(client, auth_headers):
-    # 1. SNMP Status
-    res = client.get("/api/snmp/status", headers=auth_headers)
-    assert res.status_code == 200
-    status = res.json()
-    assert status["enabled"] is True
-    assert status["port"] == 161
-    assert status["enterprise_oid"] == "1.3.6.1.4.1.58925"
-
-    # 2. SNMP Config (Masked credentials)
-    res = client.get("/api/snmp/config", headers=auth_headers)
-    assert res.status_code == 200
-    cfg = res.json()
-    assert "community" not in cfg
-    assert "community_masked" in cfg
-    assert cfg["v3_user"] == "kiboto_admin"
-
-    # 3. Update SNMP Config
-    new_cfg = {
-        "enabled": True,
-        "port": 1161,
-        "version": "both",
-        "community": "secret_monitoring_comm",
-        "v3_user": "sec_operator",
-        "v3_security_level": "authPriv",
-    }
-    res = client.post("/api/snmp/config", json=new_cfg, headers=auth_headers)
-    assert res.status_code == 200
-
-    # Verify update persisted and masked
-    res = client.get("/api/snmp/config", headers=auth_headers)
-    assert res.status_code == 200
-    updated = res.json()
-    assert updated["port"] == 1161
-    assert updated["v3_user"] == "sec_operator"
-    assert updated["community_masked"].startswith("sec")
-
-    # 4. Enterprise MIB file download
-    res = client.get("/api/snmp/mib")
-    assert res.status_code == 200
-    text = res.text
-    assert "ZETTLAB-KIBOTO-MIB DEFINITIONS ::= BEGIN" in text
-    assert "enterprises 58925" in text
-    assert "kibotoCpuTemp" in text
-
-    # 5. Evaluated Live OIDs
-    res = client.get("/api/snmp/oids", headers=auth_headers)
-    assert res.status_code == 200
-    oids = res.json()
-    assert "1.3.6.1.4.1.58925.1.0" in oids
-    assert "1.3.6.1.4.1.58925.2.0" in oids
-    assert oids["1.3.6.1.4.1.58925.2.0"]["name"] == "kibotoCpuTemp"

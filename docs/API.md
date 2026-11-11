@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-719 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+716 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -531,40 +531,40 @@ request and response schemas.
 
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/redfish` | signed in | Redfish Service Root (/redfish/v1/) |
-| `GET` | `/redfish/` | signed in | Redfish Service Root (/redfish/v1/) |
-| `GET` | `/redfish/Chassis` | signed in | Redfish Chassis Collection |
-| `GET` | `/redfish/Chassis/` | signed in | Redfish Chassis Collection |
-| `GET` | `/redfish/Chassis/1` | signed in | Redfish Chassis/1 Detail |
-| `GET` | `/redfish/Chassis/1/` | signed in | Redfish Chassis/1 Detail |
-| `GET` | `/redfish/Chassis/1/Thermal` | signed in | Redfish Chassis/1/Thermal: Fan RPMs and Temperature Sensors |
-| `GET` | `/redfish/Chassis/1/Thermal/` | signed in | Redfish Chassis/1/Thermal: Fan RPMs and Temperature Sensors |
-| `GET` | `/redfish/Storage` | signed in | Redfish Storage Collection |
-| `GET` | `/redfish/Storage/` | signed in | Redfish Storage Collection |
-| `GET` | `/redfish/Storage/1` | signed in | Redfish Storage/1 Detail: Drives & Volumes |
-| `GET` | `/redfish/Storage/1/` | signed in | Redfish Storage/1 Detail: Drives & Volumes |
-| `GET` | `/redfish/Storage/1/Drives/{drive_id}` | signed in | Redfish Storage/1/Drives/{drive_id}: Individual Drive Telemetry |
-| `GET` | `/redfish/Systems` | signed in | Redfish Systems Collection |
-| `GET` | `/redfish/Systems/` | signed in | Redfish Systems Collection |
-| `GET` | `/redfish/Systems/1` | signed in | Redfish Systems/1 Detail: Compute & Memory Telemetry |
-| `GET` | `/redfish/Systems/1/` | signed in | Redfish Systems/1 Detail: Compute & Memory Telemetry |
-| `GET` | `/redfish/v1` | public | Redfish Service Root (/redfish/v1/) |
-| `GET` | `/redfish/v1/` | public | Redfish Service Root (/redfish/v1/) |
-| `GET` | `/redfish/v1/Chassis` | signed in | Redfish Chassis Collection |
-| `GET` | `/redfish/v1/Chassis/` | signed in | Redfish Chassis Collection |
-| `GET` | `/redfish/v1/Chassis/1` | signed in | Redfish Chassis/1 Detail |
-| `GET` | `/redfish/v1/Chassis/1/` | signed in | Redfish Chassis/1 Detail |
-| `GET` | `/redfish/v1/Chassis/1/Thermal` | signed in | Redfish Chassis/1/Thermal: Fan RPMs and Temperature Sensors |
-| `GET` | `/redfish/v1/Chassis/1/Thermal/` | signed in | Redfish Chassis/1/Thermal: Fan RPMs and Temperature Sensors |
-| `GET` | `/redfish/v1/Storage` | signed in | Redfish Storage Collection |
-| `GET` | `/redfish/v1/Storage/` | signed in | Redfish Storage Collection |
-| `GET` | `/redfish/v1/Storage/1` | signed in | Redfish Storage/1 Detail: Drives & Volumes |
-| `GET` | `/redfish/v1/Storage/1/` | signed in | Redfish Storage/1 Detail: Drives & Volumes |
-| `GET` | `/redfish/v1/Storage/1/Drives/{drive_id}` | signed in | Redfish Storage/1/Drives/{drive_id}: Individual Drive Telemetry |
-| `GET` | `/redfish/v1/Systems` | signed in | Redfish Systems Collection |
-| `GET` | `/redfish/v1/Systems/` | signed in | Redfish Systems Collection |
-| `GET` | `/redfish/v1/Systems/1` | signed in | Redfish Systems/1 Detail: Compute & Memory Telemetry |
-| `GET` | `/redfish/v1/Systems/1/` | signed in | Redfish Systems/1 Detail: Compute & Memory Telemetry |
+| `GET` | `/redfish` | any of `system:view`, `storage:read` | Redfish Service Root (/redfish/v1/) |
+| `GET` | `/redfish/` | any of `system:view`, `storage:read` | Redfish Service Root (/redfish/v1/) |
+| `GET` | `/redfish/Chassis` | any of `system:view`, `storage:read` | Redfish Chassis Collection |
+| `GET` | `/redfish/Chassis/` | any of `system:view`, `storage:read` | Redfish Chassis Collection |
+| `GET` | `/redfish/Chassis/1` | any of `system:view`, `storage:read` | Redfish Chassis/1 Detail |
+| `GET` | `/redfish/Chassis/1/` | any of `system:view`, `storage:read` | Redfish Chassis/1 Detail |
+| `GET` | `/redfish/Chassis/1/Thermal` | any of `system:view`, `storage:read` | Redfish Chassis/1/Thermal: Fan RPMs and Temperature Sensors |
+| `GET` | `/redfish/Chassis/1/Thermal/` | any of `system:view`, `storage:read` | Redfish Chassis/1/Thermal: Fan RPMs and Temperature Sensors |
+| `GET` | `/redfish/Storage` | any of `system:view`, `storage:read` | Redfish Storage Collection |
+| `GET` | `/redfish/Storage/` | any of `system:view`, `storage:read` | Redfish Storage Collection |
+| `GET` | `/redfish/Storage/1` | any of `system:view`, `storage:read` | Redfish Storage/1 Detail: Drives & Volumes |
+| `GET` | `/redfish/Storage/1/` | any of `system:view`, `storage:read` | Redfish Storage/1 Detail: Drives & Volumes |
+| `GET` | `/redfish/Storage/1/Drives/{drive_id}` | any of `system:view`, `storage:read` | Redfish Storage/1/Drives/{drive_id}: Individual Drive Telemetry |
+| `GET` | `/redfish/Systems` | any of `system:view`, `storage:read` | Redfish Systems Collection |
+| `GET` | `/redfish/Systems/` | any of `system:view`, `storage:read` | Redfish Systems Collection |
+| `GET` | `/redfish/Systems/1` | any of `system:view`, `storage:read` | Redfish Systems/1 Detail: Compute & Memory Telemetry |
+| `GET` | `/redfish/Systems/1/` | any of `system:view`, `storage:read` | Redfish Systems/1 Detail: Compute & Memory Telemetry |
+| `GET` | `/redfish/v1` | any of `system:view`, `storage:read` | Redfish Service Root (/redfish/v1/) |
+| `GET` | `/redfish/v1/` | any of `system:view`, `storage:read` | Redfish Service Root (/redfish/v1/) |
+| `GET` | `/redfish/v1/Chassis` | any of `system:view`, `storage:read` | Redfish Chassis Collection |
+| `GET` | `/redfish/v1/Chassis/` | any of `system:view`, `storage:read` | Redfish Chassis Collection |
+| `GET` | `/redfish/v1/Chassis/1` | any of `system:view`, `storage:read` | Redfish Chassis/1 Detail |
+| `GET` | `/redfish/v1/Chassis/1/` | any of `system:view`, `storage:read` | Redfish Chassis/1 Detail |
+| `GET` | `/redfish/v1/Chassis/1/Thermal` | any of `system:view`, `storage:read` | Redfish Chassis/1/Thermal: Fan RPMs and Temperature Sensors |
+| `GET` | `/redfish/v1/Chassis/1/Thermal/` | any of `system:view`, `storage:read` | Redfish Chassis/1/Thermal: Fan RPMs and Temperature Sensors |
+| `GET` | `/redfish/v1/Storage` | any of `system:view`, `storage:read` | Redfish Storage Collection |
+| `GET` | `/redfish/v1/Storage/` | any of `system:view`, `storage:read` | Redfish Storage Collection |
+| `GET` | `/redfish/v1/Storage/1` | any of `system:view`, `storage:read` | Redfish Storage/1 Detail: Drives & Volumes |
+| `GET` | `/redfish/v1/Storage/1/` | any of `system:view`, `storage:read` | Redfish Storage/1 Detail: Drives & Volumes |
+| `GET` | `/redfish/v1/Storage/1/Drives/{drive_id}` | any of `system:view`, `storage:read` | Redfish Storage/1/Drives/{drive_id}: Individual Drive Telemetry |
+| `GET` | `/redfish/v1/Systems` | any of `system:view`, `storage:read` | Redfish Systems Collection |
+| `GET` | `/redfish/v1/Systems/` | any of `system:view`, `storage:read` | Redfish Systems Collection |
+| `GET` | `/redfish/v1/Systems/1` | any of `system:view`, `storage:read` | Redfish Systems/1 Detail: Compute & Memory Telemetry |
+| `GET` | `/redfish/v1/Systems/1/` | any of `system:view`, `storage:read` | Redfish Systems/1 Detail: Compute & Memory Telemetry |
 
 ### Remote Storage
 
@@ -605,16 +605,6 @@ request and response schemas.
 | `GET` | `/api/v1/sftp/users` | any of `shares:manage`, `storage:admin` | Lists configured SFTP users, authorized shares, and access levels |
 | `POST` | `/api/v1/sftp/users` | any of `shares:manage`, `storage:admin` | Creates a new dedicated SFTP user with designated share access |
 | `DELETE` | `/api/v1/sftp/users/{username}` | any of `shares:manage`, `storage:admin` | Deletes an SFTP user and revokes their file transfer credentials |
-
-### SNMP Monitoring
-
-| Method | Path | Access | What it does |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/snmp/config` | any of `system:view`, `system:config` | Returns current SNMP configuration with masked credentials |
-| `POST` | `/api/v1/snmp/config` | `system:config` | Updates SNMP daemon configuration |
-| `GET` | `/api/v1/snmp/mib` | `system:view` | Returns downloadable SMIv2 ZETTLAB-KIBOTO-MIB file |
-| `GET` | `/api/v1/snmp/oids` | `system:view` | Evaluates live enterprise OIDs directly from in-memory state |
-| `GET` | `/api/v1/snmp/status` | any of `system:view`, `storage:read` | Returns SNMP daemon running status and protocol capabilities |
 
 ### Samba File Sharing
 
@@ -868,6 +858,8 @@ request and response schemas.
 | `POST` | `/api/v1/system/profile` | `system:config` | Set System Profile |
 | `GET` | `/api/v1/system/protection` | `system:view` | The copies outside this NAS, for the Overview (FEAT-01) |
 | `POST` | `/api/v1/system/reboot` | `system:power` | Trigger system reboot (requires system:power scope) |
+| `GET` | `/api/v1/system/redfish` | `system:config` | Whether the Redfish interface for monitoring tools answers (off by default, SET-01) |
+| `PUT` | `/api/v1/system/redfish` | `system:config` | Put Redfish Switch |
 | `GET` | `/api/v1/system/security-posture` | any of `system:view`, `system:config`, `users:read` | Evaluates real-time security posture across authentication, MFA, HTTPS, guest network shares, and API credential hygiene |
 | `POST` | `/api/v1/system/security-posture/fix/{fix_id}` | `system:config` | Applies one Security Advisor fix (B11): tightens a setting an upgraded install kept |
 | `POST` | `/api/v1/system/shutdown` | `system:power` | Trigger system poweroff (requires system:power scope) |

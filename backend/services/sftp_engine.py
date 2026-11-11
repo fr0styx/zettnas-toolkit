@@ -224,7 +224,7 @@ Match Group sftpusers
             from backend.users_db import log_security_event
 
             log_security_event("sftp.password_cleared", "success", details={"users": damaged})
-        except Exception:
+        except (ImportError, OSError, ValueError):
             ignored("backend.services.sftp_engine.SFTPEngine._clear_damaged_passwords")
         return raw
 
