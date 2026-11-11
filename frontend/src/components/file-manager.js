@@ -4109,6 +4109,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
         </div>
 
         <div class="fmx-row-12">
+          <button id="fm-share-mine" class="btn-pill-toggle is-ghost">${t('links.see_mine', 'See my links')}</button>
           <button id="fm-share-cancel" class="btn-pill-toggle">${t('common.cancel', 'Cancel')}</button>
           <button id="fm-share-submit" class="btn-pill-toggle active is-primary"><span aria-hidden="true">✨</span> ${escapeHtml(t('ui.generate_share_link', 'Generate Share Link'))}</button>
         </div>
@@ -4148,16 +4149,24 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
   const cancelBtn = modal.querySelector('#fm-share-cancel');
   if (cancelBtn) cancelBtn.onclick = closeModal;
 
+  const mineBtn = modal.querySelector('#fm-share-mine');
+  if (mineBtn) mineBtn.onclick = () => import('./shared-links.js').then((m) => m.openSharedLinks());
+
   const submitBtn = modal.querySelector('#fm-share-submit');
   if (submitBtn) {
     submitBtn.onclick = async () => {
-      submitBtn.disabled = true;
-      submitBtn.textContent = t('ui.generating', 'Generating...');
-
       const expSelect = modal.querySelector('#fm-share-expires');
       const expHours = expSelect ? parseInt(expSelect.value, 10) : 24;
       const pwdInput = modal.querySelector('#fm-share-password');
       const pwd = pwdInput ? pwdInput.value.trim() : '';
+      if (!(expHours > 0) && !pwd) {
+        // the server refuses it too (SET-01): say so here, where the password can be typed
+        showToast(t('links.always_needs_password', 'A link that never ends needs a password.'), 'error');
+        pwdInput?.focus();
+        return;
+      }
+      submitBtn.disabled = true;
+      submitBtn.textContent = t('ui.generating', 'Generating...');
       const maxDlInput = modal.querySelector('#fm-share-max-dl');
       const maxDl = maxDlInput ? parseInt(maxDlInput.value, 10) : 0;
       const upload = Boolean(/** @type {HTMLInputElement | null} */ (modal.querySelector('#fm-share-upload'))?.checked);

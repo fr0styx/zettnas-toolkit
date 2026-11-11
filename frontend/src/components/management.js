@@ -1627,6 +1627,12 @@ export function initManagement() {
     });
   }
 
+  // every link shared from this NAS, with "Stop sharing" (SET-01)
+  const sharedLinksBtn = document.getElementById('btn-show-shared-links');
+  if (sharedLinksBtn) {
+    sharedLinksBtn.addEventListener('click', () => import('./shared-links.js').then((m) => m.openSharedLinks({ everyone: true })));
+  }
+
   // Quick Manage Protocols shortcut in Network Shares pane
   const quickManageProtocolsBtn = document.getElementById('btn-quick-manage-protocols');
   if (quickManageProtocolsBtn) {

@@ -235,3 +235,12 @@
 .fm-ctx-heading { padding: 4px 12px 2px; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
 .fm-ctx-check { display: inline-block; width: 1.1em; }
 .fm-ctx-item.is-current { font-weight: 600; }
+
+/* Links I shared (SET-01): one row per link, wrapping on a phone */
+.shared-links-window { width: min(640px, 94vw); height: auto; min-width: 0; min-height: 0; max-height: 86vh; }
+.shared-links-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+.shared-link { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 10px 12px; border: 1px solid var(--zn-line); border-radius: 8px; }
+.shared-link.is-ended { opacity: 0.7; }
+.shared-link-what { flex: 1 1 220px; min-width: 0; }
+.shared-link-name { font-weight: 600; overflow-wrap: anywhere; }
+.shared-link-meta { color: var(--zn-text-muted); font-size: var(--zn-fs-xs); }

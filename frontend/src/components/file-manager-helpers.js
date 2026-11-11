@@ -349,6 +349,10 @@ export class FmSidebarTree {
         ${onUnraid ? place('/mnt/user/appdata', '⚡', t('fm.place_appdata', 'App data'), at('/mnt/user/appdata')) : ''}
         ${onUnraid ? place('/mnt/user/system', '⚙️', t('fm.place_system', 'System files'), at('/mnt/user/system')) : ''}
         ${place(`${base}/.RecycleBin`, '🗑️', t('dock.recycle_bin', 'Recycle Bin'), this.fm.currentPath.includes('.RecycleBin'))}
+        <div class="fm-tree-item" data-shared-links role="button" tabindex="0">
+          <span class="fm-tree-icon" aria-hidden="true">🔗</span>
+          <span class="fm-tree-label">${escapeHtml(t('links.title', 'Links I shared'))}</span>
+        </div>
       </div>
 
       ${favorites().length ? `
@@ -404,6 +408,7 @@ export class FmSidebarTree {
         e.stopPropagation();
         const p = item.dataset.path;
         if (p) this.fm.loadPath(p);
+        else if ('sharedLinks' in item.dataset) import('./shared-links.js').then((m) => m.openSharedLinks());
       });
 
       item.addEventListener('dragover', (e) => {

@@ -276,6 +276,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   refused the list and the stop. Everyone now reaches their own links; administrators reach all of
   them. Links that ended more than a week ago are removed from the list.
 
+#### Files
+
+- **Links I shared**: every link you made is now in one list, with what it opens, how long it works,
+  whether it has a password and how often it was used, and a "Stop sharing" button. Open it from the
+  File Explorer's sidebar or from "See my links" in the share dialog. Administrators find everyone's
+  links in Settings → Shares → "Links shared from this NAS". Until now a link could be made and never
+  be seen or stopped again. The share dialog says at once when "Always" needs a password.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 
