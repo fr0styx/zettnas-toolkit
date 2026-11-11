@@ -534,6 +534,70 @@ def test_a_question_from_the_restore_window_can_be_answered():
         browser.close()
 
 
+def test_shut_down_asks_and_the_card_follows_the_machine():
+    """SET-07: "Shut down" ended the machine after two seconds, without a question. It now asks,
+    only asks the system inside, and the card follows by itself: "Shutting down", and "Turn off
+    now" once the server offers it. The machine is played by the test."""
+    from playwright.sync_api import sync_playwright
+
+    vm = {
+        "id": "vm-j1",
+        "name": "alpha",
+        "state": "running",
+        "vcpus": 2,
+        "ram_gb": 2,
+        "disk_size_gb": 20,
+        "disk_format": "qcow2",
+        "bridge": "br0",
+        "os_family": "linux",
+    }
+    sent = []
+
+    def action(route):
+        act = json.loads(route.request.post_data or "{}").get("action")
+        sent.append(act)
+        if act == "stop":
+            vm.update(state="shutting_down", turn_off_offered=False)
+        elif act == "force_off":
+            vm.update(state="stopped")
+            vm.pop("turn_off_offered", None)
+        route.fulfill(
+            status=200, content_type="application/json", body=json.dumps({"status": "ok", "state": vm["state"]})
+        )
+
+    with sync_playwright() as p:
+        browser = _browser(p)
+        page = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+        page.route(
+            "**/api/vms",
+            lambda route: route.fulfill(status=200, content_type="application/json", body=json.dumps([vm])),
+        )
+        page.route("**/api/vms/vm-j1/action", action)
+        _sign_in(page)
+        _close_wizard(page)
+        page.evaluate("() => window.openVmManager && window.openVmManager()")
+        card = page.locator("[data-vm-id=vm-j1]")
+        card.locator(".btn-vm-acpi").click(timeout=15000)
+        page.wait_for_selector("#confirm-toast-modal", state="visible", timeout=6000)
+        assert "alpha" in page.inner_text("#confirm-toast-modal")
+        assert sent == [], "nothing is sent before the answer"
+        page.click("#confirm-toast-modal #confirm-toast-ok")
+        card.locator(".vm-shutting-note").wait_for(timeout=8000)
+        assert sent == ["stop"]
+        assert card.locator(".btn-vm-start").count() == 0  # a machine that shuts down is not "stopped"
+        assert card.locator(".btn-vm-force-off").count() == 0  # and nothing ends it yet
+
+        vm["turn_off_offered"] = True  # two minutes later, on the server's clock
+        card.locator(".btn-vm-force-off").wait_for(timeout=12000)  # the card reads the list again by itself
+        card.locator(".btn-vm-force-off").click()
+        page.wait_for_selector("#confirm-toast-modal", state="visible", timeout=6000)
+        assert sent == ["stop"]
+        page.click("#confirm-toast-modal #confirm-toast-ok")
+        card.locator(".btn-vm-start").wait_for(timeout=8000)
+        assert sent == ["stop", "force_off"]
+        browser.close()
+
+
 def test_add_a_backup_job_opens_on_a_choice_that_works():
     """SET-06: the form's default was a choice the server always refused, and the passphrase field
     of a settings backup showed for a folder job (a style rule beat `hidden`)."""

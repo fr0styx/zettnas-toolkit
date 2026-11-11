@@ -1,6 +1,7 @@
 // The VM settings dialog and the QEMU error dialog.
 // Part of vm-manager.js, split out by ARC-5.
 
+import { shareReadOnly, shareRecord } from './power.js';
 import { api } from '../../api.js';
 import { escapeHtml } from '../../utils.js';
 import { showToast } from '../../toast.js';
@@ -608,8 +609,8 @@ export function openVmEditModal(vmId, vmObj = null) {
         <option value="9p" ${share.driver === '9p' ? 'selected' : ''}>9p</option>
       </select>
       <select class="share-mode" style="width: 60px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
-        <option value="rw" ${!share.readonly ? 'selected' : ''}>RW</option>
-        <option value="ro" ${share.readonly ? 'selected' : ''}>RO</option>
+        <option value="rw" ${!shareReadOnly(share) ? 'selected' : ''}>RW</option>
+        <option value="ro" ${shareReadOnly(share) ? 'selected' : ''}>RO</option>
       </select>
       <button type="button" class="btn-remove-share vme-crit-box">✕</button>
     `;
@@ -636,8 +637,7 @@ export function openVmEditModal(vmId, vmObj = null) {
       <input type="number" class="disk-size vme-xs-strong-box-4" min="5" max="4000" placeholder="${t('ui.size_gb', 'Size (GB)')}" value="${disk.size_gb || 50}" />
       <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
         <option value="virtio" ${disk.bus === 'virtio' ? 'selected' : ''}>virtio</option>
-        <option value="sata" ${disk.bus === 'sata' ? 'selected' : ''}>sata</option>
-        <option value="nvme" ${disk.bus === 'nvme' ? 'selected' : ''}>nvme</option>
+        ${['sata', 'nvme'].includes(disk.bus) ? `<option value="${disk.bus}" selected>${escapeHtml(t('vmp.bus_broken', '{bus} (does not start: choose virtio)', { bus: disk.bus }))}</option>` : ''}
       </select>
       <button type="button" class="btn-remove-disk vme-crit-box">✕</button>
     `;
@@ -889,7 +889,7 @@ export function openVmEditModal(vmId, vmObj = null) {
         const t = row.querySelector('.share-mount-tag')?.value?.trim();
         const d = row.querySelector('.share-driver')?.value || 'virtiofs';
         const ro = row.querySelector('.share-mode')?.value === 'ro';
-        if (p && t) hostShares.push({ host_path: p, mount_tag: t, driver: d, readonly: ro });
+        if (p && t) hostShares.push(shareRecord(p, t, d, ro));
       });
 
       const secondaryDisks = [];

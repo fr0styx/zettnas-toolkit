@@ -28,8 +28,7 @@ describe('VM Snapshots & Hyper-Backup UI Modal', () => {
   });
 
   it('renders modal with QCOW2 snapshots and takes a new snapshot', async () => {
-    api.get.mockResolvedValueOnce({
-      snapshots: [
+    api.get.mockResolvedValueOnce([
         {
           name: 'snap-clean-install',
           date: '2026-10-19 12:00:00',
@@ -37,8 +36,7 @@ describe('VM Snapshots & Hyper-Backup UI Modal', () => {
           is_live: false,
           description: 'Baseline OS installation',
         },
-      ],
-    });
+      ]);
 
     const targetVm = { id: 'vm-test-1', name: 'Ubuntu Test Server', state: 'stopped' };
     await openVmSnapshotsModal('vm-test-1', targetVm);
@@ -65,7 +63,7 @@ describe('VM Snapshots & Hyper-Backup UI Modal', () => {
     descInput.value = 'Before kernel upgrade';
 
     api.post.mockResolvedValueOnce({ success: true, name: 'snap-pre-upgrade' });
-    api.get.mockResolvedValueOnce({ snapshots: [] });
+    api.get.mockResolvedValueOnce([]);
 
     await btnSubmit.click();
     expect(api.post).toHaveBeenCalledWith('/api/vms/vm-test-1/snapshots', {
@@ -75,18 +73,16 @@ describe('VM Snapshots & Hyper-Backup UI Modal', () => {
   });
 
   it('handles revert and delete snapshot actions', async () => {
-    api.get.mockResolvedValueOnce({
-      snapshots: [
+    api.get.mockResolvedValueOnce([
         {
           name: 'snap-test-delete',
           date: '2026-10-19 12:30:00',
           size_formatted: '128 MB',
           is_live: true,
         },
-      ],
-    });
+      ]);
 
-    const targetVm = { id: 'vm-test-2', name: 'Debian Worker', state: 'running' };
+    const targetVm = { id: 'vm-test-2', name: 'Debian Worker', state: 'stopped' };
     await openVmSnapshotsModal('vm-test-2', targetVm);
 
     const modal = document.getElementById('modal-vm-snapshots');
@@ -98,19 +94,30 @@ describe('VM Snapshots & Hyper-Backup UI Modal', () => {
 
     // Revert
     api.post.mockResolvedValueOnce({ success: true });
-    api.get.mockResolvedValueOnce({ snapshots: [] });
+    api.get.mockResolvedValueOnce([]);
     revertBtn.click();
     expect(api.post).toHaveBeenCalledWith('/api/vms/vm-test-2/snapshots/snap-test-delete/revert');
 
     // Delete
     api.delete.mockResolvedValueOnce({ success: true });
-    api.get.mockResolvedValueOnce({ snapshots: [] });
+    api.get.mockResolvedValueOnce([]);
     delBtn.click();
     expect(api.delete).toHaveBeenCalledWith('/api/vms/vm-test-2/snapshots/snap-test-delete', { confirmed: true });
   });
 
+  it('reads the plain list the server sends, and opens no snapshot action while the machine runs (SET-07)', async () => {
+    api.get.mockResolvedValueOnce([{ name: 'before-update', date: '2026-11-01 10:00:00', vm_size: '0 B' }]);
+    await openVmSnapshotsModal('vm-test-3', { id: 'vm-test-3', name: 'alpha', state: 'running' });
+    const modal = document.getElementById('modal-vm-snapshots');
+    expect(modal.innerHTML).toContain('before-update'); // it said "No snapshots yet" for every machine
+    expect(modal.querySelector('#vm-snap-rule').textContent).toContain('Shut alpha down first');
+    expect(modal.querySelector('#btn-take-snapshot').disabled).toBe(true);
+    expect(modal.querySelector('.btn-snap-revert').disabled).toBe(true);
+    expect(modal.querySelector('.btn-snap-del').disabled).toBe(true);
+  });
+
   it('switches to Hyper-Backups tab and triggers backup creation', async () => {
-    api.get.mockResolvedValueOnce({ snapshots: [] }); // initial snapshot load
+    api.get.mockResolvedValueOnce([]); // initial snapshot load
     api.get.mockResolvedValueOnce({ backups: [] }); // tab switch backup load
 
     const targetVm = { id: 'vm-test-3', name: 'Alpine Micro', state: 'stopped' };
@@ -136,7 +143,7 @@ describe('VM Snapshots & Hyper-Backup UI Modal', () => {
     const { openVmEditModal } = await import('../components/vm-manager.js');
     api.get.mockImplementation((url) => {
       if (url.includes('/budget')) return Promise.resolve({ safe_slider_max_gb: 16 });
-      if (url.includes('/snapshots')) return Promise.resolve({ snapshots: [] });
+      if (url.includes('/snapshots')) return Promise.resolve([]);
       if (url.includes('/api/vms/vm-test-4')) return Promise.resolve({ id: 'vm-test-4', name: 'Server Four', ram_gb: 4 });
       return Promise.resolve({});
     });

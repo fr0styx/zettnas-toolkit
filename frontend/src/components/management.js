@@ -1,4 +1,5 @@
 import { syncWidgetSettingsUI } from './widgets.js';
+import { askPower, isShuttingDown, powerToast } from './vm/power.js';
 import { loadSecurityPane, loadNotificationsPane } from './management/admin-panes.js';
 import { kibPaneFor, loadKibExtras } from './management/kib-access.js';
 import { setIconLabel } from '../ui/primitives.js';
@@ -929,11 +930,15 @@ export function initManagement() {
                     </div>
                   </div>
                   <span style="padding: 2px 8px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; text-transform: uppercase; background: ${statusBg}; color: ${statusColor};">
-                    ${escapeHtml(vm.state || 'stopped')}
+                    ${escapeHtml(isShuttingDown(vm) ? t('vmp.st_shutting', 'Shutting down') : vm.state || 'stopped')}
                   </span>
                 </div>
                 <div class="mgx-row-box">
-                  ${isRunning
+                  ${isShuttingDown(vm)
+                    ? `<button class="btn-pill-toggle mgx-grow" disabled>${escapeHtml(t('vmp.st_shutting', 'Shutting down'))}</button>`
+                    : isPaused
+                    ? `<button class="btn-pill-toggle btn-vm-action-start mgx-ok-grow" data-vm-id="${escapeHtml(vm.id)}" data-act="resume"><span aria-hidden="true">▶</span> ${escapeHtml(t('vm.resume', 'Resume'))}</button>`
+                    : isRunning
                     ? `<button class="btn-pill-toggle btn-vm-action-stop is-danger mgx-grow" data-vm-id="${escapeHtml(vm.id)}" title="${t('ui.stop_vm', 'Stop VM')}"><span aria-hidden="true">⏹</span> ${escapeHtml(t('ui.stop', 'Stop'))}</button>`
                     : `<button class="btn-pill-toggle btn-vm-action-start mgx-ok-grow" data-vm-id="${escapeHtml(vm.id)}" title="${t('ui.start_vm', 'Start VM')}"><span aria-hidden="true">▶</span> ${escapeHtml(t('ui.start', 'Start'))}</button>`
                   }
@@ -950,7 +955,8 @@ export function initManagement() {
               try {
                 btn.disabled = true;
                 btn.textContent = '...';
-                await api.post(`/api/vms/${id}/action`, { action: 'start' });
+                // a paused machine is resumed: "Start" marked it running while it stayed frozen
+                await api.post(`/api/vms/${id}/action`, { action: /** @type {HTMLElement} */ (btn).dataset.act === 'resume' ? 'resume' : 'start' });
                 showToast(t('toast.vm_started_successfully', 'VM started successfully'), 'success');
                 fetchAndRenderMgmtVms();
               } catch (err) {
@@ -962,19 +968,23 @@ export function initManagement() {
           });
 
           grid.querySelectorAll('.btn-vm-action-stop').forEach(btn => {
-            btn.addEventListener('click', async () => {
+            btn.addEventListener('click', () => {
               const id = btn.dataset.vmId;
-              try {
-                btn.disabled = true;
-                btn.textContent = '...';
-                await api.post(`/api/vms/${id}/action`, { action: 'stop' });
-                showToast(t('toast.vm_stop_signal_sent', 'VM stop signal sent'), 'info');
-                fetchAndRenderMgmtVms();
-              } catch (err) {
-                showToast(t('toast.failed_to_stop_vm', 'Failed to stop VM: {error}', { error: err.message }), 'error');
-                btn.disabled = false;
-                setIconLabel(btn, '⏹', t('ui.stop', 'Stop'));
-              }
+              const name = vmsList.find((v) => v.id === id)?.name || id;
+              askPower('stop', name, async () => {
+                try {
+                  btn.disabled = true;
+                  btn.textContent = '...';
+                  const res = await api.post(`/api/vms/${id}/action`, { action: 'stop' });
+                  const said = powerToast('stop', res?.state, name);
+                  showToast(said.text, said.tone);
+                  fetchAndRenderMgmtVms();
+                } catch (err) {
+                  showToast(t('toast.failed_to_stop_vm', 'Failed to stop VM: {error}', { error: err.message }), 'error');
+                  btn.disabled = false;
+                  setIconLabel(btn, '⏹', t('vmm.shutdown', 'Shut down'));
+                }
+              });
             });
           });
 

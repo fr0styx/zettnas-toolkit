@@ -23,7 +23,7 @@ vi.mock('../toast.js', () => {
 });
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
-const VM = { id: 'vm1', name: 'files', state: 'running' };
+const VM = { id: 'vm1', name: 'files', state: 'stopped' }; // snapshot actions are open only while it is off
 
 describe('snapshots and backups (NUX-20)', () => {
   beforeEach(() => {
@@ -32,12 +32,10 @@ describe('snapshots and backups (NUX-20)', () => {
   });
 
   it('lists snapshots by type and asks before going back or deleting', async () => {
-    api.get.mockResolvedValue({
-      snapshots: [
+    api.get.mockResolvedValue([
         { name: 'before-update', date: '2026-11-01 10:00', size_formatted: '1 GB', is_live: true },
         { name: 'clean', created_at: '2026-10-01', is_live: false },
-      ],
-    });
+      ]);
     await openVmSnapshotsModal('vm1', VM);
     await flush();
     const modal = document.getElementById('modal-vm-snapshots');
@@ -66,7 +64,7 @@ describe('snapshots and backups (NUX-20)', () => {
   });
 
   it('lists backups, says when there are none, and asks before restoring or deleting', async () => {
-    api.get.mockResolvedValue({ snapshots: [] });
+    api.get.mockResolvedValue([]);
     await openVmSnapshotsModal('vm1', VM);
     await flush();
     const modal = document.getElementById('modal-vm-snapshots');

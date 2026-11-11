@@ -9,8 +9,8 @@ import { makeDraggable } from '../dock.js';
 import { vmState } from './state.js';
 import { copyToClipboard, openVmConsole } from './console.js';
 
-const STATE_KEYS = { running: 'vmm.st_running', paused: 'vmm.st_paused', stopped: 'vmm.st_stopped', shutoff: 'vmm.st_stopped' };
-const STATE_WORDS = { running: 'Running', paused: 'Paused', stopped: 'Stopped', shutoff: 'Stopped' };
+const STATE_KEYS = { running: 'vmm.st_running', paused: 'vmm.st_paused', stopped: 'vmm.st_stopped', shutoff: 'vmm.st_stopped', shutting_down: 'vmp.st_shutting' };
+const STATE_WORDS = { running: 'Running', paused: 'Paused', stopped: 'Stopped', shutoff: 'Stopped', shutting_down: 'Shutting down' };
 
 /** A VM's state in words ("running" -> "Running"); an unknown state is shown as it came. */
 export function vmStateLabel(state) {

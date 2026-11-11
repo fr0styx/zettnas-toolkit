@@ -20,6 +20,7 @@ import { openVmCreateModal } from './vm/create-modal.js';
 import { openQemuErrorModal, openVmEditModal } from './vm/edit-modal.js';
 import { openIsoManagerModal } from './vm/iso-manager.js';
 import { openVmSnapshotsModal } from './vm/snapshots.js';
+import { askPower, isShuttingDown, needsWatching, powerToast, shuttingDownActionsHtml } from './vm/power.js';
 import '../styles/vm-lazy.css'; // the VM windows' own sheet loads with this code (PERF-9)
 export { kvmChecks, openKvmDiagnosticsModal, openVmConnectModal, vmStateLabel } from './vm/connect-modal.js';
 import { formatFixed } from '../format.js';
@@ -255,9 +256,22 @@ export async function loadVmDashboard() {
 
     renderTelemetry(tel);
     renderVmGrid(vmState.list);
+    watchShutdowns(vmState.list);
   } catch (err) {
     showToast(t('toast.failed_to_load_vm_data', 'Failed to load VM data: {error}', { error: err.message }), 'error');
   }
+}
+
+let _shutdownWatch = null;
+
+/** While a machine shuts down the list is read again every five seconds, so the card changes by
+ *  itself when the system inside has finished, and offers "Turn off now" when it has not. */
+function watchShutdowns(vms) {
+  if (_shutdownWatch) clearTimeout(_shutdownWatch);
+  _shutdownWatch = null;
+  const open = vmState.window && vmState.window.style.display !== 'none' && document.body.contains(vmState.window);
+  if (!open || !needsWatching(vms)) return;
+  _shutdownWatch = setTimeout(() => { _shutdownWatch = null; loadVmDashboard(); }, 5000);
 }
 
 function renderTelemetry(tel) {
@@ -359,6 +373,7 @@ function vmCardStructKey(vm, vms) {
     vm.state,
     vm.qemu_pid,
     vm.name,
+    vm.turn_off_offered,
     vm.description,
     vm.os_family,
     vm.boot_order,
@@ -440,10 +455,11 @@ function buildVmCardHtml(vm, vms) {
       const stateKey = `${vm.state}|${vm.qemu_pid}|${vm.cpu_usage_pct}|${vm.ram_usage_pct}|${vm.ip_address}|${vm.vcpus}|${vm.ram_gb}|${vm.disk_size_gb}|${vm.name}`;
       const isRunning = vm.state === 'running';
       const isPaused = vm.state === 'paused';
-      const statusColor = isRunning ? '#34d399' : isPaused ? '#fbbf24' : '#95a8ab';
+      const isShutting = isShuttingDown(vm);
+      const statusColor = isRunning ? '#34d399' : isPaused || isShutting ? '#fbbf24' : '#95a8ab';
       const statusBg = isRunning
         ? 'rgba(16,185,129,0.15)'
-        : isPaused
+        : isPaused || isShutting
         ? 'rgba(245,158,11,0.15)'
         : 'rgba(255,255,255,0.06)';
 
@@ -451,9 +467,8 @@ function buildVmCardHtml(vm, vms) {
 
       const vncPort = vm.vnc_port || (5901 + (vms.findIndex((v) => v.id === vm.id) % 10));
       const vncDisplay = Math.max(1, vncPort - 5900);
-      const sshPort = vm.ssh_port || (2220 + vncDisplay);
       const hostIp = (typeof window !== 'undefined' && window.location && window.location.hostname) || 'localhost';
-      const sshCmd = vm.ip_address ? `ssh root@${vm.ip_address}` : `ssh -p ${sshPort} root@${hostIp}`;
+      const sshCmd = vm.ip_address ? `ssh root@${vm.ip_address}` : '';
       const vncUri = `vnc://${hostIp}:${vncPort}`;
       const qemuPid = vm.qemu_pid || null;
       const bootOrder = vm.boot_order || (vm.iso_path ? 'iso' : 'disk');
@@ -486,7 +501,7 @@ function buildVmCardHtml(vm, vms) {
                   : `<span class="vm-boot-order-pill iso" title="${t('ui.boot_order_iso_installer_first', 'Boot order: ISO installer first')}">${ico('💿')} ${t('vmm.boot_iso', 'ISO first')}</span>`
               }
               ${
-                isRunning
+                isRunning || isShutting
                   ? `<span class="qemu-process-badge active" title="${t('ui.qemu_kvm_hypervisor_process_active', 'Virtual machine service running')}">${ico('●')} QEMU ${qemuPid ? `(${qemuPid})` : t('vmm.active', 'active')}</span>`
                   : isPaused
                   ? `<span class="qemu-process-badge paused" title="${t('ui.qemu_process_paused', 'QEMU process paused')}">${ico('⏸')} ${t('vmm.qemu_paused', 'QEMU paused')}</span>`
@@ -536,8 +551,8 @@ function buildVmCardHtml(vm, vms) {
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 </button>
               </span>
-              <span style="color: var(--lt-t-ffffff26, rgba(255,255,255,0.15));">|</span>
-              <span class="vmm-row-accent">
+              <span style="color: var(--lt-t-ffffff26, rgba(255,255,255,0.15));${sshCmd ? '' : ' display:none;'}">|</span>
+              <span class="vmm-row-accent"${sshCmd ? '' : ' hidden'}>
                 <span>${escapeHtml(sshCmd)}</span>
                 <button class="btn-copy-ssh-cmd vmm-row-muted-box" data-cmd="${escapeHtml(sshCmd)}" title="${t('vm.copy_ssh', 'Copy SSH Command')}">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -644,8 +659,9 @@ function buildVmCardHtml(vm, vms) {
         </div>
 
         <div class="vm-card-actions vmm-row-box">
+          ${isShutting ? shuttingDownActionsHtml(vm) : ''}
           ${
-            !isRunning && !isPaused
+            !isRunning && !isPaused && !isShutting
               ? `
             <button class="btn-vm-action btn-vm-start vmm-grow-2" data-id="${vm.id}" data-act="start" title="${t('vm.start', 'Start')}">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -681,9 +697,9 @@ function buildVmCardHtml(vm, vms) {
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
               <span>${t('vmm.shutdown', 'Shut down')}</span>
             </button>
-            <button class="btn-vm-action btn-vm-stop btn-vm-force-off vmm-grow-2" data-id="${vm.id}" data-act="force_off" title="${t('ui.force_stop_hard_power_cut', 'Force Stop (Hard Power Cut)')}">
+            <button class="btn-vm-action btn-vm-stop btn-vm-force-off vmm-grow-2" data-id="${vm.id}" data-act="force_off" title="${t('vmm.force_off', 'Turn off now (like pulling the plug)')}">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
-              <span>${t('vmm.force_stop', 'Force stop')}</span>
+              <span>${t('vmm.force_stop', 'Turn off now')}</span>
             </button>
             <button class="btn-vm-gui" data-id="${vm.id}" title="${t('vm.gui', 'KVM GUI')}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -715,9 +731,9 @@ function buildVmCardHtml(vm, vms) {
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
               <span>${t('vmm.shutdown', 'Shut down')}</span>
             </button>
-            <button class="btn-vm-action btn-vm-stop btn-vm-force-off vmm-grow-2" data-id="${vm.id}" data-act="force_off" title="${t('ui.force_stop', 'Force Stop')}">
+            <button class="btn-vm-action btn-vm-stop btn-vm-force-off vmm-grow-2" data-id="${vm.id}" data-act="force_off" title="${t('vmm.force_off', 'Turn off now (like pulling the plug)')}">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
-              <span>${t('vmm.force_stop', 'Force stop')}</span>
+              <span>${t('vmm.force_stop', 'Turn off now')}</span>
             </button>
             <button class="btn-vm-action btn-vm-edit" data-id="${vm.id}" title="${t('ui.edit_vm_configuration', 'Edit VM Configuration')}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -751,7 +767,13 @@ function bindVmGridHandlers(grid) {
       const card = btn.closest('[data-vm-id]'); // the menu's items click the card's own buttons
       const items = [];
 
-      if (isRunning) {
+      if (stateStr === 'shutting_down') {
+        // nothing to press while the system inside finishes; after two minutes, "Turn off now"
+        if (targetVm?.turn_off_offered) {
+          items.push({ icon: '⏹️', label: t('vmm.force_off', 'Turn off now (like pulling the plug)'), destructive: true, onClick: () => card?.querySelector('.btn-vm-force-off')?.click() });
+        }
+        items.push({ icon: '📸', label: t('vm.snapshots', 'Snapshots & Rollback'), onClick: () => openVmSnapshotsModal(vmId) });
+      } else if (isRunning) {
         items.push(
           { icon: '🖥️', label: t('vm.gui', 'KVM GUI'), onClick: () => openVmConsole(vmId, name, 'gui') },
           { icon: '⌨️', label: t('vm.console', 'Console (Serial TTY)'), onClick: () => openVmConsole(vmId, name, 'cli') },
@@ -759,7 +781,7 @@ function bindVmGridHandlers(grid) {
           { icon: '⏸️', label: t('vm.pause', 'Pause VM'), onClick: () => card?.querySelector('.btn-vm-pause')?.click() },
           { icon: '🔄', label: t('vmm.restart_vm', 'Restart VM'), onClick: () => card?.querySelector('.btn-vm-restart')?.click() },
           { icon: '⏻', label: t('vmm.acpi', 'Shut down (ACPI)'), onClick: () => card?.querySelector('.btn-vm-acpi')?.click() },
-          { icon: '⏹️', label: t('vmm.force_off', 'Force stop (cuts the power)'), destructive: true, onClick: () => card?.querySelector('.btn-vm-force-off')?.click() },
+          { icon: '⏹️', label: t('vmm.force_off', 'Turn off now (like pulling the plug)'), destructive: true, onClick: () => card?.querySelector('.btn-vm-force-off')?.click() },
           { icon: '✏️', label: t('vmd.edit_settings', 'Edit VM settings'), onClick: () => openVmEditModal(vmId) }
         );
       } else if (isPaused) {
@@ -767,7 +789,7 @@ function bindVmGridHandlers(grid) {
           { icon: '▶️', label: t('vm.resume', 'Resume VM'), onClick: () => card?.querySelector('.btn-vm-resume')?.click() },
           { icon: '📸', label: t('vm.snapshots', 'Snapshots & Rollback'), onClick: () => openVmSnapshotsModal(vmId) },
           { icon: '⏻', label: t('vmm.acpi', 'Shut down (ACPI)'), onClick: () => card?.querySelector('.btn-vm-acpi')?.click() },
-          { icon: '⏹️', label: t('vmm.force_off', 'Force stop (cuts the power)'), destructive: true, onClick: () => card?.querySelector('.btn-vm-force-off')?.click() },
+          { icon: '⏹️', label: t('vmm.force_off', 'Turn off now (like pulling the plug)'), destructive: true, onClick: () => card?.querySelector('.btn-vm-force-off')?.click() },
           { icon: '✏️', label: t('vmd.edit_settings', 'Edit VM settings'), onClick: () => openVmEditModal(vmId) }
         );
       } else {
@@ -794,18 +816,23 @@ function bindVmGridHandlers(grid) {
       const targetVm = vmState.list.find((v) => v.id === vmId);
       const name = targetVm ? targetVm.name : 'Virtual Machine';
 
-      try {
-        await api.post(`/api/vms/${vmId}/action`, { action });
-        showToast(t('toast.vm_action_completed', 'VM action \'{action}\' completed', { action: action }), 'success');
-        loadVmDashboard();
-      } catch (err) {
-        const errorDetail = err.detail || err.message || 'Unknown hypervisor error';
-        if (action === 'start' || action === 'restart') {
-          openQemuErrorModal(name, errorDetail, vmId);
-        } else {
-          showToast(t('toast.action_failed', 'Action failed: {errorDetail}', { errorDetail: errorDetail }), 'error');
+      // Shut down, Turn off now and Restart are asked about first. "Shut down" used to end the
+      // machine after two seconds; it now only asks the system inside (SET-07).
+      askPower(action, name, async () => {
+        try {
+          const res = await api.post(`/api/vms/${vmId}/action`, { action });
+          const said = powerToast(action, res?.state, name);
+          showToast(said.text, said.tone);
+          loadVmDashboard();
+        } catch (err) {
+          const errorDetail = err.detail || err.message || 'Unknown hypervisor error';
+          if (action === 'start' || action === 'restart') {
+            openQemuErrorModal(name, errorDetail, vmId);
+          } else {
+            showToast(t('toast.action_failed', 'Action failed: {errorDetail}', { errorDetail: errorDetail }), 'error');
+          }
         }
-      }
+      });
     };
   });
 

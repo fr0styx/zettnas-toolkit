@@ -728,6 +728,22 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Compose files now set `stop_grace_period: 150s`. If you start Kiboto another way, raise the stop
   time there (`docker stop -t 150`, or the stop time of your template).
 
+#### Fixes
+
+- **Virtual machines: "Shut down", "Turn off now" and "Restart" ask first.** "Shut down" says that
+  the system inside is asked and nothing is ended; "Turn off now" (was "Force stop") and "Restart"
+  are red questions that say what is lost. While a machine shuts down its card shows "Shutting
+  down" and updates by itself; if the machine has not finished after two minutes, the card offers
+  "Turn off now".
+- **The list of a virtual machine's snapshots shows them.** The window read the server's answer
+  under a name the server never sent, so it said "No snapshots yet" after every snapshot, and
+  nothing could be restored or deleted. While a machine is not off, the window says why its
+  buttons are closed.
+- **Virtual machines on the Settings page:** a paused machine shows "Resume", and "Shut down" asks
+  like in the window. The forms no longer offer the disk types "sata" and "nvme", which stopped a
+  machine from starting; a disk saved with one is shown as needing a change. No `ssh` command
+  through a port of the NAS is shown any more.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

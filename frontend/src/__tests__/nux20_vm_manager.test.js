@@ -9,7 +9,7 @@ import {
   kvmChecks,
 } from '../components/vm-manager.js';
 import { api } from '../api.js';
-import { showBottomSheet } from '../toast.js';
+import { showBottomSheet, showConfirmToast, showDangerConfirm } from '../toast.js';
 
 vi.mock('../api.js', () => ({
   api: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
@@ -19,6 +19,7 @@ vi.mock('../api.js', () => ({
 vi.mock('../toast.js', () => ({
   showToast: vi.fn(),
   showConfirmToast: vi.fn(),
+  showDangerConfirm: vi.fn(),
   showPromptToast: vi.fn(),
   showBottomSheet: vi.fn(),
 }));
@@ -106,7 +107,7 @@ describe('VM manager window (NUX-20)', () => {
     expect(web.textContent).toContain('All ways to connect…');
     expect(web.querySelector('.btn-copy-vnc').getAttribute('title')).toMatch(/^Copy the VNC address \(vnc:\/\/.+:5902\)$/);
     expect(web.querySelector('.btn-vm-join-toggle').textContent.trim()).toBe('Connect ▾');
-    for (const word of ['Restart', 'Shut down', 'Force stop', 'Edit']) expect(web.querySelector('.vm-card-actions').textContent).toContain(word);
+    for (const word of ['Restart', 'Shut down', 'Turn off now', 'Edit']) expect(web.querySelector('.vm-card-actions').textContent).toContain(word);
 
     const desk = card(grid, 'desk');
     expect(desk.textContent).toContain('QEMU active');
@@ -130,18 +131,28 @@ describe('VM manager window (NUX-20)', () => {
     const labels = () => showBottomSheet.mock.calls.at(-1)[0].items.map((i) => i.label);
 
     card(grid, 'web1').querySelector('.btn-vm-more-sheet').click();
-    expect(labels()).toEqual(expect.arrayContaining(['Restart VM', 'Shut down (ACPI)', 'Force stop (cuts the power)', 'Edit VM settings']));
+    expect(labels()).toEqual(expect.arrayContaining(['Restart VM', 'Shut down (ACPI)', 'Turn off now (like pulling the plug)', 'Edit VM settings']));
     expect(showBottomSheet.mock.calls.at(-1)[0].subtitle).toBe('Running • 4 vCPU • 2048 MB');
 
     api.post.mockResolvedValue({});
+    // Restart, Shut down and Turn off now are asked about before anything is sent (SET-07)
     showBottomSheet.mock.calls.at(-1)[0].items.find((i) => i.label === 'Restart VM').onClick();
+    expect(api.post).not.toHaveBeenCalled();
+    expect(showDangerConfirm.mock.calls.at(-1)[0]).toBe('Restart web1?');
+    showDangerConfirm.mock.calls.at(-1)[2]();
     expect(api.post).toHaveBeenCalledWith('/api/vms/v1/action', { action: 'restart' });
+    card(grid, 'web1').querySelector('.btn-vm-acpi').click();
+    expect(showConfirmToast.mock.calls.at(-1)[0]).toBe('Shut down web1?');
+    expect(api.post).toHaveBeenCalledTimes(1);
+    card(grid, 'web1').querySelector('.btn-vm-force-off').click();
+    expect(showDangerConfirm.mock.calls.at(-1)[0]).toBe('Turn off web1 now?');
+    expect(api.post).toHaveBeenCalledTimes(1);
 
     card(grid, 'desk').querySelector('.btn-vm-more-sheet').click();
     expect(showBottomSheet.mock.calls.at(-1)[0].subtitle).toBe('Running • 2 vCPU • 4096 MB');
 
     card(grid, 'idle').querySelector('.btn-vm-more-sheet').click();
-    expect(labels()).toEqual(expect.arrayContaining(['Shut down (ACPI)', 'Force stop (cuts the power)', 'Edit VM settings']));
+    expect(labels()).toEqual(expect.arrayContaining(['Shut down (ACPI)', 'Turn off now (like pulling the plug)', 'Edit VM settings']));
 
     card(grid, 'setup').querySelector('.btn-vm-more-sheet').click();
     expect(labels()).toEqual(expect.arrayContaining(['Start VM', 'Edit VM settings']));

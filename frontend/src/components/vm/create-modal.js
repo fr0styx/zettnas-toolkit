@@ -1,6 +1,7 @@
 // The new-VM wizard.
 // Part of vm-manager.js, split out by ARC-5.
 
+import { shareRecord } from './power.js';
 import { api } from '../../api.js';
 import { escapeHtml } from '../../utils.js';
 import { showToast } from '../../toast.js';
@@ -519,8 +520,6 @@ export function openVmCreateModal() {
         <input type="number" class="disk-size vmc-xs-strong-box-4" min="5" max="4000" placeholder="${t('ui.size_gb', 'Size (GB)')}" value="50" />
         <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
           <option value="virtio">virtio</option>
-          <option value="sata">sata</option>
-          <option value="nvme">nvme</option>
         </select>
         <button type="button" class="btn-remove-disk vmc-crit-box">✕</button>
       `;
@@ -698,7 +697,7 @@ export function openVmCreateModal() {
         const driver = row.querySelector('.share-driver')?.value || 'virtiofs';
         const mode = row.querySelector('.share-mode')?.value || 'rw';
         if (host_path && mount_tag) {
-          host_shares.push({ host_path, mount_tag, driver, mode });
+          host_shares.push(shareRecord(host_path, mount_tag, driver, mode === 'ro'));
         }
       });
 
@@ -708,7 +707,7 @@ export function openVmCreateModal() {
         const size_gb = parseInt(row.querySelector('.disk-size')?.value || '0', 10);
         const bus = row.querySelector('.disk-bus')?.value || 'virtio';
         if (size_gb > 0) {
-          secondary_disks.push({ name: dName || 'disk', size_gb, bus, format: 'qcow2' });
+          secondary_disks.push({ name: dName || '', size_gb, bus, format: 'qcow2' }); // unnamed: the server names its file
         }
       });
 

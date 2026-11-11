@@ -10,6 +10,7 @@ import { vmState } from './state.js';
 import { openVmConnectModal } from './connect-modal.js';
 import { openVmEditModal } from './edit-modal.js';
 import { loadVmDashboard } from '../vm-manager.js';
+import { isOff, snapshotList } from './power.js';
 
 export async function openVmSnapshotsModal(vmId, vmObj = null) {
   let modal = document.getElementById('modal-vm-snapshots');
@@ -55,7 +56,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
           <div class="vmsn-row-4">
             <div>
               <div class="vmsn-xs-bold-strong">${t('vsn.snaps_title', 'Snapshots of this VM')}</div>
-              <div class="vmsn-xs-muted">${t('vsn.snaps_desc', 'While the VM runs, a snapshot saves its memory and disk; while it is off, the disk only.')}</div>
+              <div class="vmsn-xs-muted" id="vm-snap-rule">${escapeHtml(isOff(targetVm) ? t('vsn.snaps_desc', 'A snapshot keeps the disk as it is now, so you can go back to it.') : t('vsn.snaps_off_first', 'Shut {name} down first. Snapshots are made, restored and deleted only while the machine is off.', { name: targetVm.name }))}</div>
             </div>
             <button type="button" id="btn-take-snapshot" class="btn-pill-toggle" style="background: rgba(51,205,184,0.15); border: 1px solid rgba(51,205,184,0.35); color: var(--zn-text-accent);">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -172,6 +173,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
 
   const defaultSnapName = () => `snap-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${new Date().toTimeString().slice(0, 8).replace(/:/g, '')}`;
 
+  if (btnTake) /** @type {HTMLButtonElement} */ (btnTake).disabled = !isOff(targetVm);
   if (btnTake && createForm) {
     btnTake.onclick = () => {
       createForm.style.display = createForm.style.display === 'none' ? 'flex' : 'none';
@@ -191,7 +193,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
     if (!container) return;
     try {
       const data = await api.get(`/api/vms/${vmId}/snapshots`);
-      const snaps = data?.snapshots || [];
+      const snaps = snapshotList(data);
       if (snaps.length === 0) {
         container.innerHTML = `
           <div class="vmsn-col-xs-muted-center">
@@ -245,6 +247,9 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         </table>
       `;
 
+      if (!isOff(targetVm)) {
+        container.querySelectorAll('.btn-snap-revert, .btn-snap-del').forEach((b) => { /** @type {HTMLButtonElement} */ (b).disabled = true; });
+      }
       container.querySelectorAll('.btn-snap-revert').forEach((b) => {
         b.onclick = () => {
           const snapName = b.dataset.name;
