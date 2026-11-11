@@ -21,7 +21,7 @@ from backend.auth import AuthenticatedPrincipal, get_current_principal, require_
 from backend.config import POOL_PATH, logger
 from backend.fsutil import resolve_within
 from backend.ignored_errors import ignored
-from backend.services import malware_scan
+from backend.services import malware_scan, recycle_bin
 from backend.services.path_access import ALLOWED_BROWSE_ROOTS, check_user_path_access
 from backend.state import add_event, event_text
 
@@ -91,6 +91,61 @@ async def fs_inbox_upload(
     return {"status": "ok", "path": target, "name": os.path.basename(target)}
 
 
+# An upload onto a name that is taken (SET-05). It used to replace the file with no question and
+# no copy in the Recycle Bin. "keep_both" saves it as "name (2)"; it is what a caller gets who
+# says nothing. "ask" answers 409 "name_taken" before any byte is stored, so a page can ask the
+# person. "replace" puts the old file in the Recycle Bin first.
+ON_CONFLICT = ("keep_both", "ask", "replace")
+
+
+def _free_name(folder: str, filename: str) -> str:
+    """ "name (2).ext", "name (3).ext"...: the first one nothing in the folder has."""
+    stem, ext = os.path.splitext(filename)
+    n, candidate = 1, filename
+    while os.path.lexists(os.path.join(folder, candidate)):
+        n += 1
+        candidate = f"{stem} ({n}){ext}"
+    return candidate
+
+
+def _name_taken(filename: str, what: str = "file") -> HTTPException:
+    exc = HTTPException(status_code=409, detail=f"A {what} named “{filename}” is already there.")
+    exc.error = "name_taken"  # type: ignore[attr-defined]  # read by the error handler
+    return exc
+
+
+def _landing_name(folder: str, filename: str, on_conflict: str) -> str:
+    """The name an upload will have in `folder`, before any byte of it is stored."""
+    if on_conflict not in ON_CONFLICT:
+        raise HTTPException(status_code=400, detail="on_conflict is keep_both, ask or replace.")
+    target = os.path.join(folder, filename)
+    if not os.path.lexists(target):
+        return filename
+    if on_conflict == "ask":
+        raise _name_taken(filename)
+    if on_conflict == "replace":
+        if os.path.isdir(target) and not os.path.islink(target):
+            raise _name_taken(filename, "folder")  # a file never replaces a folder
+        return filename
+    return _free_name(folder, filename)
+
+
+def _land(staged: str, folder: str, filename: str, on_conflict: str, principal: Any) -> str:
+    """Puts the finished upload in its place and returns its path. With "replace" the file that
+    is there goes to the Recycle Bin first, where the disk has one; with "keep_both" a name taken
+    while the bytes came in gets the next free one."""
+    target = os.path.join(folder, filename)
+    if os.path.lexists(target):
+        if on_conflict != "replace":
+            target = os.path.join(folder, _free_name(folder, filename))
+        elif not os.path.islink(target):
+            recycle_dir = recycle_bin.bin_for(target) or recycle_bin.same_disk_bin(target)
+            if recycle_dir and recycle_bin.move_to_bin(target, recycle_dir, target, True):
+                record_activity("delete", target, principal, detail="to the Recycle Bin, replaced by an upload")
+    os.replace(staged, target)
+    return target
+
+
 @router.post(
     "/fs/upload",
     dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
@@ -99,6 +154,7 @@ async def fs_upload(
     request: Request,
     path: str,
     filename: str,
+    on_conflict: str = "keep_both",
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     await asyncio.to_thread(check_user_path_access, path, principal, write=True)
@@ -116,6 +172,8 @@ async def fs_upload(
     await asyncio.to_thread(check_user_path_access, file_path, principal, write=True)
     if os.path.islink(file_path) and resolve_within(file_path, ALLOWED_BROWSE_ROOTS) is None:
         raise HTTPException(status_code=403, detail="Destination symlink points outside allowed folders")
+    landing = _landing_name(target_canonical, filename, on_conflict)  # 409 "name_taken" comes before the bytes
+    file_path = os.path.join(target_canonical, landing)
 
     # Personal space quota (Batch 6): refuse up front when the size is known, stop when it isn't
     from backend.services.user_spaces import QuotaExceeded, check_upload
@@ -137,10 +195,17 @@ async def fs_upload(
                         raise QuotaExceeded(0, 0, written)
                     await f_out.write(chunk)
 
-        os.replace(staging_file, file_path)
+        file_path = await asyncio.to_thread(_land, staging_file, target_canonical, landing, on_conflict, principal)
         await asyncio.to_thread(record_activity, "upload", file_path, principal)
         malware_scan.queue_scan(file_path, "upload", getattr(principal, "username", "") or "")  # NFEAT-11
-        return {"status": "ok", "message": "File uploaded"}
+        name = os.path.basename(file_path)
+        return {
+            "status": "ok",
+            "message": "File uploaded",
+            "name": name,
+            "path": file_path,
+            "renamed": name != filename,
+        }
     except QuotaExceeded:
         if os.path.exists(staging_file):
             os.remove(staging_file)
@@ -186,6 +251,7 @@ class UploadInitRequest(BaseModel):
     total_size: int = Field(ge=0)
     total_chunks: int | None = Field(default=None, ge=1, le=1_000_000)
     chunk_size: int | None = None
+    on_conflict: str = "keep_both"  # keep_both, ask or replace: see ON_CONFLICT
 
 
 class UploadCompleteRequest(BaseModel):
@@ -224,6 +290,7 @@ async def fs_upload_init(
     filename = os.path.basename(req.filename)
     if not filename or filename in (".", "..") or "/" in filename or "\\" in filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
+    _landing_name(target_canonical, filename, req.on_conflict)  # 409 "name_taken" before any chunk is sent
 
     from backend.services.user_spaces import QuotaExceeded, check_upload
 
@@ -260,6 +327,7 @@ async def fs_upload_init(
             "chunk_bytes": {},
             "created_at": time.time(),
             "created_by": principal.username,
+            "on_conflict": req.on_conflict,
         }
 
     return {
@@ -375,7 +443,9 @@ async def fs_upload_complete(
                 detail=f"SHA-256 integrity mismatch: expected {req.expected_sha256}, computed {computed_hash}",
             )
 
-        os.replace(temp_assembly, final_target)
+        final_target = await asyncio.to_thread(
+            _land, temp_assembly, target_dir, filename, upload_info.get("on_conflict", "keep_both"), principal
+        )
         from backend.services import upload_staging
 
         await asyncio.to_thread(shutil.rmtree, staging_dir, True)  # off the event loop (NARC-9)
@@ -386,9 +456,13 @@ async def fs_upload_complete(
         final_size = os.path.getsize(final_target)
         await asyncio.to_thread(record_activity, "upload", final_target, principal)
         malware_scan.queue_scan(final_target, "upload", getattr(principal, "username", "") or "")  # NFEAT-11
+        name = os.path.basename(final_target)
         return {
             "status": "ok",
-            "filename": filename,
+            "filename": name,
+            "name": name,
+            "path": final_target,
+            "renamed": name != filename,
             "size_bytes": final_size,
             "sha256": computed_hash,
         }

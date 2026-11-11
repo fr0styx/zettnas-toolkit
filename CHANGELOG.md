@@ -516,6 +516,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Escape closes "Organize Media"**, like every other dialog. "No earlier versions" now points
   to Backup → Snapshots, where the Snapshots card is.
 
+#### Fixes
+
+- **An upload no longer replaces a file of the same name**: the old content was gone, with no
+  question and no copy in the Recycle Bin, for small and large files alike. The server now keeps
+  both unless it is told otherwise: the new file is saved as "name (2)". When you choose
+  "Replace", the old file goes to the Recycle Bin first. For scripts: `POST /api/fs/upload` and
+  `/api/fs/upload/init` take `on_conflict` (`keep_both`, the default; `ask`, which answers 409
+  `name_taken` before anything is stored; `replace`), and the answer carries the name the file
+  got.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

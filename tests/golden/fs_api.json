@@ -407,6 +407,7 @@
    ],
    "params": [
     "filename",
+    "on_conflict",
     "path",
     "principal",
     "request"
@@ -1553,6 +1554,9 @@
   {
    "body": {
     "message": "File uploaded",
+    "name": "up.txt",
+    "path": "<work>/up.txt",
+    "renamed": false,
     "status": "ok"
    },
    "label": "upload",
@@ -1579,6 +1583,9 @@
   {
    "body": {
     "filename": "big.bin",
+    "name": "big.bin",
+    "path": "<work>/big.bin",
+    "renamed": false,
     "sha256": "<id8>",
     "size_bytes": 10,
     "status": "ok"
@@ -2261,6 +2268,7 @@
     "chunk_size",
     "destination_dir",
     "filename",
+    "on_conflict",
     "path",
     "total_chunks",
     "total_size"
@@ -2479,7 +2487,7 @@
    "async": "(req: PermissionsUpdateRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
   },
   "fs_upload": {
-   "async": "(request: starlette.requests.Request, path: str, filename: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+   "async": "(request: starlette.requests.Request, path: str, filename: str, on_conflict: str = 'keep_both', principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
   },
   "fs_upload_chunk": {
    "async": "(request: starlette.requests.Request, upload_id: str, chunk_index: int, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"

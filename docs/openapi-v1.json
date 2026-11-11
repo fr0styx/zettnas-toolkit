@@ -40223,6 +40223,11 @@
       "title": "Filename",
       "type": "string"
      },
+     "on_conflict": {
+      "default": "keep_both",
+      "title": "On Conflict",
+      "type": "string"
+     },
      "path": {
       "anyOf": [
        {
@@ -55092,6 +55097,16 @@
       "required": true,
       "schema": {
        "title": "Filename",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "on_conflict",
+      "required": false,
+      "schema": {
+       "default": "keep_both",
+       "title": "On Conflict",
        "type": "string"
       }
      }
