@@ -850,6 +850,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   now". Both now follow at once, and come back with the same password when the person is turned
   on again.
 
+#### Fixes
+
+- **The Language menu in Settings works.** It did nothing, while the same menu in the top bar
+  changed the language.
+- **A failed update check says so.** Without internet, or when the release list refused to answer,
+  the page read "Kiboto is up to date". It now says that the check got no answer and which
+  version is running.
+- **"Revert to previous version" can be reached.** The button sat inside the box that is hidden
+  while Kiboto is up to date, which is exactly when it is needed after an update.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

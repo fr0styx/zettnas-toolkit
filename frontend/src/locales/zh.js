@@ -6923,6 +6923,8 @@ export default {
   "sysu.install_release": "安装版本 {version}",
   "sysu.uptodate_main": "Kiboto 已与 main 同步",
   "sysu.uptodate": "Kiboto 已是最新版本",
+  "sysu.check_failed": "无法检查更新",
+  "sysu.check_failed_desc": "Kiboto {version} 正在运行。检查没有得到回应（{error}），可能已有更新的版本。",
   "sysu.latest_commit": "你正在运行 main 分支的最新提交（{version}）。",
   "sysu.latest_release": "你正在运行最新的稳定版本（{version}）。",
   "sysu.checked": "检查时间：{time}",

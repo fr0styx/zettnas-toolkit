@@ -232,6 +232,21 @@ function syncLanguageSelectors() {
   });
 }
 
+let _menusBound = false;
+
+/** Every language menu on the page changes the language, also one that is drawn later. The menu
+ *  in Settings is: it was not there yet when the menus were bound one by one, so it did nothing
+ *  while the same menu in the top bar worked (SET-10). */
+export function bindLanguageMenus(doc = document) {
+  if (_menusBound) return;
+  _menusBound = true;
+  doc.addEventListener('change', (e) => {
+    const target = /** @type {HTMLElement | null} */ (e.target);
+    const menu = /** @type {HTMLSelectElement | null} */ (target && target.closest ? target.closest('.language-picker-select') : null);
+    if (menu) setLanguage(menu.value);
+  });
+}
+
 export function initI18n() {
   let saved = null;
   try {
@@ -242,11 +257,6 @@ export function initI18n() {
 
   const ready = setLanguage(saved || 'en');
 
-  // Bind change listener to all language selects
-  document.querySelectorAll('.language-picker-select').forEach((sel) => {
-    sel.addEventListener('change', (e) => {
-      setLanguage(e.target.value);
-    });
-  });
+  bindLanguageMenus();
   return ready;
 }

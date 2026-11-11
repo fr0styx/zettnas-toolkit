@@ -6923,6 +6923,8 @@ export default {
   "sysu.install_release": "Version {version} installieren",
   "sysu.uptodate_main": "Kiboto ist auf dem Stand von main",
   "sysu.uptodate": "Kiboto ist aktuell",
+  "sysu.check_failed": "Die Suche nach Updates ist fehlgeschlagen",
+  "sysu.check_failed_desc": "Kiboto {version} läuft. Die Prüfung hat keine Antwort erhalten ({error}), es kann also eine neuere Version geben.",
   "sysu.latest_commit": "Sie nutzen den neuesten Stand des main-Zweigs ({version}).",
   "sysu.latest_release": "Sie nutzen die neueste stabile Version ({version}).",
   "sysu.checked": "Geprüft: {time}",

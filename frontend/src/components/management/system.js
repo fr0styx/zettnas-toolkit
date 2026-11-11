@@ -2,6 +2,7 @@
  * Mission Control: System info, updates, revert, diagnostics bundle.
  * Split out of management.js (ARCH-1); management.js re-exports everything here.
  */
+import { checkFailed, checkFailedText, keepRevertReachable } from './update-status.js';
 import { bringToFront } from '../dock.js';
 import { api } from '../../api.js';
 import { showToast, showConfirmToast, showPromptToast } from '../../toast.js';
@@ -163,6 +164,17 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
             ? t('sysu.install_commit', 'Install Latest Commit ({version})', { version: data.latest_version })
             : t('sysu.install_release', 'Install Release {version}', { version: data.latest_tag || 'v' + data.latest_version });
         }
+      } else if (checkFailed(data)) {
+        // the check got no answer: that is not "up to date" (SET-10)
+        const said = checkFailedText(data);
+        if (statusIcon) statusIcon.textContent = said.icon;
+        if (statusTitle) {
+          statusTitle.textContent = said.title;
+          statusTitle.style.color = 'var(--warn, #f5a623)';
+        }
+        if (statusDesc) statusDesc.textContent = said.desc;
+        if (detailsBox) detailsBox.style.display = 'none';
+        if (applyBtn) applyBtn.style.display = 'none';
       } else {
         if (statusIcon) statusIcon.textContent = '✅';
         if (statusTitle) {
@@ -268,6 +280,7 @@ export async function refreshPreviousVersions() {
   } catch (e) {
     _previousVersion = null;
   }
+  keepRevertReachable(btn, document.getElementById('update-details-box'));
   btn.style.display = _previousVersion ? 'flex' : 'none';
   if (_previousVersion && label) {
     label.textContent = _previousVersion.version ? t('sysu.revert_to', 'Revert to v{version}', { version: _previousVersion.version }) : t('sysu.revert_prev', 'Revert to previous version');

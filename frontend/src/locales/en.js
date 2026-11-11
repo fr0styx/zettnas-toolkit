@@ -6923,6 +6923,8 @@ export default {
   "sysu.install_release": "Install Release {version}",
   "sysu.uptodate_main": "Kiboto is up to date with main",
   "sysu.uptodate": "Kiboto is up to date",
+  "sysu.check_failed": "Could not check for updates",
+  "sysu.check_failed_desc": "Kiboto {version} is running. The check did not get an answer ({error}), so a newer version may exist.",
   "sysu.latest_commit": "You are running the latest commit on the main branch ({version}).",
   "sysu.latest_release": "You are running the latest stable release ({version}).",
   "sysu.checked": "Checked: {time}",
