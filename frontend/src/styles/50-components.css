@@ -29,13 +29,13 @@
   --kb-btn-h-sm: 28px;
   --kb-btn-px: 12px;
   --kb-text-strong: #fff;
-  --kb-text: var(--c-text);
+  --kb-text: #e6efef;
   --kb-text-soft: #c9d6d7;
-  --kb-text-muted: var(--c-muted);
+  --kb-text-muted: #95a8ab;
   --kb-line: rgba(255, 255, 255, 0.06);
   --kb-line-strong: rgba(255, 255, 255, 0.12);
   --kb-surface: rgba(14, 28, 30, 0.65);
-  --kb-surface-line: rgba(var(--c-primary-text-rgb), 0.25);
+  --kb-surface-line: rgba(79, 216, 196, 0.25);
   --kb-danger-bg: rgba(235, 87, 87, 0.18);
   --kb-danger-line: rgba(235, 87, 87, 0.5);
   --kb-danger-text: #fecaca;
@@ -232,7 +232,7 @@ body.theme-light button.catalog-deploy:focus-visible { color: #fff; background: 
    are named by opacity: --kb-line-8 is a white line at 8 %. */
 :root {
   --kb-text-bright: #f1f7f7;
-  --kb-text-accent: var(--c-primary-text);
+  --kb-text-accent: #4fd8c4;
   --kb-text-ok: #34d399;
   --kb-text-warn: #fbbf24;
   --kb-text-crit: #f87171;

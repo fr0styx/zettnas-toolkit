@@ -327,12 +327,31 @@ def _fallbacks(prop: str, value: str) -> str:
     return _FALLBACK.sub(fb, value)
 
 
+# The palette's colour tokens (APP-A) read as Lagoon's dark colours when deciding whether a
+# background is a saturated fill (white text on a teal button keeps its colour)
+_C_TOKENS = {
+    "var(--c-primary-rgb)": "51, 205, 184",
+    "var(--c-primary-text-rgb)": "79, 216, 196",
+    "var(--c-primary)": "#33cdb8",
+    "var(--c-primary-text)": "#4fd8c4",
+    "var(--c-success)": "#46c776",
+    "var(--c-accent)": "#f6b44c",
+}
+
+
+def _as_lagoon(value: str) -> str:
+    for token, literal in _C_TOKENS.items():
+        value = value.replace(token, literal)
+    return value
+
+
 def rewrite_block(block: str) -> str:
     """Rewrites the declarations of one CSS rule or style attribute."""
     keep_text = False
     for m in DECL.finditer(block):
-        if kind(m.group(1)) == "b" and "var(" not in m.group(3):
-            for c in COLOR.findall(m.group(3)):
+        background = _as_lagoon(m.group(3))
+        if kind(m.group(1)) == "b" and "var(" not in background:
+            for c in COLOR.findall(background):
                 p = parse(c)
                 if p and saturated_fill(p):
                     keep_text = True

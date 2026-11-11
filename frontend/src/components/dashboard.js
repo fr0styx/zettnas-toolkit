@@ -426,7 +426,9 @@ export function applyDesktopTheme(themeName, customAccent = null) {
       document.body.classList.toggle('theme-light', !isDark);
       if (wpLayer) _restoreNonYakWallpaper(wpLayer);
     } else if (themeName === 'yak') {
-      import('../styles/04-yak-theme.css'); // the hidden Yak theme loads only when it is chosen (first-load budget)
+      // the hidden Yak theme loads only when it is chosen (first-load budget); a stylesheet has no types
+      // @ts-ignore
+      import('../styles/04-yak-theme.css').catch(() => null);
       document.body.classList.add('theme-yak');
       if (wpLayer) {
         if (!wpLayer.dataset.previousWallpaper && wpLayer.style.backgroundImage && !wpLayer.style.backgroundImage.includes('yak.webp')) {

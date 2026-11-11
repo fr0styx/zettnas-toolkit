@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ALL_TRANSLATIONS as TRANSLATIONS } from '../locales/all.js';
@@ -161,7 +162,7 @@ describe('Batch 5: Performance, WAI-ARIA, Keyboard Ergonomics & i18n Verificatio
   });
 
   it('6. Theme Contrast & CSS Compositing Rules: verify CSS tokens in style.css', () => {
-    const css = readStyleCss();
+    const css = readStyleCss() + readFileSync('frontend/src/styles/04-yak-theme.css', 'utf8'); // the Yak sheet loads on demand
 
     // Root contrast & fonts
     expect(css).toContain('--muted:#95a8ab;');
