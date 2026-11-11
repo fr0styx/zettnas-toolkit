@@ -121,7 +121,7 @@ describe('updates panel words (NUX-20)', () => {
     await applySystemUpdate();
     const onOk = showConfirmToast.mock.calls.at(-1)[2];
     await onOk();
-    expect(byId('update-progress-desc').textContent).toBe('Latest image downloaded.Please restart the container in Unraid or Docker to finalize.');
+    expect(byId('update-progress-desc').textContent).toBe('The new version is downloaded.Please restart the container in Unraid or Docker to finalize.');
     post.mockResolvedValue({ auto_restarting: false, message: 'Pulled.' });
     await onOk();
     expect(byId('update-progress-desc').textContent).toContain('Pulled.');

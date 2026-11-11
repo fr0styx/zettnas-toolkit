@@ -319,6 +319,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   name, and the sentence under it where Kiboto knows what goes into it, now come in English,
   German, Spanish, French and Chinese.
 
+#### Fixes
+
+- **No fixed English left on the four Settings tabs.** The two-step sign-in button, the uptime
+  heading and its "3d 4h" figure, the update channel's name, and a few update and support messages
+  were English in every language.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

@@ -38,3 +38,12 @@ def test_the_score_does_not_move():
     with patch.object(security_advisor, "_check_admin_accounts", lambda checks: None):
         without = security_advisor.evaluate_security_posture(None)
     assert with_rows["score"] == without["score"]
+
+
+def test_unreadable_accounts_leave_the_rows_out():
+    import sqlite3
+
+    with patch("backend.users_db.list_users", side_effect=sqlite3.OperationalError("locked")):
+        out = security_advisor.evaluate_security_posture(None)
+    ids = {c["id"] for c in out["checks"]}
+    assert "sec_default_admin" not in ids and "sec_superadmin_redundancy" not in ids

@@ -9,7 +9,7 @@ import { showToast, showConfirmToast, showPromptToast } from '../../toast.js';
 import { escapeHtml, copyTextToClipboard } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { collectClientEnvironment, getClientLogs } from '../../client-logger.js';
-import { formatDateTime, formatTime } from '../../format.js';
+import { formatDateTime, formatTime, formatUptime } from '../../format.js';
 import { setIconLabel } from '../../ui/primitives.js';
 
 const UPDATE_CHANNELS = ['stable', 'beta', 'edge'];
@@ -111,17 +111,12 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
     const about = await api.get('/api/system/about');
     if (about) {
       const commitTag = about.commit ? ` (${about.commit})` : '';
-      const channelLabel = channel === 'edge' ? 'Edge (Rolling)' : channel === 'beta' ? t('updates.channel_beta_label', 'Beta (3-day test)') : (about.release_channel || 'Stable');
+      const channelLabel = channel === 'edge' ? t('updates.channel_edge', 'Edge (Latest Commits)') : channel === 'beta' ? t('updates.channel_beta_label', 'Beta (3-day test)') : t('updates.channel_stable', 'Stable');
       if (versionBadge) versionBadge.textContent = `${about.tag || 'v' + about.version}${commitTag} • ${channelLabel}`;
       if (chassisEl) chassisEl.textContent = about.chassis_model || t('sysu.chassis_diy', 'Standard / DIY');
       if (hostEl) hostEl.textContent = `${about.hostname || 'NAS'} (${about.platform || 'Linux'})`;
       if (runtimeEl) runtimeEl.textContent = t('sysu.runtime', '{where} (Python {version})', { where: about.containerized ? t('sysu.in_docker', 'Docker Container') : t('sysu.native', 'Native Host'), version: about.python_version || '3.12' });
-      if (uptimeEl && about.uptime_secs != null) {
-        const d = Math.floor(about.uptime_secs / 86400);
-        const h = Math.floor((about.uptime_secs % 86400) / 3600);
-        const m = Math.floor((about.uptime_secs % 3600) / 60);
-        uptimeEl.textContent = d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m`;
-      }
+      if (uptimeEl && about.uptime_secs != null) uptimeEl.textContent = formatUptime(about.uptime_secs);
     }
   } catch (err) {
     console.warn('[Kiboto] Failed to fetch system about info:', err);
@@ -359,12 +354,12 @@ export async function applySystemUpdate() {
 
       try {
         const res = await postUpdate(channel);
-        showToast(res?.message || 'Update initiated. Reconnecting...', 'info');
+        showToast(res?.message || t('updates.started', 'The update has started. Kiboto reconnects when it is back.'), 'info');
 
         if (res && res.auto_restarting === false) {
           if (progressTitle) setIconLabel(progressTitle, '📦', t('ui.image_pulled', 'Image Pulled'));
           if (progressDesc) {
-            progressDesc.innerHTML = `${escapeHtml(res.message || 'Latest image downloaded.')}<br><br><span style="color:var(--lt-ink-brand, var(--brand, #33cdb8));font-weight:600;">${escapeHtml(t('sysu.restart_to_finish', 'Please restart the container in Unraid or Docker to finalize.'))}</span>`;
+            progressDesc.innerHTML = `${escapeHtml(res.message || t('updates.image_downloaded', 'The new version is downloaded.'))}<br><br><span style="color:var(--lt-ink-brand, var(--brand, #33cdb8));font-weight:600;">${escapeHtml(t('sysu.restart_to_finish', 'Please restart the container in Unraid or Docker to finalize.'))}</span>`;
           }
           if (applyBtn) applyBtn.disabled = false;
           return;
@@ -542,7 +537,7 @@ export function openDiagnosticsPreviewModal(data) {
     grid.innerHTML = `
       <div class="syj-box">
         <div class="syj-xs-bold-muted">${t('dgx.host', 'Host & OS')}</div>
-        <div class="syj-xs-bold-strong">${escapeHtml(data.chassis || 'Appliance')}</div>
+        <div class="syj-xs-bold-strong">${escapeHtml(data.chassis || t('dgx.this_nas', 'This NAS'))}</div>
         <div class="syj-xs-muted-2">${t('dgx.uptime', 'Uptime: {h}h', { h: data.uptime_hours || 0 })}</div>
       </div>
       <div class="syj-box">
@@ -616,13 +611,13 @@ export async function copySupportMarkdown() {
       const data = await api.get('/api/system/diagnostics-summary');
       md = data?.support_markdown || '';
     }
-    if (!md) throw new Error('No support markdown generated');
+    if (!md) throw new Error(t('diagnostics.no_summary', 'the server sent no summary'));
 
     const copied = await copyTextToClipboard(md);
     if (copied) {
       showToast(t('diagnostics.copied', 'Support markdown copied to clipboard!'), 'success');
     } else {
-      throw new Error('Clipboard copy failed');
+      throw new Error(t('diagnostics.clipboard_refused', 'the clipboard did not accept it'));
     }
   } catch (err) {
     showToast(t('toast.failed_to_copy_support_markdown', 'Failed to copy support markdown: {error}', { error: err.message }), 'error');

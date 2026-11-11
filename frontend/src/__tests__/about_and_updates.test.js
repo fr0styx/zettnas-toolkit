@@ -172,7 +172,7 @@ describe('System About & Software Updates Frontend Component', () => {
 
     expect(localStorage.getItem('kiboto_update_channel')).toBe('edge');
     expect(apiGetSpy).toHaveBeenCalledWith(expect.stringContaining('channel=edge'));
-    expect(document.getElementById('about-version-badge').textContent).toContain('Edge (Rolling)');
+    expect(document.getElementById('about-version-badge').textContent).toContain('Edge (Latest Commits)');
     expect(document.getElementById('update-status-title').textContent).toContain('Update Available (Edge): 5c0639d');
     expect(document.getElementById('update-release-notes').textContent).toContain('fix(ci): restore ruff target-version');
     expect(document.getElementById('btn-apply-update-text').textContent).toContain('Install Latest Commit (5c0639d)');

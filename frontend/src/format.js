@@ -125,3 +125,23 @@ export function formatBytes(bytes, { decimals = 1, si = false, fixed = false } =
   const digits = i === 0 ? 0 : decimals;
   return `${formatNumber(value, { maximumFractionDigits: digits, minimumFractionDigits: fixed ? digits : 0 })} ${units[i]}`;
 }
+
+/**
+ * How long something has run, in the reader's language: "3 d 4 h 12 min" (minutes only below a day).
+ * @param {number} secs
+ */
+export function formatUptime(secs) {
+  const total = Math.max(0, Math.floor(Number(secs) || 0));
+  const d = Math.floor(total / 86400);
+  const h = Math.floor((total % 86400) / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const unit = (value, name) => {
+    try {
+      return new Intl.NumberFormat(currentLocale(), { style: 'unit', unit: name, unitDisplay: 'narrow' }).format(value);
+    } catch (e) {
+      return `${value}${name[0]}`;
+    }
+  };
+  const parts = d > 0 ? [unit(d, 'day'), unit(h, 'hour'), unit(m, 'minute')] : [unit(h, 'hour'), unit(m, 'minute')];
+  return parts.join(' ');
+}
