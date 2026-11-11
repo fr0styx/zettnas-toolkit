@@ -51,7 +51,23 @@ jobs:
           pip install --require-hashes -r requirements-dev.lock
           # restic: the offsite backup restore drill (Batch 6); rclone: the two-way sync tests, which
           # skip without it (NARC-10)
-          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends restic rclone
+          # when Ubuntu's package server cannot be reached (it failed three runs in a row on 11 Nov
+          # 2026), the same versions come from the projects' own releases, checked against their sums
+          if ! (sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends -o Acquire::Retries=3 restic rclone); then
+            echo "::warning::Ubuntu's package server did not answer: restic and rclone come from their releases"
+            set -e
+            cd /tmp
+            curl -fsSL --retry 3 -O https://github.com/restic/restic/releases/download/v0.18.1/restic_0.18.1_linux_amd64.bz2
+            curl -fsSL --retry 3 -o restic.sums https://github.com/restic/restic/releases/download/v0.18.1/SHA256SUMS
+            grep " restic_0.18.1_linux_amd64.bz2$" restic.sums | sha256sum -c -
+            bunzip2 -f restic_0.18.1_linux_amd64.bz2 && sudo install -m 755 restic_0.18.1_linux_amd64 /usr/local/bin/restic
+            curl -fsSL --retry 3 -O https://github.com/rclone/rclone/releases/download/v1.60.1/rclone-v1.60.1-linux-amd64.zip
+            curl -fsSL --retry 3 -o rclone.sums https://github.com/rclone/rclone/releases/download/v1.60.1/SHA256SUMS
+            grep " rclone-v1.60.1-linux-amd64.zip$" rclone.sums | sha256sum -c -
+            unzip -oq rclone-v1.60.1-linux-amd64.zip && sudo install -m 755 rclone-v1.60.1-linux-amd64/rclone /usr/local/bin/rclone
+            cd "$GITHUB_WORKSPACE"
+            restic version && rclone version | head -1
+          fi
           python scripts/check_lock_versions.py
 
       - name: Known vulnerabilities in the Python dependencies (ARC-32)
