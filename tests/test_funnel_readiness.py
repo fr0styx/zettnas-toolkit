@@ -113,5 +113,6 @@ def test_share_links_asked_for_early_go_public_once_both_are_done(tailnet):
     st = pl.enable(8082)
     assert st["pending"] is True and st["enabled"] is False
     tailnet["doc"] = doc()
-    st = pl.status()
+    assert pl.status()["enabled"] is False  # reading the card publishes nothing (SET-02)
+    st = pl.status(finish_pending=True)
     assert st["enabled"] is True and st["pending"] is False

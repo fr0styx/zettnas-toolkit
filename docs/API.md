@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-716 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+717 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -437,6 +437,7 @@ request and response schemas.
 | `DELETE` | `/api/v1/network/public-apps/{funnel_port}` | `system:config` | Takes the app on that Funnel port off the internet |
 | `GET` | `/api/v1/network/public-links` | `system:view` | Whether share links work from the internet, their address, and a Tailscale approval to open |
 | `PUT` | `/api/v1/network/public-links` | `system:config` | Turns public share links on (confirmed first: 428 until then) or off |
+| `POST` | `/api/v1/network/public-links/close-port` | `system:config` | Takes the share links' port off the internet with everything it carries there |
 
 ### Network & Switching
 

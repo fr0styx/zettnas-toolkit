@@ -2803,6 +2803,8 @@ export default {
   "pl.no_tailscale": "Nécessite Tailscale : connectez-le d'abord dans Réseau → WireGuard et Tailscale.",
   "pl.approve": "Tailscale demande d'abord au propriétaire du tailnet d'autoriser Funnel.",
   "pl.off": "Désactivé : les liens fonctionnent à la maison et sur votre tailnet.",
+  "pl.also_public": "Problème : ce port est sur Internet et sert aussi {what}. N’importe qui sur Internet peut y accéder.",
+  "pl.take_off": "Retirer d’Internet",
   "pl.starting": "Démarrage…",
   "pl.on": "Activé : les liens fonctionnent depuis partout, à {address}.",
   "fm.share_expires_in": "Expire dans {n, plural, one {# heure} other {# heures}}",

@@ -97,36 +97,67 @@ def funnel_readiness(doc: dict[str, Any] | None = None) -> dict[str, Any]:
     }
 
 
-def live(dns: str) -> bool:
-    """Whether Funnel serves the share links on FUNNEL_PORT right now."""
+OTHERS_ON_PORT = (
+    f"Tailscale already serves something else on port {FUNNEL_PORT} of this NAS (Immich, for example). "
+    "Turning share links on would put that on the internet too. Move it to another port first."
+)
+NOT_OFF = "Tailscale did not confirm that the share links are off the internet. Try again."
+
+
+def _port_state(dns: str) -> tuple[dict[str, Any], bool, bool]:
+    """What Tailscale serves on the share links' port, by path; whether Funnel publishes the port;
+    and whether the answer could be read at all. Funnel opens a whole port, never one path
+    (SET-02): everything served on a published port is on the internet."""
     code, out = _ts(["funnel", "status", "--json"], timeout=4.0)
     if code != 0 or not dns:
-        return False
+        return {}, False, False
     try:
         doc = json.loads(out) or {}
     except ValueError:
-        return False
+        return {}, False, False
     if not isinstance(doc, dict):
-        return False
+        return {}, False, False
     host = f"{dns}:{FUNNEL_PORT}"
     handlers = ((doc.get("Web") or {}).get(host) or {}).get("Handlers") or {}
-    return bool((doc.get("AllowFunnel") or {}).get(host)) and any(p.rstrip("/") == PATH for p in handlers)
+    return handlers, bool((doc.get("AllowFunnel") or {}).get(host)), True
 
 
-def status() -> dict[str, Any]:
+def _links_served(handlers: dict[str, Any]) -> bool:
+    return any(p.rstrip("/") == PATH for p in handlers)
+
+
+def _others(handlers: dict[str, Any]) -> list[str]:
+    """The paths on the port that are not the share links'."""
+    return sorted(p for p in handlers if p.rstrip("/") != PATH)
+
+
+def live(dns: str) -> bool:
+    """Whether Funnel serves the share links on FUNNEL_PORT right now."""
+    handlers, public, _read = _port_state(dns)
+    return public and _links_served(handlers)
+
+
+def status(finish_pending: bool = False) -> dict[str, Any]:
+    """`finish_pending`: a request that waited for the tailnet owner's steps is carried out now.
+    Only for someone who may change settings: reading the card must never publish anything."""
     st = _state()
     ready = funnel_readiness()
     pending = st.get("pending") or {}
-    if pending and ready["ready"] and time.time() - float(pending.get("since") or 0) < PENDING_SECONDS:
+    waiting = bool(pending) and time.time() - float(pending.get("since") or 0) < PENDING_SECONDS
+    if finish_pending and waiting and ready["ready"]:
         logger.info("[PublicLinks] Funnel is allowed now: finishing the waiting request")
         return enable(int(pending.get("web_port") or 8082))
     dns = _dns_name()
     on = bool(st.get("enabled"))
+    handlers, public, _read = _port_state(dns)
     return {
         "funnel": ready,
-        "pending": bool(pending) and time.time() - float(pending.get("since") or 0) < PENDING_SECONDS,
+        "pending": waiting,
         "enabled": on,
-        "live": live(dns) if on else False,
+        "live": on and public and _links_served(handlers),
+        # the port is on the internet, and what else it carries there besides the share links
+        "port_public": public,
+        "also_public": _others(handlers) if public else [],
         "tailscale": bool(dns),
         "base_url": f"https://{dns}:{FUNNEL_PORT}" if dns else "",
         "approval_url": st.get("approval_url") or "",
@@ -143,6 +174,11 @@ def enable(web_port: int) -> dict[str, Any]:
     if not funnel_readiness()["ready"]:
         # the owner's steps aren't done: remember the request; status() finishes it once they are
         atomic_write_json(STATE_FILE, {"enabled": False, "pending": {"web_port": web_port, "since": time.time()}})
+        return status()
+    handlers, _public, _read = _port_state(dns)
+    if _others(handlers):
+        atomic_write_json(STATE_FILE, {"enabled": False, "error": OTHERS_ON_PORT})
+        logger.warning("[PublicLinks] not published: port %s also serves %s", FUNNEL_PORT, _others(handlers))
         return status()
     target = f"http://127.0.0.1:{web_port}{PATH}"
     code, out = _ts(["funnel", "--bg", "--yes", f"--https={FUNNEL_PORT}", f"--set-path={PATH}", target])
@@ -162,8 +198,36 @@ def enable(web_port: int) -> dict[str, Any]:
 
 
 def disable() -> dict[str, Any]:
+    """Takes the share links off the internet, and says "off" only once Tailscale shows it."""
+    dns = _dns_name()
     _ts(["funnel", f"--https={FUNNEL_PORT}", f"--set-path={PATH}", "off"])
-    atomic_write_json(STATE_FILE, {"enabled": False})
+    handlers, public, read = _port_state(dns)
+    if dns and (not read or (public and _links_served(handlers))):
+        atomic_write_json(STATE_FILE, {**_state(), "enabled": True, "error": NOT_OFF})
+        logger.warning("[PublicLinks] turning off was not confirmed by Tailscale")
+    else:
+        atomic_write_json(STATE_FILE, {"enabled": False})
+    return status()
+
+
+def close_port(actor: str = "") -> dict[str, Any]:
+    """Takes the whole port off the internet: the share links and whatever else it carried there
+    (SET-02). What was served on it for the tailnet only can be turned on again afterwards."""
+    dns = _dns_name()
+    _ts(["funnel", f"--https={FUNNEL_PORT}", "off"], timeout=15.0)
+    _handlers, public, read = _port_state(dns)
+    if dns and (not read or public):
+        atomic_write_json(STATE_FILE, {**_state(), "error": NOT_OFF})
+    else:
+        atomic_write_json(STATE_FILE, {"enabled": False})
+    try:
+        from backend.users_db import log_security_event
+
+        log_security_event(
+            "public_links.close_port", "success", actor_username=actor or None, details={"port": FUNNEL_PORT}
+        )
+    except (ImportError, OSError, ValueError):
+        logger.debug("[PublicLinks] could not write the security log", exc_info=True)
     return status()
 
 

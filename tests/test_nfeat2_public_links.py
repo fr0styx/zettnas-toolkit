@@ -82,6 +82,8 @@ def test_only_the_share_link_path_is_published_on_its_own_port(ts):
     assert st == {
         "enabled": True,
         "live": True,
+        "port_public": True,
+        "also_public": [],
         "tailscale": True,
         "base_url": f"https://{DNS}:8443",
         "approval_url": "",

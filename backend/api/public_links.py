@@ -19,9 +19,17 @@ class PublicLinksUpdate(BaseModel):
 
 
 @router.get("/network/public-links", dependencies=[Depends(require_scope("system:view"))])
-async def get_public_links() -> dict[str, Any]:
-    """Whether share links work from the internet, their address, and a Tailscale approval to open."""
-    return await asyncio.to_thread(public_links.status)
+async def get_public_links(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> dict[str, Any]:
+    """Whether share links work from the internet, their address, and a Tailscale approval to open.
+    A request that waited for the tailnet owner is only carried out for someone who may change
+    settings: a read by anyone else publishes nothing (SET-02)."""
+    return await asyncio.to_thread(public_links.status, principal.has_scope("system:config"))
+
+
+@router.post("/network/public-links/close-port", dependencies=[Depends(require_scope("system:config"))])
+async def close_public_port(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> dict[str, Any]:
+    """Takes the share links' port off the internet with everything it carries there."""
+    return await asyncio.to_thread(public_links.close_port, getattr(principal, "username", "") or "")
 
 
 @router.put("/network/public-links", dependencies=[Depends(require_scope("system:config"))])

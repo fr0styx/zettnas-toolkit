@@ -36,9 +36,45 @@ export function renderPublicLinks(st) {
     $('pl-status').insertAdjacentElement('afterend', steps);
   }
   steps.innerHTML = funnelStepsHtml(st.funnel);
+  renderPortAlert(st);
   const approve = /** @type {HTMLAnchorElement} */ ($('pl-approve'));
   approve.hidden = !st.approval_url;
   approve.href = st.approval_url || '#';
+}
+
+/** Red, with a way out: the port is on the internet with more than the share links (SET-02). */
+function renderPortAlert(st) {
+  let alert = $('pl-port-alert');
+  const others = st.port_public ? st.also_public || [] : [];
+  if (!others.length) {
+    if (alert) alert.hidden = true;
+    return;
+  }
+  if (!alert) {
+    alert = document.createElement('div');
+    alert.id = 'pl-port-alert';
+    alert.className = 'zn-alert zn-alert--danger';
+    alert.setAttribute('role', 'alert');
+    $('pl-status').insertAdjacentElement('afterend', alert);
+  }
+  alert.hidden = false;
+  alert.textContent = '';
+  const text = document.createElement('span');
+  text.textContent = `⚠ ${t('pl.also_public', 'Problem: this port is on the internet and also serves {what}. Anyone on the internet can reach that.', { what: others.join(', ') })}`;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn-pill-toggle is-danger is-small';
+  btn.textContent = t('pl.take_off', 'Take off the internet');
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    try {
+      renderPublicLinks(await api.post('/api/network/public-links/close-port'));
+    } catch (err) {
+      showToast(/** @type {Error} */ (err).message, 'error');
+      btn.disabled = false;
+    }
+  });
+  alert.append(text, btn);
 }
 
 async function put(enabled) {

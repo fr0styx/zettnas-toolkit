@@ -297,6 +297,20 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   No SNMP agent ever existed behind them: nothing listened on the port, while the status answered
   "engine active". A real SNMP agent is planned as its own feature.
 
+#### Security
+
+- **Share links from anywhere no longer put anything else on the internet**: share links and Immich's
+  HTTPS address used the same port, and Tailscale Funnel opens a whole port, never one path. Turning
+  share links on could therefore put all of Immich on the internet, and turning them off left it
+  there while the card said "Off". Share links are now refused while their port serves anything
+  else, "Turn on HTTPS" no longer puts an app on a port that is on the internet, the card says "off"
+  only once Tailscale shows it, and it turns red with a "Take off the internet" button when the port
+  carries more than the share links. To check a NAS that used both: on the machine that runs
+  Tailscale, `tailscale funnel status` lists everything that is public.
+- **Reading the share links card publishes nothing**: a request to publish that waited for the
+  tailnet owner's approval was carried out by whoever next opened the card, also someone who may
+  only look. Only a person who may change settings finishes it now.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

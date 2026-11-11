@@ -61048,7 +61048,7 @@
   },
   "/api/v1/network/public-links": {
    "get": {
-    "description": "Whether share links work from the internet, their address, and a Tailscale approval to open.",
+    "description": "Whether share links work from the internet, their address, and a Tailscale approval to open.\nA request that waited for the tailnet owner is only carried out for someone who may change\nsettings: a read by anyone else publishes nothing (SET-02).",
     "operationId": "get_public_links_api_v1_network_public_links_get",
     "responses": {
      "200": {
@@ -61115,6 +61115,39 @@
      }
     },
     "summary": "Put Public Links",
+    "tags": [
+     "Network"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/network/public-links/close-port": {
+   "post": {
+    "description": "Takes the share links' port off the internet with everything it carries there.",
+    "operationId": "close_public_port_api_v1_network_public_links_close_port_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Close Public Port Api V1 Network Public Links Close Port Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Close Public Port",
     "tags": [
      "Network"
     ],

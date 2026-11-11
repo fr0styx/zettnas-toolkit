@@ -170,7 +170,12 @@ def publish(app_port: int | None = None) -> dict[str, Any]:
     targets += [(app["port"] + APP_HTTPS_OFFSET, app["port"]) for app in web_apps()]
     _drop_gone_apps({public for public, _local in targets})
     approval = ""
+    on_internet = _public_ports()
     for public, local in targets:
+        if public in on_internet:
+            # Funnel publishes this port (share links, or an app): serving this here as well would
+            # put it on the internet with them, or take the port off the internet (SET-02)
+            continue
         code, out = tailscale.run_cli(
             ["serve", "--bg", "--yes", f"--https={public}", f"http://127.0.0.1:{local}"], timeout=10.0
         )
@@ -181,6 +186,17 @@ def publish(app_port: int | None = None) -> dict[str, Any]:
         if code != 0:
             raise RemoteAccessError((out or "tailscale serve failed").strip().splitlines()[-1][:300])
     return {**status(), "approval_url": approval}
+
+
+def _public_ports() -> set[int]:
+    """The ports Funnel publishes to the internet right now."""
+    _code, doc = _json(["funnel", "status", "--json"])
+    ports = set()
+    for host, on in (doc.get("AllowFunnel") or {}).items():
+        port = str(host).rsplit(":", 1)[-1]
+        if on and port.isdigit():
+            ports.add(int(port))
+    return ports
 
 
 def _drop_gone_apps(wanted: set[int]) -> None:

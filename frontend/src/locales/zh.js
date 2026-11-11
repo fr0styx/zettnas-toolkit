@@ -2803,6 +2803,8 @@ export default {
   "pl.no_tailscale": "需要 Tailscale：请先在“网络 → WireGuard 与 Tailscale”中连接。",
   "pl.approve": "Tailscale 需要 tailnet 所有者先允许 Funnel。",
   "pl.off": "已关闭：分享链接只在家里和你的 tailnet 中可用。",
+  "pl.also_public": "问题：此端口已暴露在互联网上，并且还提供 {what}。互联网上的任何人都可以访问。",
+  "pl.take_off": "从互联网撤下",
   "pl.starting": "正在启动…",
   "pl.on": "已开启：分享链接随处可用，地址为 {address}。",
   "fm.share_expires_in": "{n} 小时后过期",
