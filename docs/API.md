@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-718 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+719 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -925,6 +925,7 @@ request and response schemas.
 | `PUT` | `/api/v1/ups/nut-server` | `system:config` | Put Nut Server |
 | `GET` | `/api/v1/ups/nut-server/client` | `system:config` | The monitor password and the upsmon.conf line for a PC (admins only) |
 | `POST` | `/api/v1/ups/self-test` | `system:config` | Issues 10-second battery self-test diagnostic command to the configured UPS |
+| `GET` | `/api/v1/ups/shutdown-path` | any of `hardware:read`, `system:view` | Who switches the NAS off when the battery runs out, for the Power page's permanent line (SET-15) |
 | `POST` | `/api/v1/ups/simulate` | `system:config` | Triggers simulated power outage drill for desktop UI testing |
 | `POST` | `/api/v1/ups/test-connection` | `system:config` | Validates connection to a UPS daemon without altering persistent configuration |
 
