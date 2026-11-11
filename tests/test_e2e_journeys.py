@@ -501,6 +501,14 @@ def test_a_question_from_the_restore_window_can_be_answered():
             "**/api/offsite/connect-kit",
             lambda route: route.fulfill(status=200, content_type="application/json", body=json.dumps(state)),
         )
+        # the card offers "Connect from a recovery kit" only where the backup tool is installed;
+        # the machine that runs this test may not have it, and the page is what is under test
+        page.route(
+            "**/api/offsite",
+            lambda route: route.fulfill(
+                status=200, content_type="application/json", body=json.dumps({"available": True, "repos": []})
+            ),
+        )
         page.route("**/api/offsite/repos/old-nas/restore-settings", restore_settings)
         _sign_in(page)
         _close_wizard(page)
