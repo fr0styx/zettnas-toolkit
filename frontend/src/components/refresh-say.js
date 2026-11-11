@@ -4,6 +4,7 @@
 // Refresh buttons said "refreshed" at once, whatever came back.
 
 import { showToast } from '../toast.js';
+import { showState } from './state-block.js';
 import { t } from '../i18n.js';
 
 /**
@@ -13,19 +14,8 @@ import { t } from '../i18n.js';
  * @param {() => unknown} retry
  */
 export function showReadError(container, text, retry) {
-  const box = document.createElement('div');
-  box.className = 'cv-muted-center read-error';
-  box.setAttribute('role', 'alert');
-  const said = document.createElement('p');
-  said.textContent = text;
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'btn-pill-toggle';
-  btn.setAttribute('data-try-again', '');
-  btn.textContent = t('common.try_again', 'Try again');
-  btn.addEventListener('click', () => retry());
-  box.append(said, btn);
-  container.replaceChildren(box);
+  const block = showState(container, 'failed', { text, retry });
+  if (block) block.classList.add('read-error', 'cv-muted-center');
 }
 
 /**

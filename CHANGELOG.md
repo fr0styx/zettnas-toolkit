@@ -12,6 +12,22 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   failed, or before it arrived, the sample stood there as if it had been measured. They now show a
   dash until the real value is known, and a test keeps new ones out.
 
+#### Fixes
+
+- **A kid who signs in outside their hours reads why in their own language.** The sign-in page
+  showed an English sentence from the server ("This account can be signed in every day
+  09:00-20:00 (server time)"). It now says it in the person's language, with the days written out.
+
+#### Changes
+
+- **One way to say "loading", "could not load", "nothing here" and "you can look but not
+  change".** Pages had their own way for each, or none. There is one block for the four now, in
+  five languages; the Storage page uses it first, and the other pages take it as they are worked
+  on.
+- **Texts from the server can be shown in your language.** The server can now say how a sentence
+  was made (which text, with which values) beside its English form, and every error message on
+  screen uses that when it is there.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

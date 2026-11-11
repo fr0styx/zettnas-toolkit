@@ -30,7 +30,7 @@ from backend.auth import (
 )
 from backend.config import SECURITY_FILE, is_using_default_password, logger
 from backend.confirmations import require_confirmation
-from backend.errors import error_response
+from backend.errors import error_response, said
 from backend.fsutil import atomic_write_json, read_json
 from backend.ignored_errors import ignored
 from backend.models.schemas import (
@@ -387,11 +387,19 @@ def _outside_signin_hours(user: dict[str, Any]) -> JSONResponse | None:
     log_security_event(
         "auth.login.outside_hours", "failure", actor_id=user.get("id"), actor_username=user.get("username")
     )
+    every_day = list(hours["days"]) == list(range(7))
     return error_response(
         403,
         f"This account can be signed in {describe(hours)} (server time).",
         error="outside_signin_hours",
         signin_hours=hours,
+        # in the person's language: a kid read an English server sentence here (SET-11)
+        text=said(
+            "outside_hours_daily" if every_day else "outside_hours_days",
+            start=hours["start"],
+            end=hours["end"],
+            days={"weekdays": list(hours["days"])},
+        ),
     )
 
 

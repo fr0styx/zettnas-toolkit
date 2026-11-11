@@ -20,3 +20,14 @@
 .empty-state-row > td { padding: 0; }
 /* Share protocols: whether each service is really running (UX-11) */
 .proto-tag.proto-down { background: rgba(245, 158, 11, 0.12); color: var(--warn); border-color: rgba(245, 158, 11, 0.3); }
+
+/* SET-11: one block for loading, could not load, nothing there, and "look but not change" */
+.state-block { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 12px; text-align: center; color: var(--muted); }
+.state-block-text { margin: 0; font-size: 13px; color: var(--zn-text-soft, var(--muted)); }
+.state-block-detail { margin: 0; font-size: var(--zn-fs-xs, 12px); color: var(--muted); }
+.state-block.is-failed .state-block-text { color: var(--zn-text-strong); }
+.state-block.is-failed { border-left: 3px solid var(--crit); }
+.state-block.is-readonly { flex-direction: row; justify-content: flex-start; text-align: left; padding: 8px 12px; margin-bottom: 10px; border-left: 3px solid var(--warn); background: var(--zn-glaze-3, transparent); border-radius: 6px; }
+.state-block.is-loading .state-block-text::before { content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 8px; border: 2px solid var(--muted); border-top-color: transparent; border-radius: 50%; vertical-align: -2px; animation: state-block-spin 0.9s linear infinite; }
+@keyframes state-block-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .state-block.is-loading .state-block-text::before { animation: none; } }

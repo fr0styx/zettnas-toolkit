@@ -3,6 +3,7 @@
  * and what to do next, keyed by the error slug the server sends (backend/errors.py).
  */
 import { getLanguage, t } from './i18n.js';
+import { serverSaid } from './server-text.js';
 
 const NEXT_STEP = {
   forbidden: () => t('err.next_forbidden', 'Ask the owner of this server if you need access.'),
@@ -94,6 +95,9 @@ function byStatus(body) {
 export function explain(detail, error, body = null) {
   // whole messages the interface knows in every language
   if (error === 'ai_off_for_role') return t('err.ai_off_for_role', 'Kib is turned off for your account. An administrator can turn it on in AI settings.');
+  // a sentence the server described (text: {msg_key, params}) is shown in the reader's language
+  const described = body && body.text && body.text.msg_key ? serverSaid(body, String(detail || '').trim()) : '';
+  if (described) return described;
   const what = String(detail || '').trim();
   const step = nextStep(error, body);
   if (getLanguage() !== 'en') {

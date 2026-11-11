@@ -5,14 +5,7 @@
  * ({key, default, params}: a drive's label inside "Drive sdb: Replace soon").
  */
 import { t } from './i18n.js';
-
-function resolve(params) {
-  const out = {};
-  for (const [k, v] of Object.entries(params || {})) {
-    out[k] = v && typeof v === 'object' && 'key' in v ? t(v.key, v.default || '', resolve(v.params)) : v;
-  }
-  return out;
-}
+import { resolveParams as resolve } from './server-text.js';
 
 /** {title, message} of an event, translated when it says how. */
 export function eventText(e) {

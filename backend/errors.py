@@ -72,6 +72,13 @@ def _hide_internal(status: int, detail: str, extra: dict[str, Any], shown: bool 
     return GENERIC_500
 
 
+def said(key: str, **params: Any) -> dict[str, Any]:
+    """How a sentence for a person was made, to send beside its English form as `text`: the page
+    then shows it in the reader's language (frontend/src/server-text.js). The key is srv.<key> in
+    the locale files. A value {"weekdays": [0-6]} is written out as day names by the page."""
+    return {"msg_key": f"srv.{key}", "params": params}
+
+
 def error_body(status: int, detail: str, error: str | None = None, shown: bool = False, **extra: Any) -> dict[str, Any]:
     detail = _hide_internal(status, detail, extra, shown)
     body = {"error": error or ERROR_SLUGS.get(status, "error"), "detail": detail, "code": status}

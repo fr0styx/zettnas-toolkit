@@ -2,6 +2,7 @@
  * Kiboto Authentication & Lock Screen Component
  * Handles Dual-Mode Login, MFA/TOTP Challenge Interception, and Inactivity Auto-Lock.
  */
+import { serverSaid } from '../server-text.js';
 import { auth } from '../api.js';
 import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
@@ -426,7 +427,7 @@ async function doLogin() {
       // The message stays on screen and is announced (role="alert") until the next attempt.
       let msg = res.status === 401
         ? t('login.invalid_msg', 'Wrong username or password.')
-        : (data.detail || t('login.invalid_msg', 'Wrong username or password.'));
+        : (serverSaid(data) || t('login.invalid_msg', 'Wrong username or password.')); // in the reader's language where the server said how
       if (res.status === 429) {
         const retry = parseInt(res.headers.get('Retry-After') || '0', 10);
         msg = t('login.too_many', 'Too many attempts. Try again in {seconds} s.', { seconds: Math.max(retry, 1) });
