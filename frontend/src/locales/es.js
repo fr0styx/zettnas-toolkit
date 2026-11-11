@@ -5570,6 +5570,8 @@ export default {
   "ev.vm_snap_reverted.msg": "{name} se restauró a la instantánea {snap}.",
   "ev.vm_snap_reverted.title": "VM restaurada",
   "ev.vm_state.msg": "{name}: {action} hecho.",
+  "ev.vm_autostart_failed.title": "La máquina virtual no se ha iniciado",
+  "ev.vm_autostart_failed.msg": "{name} debía iniciarse con el NAS y no se ha iniciado: {reason}",
   "ev.vm_state.title": "Máquina virtual",
   "ev.vm_turned_off.msg": "{name} no se apagó en {secs} segundos y se desconectó.",
   "ev.vm_turned_off.title": "Máquina virtual desconectada",

@@ -5570,6 +5570,8 @@ export default {
   "ev.vm_snap_reverted.msg": "{name} 已还原到快照 {snap}。",
   "ev.vm_snap_reverted.title": "虚拟机已还原",
   "ev.vm_state.msg": "{name}：已执行 {action}。",
+  "ev.vm_autostart_failed.title": "虚拟机未能启动",
+  "ev.vm_autostart_failed.msg": "{name} 设置为随 NAS 启动，但未能启动：{reason}",
   "ev.vm_state.title": "虚拟机",
   "ev.vm_turned_off.msg": "{name} 未在 {secs} 秒内关机，已被强制关闭。",
   "ev.vm_turned_off.title": "虚拟机已强制关闭",

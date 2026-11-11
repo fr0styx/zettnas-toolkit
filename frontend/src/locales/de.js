@@ -5570,6 +5570,8 @@ export default {
   "ev.vm_snap_reverted.msg": "{name} wurde auf Snapshot {snap} zurückgesetzt.",
   "ev.vm_snap_reverted.title": "VM zurückgesetzt",
   "ev.vm_state.msg": "{name}: {action} ausgeführt.",
+  "ev.vm_autostart_failed.title": "Virtuelle Maschine ist nicht gestartet",
+  "ev.vm_autostart_failed.msg": "{name} sollte mit dem NAS starten und ist nicht gestartet: {reason}",
   "ev.vm_state.title": "Virtuelle Maschine",
   "ev.vm_turned_off.msg": "{name} wurde nicht innerhalb von {secs} Sekunden heruntergefahren und wurde ausgeschaltet.",
   "ev.vm_turned_off.title": "Virtuelle Maschine ausgeschaltet",

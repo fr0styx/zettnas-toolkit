@@ -5570,6 +5570,8 @@ export default {
   "ev.vm_snap_reverted.msg": "{name} was put back to snapshot {snap}.",
   "ev.vm_snap_reverted.title": "VM put back",
   "ev.vm_state.msg": "{name}: {action} done.",
+  "ev.vm_autostart_failed.title": "Virtual machine did not start",
+  "ev.vm_autostart_failed.msg": "{name} was set to start with the NAS and did not start: {reason}",
   "ev.vm_state.title": "Virtual machine",
   "ev.vm_turned_off.msg": "{name} did not shut down within {secs} seconds and was turned off.",
   "ev.vm_turned_off.title": "Virtual machine turned off",

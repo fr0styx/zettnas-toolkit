@@ -87,6 +87,56 @@ def calculate_vm_budget(total_ram_bytes: int, running_vms: list[dict[str, Any]])
     }
 
 
+MIN_FREE_BYTES = 1024**3  # a machine's disk grows as it writes: below this it may stop in the middle
+
+
+def disk_free_bytes() -> int:
+    """Free space where machine disks are kept (Kiboto's data folder)."""
+    try:
+        return shutil.disk_usage(DATA_DIR).free
+    except OSError:
+        return -1  # not known: no refusal on a guess
+
+
+def _gb(n_bytes: float) -> str:
+    return f"{n_bytes / 1024**3:.1f} GB"
+
+
+def start_refusal(vm: dict[str, Any], vms: list[dict[str, Any]], total_bytes: int, free_bytes: int) -> str:
+    """Why a machine may not start now, or "". Memory was checked once, at creation, against the
+    machines running then; a start checked nothing, so a second large machine could take the
+    memory the NAS itself needs. Disks grow in the data folder with no check anywhere (SET-14)."""
+    name = str(vm.get("name") or "the machine")
+    if not vm.get("override_active") and total_bytes > 0:
+        others = [v for v in vms if v.get("id") != vm.get("id")]
+        budget = calculate_vm_budget(total_bytes, others)
+        want = float(vm.get("ram_gb") or 0)
+        if want > budget["safe_headroom_gb"]:
+            return (
+                f"{name} needs {want:g} GB of memory, and only {budget['safe_headroom_gb']:g} GB is left for virtual "
+                f"machines: this NAS has {budget['total_host_ram_gb']:g} GB, keeps {budget['host_reserve_gb']:g} GB for "
+                f"itself, and running machines hold {budget['allocated_vm_ram_gb']:g} GB. Shut another machine down or "
+                f"give {name} less memory."
+            )
+    if 0 <= free_bytes < MIN_FREE_BYTES:
+        return (
+            f"Only {_gb(free_bytes)} is free in Kiboto's data folder, where the disk of {name} is kept. "
+            "Free some space first: a machine whose disk cannot grow stops in the middle of what it does."
+        )
+    return ""
+
+
+def create_refusal(disk_size_gb: float, disk_format: str, free_bytes: int) -> str:
+    """Why a new machine's disk may not be made, or "". A raw disk takes its whole size at once."""
+    need = disk_size_gb * 1024**3 if disk_format == "raw" else MIN_FREE_BYTES
+    if 0 <= free_bytes < need:
+        return (
+            f"The new disk needs {_gb(need)} and only {_gb(free_bytes)} is free in Kiboto's data folder. "
+            "Choose a smaller disk or free some space."
+        )
+    return ""
+
+
 def calculate_cpu_capacity(host_threads: int, running_vms: list[dict[str, Any]]) -> dict[str, Any]:
     """
     Evaluates CPU thread allocation and overcommit ratio:

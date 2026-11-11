@@ -252,6 +252,18 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   pointed at the literal address "[HOST]". The message after backing up an app always named the
   file "archive.tar.gz"; it names the real file and its size.
 
+#### Fixes
+
+- **A virtual machine that would take the memory the NAS needs does not start.** Memory was
+  checked once, when a machine was created, against the machines running then; starting it later
+  checked nothing, so a second large machine could take what the NAS itself needs. A start now
+  says how much is left and what to do, unless the machine was set to allow more memory than is
+  safe. A start, and a new disk, are also refused when Kiboto's data folder, where machine disks
+  are kept, has too little free space.
+- **A machine set to "Start with the NAS" that does not start leaves an entry in the event log**,
+  with the reason; it was in the server log only. When a restart fails, the reason is shown
+  instead of a general error.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

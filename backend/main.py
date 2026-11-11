@@ -292,6 +292,46 @@ def _startup_schedulers() -> Any:
     return _start_rag
 
 
+def autostart_vms():
+    """Starts the machines set to start with the NAS, and those Kiboto shut down for a restart."""
+    try:
+        import time
+
+        time.sleep(3.0)  # Brief pause to allow storage and bridge initialization
+        from backend.api.vms import _get_qemu_vnc_port, _is_qemu_process_alive, _load_vms, _start_qemu
+        from backend.services import vm_host, vm_qemu
+
+        vms = _load_vms()
+        for vm in vms:
+            vm_id = vm.get("id")
+            # "Start with the NAS", and what Kiboto itself shut down for a restart or an update
+            again = bool(vm.get("start_again"))
+            if not vm_id or not (vm.get("autostart") or again):
+                continue
+            if vm.get("state") != "running" and not _is_qemu_process_alive(vm_id):
+                vnc_port = _get_qemu_vnc_port(vms, vm_id)
+                logger.info("[VM Autostart] Starting VM '%s' (ID: %s)...", vm.get("name"), vm_id)
+                why = vm_host.start_refusal(
+                    vm, _load_vms(), vm_host._get_host_memory_bytes(), vm_host.disk_free_bytes()
+                )
+                ok, err = (False, why) if why else _start_qemu(vm, vnc_port)
+                if ok:
+                    vm_qemu.save_fields(vm_id, {"state": "running"}, ("start_again", "shutdown_asked_at"))
+                    continue
+                # a failed automatic start was in the server log only (SET-14)
+                name = str(vm.get("name") or vm_id)
+                add_event(
+                    "warning",
+                    "Virtual machine did not start",
+                    f"{name} was set to start with the NAS and did not start: {err}",
+                    event_text("vm_autostart_failed", name=name, reason=str(err or "")),
+                )
+            if again:
+                vm_qemu.save_fields(vm_id, {}, ("start_again",))  # asked once, not at every start
+    except Exception as e:
+        logger.warning(f"[VM Autostart] Error starting autostart VMs: {e}")
+
+
 def startup_system():
     """System initialization and background services launch."""
     import gc
@@ -405,35 +445,7 @@ def startup_system():
     # that comes first opens it itself (get_rag_engine is locked)
     threading.Thread(target=_start_rag, name="RagStart", daemon=True).start()
 
-    # VM Autostart Background Daemon
-    def _autostart_vms():
-        try:
-            import time
-
-            time.sleep(3.0)  # Brief pause to allow storage and bridge initialization
-            from backend.api.vms import _get_qemu_vnc_port, _is_qemu_process_alive, _load_vms, _start_qemu
-            from backend.services import vm_qemu
-
-            vms = _load_vms()
-            for vm in vms:
-                vm_id = vm.get("id")
-                # "Start with the NAS", and what Kiboto itself shut down for a restart or an update
-                again = bool(vm.get("start_again"))
-                if not vm_id or not (vm.get("autostart") or again):
-                    continue
-                if vm.get("state") != "running" and not _is_qemu_process_alive(vm_id):
-                    vnc_port = _get_qemu_vnc_port(vms, vm_id)
-                    logger.info("[VM Autostart] Starting VM '%s' (ID: %s)...", vm.get("name"), vm_id)
-                    ok, _ = _start_qemu(vm, vnc_port)
-                    if ok:
-                        vm_qemu.save_fields(vm_id, {"state": "running"}, ("start_again", "shutdown_asked_at"))
-                        continue
-                if again:
-                    vm_qemu.save_fields(vm_id, {}, ("start_again",))  # asked once, not at every start
-        except Exception as e:
-            logger.warning(f"[VM Autostart] Error starting autostart VMs: {e}")
-
-    threading.Thread(target=_autostart_vms, daemon=True, name="VmAutostart").start()
+    threading.Thread(target=autostart_vms, daemon=True, name="VmAutostart").start()
 
     # Backup in case the server exits without running the lifespan shutdown.
     # Registered here (not at import) so tooling that imports main.py is inert.

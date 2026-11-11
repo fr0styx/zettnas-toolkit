@@ -629,6 +629,9 @@ def create_vm(req: VmCreateRequest, principal: AuthenticatedPrincipal = Depends(
 
     total_mem = vm_host._get_host_memory_bytes()
     budget = vm_host.calculate_vm_budget(total_mem, vms)
+    no_room = vm_host.create_refusal(req.disk_size_gb, req.disk_format, vm_host.disk_free_bytes())
+    if no_room:
+        raise HTTPException(status_code=400, detail=no_room)
 
     # Validate RAM allocation against safe headroom unless overridden
     if not req.override_limits and req.ram_gb > budget["safe_headroom_gb"]:
@@ -1160,6 +1163,15 @@ async def _shut_down(vm_id: str, target_vm: dict[str, Any]) -> dict[str, Any]:
 
 async def _start(vm_id: str, target_vm: dict[str, Any], vnc_port: int) -> dict[str, Any]:
     """Starts the machine and returns the fields to save."""
+    refusal = await asyncio.to_thread(
+        vm_host.start_refusal,
+        target_vm,
+        vm_qemu._load_vms(),
+        vm_host._get_host_memory_bytes(),
+        vm_host.disk_free_bytes(),
+    )
+    if refusal:
+        raise ShownServerError(refusal, status_code=409, error="vm_start_refused")
     vm_guest._forget_vm_ip(vm_id)
     ok, err_msg = await asyncio.to_thread(vm_qemu._start_qemu, target_vm, vnc_port)
     if not ok:
@@ -1211,9 +1223,9 @@ async def execute_vm_action(
             ok, err_msg = await asyncio.to_thread(vm_qemu._start_qemu, target_vm, vnc_port)
             if not ok:
                 await asyncio.to_thread(vm_qemu.save_fields, vm_id, {"state": "stopped", "last_error": err_msg})
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Failed to restart VM '{target_vm['name']}': {err_msg}",
+                # the cause is shown: every 500 was replaced by one generic sentence (SET-14)
+                raise ShownServerError(
+                    f"{target_vm['name']} could not be restarted: {err_msg}", error="vm_start_failed"
                 )
         fields = {"state": "running", "uptime_seconds": 1}
 
