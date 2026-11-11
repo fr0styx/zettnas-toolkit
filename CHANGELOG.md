@@ -450,6 +450,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   guests. Every lookup now passes the same rights as the matching page and is logged. Processor,
   memory, temperature and fan readings need the right to see the system, as on the desktop.
 
+#### Fixes
+
+- **Web in Ask Kib is chosen for one chat and never remembered**: the "Web" tick was kept in the
+  browser, so it stayed on for every later chat and for the next person who signed in on that
+  browser. It now starts off, and goes off again with a new chat, another chat, a cleared chat
+  and at sign-out. Signing out also clears the chat from the window.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

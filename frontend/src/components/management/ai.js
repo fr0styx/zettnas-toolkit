@@ -2778,20 +2778,36 @@ function _buildAiExternalNoteHtml(res) {
   return `<div class="ai-chat-external-note aicm-xs-warn" title="${t('ui.this_answer_used_services_outside', 'This answer used services outside your NAS')}">🌐 ${escapeHtml(t('aiq.data_left', 'Data left this device: {services}', { services: ext.join(', ') }))}</div>`;
 }
 
-// Remember the Web toggle per browser (a convenience; the server default is off).
+// Web is a choice for one chat (SET-04, the owner's decision S13). It is never remembered: the
+// tick used to be kept in the browser, so it stayed on for every later chat and for the next
+// person who signed in there. What an older version stored is removed.
 function _initAiWebToggle() {
   const el = document.getElementById('ai-chat-web-toggle');
   if (!el || el.dataset.bound) return;
   el.dataset.bound = '1';
   try {
-    el.checked = localStorage.getItem('kiboto_ai_web') === '1';
+    localStorage.removeItem('kiboto_ai_web');
   } catch (e) { /* storage blocked */ }
-  el.addEventListener('change', () => {
-    try {
-      localStorage.setItem('kiboto_ai_web', el.checked ? '1' : '0');
-    } catch (e) { /* storage blocked */ }
-  });
+  _aiWebOff();
 }
+
+/** Turns Web off: a new chat, another chat, a cleared chat or another person starts without it. */
+function _aiWebOff() {
+  const el = document.getElementById('ai-chat-web-toggle');
+  if (el) /** @type {HTMLInputElement} */ (el).checked = false;
+}
+
+// Signing out leaves nothing of the chat behind for the next person at this browser.
+ZettEventBus.on?.('auth:logout', () => {
+  if (_aiActiveAbortController) {
+    _aiActiveAbortController.abort();
+    _aiActiveAbortController = null;
+  }
+  _activeConversationId = null;
+  _activeConversationTitle = 'New Conversation';
+  _aiConversations = [];
+  clearAiChatHistory();
+});
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _initAiWebToggle);
   else _initAiWebToggle();
@@ -3096,6 +3112,7 @@ export async function selectAiConversation(convId) {
     _aiActiveAbortController.abort();
     _aiActiveAbortController = null;
   }
+  if (convId !== _activeConversationId) _aiWebOff();
   _activeConversationId = convId;
 
   document.querySelectorAll('.ai-thread-item').forEach((el) => {
@@ -3157,6 +3174,7 @@ export async function createNewAiConversation() {
   try {
     const res = await api.post('/api/ai/conversations', { title: 'New Conversation' });
     if (res && res.conversation) {
+      _aiWebOff();
       _activeConversationId = res.conversation.id;
       _activeConversationTitle = res.conversation.title || 'New Conversation';
       const titleEl = document.getElementById('ai-chat-active-title');
@@ -3580,6 +3598,7 @@ if (typeof window !== 'undefined') {
 
 export function clearAiChatHistory() {
   _aiChatHistory = [];
+  _aiWebOff();
   const listEl = document.getElementById('ai-chat-messages-list');
   if (!listEl) return;
   listEl.innerHTML = '';
