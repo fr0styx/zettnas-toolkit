@@ -366,6 +366,21 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   in a form that can be turned back into the password, to every account that may look at storage.
   Both are left out now.
 
+#### Security
+
+- **Virtual machines are read with the virtual machine right**: the list of machines with their disk
+  paths, a picture of any machine's screen, the NAS's USB and built-in devices and the machines' error
+  logs were answered to every account that may look at the system, family members included. They
+  now need the right to manage virtual machines, and a storage administrator can no longer open a
+  machine's screen and keyboard.
+
+#### Fixes
+
+- **A virtual machine keeps its own screen**: after one machine was deleted, the window of another
+  machine could show the screen of a different machine and send it the keyboard and mouse, and a
+  machine started afterwards could fail to start. Each machine now keeps the screen port it was
+  given.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

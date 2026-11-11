@@ -70082,8 +70082,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    },
    "post": {
@@ -70157,8 +70157,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },
@@ -70285,8 +70285,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },
@@ -70321,8 +70321,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },
@@ -70357,8 +70357,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },
@@ -70487,8 +70487,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },
@@ -70560,8 +70560,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },
@@ -70645,8 +70645,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },
@@ -70677,8 +70677,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },
@@ -70713,8 +70713,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },
@@ -70821,8 +70821,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    },
    "patch": {
@@ -71112,8 +71112,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },
@@ -71162,8 +71162,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },
@@ -71323,8 +71323,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },
@@ -71481,8 +71481,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },
@@ -71535,8 +71535,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    },
    "post": {
@@ -71811,8 +71811,8 @@
      "Virtual Machines"
     ],
     "x-required-scopes": [
-     "system:view",
-     "storage:read"
+     "vms:read",
+     "system:config"
     ]
    }
   },

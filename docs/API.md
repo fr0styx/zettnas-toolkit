@@ -942,43 +942,43 @@ request and response schemas.
 
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/vms` | any of `system:view`, `storage:read` | Lists configured virtual machines with live states and resource allocations |
+| `GET` | `/api/v1/vms` | any of `vms:read`, `system:config` | Lists configured virtual machines with live states and resource allocations |
 | `POST` | `/api/v1/vms` | any of `vms:manage`, `system:config` | Provisions a new virtual machine with dynamic headroom validation and volume mappings |
-| `GET` | `/api/v1/vms/backups` | any of `system:view`, `storage:read` | Lists all saved VM backup archives across all virtual machines |
+| `GET` | `/api/v1/vms/backups` | any of `vms:read`, `system:config` | Lists all saved VM backup archives across all virtual machines |
 | `DELETE` | `/api/v1/vms/backups/{backup_id}` | any of `vms:manage`, `system:config` | Deletes a VM backup archive from disk and updates registry |
 | `POST` | `/api/v1/vms/backups/{backup_id}/restore` | any of `vms:manage`, `system:config` | Restores VM configuration and disk images from backup archive |
-| `GET` | `/api/v1/vms/bridges` | any of `system:view`, `storage:read` | Lists available host network bridges |
-| `GET` | `/api/v1/vms/catalog` | any of `system:view`, `storage:read` | Lists curated official distribution images with local cache detection |
-| `GET` | `/api/v1/vms/catalog/tasks` | any of `system:view`, `storage:read` | Returns status and telemetry of active and recent ISO download tasks |
+| `GET` | `/api/v1/vms/bridges` | any of `vms:read`, `system:config` | Lists available host network bridges |
+| `GET` | `/api/v1/vms/catalog` | any of `vms:read`, `system:config` | Lists curated official distribution images with local cache detection |
+| `GET` | `/api/v1/vms/catalog/tasks` | any of `vms:read`, `system:config` | Returns status and telemetry of active and recent ISO download tasks |
 | `DELETE` | `/api/v1/vms/catalog/tasks/{task_id}` | any of `vms:manage`, `system:config` | Cancels an in-flight ISO download task or removes a finished/failed task record |
 | `POST` | `/api/v1/vms/catalog/{catalog_id}/download` | any of `vms:manage`, `system:config` | Initiates a background download of a verified official distribution ISO |
-| `GET` | `/api/v1/vms/iommu-groups` | any of `system:view`, `storage:read` | Scans Linux host sysfs /sys/kernel/iommu_groups to report IOMMU isolation groups and PCI devices |
+| `GET` | `/api/v1/vms/iommu-groups` | any of `vms:read`, `system:config` | Scans Linux host sysfs /sys/kernel/iommu_groups to report IOMMU isolation groups and PCI devices |
 | `DELETE` | `/api/v1/vms/isos` | any of `vms:manage`, `system:config` | Delete Iso Image |
-| `GET` | `/api/v1/vms/isos` | any of `system:view`, `storage:read` | Lists available ISO and OS installation images |
+| `GET` | `/api/v1/vms/isos` | any of `vms:read`, `system:config` | Lists available ISO and OS installation images |
 | `POST` | `/api/v1/vms/isos/upload` | any of `vms:manage`, `system:config` | Streams uploaded ISO file directly into NAS storage (/mnt/user/isos) |
-| `GET` | `/api/v1/vms/kvm/diagnose` | any of `system:view`, `storage:read` | Returns detailed multi-tier KVM diagnostic report including host hardware and cgroup analysis |
-| `GET` | `/api/v1/vms/telemetry` | any of `system:view`, `storage:read` | Returns KVM hypervisor acceleration state, dynamic memory headroom budget, and CPU capacity |
-| `GET` | `/api/v1/vms/usb-devices` | any of `system:view`, `storage:read` | Lists physical and virtual USB devices connected to the host |
+| `GET` | `/api/v1/vms/kvm/diagnose` | any of `vms:read`, `system:config` | Returns detailed multi-tier KVM diagnostic report including host hardware and cgroup analysis |
+| `GET` | `/api/v1/vms/telemetry` | any of `vms:read`, `system:config` | Returns KVM hypervisor acceleration state, dynamic memory headroom budget, and CPU capacity |
+| `GET` | `/api/v1/vms/usb-devices` | any of `vms:read`, `system:config` | Lists physical and virtual USB devices connected to the host |
 | `DELETE` | `/api/v1/vms/{vm_id}` | any of `vms:manage`, `system:config` | Deletes a virtual machine definition and cleans up its virtual disk directory |
-| `GET` | `/api/v1/vms/{vm_id}` | any of `system:view`, `storage:read` | Retrieves detailed virtual machine configuration, attachments, and runtime state |
+| `GET` | `/api/v1/vms/{vm_id}` | any of `vms:read`, `system:config` | Retrieves detailed virtual machine configuration, attachments, and runtime state |
 | `PATCH` | `/api/v1/vms/{vm_id}` | any of `vms:manage`, `system:config` | Updates virtual machine configuration (RAM, vCPUs, name, description, ISO path, boot order, autostart) |
 | `PUT` | `/api/v1/vms/{vm_id}` | any of `vms:manage`, `system:config` | Updates virtual machine configuration (RAM, vCPUs, name, description, ISO path, boot order, autostart) |
 | `POST` | `/api/v1/vms/{vm_id}/action` | any of `vms:manage`, `system:config` | Executes lifecycle action on target VM: start, stop, restart, reboot, acpi_shutdown, pause, resume, force_off |
 | `POST` | `/api/v1/vms/{vm_id}/backup` | any of `vms:manage`, `system:config` | Takes a full backup of VM configuration and virtual disks |
-| `GET` | `/api/v1/vms/{vm_id}/backups` | any of `system:view`, `storage:read` | Lists saved backup archives for target VM |
-| `GET` | `/api/v1/vms/{vm_id}/connection-info` | any of `system:view`, `storage:read` | Returns multi-protocol access credentials (SSH, VNC, Web Console) for a target VM |
+| `GET` | `/api/v1/vms/{vm_id}/backups` | any of `vms:read`, `system:config` | Lists saved backup archives for target VM |
+| `GET` | `/api/v1/vms/{vm_id}/connection-info` | any of `vms:read`, `system:config` | Returns multi-protocol access credentials (SSH, VNC, Web Console) for a target VM |
 | `POST` | `/api/v1/vms/{vm_id}/console/token` | any of `vms:write`, `vms:manage`, `system:config` | Issues single-use ephemeral ticket for noVNC / serial console WebSocket streaming |
 | `POST` | `/api/v1/vms/{vm_id}/disk/resize` | any of `vms:manage`, `system:config` | Expands a virtual machine virtual disk (qcow2/raw) using qemu-img resize |
-| `GET` | `/api/v1/vms/{vm_id}/error` | any of `system:view`, `storage:read` | Returns the last recorded QEMU error or startup failure log for a virtual machine |
+| `GET` | `/api/v1/vms/{vm_id}/error` | any of `vms:read`, `system:config` | Returns the last recorded QEMU error or startup failure log for a virtual machine |
 | `POST` | `/api/v1/vms/{vm_id}/resize-disk` | any of `vms:manage`, `system:config` | Expands a virtual machine virtual disk (qcow2/raw) using qemu-img resize |
 | `POST` | `/api/v1/vms/{vm_id}/restart` | any of `vms:manage`, `system:config` | Restarts the target virtual machine |
-| `GET` | `/api/v1/vms/{vm_id}/screenshot` | any of `system:view`, `storage:read` | Captures and returns a live graphical screendump of the VM via QMP screendump |
-| `GET` | `/api/v1/vms/{vm_id}/snapshots` | any of `system:view`, `storage:read` | Lists snapshots for target virtual machine with QCOW2 internal and saved metadata |
+| `GET` | `/api/v1/vms/{vm_id}/screenshot` | any of `vms:read`, `system:config` | Captures and returns a live graphical screendump of the VM via QMP screendump |
+| `GET` | `/api/v1/vms/{vm_id}/snapshots` | any of `vms:read`, `system:config` | Lists snapshots for target virtual machine with QCOW2 internal and saved metadata |
 | `POST` | `/api/v1/vms/{vm_id}/snapshots` | any of `vms:manage`, `system:config` | Creates a live snapshot (savevm via QMP if running, qemu-img if stopped) |
 | `DELETE` | `/api/v1/vms/{vm_id}/snapshots/{snapshot_name}` | any of `vms:manage`, `system:config` | Deletes a named snapshot |
 | `POST` | `/api/v1/vms/{vm_id}/snapshots/{snapshot_name}/revert` | any of `vms:manage`, `system:config` | Reverts virtual machine state to a named snapshot |
 | `POST` | `/api/v1/vms/{vm_id}/start` | any of `vms:manage`, `system:config` | Starts the target virtual machine |
-| `GET` | `/api/v1/vms/{vm_id}/status` | any of `system:view`, `storage:read` | Queries live QMP monitor socket for hypervisor execution state and vCPU threads |
+| `GET` | `/api/v1/vms/{vm_id}/status` | any of `vms:read`, `system:config` | Queries live QMP monitor socket for hypervisor execution state and vCPU threads |
 | `POST` | `/api/v1/vms/{vm_id}/stop` | any of `vms:manage`, `system:config` | Stops the target virtual machine |
 
 ### Wallpapers

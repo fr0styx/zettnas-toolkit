@@ -328,7 +328,7 @@ def _download_iso_worker(task_id: str, catalog_item: dict[str, Any], target_dir:
         )
 
 
-@router.get("/telemetry", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/telemetry", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def get_vms_telemetry():
     """Returns KVM hypervisor acceleration state, dynamic memory headroom budget, and CPU capacity."""
     total_mem = vm_host._get_host_memory_bytes()
@@ -374,13 +374,13 @@ def collect_vm_diagnostics() -> dict[str, Any]:
     }
 
 
-@router.get("/kvm/diagnose", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/kvm/diagnose", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def get_kvm_diagnose():
     """Returns detailed multi-tier KVM diagnostic report including host hardware and cgroup analysis."""
     return vm_host.get_kvm_status()
 
 
-@router.get("", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def list_vms():
     """Lists configured virtual machines with live states and resource allocations."""
     vms = vm_qemu._load_vms()
@@ -392,7 +392,7 @@ def list_vms():
     return vms
 
 
-@router.get("/isos", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/isos", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def get_discovered_isos():
     """Lists available ISO and OS installation images."""
     return vm_host.scan_isos()
@@ -527,7 +527,7 @@ def delete_iso_image(
     return {"status": "ok"}
 
 
-@router.get("/catalog", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/catalog", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def get_official_catalog():
     """Lists curated official distribution images with local cache detection."""
     local_isos = vm_host.scan_isos()
@@ -581,7 +581,7 @@ def download_official_iso(
     return {"status": "started", "task_id": task_id, "catalog_id": catalog_id}
 
 
-@router.get("/catalog/tasks", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/catalog/tasks", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def get_catalog_download_tasks():
     """Returns status and telemetry of active and recent ISO download tasks."""
     return list(_DOWNLOAD_TASKS.values())
@@ -606,13 +606,13 @@ def cancel_or_remove_catalog_task(
     return {"status": "removed", "task_id": task_id}
 
 
-@router.get("/bridges", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/bridges", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def get_network_bridges():
     """Lists available host network bridges."""
     return vm_host.scan_bridges()
 
 
-@router.get("/usb-devices", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/usb-devices", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def get_host_usb_devices():
     """Lists physical and virtual USB devices connected to the host."""
     return vm_host.scan_host_usb_devices()
@@ -687,7 +687,7 @@ def create_vm(req: VmCreateRequest, principal: AuthenticatedPrincipal = Depends(
 # ---- Host PCI / GPU passthrough (VFIO) ----
 
 
-@router.get("/iommu-groups", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/iommu-groups", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def get_host_iommu_groups():
     """Scans Linux host sysfs /sys/kernel/iommu_groups to report IOMMU isolation groups and PCI devices."""
     iommu_path = "/sys/kernel/iommu_groups"
@@ -754,7 +754,7 @@ def get_host_iommu_groups():
 
 @router.get(
     "/backups",
-    dependencies=[Depends(require_scope("system:view", "storage:read"))],
+    dependencies=[Depends(require_scope("vms:read", "system:config"))],
 )
 async def list_all_virtual_machine_backups():
     """Lists all saved VM backup archives across all virtual machines."""
@@ -811,7 +811,7 @@ async def delete_virtual_machine_backup(backup_id: str):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.get("/{vm_id}", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/{vm_id}", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def get_vm_detail(vm_id: VmId):
     """Retrieves detailed virtual machine configuration, attachments, and runtime state."""
     vms = vm_qemu._load_vms()
@@ -912,7 +912,7 @@ def update_vm(
     return target_vm
 
 
-@router.get("/{vm_id}/connection-info", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/{vm_id}/connection-info", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def get_vm_connection_info(
     vm_id: VmId,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -1002,7 +1002,6 @@ def _validate_console_ticket(ticket: str | None, vm_id: str) -> bool:
         "vms:write",
         "vms:manage",
         "system:config",
-        "storage:admin",
     )
     try:
         from backend.auth import AuthenticatedPrincipal, get_current_session
@@ -1248,7 +1247,7 @@ async def restart_vm(
     return await execute_vm_action(vm_id, VmActionRequest(action="restart"), principal)
 
 
-@router.get("/{vm_id}/error", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/{vm_id}/error", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def get_vm_error(vm_id: VmId):
     """Returns the last recorded QEMU error or startup failure log for a virtual machine."""
     vms = vm_qemu._load_vms()
@@ -1274,7 +1273,7 @@ def get_vm_error(vm_id: VmId):
     }
 
 
-@router.get("/{vm_id}/status", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/{vm_id}/status", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def get_vm_qmp_status(vm_id: VmId):
     """Queries live QMP monitor socket for hypervisor execution state and vCPU threads."""
     vms = vm_qemu._load_vms()
@@ -1305,7 +1304,7 @@ def get_vm_qmp_status(vm_id: VmId):
     }
 
 
-@router.get("/{vm_id}/screenshot", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/{vm_id}/screenshot", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 def get_vm_screenshot(vm_id: VmId):
     """Captures and returns a live graphical screendump of the VM via QMP screendump."""
     vms = vm_qemu._load_vms()
@@ -1547,7 +1546,7 @@ def _list_qcow2_snapshots(disk_path: str) -> list[dict[str, Any]]:
         return []
 
 
-@router.get("/{vm_id}/snapshots", dependencies=[Depends(require_scope("system:view", "storage:read"))])
+@router.get("/{vm_id}/snapshots", dependencies=[Depends(require_scope("vms:read", "system:config"))])
 async def get_vm_snapshots(vm_id: VmId):
     """Lists snapshots for target virtual machine with QCOW2 internal and saved metadata."""
     vms = vm_qemu._load_vms()
@@ -1775,7 +1774,7 @@ async def backup_virtual_machine(vm_id: VmId, req: VmBackupRequest | None = None
 
 @router.get(
     "/{vm_id}/backups",
-    dependencies=[Depends(require_scope("system:view", "storage:read"))],
+    dependencies=[Depends(require_scope("vms:read", "system:config"))],
 )
 async def list_virtual_machine_backups(vm_id: VmId):
     """Lists saved backup archives for target VM."""

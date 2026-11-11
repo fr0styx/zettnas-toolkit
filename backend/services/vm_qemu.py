@@ -208,8 +208,30 @@ def _save_vms(vms: list[dict[str, Any]]) -> None:
 
 
 def _get_qemu_vnc_port(vms: list[dict[str, Any]], vm_id: str) -> int:
-    idx = next((i for i, v in enumerate(vms) if v["id"] == vm_id), 0)
-    return 5900 + idx + 1
+    """The port a machine's screen listens on. It belongs to the machine and is stored with it.
+
+    It used to be worked out from the machine's place in the list on every use (SET-03). After one
+    machine was deleted, the others moved up: their windows then opened the screen, keyboard and
+    mouse of the machine that had held that place, and a machine started afterwards was given a port
+    a running one still held."""
+    idx = next((i for i, v in enumerate(vms) if v.get("id") == vm_id), None)
+    if idx is None:
+        return 5901
+    target = vms[idx]
+    stored = target.get("vnc_port")
+    if isinstance(stored, int) and 5900 < stored < 65536:
+        return stored
+    running = vm_store._RUNNING_QEMU_PROCS
+    taken = {v.get("vnc_port") for v in vms if v.get("id") != vm_id}
+    taken |= {(p or {}).get("vnc_port") for k, p in running.items() if k != vm_id}
+    # first the port it runs on now, then the one its place gave it until today, then the next free
+    wanted = [(running.get(vm_id) or {}).get("vnc_port"), 5900 + idx + 1]
+    port = next((p for p in wanted if isinstance(p, int) and p not in taken), None)
+    if port is None:
+        port = next(p for p in range(5901, 65536) if p not in taken)
+    target["vnc_port"] = port
+    _save_vms(vms)
+    return port
 
 
 def _prepare_vtpm(vm_id: str, vm_dir: str, wait_secs: float = 3.0) -> list[str]:
