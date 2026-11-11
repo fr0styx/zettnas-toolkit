@@ -136,27 +136,6 @@
   box-shadow: 0 0 10px rgba(51, 205, 184, 0.45) !important;
 }
 
-.btn-sys-restore-snap {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(245, 158, 11, 0.14) !important;
-  color: var(--kb-text-warn) !important;
-  border: 1px solid rgba(245, 158, 11, 0.35) !important;
-  border-radius: 5px !important;
-  font-size: var(--kb-fs-xs) !important;
-  font-weight: 600 !important;
-  padding: 3px 8px !important;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.btn-sys-restore-snap:hover:not(:disabled) {
-  background: rgba(245, 158, 11, 0.28) !important;
-  border-color: #fbbf24 !important;
-  color: var(--kb-text-strong) !important;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.45) !important;
-}
-
 #sec-save-btn {
   background: rgba(249, 115, 22, 0.14) !important;
   border: 1px solid rgba(249, 115, 22, 0.45) !important;
@@ -785,11 +764,6 @@ body.theme-yak .mgmt-app-card:hover {
 
 body.theme-yak .mgmt-app-action {
   color: var(--lt-t-e6ad65ff, #e6ad65);
-}
-
-body.theme-yak .mgmt-back-btn:hover {
-  background: rgba(212, 138, 55, 0.2);
-  border-color: #e6ad65;
 }
 
 @media (max-width: 600px) {

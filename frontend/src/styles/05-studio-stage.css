@@ -80,24 +80,6 @@
   animation: pulse 1.6s infinite;
 }
 
-.zoom-toggle-btn {
-  background: var(--lt-b-15282cff, #15282c);
-  border: 1px solid var(--kb-line-12);
-  color: var(--kb-text-soft);
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: var(--kb-fs-xs);
-  font-weight: 800;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.zoom-toggle-btn:hover {
-  background: var(--lt-b-20373bff, #20373b);
-  color: var(--kb-text-strong);
-  border-color: var(--ok2);
-}
-
 .yak-egg-btn {
   background: var(--lt-b-15282cff, #15282c);
   border: 1px solid var(--kb-line-12);
@@ -279,25 +261,6 @@ body.drawer-is-open .chassis-workbench-stage {
   height: 30px;
   color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));
   filter: drop-shadow(0 2px 6px rgba(51, 205, 184, 0.4));
-}
-
-.management-hero-box {
-  width: 100%;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, rgba(51, 205, 184, 0.14) 0%, rgba(79, 216, 196, 0.08) 100%);
-  border: 1px solid rgba(51, 205, 184, 0.25);
-  border-radius: 8px;
-  color: var(--ok2);
-}
-
-.management-hero-icon {
-  width: 26px;
-  height: 26px;
-  stroke: currentColor;
-  filter: drop-shadow(0 2px 6px rgba(51, 205, 184, 0.35));
 }
 
 .desktop-icon-label {
@@ -874,26 +837,6 @@ body.drawer-is-open .chassis-workbench-stage {
 .disk .dt{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:space-between;gap:2px}
 .disk .dt-temp{display:inline-flex;align-items:baseline;gap:1px}
 .disk .dt .u{font-size:8px;color:var(--muted);font-weight:600}
-
-
-
-.sl-parity-tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(249, 115, 22, 0.22);
-  color: var(--lt-t-fb923cff, #fb923c);
-  border: 1px solid rgba(249, 115, 22, 0.5);
-  border-radius: 2.5px;
-  font-size: 7.5px;
-  font-weight: 800;
-  padding: 0 3px;
-  line-height: 10px;
-  letter-spacing: 0.2px;
-  flex-shrink: 0;
-  margin: 0 2px;
-  box-shadow: 0 0 5px rgba(249, 115, 22, 0.25);
-}
 
 .disks.compact { gap: 4px; }
 .disks.compact .group-tiles { gap: 4px; }
