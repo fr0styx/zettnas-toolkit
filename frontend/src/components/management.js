@@ -1,4 +1,5 @@
 import { syncWidgetSettingsUI } from './widgets.js';
+import { refreshAndSay } from './refresh-say.js';
 import { askPower, isShuttingDown, powerToast } from './vm/power.js';
 import { loadSecurityPane, loadNotificationsPane } from './management/admin-panes.js';
 import { kibPaneFor, loadKibExtras } from './management/kib-access.js';
@@ -1575,8 +1576,7 @@ export function initManagement() {
   if (refreshChassisBtn) {
     refreshChassisBtn.addEventListener('click', () => {
       const mount = document.getElementById('mgmt-chassis-twin-mount');
-      if (mount) fetchAndRenderChassisTwin(mount);
-      showToast(t('toast.chassis_digital_twin_refreshed', 'Drive bays refreshed.'), 'info');
+      if (mount) refreshAndSay(() => fetchAndRenderChassisTwin(mount), t('toast.chassis_digital_twin_refreshed', 'Drive bays refreshed.'));
     });
   }
 
@@ -1585,8 +1585,7 @@ export function initManagement() {
   if (refreshTopoBtn) {
     refreshTopoBtn.addEventListener('click', () => {
       const mount = document.getElementById('mgmt-storage-topo-mount');
-      if (mount) fetchAndRenderStorageTopology(mount);
-      showToast(t('toast.storage_topology_refreshed', 'Storage topology refreshed.'), 'info');
+      if (mount) refreshAndSay(() => fetchAndRenderStorageTopology(mount), t('toast.storage_topology_refreshed', 'Storage topology refreshed.'));
     });
   }
 
@@ -1642,8 +1641,7 @@ export function initManagement() {
   if (refreshRemotesBtn) {
     refreshRemotesBtn.addEventListener('click', () => {
       const mount = document.getElementById('mgmt-storage-remotes-mount');
-      if (mount) fetchAndRenderRemoteStorage(mount);
-      showToast(t('toast.remote_storage_refreshed', 'Remote storage refreshed.'), 'info');
+      if (mount) refreshAndSay(() => fetchAndRenderRemoteStorage(mount), t('toast.remote_storage_refreshed', 'Remote storage refreshed.'));
     });
   }
 

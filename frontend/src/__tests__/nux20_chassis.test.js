@@ -154,10 +154,12 @@ describe('chassis and storage text in German (NUX-20)', () => {
     const c = box();
     routes({
       '/api/storage/pools': { pools: [], is_observer_mode: false },
-      '/api/storage/platform': {},
+      '/api/storage/platform': { can_look_for_pools: true },
       '/api/storage/pools/discover': { discovered_pools: [{ pool_id: 'backup', fs_type: 'zfs' }] },
     });
     await fetchAndRenderStorageTopology(c);
+    c.querySelector('[data-look-for-pools]').click(); // a button now, not something every opening does (SET-09)
+    await new Promise((r) => setTimeout(r, 0));
     expect(c.textContent).toContain('Externer Speicherpool gefunden:');
     expect(c.querySelector('.btn-import-external-pool').textContent).toContain('Pool importieren');
   });

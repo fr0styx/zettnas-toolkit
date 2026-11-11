@@ -1,4 +1,5 @@
 import { escapeHtml, trapFocus, copyTextToClipboard, reconcileKeyedTable } from '../utils.js';
+import { showReadError } from './refresh-say.js';
 import { locateSaid } from './locate-text.js';
 import { api } from '../api.js';
 import { t } from '../i18n.js';
@@ -361,9 +362,9 @@ export async function fetchAndRenderChassisTwin(container, options = {}) {
     console.warn('[ChassisVisualizer] Failed to load chassis config:', err);
   }
 
-  // Fallback to latestStats.disks if available
-  const fallbackDisks = state.latestStats?.disks || [];
-  renderChassisTwin(container, fallbackDisks, options);
+  // No picture drawn from guesses: it showed a layout named after the number of drives (SET-09)
+  showReadError(container, t('chassis.bays_failed', 'The drive bays could not be read.'), () => fetchAndRenderChassisTwin(container, options));
+  return false;
 }
 
 /**
@@ -910,10 +911,11 @@ export async function fetchAndRenderStorageTopology(container) {
   }
 
   try {
-    const [data, platformData, discoveredData] = await Promise.all([
+    // no look for pools on other drives here: that reads the label of every drive, and ran at
+    // each opening and each Refresh. It is a button now, where it can work (SET-09)
+    const [data, platformData] = await Promise.all([
       api.get('/api/storage/pools'),
       api.get('/api/storage/platform').catch(() => ({})),
-      api.get('/api/storage/pools/discover').catch(() => ({ discovered_pools: [] })),
     ]);
 
     const canCreatePools = platformData?.capabilities?.can_create_pools ?? false;
@@ -923,60 +925,58 @@ export async function fetchAndRenderStorageTopology(container) {
       btnCreatePool.onclick = () => openCreateStoragePoolModal(() => fetchAndRenderStorageTopology(container));
     }
 
-    const discoveredList = discoveredData?.discovered_pools || [];
-    let externalBannerHtml = '';
-    if (discoveredList.length > 0) {
-      externalBannerHtml = discoveredList.map(p => `
-        <div class="external-pools-banner" style="background:rgba(51,205,184,0.12); border:1px solid rgba(51,205,184,0.3); border-radius:8px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-          <div class="cv-row-6">
-            <span class="cv-fs20">🔌</span>
-            <div>
-              <strong class="cv-accent">${t('chassis.external_pool', 'External storage pool found:')}</strong>
-              <span class="cv-semi-strong">${escapeHtml(p.pool_id)}</span>
-              <span class="cv-xs-muted-2">(${escapeHtml((p.fs_type || 'zfs').toUpperCase())}${p.status ? ` · ${escapeHtml(p.status)}` : ''})</span>
-            </div>
-          </div>
-          <button class="btn-import-external-pool btn-pill-toggle" data-pool-id="${escapeHtml(p.pool_id)}" data-fs-type="${escapeHtml(p.fs_type || 'zfs')}" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); color: var(--lt-t-4ade80ff, #4ade80);" title="${t('ui.import_detached_storage_pool', 'Import detached storage pool')}">
-            ${ico('📥')} ${t('chassis.import_pool', 'Import pool')}
-          </button>
-        </div>
-      `).join('');
-    }
-
     if (!data || !Array.isArray(data.pools) || data.pools.length === 0) {
-      renderStorageTopologyTree(container, state.latestStats?.disks, state.latestStats?.unraid || {});
+      container.innerHTML = `<div class="cv-muted-center">${escapeHtml(t('chassis.no_pools', 'No storage pool was found here.'))}</div>`;
     } else {
       renderStructuredPoolsTopology(container, data);
     }
+    if (platformData?.can_look_for_pools) {
+      container.insertAdjacentHTML('beforeend', `<p class="cv-look-for-pools"><button type="button" class="btn-pill-toggle" data-look-for-pools>${escapeHtml(t('chassis.look_for_pools', 'Look for pools on other drives'))}</button></p>`);
+      const look = container.querySelector('[data-look-for-pools]');
+      if (look) look.addEventListener('click', () => lookForPools(container, /** @type {HTMLButtonElement} */ (look)));
+    }
+    return true;
+  } catch (err) {
+    console.warn('[Kiboto] Failed to load /api/storage/pools:', err);
+    // no tree drawn from guesses: it labelled the system drive as parity, under a green "online"
+    showReadError(container, t('chassis.pools_failed', 'The storage pools could not be read.'), () => fetchAndRenderStorageTopology(container));
+    return false;
+  }
+}
 
-    if (externalBannerHtml) {
-      container.insertAdjacentHTML('afterbegin', externalBannerHtml);
-      if (!container._externalPoolEventsBound) {
-        container._externalPoolEventsBound = true;
-        container.addEventListener('click', async (e) => {
-          const importBtn = e.target.closest('.btn-import-external-pool');
-          if (importBtn) {
-            e.stopPropagation();
-            const pid = importBtn.dataset.poolId;
-            const fstype = importBtn.dataset.fsType || 'zfs';
-            try {
-              importBtn.disabled = true;
-              setIconLabel(importBtn, '⏳', t('ui.importing', 'Importing...'));
-              await api.post('/api/storage/pools/import', { pool_id: pid, fs_type: fstype });
-              showToast(t('toast.successfully_imported_storage_pool', 'Successfully imported storage pool \'{pid}\'!', { pid: pid }), 'success');
-              fetchAndRenderStorageTopology(container);
-            } catch (err) {
-              showToast(err.message || `Failed to import pool '${pid}'`, 'error');
-              importBtn.disabled = false;
-              setIconLabel(importBtn, '📥', t('ui.import_pool', 'Import Pool'));
-            }
-          }
-        });
-      }
+/** What "Look for pools on other drives" found, as banners with an Import button each. */
+export function foundPoolsHtml(found) {
+  return (found || []).map((p) => `
+    <div class="external-pools-banner">
+      <div class="cv-row-6">
+        <span class="cv-fs20" aria-hidden="true">🔌</span>
+        <div>
+          <strong class="cv-accent">${t('chassis.external_pool', 'External storage pool found:')}</strong>
+          <span class="cv-semi-strong">${escapeHtml(p.pool_id)}</span>
+          <span class="cv-xs-muted-2">(${escapeHtml((p.fs_type || 'zfs').toUpperCase())}${p.status ? ` · ${escapeHtml(p.status)}` : ''})</span>
+        </div>
+      </div>
+      <button class="btn-import-external-pool btn-pill-toggle" data-pool-id="${escapeHtml(p.pool_id)}" data-fs-type="${escapeHtml(p.fs_type || 'zfs')}">
+        ${ico('📥')} ${t('chassis.import_pool', 'Import pool')}
+      </button>
+    </div>`).join('');
+}
+
+/** Looks for pools on drives that belong to none yet, on a press of the button. */
+export async function lookForPools(container, button) {
+  if (button) button.disabled = true;
+  try {
+    const found = (await api.get('/api/storage/pools/discover'))?.discovered_pools || [];
+    container.querySelectorAll('.external-pools-banner').forEach((el) => el.remove()); // they piled up, one per Refresh
+    if (found.length === 0) {
+      showToast(t('chassis.no_other_pool', 'No other pool was found.'), 'info');
+    } else {
+      container.insertAdjacentHTML('afterbegin', foundPoolsHtml(found));
     }
   } catch (err) {
-    console.warn('[Kiboto] Failed to load /api/storage/pools, falling back to local disks:', err);
-    renderStorageTopologyTree(container, state.latestStats?.disks, state.latestStats?.unraid || {});
+    showToast(t('chassis.look_failed', 'Could not look for pools: {error}', { error: err.message || String(err) }), 'error');
+  } finally {
+    if (button) button.disabled = false;
   }
 }
 
@@ -1974,6 +1974,7 @@ export async function fetchAndRenderRemoteStorage(container) {
         ${escapeHtml(t('chassis.remotes_failed', 'Could not load cloud drives: {error}', { error: err.message || t('toast.unknown_error', 'Unknown error') }))}
       </div>
     `;
+    return false;
   }
 }
 

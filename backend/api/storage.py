@@ -153,7 +153,14 @@ def get_storage_platform_info() -> dict[str, Any]:
         "platform": adapter.get_platform_type().value,
         "capabilities": caps.model_dump(),
         "is_busy": adapter.is_storage_busy(),
+        # looking for pools reads the label of every drive; in a container install it finds no
+        # device and an import cannot work, so the page does not offer it there (SET-09)
+        "can_look_for_pools": bool(caps.can_import_pools) and not _in_container(),
     }
+
+
+def _in_container() -> bool:
+    return os.path.exists("/.dockerenv") or bool(config.SETTINGS.containerized)
 
 
 @router.get("/pools", dependencies=[Depends(require_scope("storage:read", "system:view"))])
@@ -639,10 +646,12 @@ def discover_external_storage_pools() -> dict[str, Any]:
     """
     Discovers unimported or detachable external storage pools (e.g. USB/Thunderbolt DAS).
     """
+    if _in_container():
+        return {"status": "ok", "discovered_pools": [], "available": False}
     adapter = get_storage_platform()
     try:
         discovered = adapter.discover_external_pools()
-        return {"status": "ok", "discovered_pools": discovered}
+        return {"status": "ok", "discovered_pools": discovered, "available": True}
     except Exception as e:
         logger.warning(f"[StorageAPI] Error discovering external pools: {e}")
         return {"status": "ok", "discovered_pools": []}

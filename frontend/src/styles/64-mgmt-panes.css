@@ -1050,3 +1050,8 @@
 #management-modal-overlay .mgx-fs14-bold-strong { font-size: 14px; font-weight: 700; color: var(--zn-text-strong); margin-top: 2px; }
 #management-modal-overlay .mgx-fs14-bold-ok { font-size: 14px; font-weight: 700; color: var(--ok2); margin-top: 2px; }
 #management-modal-overlay .mgx-fs14-bold-brand { font-size: 14px; font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan)); margin-top: 2px; }
+
+/* SET-09: a pool found on other drives, and a page part that could not be read */
+.external-pools-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--zn-line-10); background: var(--zn-glaze-3); }
+.read-error { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 12px; }
+.cv-look-for-pools { margin: 14px 0 0; text-align: center; }

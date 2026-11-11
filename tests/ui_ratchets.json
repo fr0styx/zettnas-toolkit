@@ -32,8 +32,8 @@
  "frontend/src/components/chassis-visualizer.js": {
   "buttons": 3,
   "globals": 1,
-  "styles": 42,
-  "templates": 20
+  "styles": 40,
+  "templates": 22
  },
  "frontend/src/components/container-modal.js": {
   "buttons": 0,
@@ -318,6 +318,12 @@
   "templates": 1
  },
  "frontend/src/components/photo-import.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 0,
+  "templates": 1
+ },
+ "frontend/src/components/refresh-say.js": {
   "buttons": 0,
   "globals": 0,
   "styles": 0,

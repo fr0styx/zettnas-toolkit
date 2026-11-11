@@ -805,6 +805,20 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **The light bar is left alone when you look for a drive.** It flashed the same for every drive,
   which finds none, and stayed white afterwards instead of going back to your setting.
 
+#### Fixes
+
+- **The Storage page no longer draws a guess when it cannot read.** When the call for the drive
+  bays failed, a picture was drawn from live statistics and named after the number of drives.
+  When the call for the pools failed, a tree was drawn that labelled the system drive as parity
+  and every NVMe as cache, under a green "online". Both now say that they could not be read, with
+  "Try again"; a server with no pool says "No storage pool was found here".
+- **Opening the Pools tab no longer looks at every drive.** Each opening and each Refresh looked
+  for pools on other drives, which reads every drive's label. That is a button now ("Look for
+  pools on other drives"), offered only where it can work: not in a container install, where no
+  drive can be seen and an import cannot succeed. The found-pool notes no longer pile up.
+- **"Refresh" on the Storage page speaks after the answer.** Drive bays, pools and cloud drives
+  said "refreshed" at once, whatever came back; a refresh that failed now says so.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

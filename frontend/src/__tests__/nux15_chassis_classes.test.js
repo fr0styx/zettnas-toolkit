@@ -24,9 +24,13 @@ describe('chassis-visualizer markup on classes (NUX-15)', () => {
     vi.spyOn(api, 'get').mockImplementation(async (url) => {
       if (url === '/api/storage/pools') return { pools: [], platform: 'generic_linux' };
       if (url === '/api/storage/pools/discover') return { discovered_pools: [{ pool_id: 'old', fs_type: 'btrfs', status: 'ONLINE' }, { pool_id: 'usb' }] };
+      if (url === '/api/storage/platform') return { can_look_for_pools: true };
       return {};
     });
     await fetchAndRenderStorageTopology(mount);
+    expect(mount.querySelector('.external-pools-banner')).toBeNull(); // looked for on a press of the button (SET-09)
+    mount.querySelector('[data-look-for-pools]').click();
+    await new Promise((r) => setTimeout(r, 0));
     const notes = [...mount.querySelectorAll('.external-pools-banner .cv-xs-muted-2')].map((n) => n.textContent);
     expect(notes).toEqual(['(BTRFS · ONLINE)', '(ZFS)']);
   });

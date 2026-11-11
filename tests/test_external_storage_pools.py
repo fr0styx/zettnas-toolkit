@@ -221,7 +221,10 @@ def test_storage_api_export_and_discover(client, auth_headers):
     mock_platform.export_pool.return_value = {"status": "exported", "safe_to_disconnect": True}
     mock_platform.import_pool.return_value = {"status": "imported", "pool_id": "ext_pool"}
 
-    with patch("backend.api.storage.get_storage_platform", return_value=mock_platform):
+    with (
+        patch("backend.api.storage.get_storage_platform", return_value=mock_platform),
+        patch("backend.api.storage._in_container", return_value=False),  # the look is closed in a container (SET-09)
+    ):
         # 1. Discover external pools
         res = client.get("/api/storage/pools/discover", headers=auth_headers)
         assert res.status_code == 200
