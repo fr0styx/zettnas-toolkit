@@ -43,6 +43,22 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
+      - name: Use the runner's Ubuntu mirror when security.ubuntu.com does not resolve
+        run: |
+          # On 11 Nov 2026 GitHub's runners could not resolve security.ubuntu.com for hours, and
+          # every apt install that reached for it failed (restic, rclone, Playwright's fonts). The
+          # runner's own archive mirror carries the security pocket too.
+          if ! getent hosts security.ubuntu.com >/dev/null; then
+            echo "::warning::security.ubuntu.com does not resolve: apt uses the runner's mirror for it"
+            TO=http://azure.archive.ubuntu.com/ubuntu
+            if [ -f /etc/apt/apt-mirrors.txt ]; then
+              sudo sed -i '/security\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt
+              TO=mirror+file:/etc/apt/apt-mirrors.txt
+            fi
+            sudo sed -i -E "s#https?://security\.ubuntu\.com/ubuntu/?#$TO#g" \
+              /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list 2>/dev/null || true
+          fi
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -214,6 +230,22 @@ jobs:
         with:
           python-version: "3.12"
           cache: "pip"
+
+      - name: Use the runner's Ubuntu mirror when security.ubuntu.com does not resolve
+        run: |
+          # On 11 Nov 2026 GitHub's runners could not resolve security.ubuntu.com for hours, and
+          # every apt install that reached for it failed (restic, rclone, Playwright's fonts). The
+          # runner's own archive mirror carries the security pocket too.
+          if ! getent hosts security.ubuntu.com >/dev/null; then
+            echo "::warning::security.ubuntu.com does not resolve: apt uses the runner's mirror for it"
+            TO=http://azure.archive.ubuntu.com/ubuntu
+            if [ -f /etc/apt/apt-mirrors.txt ]; then
+              sudo sed -i '/security\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt
+              TO=mirror+file:/etc/apt/apt-mirrors.txt
+            fi
+            sudo sed -i -E "s#https?://security\.ubuntu\.com/ubuntu/?#$TO#g" \
+              /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list 2>/dev/null || true
+          fi
 
       - name: Install Python dependencies & Playwright
         run: |
