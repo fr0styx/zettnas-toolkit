@@ -71,11 +71,14 @@ def trigger_outage_simulation(duration_sec: int = 15) -> dict[str, Any]:
         event_text("ups_drill", secs=duration_sec),
     )
 
+    path = shutdown_path_report()  # who shuts the server down when it is real
+    _remember_practice(path)
     return {
         "simulation_active": True,
         "duration_sec": duration_sec,
         "expires_in_sec": round(_simulation_end_ts - time.time(), 1),
-        "shutdown_path": shutdown_path_report(),  # who shuts the server down when it is real
+        "shutdown_path": path,
+        "practice": last_practice(),
     }
 
 
@@ -151,6 +154,34 @@ def _stopped_file() -> str:
     from backend.config import DATA_DIR
 
     return os.path.join(DATA_DIR, "ups_stopped_apps.json")
+
+
+def _practice_file() -> str:
+    from backend.config import DATA_DIR
+
+    return os.path.join(DATA_DIR, "ups_last_practice.json")
+
+
+def _remember_practice(path: dict[str, Any]) -> None:
+    """The last practice run and its answer (who would switch the NAS off), kept for the page
+    (SET-15, Power B4: the answer was a pop-up that vanished after 6.5 s, in English)."""
+    from backend.fsutil import atomic_write_json
+
+    try:
+        atomic_write_json(
+            _practice_file(),
+            {"at": time.time(), "ok": bool(path.get("ok")), "text": path.get("text"), "detail": path.get("detail", "")},
+        )
+    except OSError:
+        logger.warning("[UPS] Could not keep the practice run's result", exc_info=True)
+
+
+def last_practice() -> dict[str, Any]:
+    """The last practice run: {at, ok, text, detail}, or {} when there has been none."""
+    from backend.fsutil import read_json
+
+    rec = read_json(_practice_file(), {}) or {}
+    return rec if isinstance(rec, dict) and rec.get("at") else {}
 
 
 def _remember_stopped(names: list[str]) -> None:

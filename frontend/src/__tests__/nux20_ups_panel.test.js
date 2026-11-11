@@ -103,8 +103,9 @@ describe('UPS panel words (NUX-20)', () => {
 
     byId('btn-ups-simulate').click();
     const [title, msg] = showConfirmToast.mock.calls.at(-1);
-    expect(title).toBe('Simulate Power Outage Drill?');
-    expect(msg).toBe('This pretends the power fails for 15 seconds, so you can see the power diagram, the countdown banner and the event log react. <strong>The server will not shut down.</strong>');
+    expect(title).toBe('Start a practice run?'); // SET-15, Power B4
+    // it promises only what it does: nothing is switched off; the diagram and banner do not react
+    expect(msg).toBe('Kiboto acts as if the power went out for 15 seconds and checks who would switch the NAS off. Nothing is switched off and no app is closed.');
     byId('btn-run-ups-selftest').click();
     expect(showConfirmToast.mock.calls.at(-1)[4]).toMatchObject({ okText: '🔋 Run Self-Test', cancelText: 'Cancel' });
   });

@@ -268,6 +268,22 @@ function applyCutPowerAvailability() {
   if (why) why.hidden = can;
 }
 
+/** The last practice run and its answer, kept on the page (SET-15, Power B4). */
+export function renderPracticeLine(rec) {
+  const line = document.getElementById('ups-practice-line');
+  if (!line) return;
+  if (!rec || !rec.at) {
+    line.hidden = true;
+    return;
+  }
+  line.textContent = t('upx.practice_last', 'Last practice run: {when}. {answer}', {
+    when: formatDateTime(rec.at * 1000),
+    answer: serverSaid(rec, rec.detail || ''),
+  });
+  line.classList.toggle('is-bad', rec.ok === false);
+  line.hidden = false;
+}
+
 let _pathAt = 0;
 /** Who switches the NAS off, asked at most once a minute (it may look for the host's UPS service). */
 async function renderShutdownLine(ups) {
@@ -275,7 +291,8 @@ async function renderShutdownLine(ups) {
   if (!line || upsState(ups) === 'none' || Date.now() - _pathAt < 60000) return;
   _pathAt = Date.now();
   try {
-    const path = await api.get('/api/ups/shutdown-path');
+    const [path, practice] = await Promise.all([api.get('/api/ups/shutdown-path'), api.get('/api/ups/practice').catch(() => null)]);
+    renderPracticeLine(practice);
     _pathBy = path?.by || '';
     applyCutPowerAvailability();
     line.textContent = serverSaid(path, path?.detail || '');
@@ -924,24 +941,21 @@ export function initUpsDrawerControls() {
   const btnSimulate = document.getElementById('btn-ups-simulate');
   btnSimulate?.addEventListener('click', () => {
     showConfirmToast(
-      t('upx.drill_title', 'Simulate Power Outage Drill?'),
-      `${escapeHtml(t('upx.drill_msg', 'This pretends the power fails for 15 seconds, so you can see the power diagram, the countdown banner and the event log react.'))} <strong>${escapeHtml(t('upx.no_shutdown', 'The server will not shut down.'))}</strong>`,
+      t('upx.drill_title', 'Start a practice run?'),
+      t('upx.drill_msg', 'Kiboto acts as if the power went out for 15 seconds and checks who would switch the NAS off. Nothing is switched off and no app is closed.'),
       async () => {
         try {
-          showToast(t('toast.outage_drill_started_15s', 'Outage drill started (15s)...'), 'warn');
+          showToast(t('toast.outage_drill_started_15s', 'Practice run started: 15 seconds.'), 'info');
           const res = await api.post('/api/ups/simulate', { duration_sec: 15 });
-          // when it is real: who shuts the server down, or that nothing will (REL-10)
-          const path = res?.shutdown_path;
-          if (path?.detail) {
-            showToast(t('ups.drill_path', 'When the battery really runs out: {detail}', { detail: path.detail }), path.ok ? 'info' : 'error');
-          }
+          // the answer (who switches the NAS off when it is real) stays on the page (SET-15, Power B4)
+          renderPracticeLine(res?.practice);
           fetchAndRenderUpsTelemetry();
         } catch (err) {
-          showToast(t('toast.simulation_failed', 'Simulation failed: {error}', { error: err.message }), 'error');
+          showToast(t('toast.simulation_failed', 'The practice run did not start: {error}', { error: err.message }), 'error');
         }
       },
       null,
-      { okText: `⚠️ ${t('ups.start_drill', 'Start Drill')}`, cancelText: t('common.cancel', 'Cancel'), allowHtml: true }
+      { okText: t('ups.start_drill', 'Start practice run'), cancelText: t('common.cancel', 'Cancel') }
     );
   });
   return loadPromise;

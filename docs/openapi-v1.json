@@ -69298,6 +69298,36 @@
     ]
    }
   },
+  "/api/v1/ups/practice": {
+   "get": {
+    "description": "The last practice run and its answer, for the page (SET-15, Power B4).",
+    "operationId": "get_ups_practice_api_v1_ups_practice_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Ups Practice",
+    "tags": [
+     "UPS & Power Integrity"
+    ],
+    "x-required-scopes": [
+     "hardware:read",
+     "system:view"
+    ]
+   }
+  },
   "/api/v1/ups/self-test": {
    "post": {
     "description": "Issues 10-second battery self-test diagnostic command to the configured UPS.",

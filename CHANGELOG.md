@@ -518,6 +518,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Crimson become Canyon, Daylight becomes Light mode and Pure OLED Black becomes True black.
 - Light mode's page behind the desktop is light again (it showed a dark page under the windows).
 
+#### Changes
+
+- **One name: Power.** The Power page, its widget, the Mission Control tile, the event button and the
+  history now all say "Power" (before: "UPS & Power", "Power & Battery Cockpit", "Power Integrity &
+  Outage Ledger" and others). The page says what it is for: what happens when the power goes out,
+  and whether your NAS starts again by itself.
+- **The practice run says what it does.** Its dialog no longer promises a diagram, banner and log
+  that do not react; it says that nothing is switched off and no app is closed. Its answer (who would
+  switch the NAS off in a real power cut) stays on the page with the date of the last run, in your
+  language, instead of a pop-up that vanished after a few seconds.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

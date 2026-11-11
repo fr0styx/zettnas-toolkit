@@ -199,6 +199,14 @@ async def get_ups_event_history(page: PageParams = Depends()):
     return {"events": events, "count": len(events), **page.meta(len(rows))}
 
 
+@router.get("/ups/practice", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
+async def get_ups_practice():
+    """The last practice run and its answer, for the page (SET-15, Power B4)."""
+    from backend.services.ups_watchdog import last_practice
+
+    return last_practice()
+
+
 @router.post("/ups/simulate", dependencies=[Depends(require_scope("system:config"))])
 async def post_ups_simulate(req: UpsSimulateRequest):
     """Triggers simulated power outage drill for desktop UI testing."""

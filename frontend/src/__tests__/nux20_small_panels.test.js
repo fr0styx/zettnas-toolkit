@@ -13,7 +13,7 @@ describe('small panels (NUX-20)', () => {
 
   it('titles every system shortcut', () => {
     const titles = SYSTEM_SHORTCUTS.map((s) => s.title);
-    for (const w of ['Apps & Containers', 'Storage & Chassis', 'Network & Virtual Switch', 'Activity & Telemetry', 'Hardware & Acoustic Profiles', 'UPS & Power Integrity', 'System & Security', 'Notifications & Alerts']) {
+    for (const w of ['Apps & Containers', 'Storage & Chassis', 'Network & Virtual Switch', 'Activity & Telemetry', 'Hardware & Acoustic Profiles', 'Power', 'System & Security', 'Notifications & Alerts']) {
       expect(titles).toContain(w);
     }
   });

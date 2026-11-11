@@ -2665,13 +2665,13 @@
                   <span data-i18n="mgmt.ups_sec_title">UPS and power</span>
                 </div>
                 <div class="mgmt-card-intro-desc" data-i18n="mgmt.ups_sec_desc">
-                  Battery level, power use and a safe shutdown when the power fails.
+                  What happens when the power goes out, and whether your NAS starts again by itself.
                 </div>
               </div>
               <div class="ups-row-2">
                 <button class="btn-pill-toggle" id="btn-ups-discover" title="Scan local USB ports and host gateway for power daemons" data-i18n-title="ui.scan_local_usb_ports_and" data-i18n="mgmt.ups_btn_scan">🔍 Scan Hardware</button>
                 <button class="btn-pill-toggle" id="btn-run-ups-selftest" title="Trigger 10s diagnostic battery self-test" data-i18n-title="ui.trigger_10s_diagnostic_battery_self"><span aria-hidden="true">🔋</span> <span data-i18n="mgmt.ups_btn_selftest">Self-Test</span></button>
-                <button class="btn-pill-toggle" id="btn-ups-simulate" title="Simulate 15s power outage drill" data-i18n-title="ui.simulate_15s_power_outage_drill"><span aria-hidden="true">⚠️</span> <span data-i18n="mgmt.ups_btn_simulate">Simulate Drill</span></button>
+                <button class="btn-pill-toggle" id="btn-ups-simulate" title="Simulate 15s power outage drill" data-i18n-title="ui.simulate_15s_power_outage_drill"><span aria-hidden="true">▶</span> <span data-i18n="mgmt.ups_btn_simulate">Simulate Drill</span></button>
                 <button class="btn-pill-toggle" id="btn-refresh-ups" title="Refresh UPS readings" data-i18n-title="ui.refresh_ups_telemetry"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 <button id="btn-open-ups-config" style="display:none;" aria-hidden="true"></button>
               </div>
@@ -2681,6 +2681,7 @@
             <div id="ups-status-line" class="ups-status-line" data-state="none" role="status">
               <div class="ups-status-main"><span id="ups-status-icon" class="ups-status-icon" aria-hidden="true">○</span> <strong id="ups-status-sentence">—</strong></div>
               <div id="ups-shutdown-line" class="ups-shutdown-line" hidden></div>
+              <div id="ups-practice-line" class="ups-shutdown-line" hidden></div>
               <div id="ups-restart-line" class="ups-shutdown-line" hidden data-i18n="upx.restart_unproven">Starts again by itself after a power cut: not proven yet.</div>
               <button type="button" id="ups-show-setup" class="btn-pill-toggle ups-show-setup" hidden data-i18n="upx.setup_ups">Set up a UPS</button>
             </div>
