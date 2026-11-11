@@ -2,6 +2,7 @@
  * Mission Control: Docker containers table, app catalog, deploy, prune, sources and sideload.
  * Split out of management.js (ARCH-1); management.js re-exports everything here.
  */
+import { serverSaid } from '../../server-text.js';
 import { catalogCardHtml, catalogChipsHtml, filterCatalog, isInstalled, bindCatalogChips } from '../catalog-view.js';
 import { openContainerInspector, openContainerDeleteModal } from '../container-modal.js';
 import { openStackModal, openStackPickerModal } from '../stack-modal.js';
@@ -1866,8 +1867,9 @@ export async function openAppDeployModal(appId) {
       }
     }
     if (data.message) {
-      if (progressStatus) progressStatus.textContent = data.message;
-      logDeployLine(data.message, data.step === 'error' ? 'error' : data.step === 'success' ? 'success' : 'info');
+      const said = serverSaid(data, data.message); // the server says how it made the line (SET-14)
+      if (progressStatus) progressStatus.textContent = said;
+      logDeployLine(said, data.step === 'error' ? 'error' : data.step === 'success' ? 'success' : 'info');
     }
 
     if (data.step === 'success') {

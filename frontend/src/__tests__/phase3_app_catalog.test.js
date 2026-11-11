@@ -60,7 +60,7 @@ describe('Phase 3: Container App Catalog & Web Terminal', () => {
     const termOutput = document.getElementById('ci-term-output');
     termOutput.innerHTML = '<div>Some old command output</div>';
     clearTerminal();
-    expect(termOutput.textContent).toContain('Interactive Container Terminal Ready');
+    expect(termOutput.textContent).toContain('Container terminal ready');
   });
 
   it('executes terminal command via container exec API', async () => {

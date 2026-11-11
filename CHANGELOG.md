@@ -420,6 +420,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   settings that give an app power over the NAS, and the terminal's own lines, were English in every
   language.
 
+#### Fixes
+
+- **Installing an app speaks your language.** The progress lines while an app installs (preparing
+  folders, downloading the image, ports in use, done) were English in every language. Lines that
+  pass on Docker's own message stay as Docker wrote them.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

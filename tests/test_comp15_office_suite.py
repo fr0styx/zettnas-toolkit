@@ -152,7 +152,7 @@ def test_the_installer_passes_the_browser_host(monkeypatch):
     monkeypatch.setattr(aas, "run_steps", fake_steps)
     import inspect
 
-    src = inspect.getsource(app_catalog.stream_deploy_catalog_app)
+    src = inspect.getsource(app_catalog._deploy_steps)  # the steps; stream_deploy_catalog_app wraps them (SET-14)
     assert "run_steps(app, service_name, secrets_map, browser_host, port)" in src
     assert '"setup_unfinished": unfinished' in src
     # no steps: Docker isn't asked for anything

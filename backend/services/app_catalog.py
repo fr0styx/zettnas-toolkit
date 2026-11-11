@@ -1538,7 +1538,7 @@ def _swap_in(
     return cid, is_running
 
 
-def stream_deploy_catalog_app(
+def _deploy_steps(
     app_id: str,
     host_port: int | None = None,
     storage_root: str = "/mnt/user/appdata",
@@ -1922,3 +1922,60 @@ def stream_deploy_catalog_app(
         "setup_unfinished": unfinished,
         "done": True,
     }
+
+
+# The install's progress sentences, so the page can say them in the reader's language (SET-14,
+# SET-11's pattern): an event whose English matches one gets text = {msg_key, params}. Lines that
+# pass on another text (Docker's own error, a folder check) match none and are shown as sent.
+INSTALL_SAID: dict[str, str] = {
+    "preparing_service": "Preparing {name} ({image})...",
+    "started_service": "Started {name}.",
+    "set_aside": "Setting the existing '{name}' aside. It comes back if the new one does not start.",
+    "created": "Container created successfully (ID: {id}).",
+    "starting": "Starting container '{name}'...",
+    "not_found": "Application '{app}' was not found in the curated catalog.",
+    "init": "Initializing deployment for {app} as '{name}' (Port :{port})...",
+    "storage": "Preparing persistent storage directories under {path}...",
+    "unsafe_folders": "The template asks for host folders ({folders}); only folders inside the app's own folder are allowed.",
+    "multi_service": "Application '{app}' requires a multi-service Docker Compose engine or does not specify a primary container image.",
+    "checking": "Storage prepared. Checking container state and port availability...",
+    "name_taken": "Deployment aborted: A container named '{name}' already exists. Please choose a different container name or select 'Stop & Replace Existing'.",
+    "port_taken": "Deployment aborted: Host port {port} is already in use by {by}. Please choose an available port in configuration.",
+    "port_taken_extra": "Deployment aborted: {app} also needs host port {port}/{proto}, which is in use by {by}.",
+    "checking_image": "Inspecting local image cache for {image}...",
+    "image_present": "Image {image} is already present locally.",
+    "pulling": "Pulling {image} from registry (downloading layers)...",
+    "no_docker": "Docker socket /var/run/docker.sock not available.",
+    "pull_failed": "Failed to pull image {image}: {error}",
+    "pulled": "Image {image} successfully downloaded and verified.",
+    "pull_error": "Image pull error: {error}",
+    "creating": "Creating container '{name}' with port bindings...",
+    "done": "\u2713 {app} deployed and running successfully!",
+}
+
+
+def _said_pattern(template: str) -> re.Pattern[str]:
+    parts = re.split(r"\{(\w+)\}", template)
+    rx = "".join(re.escape(p) if i % 2 == 0 else f"(?P<{p}>.+?)" for i, p in enumerate(parts))
+    return re.compile(rx + r"\Z", re.S)
+
+
+_SAID_PATTERNS = [(key, _said_pattern(tpl)) for key, tpl in INSTALL_SAID.items()]
+
+
+def with_text(event: dict[str, Any]) -> dict[str, Any]:
+    """Adds text = {msg_key, params} to an install event whose sentence is one of INSTALL_SAID."""
+    msg = event.get("message")
+    if isinstance(msg, str) and "text" not in event:
+        for key, rx in _SAID_PATTERNS:
+            m = rx.match(msg)
+            if m:
+                event["text"] = {"msg_key": f"install.{key}", "params": m.groupdict()}
+                break
+    return event
+
+
+def stream_deploy_catalog_app(*args: Any, **kwargs: Any) -> Iterator[dict[str, Any]]:
+    """Deploys a curated app (see _deploy_steps), each progress event carrying how it was said."""
+    for event in _deploy_steps(*args, **kwargs):
+        yield with_text(event)
