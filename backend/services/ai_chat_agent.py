@@ -583,8 +583,9 @@ _HARDWARE_TEMP_RE = re.compile(
 # Scopes a user needs before the AI may use a tool for them: the same ones the matching REST
 # endpoint asks for (AI-04). None means any signed-in user. Write tools also check inside the tool.
 TOOL_REQUIRED_SCOPES: dict[str, tuple[str, ...] | None] = {
-    "get_system_telemetry": None,
-    "get_fan_and_thermal_status": None,
+    # processor, memory, temperatures and fans: what the stats page keeps from kids and guests
+    "get_system_telemetry": ("system:view", "hardware:read"),
+    "get_fan_and_thermal_status": ("system:view", "hardware:read"),
     "calculate": None,
     "search_nas_knowledge": None,  # results are filtered by the user's share access
     "browse_internet": None,  # also needs the per-chat web toggle
@@ -798,6 +799,13 @@ def run_agentic_chat(
 # pins the whole turn. ----------------------------------------------------------------------------
 
 
+def _routed(name: str, principal: Any, args: dict[str, Any] | None = None) -> dict[str, Any]:
+    """A tool the keyword router picks goes the way of one the model picks: the rights table, then
+    the audit log (SET-04). The router used to call the tools directly, so the chat could show a
+    person what the matching page refuses them, and nothing was written down."""
+    return execute_nas_tool(name, args or {}, principal=principal, source="router")
+
+
 def _turn_run_requested_tools(
     *,
     allow_nas_tools,
@@ -838,7 +846,7 @@ def _turn_run_requested_tools(
                     tool_results.append(res_dctrl)
                     tools_called.append("control_docker_container")
                 elif any(w in combined_prev for w in ("docker", "dockers", "container", "containers")):
-                    res_dlist = tool_list_docker_containers()
+                    res_dlist = _routed("list_docker_containers", principal)
                     tool_results.append(res_dlist)
                     tools_called.append("list_docker_containers")
                 elif any(w in combined_prev for w in ("fan", "fans", "cooling", "thermal", "quiet", "performance")):
@@ -854,11 +862,11 @@ def _turn_run_requested_tools(
                         tool_results.append(res_fan_set)
                         tools_called.append("set_fan_profile")
                     else:
-                        res_fan = tool_get_fan_and_thermal_status()
+                        res_fan = _routed("get_fan_and_thermal_status", principal)
                         tool_results.append(res_fan)
                         tools_called.append("get_fan_and_thermal_status")
                 elif any(w in combined_prev for w in ("disk", "disks", "drive", "drives", "standby", "sleeping")):
-                    res_disks = tool_get_disks_and_standby_status()
+                    res_disks = _routed("get_disks_and_standby_status", principal)
                     tool_results.append(res_disks)
                     tools_called.append("get_disks_and_standby_status")
                 elif any(w in combined_prev for w in ("ai sync", "indexing", "sync shares", "learning")):
@@ -879,7 +887,7 @@ def _turn_run_requested_tools(
         elif "get_fan_and_thermal_status" not in tools_called and _mentions(
             msg_lower, ("fan", "fans", "rpm", "pwm", "cooling", "thermal", "zero rpm", "acoustic")
         ):
-            res_fan = tool_get_fan_and_thermal_status()
+            res_fan = _routed("get_fan_and_thermal_status", principal)
             tool_results.append(res_fan)
             tools_called.append("get_fan_and_thermal_status")
 
@@ -919,13 +927,13 @@ def _turn_run_requested_tools(
                 "plex",
             ),
         ):
-            res_dlist = tool_list_docker_containers()
+            res_dlist = _routed("list_docker_containers", principal)
             tool_results.append(res_dlist)
             tools_called.append("list_docker_containers")
 
         # 1c. Math & Exact Calculation
         if "calculate" not in tools_called and _is_math_or_calculation_query(clean_msg):
-            res_calc = tool_calculate(clean_msg)
+            res_calc = _routed("calculate", principal, {"expression": clean_msg})
             tool_results.append(res_calc)
             tools_called.append("calculate")
 
@@ -949,7 +957,7 @@ def _turn_run_requested_tools(
                 "zfs pool",
             ),
         ):
-            res_stor = tool_get_storage_status()
+            res_stor = _routed("get_storage_status", principal)
             tool_results.append(res_stor)
             tools_called.append("get_storage_status")
 
@@ -971,7 +979,7 @@ def _turn_run_requested_tools(
                 "network card",
             ),
         ):
-            res_net = tool_get_network_status()
+            res_net = _routed("get_network_status", principal)
             tool_results.append(res_net)
             tools_called.append("get_network_status")
 
@@ -992,7 +1000,7 @@ def _turn_run_requested_tools(
                 "smart",
             ),
         ):
-            res_disks = tool_get_disks_and_standby_status()
+            res_disks = _routed("get_disks_and_standby_status", principal)
             tool_results.append(res_disks)
             tools_called.append("get_disks_and_standby_status")
 
@@ -1016,7 +1024,7 @@ def _turn_run_requested_tools(
             )
             or _HARDWARE_TEMP_RE.search(msg_lower)
         ):
-            res_sys = tool_get_system_telemetry()
+            res_sys = _routed("get_system_telemetry", principal)
             tool_results.append(res_sys)
             tools_called.append("get_system_telemetry")
 
@@ -1214,8 +1222,13 @@ def _turn_classify(
             web_sources = res_web.get("sources", [])
 
     # If this is a self-identity or model question, ensure system telemetry is fetched for live hardware context
-    if is_self_identity and "get_system_telemetry" not in tools_called and allow_nas_tools:
-        res_sys = tool_get_system_telemetry()
+    if (
+        is_self_identity
+        and "get_system_telemetry" not in tools_called
+        and allow_nas_tools
+        and TOOL_REGISTRY.allowed("get_system_telemetry", principal)  # context only: never a refusal in the answer
+    ):
+        res_sys = _routed("get_system_telemetry", principal)
         tool_results.append(res_sys)
         tools_called.append("get_system_telemetry")
 

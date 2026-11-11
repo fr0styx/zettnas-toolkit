@@ -442,6 +442,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   everywhere except the address for apps. If you use one of these keys for anything else, make an
   API token with the rights it needs instead.
 
+#### Security
+
+- **Kib shows a person only what their pages show them**: when a message named apps, drives,
+  storage or the network, Kib looked the answer up without asking whether that person may see it,
+  and without writing it to the security log. It mattered once Kib was turned on for kids or
+  guests. Every lookup now passes the same rights as the matching page and is logged. Processor,
+  memory, temperature and fan readings need the right to see the system, as on the desktop.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

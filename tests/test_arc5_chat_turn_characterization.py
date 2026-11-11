@@ -87,11 +87,15 @@ def _record_tools():
 def _stub(monkeypatch, tools, mode, seen):
     for name, (func, _args, _kwargs) in TOOL_FUNCS.items():
         monkeypatch.setattr(agent, func, lambda *a, _n=name, **k: copy.deepcopy(tools[_n]))
-    monkeypatch.setattr(
-        agent,
-        "execute_nas_tool",
-        lambda name, args=None, principal=None, **k: copy.deepcopy(tools.get(name) or {"tool": name, "status": "ok"}),
-    )
+    real_execute = agent.execute_nas_tool
+
+    def execute(name, args=None, principal=None, **k):
+        if name == "calculate":  # plain arithmetic, the same on every machine: the real tool runs
+            return real_execute(name, args, principal=principal, **k)
+        return copy.deepcopy(tools.get(name) or {"tool": name, "status": "ok"})
+
+    # since SET-04 the keyword router reaches its tools through execute_nas_tool as well
+    monkeypatch.setattr(agent, "execute_nas_tool", execute)
     monkeypatch.setattr(agent, "detect_hardware_accelerator", lambda *a, **k: {"has_npu": False, "has_gpu": False})
     monkeypatch.setattr(agent, "read_total_ram_bytes", lambda *a, **k: 16 * 1024**3)
     monkeypatch.setattr(
