@@ -643,6 +643,20 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **"Scrub pool" asks first**: a check spins the pool's drives up and keeps them busy for hours.
   The button is shown only where the system can run a check.
 
+#### Fixes
+
+- **Saving a stack no longer rewrites its Compose file wrongly.** The editor shows dots where a
+  line may hold a password. On save, each such line was filled in again from the first line of
+  the old file with the same key, cut at its first space: a second service could receive the
+  first one's image and password, and a command lost everything after its first word. Hidden
+  lines are now put back exactly where they were. If you change a hidden line while it is
+  hidden, the save is refused and nothing is written. The editor has a **"Show secrets"**
+  button for editing them, and a password inside an address is now hidden too.
+- **"Save and recreate" on an app no longer writes dots into it**: the Edit form was filled from
+  the view where passwords are dots, so a password inside an address (a database URL, for
+  example) went into the new app as `••••••••`. The form now always starts from the real
+  values, and a value that still holds the dots is refused before anything is touched.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

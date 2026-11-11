@@ -103,6 +103,7 @@ export function initStackModal() {
           <div class="stk-xs-muted" id="stack-modal-msg"></div>
           <div class="stk-row-5">
             <button class="btn-pill-toggle" id="stack-cancel-btn">${t('common.cancel', 'Cancel')}</button>
+            <button class="btn-pill-toggle stk-box" id="stack-secrets-btn" aria-pressed="false">${t('stk.show_secrets', 'Show secrets')}</button>
             <button class="btn-pill-toggle stk-box" id="stack-save-btn">${t('stk.save', 'Save')}</button>
             <button class="btn-pill-toggle is-primary" id="stack-save-redeploy-btn">${t('stk.save_redeploy', 'Save and redeploy')}</button>
           </div>
@@ -202,6 +203,7 @@ export function initStackModal() {
   document.getElementById('stack-action-redeploy')?.addEventListener('click', () => triggerStackAction('redeploy'));
 
   // Save buttons
+  document.getElementById('stack-secrets-btn')?.addEventListener('click', () => toggleStackSecrets());
   document.getElementById('stack-save-btn')?.addEventListener('click', () => saveStack(false));
   document.getElementById('stack-save-redeploy-btn')?.addEventListener('click', () => saveStack(true));
 
@@ -376,7 +378,18 @@ function renderStackDetails(data) {
   // Fill textareas
   document.getElementById('stack-compose-editor').value = data.compose_yaml || '';
   document.getElementById('stack-env-editor').value = data.env_content || '';
-  document.getElementById('stack-modal-msg').textContent = data.has_real_file ? t('stk.from_disk', 'Loaded from the Compose file on disk') : t('stk.synth', 'Rebuilt from the running containers');
+  const from = data.has_real_file ? t('stk.from_disk', 'Loaded from the Compose file on disk') : t('stk.synth', 'Rebuilt from the running containers');
+  // passwords are hidden until asked for; a hidden line that you change cannot be put back, so
+  // the save refuses it and points here (SET-07, the owner's decision S21)
+  const hidden = !data.secrets_shown && `${data.compose_yaml || ''}\n${data.env_content || ''}`.includes('••••••••');
+  document.getElementById('stack-modal-msg').textContent = hidden
+    ? `${from}. ${t('stk.secrets_hidden', 'Passwords and keys are hidden (••••••••). Leave those lines as they are, or press “Show secrets” to edit them.')}`
+    : from;
+  const secretsBtn = document.getElementById('stack-secrets-btn');
+  if (secretsBtn) {
+    secretsBtn.textContent = data.secrets_shown ? t('stk.hide_secrets', 'Hide secrets') : t('stk.show_secrets', 'Show secrets');
+    secretsBtn.setAttribute('aria-pressed', data.secrets_shown ? 'true' : 'false');
+  }
 
   // Render Services list
   renderServicesList(data.containers || []);
@@ -437,6 +450,28 @@ function renderServicesList(containers) {
       if (cid) openContainerModal(cid);
     });
   });
+}
+
+/** Loads the stack again with its secrets shown, or hidden again. What was typed is kept only when nothing was. */
+export async function toggleStackSecrets() {
+  if (!_activeStackName) return;
+  const show = !(_activeStackDetails && _activeStackDetails.secrets_shown);
+  const composeEl = /** @type {HTMLTextAreaElement | null} */ (document.getElementById('stack-compose-editor'));
+  const envEl = /** @type {HTMLTextAreaElement | null} */ (document.getElementById('stack-env-editor'));
+  const changed = _activeStackDetails
+    && ((composeEl?.value ?? '') !== (_activeStackDetails.compose_yaml || '') || (envEl?.value ?? '') !== (_activeStackDetails.env_content || ''));
+  if (changed) {
+    showToast(t('stk.secrets_save_first', 'Save or undo your changes first: showing or hiding secrets loads the file again.'), 'warn');
+    return;
+  }
+  try {
+    const data = await api.get(`/api/docker/stacks/${encodeURIComponent(_activeStackName)}${show ? '?unmask=true' : ''}`);
+    _activeStackDetails = data;
+    renderStackDetails(data);
+    if (show && !data.secrets_shown) showToast(t('stk.secrets_not_allowed', 'Your account may not see this stack’s secrets.'), 'warn');
+  } catch (err) {
+    showToast(t('toast.failed_loading_stack', 'Failed loading stack: {error}', { error: err.message }), 'error');
+  }
 }
 
 async function saveStack(redeployAfterSave = false) {

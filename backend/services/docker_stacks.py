@@ -445,48 +445,97 @@ def get_stack_details(stack_name: str) -> dict[str, Any]:
     }
 
 
+MASK = "••••••••"
+_OLD_MASKS = ("********", "******")
+_SECRET_WORDS = ("pass", "secret", "token", "key", "auth", "pwd")
+_URL_PASSWORD = re.compile(r"://[^/\s:@]*:[^/\s@]+@")
+
+
+def mask_compose_secrets(yaml_text: str) -> str:
+    """The Compose file as the editor shows it: the value of every line with a word that may
+    name a secret is replaced by dots. One line in, one line out, so a masked line can be put
+    back by its position (unmask_by_position)."""
+    if not yaml_text:
+        return yaml_text
+    masked_lines = []
+    for line in yaml_text.splitlines():
+        line_s = line.strip()
+        if not line_s.startswith("#") and any(sep in line_s for sep in (":", "=")):
+            # a word that may name a secret, or a password inside an address (scheme://user:password@host)
+            if any(word in line_s.lower() for word in _SECRET_WORDS) or _URL_PASSWORD.search(line_s):
+                m = re.search(r"^(\s*-\s*[a-zA-Z0-9_-]+\s*=\s*)(.+)$", line) or re.search(
+                    r"^(\s*[a-zA-Z0-9_-]+\s*:\s*)(.+)$", line
+                )
+                if m:
+                    line = f"{m.group(1)}{MASK}"
+        masked_lines.append(line)
+    return "\n".join(masked_lines)
+
+
+def mask_env_secrets(env_text: str) -> str:
+    """The .env file as the editor shows it: KEY=dots for a key that may name a secret."""
+    out = []
+    for line in (env_text or "").splitlines():
+        if "=" in line and not line.strip().startswith("#"):
+            k, _v = line.split("=", 1)
+            if any(word in k.lower() for word in _SECRET_WORDS) or _URL_PASSWORD.search(_v):
+                out.append(f"{k}={MASK}")
+                continue
+        out.append(line)
+    return "\n".join(out)
+
+
+def _has_mask(text: str) -> bool:
+    return MASK in text or any(m in text for m in _OLD_MASKS)
+
+
+def unmask_by_position(new_text: str, old_text: str, masked_old: str) -> tuple[str, list[int]]:
+    """Puts the hidden lines back (SET-07). The editor sends the file with dots where secrets
+    were. A line that still holds the dots is restored only where it is, unchanged, the same line
+    of the old file: the two texts are lined up, and a masked line that was not touched takes the
+    old file's line at that place. Returns the text and the numbers of the lines whose dots
+    could not be put back (a line that was edited, or added, with the dots in it).
+
+    The save used to look for the first line of the old file with the same key name and cut its
+    value at the first space or "#": a second service received the first service's image and
+    password, and "redis-server --requirepass x --appendonly yes" became "redis-server"."""
+    import difflib
+
+    new_lines, old_lines, masked_lines = new_text.splitlines(), old_text.splitlines(), masked_old.splitlines()
+    restored = list(new_lines)
+    if len(old_lines) == len(masked_lines):
+        blocks = difflib.SequenceMatcher(a=masked_lines, b=new_lines, autojunk=False).get_matching_blocks()
+        for block in blocks:
+            for k in range(block.size):
+                i, j = block.a + k, block.b + k
+                if masked_lines[i] != old_lines[i]:  # this line was hidden: put the real one back
+                    restored[j] = old_lines[i]
+    own = {line for line in old_lines if _has_mask(line)}  # dots someone wrote into the file itself
+    lost = [n + 1 for n, line in enumerate(restored) if _has_mask(line) and line not in own]
+    return "\n".join(restored), lost
+
+
 def _restore_masked_stack_secrets(
     new_compose: str, new_env: str | None, old_compose: str, old_env: str
 ) -> tuple[str, str | None]:
-    """Restores unmasked secret values if the caller round-trips masked placeholders."""
+    """Puts back what the editor hid; raises ValueError where it cannot, so nothing is saved."""
+    restored_compose, lost = unmask_by_position(new_compose, old_compose, mask_compose_secrets(old_compose))
+    if lost:
+        raise ValueError(_cannot_put_back("The Compose file", lost))
     restored_env = new_env
-    if new_env is not None and old_env:
-        old_env_map = {}
-        for line in old_env.splitlines():
-            line_s = line.strip()
-            if "=" in line_s and not line_s.startswith("#"):
-                k, v = line_s.split("=", 1)
-                old_env_map[k.strip()] = v.strip()
-
-        restored_lines = []
-        for line in new_env.splitlines():
-            line_s = line.strip()
-            if "=" in line_s and not line_s.startswith("#"):
-                k, v = line_s.split("=", 1)
-                k_clean = k.strip()
-                v_clean = v.strip()
-                if v_clean in ("••••••••", "********", "******") and k_clean in old_env_map:
-                    restored_lines.append(f"{k_clean}={old_env_map[k_clean]}")
-                    continue
-            restored_lines.append(line)
-        restored_env = "\n".join(restored_lines)
-
-    restored_compose = new_compose
-    if old_compose and ("••••••••" in new_compose or "********" in new_compose):
-        for placeholder in ("••••••••", "********"):
-            if placeholder not in restored_compose:
-                continue
-            for line in restored_compose.splitlines():
-                if placeholder in line:
-                    m = re.search(r"([a-zA-Z0-9_-]+)\s*[:=]\s*[\"']?" + re.escape(placeholder) + r"[\"']?", line)
-                    if m:
-                        key_name = m.group(1)
-                        old_m = re.search(r"\b" + re.escape(key_name) + r"\s*[:=]\s*([^\s#]+)", old_compose)
-                        if old_m:
-                            old_val = old_m.group(1).strip().strip('"').strip("'")
-                            restored_compose = restored_compose.replace(line, line.replace(placeholder, old_val))
-
+    if new_env is not None:
+        restored_env, lost = unmask_by_position(new_env, old_env or "", mask_env_secrets(old_env or ""))
+        if lost:
+            raise ValueError(_cannot_put_back("The .env file", lost))
     return restored_compose, restored_env
+
+
+def _cannot_put_back(what: str, lines: list[int]) -> str:
+    shown = ", ".join(str(n) for n in lines[:8]) + (" and more" if len(lines) > 8 else "")
+    return (
+        f"{what} still has hidden text (••••••••) on line {shown} that cannot be put back, because the line "
+        "was changed or is new. Nothing was saved. Press “Show secrets”, then edit and save."
+    )
 
 
 def save_stack_config(stack_name: str, compose_yaml: str, env_content: str | None = None) -> dict[str, Any]:
@@ -505,7 +554,10 @@ def save_stack_config(stack_name: str, compose_yaml: str, env_content: str | Non
     details = get_stack_details(stack_name)
     old_compose = details.get("compose_yaml") or ""
     old_env = details.get("env_content") or ""
-    compose_yaml, env_content = _restore_masked_stack_secrets(compose_yaml, env_content, old_compose, old_env)
+    try:
+        compose_yaml, env_content = _restore_masked_stack_secrets(compose_yaml, env_content, old_compose, old_env)
+    except ValueError as e:
+        return {"success": False, "error": str(e)}
 
     location_type = details.get("location_type")
     config_file = details.get("config_file")

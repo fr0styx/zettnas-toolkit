@@ -290,6 +290,27 @@ def _recreate_ports(config: Any, host_config: Any, port_bindings: Any) -> Any:
     return cloned_exposed_ports, cloned_port_bindings
 
 
+HIDDEN = "••••••••"
+
+
+def _refuse_hidden_text(env: list[str] | None, current: list[str]) -> None:
+    """A value that still holds the dots the details view shows is never written into a container
+    (SET-07). A whole value of dots is put back from the container as it is (the key is known
+    there). Dots inside a longer value cannot be: "postgres://app:••••••••@db/app" was written
+    into the new container as shown. The save is refused before anything is touched."""
+    known = {item.split("=", 1)[0] for item in current if "=" in item}
+    bad = []
+    for item in env or []:
+        key, _, value = str(item).strip().partition("=")
+        if HIDDEN in value and not (value == HIDDEN and key in known):
+            bad.append(key)
+    if bad:
+        raise ValueError(
+            f"{', '.join(bad[:6])} still {'holds' if len(bad) == 1 else 'hold'} hidden text (••••••••), which would "
+            "be written into the app as it is. Nothing was changed. Open Edit again: it shows the real values."
+        )
+
+
 def _recreate_payload(cloned_exposed_ports: Any, config: Any, env: Any, new_host_config: Any, target_image: Any) -> Any:
     """recreate_container: the create payload from the current inspect."""
     orig_env_list = config.get("Env", []) or []
@@ -355,8 +376,8 @@ def recreate_container(
     inspect_data = fetch_container_raw_inspect(cid)
     if not inspect_data:
         raise ValueError(f"Container '{cid}' not found or Docker socket unavailable.")
-
     config = inspect_data.get("Config", {})
+    _refuse_hidden_text(env, config.get("Env") or [])
     host_config = inspect_data.get("HostConfig", {})
     orig_name = inspect_data.get("Name", "").lstrip("/")
     if not orig_name:

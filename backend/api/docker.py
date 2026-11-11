@@ -569,29 +569,6 @@ async def get_docker_stacks():
     return await asyncio.to_thread(list_all_stacks)
 
 
-def _mask_compose_yaml_secrets(yaml_text: str) -> str:
-    if not yaml_text:
-        return yaml_text
-    masked_lines = []
-    for line in yaml_text.splitlines():
-        line_s = line.strip()
-        if not line_s.startswith("#") and any(sep in line_s for sep in (":", "=")):
-            for pattern in ("pass", "secret", "token", "key", "auth", "pwd"):
-                if pattern in line_s.lower():
-                    # - KEY=VAL
-                    m = re.search(r"^(\s*-\s*[a-zA-Z0-9_-]+\s*=\s*)(.+)$", line)
-                    if m:
-                        line = f"{m.group(1)}••••••••"
-                        break
-                    # KEY: VAL
-                    m = re.search(r"^(\s*[a-zA-Z0-9_-]+\s*:\s*)(.+)$", line)
-                    if m:
-                        line = f"{m.group(1)}••••••••"
-                        break
-        masked_lines.append(line)
-    return "\n".join(masked_lines)
-
-
 @router.get(
     "/docker/stacks/{stack_name}",
     dependencies=[Depends(require_scope("containers:read", "containers:manage"))],
@@ -609,21 +586,16 @@ async def get_docker_stack_details(
     if not details.get("containers") and not details.get("has_real_file"):
         raise HTTPException(status_code=404, detail=f"Stack '{stack_name}' not found")
 
-    can_unmask = principal and principal.has_scope("containers:manage")
-    if not (unmask and can_unmask):
-        if details.get("env_content"):
-            masked_lines = []
-            for line in details["env_content"].splitlines():
-                if "=" in line and not line.strip().startswith("#"):
-                    k, v = line.split("=", 1)
-                    if any(s in k.lower() for s in ("pass", "secret", "token", "key", "auth", "pwd")):
-                        masked_lines.append(f"{k}=••••••••")
-                        continue
-                masked_lines.append(line)
-            details["env_content"] = "\n".join(masked_lines)
-        if details.get("compose_yaml"):
-            details["compose_yaml"] = _mask_compose_yaml_secrets(details["compose_yaml"])
+    from backend.services.docker_stacks import mask_compose_secrets, mask_env_secrets
 
+    can_unmask = principal and principal.has_scope("containers:manage")
+    shown = bool(unmask and can_unmask)
+    if not shown:
+        if details.get("env_content"):
+            details["env_content"] = mask_env_secrets(details["env_content"])
+        if details.get("compose_yaml"):
+            details["compose_yaml"] = mask_compose_secrets(details["compose_yaml"])
+    details["secrets_shown"] = shown  # the editor says which it is, and offers the other
     return details
 
 

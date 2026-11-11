@@ -1480,17 +1480,18 @@ async function renderContainerEditTab(cid) {
   const hostEl = document.getElementById('cie-form-host');
   if (!hostEl) return;
 
-  if (!_activeDetails || (_activeDetails.overview && _activeDetails.overview.id !== cid && _activeDetails.overview.full_id !== cid)) {
-    hostEl.innerHTML = '<div class="ci-muted-center">' + t('ci.loading_config', 'Loading the container settings…') + '</div>';
-    try {
-      _activeDetails = await api.get(`/api/docker/containers/${encodeURIComponent(cid)}/details?unmask=true`);
-    } catch (e) {
-      hostEl.innerHTML = `<div class="ci-crit-2">${escapeHtml(t('ci.load_failed', 'Could not load the container details: {error}', { error: e.message }))}</div>`;
-      return;
-    }
+  // The form always starts from the real values (SET-07). It was filled from the details the
+  // Overview had loaded, where secrets are dots: "Save and recreate" then wrote the dots of a
+  // password inside an address into the new container.
+  hostEl.innerHTML = '<div class="ci-muted-center">' + t('ci.loading_config', 'Loading the container settings…') + '</div>';
+  let details;
+  try {
+    details = await api.get(`/api/docker/containers/${encodeURIComponent(cid)}/details?unmask=true`);
+  } catch (e) {
+    hostEl.innerHTML = `<div class="ci-crit-2">${escapeHtml(t('ci.load_failed', 'Could not load the container details: {error}', { error: e.message }))}</div>`;
+    return;
   }
 
-  const details = _activeDetails;
   const ov = details.overview || {};
   const currentName = ov.name || _activeCname || '';
   const currentImage = ov.image || '';
