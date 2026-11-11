@@ -492,6 +492,19 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Active". It now shows an alert with the reason and "Try again", and a dash where no value is
   known.
 
+#### Fixes
+
+- **Rename works in the File Explorer**: the pencil, F2 and the menu all answered "Invalid body:
+  Field required" and the file kept its name.
+- **One delete, one question**: "Delete permanently" in the menu said "deleted for good. This
+  can't be undone", then moved the file to the Recycle Bin and offered Undo. It is gone, with the
+  "Shift+Delete" printed beside it that was never a shortcut. A delete outside the Recycle Bin
+  always goes to the bin and asks "Move … to the Recycle Bin?", from the row, the bar, the key and
+  the menu alike. Inside the bin the question is red, says "Delete for good" and shows the name
+  the file had, not the stored name with a number in front.
+- **The right-click menu opens on empty space while one item is selected**: it threw an error
+  and nothing opened.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

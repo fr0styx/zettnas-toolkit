@@ -1047,6 +1047,10 @@ export class FmContextMenu {
     const isSingle = this.fm.selectedPaths.size === 1;
     const isDir = fileItem && fileItem.is_dir;
     const isZip = fileItem && fileItem.name && fileItem.name.match(/\.(zip|tar|tar\.gz|tgz)$/i);
+    // the rows about one item need the item that was clicked: a right-click on empty space with
+    // one item selected read its name from nothing, threw, and no menu opened
+    const one = isSingle && Boolean(fileItem);
+    const inBin = Boolean(this.fm._inBin);
 
     const mod = modKey();
     const it = ctxItem;
@@ -1066,7 +1070,7 @@ export class FmContextMenu {
         fileItem && isDir && it('open', '📂', t('fm.ctx_open', 'Open'), t('fm.kbd_enter', 'Enter')),
         fileItem && fileItem.trash_id && it('restore', '↩️', t('fm.restore', 'Restore')),
         it('new-window', '🪟', t('fm.ctx_new_window', 'Open in a new window')),
-        isSingle && it('info', 'ℹ️', t('fm.ctx_info', 'Get info')),
+        one && it('info', 'ℹ️', t('fm.ctx_info', 'Get info')),
       ]),
       line,
       group([
@@ -1074,26 +1078,26 @@ export class FmContextMenu {
         hasSelection && it('copy', '📋', t('fm.ctx_copy', 'Copy'), `${mod}+C`),
         it('paste', '📥', t('fm.ctx_paste', 'Paste'), `${mod}+V`),
         hasSelection && it('duplicate', '📄', t('fm.ctx_duplicate', 'Duplicate'), `${mod}+D`),
-        isSingle && it('rename', '✏️', t('fm.ctx_rename', 'Rename'), 'F2'),
+        one && it('rename', '✏️', t('fm.ctx_rename', 'Rename'), 'F2'),
       ]),
       line,
       group([
         hasSelection && it('archive-create', '🗜️', t('fm.ctx_zip', 'Compress to a .zip file')),
         isZip && it('archive-extract', '📦', t('fm.ctx_unzip', 'Extract here')),
-        isSingle && (isDir || /\.zip$/i.test(fileItem.name)) && it('photo-import', '🏠', t('fm.ctx_photo_import', 'Bring photos home…')),
-        isSingle && isDir && it('icloud-photos', '☁️', t('fm.ctx_icloud_photos', 'Download from iCloud Photos…')),
-        isSingle && it('share', '🔗', t('fm.ctx_share', 'Share a link…')),
-        isSingle && !isDir && it('checksum', '🛡️', t('fm.ctx_checksum', 'Show its SHA-256 checksum')),
-        isSingle && !isDir && it('versions', '🕘', t('fm.versions_menu', 'Previous versions…')),
-        isSingle && it('ask-kib', '✨', t('fm.ask_kib', 'Ask Kib about this')),
-        isSingle && isDir && fav(false),
+        one && (isDir || /\.zip$/i.test(fileItem.name)) && it('photo-import', '🏠', t('fm.ctx_photo_import', 'Bring photos home…')),
+        one && isDir && it('icloud-photos', '☁️', t('fm.ctx_icloud_photos', 'Download from iCloud Photos…')),
+        one && it('share', '🔗', t('fm.ctx_share', 'Share a link…')),
+        one && !isDir && it('checksum', '🛡️', t('fm.ctx_checksum', 'Show its SHA-256 checksum')),
+        one && !isDir && it('versions', '🕘', t('fm.versions_menu', 'Previous versions…')),
+        one && it('ask-kib', '✨', t('fm.ask_kib', 'Ask Kib about this')),
+        one && isDir && fav(false),
         !fileItem && fav(true),
       ]),
       !fileItem ? `${line}${sortMenuHtml(this.fm.currentSortBy, this.fm.currentSortDir)}` : '',
       line,
       group([
-        hasSelection && it('trash', '🗑️', t('fm.ctx_to_bin', 'Move to the Recycle Bin'), t('fm.kbd_delete', 'Delete'), 'text-danger'),
-        hasSelection && it('delete-perm', '⚠️', t('fm.ctx_delete_forever', 'Delete permanently'), t('fm.kbd_shift_delete', 'Shift+Delete'), 'text-danger'),
+        // one delete: to the Recycle Bin, or, for what is already in it, for good (SET-05)
+        hasSelection && it('trash', '🗑️', inBin ? t('fm.delete_for_good', 'Delete for good') : t('fm.ctx_to_bin', 'Move to the Recycle Bin'), t('fm.kbd_delete', 'Delete'), 'text-danger'),
       ]),
     ].join('');
     this._returnFocus = /** @type {HTMLElement | null} */ (document.activeElement);
@@ -1233,9 +1237,6 @@ export class FmContextMenu {
         break;
       case 'trash':
         this.fm.bulkDelete();
-        break;
-      case 'delete-perm':
-        this.fm.bulkDelete(true);
         break;
     }
   }

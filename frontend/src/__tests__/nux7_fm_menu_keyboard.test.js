@@ -35,7 +35,7 @@ describe('File Explorer menu by keyboard (NUX-7)', () => {
     expect(document.activeElement.dataset.act).toBe('new-window');
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
-    expect(document.activeElement.dataset.act).toBe('delete-perm'); // wraps round
+    expect(document.activeElement.dataset.act).toBe('trash'); // wraps round
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
     expect(menu.handleAction).toHaveBeenCalledWith('preview');

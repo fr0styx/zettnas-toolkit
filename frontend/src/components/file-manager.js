@@ -9,7 +9,7 @@ import {
 import { api, auth, ApiError } from '../api.js';
 import { escapeHtml, copyTextToClipboard } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
-import { showToast, showConfirmToast, showPromptToast, showBottomSheet, showActionToast } from '../toast.js';
+import { showToast, showConfirmToast, showDangerConfirm, showPromptToast, showBottomSheet, showActionToast } from '../toast.js';
 import { t } from '../i18n.js';
 import { setIconLabel } from '../ui/primitives.js';
 import { binColumns, binBar } from './fm-bin-view.js';
@@ -104,10 +104,29 @@ function selectionBarHtml(withIds) {
 
 /** What a delete asks: the file's own name for one item, the count for several. Items already
  * in a Recycle Bin are deleted for good, and the question says so. */
-export function binConfirmText(paths) {
-  const inBin = paths.length > 0 && paths.every((p) => String(p).includes('/.RecycleBin/'));
+/** What POST /api/fs/rename takes: the item and its new name. The page sent two paths
+ *  under other names, the server answered 422, and no rename ever worked (SET-05). */
+export function renameBody(path, newName) {
+  return { path, new_name: String(newName).trim() };
+}
+
+/** The name a person knows an item by. In the Recycle Bin the stored name starts with a number
+ *  ("1794349636_budget.csv"); the name it had comes from where it was. */
+export function shownName(path, file = null) {
+  const stored = String(path).replace(/\/+$/, '').split('/').pop() || String(path);
+  if (file?.original_path) return String(file.original_path).replace(/\/+$/, '').split('/').pop() || stored;
+  return String(path).includes('/.RecycleBin/') ? stored.replace(/^\d[\d-]*_/, '') || stored : stored;
+}
+
+/** True when every one of the paths is in a Recycle Bin: deleting them is for good. */
+export function allInBin(paths) {
+  return paths.length > 0 && paths.every((p) => String(p).includes('/.RecycleBin/'));
+}
+
+export function binConfirmText(paths, files = []) {
+  const inBin = allInBin(paths);
   if (paths.length === 1) {
-    const name = String(paths[0]).replace(/\/+$/, '').split('/').pop() || String(paths[0]);
+    const name = shownName(paths[0], files[0]);
     return inBin
       ? t('fm.confirm_delete_one_permanent', "“{name}” will be deleted for good. This can't be undone.", { name })
       : t('fm.confirm_delete_one', 'Move “{name}” to the Recycle Bin?', { name });
@@ -1239,18 +1258,7 @@ export class FileManagerWindow {
     this.updateSortHeaderUI();
 
     // Bulk Delete
-    this.bulkDeleteBtn?.addEventListener('click', () => {
-      const count = this.selectedPaths.size;
-      if (count === 0) return;
-      const confirmMsg = binConfirmText(Array.from(this.selectedPaths));
-      showConfirmToast(t('common.confirm', 'Confirm Action'), confirmMsg, async () => {
-        const targets = Array.from(this.selectedPaths);
-        this.selectedPaths.clear();
-        this.lastSelectedIndex = -1;
-        this.selectionAnchorIndex = -1;
-        await this.deleteWithProgress(targets);
-      });
-    });
+    this.bulkDeleteBtn?.addEventListener('click', () => this.bulkDelete());
 
     // Move to…: pick a folder, then move in the background with progress
     this.bulkMoveBtn?.addEventListener('click', () => {
@@ -2561,10 +2569,7 @@ export class FileManagerWindow {
       const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
       window.open(`/api/fs/download?path=${encodeURIComponent(path)}`, '_blank');
     } else if (act === 'delete') {
-      const confirmMsg = binConfirmText([path]);
-      showConfirmToast(t('common.confirm', 'Confirm Action'), confirmMsg, async () => {
-        await this.deleteWithProgress([path]);
-      });
+      this.askDelete([path]);
     } else if (act === 'rename') {
       showPromptToast(
         t('fm.rename_title', 'Rename Item'),
@@ -2573,9 +2578,7 @@ export class FileManagerWindow {
         async (newName) => {
           if (newName && newName !== oldName) {
             try {
-              const parent = path.substring(0, path.lastIndexOf('/'));
-              const newPath = parent ? `${parent}/${newName}` : `/${newName}`;
-              await api.post('/api/fs/rename', { old_path: path, new_path: newPath });
+              await api.post('/api/fs/rename', renameBody(path, newName));
               this.loadPath(this.currentPath);
               ZettEventBus.emit('fm:refresh');
             } catch (err) {
@@ -3131,9 +3134,7 @@ export class FileManagerWindow {
       nameEl.style.display = '';
       if (newName && newName !== oldName) {
         try {
-          const parent = file.path.substring(0, file.path.lastIndexOf('/'));
-          const newPath = parent ? `${parent}/${newName}` : `/${newName}`;
-          await api.post('/api/fs/rename', { old_path: file.path, new_path: newPath });
+          await api.post('/api/fs/rename', renameBody(file.path, newName));
           this.loadPath(this.currentPath);
           ZettEventBus.emit('fm:refresh');
         } catch (err) {
@@ -3223,7 +3224,7 @@ export class FileManagerWindow {
     for (const p of targets) {
       job.progress({ current: p.split('/').pop() });
       try {
-        const res = await api.post('/api/fs/delete', permanent ? { path: p, permanent: true } : { path: p });
+        const res = await api.post('/api/fs/delete', { path: p }); // the server decides: for good only inside a bin
         if (res?.trash_id) trashIds.push(res.trash_id);
         success++;
       } catch (err) {
@@ -3279,20 +3280,37 @@ export class FileManagerWindow {
     );
   }
 
-  bulkDelete(isPermanent = false) {
-    const count = this.selectedPaths.size;
+  /** Deletes what is selected: the row button, the bar, the Delete key and the menu all end here. */
+  bulkDelete() {
+    this.askDelete(Array.from(this.selectedPaths));
+  }
+
+  /**
+   * The one question before a delete (SET-05). Outside the Recycle Bin a delete always goes to
+   * the bin, and the question says so. In the bin it is for good: red, with the item's real name.
+   * There were two questions for the same delete, and a "Delete permanently" that went to the bin.
+   * @param {string[]} targets
+   */
+  askDelete(targets) {
+    const count = targets.length;
     if (count === 0) return;
-    const confirmMsg = isPermanent
-      ? t('fm.confirm_bulk_delete_permanent', "{count, plural, one {# item will be deleted for good. This can't be undone.} other {# items will be deleted for good. This can't be undone.}}", { count })
-      : binConfirmText(Array.from(this.selectedPaths));
-    showConfirmToast(t('fm.delete_title', '{count, plural, one {Delete # item?} other {Delete # items?}}', { count }), confirmMsg, async () => {
-      const targets = Array.from(this.selectedPaths);
+    const forGood = allInBin(targets);
+    const files = targets.map((p) => (this.fileList || []).find((f) => f.path === p) || null);
+    const run = async () => {
       this.clearSelection();
-      await this.deleteWithProgress(targets, { permanent: isPermanent });
-    }, null, {
-      destructive: true,
-      okText: isPermanent ? t('fm.delete_permanently', 'Delete permanently') : t('fm.move_to_bin', 'Move to Recycle Bin'),
-    });
+      await this.deleteWithProgress(targets, { permanent: forGood });
+    };
+    if (forGood) {
+      showDangerConfirm(
+        t('fm.delete_for_good_title', '{count, plural, one {Delete # item for good?} other {Delete # items for good?}}', { count }),
+        binConfirmText(targets, files), run, null, { okText: t('fm.delete_for_good', 'Delete for good') },
+      );
+    } else {
+      showConfirmToast(
+        t('fm.delete_title', '{count, plural, one {Delete # item?} other {Delete # items?}}', { count }),
+        binConfirmText(targets, files), run, null, { okText: t('fm.move_to_bin', 'Move to Recycle Bin') },
+      );
+    }
   }
 
   /** Sorts by a field in a direction, as chosen from the folder's right-click menu. */
