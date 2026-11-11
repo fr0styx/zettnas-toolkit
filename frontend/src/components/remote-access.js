@@ -46,6 +46,13 @@ export function appPort(loc = window.location) {
   return Number(loc.port) || (loc.protocol === 'https:' ? 443 : 80);
 }
 
+/** What "Turn on HTTPS" sends. The port only from a plain page at home: on the HTTPS address the
+ *  browser's port is Tailscale's 443, not the port Kiboto listens on, and the server keeps the one
+ *  it knows (SET-02). */
+export function publishBody(loc = window.location) {
+  return loc.protocol === 'http:' ? { app_port: appPort(loc) } : {};
+}
+
 function connectForm() {
   const own = el('input', { type: 'radio', name: 'remote-kind', value: 'headscale' });
   const server = el('input', { name: 'login_server', type: 'url', placeholder: 'https://headscale.example.com', autocomplete: 'off' });
@@ -218,7 +225,7 @@ export async function renderRemoteAccess(card, s = null, polls = 0) {
     b.addEventListener('click', async () => {
       const action = /** @type {HTMLElement} */ (b).dataset.remote;
       try {
-        const body = action === 'publish' ? { app_port: appPort() } : {};
+        const body = action === 'publish' ? publishBody() : {};
         const next = await api.post(`/api/network/remote-access/${action}`, body);
         if (next.approval_url) {
           window.open(next.approval_url, '_blank', 'noopener');

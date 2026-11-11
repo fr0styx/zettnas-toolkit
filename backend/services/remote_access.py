@@ -177,7 +177,7 @@ def connect(login_server: str = "", auth_key: str = "") -> dict[str, Any]:
 def publish(app_port: int | None = None) -> dict[str, Any]:
     """HTTPS addresses in the tailnet for Kiboto (443), Immich (8443) and every other app
     with a web page (its port + 10000); an app's address goes when the app does."""
-    if app_port:
+    if app_port and _is_local_port(int(app_port)):
         tailscale.update_settings(app_port=int(app_port))
     now = status()
     if now["state"] != "Running":
@@ -207,6 +207,15 @@ def publish(app_port: int | None = None) -> dict[str, Any]:
         if code != 0:
             raise RemoteAccessError((out or "tailscale serve failed").strip().splitlines()[-1][:300])
     return {**status(), "approval_url": approval}
+
+
+def _is_local_port(port: int) -> bool:
+    """Whether a port named by the page can be the one Kiboto is reached on at home. 443 is the
+    port of the HTTPS address itself: from that page it used to be saved as Kiboto's port, and the
+    address away from home then pointed at the wrong local port (SET-02)."""
+    from backend import settings
+
+    return port != 443 or int(settings.current("port") or DEFAULT_APP_PORT) == 443
 
 
 def _public_ports() -> set[int]:

@@ -338,6 +338,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   received over Tailscale. They now get the counts only; the links, addresses and names are for
   people who may change settings.
 
+#### Fixes
+
+- **"Turn on HTTPS for new apps" no longer breaks Kiboto's address away from home**: pressed while
+  Kiboto was open at its secure address, the button saved that page's port (443) as Kiboto's own, and
+  the address away from home pointed at the wrong local port from then on.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

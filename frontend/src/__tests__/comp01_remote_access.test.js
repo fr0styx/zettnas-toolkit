@@ -130,6 +130,9 @@ describe('COMP-01: use from anywhere', () => {
     expect(ra.appPort({ port: '8082', protocol: 'http:' })).toBe(8082);
     expect(ra.appPort({ port: '', protocol: 'https:' })).toBe(443);
     expect(ra.appPort({ port: '', protocol: 'http:' })).toBe(80);
+    // SET-02: only a plain page at home names the port; the HTTPS address would name Tailscale's 443
+    expect(ra.publishBody({ port: '8082', protocol: 'http:' })).toEqual({ app_port: 8082 });
+    expect(ra.publishBody({ port: '', protocol: 'https:' })).toEqual({});
   });
 
   it('labels ports and keeps the main addresses as links', async () => {
