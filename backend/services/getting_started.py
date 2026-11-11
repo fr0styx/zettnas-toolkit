@@ -46,12 +46,10 @@ def _has_app() -> bool:
     return any(not str(c.get("name") or "").startswith(("kiboto", "zettnas")) for c in read_docker_containers())
 
 
-OFF_BOX_ROOTS = ("/mnt/disks/", "/mnt/remotes/", "/mnt/addons/")  # USB and network disks
-
-
 def _off_box(where: str) -> bool:
-    where = str(where or "")
-    return where.startswith("rclone:") or where.startswith(OFF_BOX_ROOTS)
+    from backend.services.protection_status import kind_of
+
+    return kind_of(str(where or "")) != "here"  # the Overview's rule, so the two never disagree
 
 
 def _has_backup() -> bool:

@@ -526,6 +526,32 @@ def test_a_question_from_the_restore_window_can_be_answered():
         browser.close()
 
 
+def test_add_a_backup_job_opens_on_a_choice_that_works():
+    """SET-06: the form's default was a choice the server always refused, and the passphrase field
+    of a settings backup showed for a folder job (a style rule beat `hidden`)."""
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as p:
+        browser = _browser(p)
+        page = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+        _sign_in(page)
+        _close_wizard(page)
+        page.evaluate("() => window.openManagementWindow && window.openManagementWindow('mgmt-pane-backups')")
+        page.click("#btn-open-create-backup-job", timeout=15000)
+        page.wait_for_selector("#create-backup-job-form", state="visible")
+        assert page.input_value("#backup-job-dest-type") == "local_snapshot"
+        assert not page.is_visible("#backup-job-passphrase")
+        assert page.is_visible("#backup-dest-cloud-hint")
+        shown = page.evaluate(
+            "() => [...document.querySelectorAll('#backup-job-dest-type option')].filter((o) => !o.hidden).map((o) => o.value)"
+        )
+        assert shown == ["local_snapshot"], shown
+        page.select_option("#backup-job-kind", "config")
+        assert page.is_visible("#backup-job-passphrase")
+        assert page.input_value("#backup-job-dest-type") == "local_folder"
+        browser.close()
+
+
 def _strings(lang):
     with open(os.path.join(ROOT, "frontend", "src", "locales", f"{lang}.js"), encoding="utf-8") as f:
         src = f.read()

@@ -586,6 +586,19 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   set it to 0 days and reset the lock. The form now shows the share's schedule, has a field for
   the daily tier, and the list names it.
 
+#### Fixes
+
+- **A backup to a second Kiboto counts as a copy outside**: a household that backs up to a backup
+  buddy was told "No copy" on the Overview and in "Getting started", because a buddy counted as
+  a place on this NAS. The two screens now use one rule.
+- **"Add a backup job" opens on a choice that works**: its default, a folder with "Snapshots
+  here, plus a copy in a cloud", was always refused with a long message. A folder job now offers
+  snapshots on this server, with a line that says where a copy to a cloud is made (an off-site
+  backup).
+- **Deleting a backup job asks about it by name**, not by its id. The "Take a snapshot" button in
+  the empty snapshot list is gone: it pressed a button of the pool's window, which did nothing,
+  or snapshotted whichever pool that window had last been opened for.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

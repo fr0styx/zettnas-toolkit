@@ -1948,6 +1948,7 @@ export function initManagement() {
       modalBackupJob.style.display = 'flex';
       modalBackupJob.classList.add('open');
       bringToFront(modalBackupJob);
+      syncBackupJobForm(); // the fields that go with the chosen kind, from the first look
       const nameInput = document.getElementById('backup-job-name');
       if (nameInput) nameInput.focus();
     });
@@ -1981,7 +1982,7 @@ export function initManagement() {
         kind,
         local_path: document.getElementById('backup-job-local-path')?.value.trim() || '',
         source_subvolume: kind === 'config' ? '' : document.getElementById('backup-job-subvolume')?.value.trim() || '',
-        destination_type: document.getElementById('backup-job-dest-type')?.value || 'remote',
+        destination_type: document.getElementById('backup-job-dest-type')?.value || 'local_snapshot',
         remote_name: document.getElementById('backup-job-remote-name')?.value.trim() || '',
         remote_path: document.getElementById('backup-job-remote-path')?.value.trim() || '',
         schedule: document.getElementById('backup-job-schedule')?.value || 'daily',
@@ -1996,6 +1997,7 @@ export function initManagement() {
         showToast(t('toast.hyper_backup_pipeline_saved_successfully', 'Backup job saved.'), 'success');
         closeBackupModal();
         formBackupJob.reset();
+        syncBackupJobForm();
         fetchAndRenderBackupJobs();
       } catch (err) {
         showToast(t('toast.failed_to_save_backup_job', 'Failed to save backup job: {error}', { error: err.message }), 'error');

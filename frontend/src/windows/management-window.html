@@ -5712,10 +5712,11 @@
       <div>
         <label class="bjob-xs-bold-muted" for="backup-job-dest-type" data-i18n="backup.f_dest">Where the copies go</label>
         <select id="backup-job-dest-type" class="tz-select-input bjob-xs-strong-box">
-          <option value="remote" selected data-i18n="backup.dest_remote">Snapshots here, plus a copy in a cloud</option>
-          <option value="local_snapshot" data-i18n="backup.dest_local">Snapshots on this server only</option>
+          <option value="local_snapshot" selected data-i18n="backup.dest_local">Snapshots on this server only</option>
+          <option value="remote" hidden data-i18n="backup.dest_remote">Snapshots here, plus a copy in a cloud</option>
           <option value="local_folder" hidden data-i18n="backup.dest_folder">A folder in the pool</option>
         </select>
+        <div class="bjob-xs-muted" id="backup-dest-cloud-hint" data-i18n="backup.dest_cloud_hint">To copy a folder to a cloud or to another disk, add an off-site backup instead (further down this page): it keeps versions and is encrypted.</div>
       </div>
       <div id="backup-local-fields" hidden>
         <label class="bjob-xs-bold-muted" for="backup-job-local-path" data-i18n="backup.f_local_path">Folder in the pool</label>

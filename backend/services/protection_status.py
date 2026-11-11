@@ -17,10 +17,19 @@ USB_ROOT = "/mnt/disks"
 NAS_ROOTS = ("/mnt/remotes", "/mnt/addons")
 
 
+# Destinations on another machine that restic reaches itself. A backup buddy is the first one
+# ("rest:http://..."): it counted as "here", so a household that backs up to a second Kiboto
+# was told it has no copy outside (SET-06).
+OTHER_MACHINE = ("rest:", "sftp:")
+
+
 def kind_of(location: str) -> str:
-    """ "cloud", "usb", "nas" or "here" for a backup destination."""
+    """ "cloud", "usb", "nas" or "here" for a backup destination. The one rule for "is this copy
+    outside the box": the Overview and "Getting started" both ask here."""
     if location.startswith("rclone:"):
         return "cloud"
+    if location.startswith(OTHER_MACHINE):
+        return "nas"
     if location.startswith(USB_ROOT + "/"):
         return "usb"
     if location.startswith(tuple(r + "/" for r in NAS_ROOTS)):

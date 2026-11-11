@@ -102,7 +102,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
               <button class="btn-rect primary btn-run-backup-job" data-job-id="${escapeHtml(job.id)}" title="${t('ui.run_backup_job_now', 'Run Backup Job Now')}">
                 <span aria-hidden="true">▶</span> ${escapeHtml(t('backup.run', 'Run'))}
               </button>
-              <button class="btn-rect danger btn-delete-backup-job" data-job-id="${escapeHtml(job.id)}" title="${t('ui.delete_backup_job', 'Delete Backup Job')}">
+              <button class="btn-rect danger btn-delete-backup-job" data-job-id="${escapeHtml(job.id)}" data-job-name="${escapeHtml(job.name || job.id)}" title="${t('ui.delete_backup_job', 'Delete Backup Job')}">
                 🗑️
               </button>
             </div>
@@ -155,7 +155,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
     mount.querySelectorAll('.btn-delete-backup-job').forEach(btn => {
       btn.addEventListener('click', async () => {
         const jobId = btn.dataset.jobId;
-        showConfirmToast(t('backup.delete_job_q', 'Delete the backup job "{name}"? Copies already made stay where they are.', { name: jobId }), async () => {
+        showConfirmToast(t('backup.delete_job_q', 'Delete the backup job "{name}"? Copies already made stay where they are.', { name: btn.dataset.jobName || jobId }), async () => {
           try {
             await api.delete(`/api/backup/schedule/${jobId}`);
             showToast(t('toast.backup_task_removed', 'Backup task removed.'), 'success');
@@ -192,8 +192,9 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
       mount.innerHTML = emptyStateHtml({
         compact: true,
         title: t('backup.snap_none_title', 'No snapshots yet'),
-        body: t('backup.snap_none_desc', 'A snapshot freezes a folder as it is now, in seconds, so you can go back to it later.'),
-        action: { target: 'btn-take-snapshot-submit', label: t('backup.snap_take', 'Take a snapshot') },
+        // no button: the one that was here pressed a button of the pool's window, which did nothing,
+        // or, where that window had been opened for a pool, snapshotted that pool (SET-06)
+        body: t('backup.snap_none_desc', 'A snapshot freezes a folder as it is now, in seconds, so you can go back to it later. Add a share under “Scheduled snapshots per share”; “Snapshot now” on its row takes one at once.'),
       });
       return;
     }

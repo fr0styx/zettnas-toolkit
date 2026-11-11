@@ -221,12 +221,18 @@ export function syncBackupJobForm() {
   if (dest) {
     const folderOpt = dest.querySelector('option[value="local_folder"]');
     const snapOpt = dest.querySelector('option[value="local_snapshot"]');
+    const remoteOpt = dest.querySelector('option[value="remote"]');
     if (folderOpt) folderOpt.hidden = !isConfig;
     if (snapOpt) snapOpt.hidden = isConfig;
+    // A new copy of a folder to a cloud is an off-site backup; the server refuses it as a job.
+    // It was this form's default, so the first try always ended in a long refusal (SET-06).
+    if (remoteOpt) remoteOpt.hidden = !isConfig;
     if (isConfig && dest.value === 'local_snapshot') dest.value = 'local_folder';
-    if (!isConfig && dest.value === 'local_folder') dest.value = 'remote';
+    if (!isConfig) dest.value = 'local_snapshot';
   }
-  const value = dest ? dest.value : 'remote';
+  const hint = document.getElementById('backup-dest-cloud-hint');
+  if (hint) hint.hidden = isConfig;
+  const value = dest ? dest.value : 'local_snapshot';
   if (local) local.hidden = !(isConfig && value === 'local_folder');
   if (remote) remote.style.display = value === 'remote' ? 'flex' : 'none';
 }
