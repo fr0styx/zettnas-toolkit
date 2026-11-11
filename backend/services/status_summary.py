@@ -191,6 +191,30 @@ def _password() -> list[dict[str, Any]]:
     return []
 
 
+def _security() -> list[dict[str, Any]]:
+    """The security check's serious findings (critical or high), as one row: the Overview said
+    "Everything is fine" while the security check showed red rows (SET-14). The first-time
+    password has its own row above."""
+    from backend.services.security_advisor import evaluate_security_posture
+
+    issues = evaluate_security_posture(None).get("issues") or []
+    serious = [
+        i for i in issues if i.get("severity") in ("critical", "high") and i.get("id") != "sec-issue-default-password"
+    ]
+    if not serious:
+        return []
+    level = "critical" if any(i.get("severity") == "critical" for i in serious) else "warning"
+    return [
+        {
+            "id": "security:check",
+            "level": level,
+            "kind": "security_look",
+            "subject": str(len(serious)),
+            "open": "settings",
+        }
+    ]
+
+
 def _timezone() -> list[dict[str, Any]]:
     """No time zone chosen and none from the container: "night" (backups, scrubs, the AI's
     re-index) is night in UTC, which is the evening or the morning for most families."""
@@ -201,7 +225,20 @@ def _timezone() -> list[dict[str, Any]]:
     return [{"id": "server:timezone", "level": "warning", "kind": "timezone_unset", "subject": "", "open": "time"}]
 
 
-CHECKS = (_drives, _pools, _storage, _backups, _protection, _kits, _stalled, _frozen, _power, _password, _timezone)
+CHECKS = (
+    _drives,
+    _pools,
+    _storage,
+    _backups,
+    _protection,
+    _kits,
+    _stalled,
+    _frozen,
+    _power,
+    _password,
+    _security,
+    _timezone,
+)
 
 
 # What it takes to act on an item where its Open button leads (NUX-5)

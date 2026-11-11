@@ -4973,6 +4973,7 @@ export default {
   "overview.on_battery": "服务器正在使用电池供电。",
   "overview.too_hot": "服务器温度过高。",
   "overview.default_password": "仍在使用初始密码。",
+  "overview.security_look": "安全检查有需要查看的事项（{subject} 项）。",
   "overview.all_good": "一切正常",
   "overview.checking": "正在检查状态",
   "overview.checking_desc": "硬盘、备份、电源及其他项目。",

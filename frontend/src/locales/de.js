@@ -4973,6 +4973,7 @@ export default {
   "overview.on_battery": "Der Server läuft im Akkubetrieb.",
   "overview.too_hot": "Der Server ist zu heiß.",
   "overview.default_password": "Das Erstpasswort wird noch verwendet.",
+  "overview.security_look": "Die Sicherheitsprüfung hat Punkte, die Sie ansehen sollten ({subject}).",
   "overview.all_good": "Alles in Ordnung",
   "overview.checking": "Der Zustand wird geprüft",
   "overview.checking_desc": "Laufwerke, Sicherungen, Strom und der Rest.",

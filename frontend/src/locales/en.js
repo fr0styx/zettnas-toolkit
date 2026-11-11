@@ -4973,6 +4973,7 @@ export default {
   "overview.on_battery": "The server is running on battery power.",
   "overview.too_hot": "The server is too hot.",
   "overview.default_password": "The first-time password is still in use.",
+  "overview.security_look": "The security check has findings to look at ({subject}).",
   "overview.all_good": "Everything is fine",
   "overview.checking": "Checking how things are",
   "overview.checking_desc": "Drives, backups, power and the rest.",

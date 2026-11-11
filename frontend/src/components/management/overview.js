@@ -84,6 +84,7 @@ const MESSAGES = {
   on_battery: () => t('overview.on_battery', 'The server is running on battery power.'),
   too_hot: () => t('overview.too_hot', 'The server is too hot.'),
   default_password: () => t('overview.default_password', 'The first-time password is still in use.'),
+  security_look: () => t('overview.security_look', 'The security check has findings to look at ({subject}).'),
   timezone_unset: () => t('overview.timezone_unset_clock', "The server's time zone isn't set, so nightly work (backups, checks, AI indexing) runs at night by London winter time (UTC), which may be daytime where you are."),
 };
 

@@ -284,6 +284,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   "Saved."; a save that fails says so. The "Container crashes" box is gone: no code sends that
   kind of alert.
 
+#### Fixes
+
+- **The Overview and the security check agree.** The Overview said "Everything is fine" while the
+  security check, a few clicks away, showed red rows. Serious findings of the security check
+  (critical or high) are now one row on the Overview that opens Settings.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
