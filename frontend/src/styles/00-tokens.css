@@ -18,6 +18,15 @@
   --stage-gap: 24px;
   --stage-offset-y: 0px;
 
+  /* The palette's colour tokens (APP-A): Lagoon dark; light mode below. Themes (stage B) set the
+     same names. --c-neutral is the fourth status look beside ok, warning and danger (X8). */
+  --c-bg: #0a1113; --c-raised: #1a2629;
+  --c-text: #e6efef; --c-muted: #95a8ab;
+  --c-primary: #33cdb8; --c-primary-rgb: 51, 205, 184;
+  --c-primary-text: #4fd8c4; --c-primary-text-rgb: 79, 216, 196;
+  --c-success: #46c776; --c-info-text: #8db1ff; --c-accent: #f6b44c;
+  --c-neutral: #95a8ab; --c-neutral-soft: #1a2629;
+
   /* Chromatic Base & Dynamic Contrast Tokens */
   --brand-rgb: 51, 205, 184;
   --brand: rgb(var(--brand-rgb));
@@ -107,4 +116,12 @@ body, body.studio-workbench:not(.lcd-direct) {
   transition: background-color 0.35s ease, color 0.35s ease;
 }
 
-
+/* Lagoon light (APP-A): the palette's light values for the same names */
+body.theme-light:not(.lcd-direct) {
+  --c-bg: #f3f6f6; --c-raised: #e8eeee;
+  --c-text: #0e1c1e; --c-muted: #4a5c60;
+  --c-primary: #0a7a70; --c-primary-rgb: 10, 122, 112;
+  --c-primary-text: #08695f; --c-primary-text-rgb: 8, 105, 95;
+  --c-success: #1d7a3e; --c-info-text: #2152ad; --c-accent: #f2a93b;
+  --c-neutral: #4a5c60; --c-neutral-soft: #e8eeee;
+}
