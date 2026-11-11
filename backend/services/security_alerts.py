@@ -77,6 +77,7 @@ def maybe_alert(
                 level=level,
                 event_type="security",
                 dedup_key=f"sec:{event_type}:{actor_username or ''}:{actor_ip or ''}",
+                record=False,  # who signed in from where is not for the shared log (sign-ins have their own table)
             )
         except Exception:
             ignored("backend.services.security_alerts.maybe_alert._send")

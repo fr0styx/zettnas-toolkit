@@ -429,7 +429,12 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
         from backend.services.notifications import send_notification
 
         send_notification(
-            title="UPS: shut the NAS down by hand", message=msg, level="critical", event_type="ups", text=text
+            title="UPS: shut the NAS down by hand",
+            message=msg,
+            level="critical",
+            event_type="ups",
+            text=text,
+            record=False,
         )
     except Exception:
         logger.debug("ups_watchdog: notification failed", exc_info=True)
@@ -474,6 +479,7 @@ def _say_shutdown_starts(reason: str, charge: float | None, runtime: float | Non
         text=alert_text(
             "ups_shutdown_now", charge="?" if charge is None else charge, runtime="?" if runtime is None else runtime
         ),
+        record=False,  # the shutdown has its own entry
     )
 
 
@@ -498,7 +504,12 @@ def _ups_fell_silent(now: float) -> None:
     _step(
         "tell the household",
         lambda: send_notification(
-            title="UPS stopped answering during a power cut", message=msg, level="critical", event_type="ups", text=text
+            title="UPS stopped answering during a power cut",
+            message=msg,
+            level="critical",
+            event_type="ups",
+            text=text,
+            record=False,
         ),
     )
 

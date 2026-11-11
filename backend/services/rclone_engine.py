@@ -328,6 +328,40 @@ CURATED_PROVIDERS = [
 ]
 
 
+def _tell_sync_done(job: dict[str, Any], action: str, src: str, dst: str, job_id: str) -> None:
+    """A finished or failed cloud sync: the event log gets its entry either way, the alert goes
+    out when the job asks for one (SET-13)."""
+    try:
+        from backend.services.notifications import send_notification
+
+        told = bool(job.get("notify", True))
+        if job["status"] == "success":
+            mb = round(job.get("bytes_transferred", 0) / (1024 * 1024), 2)
+            send_notification(
+                {
+                    "type": "sync",
+                    "title": f"Cloud Sync Completed: {action.capitalize()}",
+                    "message": f"Operation '{action}' from {src} to {dst} finished successfully ({mb} MB transferred).",
+                    "level": "info",
+                    "deliver": told,
+                    "meta": {"job_id": job_id, "src": src, "dst": dst},
+                }
+            )
+        else:
+            send_notification(
+                {
+                    "type": "sync",
+                    "title": f"Cloud Sync Failed: {action.capitalize()}",
+                    "message": f"Sync from {src} to {dst} failed: {job.get('error')}",
+                    "level": "error",
+                    "deliver": told,
+                    "meta": {"job_id": job_id, "src": src, "dst": dst, "error": job.get("error")},
+                }
+            )
+    except Exception as notify_err:
+        logger.debug(f"[RCLONE] Notification error: {notify_err}")
+
+
 class RcloneEngine:
     """Manages cloud remotes, FUSE mounting, and synchronization jobs."""
 
@@ -1146,34 +1180,7 @@ class RcloneEngine:
                 job["status"] = "error"
                 job["error"] = str(e)
 
-            # Notification dispatch
-            if job.get("notify", True):
-                try:
-                    from backend.services.notifications import send_notification
-
-                    if job["status"] == "success":
-                        mb = round(job.get("bytes_transferred", 0) / (1024 * 1024), 2)
-                        send_notification(
-                            {
-                                "type": "sync",
-                                "title": f"Cloud Sync Completed: {action.capitalize()}",
-                                "message": f"Operation '{action}' from {src} to {dst} finished successfully ({mb} MB transferred).",
-                                "level": "info",
-                                "meta": {"job_id": job_id, "src": src, "dst": dst},
-                            }
-                        )
-                    else:
-                        send_notification(
-                            {
-                                "type": "sync",
-                                "title": f"Cloud Sync Failed: {action.capitalize()}",
-                                "message": f"Sync from {src} to {dst} failed: {job.get('error')}",
-                                "level": "error",
-                                "meta": {"job_id": job_id, "src": src, "dst": dst, "error": job.get("error")},
-                            }
-                        )
-                except Exception as notify_err:
-                    logger.debug(f"[RCLONE] Notification error: {notify_err}")
+            _tell_sync_done(job, action, src, dst, job_id)
 
         t = threading.Thread(target=_run_sync, daemon=True, name=f"RcloneSync-{job_id}")
         t.start()

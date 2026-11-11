@@ -185,7 +185,7 @@ def tick(now: float | None = None, get: Callable = _get_json, send: Callable | N
     if send is None:
         from backend.services.notifications import send_notification as send
     for a in alerts:
-        send(a)
+        send({**a, "record": False})  # camera alerts stay out of the shared log (SET-13)
     _record(last_check=now, last_error="", last_sent=last_sent, seen=seen)
     return len(alerts)
 

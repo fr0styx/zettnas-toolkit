@@ -759,6 +759,7 @@ def evaluate_smart_velocity_alerts() -> list[dict[str, Any]]:
                             "type": "smart",
                             "level": "critical",
                             "title": title,
+                            "record": False,
                             "message": msg,
                         }
                     )

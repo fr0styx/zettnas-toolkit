@@ -473,6 +473,7 @@ class ReplicationEngine:
             job_id, "success", bytes_transferred=res["bytes"], last_success=time.time(), last_snapshot=res["snapshot"]
         )
         logger.info("[Replication] %s: sent %s bytes as %s", name, res["bytes"], res["snapshot"])
+        _finished("replication_ok", f"Replication finished: {name}", f"“{name}” was copied to the other server.", name)
 
     def due(self, job: dict[str, Any], now: float) -> bool:
         interval = INTERVALS.get(str(job.get("schedule") or ""))
@@ -497,6 +498,18 @@ class ReplicationEngine:
                 self.run_job_async(str(job["id"]))
                 started.append(str(job["id"]))
         return started
+
+
+def _finished(alert: str, title: str, message: str, name: str) -> None:
+    """A finished run as an entry in the event log; nothing is sent (SET-13)."""
+    try:
+        from backend.services.notifications import alert_text, send_notification
+
+        send_notification(
+            title, message, level="info", event_type="backup", text=alert_text(alert, name=name), deliver=False
+        )
+    except (ImportError, OSError, ValueError, RuntimeError, TypeError):
+        logger.debug("[Replication] The finished run was not logged", exc_info=True)
 
 
 def _notify(title: str, message: str, level: str, job_id: str) -> None:

@@ -107,6 +107,7 @@ def on_verdict(
             level=LEVEL.get(verdict, "warning"),
             event_type="smart",
             dedup_key=f"drive_verdict_{key}_{verdict}_{int(now // REMIND_SECS) if action == 'reminder' else 0}",
+            record=False,  # the entry is written above, with its keys
         )
     elif action == "better":
         from backend.state import add_event

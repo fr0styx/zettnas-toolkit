@@ -188,7 +188,14 @@ def _trigger_alert(alert_id, title, message, level, now, text=None):
         _active_alerts[alert_id] = now
         add_event(level, title, message, text)
         send_notification(
-            {"type": "system", "title": title, "message": message, "level": level, **({"text": text} if text else {})}
+            {
+                "type": "system",
+                "title": title,
+                "message": message,
+                "level": level,
+                "record": False,  # the entry is written above
+                **({"text": text} if text else {}),
+            }
         )
 
 
@@ -205,6 +212,7 @@ def _resolve_alert(alert_id, resolve_msg=None, text=None):
                     "title": "Alert Resolved",
                     "message": resolve_msg,
                     "level": "info",
+                    "record": False,
                     **({"text": text} if text else {}),
                 }
             )

@@ -87,6 +87,20 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - Every event has an id, the name of its kind and the place that deals with it. The bell, read
   marks and links to an entry build on these in the next steps.
 
+#### Fixes
+
+- **What reaches your phone is also in the event log.** A failed backup, a backup that is
+  overdue, a pool that lost a disk, a sync that stopped, a failed drive test: these went out as
+  alerts and left no entry on the NAS, and with no alert channel set up they left no trace at
+  all. Every alert now writes an entry at the moment it is raised, whether or not a channel is
+  set up, and the entry knows the page that deals with it.
+- **"Did last night's backup run?" has an answer in the log.** A finished backup, off-site
+  backup, replication, cloud sync and two-way sync each write an entry, also when the job's own
+  notifications are turned off. Runs of the same job within an hour are counted on one entry.
+- **The shared log names the threat, not the file, when the malware scan moves a file to
+  quarantine.** Camera alerts from Frigate and sign-in alerts stay out of the log that everyone
+  with the view right reads.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

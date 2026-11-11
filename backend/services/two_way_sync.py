@@ -268,6 +268,7 @@ def run_now(pair_id: str, run: Callable = run_bounded) -> dict[str, Any]:
     fields: dict[str, Any] = {"last_run": time.time(), "last_summary": summary}
     if summary["ok"]:
         fields.update(baseline=True, last_result="ok")
+        _log_finished(pair)
     elif summary["too_many_deletes"]:
         # a sudden mass delete on one side: stop and ask, never pass it on (FEAT-06)
         fields.update(
@@ -283,6 +284,25 @@ def run_now(pair_id: str, run: Callable = run_bounded) -> dict[str, Any]:
         fields.update(last_result=summary.get("error") or "failed")
     logger.info("[Sync] %s: %s", pair["name"], fields.get("last_result"))
     return _update(pair_id, **fields)
+
+
+def _log_finished(pair: dict[str, Any]) -> None:
+    """A finished sync as an entry in the event log; nothing is sent. Runs within the hour are
+    counted on one entry (SET-13)."""
+    try:
+        from backend.services.notifications import alert_text, send_notification
+
+        name = str(pair.get("name") or "")
+        send_notification(
+            f"Sync finished: {name}",
+            f"Both sides of “{name}” hold the same files again.",
+            level="info",
+            event_type="sync",
+            text=alert_text("sync_ok", name=name),
+            deliver=False,
+        )
+    except (ImportError, OSError, ValueError, RuntimeError, TypeError):
+        logger.debug("two_way_sync: the finished sync was not logged", exc_info=True)
 
 
 def _notify(pair: dict[str, Any], message: str) -> None:

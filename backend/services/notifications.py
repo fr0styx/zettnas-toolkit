@@ -426,12 +426,18 @@ def send_notification(
     event_type: str = "general",
     dedup_key: str = "",
     text: dict[str, Any] | None = None,
+    record: bool = True,
+    deliver: bool = True,
 ) -> dict[str, Any]:
     """
     Dispatch a notification to all configured channels with rate limiting and deduplication.
     Supports either positional args (title, message, level) or a single dictionary payload.
     `text` ({title_key, msg_key, params}) writes it in the household's language (NUX-3); the
     English title and message are used as they are when that language is English.
+
+    Every alert is also an entry in the event log (SET-13), whatever channels are set up: a
+    caller that writes its own entry for the same thing turns `record` off. With `deliver` off,
+    only the entry is written (a job whose own "notify" is off still shows in the log).
     """
     if isinstance(title, dict):
         d = title
@@ -441,10 +447,16 @@ def send_notification(
         event_type = str(d.get("event_type", d.get("type", "general")))
         dedup_key = str(d.get("dedup_key", ""))
         text = d.get("text") if isinstance(d.get("text"), dict) else None
+        record = bool(d.get("record", True))
+        deliver = bool(d.get("deliver", True))
+    cfg = load_notification_config()
+    if record:
+        _record_in_log(str(title), str(message), level, event_type, dedup_key, text, cfg)
+    if not deliver:
+        return {"dispatched": False, "reason": "recorded only"}
     if text:
         title, message = in_household_language(str(title), str(message), text)
 
-    cfg = load_notification_config()
     # Phones with the app installed get alerts even if no other channel is set up (M1)
     push_on = False
     if cfg.get("push_enabled", True):
@@ -507,6 +519,54 @@ def send_notification(
         _enqueue(str(title), str(message), level, event_type, dedup_key, now)  # every channel failed
         res["reason"] = "queued for retry"
     return res
+
+
+# Where an alert's entry leads when its text has no name of its own, by the alert's type (SET-13)
+_TYPE_LINKS = {
+    "smart": "drives",
+    "smart_test_result": "drives",
+    "temp": "hardware",
+    "fan": "hardware",
+    "copy": "cards",
+    "media": "cards",
+    "ups": "power",
+    "container": "apps",
+    "backup": "backup",
+    "sync": "backup",
+    "storage": "storage",
+    "security": "settings",
+    "system_update": "settings",
+    "vm": "vms",
+}
+_LOG_LEVELS = {"normal": "info", "warn": "warning", "alert": "critical"}
+_logged: dict[str, dict[str, Any]] = {}  # dedup key -> when and how seriously it was last written
+
+
+def _record_in_log(
+    title: str, message: str, level: str, event_type: str, dedup_key: str, text: dict[str, Any] | None, cfg: dict
+) -> bool:
+    """The alert as an entry in the event log: twelve kinds of alert (a failed backup, a degraded
+    pool, a stopped sync) reached a phone and left no trace on the NAS. An alert that is raised
+    again within its cooldown is not written again, as it is not sent again."""
+    from backend import event_store
+    from backend.state import add_event
+
+    now = time.time()
+    urgent = level in ("critical", "alert", "error")
+    if dedup_key:
+        prev = _logged.get(dedup_key)
+        if prev and now - prev["at"] < cfg.get("cooldown_seconds", 1800) and (prev["urgent"] or not urgent):
+            return False
+        if len(_logged) > 500:
+            _logged.clear()
+        _logged[dedup_key] = {"at": now, "urgent": urgent}
+    details: dict[str, Any] = {**(text or {}), "alert": event_type}
+    kind = event_store.kind_of(details)
+    if not event_store.link_of(kind) and _TYPE_LINKS.get(event_type):
+        details["link"] = _TYPE_LINKS[event_type]
+    shown = "success" if kind.endswith("_ok") else _LOG_LEVELS.get(level, level)
+    add_event(shown, title, message, details)
+    return True
 
 
 def _dispatch_shared(cfg: dict[str, Any], title: str, message: str, level: str, push_on: bool) -> dict[str, Any]:

@@ -350,6 +350,7 @@ class RansomwareGuard:
                 level="critical",
                 event_type="security",
                 dedup_key="ransomware-guard",
+                record=False,
             )
         except Exception:
             logger.warning("[RansomwareGuard] Could not send the alert", exc_info=True)

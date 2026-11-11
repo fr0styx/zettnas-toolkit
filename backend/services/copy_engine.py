@@ -97,6 +97,7 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
                 {
                     "type": "media",
                     "title": f"{slot_label} Detected",
+                    "record": False,
                     "message": f"{mb} MB card detected on /dev/{curr_dev}. Ready for import.",
                     "level": "info",
                 }
@@ -193,6 +194,7 @@ def _maybe_trigger_auto_ingest(slot: str, dev: str | None = None, size: int | No
                 "type": "media",
                 "title": "Auto-Ingest Started",
                 "message": f"Automatically importing photos from {slot.upper()} card to {job_cfg['dest']}",
+                "record": False,
                 "level": "info",
             }
         )
@@ -629,6 +631,7 @@ async def _do_copy(cfg):
                 level="normal",
                 event_type="copy",
                 dedup_key="copy_finished",
+                record=False,  # _note_copy_done wrote the entry
             )
             Z_STATE.copy.update(file="Finished successfully.")
 
@@ -644,6 +647,7 @@ async def _do_copy(cfg):
             level="warning",
             event_type="copy",
             dedup_key="copy_failed",
+            record=False,
         )
         try:
             send_led_packet(5, 255, 0, 0, 0, 0, 0, speed=10)

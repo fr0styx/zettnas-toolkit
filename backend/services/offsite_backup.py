@@ -597,6 +597,7 @@ def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str,
         if count[0]:
             job_manager.update(job.id, detail=f"{count[0]} files could not be read")
         job_manager.finish(job.id, "done")
+        _log_finished(str(repo.get("name") or repo_id))
         return result
     except ResticError as e:
         _update(repo_id, last_result=f"failed: {e}"[:300])
@@ -951,6 +952,23 @@ def run_due(now: float | None = None) -> list[str]:
                 target=_safe, args=(drill, repo["id"]), daemon=True, name=f"offsite-drill-{repo['id']}"
             ).start()
     return started
+
+
+def _log_finished(name: str) -> None:
+    """A finished off-site backup as an entry in the event log; nothing is sent (SET-13)."""
+    try:
+        from backend.services.notifications import alert_text, send_notification
+
+        send_notification(
+            f"Off-site backup finished: {name}",
+            f"The off-site backup “{name}” finished.",
+            level="info",
+            event_type="backup",
+            text=alert_text("offsite_ok", name=name),
+            deliver=False,
+        )
+    except (ImportError, OSError, ValueError, RuntimeError, TypeError):
+        logger.debug("offsite: the finished backup was not logged", exc_info=True)
 
 
 def _safe(fn: Any, repo_or_id: Any, *args: Any, **kwargs: Any) -> None:
