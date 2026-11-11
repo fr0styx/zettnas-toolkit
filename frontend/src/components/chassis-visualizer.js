@@ -975,6 +975,23 @@ export function foundPoolsHtml(found) {
     </div>`).join('');
 }
 
+/** Imports a pool that the look found, and draws the pools again. */
+export async function importFoundPool(container, importBtn) {
+  const pid = importBtn.dataset.poolId;
+  const fstype = importBtn.dataset.fsType || 'zfs';
+  try {
+    importBtn.disabled = true;
+    setIconLabel(importBtn, '⏳', t('ui.importing', 'Importing...'));
+    await api.post('/api/storage/pools/import', { pool_id: pid, fs_type: fstype });
+    showToast(t('toast.successfully_imported_storage_pool', 'Successfully imported storage pool \'{pid}\'!', { pid: pid }), 'success');
+    await fetchAndRenderStorageTopology(container);
+  } catch (err) {
+    showToast(err.message || `Failed to import pool '${pid}'`, 'error');
+    importBtn.disabled = false;
+    setIconLabel(importBtn, '📥', t('ui.import_pool', 'Import Pool'));
+  }
+}
+
 /** Looks for pools on drives that belong to none yet, on a press of the button. */
 export async function lookForPools(container, button) {
   if (button) button.disabled = true;
@@ -985,6 +1002,12 @@ export async function lookForPools(container, button) {
       showToast(t('chassis.no_other_pool', 'No other pool was found.'), 'info');
     } else {
       container.insertAdjacentHTML('afterbegin', foundPoolsHtml(found));
+      container.querySelectorAll('.external-pools-banner .btn-import-external-pool').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          importFoundPool(container, /** @type {HTMLButtonElement} */ (btn));
+        });
+      });
     }
   } catch (err) {
     showToast(t('chassis.look_failed', 'Could not look for pools: {error}', { error: err.message || String(err) }), 'error');

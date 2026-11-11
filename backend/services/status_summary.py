@@ -165,7 +165,7 @@ def _power() -> list[dict[str, Any]]:
 
     ups = read_ups_status() or {}
     # every connection type: Overview knew one spelling ("OB") and missed a power cut on the others
-    if ups.get("available") and ups_state.power_state(ups.get("status")) == ups_state.ON_BATTERY:
+    if ups_state.power_state(ups.get("status")) == ups_state.ON_BATTERY:
         out.append({"id": "ups:battery", "level": "warning", "kind": "on_battery", "subject": "", "open": "power"})
     if getattr(Z_STATE, "critical_temp_active", False):
         out.append({"id": "temp:critical", "level": "critical", "kind": "too_hot", "subject": "", "open": "activity"})

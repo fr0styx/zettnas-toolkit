@@ -567,6 +567,8 @@ def usable_fan_settings(saved, defaults: dict) -> dict:
             continue
         default = defaults.get(key)
         if isinstance(default, bool):
+            if isinstance(value, int) and not isinstance(value, bool) and value in (0, 1):
+                value = bool(value)  # a switch saved as 0 or 1 is still that switch
             if not isinstance(value, bool):
                 continue
         elif isinstance(default, (int, float)):

@@ -19,6 +19,9 @@ DEFAULTS = {"profile": "auto", "manual_pct": 60, "ctrl_cpu_fan": False, "zero_rp
         ({"zero_rpm_stop_delay": "soon"}, DEFAULTS),
         ({"manual_pct": True}, DEFAULTS),  # a switch is not a number
         ({"ctrl_cpu_fan": "yes"}, DEFAULTS),
+        ({"ctrl_cpu_fan": 1}, {**DEFAULTS, "ctrl_cpu_fan": True}),  # a switch saved as 1 stays on
+        ({"ctrl_cpu_fan": 0}, DEFAULTS),
+        ({"ctrl_cpu_fan": 2}, DEFAULTS),
         ({"profile": 3}, DEFAULTS),
         ("not a dict", DEFAULTS),
         (None, DEFAULTS),

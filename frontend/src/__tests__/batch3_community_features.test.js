@@ -167,6 +167,7 @@ describe('Batch 3 Community Features Suite', () => {
           return Promise.resolve({
             platform: 'generic_linux',
             capabilities: { can_create_pools: true },
+            can_look_for_pools: true,
           });
         }
         if (url === '/api/storage/pools/discover') {
@@ -190,6 +191,10 @@ describe('Batch 3 Community Features Suite', () => {
       });
 
       await fetchAndRenderStorageTopology(container);
+      // looking for pools on other drives is a button now, not part of every opening (SET-09)
+      expect(container.querySelector('.external-pools-banner')).toBeNull();
+      container.querySelector('[data-look-for-pools]').click();
+      await vi.waitFor(() => expect(container.querySelector('.external-pools-banner')).not.toBeNull());
 
       const banner = container.querySelector('.external-pools-banner');
       expect(banner).not.toBeNull();

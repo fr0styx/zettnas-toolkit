@@ -301,6 +301,9 @@ def startup_system():
     # while two of them run; 20 ms cuts those wakeups at no visible cost (PERF-5)
     sys.setswitchinterval(SETTINGS.gil_switch_secs)  # a typo keeps the default (NARC-8)
     setup_structured_logging()
+    from backend import users_db
+
+    users_db.on_status_change(_family_signin_follows_status)  # sign-in to other apps follows a person's status
     from backend.services.supervisor import install_os_thread_names
 
     install_os_thread_names()  # threads show their names in top and /proc
@@ -563,9 +566,6 @@ async def lifespan(app: FastAPI):
     threading.Thread(target=_open_encrypted_folders, name="EncryptedFolders", daemon=True).start()
     threading.Thread(target=_rejoin_app_networks, name="AppNetworks", daemon=True).start()
     threading.Thread(target=_refresh_share_access, name="ShareAccess", daemon=True).start()
-    from backend import users_db
-
-    users_db.on_status_change(_family_signin_follows_status)
     _start_home_assistant()
     try:
         yield

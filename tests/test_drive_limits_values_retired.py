@@ -31,13 +31,13 @@ def test_the_limit_is_kept_with_the_details():
 
 def test_the_rules_use_the_drives_own_limit():
     r = {"protocol": "ata", "temp_c": 47, "attributes": {}}
-    assert drive_health.temp_limits(r, False) == (50, 60)
+    assert drive_health.temp_limits(r, False) == (50, 55)  # the limits of the alerts and the fans (SET-09)
     assert not [f for f in drive_health.findings_for(r) if f["kind"] == "cooling"]
     r["temp_limit"] = 45
     assert drive_health.temp_limits(r, False) == (45, 55)
     warm = [f for f in drive_health.findings_for(r) if f["kind"] == "cooling"]
     assert warm[0]["code"] == "warm" and warm[0]["params"]["limit"] == 45
-    assert drive_health.temp_limits({"temp_limit": 200}, True) == (70, 80)
+    assert drive_health.temp_limits({"temp_limit": 200}, True) == (70, 75)
 
 
 def test_alerts_use_the_drives_own_limit():

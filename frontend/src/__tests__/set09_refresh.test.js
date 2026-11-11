@@ -87,6 +87,15 @@ describe('no invented picture, no scan on opening', () => {
     expect(box.querySelectorAll('.external-pools-banner')).toHaveLength(1); // they piled up, one per Refresh
     expect(box.querySelector('.btn-import-external-pool').dataset.poolId).toBe('backup<1>');
     expect(box.innerHTML).not.toContain('backup<1>'); // escaped
+    // and its Import button works
+    const post = vi.spyOn(api, 'post').mockResolvedValue({ status: 'imported' });
+    get.mockResolvedValue({ pools: [] });
+    box.querySelector('.btn-import-external-pool').click();
+    await vi.waitFor(() => expect(post).toHaveBeenCalledWith('/api/storage/pools/import', { pool_id: 'backup<1>', fs_type: 'zfs' }));
+    await vi.waitFor(() => expect(box.textContent).toContain('No storage pool was found here.'));
+    box.innerHTML = '<div class="external-pools-banner">old</div>';
+    get.mockResolvedValue({ discovered_pools: [{ pool_id: 'backup<1>', fs_type: 'zfs', status: 'ONLINE' }] });
+    await lookForPools(box, null);
 
     get.mockResolvedValue({ discovered_pools: [] });
     await lookForPools(box, null);

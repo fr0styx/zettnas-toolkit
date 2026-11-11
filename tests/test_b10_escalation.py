@@ -50,8 +50,9 @@ def test_turning_off_two_factor_needs_password_and_code_and_is_rate_limited(clie
     monkeypatch.setattr(auth, "disable_user_mfa", lambda uid: calls.__setitem__("n", calls["n"] + 1) or True)
     monkeypatch.setattr(auth, "_is_person_session", lambda user: True)
     url = "/api/auth/mfa/disable"
-    assert client.post(url, json={"password": "admin"}, headers=auth_headers).status_code == 401  # no code
-    assert client.post(url, json={"code": "123456"}, headers=auth_headers).status_code == 401  # no password
+    # 403, not 401: the app reads a 401 as "signed out" (SET-10)
+    assert client.post(url, json={"password": "admin"}, headers=auth_headers).status_code == 403  # no code
+    assert client.post(url, json={"code": "123456"}, headers=auth_headers).status_code == 403  # no password
     assert calls["n"] == 0
     statuses = [
         client.post(url, json={"password": "wrong", "code": "000000"}, headers=auth_headers).status_code

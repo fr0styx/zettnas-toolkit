@@ -267,7 +267,7 @@ def test_mfa_recovery_code_login_and_disable(test_env):
 
     # 5. Disable MFA: the password alone is not enough (SEC-27); password + a recovery code is
     weak = client.post("/api/auth/mfa/disable", headers=headers, json={"password": "SecurePassword456!"})
-    assert weak.status_code == 401
+    assert weak.status_code == 403  # not 401, which the app reads as "signed out" (SET-10)
     disable_res = client.post(
         "/api/auth/mfa/disable",
         headers=headers,

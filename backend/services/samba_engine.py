@@ -656,8 +656,8 @@ class SambaEngine:
             if subprocess.run(cmd, capture_output=True, timeout=3).returncode == 0:
                 logger.info("[SambaEngine] Network account of '%s' %s.", username, "on" if enabled else "off")
                 return True
-        except (FileNotFoundError, subprocess.SubprocessError):
-            pass
+        except (FileNotFoundError, subprocess.SubprocessError) as e:
+            logger.debug("[SambaEngine] no local smbpasswd for %s (%s): trying the Samba container", username, e)
         sidecar_info = self.check_sidecar()
         docker_sock = _docker_sock_path()
         if not (sidecar_info.get("detected") and os.path.exists(docker_sock)):
