@@ -18,6 +18,7 @@ export function standbyReason(fc, remaining) {
 }
 import { showToast } from '../toast.js';
 import { manualChange, modeChange, saveFans } from './fan-save.js';
+import { FIXED_PCT, askFixedSpeed } from './fan-modes.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -26,6 +27,19 @@ let dragIndex = -1;
 let _curveInitialized = false;
 let _lastCurveSaveTime = 0;
 let currentFanProfile = 'auto';
+let _localChangeAt = 0; // a change made here wins over the stream for a moment (until it is saved)
+
+/**
+ * The Fans tab follows the live stream, so a mode chosen on the Host tab shows here too: the tab
+ * used to keep its own stale mode and undo the other choice with its next change (Hardware 6).
+ */
+export function syncFanModeFromStream(fc, now = Date.now()) {
+  const prof = fc && typeof fc.profile === 'string' ? fc.profile.toLowerCase() : '';
+  if (!prof || prof === currentFanProfile || now - _localChangeAt < 3000) return false;
+  currentFanProfile = prof;
+  document.querySelectorAll('.fan-profile-btn').forEach((b) => b.classList.toggle('active', /** @type {HTMLElement} */ (b).dataset.fanProfile === prof));
+  return true;
+}
 
 export function tempToX(t) { return 38 + ((Math.max(30, Math.min(60, t)) - 30) / 30) * (285 - 38); }
 export function xToTemp(x) { return Math.round(30 + ((x - 38) / (285 - 38)) * 30); }
@@ -111,6 +125,7 @@ export function renderCurveLines() {
 export function updateFanCurveWorkstation(s) {
   if (!s || !s.fan_control) return;
   const fc = s.fan_control;
+  syncFanModeFromStream(fc);
 
   if ($('zp-z1-temp')) $('zp-z1-temp').textContent = `${fc.zone1_temp}°C`;
   if ($('zp-z1-pwm')) {
@@ -378,7 +393,7 @@ export function initFanControl() {
     if (fanPwmVal) {
       if (profile === 'manual') {
         const val = pct !== undefined ? pct : (fanPwmSlider ? fanPwmSlider.value : 60);
-        fanPwmVal.textContent = t('fan.manual_active', '{pct}% (Manual Active)', { pct: val });
+        fanPwmVal.textContent = t('fan.manual_active', 'Fixed {pct} %', { pct: val });
         fanPwmVal.style.color = 'var(--ok2)';
         fanPwmVal.style.opacity = '1';
         fanPwmVal.style.fontWeight = '700';
@@ -476,19 +491,31 @@ export function initFanControl() {
   fanProfileBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const pr = btn.dataset.fanProfile;
-      const map = { auto: 60, quiet: 37, balanced: 66, performance: 85, full: 100 };
-      const pct = map[pr] || 60;
-      updateFanUiState(pr, pct);
-      saveChange(modeChange(pr));
+      const apply = () => {
+        _localChangeAt = Date.now();
+        updateFanUiState(pr, FIXED_PCT[pr] ?? 60);
+        saveChange(modeChange(pr));
+      };
+      // a fixed speed does not follow the temperature: ask first (SET-15, Hardware 1)
+      if (pr in FIXED_PCT) askFixedSpeed(FIXED_PCT[pr], apply);
+      else apply();
     });
   });
 
   if (fanPwmSlider) {
-    fanPwmSlider.addEventListener('input', (e) => {
-      const val = parseInt(e.target.value, 10);
-      updateFanUiState('manual', val);
+    // the number follows the slider; the speed is applied on release, after asking (Hardware 1)
+    const slider = /** @type {HTMLInputElement} */ (fanPwmSlider);
+    slider.addEventListener('input', () => {
+      if (fanPwmVal) fanPwmVal.textContent = t('fan.manual_active', 'Fixed {pct} %', { pct: parseInt(slider.value, 10) });
+    });
+    slider.addEventListener('change', () => {
+      const val = parseInt(slider.value, 10);
       clearTimeout(fanPwmDebounce);
-      fanPwmDebounce = setTimeout(() => saveChange(manualChange(val)), 120);
+      askFixedSpeed(val, () => {
+        _localChangeAt = Date.now();
+        updateFanUiState('manual', val);
+        saveChange(manualChange(val));
+      }, () => fetchFanState());
     });
   }
 

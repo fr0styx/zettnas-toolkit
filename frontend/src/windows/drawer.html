@@ -579,11 +579,11 @@
         </div>
         <div class="card-instruction" data-i18n="settings.cooling_duty_desc">Select dynamic thermal scaling or fixed duty presets mapped across disk fans.</div>
         <div class="profiles-grid drw-x-8">
-          <button class="profile-pill fan-profile-btn active" data-fan-profile="auto"><span aria-hidden="true">⚡</span> <span data-i18n="dr.auto_dynamic">Auto Dynamic</span></button>
-          <button class="profile-pill fan-profile-btn" data-fan-profile="quiet" data-i18n="dr.quiet_67">Quiet (67)</button>
-          <button class="profile-pill fan-profile-btn" data-fan-profile="balanced" data-i18n="dr.balanced_120">Balanced (120)</button>
-          <button class="profile-pill fan-profile-btn" data-fan-profile="performance" data-i18n="dr.perf_155">Perf (155)</button>
-          <button class="profile-pill fan-profile-btn" data-fan-profile="full" data-i18n="dr.full_183">Full (183)</button>
+          <button class="profile-pill fan-profile-btn active" data-fan-profile="auto"><span aria-hidden="true">⚡</span> <span data-i18n="dr.auto_dynamic">Automatic</span></button>
+          <button class="profile-pill fan-profile-btn" data-fan-profile="quiet" data-i18n="dr.quiet_67">Quiet · 37 %</button>
+          <button class="profile-pill fan-profile-btn" data-fan-profile="balanced" data-i18n="dr.balanced_120">Balanced · 66 %</button>
+          <button class="profile-pill fan-profile-btn" data-fan-profile="performance" data-i18n="dr.perf_155">Performance · 85 %</button>
+          <button class="profile-pill fan-profile-btn" data-fan-profile="full" data-i18n="dr.full_183">Full · 100 %</button>
         </div>
         <div id="fan-presets-bar" class="fan-presets-bar">
           <div class="fan-presets-header">
@@ -621,7 +621,7 @@
         </div>
         <div class="card-instruction" data-i18n="settings.manual_pwm_desc">Directly commands pwmX_enable = 1 and sets duty cycles 0-183.</div>
         <div class="slider-row">
-          <input type="range" id="fan-pwm-slider" min="10" max="100" value="60" step="1" class="custom-slider">
+          <input type="range" id="fan-pwm-slider" min="32" max="100" value="60" step="1" class="custom-slider">
         </div>
       </div>
 

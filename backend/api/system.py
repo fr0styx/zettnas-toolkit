@@ -31,7 +31,6 @@ from backend.config import (
     DASH_LAYOUT_FILE,
     EVENTS_FILE,
     FAN_STATE_FILE,
-    LED_STATE_FILE,
     docker_sock,
     logger,
 )
@@ -40,8 +39,6 @@ from backend.db import query_copy_history
 from backend.fsutil import atomic_write_json, json_locked, read_json, resolve_within, root_for
 from backend.hardware.disks import is_drive_asleep, locate_disk, read_smart_detail, run_disk_smart_test
 from backend.hardware.docker_stats import container_action, read_docker_containers
-from backend.hardware.fans import set_fan_pwm
-from backend.hardware.led import apply_led_state
 from backend.hardware.memory import read_mem
 from backend.hardware.pal_storage import get_storage_platform
 from backend.hardware.screen import get_screen_state, save_screen_state
@@ -627,42 +624,15 @@ def get_unraid_telemetry():
 @router.post("/system/profile", dependencies=[Depends(require_scope("system:config"))])
 @json_locked(lambda *a, **k: FAN_STATE_FILE)
 def set_system_profile(req: SystemProfileRequest):
+    """The Host tab's cooling mode. It is saved and the fan loop applies it on its next pass (within
+    2 s): writing the fans from here raced the loop. The light keeps its own brightness; the mode
+    used to set it to 20, 50 or 100 % and never gave it back (SET-15, Hardware decision 4)."""
     profile = req.profile.lower()
-    # Profile mappings:
-    # auto: fan auto dynamic curve, LED dynamic/current
-    # quiet: fan quiet (37%), LED 20%
-    # balanced: fan balanced (60%), LED 50%
-    # performance: fan performance (85%), LED 100%
     fan_cfg = read_json(FAN_STATE_FILE, {})
-    led_cfg = read_json(LED_STATE_FILE, {})
-
-    if profile == "auto":
-        fan_cfg["profile"] = "auto"
-        led_cfg["brightness"] = led_cfg.get("brightness", 50)
-    elif profile == "quiet":
-        fan_cfg["profile"] = "quiet"
-        fan_cfg["manual_pct"] = 37
-        led_cfg["brightness"] = 20
-    elif profile == "performance":
-        fan_cfg["profile"] = "performance"
-        fan_cfg["manual_pct"] = 85
-        led_cfg["brightness"] = 100
-    else:  # balanced
-        fan_cfg["profile"] = "balanced"
-        fan_cfg["manual_pct"] = 60
-        led_cfg["brightness"] = 50
-
+    fan_cfg["profile"] = profile if profile in ("auto", "quiet", "performance") else "balanced"
     atomic_write_json(FAN_STATE_FILE, fan_cfg)
-    atomic_write_json(LED_STATE_FILE, led_cfg)
-
-    if not Z_STATE.critical_temp_active:
-        set_fan_pwm(fan_cfg["profile"], fan_cfg.get("manual_pct", 60), ctrl_cpu_fan=fan_cfg.get("ctrl_cpu_fan", False))
-    else:
-        logger.warning("[FANS] Critical temperature active; preserving maximum fan PWM clamp.")
-    apply_led_state(led_cfg)
     Z_STATE.ui_wake.set()
-
-    return {"status": "ok", "profile": profile, "fan": fan_cfg, "led": led_cfg}
+    return {"status": "ok", "profile": fan_cfg["profile"], "fan": fan_cfg}
 
 
 class TokenCreateRequest(BaseModel):

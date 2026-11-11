@@ -529,6 +529,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   switch the NAS off in a real power cut) stays on the page with the date of the last run, in your
   language, instead of a pop-up that vanished after a few seconds.
 
+#### Changes
+
+- **The two fan choosers agree.** A cooling mode chosen on the Host tab now shows on the Fans tab
+  too, and the Host tab no longer highlights a mode the fans are not in.
+- **Fan modes say what they do.** Quiet, Balanced, Performance and Full are fixed speeds; they are now
+  labelled with the real speed (37, 66, 85 and 100 %) and ask before they are used, because a fixed
+  speed does not follow the temperature. The speed slider starts at 32 %, the slowest the fans run,
+  and applies when you let go.
+- **The cooling mode leaves the light alone.** Choosing Quiet no longer dims the light to 20 %.
+- A refused cooling change says so and shows the mode the fans really have.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

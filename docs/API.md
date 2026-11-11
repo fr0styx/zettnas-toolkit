@@ -857,7 +857,7 @@ request and response schemas.
 | `PUT` | `/api/v1/system/identity` | `system:config` | Put Server Identity |
 | `POST` | `/api/v1/system/identity/detected-timezone` | `system:config` | An administrator's browser zone, used only while the server has none |
 | `GET` | `/api/v1/system/network-topology` | any of `system:view`, `system:config` | Expose complete host networking topology, physical NIC carrier states, link negotiation speeds (10GbE / 2.5GbE / 1GbE / 100M), duplex, MT… |
-| `POST` | `/api/v1/system/profile` | `system:config` | Set System Profile |
+| `POST` | `/api/v1/system/profile` | `system:config` | The Host tab's cooling mode |
 | `GET` | `/api/v1/system/protection` | `system:view` | The copies outside this NAS, for the Overview (FEAT-01) |
 | `POST` | `/api/v1/system/reboot` | `system:power` | Trigger system reboot (requires system:power scope) |
 | `GET` | `/api/v1/system/redfish` | `system:config` | Whether the Redfish interface for monitoring tools answers (off by default, SET-01) |

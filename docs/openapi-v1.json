@@ -36335,9 +36335,6 @@
      "fan": {
       "$ref": "#/components/schemas/SetSystemProfileResponseFan"
      },
-     "led": {
-      "$ref": "#/components/schemas/SetSystemProfileResponseLed"
-     },
      "profile": {
       "title": "Profile",
       "type": "string"
@@ -36349,7 +36346,6 @@
     },
     "required": [
      "fan",
-     "led",
      "profile",
      "status"
     ],
@@ -36383,24 +36379,6 @@
      }
     },
     "title": "SetSystemProfileResponseFan",
-    "type": "object"
-   },
-   "SetSystemProfileResponseLed": {
-    "additionalProperties": true,
-    "properties": {
-     "brightness": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Brightness"
-     }
-    },
-    "title": "SetSystemProfileResponseLed",
     "type": "object"
    },
    "SetupMfaResponse": {
@@ -68194,6 +68172,7 @@
   },
   "/api/v1/system/profile": {
    "post": {
+    "description": "The Host tab's cooling mode. It is saved and the fan loop applies it on its next pass (within\n2 s): writing the fans from here raced the loop. The light keeps its own brightness; the mode\nused to set it to 20, 50 or 100 % and never gave it back (SET-15, Hardware decision 4).",
     "operationId": "set_system_profile_api_v1_system_profile_post",
     "requestBody": {
      "content": {

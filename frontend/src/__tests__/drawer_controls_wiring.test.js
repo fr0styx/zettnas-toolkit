@@ -63,7 +63,8 @@ describe('drawer controls are wired when the drawer arrives', () => {
     expect(warn).not.toHaveBeenCalled();
 
     api.post.mockClear();
-    document.querySelector('.fan-profile-btn[data-fan-profile="quiet"]').click();
+    // Automatic saves at once; a fixed speed asks first (SET-15, Hardware 1, tested in hw1a_fan_modes)
+    document.querySelector('.fan-profile-btn[data-fan-profile="auto"]').click();
     await settle();
     expect(api.post.mock.calls.length + api.put.mock.calls.length).toBeGreaterThan(0);
 

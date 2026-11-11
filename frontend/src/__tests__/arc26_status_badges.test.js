@@ -30,6 +30,6 @@ describe('status badges', () => {
   it('shows the manual fan speed', async () => {
     document.body.innerHTML = '<span id="fan-pwm-val-display"></span>';
     initFanControl();
-    await vi.waitFor(() => expect(document.getElementById('fan-pwm-val-display').textContent).toBe('70% (Manual Active)'));
+    await vi.waitFor(() => expect(document.getElementById('fan-pwm-val-display').textContent).toBe('Fixed 70 %')); // SET-15, Hardware 1
   });
 });

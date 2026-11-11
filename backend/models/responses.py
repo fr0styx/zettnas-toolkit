@@ -4468,15 +4468,10 @@ class SetSystemProfileResponseFan(_Doc):
     profile: str | None = None
 
 
-class SetSystemProfileResponseLed(_Doc):
-    brightness: float | None = None
-
-
 class SetSystemProfileResponse(_Doc):
     """POST /system/profile"""
 
     fan: SetSystemProfileResponseFan
-    led: SetSystemProfileResponseLed
     profile: str
     status: str
 

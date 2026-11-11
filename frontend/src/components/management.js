@@ -31,6 +31,7 @@ import { installAdvancedSwitch, renderStatusSummary } from './management/overvie
 import { installHealthSignal } from './management/health-signal.js';
 import { _aiSelectedColor, _aiSelectedScene, _getActiveAiSearchQuery, _renderAiRagInitialEmptyState, fetchAndRenderAiStatus, initAiKnowledgeEngine, runAiVisualSearch, setAiVisualFiltersDrawerOpen } from './management/ai.js';
 import { formatFixed } from '../format.js';
+import { FIXED_PCT, askFixedSpeed, modeName } from './fan-modes.js';
 
 export * from './management/docker.js';
 export * from './management/ups.js';
@@ -489,7 +490,8 @@ export function updateManagementTelemetry(stats) {
 
   if (stats.fan_control && stats.fan_control.profile) {
     const prof = stats.fan_control.profile.toLowerCase();
-    if (['auto', 'quiet', 'balanced', 'performance'].includes(prof) && prof !== _activeProfile) {
+    // a mode the Fans tab set (Full, or a speed by hand) highlights nothing here (Hardware 6)
+    if (prof !== _activeProfile) {
       _activeProfile = prof;
       document.querySelectorAll('.profile-btn').forEach((b) => {
         const isAct = b.dataset.profile === prof;
@@ -499,8 +501,8 @@ export function updateManagementTelemetry(stats) {
     }
     const currentPill = document.getElementById('unraid-profile-current-pill');
     if (currentPill) {
-      currentPill.textContent = `ACTIVE: ${prof === 'auto' ? 'AUTO DYNAMIC' : prof.toUpperCase()}`;
-      currentPill.style.color = prof === 'performance' ? 'var(--warn)' : 'var(--ok2)';
+      currentPill.textContent = t('hw.mode_now', 'Now: {mode}', { mode: modeName(prof, stats.fan_control.manual_pct) });
+      currentPill.style.color = prof === 'auto' ? 'var(--ok2)' : 'var(--c-muted)';
     }
   }
 
@@ -513,6 +515,25 @@ export function updateManagementTelemetry(stats) {
 
   const lcdTab = document.querySelector('.mgmt-inner-tab[data-tab-target="mgmt-pane-hardware-lcd"]');
   if (lcdTab) lcdTab.style.display = hasLcd ? '' : 'none';
+}
+
+/** The Host tab's cooling mode: shown at once, saved, and put back to the real mode if refused. */
+export async function chooseHostMode(p, btn, profileBtns) {
+  _activeProfile = p;
+  profileBtns.forEach((b) => {
+    const isAct = b === btn;
+    b.classList.toggle('active', isAct);
+    b.setAttribute('aria-checked', isAct ? 'true' : 'false');
+  });
+  const pill = document.getElementById('unraid-profile-current-pill');
+  if (pill) pill.textContent = t('hw.mode_now', 'Now: {mode}', { mode: modeName(p) });
+  try {
+    await api.post('/api/system/profile', { profile: p });
+    showToast(t('toast.system_profile_switched', 'Cooling: {profile}.', { profile: modeName(p) }), 'success');
+  } catch (err) {
+    _activeProfile = null; // the next live reading puts back the mode the fans really have
+    showToast(t('toast.failed_to_switch_profile', 'The cooling mode was not changed: {error}', { error: err.message }), 'error');
+  }
 }
 
 export function initManagement() {
@@ -1406,26 +1427,13 @@ export function initManagement() {
   // Profile buttons listener and keyboard navigation
   const profileBtns = Array.from(document.querySelectorAll('.profile-btn'));
   profileBtns.forEach((btn, idx) => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', () => {
       const p = btn.dataset.profile;
       if (!p) return;
-      _activeProfile = p;
-      profileBtns.forEach((b) => {
-        const isAct = b === btn;
-        b.classList.toggle('active', isAct);
-        b.setAttribute('aria-checked', isAct ? 'true' : 'false');
-      });
-      const pill = document.getElementById('unraid-profile-current-pill');
-      if (pill) {
-        pill.textContent = `ACTIVE: ${p === 'auto' ? 'AUTO DYNAMIC' : p.toUpperCase()}`;
-        pill.style.color = p === 'performance' ? 'var(--warn)' : 'var(--ok2)';
-      }
-      try {
-        await api.post('/api/system/profile', { profile: p });
-        showToast(t('toast.system_profile_switched', 'System profile switched to {profile}.', { profile: p === 'auto' ? t('toast.profile_auto', 'Automatic') : p.toUpperCase() }), 'success');
-      } catch (err) {
-        showToast(t('toast.failed_to_switch_profile', 'Failed to switch profile: {error}', { error: err.message }), 'error');
-      }
+      const apply = () => chooseHostMode(p, btn, profileBtns);
+      // a fixed speed does not follow the temperature: ask first (SET-15, Hardware 1)
+      if (p in FIXED_PCT) askFixedSpeed(FIXED_PCT[p], apply);
+      else apply();
     });
 
     btn.addEventListener('keydown', (e) => {
