@@ -945,7 +945,7 @@ export function statsView(raw) {
   if (!raw || typeof raw !== 'object') return raw;
   const view = { ...(state.latestStats || raw) };
   if (!('docker' in raw) && !('docker_tel' in raw)) delete view.docker;
-  if (!('events' in raw)) delete view.events;
+  if (!('events' in raw) && !('events_new' in raw)) delete view.events;
   if (!('remotes_event' in raw)) delete view.remotes_event;
   return view;
 }

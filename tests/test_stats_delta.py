@@ -50,6 +50,12 @@ def _tick(**over):
 def _merge(state, msg):
     """Mirror of frontend state.setStats merge, used to prove round-trips."""
     msg = dict(msg)
+    fresh = msg.pop("events_new", None)
+    if fresh is not None:
+        ids = {e["id"] for e in fresh}
+        merged = fresh + [e for e in state.get("events", []) if e["id"] not in ids]
+        merged.sort(key=lambda e: (e.get("last_ts") or e["ts"], e["id"]), reverse=True)
+        msg["events"] = merged[:100]
     tel = msg.pop("docker_tel", None)
     if tel and isinstance(state.get("docker"), list):
         msg["docker"] = [{**c, **tel[c["id"]]} if c["id"] in tel else c for c in state["docker"]]
@@ -157,3 +163,61 @@ def test_full_queue_resyncs_with_snapshot_instead_of_dropping():
         assert json.loads(q.get_nowait()[len("data: ") :]) == {"cpu": 9, "mem": 3}
 
     asyncio.run(run())
+
+
+def _event(n, **over):
+    return {
+        "id": n,
+        "ts": 1000 + n,
+        "level": "info",
+        "title": f"Entry {n}",
+        "message": "something happened " * 3,
+        **over,
+    }
+
+
+def test_only_new_and_changed_log_entries_are_sent():
+    """SET-13: one new entry sent the whole list of up to 100 again."""
+    clock = FakeClock()
+    enc = StatsDeltaEncoder(clock=clock)
+    events = [_event(n) for n in range(100, 0, -1)]
+    state = enc.encode(_tick(events=events))
+    assert len(state["events"]) == 100
+    clock.t += 2
+    assert "events" not in enc.encode(_tick(events=events)) and "events_new" not in enc.encode(_tick(events=events))
+
+    # a new entry pushes the oldest out
+    events = [_event(101), *events[:99]]
+    msg = enc.encode(_tick(events=events))
+    assert "events" not in msg and msg["events_new"] == [_event(101)]
+    assert len(json.dumps(msg)) < len(json.dumps(events)) / 20  # the stream is not larger: far smaller
+    state = _merge(state, msg)
+    assert state["events"] == events
+
+    # a repeat is counted on its entry, which becomes the newest
+    again = _event(50, count=2, last_ts=5000)
+    events = [again, *[e for e in events if e["id"] != 50]]
+    msg = enc.encode(_tick(events=events))
+    assert msg["events_new"] == [again]
+    state = _merge(state, msg)
+    assert state["events"] == events
+
+    # the log was cleared: the list itself is sent
+    msg = enc.encode(_tick(events=[]))
+    assert msg["events"] == [] and "events_new" not in msg
+    state = _merge(state, msg)
+    msg = enc.encode(_tick(events=[_event(102)]))
+    assert msg["events_new"] == [_event(102)]
+    assert _merge(state, msg)["events"] == [_event(102)]
+
+    # a keyframe carries the whole list, so a client can never drift for long
+    clock.t += 301
+    assert enc.encode(_tick(events=[_event(102)]))["events"] == [_event(102)]
+
+
+def test_entries_without_an_id_are_sent_whole_as_before():
+    enc = StatsDeltaEncoder(clock=FakeClock())
+    enc.encode(_tick())
+    assert "events" not in enc.encode(_tick())
+    msg = enc.encode(_tick(events=[{"ts": 2, "msg": "again"}, {"ts": 1, "msg": "boot"}]))
+    assert msg["events"][0]["msg"] == "again" and "events_new" not in msg

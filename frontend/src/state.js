@@ -69,6 +69,21 @@ export function mergeDockerTelemetry(s, current) {
   return rest;
 }
 
+// New and changed event-log entries arrive as `events_new` (SET-13); fold them into the list by
+// id, the most recently seen first, as the server keeps it.
+export const EVENTS_KEPT = 100;
+export function mergeNewEvents(s, current) {
+  if (!s || !Array.isArray(s.events_new)) return s;
+  const { events_new: fresh, ...rest } = s;
+  const base = Array.isArray(rest.events) ? rest.events : current && Array.isArray(current.events) ? current.events : [];
+  const ids = new Set(fresh.map((e) => e.id));
+  const seen = (e) => e.last_ts || e.ts || 0;
+  rest.events = [...fresh, ...base.filter((e) => !ids.has(e.id))]
+    .sort((a, b) => seen(b) - seen(a) || (b.id || 0) - (a.id || 0))
+    .slice(0, EVENTS_KEPT);
+  return rest;
+}
+
 export const state = {
   isLcdDirect: typeof window !== 'undefined' && (window.location.search.includes('mode=lcd') || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct'))),
   isVmConsoleDirect: typeof window !== 'undefined' && (window.location.search.includes('mode=vm-console') || (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct'))),
@@ -103,7 +118,7 @@ export const state = {
 
   setStats(s) {
     if (!s) return false;
-    s = mergeDockerTelemetry(s, this.latestStats);
+    s = mergeNewEvents(mergeDockerTelemetry(s, this.latestStats), this.latestStats);
     if (!this.latestStats) {
       this.latestStats = s;
       ZettEventBus.emit('stats:updated', this.latestStats);

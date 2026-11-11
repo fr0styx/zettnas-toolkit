@@ -14,6 +14,11 @@ Containers get special handling because the full list is large
 - Otherwise ``docker_tel`` carries just the changed live fields per
   container id, e.g. ``{"abc123": {"cpu_pct": 2.5, "mem_used": 1048576}}``.
 
+The event log gets the same treatment (SET-13): the list is up to 100 entries and changes one
+entry at a time, so ``events_new`` carries only the entries that are new or whose count
+changed, by id. The full ``events`` list is sent when entries went away (the log was cleared)
+and with every keyframe.
+
 A full tick (keyframe) is sent every ``KEYFRAME_SECS`` so a client can
 never drift for long, and new subscribers always start from a full
 snapshot (see ``StatsBroadcaster.subscribe``).
@@ -54,6 +59,7 @@ class StatsDeltaEncoder:
         self._last: dict[str, str] = {}
         self._last_docker_structure: str | None = None
         self._last_docker_tel: dict[str, dict[str, Any]] = {}
+        self._last_events: dict[Any, str] = {}
         self._last_keyframe: float | None = None
 
     def encode(self, data: dict[str, Any]) -> dict[str, Any]:
@@ -62,7 +68,7 @@ class StatsDeltaEncoder:
 
         out: dict[str, Any] = {}
         for key, value in data.items():
-            if key == "docker":
+            if key in ("docker", "events"):
                 continue
             ser = fast_dumps(value)
             if keyframe or self._last.get(key) != ser:
@@ -87,6 +93,26 @@ class StatsDeltaEncoder:
                     out["docker_tel"] = delta
             self._last_docker_tel = tel
 
+        events = data.get("events")
+        if isinstance(events, list):
+            self._encode_events(events, keyframe, out)
+
         if keyframe:
             self._last_keyframe = now
         return out
+
+    def _encode_events(self, events: list[Any], keyframe: bool, out: dict[str, Any]) -> None:
+        """`events` in full, or only what is new or changed as `events_new`."""
+        whole = fast_dumps(events)
+        ser = {e.get("id"): fast_dumps(e) for e in events if isinstance(e, dict)}
+        by_id = None not in ser and len(ser) == len(events)  # entries without an id can only be sent whole
+        last = self._last_events
+        went_away = bool(last.keys() - ser.keys()) and len(events) < len(last)  # cleared, not pushed out
+        if keyframe or ((not by_id or went_away) and whole != self._last.get("events")):
+            out["events"] = events
+        elif by_id and not went_away:
+            changed = [e for e in events if last.get(e["id"]) != ser[e["id"]]]
+            if changed:
+                out["events_new"] = changed
+        self._last_events = ser if by_id else {}
+        self._last["events"] = whole

@@ -101,6 +101,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   quarantine.** Camera alerts from Frigate and sign-in alerts stay out of the log that everyone
   with the view right reads.
 
+#### Changes
+
+- **The live stream sends only the log entries that are new.** One new entry sent the whole event
+  log again, up to 100 entries, to every open page. For API users of `/api/stats/stream`: between
+  the full messages (every five minutes) new and changed entries arrive as `events_new`, a list
+  to merge into `events` by `id`; `events` itself is still sent in full with every keyframe and
+  when the log was cleared. `/api/stats` is unchanged.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
