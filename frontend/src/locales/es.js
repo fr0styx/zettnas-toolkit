@@ -3814,6 +3814,8 @@ export default {
   "backup.apps_failed": "No se pudieron cargar las copias de apps: {error}",
   "users.admin_only": "Solo los administradores pueden ver la lista de personas.",
   "role.auditor_option": "Observador: puede ver, no cambiar",
+  "role.guest_option": "Invitado: puede ver las carpetas compartidas que elijas",
+  "role.kid_option": "Niño: su propia carpeta, las carpetas compartidas que elijas y las normas para niños",
   "role.share_user_option": "Miembro de la familia: su propia carpeta y las carpetas compartidas que elijas",
   "role.backup_operator_option": "Gestión de copias: copias de seguridad y en la nube",
   "role.app_operator_option": "Gestión de apps: instala y ejecuta apps",

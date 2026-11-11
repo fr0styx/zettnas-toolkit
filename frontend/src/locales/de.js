@@ -3814,6 +3814,8 @@ export default {
   "backup.apps_failed": "Die App-Backups konnten nicht geladen werden: {error}",
   "users.admin_only": "Nur Administratoren sehen die Liste der Personen.",
   "role.auditor_option": "Betrachter: kann ansehen, nicht ändern",
+  "role.guest_option": "Gast: kann die von Ihnen gewählten freigegebenen Ordner ansehen",
+  "role.kid_option": "Kind: eigener Ordner, die von Ihnen gewählten freigegebenen Ordner und die Regeln für Kinder",
   "role.share_user_option": "Familienmitglied: der eigene Ordner und die freigegebenen Ordner, die Sie wählen",
   "role.backup_operator_option": "Sicherungsverwaltung: Sicherungen und Cloud-Kopien",
   "role.app_operator_option": "App-Verwaltung: installiert und betreibt Apps",

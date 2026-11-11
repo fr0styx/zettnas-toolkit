@@ -3,6 +3,7 @@
  * Handles User inventory, Role assignment, Session revocation, and TOTP 2FA setup.
  */
 
+import { roleChange, showRole } from './role-change.js';
 import { onManagementDom } from '../management-dom.js';
 import { api, auth, apiFetch } from '../api.js';
 import {
@@ -387,7 +388,7 @@ export function showEditUserModal(user) {
   document.getElementById('edit-user-username').value = user.username;
   document.getElementById('edit-user-display').value = user.display_name || '';
   document.getElementById('edit-user-email').value = user.email || '';
-  document.getElementById('edit-user-role').value = user.role_id;
+  showRole(/** @type {HTMLSelectElement | null} */ (document.getElementById('edit-user-role')), user.role_id);
   const quotaGb = user.storage_quota_bytes > 0 ? Math.round(user.storage_quota_bytes / (1024 * 1024 * 1024)) : 0;
   document.getElementById('edit-user-quota').value = quotaGb || '';
 
@@ -424,7 +425,7 @@ export function showEditUserModal(user) {
           body: JSON.stringify({
             display_name: displayName,
             email,
-            role_id: roleId,
+            ...roleChange(roleId, user.role_id), // sent only when it was changed (SET-10)
             storage_quota_bytes: qVal > 0 ? qVal * 1024 * 1024 * 1024 : 0,
             ...(hoursBox && readHours && hoursChanged() ? { signin_hours: readHours(hoursBox) } : {})
           })

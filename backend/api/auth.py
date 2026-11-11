@@ -1203,9 +1203,13 @@ def update_user_endpoint(user_id: str, data: UserUpdateRequest, request: Request
         return error_response(403, "Permission denied.", error="forbidden")
 
     # Non-admins cannot alter their own role, status, or storage quota
-    role_to_set = data.role_id
+    role_to_set = (data.role_id or "").strip() or None  # an empty role is "not sent", not a role
     status_to_set = data.status
     quota_to_set = data.storage_quota_bytes
+    from backend.users_db import get_role
+
+    if role_to_set and not get_role(role_to_set):
+        return error_response(400, f"There is no role called '{role_to_set}'.", error="unknown_role")
     if not is_user_admin:
         role_to_set = None
         status_to_set = None

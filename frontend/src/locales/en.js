@@ -3814,6 +3814,8 @@ export default {
   "backup.apps_failed": "The app backups couldn't be loaded: {error}",
   "users.admin_only": "Only administrators can see the list of people.",
   "role.auditor_option": "Viewer: can look, can't change",
+  "role.guest_option": "Guest: can look at the shared folders you choose",
+  "role.kid_option": "Kid: their own folder, the shared folders you choose, and the kids' rules",
   "role.share_user_option": "Family member: their own folder and the shared folders you choose",
   "role.backup_operator_option": "Backup manager: backups and cloud copies",
   "role.app_operator_option": "App manager: installs and runs apps",

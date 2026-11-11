@@ -834,6 +834,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   as "your session ended": the sign-in screen appeared, and after signing in the same wrong
   request was sent again.
 
+#### Fixes
+
+- **A kid or a guest can be edited.** The Edit dialog listed six roles, without Kid and Guest. For
+  a kid the Role field was blank and "Save changes" sent an empty role: the server answered
+  "Something went wrong" and saved nothing, so neither the name nor the limit nor the sign-in
+  hours could be changed. Both role lists now offer all eight roles, the role is sent only when
+  you change it, and an unknown role is refused in plain words.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

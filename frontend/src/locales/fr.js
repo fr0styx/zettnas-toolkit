@@ -3814,6 +3814,8 @@ export default {
   "backup.apps_failed": "Les sauvegardes d'applications n'ont pas pu être chargées : {error}",
   "users.admin_only": "Seuls les administrateurs voient la liste des personnes.",
   "role.auditor_option": "Lecteur : peut consulter, pas modifier",
+  "role.guest_option": "Invité : peut consulter les dossiers partagés que vous choisissez",
+  "role.kid_option": "Enfant : son propre dossier, les dossiers partagés que vous choisissez et les règles pour enfants",
   "role.share_user_option": "Membre de la famille : son propre dossier et les dossiers partagés que vous choisissez",
   "role.backup_operator_option": "Gestion des sauvegardes : sauvegardes et copies cloud",
   "role.app_operator_option": "Gestion des applications : installe et gère les applications",

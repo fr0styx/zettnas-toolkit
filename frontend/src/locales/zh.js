@@ -3814,6 +3814,8 @@ export default {
   "backup.apps_failed": "无法加载应用备份：{error}",
   "users.admin_only": "只有管理员可以查看人员列表。",
   "role.auditor_option": "只读用户：可以查看，不能更改",
+  "role.guest_option": "访客：可以查看你选择的共享文件夹",
+  "role.kid_option": "儿童：自己的文件夹、你选择的共享文件夹，并适用儿童规则",
   "role.share_user_option": "家庭成员：自己的文件夹和你选择的共享文件夹",
   "role.backup_operator_option": "备份管理员：备份和云端副本",
   "role.app_operator_option": "应用管理员：安装和运行应用",
