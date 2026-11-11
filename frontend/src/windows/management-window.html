@@ -2704,6 +2704,7 @@
             <div id="ups-status-line" class="ups-status-line" data-state="none" role="status">
               <div class="ups-status-main"><span id="ups-status-icon" class="ups-status-icon" aria-hidden="true">○</span> <strong id="ups-status-sentence" data-sample>No battery backup.</strong></div>
               <div id="ups-shutdown-line" class="ups-shutdown-line" hidden></div>
+              <div id="ups-restart-line" class="ups-shutdown-line" hidden data-i18n="upx.restart_unproven">Starts again by itself after a power cut: not proven yet.</div>
             </div>
 
             <!-- Emergency Warning Banner (Shown when on battery or simulating) -->
@@ -2968,13 +2969,14 @@
                   <!-- Failsafe Toggles -->
                   <div class="ups-col-box">
                     <div class="ups-row-10">
-                      <label for="ups-chk-docker" style="font-size:var(--kb-fs-xs); font-weight:500; color:var(--fg, #e6efef); cursor:pointer; flex:1;" data-i18n="mgmt.ups_chk_docker">Gracefully terminate Docker database containers (flush WAL)</label>
+                      <label for="ups-chk-docker" style="font-size:var(--kb-fs-xs); font-weight:500; color:var(--fg, #e6efef); cursor:pointer; flex:1;" data-i18n="mgmt.ups_chk_docker">Give apps up to 45 seconds to close (they are always stopped before the shutdown)</label>
                       <label class="switch"><input type="checkbox" id="ups-chk-docker" checked><span class="toggle-slider"></span></label>
                     </div>
                     <div class="ups-row-10">
-                      <label for="ups-chk-cutpower" style="font-size:var(--kb-fs-xs); font-weight:500; color:var(--fg, #e6efef); cursor:pointer; flex:1;" data-i18n="mgmt.ups_chk_cutpower">Send cut-power command to UPS on halt (load.off.delay)</label>
+                      <label for="ups-chk-cutpower" style="font-size:var(--kb-fs-xs); font-weight:500; color:var(--fg, #e6efef); cursor:pointer; flex:1;" data-i18n="mgmt.ups_chk_cutpower">Turn the UPS sockets off after the NAS has shut down</label>
                       <label class="switch"><input type="checkbox" id="ups-chk-cutpower"><span class="toggle-slider"></span></label>
                     </div>
+                    <div id="ups-cutpower-why" class="ups-cutpower-why" hidden data-i18n="upx.cutpower_why">Only possible when Kiboto itself switches the NAS off and reaches the UPS over the network (NUT).</div>
                   </div>
 
                   <!-- Auto-save note -->

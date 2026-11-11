@@ -237,6 +237,20 @@ function renderUpsStatusLine(ups) {
   if (sentence) sentence.textContent = upsSentence(ups);
   const line = document.getElementById('ups-shutdown-line');
   if (line && state === 'none') line.hidden = true; // nothing to switch off by battery without a UPS
+  const restart = document.getElementById('ups-restart-line');
+  if (restart) restart.hidden = state === 'none'; // proven only after a real power cut (Power decision 6)
+}
+
+let _upsMode = '';
+let _pathBy = '';
+/** The sockets switch works only when Kiboto itself switches the NAS off over a network UPS (SET-15, Power B7). */
+function applyCutPowerAvailability() {
+  const chk = /** @type {HTMLInputElement | null} */ (document.getElementById('ups-chk-cutpower'));
+  if (!chk) return;
+  const can = _pathBy === 'kiboto' && /nut/.test(_upsMode);
+  chk.disabled = !can;
+  const why = document.getElementById('ups-cutpower-why');
+  if (why) why.hidden = can;
 }
 
 let _pathAt = 0;
@@ -247,6 +261,8 @@ async function renderShutdownLine(ups) {
   _pathAt = Date.now();
   try {
     const path = await api.get('/api/ups/shutdown-path');
+    _pathBy = path?.by || '';
+    applyCutPowerAvailability();
     line.textContent = serverSaid(path, path?.detail || '');
     line.classList.toggle('is-bad', path?.ok === false);
     line.hidden = !line.textContent;
@@ -538,6 +554,8 @@ export async function loadUpsConfigToDrawer() {
     if (chkCutpower) {
       chkCutpower.checked = Boolean(cfg.poweroff_ups);
     }
+    _upsMode = String(cfg.mode || '');
+    applyCutPowerAvailability();
 
     // Restore policy collapse state
     try {

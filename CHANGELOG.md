@@ -481,6 +481,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Overview card showed "64 %" with an amber dot. They now show a lightning sign and say "Power cut"
   to screen readers and on hover; a home without a UPS reads "No UPS" instead of "Offline".
 
+#### Fixes
+
+- **Two Power switches say what they do.** "Gracefully terminate Docker database containers" only
+  chose how long apps get to close (they are always stopped); it now says so. "Turn the UPS sockets
+  off" is greyed, with the reason, where it cannot work. The page also says honestly that starting
+  again by itself after a power cut is not proven yet.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

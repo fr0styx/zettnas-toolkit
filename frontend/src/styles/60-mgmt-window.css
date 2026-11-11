@@ -203,3 +203,4 @@
 .ups-status-line[data-state="cut"] { border-left-color: var(--err, #eb5757); }
 .ups-shutdown-line { margin-top: 6px; font-size: var(--kb-fs-xs); color: var(--kb-text-soft); }
 .ups-shutdown-line.is-bad { color: var(--err, #eb5757); font-weight: 600; }
+.ups-cutpower-why { font-size: var(--kb-fs-xs); color: var(--kb-text-muted); margin: -2px 0 6px; }
