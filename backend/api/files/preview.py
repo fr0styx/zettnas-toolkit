@@ -18,7 +18,7 @@ from starlette.concurrency import iterate_in_threadpool
 from backend.api.files.common import _contained, _user_file_headers
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import logger
-from backend.fsutil import prune_protected, resolve_within
+from backend.fsutil import prune_download, resolve_within
 from backend.logging_config import sanitize_string
 from backend.services import media_info, thumb_prefetch, thumbs, video_compat
 from backend.services.path_access import ALLOWED_BROWSE_ROOTS, check_user_path_access
@@ -448,7 +448,7 @@ def fs_download_zip(
             base = os.path.basename(real_target)
             if os.path.isdir(real_target):
                 for root_dir, sub_dirs, files in os.walk(real_target):
-                    prune_protected(root_dir, sub_dirs)
+                    prune_download(root_dir, sub_dirs, files)
                     for f in files:
                         fp = os.path.join(root_dir, f)
                         # Ensure symlinks inside directories do not escape allowed roots or user bounds

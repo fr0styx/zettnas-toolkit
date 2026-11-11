@@ -344,6 +344,20 @@ def is_protected(path: str) -> bool:
     return any(_inside(p, d) for d in protected_dirs())
 
 
+def left_out_of_downloads(name: str) -> bool:
+    """A name a folder download never carries (SET-01): the folder's Recycle Bin, which the file list
+    does not show either, and uploads that are not finished."""
+    return name == ".RecycleBin" or name.startswith((".kiboto_tmp_", ".kiboto_staging_"))
+
+
+def prune_download(dirpath: str, dirnames: list[str], filenames: list[str]) -> None:
+    """For os.walk over a folder that is handed out: app folders, Recycle Bins and unfinished
+    uploads are dropped in place."""
+    prune_protected(dirpath, dirnames)
+    dirnames[:] = [n for n in dirnames if not left_out_of_downloads(n)]
+    filenames[:] = [n for n in filenames if not left_out_of_downloads(n)]
+
+
 def prune_protected(dirpath: str, dirnames: list[str]) -> None:
     """For os.walk: drop app folders from `dirnames` in place so the walk never enters them."""
     dirnames[:] = [n for n in dirnames if not is_protected(os.path.join(dirpath, n))]

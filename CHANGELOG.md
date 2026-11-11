@@ -265,6 +265,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   set no size limit, so a Mac could fill the storage, and hid its own failure. It is one request now.
   A Time Machine folder needs a size limit; the dialog asks for one.
 
+#### Security
+
+- **A shared link to a folder no longer hands out its Recycle Bin**: the download behind a link to a
+  folder, and a download of several files at once, also packed the folder's Recycle Bin (files
+  deleted from it) and uploads that were not finished. Both are left out now.
+- **A link that never ends needs a password**: "Always" without a password is refused. When nothing
+  is chosen a link ends after one day.
+- **Whoever makes a link can see and stop it**: family members and kids could make links but were
+  refused the list and the stop. Everyone now reaches their own links; administrators reach all of
+  them. Links that ended more than a week ago are removed from the list.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

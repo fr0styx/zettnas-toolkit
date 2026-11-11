@@ -20,7 +20,7 @@ from backend.api.files import upload_links
 from backend.api.files.common import _contained, _user_file_headers
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import logger
-from backend.fsutil import atomic_write_json, prune_protected, read_json, resolve_within
+from backend.fsutil import atomic_write_json, prune_download, read_json, resolve_within
 from backend.passwords import hash_password, verify_password
 from backend.rate_limit import rate_limit
 from backend.services import public_links
@@ -42,6 +42,19 @@ def _load_share_links() -> dict[str, Any]:
         return {}
 
 
+EXPIRED_KEPT_S = 7 * 86400
+
+
+def _drop_long_expired(links: dict[str, Any], now: float) -> dict[str, Any]:
+    """Links that ended more than a week ago leave the file (SET-01); until then the list shows
+    them as ended."""
+    return {
+        token: item
+        for token, item in links.items()
+        if not (item.get("expires_at") and now - float(item["expires_at"]) > EXPIRED_KEPT_S)
+    }
+
+
 def _save_share_links(links: dict[str, Any]) -> None:
     """Saves share links; a failure is an error the caller sees, never a silent "ok" (SEC-10)."""
     try:
@@ -55,7 +68,8 @@ def _save_share_links(links: dict[str, Any]) -> None:
 
 class CreateShareLinkRequest(BaseModel):
     path: str
-    expires_hours: int | None = None
+    # a day when nothing is said; null or 0 asks for a link that never ends, which needs a password
+    expires_hours: int | None = 24
     max_downloads: int | None = None
     password: str | None = None
     label: str | None = None
@@ -137,6 +151,11 @@ async def create_share_link(
     token = secrets.token_urlsafe(24)
     now = time.time()
     expires_at = (now + (req.expires_hours * 3600)) if req.expires_hours and req.expires_hours > 0 else None
+    if expires_at is None and not (req.password and req.password.strip()):
+        raise HTTPException(
+            status_code=400,
+            detail="A link that never ends needs a password. Choose when it ends, or set a password.",
+        )
 
     password_hash = None
     if req.password and req.password.strip():
@@ -166,7 +185,7 @@ async def create_share_link(
         )
 
     async with _SHARE_LOCK:
-        links = _load_share_links()
+        links = _drop_long_expired(_load_share_links(), now)
         links[token] = link_data
         _save_share_links(links)
 
@@ -177,8 +196,11 @@ async def create_share_link(
     return sanitized
 
 
-@router.get("/fs/share-links", dependencies=[Depends(require_scope("files:read", "storage:read", "storage:admin"))])
-@router.get("/share-links", dependencies=[Depends(require_scope("files:read", "storage:read", "storage:admin"))])
+_OWN_LINKS = ("files:read", "shares:user_write", "storage:read", "storage:admin")
+
+
+@router.get("/fs/share-links", dependencies=[Depends(require_scope(*_OWN_LINKS))])
+@router.get("/share-links", dependencies=[Depends(require_scope(*_OWN_LINKS))])
 def list_share_links(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
@@ -207,8 +229,11 @@ def list_share_links(
     return results
 
 
-@router.delete("/fs/share-links/{token}", dependencies=[Depends(require_scope("files:write", "storage:admin"))])
-@router.delete("/share-links/{token}", dependencies=[Depends(require_scope("files:write", "storage:admin"))])
+_STOP_LINKS = ("files:write", "shares:user_write", "storage:admin")
+
+
+@router.delete("/fs/share-links/{token}", dependencies=[Depends(require_scope(*_STOP_LINKS))])
+@router.delete("/share-links/{token}", dependencies=[Depends(require_scope(*_STOP_LINKS))])
 async def revoke_share_link(
     token: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -223,7 +248,7 @@ async def revoke_share_link(
         if not is_admin and item.get("created_by") != principal.username:
             raise HTTPException(status_code=403, detail="Cannot revoke share link created by another user")
         del links[token]
-        _save_share_links(links)
+        _save_share_links(_drop_long_expired(links, time.time()))
 
     return {"status": "ok", "revoked": token}
 
@@ -360,7 +385,7 @@ def _folder_size_capped(folder: str, limit: int) -> int:
     """Total size of a folder; raises ValueError as soon as it passes `limit`."""
     total = 0
     for root_dir, sub_dirs, files in os.walk(folder):
-        prune_protected(root_dir, sub_dirs)
+        prune_download(root_dir, sub_dirs, files)
         for f in files:
             try:
                 total += os.path.getsize(os.path.join(root_dir, f))
@@ -455,7 +480,7 @@ def _stream_folder_zip(folder: str, slot: str = ""):
         # zipfile only writes, tells and flushes on a stream it was handed (never closes it)
         with zipfile.ZipFile(cast(IO[bytes], sink), mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
             for root_dir, sub_dirs, files in os.walk(folder):
-                prune_protected(root_dir, sub_dirs)
+                prune_download(root_dir, sub_dirs, files)
                 for f in files:
                     fp = os.path.join(root_dir, f)
                     real_fp = os.path.realpath(fp)

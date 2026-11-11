@@ -4275,6 +4275,7 @@
         "type": "null"
        }
       ],
+      "default": 24,
       "title": "Expires Hours"
      },
      "kind": {
@@ -37534,6 +37535,12 @@
       "title": "Security",
       "type": "string"
      },
+     "timemachine": {
+      "default": false,
+      "description": "A Time Machine destination; needs SMB and a size limit",
+      "title": "Timemachine",
+      "type": "boolean"
+     },
      "user_permissions": {
       "anyOf": [
        {
@@ -54302,6 +54309,7 @@
     ],
     "x-required-scopes": [
      "files:read",
+     "shares:user_write",
      "storage:read",
      "storage:admin"
     ]
@@ -54403,6 +54411,7 @@
     ],
     "x-required-scopes": [
      "files:write",
+     "shares:user_write",
      "storage:admin"
     ]
    }
@@ -65163,7 +65172,7 @@
      "SFTP File Sharing"
     ],
     "x-required-scopes": [
-     "shares:read",
+     "shares:manage",
      "storage:admin"
     ]
    },
@@ -65290,6 +65299,7 @@
     ],
     "x-required-scopes": [
      "files:read",
+     "shares:user_write",
      "storage:read",
      "storage:admin"
     ]
@@ -65391,6 +65401,7 @@
     ],
     "x-required-scopes": [
      "files:write",
+     "shares:user_write",
      "storage:admin"
     ]
    }

@@ -1778,7 +1778,7 @@
     "created_at": "<float>",
     "created_by": "admin",
     "download_count": 0,
-    "expires_at": null,
+    "expires_at": "<float>",
     "filename": "a.txt",
     "has_password": false,
     "is_dir": false,
@@ -1797,7 +1797,7 @@
     "created_at": "<float>",
     "created_by": "admin",
     "download_count": 0,
-    "expires_at": null,
+    "expires_at": "<float>",
     "filename": "sub",
     "has_password": true,
     "is_dir": true,
@@ -1828,7 +1828,7 @@
   {
    "body": {
     "download_count": 0,
-    "expires_at": null,
+    "expires_at": "<float>",
     "filename": "a.txt",
     "has_password": false,
     "is_dir": false,
@@ -1880,7 +1880,7 @@
   {
    "body": {
     "download_count": 1,
-    "expires_at": null,
+    "expires_at": "<float>",
     "filename": "sub",
     "has_password": true,
     "is_dir": true,

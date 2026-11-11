@@ -279,9 +279,9 @@ request and response schemas.
 | `POST` | `/api/v1/fs/rename` | any of `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Fs Rename |
 | `GET` | `/api/v1/fs/roots` | any of `shares:read`, `storage:read`, `system:view` | Authoritative platform-aware storage hierarchy for File Explorer |
 | `GET` | `/api/v1/fs/search` | any of `shares:read`, `storage:read`, `system:view` | Streaming bounded filesystem search using os.scandir with path containment |
-| `GET` | `/api/v1/fs/share-links` | any of `files:read`, `storage:read`, `storage:admin` | Lists active public share links created by the current user or all if admin |
+| `GET` | `/api/v1/fs/share-links` | any of `files:read`, `shares:user_write`, `storage:read`, `storage:admin` | Lists active public share links created by the current user or all if admin |
 | `POST` | `/api/v1/fs/share-links` | any of `files:write`, `shares:user_write`, `storage:admin` ⏱ | Generates a secure, temporary or password-protected public share link for a file or folder |
-| `DELETE` | `/api/v1/fs/share-links/{token}` | any of `files:write`, `storage:admin` | Revokes and deletes an existing share link |
+| `DELETE` | `/api/v1/fs/share-links/{token}` | any of `files:write`, `shares:user_write`, `storage:admin` | Revokes and deletes an existing share link |
 | `GET` | `/api/v1/fs/shared/{token}` | public ⏱ | Public access endpoint for shared files and folders (no session needed) |
 | `POST` | `/api/v1/fs/shared/{token}` | public ⏱ | Same as the GET route, with the password in a form or JSON body instead of the URL (SEC-21) |
 | `POST` | `/api/v1/fs/shared/{token}/upload` | public ⏱ | A file sent through a send-me-files link (NFEAT-2): the body is the file, X-File-Name its name (URL-encoded), X-Share-Password the link's… |
@@ -307,9 +307,9 @@ request and response schemas.
 | `POST` | `/api/v1/fs/upload/init` | any of `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Fs Upload Init |
 | `GET` | `/api/v1/fs/video/converted` | any of `shares:read`, `storage:read`, `system:view` | The video converted once and kept, as a plain MP4 the browser buffers and seeks (NVID-1) |
 | `POST` | `/api/v1/mkdir` | any of `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Mkdir |
-| `GET` | `/api/v1/share-links` | any of `files:read`, `storage:read`, `storage:admin` | Lists active public share links created by the current user or all if admin |
+| `GET` | `/api/v1/share-links` | any of `files:read`, `shares:user_write`, `storage:read`, `storage:admin` | Lists active public share links created by the current user or all if admin |
 | `POST` | `/api/v1/share-links` | any of `files:write`, `shares:user_write`, `storage:admin` ⏱ | Generates a secure, temporary or password-protected public share link for a file or folder |
-| `DELETE` | `/api/v1/share-links/{token}` | any of `files:write`, `storage:admin` | Revokes and deletes an existing share link |
+| `DELETE` | `/api/v1/share-links/{token}` | any of `files:write`, `shares:user_write`, `storage:admin` | Revokes and deletes an existing share link |
 | `GET` | `/api/v1/shared/{token}` | public ⏱ | Public access endpoint for shared files and folders (no session needed) |
 | `POST` | `/api/v1/shared/{token}` | public ⏱ | Same as the GET route, with the password in a form or JSON body instead of the URL (SEC-21) |
 | `POST` | `/api/v1/shared/{token}/upload` | public ⏱ | A file sent through a send-me-files link (NFEAT-2): the body is the file, X-File-Name its name (URL-encoded), X-Share-Password the link's… |
@@ -602,7 +602,7 @@ request and response schemas.
 | `POST` | `/api/v1/sftp/config` | any of `shares:manage`, `storage:admin` | Updates global SFTP configuration (port, authentication modes, chroot) |
 | `GET` | `/api/v1/sftp/status` | any of `shares:manage`, `storage:read`, `system:view` | Returns operational status, port, sidecar state, and quick-connect info for SFTP |
 | `POST` | `/api/v1/sftp/toggle` | any of `shares:manage`, `storage:admin` | Enables or disables the inbound SFTP service |
-| `GET` | `/api/v1/sftp/users` | any of `shares:read`, `storage:admin` | Lists configured SFTP users, authorized shares, and access levels |
+| `GET` | `/api/v1/sftp/users` | any of `shares:manage`, `storage:admin` | Lists configured SFTP users, authorized shares, and access levels |
 | `POST` | `/api/v1/sftp/users` | any of `shares:manage`, `storage:admin` | Creates a new dedicated SFTP user with designated share access |
 | `DELETE` | `/api/v1/sftp/users/{username}` | any of `shares:manage`, `storage:admin` | Deletes an SFTP user and revokes their file transfer credentials |
 
