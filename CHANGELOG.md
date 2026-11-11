@@ -526,6 +526,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   `name_taken` before anything is stored; `replace`), and the answer carries the name the file
   got.
 
+#### Fixes
+
+- **Uploading onto a name that is taken asks what to do**: "Replace", "Keep Both" or "Skip", each
+  time, with a tick "Do the same for the rest of this upload". "Replace" puts the file that is
+  there in the Recycle Bin.
+- **Dropping files from a computer shows progress, can be cancelled, and says what failed**: a
+  drop took a second upload path with none of that, where a failed file showed nothing. The
+  Upload button, the phone's "+" and a drop of files or folders now go the same way.
+- **The File Explorer has an Upload button on a computer**: the file picker was reachable only
+  from the phone's "+".
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

@@ -6,7 +6,7 @@ import {
   FmContextMenu,
   extractDataTransferEntries,
 } from './file-manager-helpers.js';
-import { api, auth, ApiError } from '../api.js';
+import { api, auth } from '../api.js';
 import { escapeHtml, copyTextToClipboard } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showDangerConfirm, showPromptToast, showBottomSheet, showActionToast } from '../toast.js';
@@ -16,6 +16,7 @@ import { binColumns, binBar } from './fm-bin-view.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { openFilePreview as openFilePreviewModal } from '../file-preview-loader.js';
 import { transferCenter } from './transfer-center.js';
+import { uploadAll, planDrop, uploadUrl } from './fm-upload.js';
 import { favorites, isFavorite, toggleFavorite, closestPath } from './fm-favorites.js';
 import { thumbKind, thumbUrl } from './viewer-kit.js';
 
@@ -70,7 +71,7 @@ export function getActiveFmInstance() {
  * navigation history stacks, client/server search, and inter-window drag-and-drop.
  */
 export function fsUploadUrl(dir, name) {
-  return `/api/fs/upload?path=${encodeURIComponent(dir)}&filename=${encodeURIComponent(name)}`;
+  return uploadUrl(dir, name);
 }
 
 const SEL_ICONS = {
@@ -185,6 +186,7 @@ export class FileManagerWindow {
     this.refreshBtn = null;
     this.searchInput = null;
     this.newFolderBtn = null;
+    this.uploadBtn = null;
     this.newWinBtn = null;
     this.organizeBtn = null;
     this.btnViewList = null;
@@ -281,6 +283,9 @@ export class FileManagerWindow {
                 <svg class="fmx-muted" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 <button type="button" class="fm-tool-btn fm-ai-search-toggle fmx-xs-box-2" title="${t('ui.toggle_kib_semantic_visual_rag', 'Turn AI search on or off (it never wakes sleeping drives)')}" aria-label="${t('ui.ai_semantic_search', 'AI Semantic Search')}">✨ AI</button>
               </div>
+              <button class="fm-tool-btn fm-upload-btn" title="${t('fm.sheet_upload', 'Upload files')}" data-i18n-title="fm.sheet_upload" aria-label="${t('fm.sheet_upload', 'Upload files')}">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              </button>
               <button id="fm-new-folder-btn" class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="${t('fm.new_folder', 'New Folder')}">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
               </button>
@@ -397,6 +402,9 @@ export class FileManagerWindow {
               <svg class="fmx-muted" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               <button type="button" class="fm-tool-btn fm-ai-search-toggle fmx-xs-box-2" title="${t('ui.toggle_kib_semantic_visual_rag', 'Turn AI search on or off (it never wakes sleeping drives)')}" aria-label="${t('ui.ai_semantic_search', 'AI Semantic Search')}">✨ AI</button>
             </div>
+            <button class="fm-tool-btn fm-upload-btn" title="${t('fm.sheet_upload', 'Upload files')}" data-i18n-title="fm.sheet_upload" aria-label="${t('fm.sheet_upload', 'Upload files')}">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            </button>
             <button class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="${t('fm.new_folder', 'New Folder')}">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
             </button>
@@ -539,6 +547,7 @@ export class FileManagerWindow {
     this.aiSearchToggle = this.windowEl.querySelector('.fm-ai-search-toggle');
     this.aiSearchMode = false;
     this.newFolderBtn = this.windowEl.querySelector('.fm-new-folder-btn');
+    this.uploadBtn = this.windowEl.querySelector('.fm-upload-btn');
     this.newWinBtn = this.windowEl.querySelector('.fm-new-win-btn');
     this.organizeBtn = this.windowEl.querySelector('.fm-organize-btn');
     this.btnViewList = this.windowEl.querySelector('.fm-btn-view-list');
@@ -765,6 +774,9 @@ export class FileManagerWindow {
       }
       this.showLocationsMenu(this.locationsBtn, places);
     });
+
+    // the picker the phone's "+" opens
+    this.uploadBtn?.addEventListener('click', () => /** @type {HTMLElement | null} */ (this.uploadInput)?.click());
 
     // Hidden file upload input
     if (this.uploadInput) {
@@ -2376,77 +2388,16 @@ export class FileManagerWindow {
     }
   }
 
+  /** Files from the Upload button, the phone's "+" or a drop: one path for all (fm-upload.js). */
   async uploadFiles(files, targetPath = null) {
     if (!files || files.length === 0) return;
-    const destDir = targetPath || this.currentPath;
-    const list = Array.from(files);
-    const totalBytes = list.reduce((sum, f) => sum + (f.size || 0), 0);
-    let cancelled = false;
-    const job = transferCenter.startLocal({
-      kind: 'upload',
-      label: t('transfers.uploading', 'Uploading {count} file(s) to {dest}', { count: list.length, dest: destDir.split('/').pop() || '/' }),
-      totalFiles: list.length,
-      totalBytes,
-      cancel: () => { cancelled = true; },
-    });
-    let successCount = 0;
-    let doneBytes = 0;
-    const errors = [];
-
-    for (let i = 0; i < list.length && !cancelled; i++) {
-      const file = list[i];
-      job.progress({ current: file.name });
-      try {
-        if (file.size > 16 * 1024 * 1024) {
-          await this._uploadFileChunked(file, destDir, (sent) => job.progress({ bytes: doneBytes + sent }), () => cancelled);
-        } else {
-          // The upload API takes the folder and name in the query and the file as the body
-          const res = await api.postRaw(fsUploadUrl(destDir, file.name), file);
-          if (!res.ok) throw await ApiError.from(res);
-        }
-        successCount++;
-      } catch (err) {
-        if (!cancelled) errors.push(`${file.name}: ${err.message}`);
-      }
-      doneBytes += file.size || 0;
-      job.progress({ files: i + 1, bytes: doneBytes });
+    const dir = targetPath || this.currentPath;
+    const res = await uploadAll(Array.from(files).map((file) => ({ file, dir })));
+    if (res.uploaded > 0) {
+      this.loadPath(this.currentPath);
+      ZettEventBus.emit('fm:refresh');
     }
-
-    if (cancelled) job.finish('cancelled');
-    else if (errors.length && !successCount) job.finish('failed', errors[0]);
-    else job.finish('completed', errors.length ? `${errors.length} file(s) failed: ${errors[0]}` : null);
-    if (successCount > 0) this.loadPath(this.currentPath);
-  }
-
-  async _uploadFileChunked(file, destDir, onProgress = null, isCancelled = null) {
-    const CHUNK_SIZE = 16 * 1024 * 1024;
-    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-    const initRes = await api.post('/api/fs/upload/init', {
-      filename: file.name,
-      destination_dir: destDir,
-      total_size: file.size,
-      chunk_size: CHUNK_SIZE,
-    });
-    if (!initRes || !initRes.upload_id) throw new Error('Upload initialization failed');
-    const uploadId = initRes.upload_id;
-
-    for (let c = 0; c < totalChunks; c++) {
-      const start = c * CHUNK_SIZE;
-      const end = Math.min(start + CHUNK_SIZE, file.size);
-      const slice = file.slice(start, end);
-      const chunkUrl = `/api/fs/upload/chunk?upload_id=${encodeURIComponent(uploadId)}&chunk_index=${c}`;
-      const chunkRes = await api.postRaw(chunkUrl, slice, {
-        headers: { 'Content-Type': 'application/octet-stream' },
-      });
-      if (!chunkRes.ok) throw await ApiError.from(chunkRes);
-      if (onProgress) onProgress(end);
-      if (isCancelled && isCancelled()) throw new Error('Cancelled');
-    }
-
-    const completeRes = await api.post('/api/fs/upload/complete', {
-      upload_id: uploadId,
-    });
-    return completeRes;
+    return res;
   }
 
   async handleAction(act, path, oldName) {
@@ -3356,40 +3307,21 @@ export class FileManagerWindow {
     });
   }
 
+  /** A drop of folders: their folders are made first, then the files go the same way as any upload. */
   async uploadExtractedEntries(entries, targetPath = null) {
     if (!entries || entries.length === 0) return;
-    const baseDir = targetPath || this.currentPath;
-    showToast(t('fm.uploading_toast', 'Uploading {count, plural, one {# file} other {# files}}…', { count: entries.length }), 'info');
-    let success = 0;
-    const createdDirs = new Set();
-
-    for (const item of entries) {
-      const relParts = item.relPath.split('/');
-      if (relParts.length > 1) {
-        const subDir = relParts.slice(0, -1).join('/');
-        const fullSubDir = `${baseDir}/${subDir}`;
-        if (!createdDirs.has(fullSubDir)) {
-          try {
-            await api.post('/api/mkdir', { path: fullSubDir });
-            createdDirs.add(fullSubDir);
-          } catch (_) {}
-        }
-      }
-      const destDir = relParts.length > 1
-        ? `${baseDir}/${relParts.slice(0, -1).join('/')}`
-        : baseDir;
-
+    const { dirs, items } = planDrop(entries, targetPath || this.currentPath);
+    for (const dir of dirs) {
       try {
-        const res = await api.postRaw(fsUploadUrl(destDir, item.file.name), item.file);
-        if (res.ok) success++;
-      } catch (_) {}
+        await api.post('/api/mkdir', { path: dir });
+      } catch (_) { /* it is there already, or the file's own upload says what is wrong */ }
     }
-
-    if (success > 0) {
-      showToast(t('toast.uploaded_file_s_successfully', 'Uploaded {success} file(s) successfully', { success: success }), 'success');
+    const res = await uploadAll(items);
+    if (res.uploaded > 0 || dirs.length) {
       this.loadPath(this.currentPath);
       ZettEventBus.emit('fm:refresh');
     }
+    return res;
   }
 }
 

@@ -361,6 +361,66 @@ def test_rename_sort_and_the_menu_on_empty_space(journey_folder):
         browser.close()
 
 
+def test_an_upload_onto_a_taken_name_asks(journey_folder, tmp_path):
+    """SET-05, the owner's decision S16: the same name twice asks Replace, Keep both or Skip.
+    It used to replace the file with no question and no copy in the Recycle Bin."""
+    from playwright.sync_api import sync_playwright
+
+    local = tmp_path / "restore-me.txt"
+    local.write_text("the one from my computer\n")
+    here = lambda name: os.path.join(journey_folder, name)  # noqa: E731
+
+    def wait_for(path, what):
+        deadline = time.time() + 8
+        while not os.path.exists(path) and time.time() < deadline:
+            time.sleep(0.3)
+        assert os.path.exists(path), what
+
+    with sync_playwright() as p:
+        browser = _browser(p)
+        page = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+        _sign_in_with_keyboard(page)
+        _close_wizard(page)
+        _open_files_at(page, journey_folder, "restore-me.txt")
+        picker = page.locator(".file-manager-window .fm-file-upload-input").last
+        assert page.locator(".file-manager-window .fm-upload-btn").last.get_attribute("aria-label") == "Upload files"
+
+        picker.set_input_files(str(local))
+        page.wait_for_selector(".fm-upload-taken", timeout=6000)
+        assert "restore-me.txt" in page.inner_text(".fm-upload-taken")
+        page.click(".fm-upload-taken [data-choice=keep_both]")
+        wait_for(here("restore-me (2).txt"), "Keep both did not save the second file")
+        with open(here("restore-me.txt")) as f:
+            assert f.read() == "bring me back\n", "the file that was there was changed"
+
+        picker.set_input_files(str(local))
+        page.wait_for_selector(".fm-upload-taken", timeout=6000)
+        page.click(".fm-upload-taken [data-choice=skip]")
+        page.wait_for_selector(".fm-upload-taken", state="detached", timeout=4000)
+        page.wait_for_timeout(800)
+        assert sorted(n for n in os.listdir(journey_folder) if n.startswith("restore-me")) == [
+            "restore-me (2).txt",
+            "restore-me.txt",
+        ]
+
+        picker.set_input_files(str(local))
+        page.wait_for_selector(".fm-upload-taken", timeout=6000)
+        page.click(".fm-upload-taken [data-choice=replace]")
+        deadline = time.time() + 8
+        while time.time() < deadline:
+            with open(here("restore-me.txt")) as f:
+                if f.read() == "the one from my computer\n":
+                    break
+            time.sleep(0.3)
+        with open(here("restore-me.txt")) as f:
+            assert f.read() == "the one from my computer\n", "Replace did not put the new file in place"
+        binned = page.evaluate("() => fetch('/api/fs/trash', {credentials: 'include'}).then((r) => r.json())")
+        assert any(str(i.get("original_path", "")).endswith("/restore-me.txt") for i in binned["items"]), (
+            "the replaced file is not in the Recycle Bin"
+        )
+        browser.close()
+
+
 def _strings(lang):
     with open(os.path.join(ROOT, "frontend", "src", "locales", f"{lang}.js"), encoding="utf-8") as f:
         src = f.read()

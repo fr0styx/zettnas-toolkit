@@ -161,6 +161,12 @@
   "styles": 0,
   "templates": 1
  },
+ "frontend/src/components/fm-upload.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 0,
+  "templates": 1
+ },
  "frontend/src/components/getting-started.js": {
   "buttons": 0,
   "globals": 1,
