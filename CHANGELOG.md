@@ -842,6 +842,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   hours could be changed. Both role lists now offer all eight roles, the role is sent only when
   you change it, and an unknown role is refused in plain words.
 
+#### Fixes
+
+- **A person who is turned off loses their network folders at once.** Turning off ended the web
+  session only: the person's private folder and every open share stayed reachable over the
+  network, and their sign-in to other apps stayed valid until someone pressed "Update people
+  now". Both now follow at once, and come back with the same password when the person is turned
+  on again.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

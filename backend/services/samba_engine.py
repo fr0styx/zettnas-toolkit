@@ -644,6 +644,44 @@ class SambaEngine:
 
         return False
 
+    def set_account_enabled(self, username: str, enabled: bool) -> bool:
+        """Turns a person's network-share account off or on, keeping its password.
+
+        A person who was turned off kept reaching their private folder and every open share over
+        the network: only the web session was ended (SET-10)."""
+        if not re.fullmatch(r"^[a-zA-Z0-9_\-\.]{1,32}$", username):
+            return False
+        cmd = ["smbpasswd", "-e" if enabled else "-d", username]
+        try:
+            if subprocess.run(cmd, capture_output=True, timeout=3).returncode == 0:
+                logger.info("[SambaEngine] Network account of '%s' %s.", username, "on" if enabled else "off")
+                return True
+        except (FileNotFoundError, subprocess.SubprocessError):
+            pass
+        sidecar_info = self.check_sidecar()
+        docker_sock = _docker_sock_path()
+        if not (sidecar_info.get("detected") and os.path.exists(docker_sock)):
+            return False
+        try:
+            import httpx
+
+            with httpx.Client(transport=httpx.HTTPTransport(uds=docker_sock), timeout=5.0) as client:
+                cid = sidecar_info.get("id", "kiboto-samba")
+                made = client.post(
+                    f"http://localhost/containers/{cid}/exec",
+                    json={"Cmd": cmd, "AttachStdout": True, "AttachStderr": True},
+                )
+                if made.status_code != 201:
+                    return False
+                client.post(
+                    f"http://localhost/exec/{made.json().get('Id')}/start", json={"Detach": False, "Tty": False}
+                )
+                logger.info("[SambaEngine] Network account of '%s' %s (sidecar).", username, "on" if enabled else "off")
+                return True
+        except (OSError, ValueError, RuntimeError, httpx.HTTPError) as e:
+            logger.debug("[SambaEngine] could not switch the network account of %s: %s", username, e)
+            return False
+
     def get_status(self) -> SambaStatus:
         """Returns comprehensive status of Samba file sharing service."""
         port_open = self.check_port_445()

@@ -776,8 +776,47 @@ def update_user_profile(
         _evict_user_caches(user_id)
         from backend.services.samba_engine import refresh_access
 
+        if status is not None:
+            _network_follows_status(user_id, status == "active")
         refresh_access()  # their SMB access follows the new role or status (SEC-28)
     return changed
+
+
+def _network_follows_status(user_id: str, active: bool) -> None:
+    """A person who is turned off loses their network folders and their sign-in to other apps at
+    once, and gets them back when turned on again. Turning off ended only the web session: the
+    private folder and open shares stayed reachable over the network, and the family sign-in
+    for other apps stayed valid until someone pressed "Update people now" (SET-10)."""
+    user = get_user_by_id(user_id) or {}
+    name = str(user.get("username") or "")
+    if not name:
+        return
+    try:
+        from backend.services.samba_engine import get_samba_engine
+
+        get_samba_engine().set_account_enabled(name, active)
+    except (OSError, ValueError, RuntimeError):
+        logger.warning("[Users] could not switch the network account of %s", name, exc_info=True)
+
+    def others() -> None:
+        for hook in list(_STATUS_HOOKS):
+            try:
+                hook(user, active)
+            except (OSError, ValueError, RuntimeError, KeyError):
+                logger.warning("[Users] a service did not follow the status of %s", name, exc_info=True)
+
+    if _STATUS_HOOKS and not test_mode():
+        threading.Thread(target=others, name="StatusFollowers", daemon=True).start()
+
+
+_STATUS_HOOKS: list[Any] = []
+
+
+def on_status_change(hook: Any) -> None:
+    """Registers hook(user, active), called after a person is turned off or on. For services
+    above this module (family sign-in for other apps), which it must not import."""
+    if hook not in _STATUS_HOOKS:
+        _STATUS_HOOKS.append(hook)
 
 
 def delete_user(user_id: str, db_path: str | None = None) -> bool:

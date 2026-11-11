@@ -524,6 +524,14 @@ def configure_thread_limits() -> int:
     return limiter.total_tokens
 
 
+def _family_signin_follows_status(user: dict, active: bool) -> None:
+    """A person who is turned off or on: their sign-in to other apps follows at once (SET-10)."""
+    from backend.services import family_signin
+
+    if family_signin.config().get("enabled"):
+        family_signin.sync(actor="status change")
+
+
 def _refresh_share_access() -> None:
     """Network access follows the people and share access as they are now (SET-01): a change an
     older version made without rewriting the Samba settings takes effect at the next start."""
@@ -555,6 +563,9 @@ async def lifespan(app: FastAPI):
     threading.Thread(target=_open_encrypted_folders, name="EncryptedFolders", daemon=True).start()
     threading.Thread(target=_rejoin_app_networks, name="AppNetworks", daemon=True).start()
     threading.Thread(target=_refresh_share_access, name="ShareAccess", daemon=True).start()
+    from backend import users_db
+
+    users_db.on_status_change(_family_signin_follows_status)
     _start_home_assistant()
     try:
         yield
