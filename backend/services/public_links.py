@@ -122,6 +122,36 @@ def _port_state(dns: str) -> tuple[dict[str, Any], bool, bool]:
     return handlers, bool((doc.get("AllowFunnel") or {}).get(host)), True
 
 
+def own_page_ports(dns: str) -> list[int]:
+    """The ports on which Kiboto's own page is on the internet. No card publishes it; an older
+    switch did (SET-02), and a live setting is shown so it can be taken off."""
+    from urllib.parse import urlsplit
+
+    from backend.services import public_apps
+
+    code, out = _ts(["funnel", "status", "--json"], timeout=4.0)
+    if code != 0 or not dns:
+        return []
+    try:
+        doc = json.loads(out) or {}
+    except ValueError:
+        return []
+    if not isinstance(doc, dict):
+        return []
+    own = public_apps._own_port()
+    ports = []
+    for host, on in (doc.get("AllowFunnel") or {}).items():
+        port = str(host).rsplit(":", 1)[-1]
+        if not on or not port.isdigit():
+            continue
+        for path, handler in (((doc.get("Web") or {}).get(host) or {}).get("Handlers") or {}).items():
+            target = urlsplit(str((handler or {}).get("Proxy") or ""))
+            whole_page = target.path.rstrip("/") == "" and path.rstrip("/") != PATH
+            if whole_page and target.port == own and target.hostname in ("127.0.0.1", "localhost"):
+                ports.append(int(port))
+    return sorted(set(ports))
+
+
 def _links_served(handlers: dict[str, Any]) -> bool:
     return any(p.rstrip("/") == PATH for p in handlers)
 
@@ -158,6 +188,7 @@ def status(finish_pending: bool = False) -> dict[str, Any]:
         # the port is on the internet, and what else it carries there besides the share links
         "port_public": public,
         "also_public": _others(handlers) if public else [],
+        "own_page_public": own_page_ports(dns),
         "tailscale": bool(dns),
         "base_url": f"https://{dns}:{FUNNEL_PORT}" if dns else "",
         "approval_url": st.get("approval_url") or "",
@@ -210,22 +241,24 @@ def disable() -> dict[str, Any]:
     return status()
 
 
-def close_port(actor: str = "") -> dict[str, Any]:
-    """Takes the whole port off the internet: the share links and whatever else it carried there
-    (SET-02). What was served on it for the tailnet only can be turned on again afterwards."""
+def close_port(actor: str = "", port: int = FUNNEL_PORT) -> dict[str, Any]:
+    """Takes a whole port off the internet (SET-02): the share links' port with whatever else it
+    carried there, or a port that publishes Kiboto's own page. Nothing else can be named. What was
+    served for the tailnet only can be turned on again afterwards."""
     dns = _dns_name()
-    _ts(["funnel", f"--https={FUNNEL_PORT}", "off"], timeout=15.0)
-    _handlers, public, read = _port_state(dns)
-    if dns and (not read or public):
-        atomic_write_json(STATE_FILE, {**_state(), "error": NOT_OFF})
-    else:
-        atomic_write_json(STATE_FILE, {"enabled": False})
+    if port != FUNNEL_PORT and port not in own_page_ports(dns):
+        raise ValueError(f"Port {port} is not one Kiboto can take off the internet here.")
+    _ts(["funnel", f"--https={port}", "off"], timeout=15.0)
+    if port == FUNNEL_PORT:
+        _handlers, public, read = _port_state(dns)
+        if dns and (not read or public):
+            atomic_write_json(STATE_FILE, {**_state(), "error": NOT_OFF})
+        else:
+            atomic_write_json(STATE_FILE, {"enabled": False})
     try:
         from backend.users_db import log_security_event
 
-        log_security_event(
-            "public_links.close_port", "success", actor_username=actor or None, details={"port": FUNNEL_PORT}
-        )
+        log_security_event("public_links.close_port", "success", actor_username=actor or None, details={"port": port})
     except (ImportError, OSError, ValueError):
         logger.debug("[PublicLinks] could not write the security log", exc_info=True)
     return status()

@@ -311,6 +311,15 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   tailnet owner's approval was carried out by whoever next opened the card, also someone who may
   only look. Only a person who may change settings finishes it now.
 
+#### Security
+
+- **Kiboto's own page can no longer be put on the internet**: an older checkbox in Network →
+  WireGuard & Tailscale, "Enable Public Internet Funnel", published Kiboto's own sign-in page, with
+  no question on the server and no entry in the security log, and switching it off also wiped the
+  share links and the apps you had chosen for the internet. The checkbox is gone and the server
+  refuses the request. If it is still on, the "Share links from anywhere" card shows a red alert
+  with a "Take off the internet" button.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

@@ -2740,6 +2740,19 @@
     "title": "ClearEventsResponse",
     "type": "object"
    },
+   "ClosePort": {
+    "properties": {
+     "port": {
+      "default": 8443,
+      "maximum": 65535.0,
+      "minimum": 1.0,
+      "title": "Port",
+      "type": "integer"
+     }
+    },
+    "title": "ClosePort",
+    "type": "object"
+   },
    "ConfigBackupRequest": {
     "properties": {
      "passphrase": {
@@ -61125,8 +61138,25 @@
   },
   "/api/v1/network/public-links/close-port": {
    "post": {
-    "description": "Takes the share links' port off the internet with everything it carries there.",
+    "description": "Takes the share links' port off the internet with everything it carries there, or a port\nthat publishes Kiboto's own page.",
     "operationId": "close_public_port_api_v1_network_public_links_close_port_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/ClosePort"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Req"
+       }
+      }
+     }
+    },
     "responses": {
      "200": {
       "content": {
@@ -61145,6 +61175,9 @@
      },
      "403": {
       "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
      }
     },
     "summary": "Close Public Port",

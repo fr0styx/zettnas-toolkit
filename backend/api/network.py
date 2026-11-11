@@ -432,7 +432,13 @@ async def post_tailscale_set_serve(req: TailscaleSetServeRequest):
     """Configures Tailscale Serve (HTTPS on Tailnet) and optional Public Funnel."""
     from backend.hardware.network import execute_tailscale_set_serve
 
-    return await asyncio.to_thread(execute_tailscale_set_serve, serve=req.serve, funnel=req.funnel, port=req.port)
+    if req.funnel:
+        raise HTTPException(
+            status_code=400,
+            detail="Kiboto's own page is never put on the internet. Share a file with a share link, "
+            'or an app with "Apps from anywhere".',
+        )
+    return await asyncio.to_thread(execute_tailscale_set_serve, serve=req.serve, funnel=False, port=req.port)
 
 
 @router.post("/network/mesh-vpn/tailscale/taildrop/receive", dependencies=[Depends(require_scope("storage:write"))])

@@ -2804,6 +2804,7 @@ export default {
   "pl.approve": "Tailscale 需要 tailnet 所有者先允许 Funnel。",
   "pl.off": "已关闭：分享链接只在家里和你的 tailnet 中可用。",
   "pl.also_public": "问题：此端口已暴露在互联网上，并且还提供 {what}。互联网上的任何人都可以访问。",
+  "pl.own_public": "问题：Kiboto 的登录页面已暴露在互联网上，端口为 {port}。这是旧开关造成的。",
   "pl.take_off": "从互联网撤下",
   "pl.starting": "正在启动…",
   "pl.on": "已开启：分享链接随处可用，地址为 {address}。",

@@ -122,7 +122,7 @@ def test_the_api_finishes_a_waiting_request_only_for_an_administrator(client, au
 
     seen = []
     monkeypatch.setattr(pl, "status", lambda finish_pending=False: seen.append(finish_pending) or {"enabled": False})
-    monkeypatch.setattr(pl, "close_port", lambda actor="": {"enabled": False, "by": actor})
+    monkeypatch.setattr(pl, "close_port", lambda actor="", port=pl.FUNNEL_PORT: {"enabled": False, "by": actor})
     if not get_user_by_username("net_reader"):
         create_user("net_reader", "Reader", "GoodPass123!", role_id="share_user")
     token = client.post("/api/auth/login", json={"username": "net_reader", "password": "GoodPass123!"}).json()["token"]

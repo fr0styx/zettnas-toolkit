@@ -26,10 +26,21 @@ async def get_public_links(principal: AuthenticatedPrincipal = Depends(get_curre
     return await asyncio.to_thread(public_links.status, principal.has_scope("system:config"))
 
 
+class ClosePort(BaseModel):
+    port: int = Field(default=public_links.FUNNEL_PORT, ge=1, le=65535)
+
+
 @router.post("/network/public-links/close-port", dependencies=[Depends(require_scope("system:config"))])
-async def close_public_port(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> dict[str, Any]:
-    """Takes the share links' port off the internet with everything it carries there."""
-    return await asyncio.to_thread(public_links.close_port, getattr(principal, "username", "") or "")
+async def close_public_port(
+    req: ClosePort | None = None, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+) -> dict[str, Any]:
+    """Takes the share links' port off the internet with everything it carries there, or a port
+    that publishes Kiboto's own page."""
+    port = req.port if req else public_links.FUNNEL_PORT
+    try:
+        return await asyncio.to_thread(public_links.close_port, getattr(principal, "username", "") or "", port)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
 @router.put("/network/public-links", dependencies=[Depends(require_scope("system:config"))])

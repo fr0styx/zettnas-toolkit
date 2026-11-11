@@ -2804,6 +2804,7 @@ export default {
   "pl.approve": "Tailscale asks the tailnet owner to allow Funnel first.",
   "pl.off": "Off: share links work at home and on your tailnet.",
   "pl.also_public": "Problem: this port is on the internet and also serves {what}. Anyone on the internet can reach that.",
+  "pl.own_public": "Problem: Kiboto’s own sign-in page is on the internet, on port {port}. An older switch did this.",
   "pl.take_off": "Take off the internet",
   "pl.starting": "Starting…",
   "pl.on": "On: share links work from anywhere, at {address}.",

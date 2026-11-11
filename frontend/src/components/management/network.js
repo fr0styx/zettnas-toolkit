@@ -487,8 +487,6 @@ export async function fetchAndRenderWireguard() {
         const servePill = document.getElementById('ts-serve-pill');
         const serveBox = document.getElementById('ts-serve-url-box');
         const serveLink = document.getElementById('ts-serve-url-link');
-        const funnelToggle = document.getElementById('ts-funnel-toggle');
-        const funnelPill = document.getElementById('ts-funnel-pill');
         if (serveToggle) serveToggle.checked = Boolean(ts.serve_enabled);
         if (servePill) {
           servePill.textContent = ts.serve_enabled ? t('net.active', 'Active') : t('net.disabled', 'Disabled');
@@ -505,14 +503,6 @@ export async function fetchAndRenderWireguard() {
           } else {
             serveBox.style.display = 'none';
           }
-        }
-        if (funnelToggle) funnelToggle.checked = Boolean(ts.funnel_enabled);
-        if (funnelPill) {
-          funnelPill.textContent = ts.funnel_enabled ? t('net.active', 'Active') : t('net.off', 'Off');
-          funnelPill.style.color = ts.funnel_enabled ? '#f87171' : 'var(--muted)';
-          funnelPill.style.background = ts.funnel_enabled
-            ? 'rgba(239,68,68,0.15)'
-            : 'rgba(255,255,255,0.06)';
         }
 
         // 5. Taildrop Inbox
@@ -915,22 +905,17 @@ export async function fetchAndRenderWireguard() {
 
   // 4. Tailscale Serve & Funnel Toggles
   const tsServeToggle = document.getElementById('ts-serve-toggle');
-  const tsFunnelToggle = document.getElementById('ts-funnel-toggle');
   async function triggerServeFunnelUpdate() {
     const serve = tsServeToggle ? tsServeToggle.checked : false;
-    let funnel = tsFunnelToggle ? tsFunnelToggle.checked : false;
-    if (funnel && !serve) {
-      if (tsServeToggle) tsServeToggle.checked = true;
-    }
     try {
+      // HTTPS inside the tailnet only: Kiboto's own page is never put on the internet (SET-02)
       const res = await api.post('/api/network/mesh-vpn/tailscale/set-serve', {
         serve: tsServeToggle ? tsServeToggle.checked : true,
-        funnel,
+        funnel: false,
         port: 8082,
       });
       if (res && res.status === 'needs_approval' && res.approval_url) {
         if (tsServeToggle) tsServeToggle.checked = Boolean(res.serve_enabled);
-        if (tsFunnelToggle) tsFunnelToggle.checked = Boolean(res.funnel_enabled);
         try {
           window.open(res.approval_url, '_blank', 'noopener,noreferrer');
         } catch (_) {}
@@ -946,14 +931,13 @@ export async function fetchAndRenderWireguard() {
         );
       } else if (res && res.status === 'error') {
         if (tsServeToggle) tsServeToggle.checked = Boolean(res.serve_enabled);
-        if (tsFunnelToggle) tsFunnelToggle.checked = Boolean(res.funnel_enabled);
         showToast(t('toast.tailscale_configuration_error', 'Tailscale configuration error: {error}', { error: res.error || 'Operation failed' }), 'error');
       } else {
         if (serve && !res.serve_enabled) {
           if (tsServeToggle) tsServeToggle.checked = false;
           showToast(t('toast.tailscale_serve_could_not_be_activated', 'Tailscale Serve could not be activated. Check tailscaled daemon status.'), 'warn');
         } else if (serve && res.serve_url) {
-          showServeLink(res.serve_url, Boolean(res.funnel_enabled));
+          showServeLink(res.serve_url, false);
         } else {
           showToast(
             serve
@@ -973,26 +957,6 @@ export async function fetchAndRenderWireguard() {
     tsServeToggle._bound = true;
     tsServeToggle.addEventListener('change', triggerServeFunnelUpdate);
   }
-  if (tsFunnelToggle && !tsFunnelToggle._bound) {
-    tsFunnelToggle._bound = true;
-    tsFunnelToggle.addEventListener('change', () => {
-      if (tsFunnelToggle.checked) {
-        showConfirmToast(
-          t('net.tailscale_funnel_warning_title', 'Enable Public Internet Funnel'),
-          'Warning: Enabling Public Internet Funnel exposes your Kiboto desktop port 8082 to the public internet. Ensure your superadmin password and 2FA are strong. Do you want to proceed?',
-          () => {
-            triggerServeFunnelUpdate();
-          },
-          () => {
-            tsFunnelToggle.checked = false;
-          }
-        );
-      } else {
-        triggerServeFunnelUpdate();
-      }
-    });
-  }
-
   const btnCopyServeUrl = document.getElementById('btn-copy-ts-serve-url');
   if (btnCopyServeUrl && !btnCopyServeUrl._bound) {
     btnCopyServeUrl._bound = true;

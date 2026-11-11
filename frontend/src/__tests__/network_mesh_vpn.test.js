@@ -78,8 +78,6 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
       <div id="ts-serve-url-box" style="display:none;"></div>
       <a id="ts-serve-url-link" href="#"></a>
       <button id="btn-copy-ts-serve-url"></button>
-      <input type="checkbox" id="ts-funnel-toggle" />
-      <span id="ts-funnel-pill"></span>
 
       <span id="ts-taildrop-badge"></span>
       <button id="btn-ts-taildrop-fetch"></button>

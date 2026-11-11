@@ -2804,6 +2804,7 @@ export default {
   "pl.approve": "Tailscale demande d'abord au propriétaire du tailnet d'autoriser Funnel.",
   "pl.off": "Désactivé : les liens fonctionnent à la maison et sur votre tailnet.",
   "pl.also_public": "Problème : ce port est sur Internet et sert aussi {what}. N’importe qui sur Internet peut y accéder.",
+  "pl.own_public": "Problème : la page de connexion de Kiboto est sur Internet, sur le port {port}. Un ancien interrupteur l’a fait.",
   "pl.take_off": "Retirer d’Internet",
   "pl.starting": "Démarrage…",
   "pl.on": "Activé : les liens fonctionnent depuis partout, à {address}.",

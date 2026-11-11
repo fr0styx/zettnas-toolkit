@@ -2804,6 +2804,7 @@ export default {
   "pl.approve": "Tailscale bittet den Tailnet-Besitzer, Funnel zuerst zu erlauben.",
   "pl.off": "Aus: Freigabelinks funktionieren zu Hause und im Tailnet.",
   "pl.also_public": "Problem: Dieser Port ist im Internet erreichbar und stellt auch {what} bereit. Jeder im Internet kann darauf zugreifen.",
+  "pl.own_public": "Problem: Die Anmeldeseite von Kiboto ist im Internet erreichbar, auf Port {port}. Ein älterer Schalter hat das eingerichtet.",
   "pl.take_off": "Aus dem Internet nehmen",
   "pl.starting": "Wird gestartet…",
   "pl.on": "An: Freigabelinks funktionieren überall, unter {address}.",

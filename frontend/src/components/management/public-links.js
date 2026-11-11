@@ -46,7 +46,8 @@ export function renderPublicLinks(st) {
 function renderPortAlert(st) {
   let alert = $('pl-port-alert');
   const others = st.port_public ? st.also_public || [] : [];
-  if (!others.length) {
+  const own = st.own_page_public || [];
+  if (!others.length && !own.length) {
     if (alert) alert.hidden = true;
     return;
   }
@@ -60,7 +61,9 @@ function renderPortAlert(st) {
   alert.hidden = false;
   alert.textContent = '';
   const text = document.createElement('span');
-  text.textContent = `⚠ ${t('pl.also_public', 'Problem: this port is on the internet and also serves {what}. Anyone on the internet can reach that.', { what: others.join(', ') })}`;
+  text.textContent = own.length
+    ? `⚠ ${t('pl.own_public', 'Problem: Kiboto’s own sign-in page is on the internet, on port {port}. An older switch did this.', { port: own[0] })}`
+    : `⚠ ${t('pl.also_public', 'Problem: this port is on the internet and also serves {what}. Anyone on the internet can reach that.', { what: others.join(', ') })}`;
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'btn-pill-toggle is-danger is-small';
@@ -68,7 +71,7 @@ function renderPortAlert(st) {
   btn.addEventListener('click', async () => {
     btn.disabled = true;
     try {
-      renderPublicLinks(await api.post('/api/network/public-links/close-port'));
+      renderPublicLinks(await api.post('/api/network/public-links/close-port', own.length ? { port: own[0] } : {}));
     } catch (err) {
       showToast(/** @type {Error} */ (err).message, 'error');
       btn.disabled = false;

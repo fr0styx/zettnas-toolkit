@@ -437,7 +437,7 @@ request and response schemas.
 | `DELETE` | `/api/v1/network/public-apps/{funnel_port}` | `system:config` | Takes the app on that Funnel port off the internet |
 | `GET` | `/api/v1/network/public-links` | `system:view` | Whether share links work from the internet, their address, and a Tailscale approval to open |
 | `PUT` | `/api/v1/network/public-links` | `system:config` | Turns public share links on (confirmed first: 428 until then) or off |
-| `POST` | `/api/v1/network/public-links/close-port` | `system:config` | Takes the share links' port off the internet with everything it carries there |
+| `POST` | `/api/v1/network/public-links/close-port` | `system:config` | Takes the share links' port off the internet with everything it carries there, or a port that publishes Kiboto's own page |
 
 ### Network & Switching
 

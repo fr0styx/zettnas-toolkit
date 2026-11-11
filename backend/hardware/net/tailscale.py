@@ -450,18 +450,9 @@ def execute_tailscale_set_serve(serve: bool, funnel: bool = False, port: int = 8
     else:
         _run_tailscale_cmd(["serve", "reset"], timeout=4.0)
 
-    # 2. Handle Funnel
-    if funnel and serve and not approval_url:
-        _code_f, out_f = _run_tailscale_cmd(["funnel", "--bg", "--yes", str(port)], timeout=3.0)
-        m_f = re.search(r"https://login\.tailscale\.com/f/funnel[^\s]+", out_f)
-        if m_f:
-            approval_url = m_f.group(0)
-            feature = "funnel"
-        elif _code_f != 0 and "No serve config" not in out_f and "login.tailscale.com" not in out_f:
-            if not error_msg:
-                error_msg = out_f.strip()
-    elif not funnel:
-        _run_tailscale_cmd(["funnel", "reset"], timeout=4.0)
+    # Kiboto's own page is never put on the internet (SET-02). This switch used to do that when
+    # `funnel` was set, and otherwise ran "funnel reset", which also wiped the share links and the
+    # apps chosen for the internet. It does neither now; the route refuses `funnel`.
 
     # Check actual status from tailscale daemon
     sv_code, sv_out = _run_tailscale_cmd(["serve", "status", "--json"], timeout=3.0)
