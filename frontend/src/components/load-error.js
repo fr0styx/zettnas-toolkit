@@ -5,7 +5,7 @@ import { t } from '../i18n.js';
 /** Shows "couldn't load" with the reason and a Retry button that calls `retry`. */
 export function showLoadError(mount, err, retry) {
   const box = document.createElement('div');
-  box.className = 'zn-load-error';
+  box.className = 'kb-load-error';
   box.setAttribute('role', 'alert');
   const text = document.createElement('p');
   const reason = (err && err.message) || String(err || '');

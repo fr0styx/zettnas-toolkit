@@ -5,7 +5,7 @@
  */
 import { t } from './i18n.js';
 
-const BANNER_ID = 'zn-offline-banner';
+const BANNER_ID = 'kb-offline-banner';
 let _probe = null;
 let _offline = false;
 
@@ -16,7 +16,7 @@ function banner() {
     el.id = BANNER_ID;
     el.setAttribute('role', 'status');
     el.setAttribute('aria-live', 'polite');
-    el.className = 'zn-offline-banner';
+    el.className = 'kb-offline-banner';
     el.hidden = true;
     document.body.appendChild(el);
   }

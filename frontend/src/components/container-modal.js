@@ -112,7 +112,7 @@ export function initContainerModal() {
                 <button class="btn-pill-toggle" id="ci-compose-download-btn">${ico('⬇️')} ${t('ci.download_yml', 'Download .yml')}</button>
               </div>
             </div>
-            <div style="position:relative; background:var(--lt-b-091213ff, #091213); border:1px solid var(--zn-line-10); border-radius:6px; overflow:hidden;">
+            <div style="position:relative; background:var(--lt-b-091213ff, #091213); border:1px solid var(--kb-line-10); border-radius:6px; overflow:hidden;">
               <pre class="ci-xs-mono"><code id="ci-compose-code">Generating Docker Compose definition...</code></pre>
             </div>
           </div>
@@ -128,7 +128,7 @@ export function initContainerModal() {
                 <label class="ci-row-xs-muted-2">
                   <input type="checkbox" id="ci-logs-autoscroll" checked> ${t('ci.autoscroll', 'Auto-scroll')}
                 </label>
-                <label style="display:flex; align-items:center; gap:4px; font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); cursor:pointer; font-weight:600;" title="${t('ui.stream_live_container_logs_continuously', 'Stream live container logs continuously via SSE')}">
+                <label style="display:flex; align-items:center; gap:4px; font-size:var(--kb-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); cursor:pointer; font-weight:600;" title="${t('ui.stream_live_container_logs_continuously', 'Stream live container logs continuously via SSE')}">
                   <input type="checkbox" id="ci-logs-stream-toggle"> <span>${t('ci.follow', 'Follow live')}</span>
                 </label>
               </div>
@@ -137,7 +137,7 @@ export function initContainerModal() {
                 <button class="btn-pill-toggle" id="ci-logs-copy-btn">${ico('📋')} ${t('ci.copy_logs', 'Copy logs')}</button>
               </div>
             </div>
-            <div id="ci-logs-terminal" style="background:var(--lt-b-060d0eff, #060d0e); border:1px solid var(--zn-line-10); border-radius:6px; height:340px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.45; color:var(--zn-text-soft);">
+            <div id="ci-logs-terminal" style="background:var(--lt-b-060d0eff, #060d0e); border:1px solid var(--kb-line-10); border-radius:6px; height:340px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--kb-fs-xs); line-height:1.45; color:var(--kb-text-soft);">
               <div class="ci-logs-note ci-muted-center-2">${t('ci.fetching_logs', 'Fetching logs…')}</div>
             </div>
           </div>
@@ -146,23 +146,23 @@ export function initContainerModal() {
           <div id="ci-pane-terminal" class="ci-pane" style="display:none;">
             <div class="ci-row-4">
               <div class="ci-row">
-                <span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(34,197,94,0.15); color:var(--lt-t-22c55eff, #22c55e); border:1px solid rgba(34,197,94,0.3); padding:2px 8px; border-radius:4px; font-weight:700;">${t('ci.live_exec', 'LIVE EXEC')}</span>
+                <span class="ci-badge" style="font-size:var(--kb-fs-xs); background:rgba(34,197,94,0.15); color:var(--lt-t-22c55eff, #22c55e); border:1px solid rgba(34,197,94,0.3); padding:2px 8px; border-radius:4px; font-weight:700;">${t('ci.live_exec', 'LIVE EXEC')}</span>
                 <span class="ci-xs-muted">${t('ci.exec_desc', 'Run commands in the container from the browser')}</span>
               </div>
               <div class="ci-row-5">
                 <button class="btn-pill-toggle" id="ci-term-clear-btn">${ico('🧹')} ${t('ci.clear', 'Clear')}</button>
               </div>
             </div>
-            <div id="ci-term-output" style="background:var(--lt-b-030712ff, #030712); border:1px solid var(--zn-line-12); border-radius:6px 6px 0 0; height:310px; padding:6px 4px 6px 8px; box-sizing:border-box; overflow:hidden;"></div>
-            <div class="ci-term-mobile-keybar" style="display:flex; gap:6px; overflow-x:auto; background:var(--lt-b-0c1c1fff, #0c1c1f); border-left:1px solid var(--zn-line-12); border-right:1px solid var(--zn-line-12); padding:5px 8px; scrollbar-width:none;">
+            <div id="ci-term-output" style="background:var(--lt-b-030712ff, #030712); border:1px solid var(--kb-line-12); border-radius:6px 6px 0 0; height:310px; padding:6px 4px 6px 8px; box-sizing:border-box; overflow:hidden;"></div>
+            <div class="ci-term-mobile-keybar" style="display:flex; gap:6px; overflow-x:auto; background:var(--lt-b-0c1c1fff, #0c1c1f); border-left:1px solid var(--kb-line-12); border-right:1px solid var(--kb-line-12); padding:5px 8px; scrollbar-width:none;">
               ${['ls -la', 'ps aux', 'df -h'].map((c) => `<button type="button" class="btn-pill-toggle ci-term-key-btn is-small ci-x-3" data-cmd="${c}">${c}</button>`).join('')}
               <button type="button" class="btn-pill-toggle ci-term-key-btn is-small ci-x-3" data-key="ArrowUp">${ico('↑')} ${t('ci.prev', 'Previous')}</button>
               <button type="button" class="btn-pill-toggle ci-term-key-btn is-small ci-x-3" data-key="ArrowDown">${ico('↓')} ${t('common.next', 'Next')}</button>
               <button type="button" class="btn-pill-toggle ci-term-key-btn is-small ci-x-3" data-key="clear">${ico('🧹')} ${t('ci.clear', 'Clear')}</button>
             </div>
-            <div style="display:flex; background:var(--lt-b-0e1c1eff, #0e1c1e); border:1px solid var(--zn-line-12); border-top:none; border-radius:0 0 6px 6px; padding:6px 10px; gap:8px; align-items:center;">
-              <span style="color:var(--lt-t-10b981ff, #10b981); font-family:var(--font-mono, monospace); font-weight:bold; font-size:var(--zn-fs-xs);">$</span>
-              <input type="text" id="ci-term-input" placeholder="${t('ui.type_a_command_and_press', 'Type a command and press Enter...')}" style="flex:1; background:transparent; border:none; outline:none; color:var(--lt-t-f5f9f9ff, #f5f9f9); font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);" autocomplete="off" spellcheck="false">
+            <div style="display:flex; background:var(--lt-b-0e1c1eff, #0e1c1e); border:1px solid var(--kb-line-12); border-top:none; border-radius:0 0 6px 6px; padding:6px 10px; gap:8px; align-items:center;">
+              <span style="color:var(--lt-t-10b981ff, #10b981); font-family:var(--font-mono, monospace); font-weight:bold; font-size:var(--kb-fs-xs);">$</span>
+              <input type="text" id="ci-term-input" placeholder="${t('ui.type_a_command_and_press', 'Type a command and press Enter...')}" style="flex:1; background:transparent; border:none; outline:none; color:var(--lt-t-f5f9f9ff, #f5f9f9); font-family:var(--font-mono, monospace); font-size:var(--kb-fs-xs);" autocomplete="off" spellcheck="false">
               <button class="btn-pill-toggle is-small" id="ci-term-send-btn">${t('ci.run', 'Run')}</button>
             </div>
           </div>
@@ -631,7 +631,7 @@ async function loadContainerDetails(cid) {
       titleState.style.display = 'inline-block';
       titleState.style.padding = '2px 6px';
       titleState.style.borderRadius = '4px';
-      titleState.style.fontSize = 'var(--zn-fs-xs)';
+      titleState.style.fontSize = 'var(--kb-fs-xs)';
       titleState.style.fontWeight = '700';
     }
 
@@ -686,7 +686,7 @@ async function loadContainerDetails(cid) {
       <div class="ci-metric-card ci-box-3">
         <div class="ci-row-6">
           <div class="ci-xs-bold-strong">${ico('⚡')} ${t('ci.tuning', 'Live resource limits (no downtime)')}</div>
-          <span style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); background:var(--lt-b-33cdb81a, rgba(51,205,184,0.1)); padding:2px 6px; border-radius:4px;">${t('ci.hot', 'Applies at once')}</span>
+          <span style="font-size:var(--kb-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); background:var(--lt-b-33cdb81a, rgba(51,205,184,0.1)); padding:2px 6px; border-radius:4px;">${t('ci.hot', 'Applies at once')}</span>
         </div>
         <div class="ci-grid-2">
           <div>
@@ -718,7 +718,7 @@ async function loadContainerDetails(cid) {
       <div class="ci-metric-card" style="background:rgba(249,115,22,0.05); border:1px solid rgba(249,115,22,0.25); padding:12px; border-radius:8px; margin-top:12px;">
         <div class="ci-row-7">
           <div>
-            <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-fb923cff, #fb923c); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
+            <div style="font-size:var(--kb-fs-xs); font-weight:700; color:var(--lt-t-fb923cff, #fb923c); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
               <span aria-hidden="true">💾</span>
               <span>${t('ci.backup_title', 'App data & settings backup')}</span>
             </div>
@@ -738,7 +738,7 @@ async function loadContainerDetails(cid) {
       <div class="ci-metric-card" style="background:rgba(255,107,107,0.06); border:1px solid rgba(255,107,107,0.22); padding:12px; border-radius:8px; margin-top:12px;">
         <div class="ci-row-7">
           <div>
-            <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-fca5a5ff, #fca5a5); text-transform:uppercase; letter-spacing:0.5px;">${ico('⚠️')} ${t('ci.danger', 'Danger zone')}</div>
+            <div style="font-size:var(--kb-fs-xs); font-weight:700; color:var(--lt-t-fca5a5ff, #fca5a5); text-transform:uppercase; letter-spacing:0.5px;">${ico('⚠️')} ${t('ci.danger', 'Danger zone')}</div>
             <div class="ci-xs-muted-3">${t('ci.danger_desc', 'Restart this container, or delete it with its volumes and images.')}</div>
           </div>
           <div class="ci-row-5">
@@ -912,7 +912,7 @@ function renderPortsTab(details) {
                 ? `<span class="ci-bold-accent">${t('ci.host_direct', 'Host direct (:{port})', { port: p.public_port })}</span>`
                 : (p.public_port ? `${escapeHtml(p.ip || '0.0.0.0')}:${p.public_port}` : `<span class="ci-muted">${t('ci.none', 'None')}</span>`);
               const directLink = p.public_port
-                ? `<a href="http://${currentHost}:${p.public_port}/" target="_blank" rel="noopener noreferrer" style="color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); font-size:var(--zn-fs-xs);">http://${currentHost}:${p.public_port} ↗</a>`
+                ? `<a href="http://${currentHost}:${p.public_port}/" target="_blank" rel="noopener noreferrer" style="color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); font-size:var(--kb-fs-xs);">http://${currentHost}:${p.public_port} ↗</a>`
                 : '—';
               return `
                 <tr>
@@ -939,7 +939,7 @@ function renderPortsTab(details) {
         <div class="ci-metric-card ci-box-5">
           <div class="ci-row-8">
             <div class="ci-xs-bold-strong">${ico('🔄')} ${t('ci.reconfigure', 'Change ports (the container is copied and recreated)')}</div>
-            <span style="font-size:var(--zn-fs-xs); color:var(--warn); background:rgba(245,158,11,0.12); padding:2px 6px; border-radius:4px;">${t('ci.rollback', 'Rolls back on failure')}</span>
+            <span style="font-size:var(--kb-fs-xs); color:var(--warn); background:rgba(245,158,11,0.12); padding:2px 6px; border-radius:4px;">${t('ci.rollback', 'Rolls back on failure')}</span>
           </div>
           <p class="ci-xs-muted-5">
             ${t('ci.reconfigure_desc', 'Change the host ports. The container is stopped, copied and started with the new ports; every mounted folder stays.')}
@@ -979,7 +979,7 @@ function renderPortsTab(details) {
       const statusEl = document.getElementById(`ci-port-check-${idx}`);
       if (!statusEl) return;
       if (isNaN(val) || val <= 0 || val > 65535) {
-        statusEl.innerHTML = '<span class="ci-port-badge badge-crit" style="color:var(--crit); font-size:var(--zn-fs-xs); padding:2px 6px; border-radius:4px; background:rgba(239,68,68,0.12);">' + t('ci.port_invalid', 'Invalid port') + '</span>';
+        statusEl.innerHTML = '<span class="ci-port-badge badge-crit" style="color:var(--crit); font-size:var(--kb-fs-xs); padding:2px 6px; border-radius:4px; background:rgba(239,68,68,0.12);">' + t('ci.port_invalid', 'Invalid port') + '</span>';
         return;
       }
       statusEl.innerHTML = '<span class="ci-xs-muted-2">' + t('ci.checking', 'Checking…') + '</span>';
@@ -989,12 +989,12 @@ function renderPortsTab(details) {
         try {
           const chk = await api.get(`/api/docker/check_port?port=${val}&proto=${proto}`);
           if (chk && chk.available) {
-            statusEl.innerHTML = `<span class="ci-port-badge badge-ok" style="color:var(--ok2); font-weight:600; font-size:var(--zn-fs-xs); padding:2px 6px; border-radius:4px; background:rgba(34,197,94,0.12);">${ico('✓')} ${t('ci.port_free', 'Port {port} is free', { port: val })}</span>`;
+            statusEl.innerHTML = `<span class="ci-port-badge badge-ok" style="color:var(--ok2); font-weight:600; font-size:var(--kb-fs-xs); padding:2px 6px; border-radius:4px; background:rgba(34,197,94,0.12);">${ico('✓')} ${t('ci.port_free', 'Port {port} is free', { port: val })}</span>`;
           } else {
             const taken = chk && chk.in_use_by
               ? t('ci.port_used_by', 'Port {port} is in use by {name}', { port: val, name: chk.in_use_by })
               : t('ci.port_used', 'Port {port} is in use', { port: val });
-            statusEl.innerHTML = `<span class="ci-port-badge badge-warn" style="color:var(--crit); font-weight:600; font-size:var(--zn-fs-xs); padding:2px 6px; border-radius:4px; background:rgba(239,68,68,0.15);">${ico('⚠️')} ${escapeHtml(taken)}</span>`;
+            statusEl.innerHTML = `<span class="ci-port-badge badge-warn" style="color:var(--crit); font-weight:600; font-size:var(--kb-fs-xs); padding:2px 6px; border-radius:4px; background:rgba(239,68,68,0.15);">${ico('⚠️')} ${escapeHtml(taken)}</span>`;
           }
         } catch (err) {
           console.error('[check_port error]', err);
@@ -1081,7 +1081,7 @@ function renderMountsTab(details) {
           ${mounts.map((m) => {
             const isFmNavigable = m.source && (m.source.startsWith('/mnt/') || m.source.startsWith('/'));
             const appdataBadge = m.is_appdata
-              ? '<span style="display:inline-block; margin-left:4px; padding:1px 4px; border-radius:3px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(167, 139, 250, 0.2); color:var(--lt-t-c4b5fdff, #c4b5fd);">' + t('ci.appdata_badge', 'APP DATA') + '</span>'
+              ? '<span style="display:inline-block; margin-left:4px; padding:1px 4px; border-radius:3px; font-size:var(--kb-fs-xs); font-weight:700; background:rgba(167, 139, 250, 0.2); color:var(--lt-t-c4b5fdff, #c4b5fd);">' + t('ci.appdata_badge', 'APP DATA') + '</span>'
               : '';
             const btnHtml = isFmNavigable
               ? `<button class="btn-pill-toggle btn-reveal-fm is-small" data-path="${escapeHtml(m.source)}">${ico('📁')} ${t('ui.open_in_file_explorer', 'Open in File Explorer')}</button>`
@@ -1093,7 +1093,7 @@ function renderMountsTab(details) {
                   ${escapeHtml(m.source)} ${appdataBadge}
                 </td>
                 <td class="ci-xs-muted-mono-3">${escapeHtml(m.destination)}</td>
-                <td><span style="font-size:var(--zn-fs-xs); font-weight:700; text-transform:uppercase; color:${m.rw ? 'var(--ok2)' : 'var(--warn)'};">${escapeHtml(m.mode)}</span></td>
+                <td><span style="font-size:var(--kb-fs-xs); font-weight:700; text-transform:uppercase; color:${m.rw ? 'var(--ok2)' : 'var(--warn)'};">${escapeHtml(m.mode)}</span></td>
                 <td class="ci-xs-muted">${escapeHtml(m.type)}</td>
                 <td class="ci-x-7">${btnHtml}</td>
               </tr>
@@ -1152,7 +1152,7 @@ function renderEnvTab(details) {
         <tbody>
           ${envs.map((e, idx) => {
             const isSec = e.is_secret;
-            const secBadge = isSec ? '<span style="font-size:var(--zn-fs-xs); padding:1px 4px; border-radius:3px; background:rgba(239, 68, 68, 0.15); color:var(--zn-text-crit); margin-left:4px;">SECRET</span>' : '';
+            const secBadge = isSec ? '<span style="font-size:var(--kb-fs-xs); padding:1px 4px; border-radius:3px; background:rgba(239, 68, 68, 0.15); color:var(--kb-text-crit); margin-left:4px;">SECRET</span>' : '';
             return `
               <tr>
                 <td class="ci-bold-strong-mono">
@@ -1389,14 +1389,14 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
             <div class="ci-xs-soft-3">
               ${t('ci.delete_q', 'Delete the container {name} ({id}) for good?', {
                 name: '<strong class="ci-strong" id="cdm-cname"></strong>',
-                id: '<code id="cdm-cid" style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8));"></code>',
+                id: '<code id="cdm-cid" style="font-family:var(--font-mono, monospace); font-size:var(--kb-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8));"></code>',
               })}
             </div>
-            <div style="background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.25); border-radius:6px; padding:10px 12px; font-size:var(--zn-fs-xs); color:var(--lt-t-fca5a5ff, #fca5a5); line-height:1.4;">
+            <div style="background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.25); border-radius:6px; padding:10px 12px; font-size:var(--kb-fs-xs); color:var(--lt-t-fca5a5ff, #fca5a5); line-height:1.4;">
               ${ico('⚠️')} <strong>${t('ci.warning', 'Warning:')}</strong> ${t('ci.delete_warn', 'The container is stopped and removed from Docker. Anything saved only inside the container is lost.')}
             </div>
             <div class="ci-col-box">
-              <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-fb923cff, #fb923c); font-weight:600; cursor:pointer;">
+              <label style="display:flex; align-items:center; gap:8px; font-size:var(--kb-fs-xs); color:var(--lt-t-fb923cff, #fb923c); font-weight:600; cursor:pointer;">
                 <input class="ci-x-2" type="checkbox" id="cdm-archive" checked>
                 <span>${t('ci.opt_archive', 'Archive the app data and settings (kept in the backup library, never deleted)')}</span>
               </label>
@@ -1537,11 +1537,11 @@ async function renderContainerEditTab(cid) {
             ${t('ci.editor_desc', 'Saving copies the container with the new settings and switches over; if that fails, the old one comes back. Every setting is checked before the container is touched.')}
           </div>
         </div>
-        ${isToolkit ? `<span class="ci-badge" style="background:rgba(239,68,68,0.15); color:var(--lt-t-fca5a5ff, #fca5a5); font-size:var(--zn-fs-xs); padding:2px 8px; border-radius:4px; font-weight:700;">${t('ci.self_protected', 'SELF-PROTECTED')}</span>` : ''}
+        ${isToolkit ? `<span class="ci-badge" style="background:rgba(239,68,68,0.15); color:var(--lt-t-fca5a5ff, #fca5a5); font-size:var(--kb-fs-xs); padding:2px 8px; border-radius:4px; font-weight:700;">${t('ci.self_protected', 'SELF-PROTECTED')}</span>` : ''}
       </div>
 
       ${isToolkit ? `
-        <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:6px; padding:12px; margin-bottom:14px; color:var(--lt-t-fca5a5ff, #fca5a5); font-size:var(--zn-fs-xs);">
+        <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:6px; padding:12px; margin-bottom:14px; color:var(--lt-t-fca5a5ff, #fca5a5); font-size:var(--kb-fs-xs);">
           ${ico('⚠️')} ${t('ci.self_note', 'Kiboto can’t recreate its own container from here. Change its settings in Docker Compose or the host’s template, so running connections are not cut.')}
         </div>
       ` : ''}

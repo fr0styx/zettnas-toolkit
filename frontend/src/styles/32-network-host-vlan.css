@@ -42,7 +42,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: var(--zn-shade-40);
+  background: var(--kb-shade-40);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -56,15 +56,15 @@
   font-weight: 800;
   font-family: var(--font-mono);
   line-height: 1;
-  color: var(--zn-text-warn);
+  color: var(--kb-text-warn);
 }
 
 .canary-timer-circle.danger .canary-digits {
-  color: var(--zn-text-crit);
+  color: var(--kb-text-crit);
 }
 
 .canary-unit {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   letter-spacing: 1px;
   color: var(--muted);
@@ -80,7 +80,7 @@
 .net-cidr-preset.active,
 .net-dns-preset.active {
   background: rgba(79, 216, 196, 0.2);
-  color: var(--zn-text-accent);
+  color: var(--kb-text-accent);
   border-color: rgba(79, 216, 196, 0.5);
 }
 
@@ -94,8 +94,8 @@
   gap: 6px;
   max-height: 150px;
   overflow-y: auto;
-  background: var(--zn-shade-30);
-  border: 1px solid var(--zn-line-8);
+  background: var(--kb-shade-30);
+  border: 1px solid var(--kb-line-8);
   border-radius: 6px;
   padding: 8px 10px;
 }
@@ -105,7 +105,7 @@
 }
 
 .network-member-checkbox-list::-webkit-scrollbar-thumb {
-  background: var(--zn-glaze-15);
+  background: var(--kb-glaze-15);
   border-radius: 3px;
 }
 
@@ -113,7 +113,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   cursor: pointer;
   user-select: none;
   padding: 4px 6px;
@@ -122,7 +122,7 @@
 }
 
 .network-member-checkbox-list label:hover {
-  background: var(--zn-glaze-5);
+  background: var(--kb-glaze-5);
 }
 
 .network-member-checkbox-list input[type="checkbox"] {

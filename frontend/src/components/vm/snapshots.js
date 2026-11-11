@@ -39,7 +39,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       </div>
 
       <!-- Navigation Tabs -->
-      <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--zn-line-8); padding: 8px 18px; background: var(--lt-b-00000026, rgba(0,0,0,0.15));">
+      <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--kb-line-8); padding: 8px 18px; background: var(--lt-b-00000026, rgba(0,0,0,0.15));">
         <button type="button" id="tab-btn-snaps" class="btn-pill-toggle active">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           <span>${t('vsn.tab_snaps', 'Snapshots (QCOW2)')}</span>
@@ -58,14 +58,14 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
               <div class="vmsn-xs-bold-strong">${t('vsn.snaps_title', 'Snapshots of this VM')}</div>
               <div class="vmsn-xs-muted" id="vm-snap-rule">${escapeHtml(isOff(targetVm) ? t('vsn.snaps_desc', 'A snapshot keeps the disk as it is now, so you can go back to it.') : t('vsn.snaps_off_first', 'Shut {name} down first. Snapshots are made, restored and deleted only while the machine is off.', { name: targetVm.name }))}</div>
             </div>
-            <button type="button" id="btn-take-snapshot" class="btn-pill-toggle" style="background: rgba(51,205,184,0.15); border: 1px solid rgba(51,205,184,0.35); color: var(--zn-text-accent);">
+            <button type="button" id="btn-take-snapshot" class="btn-pill-toggle" style="background: rgba(51,205,184,0.15); border: 1px solid rgba(51,205,184,0.35); color: var(--kb-text-accent);">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               <span>${t('vm.take_snapshot', '+ Take Snapshot')}</span>
             </button>
           </div>
 
           <!-- Create Snapshot Form -->
-          <div id="vm-snap-create-form" style="display: none; background: var(--zn-shade-30); border: 1px solid rgba(51,205,184,0.3); border-radius: 8px; padding: 12px; flex-direction: column; gap: 10px;">
+          <div id="vm-snap-create-form" style="display: none; background: var(--kb-shade-30); border: 1px solid rgba(51,205,184,0.3); border-radius: 8px; padding: 12px; flex-direction: column; gap: 10px;">
             <div class="vmsn-xs-bold-accent">${t('vsn.new_title', 'New snapshot')}</div>
             <div class="vmsn-row-5">
               <input class="vmsn-xs-strong-box-grow" type="text" id="vm-snap-name-input" placeholder="${t('vm.snapshot_name', 'Snapshot Name')}" />
@@ -89,7 +89,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
               <div class="vmsn-xs-bold-strong">${t('vsn.bk_title', 'Full VM backups')}</div>
               <div class="vmsn-xs-muted">${t('vsn.bk_desc', 'Archives (.tar.gz) that hold the VM’s settings and its disks.')}</div>
             </div>
-            <button type="button" id="btn-create-hyper-backup" class="btn-pill-toggle" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: var(--zn-text-ok);">
+            <button type="button" id="btn-create-hyper-backup" class="btn-pill-toggle" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: var(--kb-text-ok);">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               <span>${t('ui.create_hyper_backup', '+ Back up now')}</span>
             </button>
@@ -225,13 +225,13 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
                 <td class="vmsn-muted-mono">${escapeHtml(s.date || s.created_at || '—')}</td>
                 <td class="vmsn-muted">${escapeHtml(s.size_formatted || s.vm_size || '—')}</td>
                 <td class="vmsn-x-3">
-                  <span style="font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(51,205,184,0.15); color: var(--zn-text-accent);">
+                  <span style="font-size: var(--kb-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(51,205,184,0.15); color: var(--kb-text-accent);">
                     ${s.is_live ? t('vsn.live', 'Memory and disk') : t('vsn.disk', 'Disk only')}
                   </span>
                 </td>
                 <td class="vmsn-x-4">
                   <div class="vmsn-row-7">
-                    <button class="btn-pill-toggle btn-snap-revert" data-name="${escapeHtml(s.name)}" style="color: var(--zn-text-accent); border-color: rgba(51,205,184,0.3);">
+                    <button class="btn-pill-toggle btn-snap-revert" data-name="${escapeHtml(s.name)}" style="color: var(--kb-text-accent); border-color: rgba(51,205,184,0.3);">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
                       <span>${t('vm.revert_snapshot', 'Revert')}</span>
                     </button>
@@ -329,7 +329,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
                 <td class="vmsn-muted">${escapeHtml(b.size_formatted || '—')}</td>
                 <td class="vmsn-x-4">
                   <div class="vmsn-row-7">
-                    <button class="btn-pill-toggle btn-bk-restore" data-id="${escapeHtml(b.id)}" style="color: var(--zn-text-ok); border-color: rgba(16,185,129,0.3);">
+                    <button class="btn-pill-toggle btn-bk-restore" data-id="${escapeHtml(b.id)}" style="color: var(--kb-text-ok); border-color: rgba(16,185,129,0.3);">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
                       <span>${t('vsn.restore', 'Restore')}</span>
                     </button>

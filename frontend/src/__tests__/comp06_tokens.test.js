@@ -5,7 +5,7 @@ describe('API tokens: folders, use and client settings (COMP-06)', () => {
   it('shows the folders a token is limited to, or that it has them all', () => {
     const limited = tokenRowHtml({ id: 'a', name: 'Paperless', masked_token: 'zat_ab...cd', folders: ['/mnt/user/Docs'] });
     expect(limited).toContain('/mnt/user/Docs');
-    expect(limited).toContain('zn-tag');
+    expect(limited).toContain('kb-tag');
     expect(tokenRowHtml({ id: 'b', name: 'HA', masked_token: 'zat_x', folders: [] })).toContain('All folders');
   });
 

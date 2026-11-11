@@ -1,7 +1,7 @@
 /* Passkeys (passkeys-card.js): the list under Two-step sign-in */
-#passkeys-card .pk-list { list-style: none; margin: var(--zn-space-2) 0; padding: 0; display: grid; gap: var(--zn-space-2); }
-#passkeys-card .pk-item { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: center; justify-content: space-between; overflow-wrap: anywhere; }
+#passkeys-card .pk-list { list-style: none; margin: var(--kb-space-2) 0; padding: 0; display: grid; gap: var(--kb-space-2); }
+#passkeys-card .pk-item { display: flex; flex-wrap: wrap; gap: var(--kb-space-2); align-items: center; justify-content: space-between; overflow-wrap: anywhere; }
 #passkeys-card .pk-item > span:first-child { display: grid; gap: 2px; }
-#passkeys-card .pk-actions { display: flex; gap: var(--zn-space-1); }
-#passkeys-card .pk-note { margin: var(--zn-space-2) 0; }
-.pk-reset { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: center; margin-top: var(--zn-space-2); }
+#passkeys-card .pk-actions { display: flex; gap: var(--kb-space-1); }
+#passkeys-card .pk-note { margin: var(--kb-space-2) 0; }
+.pk-reset { display: flex; flex-wrap: wrap; gap: var(--kb-space-2); align-items: center; margin-top: var(--kb-space-2); }

@@ -9,7 +9,7 @@
 }
 .theme-preset-card {
   background: var(--lt-b-15282cff, #15282c);
-  border: 1px solid var(--zn-line-8);
+  border: 1px solid var(--kb-line-8);
   border-radius: 9px;
   padding: 8px 10px;
   display: flex;
@@ -44,9 +44,9 @@
   overflow: hidden;
 }
 .theme-preset-name {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -55,7 +55,7 @@
   color: var(--lt-ink-brand, var(--brand));
 }
 .theme-preset-desc {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
   font-weight: 600;
   white-space: nowrap;

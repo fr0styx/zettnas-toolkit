@@ -449,7 +449,7 @@ function renderSpotlightResults() {
   }
 
   if (_filteredItems.length === 0) {
-    resultsContainer.innerHTML = '<div style="padding:24px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);">' + t('sp.no_results', 'Nothing found.') + '</div>';
+    resultsContainer.innerHTML = '<div style="padding:24px; text-align:center; color:var(--muted); font-size:var(--kb-fs-xs);">' + t('sp.no_results', 'Nothing found.') + '</div>';
     return;
   }
 

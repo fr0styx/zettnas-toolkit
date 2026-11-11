@@ -110,8 +110,8 @@ body.theme-yak .lcd-dot.active {
   align-content: stretch;
 }
 .bay-matrix-card {
-  background: var(--zn-glaze-3);
-  border: 1px solid var(--zn-line-8);
+  background: var(--kb-glaze-3);
+  border: 1px solid var(--kb-line-8);
   border-radius: 5px;
   padding: 4px 3px;
   display: flex;
@@ -168,7 +168,7 @@ body.theme-yak .lcd-dot.active {
   font-weight: 700;
   padding: 1px 3px;
   border-radius: 3px;
-  background: var(--zn-glaze-8);
+  background: var(--kb-glaze-8);
 }
 .bmc-health {
   font-size: 7.5px;
@@ -190,8 +190,8 @@ body.theme-yak .lcd-dot.active {
   flex: 1;
 }
 .net-io-panel {
-  background: var(--zn-glaze-3);
-  border: 1px solid var(--zn-line-8);
+  background: var(--kb-glaze-3);
+  border: 1px solid var(--kb-line-8);
   border-radius: 5px;
   padding: 6px 8px;
   display: flex;
@@ -215,12 +215,12 @@ body.theme-yak .lcd-dot.active {
   font-size: 14px;
   font-weight: 800;
   font-family: var(--font-mono, monospace);
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
 }
 .nio-bar-bg {
   width: 100%;
   height: 5px;
-  background: var(--zn-glaze-8);
+  background: var(--kb-glaze-8);
   border-radius: 3px;
   overflow: hidden;
   margin: 4px 0;
@@ -249,8 +249,8 @@ body.theme-yak .lcd-dot.active {
   flex: 1;
 }
 .uc-panel {
-  background: var(--zn-glaze-3);
-  border: 1px solid var(--zn-line-8);
+  background: var(--kb-glaze-3);
+  border: 1px solid var(--kb-line-8);
   border-radius: 5px;
   padding: 6px 8px;
   display: flex;
@@ -295,7 +295,7 @@ body.theme-yak .lcd-dot.active {
 .uc-bar-bg {
   width: 100%;
   height: 5px;
-  background: var(--zn-glaze-8);
+  background: var(--kb-glaze-8);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -314,7 +314,7 @@ body.theme-yak .lcd-dot.active {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   color: var(--ok2);
   margin-top: 2px;
@@ -338,7 +338,7 @@ body.theme-yak .lcd-dot.active {
 .unraid-parity-bar-bg {
   width: 100%;
   height: 4px;
-  background: var(--zn-glaze-10);
+  background: var(--kb-glaze-10);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -349,7 +349,7 @@ body.theme-yak .lcd-dot.active {
   transition: width 0.3s ease;
 }
 .unraid-parity-txt {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
   font-family: var(--font-mono, monospace);
 }
@@ -363,8 +363,8 @@ body.theme-yak .lcd-dot.active {
 .profile-btn {
   flex: 1;
   padding: 10px 14px;
-  background: var(--zn-glaze-4);
-  border: 1px solid var(--zn-line-12);
+  background: var(--kb-glaze-4);
+  border: 1px solid var(--kb-line-12);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -375,23 +375,23 @@ body.theme-yak .lcd-dot.active {
   color: var(--text);
 }
 .profile-btn:hover {
-  background: var(--zn-glaze-8);
+  background: var(--kb-glaze-8);
   border-color: var(--lt-r-ffffff40, rgba(255, 255, 255, 0.25));
   transform: translateY(-1px);
 }
 .profile-btn.active {
   background: rgba(37, 194, 160, 0.15);
   border-color: var(--ok2);
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
   box-shadow: 0 0 12px rgba(37, 194, 160, 0.25);
 }
 .profile-btn-title {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   letter-spacing: 0.5px;
 }
 .profile-btn-desc {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
 }
 
@@ -403,8 +403,8 @@ body.theme-yak .lcd-dot.active {
   margin-top: 12px;
 }
 .unraid-detail-item {
-  background: var(--zn-shade-25);
-  border: 1px solid var(--zn-line-8);
+  background: var(--kb-shade-25);
+  border: 1px solid var(--kb-line-8);
   border-radius: 6px;
   padding: 8px 10px;
   display: flex;
@@ -412,13 +412,13 @@ body.theme-yak .lcd-dot.active {
   gap: 3px;
 }
 .udi-label {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
 }
 .udi-val {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   color: var(--text);
   font-family: var(--font-mono, monospace);
@@ -426,8 +426,8 @@ body.theme-yak .lcd-dot.active {
 
 /* GPU Transcode Engine Card */
 .gpu-transcode-card {
-  background: var(--zn-shade-25);
-  border: 1px solid var(--zn-line-8);
+  background: var(--kb-shade-25);
+  border: 1px solid var(--kb-line-8);
   border-radius: 8px;
   padding: 12px 14px;
   display: flex;
@@ -465,18 +465,18 @@ body.theme-yak .lcd-dot.active {
 .gpu-name {
   font-size: 13px;
   font-weight: 700;
-  color: var(--text, var(--zn-text-strong));
+  color: var(--text, var(--kb-text-strong));
   font-family: var(--font-sans);
 }
 .gpu-driver-badge,
 .gpu-node-badge {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-family: var(--font-mono, monospace);
   padding: 2px 7px;
   border-radius: 4px;
-  background: var(--zn-glaze-6);
+  background: var(--kb-glaze-6);
   color: var(--muted, #94a3b8);
-  border: 1px solid var(--zn-line-8);
+  border: 1px solid var(--kb-line-8);
 }
 .gpu-node-badge {
   color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff));
@@ -484,7 +484,7 @@ body.theme-yak .lcd-dot.active {
   border-color: var(--lt-r-00f0ff33, rgba(0, 240, 255, 0.2));
 }
 .gpu-accel-desc {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--ok2, #25c2a0);
   font-weight: 600;
 }
@@ -494,10 +494,10 @@ body.theme-yak .lcd-dot.active {
   flex-wrap: wrap;
   gap: 8px;
   padding-top: 6px;
-  border-top: 1px solid var(--zn-line-5);
+  border-top: 1px solid var(--kb-line-5);
 }
 .gpu-codec-label {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   color: var(--muted, #94a3b8);
   text-transform: uppercase;
@@ -509,7 +509,7 @@ body.theme-yak .lcd-dot.active {
   gap: 6px;
 }
 .gpu-codec-tag {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   font-family: var(--font-mono, monospace);
   padding: 2px 8px;
@@ -532,8 +532,8 @@ body.theme-yak .lcd-dot.active {
   overflow-x: auto;
   overflow-y: hidden;
   height: 9px;
-  background: var(--zn-shade-40);
-  border: 1px solid var(--zn-line-8);
+  background: var(--kb-shade-40);
+  border: 1px solid var(--kb-line-8);
   border-radius: 6px;
   box-sizing: border-box;
   scrollbar-width: thin;
@@ -569,7 +569,7 @@ body.theme-yak .lcd-dot.active {
 
 .docker-table-top-scroll::-webkit-scrollbar-track,
 .docker-table-sticky-scroll::-webkit-scrollbar-track {
-  background: var(--zn-shade-30) !important;
+  background: var(--kb-shade-30) !important;
   border-radius: 4px !important;
 }
 
@@ -577,7 +577,7 @@ body.theme-yak .lcd-dot.active {
 .docker-table-sticky-scroll::-webkit-scrollbar-thumb {
   background: var(--brand, rgba(37, 194, 160, 0.75)) !important;
   border-radius: 4px !important;
-  border: 1px solid var(--zn-line-12) !important;
+  border: 1px solid var(--kb-line-12) !important;
   cursor: grab;
 }
 
@@ -611,17 +611,17 @@ body.theme-yak .docker-table-sticky-scroll::-webkit-scrollbar-thumb:hover {
 .copy-history-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   margin-top: 10px;
 }
 .copy-history-table th {
   text-align: left;
   padding: 8px 10px;
-  background: var(--zn-shade-35);
+  background: var(--kb-shade-35);
   color: var(--muted);
   font-weight: 700;
-  border-bottom: 1px solid var(--zn-line-10);
-  font-size: var(--zn-fs-xs);
+  border-bottom: 1px solid var(--kb-line-10);
+  font-size: var(--kb-fs-xs);
   text-transform: uppercase;
 }
 .copy-history-table th.sortable-th {
@@ -631,8 +631,8 @@ body.theme-yak .docker-table-sticky-scroll::-webkit-scrollbar-thumb:hover {
   white-space: nowrap;
 }
 .copy-history-table th.sortable-th:hover {
-  color: var(--text, var(--zn-text));
-  background: var(--zn-glaze-4);
+  color: var(--text, var(--kb-text));
+  background: var(--kb-glaze-4);
 }
 .copy-history-table th.sortable-th:focus-visible {
   outline: 1.5px solid var(--accent-cyan, #38bdf8);
@@ -641,7 +641,7 @@ body.theme-yak .docker-table-sticky-scroll::-webkit-scrollbar-thumb:hover {
 .docker-sort-indicator {
   display: inline-block;
   margin-left: 5px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   opacity: 0.35;
   transition: opacity 0.15s ease, color 0.15s ease;
   min-width: 8px;
@@ -658,17 +658,17 @@ body.theme-yak .docker-table-sticky-scroll::-webkit-scrollbar-thumb:hover {
 }
 .copy-history-table td {
   padding: 8px 10px;
-  border-bottom: 1px solid var(--zn-line-5);
+  border-bottom: 1px solid var(--kb-line-5);
   color: var(--text);
 }
 .copy-history-table tr:hover td {
-  background: var(--zn-glaze-2);
+  background: var(--kb-glaze-2);
 }
 .checksum-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;

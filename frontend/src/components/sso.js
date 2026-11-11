@@ -55,15 +55,15 @@ export async function renderSsoPanel() {
   }
   host.replaceChildren();
   const title = document.createElement('div');
-  title.className = 'zn-title';
+  title.className = 'kb-title';
   setIconLabel(title, '🔑', t('sso.title', 'Single sign-on (OpenID Connect)'));
   const desc = document.createElement('div');
-  desc.className = 'zn-muted';
+  desc.className = 'kb-muted';
   desc.textContent = t('sso.desc', 'Let people sign in with Authentik, Keycloak, Authelia or another OpenID Connect provider. Register Kiboto there with this redirect URI: {uri}', { uri: cfg.redirect_uri });
   const form = document.createElement('form');
-  form.className = 'zn-form';
+  form.className = 'kb-form';
   const enabled = document.createElement('label');
-  enabled.className = 'zn-toggle';
+  enabled.className = 'kb-toggle';
   const cb = document.createElement('input');
   cb.type = 'checkbox';
   cb.name = 'enabled';
@@ -72,7 +72,7 @@ export async function renderSsoPanel() {
   form.append(enabled);
   for (const [key, i18n, label, placeholder] of FIELDS) {
     const wrap = document.createElement('label');
-    wrap.className = 'zn-field';
+    wrap.className = 'kb-field';
     const span = document.createElement('span');
     span.textContent = t(i18n, label);
     const input = document.createElement('input');
@@ -113,8 +113,8 @@ export async function renderSsoPanel() {
 
 /** One click: Immich uses the same sign-in provider (M3). */
 function immichBlock() {
-  const box = Object.assign(document.createElement('div'), { className: 'zn-form' });
-  box.append(Object.assign(document.createElement('div'), { className: 'zn-title zn-title--sub', textContent: t('sso.immich_title', 'Immich') }));
+  const box = Object.assign(document.createElement('div'), { className: 'kb-form' });
+  box.append(Object.assign(document.createElement('div'), { className: 'kb-title kb-title--sub', textContent: t('sso.immich_title', 'Immich') }));
   const url = Object.assign(document.createElement('input'), {
     className: 'tz-select-input',
     type: 'url',
@@ -122,7 +122,7 @@ function immichBlock() {
   });
   url.setAttribute('aria-label', t('sso.immich_url', 'Immich address'));
   const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'btn-pill-toggle', textContent: t('sso.immich_connect', 'Use this sign-in for Immich') });
-  const out = Object.assign(document.createElement('div'), { className: 'zn-muted' });
+  const out = Object.assign(document.createElement('div'), { className: 'kb-muted' });
   out.setAttribute('aria-live', 'polite');
   btn.addEventListener('click', async () => {
     out.textContent = '…';
@@ -158,17 +158,17 @@ export async function renderLdapPanel() {
     return;
   }
   host.replaceChildren();
-  const title = Object.assign(document.createElement('div'), { className: 'zn-title' });
+  const title = Object.assign(document.createElement('div'), { className: 'kb-title' });
   setIconLabel(title, '🏢', t('ldap.title', 'LDAP / Active Directory'));
   const desc = Object.assign(document.createElement('div'), {
-    className: 'zn-muted',
+    className: 'kb-muted',
     textContent: t('ldap.desc', 'People sign in with their directory name and password. Local accounts keep their own password. Use ldaps:// or StartTLS.'),
   });
   const form = document.createElement('form');
-  form.className = 'zn-form';
+  form.className = 'kb-form';
   const toggle = (name, label, checked) => {
     const l = document.createElement('label');
-    l.className = 'zn-toggle';
+    l.className = 'kb-toggle';
     const cb = Object.assign(document.createElement('input'), { type: 'checkbox', name, checked: Boolean(checked) });
     l.append(cb, Object.assign(document.createElement('span'), { textContent: label }));
     form.append(l);
@@ -176,7 +176,7 @@ export async function renderLdapPanel() {
   };
   const enabled = toggle('enabled', t('ldap.enabled', 'Allow directory sign-in'), cfg.enabled);
   for (const [key, i18n, label, placeholder] of LDAP_FIELDS) {
-    const wrap = Object.assign(document.createElement('label'), { className: 'zn-field' });
+    const wrap = Object.assign(document.createElement('label'), { className: 'kb-field' });
     const input = Object.assign(document.createElement('input'), {
       name: key,
       className: 'tz-select-input',
@@ -189,10 +189,10 @@ export async function renderLdapPanel() {
     form.append(wrap);
   }
   const startTls = toggle('start_tls', t('ldap.start_tls', 'Use StartTLS (for ldap:// servers)'), cfg.start_tls);
-  const row = Object.assign(document.createElement('div'), { className: 'zn-row' });
+  const row = Object.assign(document.createElement('div'), { className: 'kb-row' });
   const save = Object.assign(document.createElement('button'), { type: 'submit', className: 'btn-pill-toggle', textContent: t('sso.save', 'Save') });
   const test = Object.assign(document.createElement('button'), { type: 'button', className: 'btn-pill-toggle', textContent: t('ldap.test', 'Test connection') });
-  const status = Object.assign(document.createElement('span'), { className: 'zn-muted' });
+  const status = Object.assign(document.createElement('span'), { className: 'kb-muted' });
   status.setAttribute('aria-live', 'polite');
   row.append(save, test, status);
   form.append(row);

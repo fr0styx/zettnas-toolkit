@@ -2129,7 +2129,7 @@ export function initWidgets() {
         if (nUtil > 0 || (stats.ai_active && stats.ai_accelerator === 'npu')) {
           aiEngineStatus.innerHTML = '<span class="ai-status-dot active"></span> <strong style="color:var(--lt-ink-brand, var(--brand, #33cdb8));">' + escapeHtml(t('wai.npu_active', 'Intel AI Boost NPU Active')) + '</strong>';
         } else if (gUtil > 0 || (stats.ai_active && (stats.ai_accelerator === 'gpu' || stats.ai_accelerator === 'arc'))) {
-          aiEngineStatus.innerHTML = '<span class="ai-status-dot active-gpu"></span> <strong style="color:var(--zn-text-ai);">' + escapeHtml(t('wai.gpu_active', 'Intel Arc GPU Active')) + '</strong>';
+          aiEngineStatus.innerHTML = '<span class="ai-status-dot active-gpu"></span> <strong style="color:var(--kb-text-ai);">' + escapeHtml(t('wai.gpu_active', 'Intel Arc GPU Active')) + '</strong>';
         } else if (npu.present && gpu.present) {
           aiEngineStatus.innerHTML = '<span class="ai-status-dot standby"></span> <span>' + escapeHtml(t('wai.hybrid', 'Hybrid Dual Silicon')) + '</span> <span style="opacity:0.65;">' + escapeHtml(t('wai.hybrid_ready', '(NPU + GPU Ready)')) + '</span>';
         } else {
@@ -2430,9 +2430,9 @@ export function updateTzModalPreview() {
   const btn24 = document.getElementById('btn-tz-fmt-24');
   if (btn12 && btn24) {
     btn12.style.background = fmt12 ? 'var(--brand, #33cdb8)' : 'transparent';
-    btn12.style.color = fmt12 ? 'var(--accent-contrast-fg)' : 'var(--zn-text-muted)';
+    btn12.style.color = fmt12 ? 'var(--accent-contrast-fg)' : 'var(--kb-text-muted)';
     btn24.style.background = !fmt12 ? 'var(--brand, #33cdb8)' : 'transparent';
-    btn24.style.color = !fmt12 ? 'var(--accent-contrast-fg)' : 'var(--zn-text-muted)';
+    btn24.style.color = !fmt12 ? 'var(--accent-contrast-fg)' : 'var(--kb-text-muted)';
     btn12.setAttribute('aria-checked', fmt12 ? 'true' : 'false');
     btn24.setAttribute('aria-checked', fmt12 ? 'false' : 'true');
   }
@@ -2502,7 +2502,7 @@ export function renderTimezoneList() {
         </div>
         <div class="tzl-main">
           <span class="tzl-offset">${escapeHtml(tzAbbr)}</span>
-          <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); color: ${isSelected ? 'var(--lt-ink-brand, var(--brand, #33cdb8))' : 'var(--zn-text)'};">${escapeHtml(timeStr)}</span>
+          <span style="font-size: var(--kb-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); color: ${isSelected ? 'var(--lt-ink-brand, var(--brand, #33cdb8))' : 'var(--kb-text)'};">${escapeHtml(timeStr)}</span>
           <span class="tzl-check">${isSelected ? '✓' : ''}</span>
         </div>
       </div>

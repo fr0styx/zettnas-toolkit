@@ -397,7 +397,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           </div>
           <div class="vmi-row-4">
             <span class="vmi-xs-semi-muted">${iso.size_formatted}</span>
-            <button class="btn-pill-toggle btn-boot-iso" data-path="${escapeHtml(iso.path)}" style="background: rgba(51,205,184,0.18); color: var(--zn-text-accent); border-color: rgba(51,205,184,0.35);">${ico('▶')} ${t('viso.boot', 'Create VM')}</button>
+            <button class="btn-pill-toggle btn-boot-iso" data-path="${escapeHtml(iso.path)}" style="background: rgba(51,205,184,0.18); color: var(--kb-text-accent); border-color: rgba(51,205,184,0.35);">${ico('▶')} ${t('viso.boot', 'Create VM')}</button>
             <button class="btn-pill-toggle btn-delete-iso is-danger" data-path="${escapeHtml(iso.path)}" data-name="${escapeHtml(iso.name)}" title="${t('ui.delete_iso_from_storage', 'Delete ISO from storage')}">🗑</button>
           </div>
         </div>
@@ -519,11 +519,11 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
       );
 
       return `
-        <div class="catalog-card glassmorphic-card" style="padding: 14px; border-radius: 8px; border: 1px solid var(--zn-line-8); background: var(--lt-b-13222599, rgba(19,34,37,0.6));">
+        <div class="catalog-card glassmorphic-card" style="padding: 14px; border-radius: 8px; border: 1px solid var(--kb-line-8); background: var(--lt-b-13222599, rgba(19,34,37,0.6));">
           <div class="vmi-row-5">
             <div>
-              <span style="font-size: var(--zn-fs-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(51,205,184,0.15); color: var(--zn-text-accent);">${item.badge}</span>
-              ${inStorage ? `<span style="font-size: var(--zn-fs-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--zn-text-ok); margin-left: 6px;">${ico('✓')} ${t('viso.in_storage', 'On this NAS')}</span>` : ''}
+              <span style="font-size: var(--kb-fs-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(51,205,184,0.15); color: var(--kb-text-accent);">${item.badge}</span>
+              ${inStorage ? `<span style="font-size: var(--kb-fs-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--kb-text-ok); margin-left: 6px;">${ico('✓')} ${t('viso.in_storage', 'On this NAS')}</span>` : ''}
               <div class="vmi-fs13-bold-strong-2">${escapeHtml(item.name)}</div>
             </div>
             <span class="vmi-xs-bold-muted">${item.size_formatted}</span>
@@ -545,14 +545,14 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
             <span class="vmi-xs-muted-mono">${item.arch || item.architecture || 'x86_64'} • ${item.kernel || 'Linux'}</span>
             <div class="vmi-row-7">
               ${inStorage ? `
-                <button class="btn-pill-toggle btn-boot-catalog-iso" data-filename="${escapeHtml(item.filename)}" style="background: rgba(51,205,184,0.18); color: var(--zn-text-accent); border-color: rgba(51,205,184,0.35);">
+                <button class="btn-pill-toggle btn-boot-catalog-iso" data-filename="${escapeHtml(item.filename)}" style="background: rgba(51,205,184,0.18); color: var(--kb-text-accent); border-color: rgba(51,205,184,0.35);">
                   ${ico('▶')} ${t('viso.boot', 'Create VM')}
                 </button>
-                <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" disabled style="padding: 5px 10px; font-size: var(--zn-fs-xs); font-weight: 700; background: rgba(16,185,129,0.2); color: var(--zn-text-ok); border-color: #34d399;">
+                <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" disabled style="padding: 5px 10px; font-size: var(--kb-fs-xs); font-weight: 700; background: rgba(16,185,129,0.2); color: var(--kb-text-ok); border-color: #34d399;">
                   ${ico('✓')} ${t('viso.ready', 'Ready')}
                 </button>
               ` : `
-                <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" style="padding: 5px 12px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand); color: var(--accent-contrast-fg);">
+                <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" style="padding: 5px 12px; font-size: var(--kb-fs-xs); font-weight: 700; background: var(--brand); color: var(--accent-contrast-fg);">
                   <span>${ico('⬇')} ${t('viso.download', 'Download')}</span>
                 </button>
               `}

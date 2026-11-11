@@ -34,14 +34,14 @@ export function tagLabel(tag) {
 
 function chip(item) {
   const on = selected.has(item.tag);
-  return html`<button type="button" class="btn-pill-toggle is-small${on ? ' active' : ''}" data-doc-tag="${item.tag}" aria-pressed="${on ? 'true' : 'false'}">${tagLabel(item.tag)} <span class="zn-muted">${item.count}</span></button>`;
+  return html`<button type="button" class="btn-pill-toggle is-small${on ? ' active' : ''}" data-doc-tag="${item.tag}" aria-pressed="${on ? 'true' : 'false'}">${tagLabel(item.tag)} <span class="kb-muted">${item.count}</span></button>`;
 }
 
 export function filtersHtml(data) {
   const kinds = (data && data.kinds) || [];
   const years = ((data && data.years) || []).slice(0, 8);
   if (!kinds.length && !years.length) return html``;
-  return html`<span class="zn-muted">${t('tags.title', 'Filter documents:')}</span>${kinds.map(chip)}${years.length ? html`<span class="zn-muted">·</span>${years.map(chip)}` : ''}${
+  return html`<span class="kb-muted">${t('tags.title', 'Filter documents:')}</span>${kinds.map(chip)}${years.length ? html`<span class="kb-muted">·</span>${years.map(chip)}` : ''}${
     selected.size ? html`<button type="button" class="btn-pill-toggle is-small" data-doc-tag-clear>${t('tags.clear', 'Clear')}</button>` : ''
   }`;
 }
@@ -51,7 +51,7 @@ export async function installDocFilters(root = document, onChange = () => {}) {
   if (!anchor) return;
   let box = root.getElementById(BOX_ID);
   if (!box) {
-    box = Object.assign(document.createElement('div'), { id: BOX_ID, className: 'zn-row' });
+    box = Object.assign(document.createElement('div'), { id: BOX_ID, className: 'kb-row' });
     box.setAttribute('role', 'group');
     box.setAttribute('aria-label', t('tags.group', 'Document filters'));
     placeFilter(box, anchor, root);

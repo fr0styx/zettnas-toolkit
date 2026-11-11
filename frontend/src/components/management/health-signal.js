@@ -15,13 +15,13 @@ function lastSentText(ts) {
 
 export function renderHealthSignal(card, status) {
   const available = !!status.available;
-  const body = html`<p class="zn-muted">${t('health.desc', 'Once a week, send the app version, platform, processor type, a range for the number of drives and which features are in use. No names, addresses, files or serial numbers. Turning it off forgets the random id.')}</p>
-    <label class="zn-toggle"><input type="checkbox" id="health-signal-switch" role="switch" ${status.enabled ? 'checked' : ''} ${available ? '' : 'disabled'}>
+  const body = html`<p class="kb-muted">${t('health.desc', 'Once a week, send the app version, platform, processor type, a range for the number of drives and which features are in use. No names, addresses, files or serial numbers. Turning it off forgets the random id.')}</p>
+    <label class="kb-toggle"><input type="checkbox" id="health-signal-switch" role="switch" ${status.enabled ? 'checked' : ''} ${available ? '' : 'disabled'}>
     <span>${t('health.switch', 'Send an anonymous weekly report')}</span></label>
-    ${available ? '' : html`<p class="zn-muted">${t('health.unavailable', 'Not available in this version yet.')}</p>`}
+    ${available ? '' : html`<p class="kb-muted">${t('health.unavailable', 'Not available in this version yet.')}</p>`}
     <details class="hs-details"><summary>${t('health.preview', 'See exactly what is sent')}</summary>
     <pre class="hs-preview">${JSON.stringify(status.preview, null, 2)}</pre></details>
-    <p class="zn-muted" id="health-signal-last">${status.enabled ? lastSentText(status.last_sent) : ''}</p>`;
+    <p class="kb-muted" id="health-signal-last">${status.enabled ? lastSentText(status.last_sent) : ''}</p>`;
   card.innerHTML = uiCard({ title: t('health.title', 'Help improve Kiboto'), body: String(body), variant: 'boxed' });
   const sw = card.querySelector('#health-signal-switch');
   sw?.addEventListener('change', async () => {

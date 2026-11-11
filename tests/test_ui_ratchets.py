@@ -35,7 +35,7 @@ def test_a_new_file_starts_at_zero():
 
 def test_inline_styled_buttons_become_the_system_button():
     old = (
-        '<button id="ok" style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; '
+        '<button id="ok" style="padding: 7px 18px; font-size: var(--kb-fs-xs); font-weight: 700; '
         'background: var(--brand, #0ea5e9); border: none; flex: 1;">OK</button>'
     )
     new, n = ui_buttons.rewrite(old)
@@ -58,5 +58,5 @@ def test_the_button_codemod_leaves_links_classes_and_fills_alone():
     assert 'class="btn-pill-toggle is-danger"' in ui_buttons.rewrite(danger)[0]
     ghost = '<button style="padding: 6px 10px; background: transparent; border: none; color: #94a3b8;">Tab</button>'
     assert 'class="btn-pill-toggle is-ghost"' in ui_buttons.rewrite(ghost)[0]
-    plain = '<button style="padding: 7px 16px; background: var(--zn-glaze-8); border: 1px solid #333;">Cancel</button>'
+    plain = '<button style="padding: 7px 16px; background: var(--kb-glaze-8); border: 1px solid #333;">Cancel</button>'
     assert ui_buttons.rewrite(plain)[0].startswith('<button class="btn-pill-toggle">')

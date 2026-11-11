@@ -655,11 +655,11 @@ export class FmInspector {
         <div class="fm-inspector-perms-pane fmh-xs">
           <div class="fmh-row-bold-strong">
             <span>${escapeHtml(t('fm.i_posix', 'Who may read and change it'))}</span>
-            <span id="fm-insp-perm-badge" style="font-family: monospace; font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(79,216,196,0.15); color: var(--zn-text-accent);">--</span>
+            <span id="fm-insp-perm-badge" style="font-family: monospace; font-size: var(--kb-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(79,216,196,0.15); color: var(--kb-text-accent);">--</span>
           </div>
 
           ${isGuarded ? `
-            <div class="fm-perm-guarded-banner" style="padding: 8px 10px; border-radius: 6px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--lt-t-fca5a5ff, #fca5a5); font-size: var(--zn-fs-xs); margin-bottom: 10px;">
+            <div class="fm-perm-guarded-banner" style="padding: 8px 10px; border-radius: 6px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--lt-t-fca5a5ff, #fca5a5); font-size: var(--kb-fs-xs); margin-bottom: 10px;">
               ⚠️ ${escapeHtml(t('fm.i_protected', 'A system folder: its permissions can’t be changed here.'))}
             </div>
           ` : ''}
@@ -714,7 +714,7 @@ export class FmInspector {
             </div>
           ` : ''}
 
-          <button type="button" id="fm-insp-apply-perms-btn" class="btn-pill-toggle active" ${isGuarded ? `disabled title="${escapeHtml(t('fm.why_guarded', 'System folder: its permissions are protected'))}"` : ''} style="width: 100%; font-size: var(--zn-fs-xs); font-weight: 700; padding: 6px 12px; background: #0a7a70; color: #fff;">
+          <button type="button" id="fm-insp-apply-perms-btn" class="btn-pill-toggle active" ${isGuarded ? `disabled title="${escapeHtml(t('fm.why_guarded', 'System folder: its permissions are protected'))}"` : ''} style="width: 100%; font-size: var(--kb-fs-xs); font-weight: 700; padding: 6px 12px; background: #0a7a70; color: #fff;">
             ${escapeHtml(t('ui.apply_permissions', 'Apply Permissions'))}
           </button>
         </div>

@@ -14,7 +14,7 @@ const LOOKS = {
   error: { icon: '❌', color: 'var(--crit)', word: ['overview.word_problem', 'Problem'] },
   warning: { icon: '⚠️', color: 'var(--warn)', word: ['overview.word_look', 'Needs a look'] },
   success: { icon: '✅', color: 'var(--ok2)', word: ['events.level.success', 'Done'] },
-  info: { icon: 'ℹ️', color: 'var(--zn-text)', word: ['events.level.info', 'Information'] },
+  info: { icon: 'ℹ️', color: 'var(--kb-text)', word: ['events.level.info', 'Information'] },
 };
 
 // the name of each place an entry can lead to: the words the sidebar already uses

@@ -100,10 +100,10 @@
   background: var(--lt-b-0e1b1da6, rgba(14, 27, 29, 0.65));
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
-  border: 1px solid var(--zn-line-8);
+  border: 1px solid var(--kb-line-8);
   border-radius: 14px;
   padding: 14px 16px;
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   user-select: none;
@@ -177,9 +177,9 @@ body.theme-yak .desktop-widget.clickable:hover {
   flex-shrink: 0;
 }
 .widget-title {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
-  color: var(--zn-text-muted);
+  color: var(--kb-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.4px;
   display: flex;
@@ -195,7 +195,7 @@ body.theme-yak .desktop-widget.clickable:hover {
   text-overflow: ellipsis;
 }
 .widget-badge {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 4px;
@@ -225,7 +225,7 @@ body.theme-yak .desktop-widget.clickable:hover {
   margin-top: 4px;
 }
 .cal-weekday {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   color: var(--lt-t-6c8084ff, #6c8084);
   padding: 2px 0;
@@ -233,16 +233,16 @@ body.theme-yak .desktop-widget.clickable:hover {
   user-select: none;
 }
 .cal-day {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   padding: 3px 0;
   border-radius: 4px;
-  color: var(--zn-text);
+  color: var(--kb-text);
   user-select: none;
   transition: all 0.15s ease;
 }
 .cal-day:hover {
-  background: var(--zn-glaze-8);
+  background: var(--kb-glaze-8);
 }
 .cal-day.cal-other-month {
   color: var(--lt-t-ffffff33, rgba(255, 255, 255, 0.2));
@@ -281,7 +281,7 @@ body.theme-yak .cal-day.cal-today {
 }
 .cal-day.cal-holiday:hover {
   background: rgba(246, 173, 85, 0.22);
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
   box-shadow: 0 0 10px rgba(246, 173, 85, 0.4);
   transform: scale(1.08);
   z-index: 3;
@@ -328,8 +328,8 @@ body.theme-yak .cal-day.cal-holiday:hover {
   border: 1px solid rgba(246, 173, 85, 0.5);
   border-radius: 7px;
   padding: 6px 10px;
-  font-size: var(--zn-fs-xs);
-  color: var(--zn-text-strong);
+  font-size: var(--kb-fs-xs);
+  color: var(--kb-text-strong);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 14px rgba(246, 173, 85, 0.25);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
@@ -358,12 +358,12 @@ body.theme-yak .cal-day.cal-holiday:hover {
 .cal-holiday-tooltip-name {
   color: var(--lt-t-fbd38dff, #fbd38d);
   font-weight: 700;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   letter-spacing: 0.2px;
 }
 .cal-holiday-tooltip-sub {
-  color: var(--zn-text-muted);
-  font-size: var(--zn-fs-xs);
+  color: var(--kb-text-muted);
+  font-size: var(--kb-fs-xs);
   margin-top: 1px;
 }
 
@@ -371,8 +371,8 @@ body.theme-yak .cal-day.cal-holiday:hover {
 .cal-glance-bar {
   margin-top: 6px;
   padding-top: 5px;
-  border-top: 1px solid var(--zn-line-8);
-  font-size: var(--zn-fs-xs);
+  border-top: 1px solid var(--kb-line-8);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   color: var(--lt-t-fbd38dff, #fbd38d);
   display: flex;
@@ -388,11 +388,11 @@ body.theme-yak .cal-day.cal-holiday:hover {
 }
 .cal-glance-bar.empty {
   color: var(--muted);
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 500;
 }
 .cal-glance-bar-icon {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   flex-shrink: 0;
 }
 /* centred when it fits; a long holiday name ends in an ellipsis instead of being cut on both sides */
@@ -435,27 +435,27 @@ body.theme-yak .cal-day.cal-holiday:hover {
   text-align: center;
 }
 .modal-calendar-grid .cal-weekday {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
-  color: var(--zn-text-muted);
+  color: var(--kb-text-muted);
   padding: 4px 0;
   text-transform: uppercase;
 }
 .modal-calendar-grid .cal-day {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   padding: 8px 0;
   border-radius: 6px;
-  color: var(--zn-text);
+  color: var(--kb-text);
   cursor: pointer;
   position: relative;
   transition: all 0.15s ease;
-  background: var(--zn-glaze-3);
+  background: var(--kb-glaze-3);
   border: 1px solid transparent;
 }
 .modal-calendar-grid .cal-day:hover {
-  background: var(--zn-glaze-10);
-  border-color: var(--zn-line-15);
+  background: var(--kb-glaze-10);
+  border-color: var(--kb-line-15);
 }
 .modal-calendar-grid .cal-day.cal-other-month {
   color: var(--lt-t-ffffff40, rgba(255, 255, 255, 0.25));
@@ -482,18 +482,18 @@ body.theme-yak .cal-day.cal-holiday:hover {
 /* Timezone selector styles */
 .tz-region-pill {
   padding: 4px 10px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   border-radius: 6px;
-  border: 1px solid var(--zn-line-10);
-  background: var(--zn-glaze-5);
-  color: var(--zn-text-muted);
+  border: 1px solid var(--kb-line-10);
+  background: var(--kb-glaze-5);
+  color: var(--kb-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .tz-region-pill:hover {
-  background: var(--zn-glaze-10);
-  color: var(--zn-text-strong);
+  background: var(--kb-glaze-10);
+  color: var(--kb-text-strong);
 }
 .tz-region-pill.active {
   background: var(--brand);
@@ -512,8 +512,8 @@ body.theme-yak .cal-day.cal-holiday:hover {
   border: 1px solid transparent;
 }
 .tz-item-row:hover {
-  background: var(--zn-glaze-6);
-  border-color: var(--zn-line-8);
+  background: var(--kb-glaze-6);
+  border-color: var(--kb-line-8);
 }
 .tz-item-row.selected {
   background: var(--lt-b-33cdb81f, rgba(51, 205, 184, 0.12));
@@ -523,18 +523,18 @@ body.theme-yak .cal-day.cal-holiday:hover {
 /* Filter pills in Agenda */
 .cal-filter-pill {
   padding: 3px 9px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   border-radius: 5px;
-  border: 1px solid var(--zn-line-10);
-  background: var(--zn-glaze-4);
-  color: var(--zn-text-muted);
+  border: 1px solid var(--kb-line-10);
+  background: var(--kb-glaze-4);
+  color: var(--kb-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .cal-filter-pill:hover {
-  color: var(--zn-text-strong);
-  background: var(--zn-glaze-8);
+  color: var(--kb-text-strong);
+  background: var(--kb-glaze-8);
 }
 .cal-filter-pill.active {
   background: var(--brand);
@@ -549,21 +549,21 @@ body.theme-yak .cal-day.cal-holiday:hover {
   align-items: flex-start;
   gap: 12px;
   padding: 10px 14px;
-  background: var(--zn-shade-25);
-  border: 1px solid var(--zn-line-8);
+  background: var(--kb-shade-25);
+  border: 1px solid var(--kb-line-8);
   border-radius: 8px;
   transition: all 0.15s ease;
 }
 .cal-agenda-card:hover {
-  background: var(--zn-glaze-4);
-  border-color: var(--zn-line-14);
+  background: var(--kb-glaze-4);
+  border-color: var(--kb-line-14);
 }
 .cal-agenda-card.completed {
   opacity: 0.55;
 }
 .cal-agenda-card.completed .cal-agenda-title {
   text-decoration: line-through;
-  color: var(--zn-text-muted);
+  color: var(--kb-text-muted);
 }
 
 /* Weather City Autocomplete Dropdown */
@@ -596,29 +596,29 @@ body.theme-yak .cal-day.cal-holiday:hover {
 .weather-city-item:hover,
 .weather-city-item.active {
   background: var(--lt-b-33cdb826, rgba(51, 205, 184, 0.15));
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
 }
 body.theme-yak .weather-city-item:hover,
 body.theme-yak .weather-city-item.active {
   background: rgba(212, 138, 55, 0.2);
 }
 .weather-city-name {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
 }
 .weather-city-sub {
-  font-size: var(--zn-fs-xs);
-  color: var(--zn-text-muted);
+  font-size: var(--kb-fs-xs);
+  color: var(--kb-text-muted);
   margin-top: 1px;
 }
 .weather-city-badge {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   padding: 2px 6px;
-  background: var(--zn-glaze-8);
+  background: var(--kb-glaze-8);
   border-radius: 4px;
-  color: var(--zn-text-soft);
+  color: var(--kb-text-soft);
 }
 
 /* Toggle Switch Component */
@@ -648,7 +648,7 @@ body.theme-yak .weather-city-item.active {
   justify-content: space-between;
   padding: 10px 14px;
   background: var(--lt-b-00000047, rgba(0, 0, 0, 0.28));
-  border: 1px solid var(--zn-line-7);
+  border: 1px solid var(--kb-line-7);
   border-radius: 8px;
   cursor: grab;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
@@ -660,8 +660,8 @@ body.theme-yak .weather-city-item.active {
 }
 
 .widget-sortable-item:hover {
-  background: var(--zn-glaze-4);
-  border-color: var(--zn-line-18);
+  background: var(--kb-glaze-4);
+  border-color: var(--kb-line-18);
 }
 
 .widget-sortable-left {
@@ -682,11 +682,11 @@ body.theme-yak .weather-city-item.active {
 }
 
 .widget-sortable-item:hover .widget-drag-handle {
-  color: var(--zn-text-soft);
+  color: var(--kb-text-soft);
 }
 
 .widget-drag-handle:hover {
-  background: var(--zn-glaze-10);
+  background: var(--kb-glaze-10);
   color: var(--lt-ink-brand, var(--accent-cyan, #33cdb8));
 }
 
@@ -763,7 +763,7 @@ body.theme-yak #notif-center-resizer:hover {
 }
 
 #notif-center-panel .notif-center-item:hover {
-  background: var(--zn-glaze-8) !important;
+  background: var(--kb-glaze-8) !important;
 }
 
 #notif-center-panel .notif-filter-btn {
@@ -788,7 +788,7 @@ body.theme-yak #notif-center-resizer:hover {
 }
 
 #event-detail-close-btn:hover {
-  background: var(--zn-glaze-15) !important;
+  background: var(--kb-glaze-15) !important;
 }
 
 /* Checked (read) notification events - Dimmed Effect */
@@ -813,7 +813,7 @@ body.theme-yak #notif-center-resizer:hover {
 
 .notif-center-item:not(.notif-event-checked) {
   opacity: 1 !important;
-  background: var(--zn-glaze-5);
+  background: var(--kb-glaze-5);
   border-left: 2.5px solid var(--brand);
 }
 
@@ -834,7 +834,7 @@ body.theme-yak #notif-center-resizer:hover {
 .dock-context-menu {
   background: var(--lt-b-151e1ff5, rgba(21, 30, 31, 0.96)) !important;
   backdrop-filter: blur(20px) !important;
-  border: 1px solid var(--zn-line-12) !important;
+  border: 1px solid var(--kb-line-12) !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
   border-radius: 8px !important;
   padding: 6px !important;
@@ -844,7 +844,7 @@ body.theme-yak #notif-center-resizer:hover {
 
 .dock-context-menu .ctx-item {
   padding: 6px 10px !important;
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
   font-weight: 600 !important;
   border-radius: 6px !important;
   transition: background 0.12s ease;
@@ -877,41 +877,41 @@ body.theme-yak #notif-center-resizer:hover {
 
 /* The dock's and the desktop's context menus (dock/apps.js, dock/desktop-icons.js): each rule is the
    inline style it replaced (NUX-15) */
-:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ico { font-size:var(--zn-fs-xs); margin-right:6px; }
-:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-sep { height:1px; background:var(--zn-glaze-8); margin:4px 0; }
-:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-head { font-size:var(--zn-fs-xs); color:var(--muted); padding:3px 10px; font-weight:700; text-transform:uppercase; }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ico { font-size:var(--kb-fs-xs); margin-right:6px; }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-sep { height:1px; background:var(--kb-glaze-8); margin:4px 0; }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-head { font-size:var(--kb-fs-xs); color:var(--muted); padding:3px 10px; font-weight:700; text-transform:uppercase; }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-row { display:flex; align-items:center; justify-content:space-between; }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-row-main { display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden; }
-:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ico-plain { font-size:var(--zn-fs-xs); }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ico-plain { font-size:var(--kb-fs-xs); }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ellipsis { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-check { color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); font-size:var(--zn-fs-xs); }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-check { color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); font-size:var(--kb-fs-xs); }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-crit { color:var(--crit); }
 :is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-ok { color:var(--ok2); }
-:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-danger { color:var(--zn-text-crit); }
-:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-kbd { margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6; }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-danger { color:var(--kb-text-crit); }
+:is(#dock-item-ctx-menu, #desktop-ctx-menu) .cxm-kbd { margin-left:auto; font-size:var(--kb-fs-xs); opacity:0.6; }
 
 /* The desktop shortcut tiles' emoji and the Add-a-shortcut dialog (desktop-shortcuts.js): each rule is the
    inline style it replaced; the panes' display stays inline, the script switches it (NUX-15) */
 #desktop-icons-container .dss-emoji { font-size:24px; }
-#add-desktop-shortcut-overlay .asd-win { max-width:580px; width:92%; max-height:85vh; display:flex; flex-direction:column; background:var(--lt-b-0e1c1eeb, rgba(14,28,30,0.92)); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px); border:1px solid var(--zn-line-14); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.85), 0 0 35px rgba(51,205,184,0.12); overflow:hidden; }
-#add-desktop-shortcut-overlay .asd-head { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--zn-line-8); background:var(--zn-glaze-2); }
+#add-desktop-shortcut-overlay .asd-win { max-width:580px; width:92%; max-height:85vh; display:flex; flex-direction:column; background:var(--lt-b-0e1c1eeb, rgba(14,28,30,0.92)); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px); border:1px solid var(--kb-line-14); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.85), 0 0 35px rgba(51,205,184,0.12); overflow:hidden; }
+#add-desktop-shortcut-overlay .asd-head { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--kb-line-8); background:var(--kb-glaze-2); }
 #add-desktop-shortcut-overlay .asd-title-row { display:flex; align-items:center; gap:10px; }
 #add-desktop-shortcut-overlay .asd-ico { font-size:18px; }
-#add-desktop-shortcut-overlay .asd-title { font-size:14px; font-weight:700; color:var(--zn-text-strong); }
-#add-desktop-shortcut-overlay .asd-sub { font-size:var(--zn-fs-xs); color:var(--muted); }
-#add-desktop-shortcut-overlay .asd-tabs { display:flex; gap:8px; padding:12px 20px 8px; border-bottom:1px solid var(--zn-line-6); }
+#add-desktop-shortcut-overlay .asd-title { font-size:14px; font-weight:700; color:var(--kb-text-strong); }
+#add-desktop-shortcut-overlay .asd-sub { font-size:var(--kb-fs-xs); color:var(--muted); }
+#add-desktop-shortcut-overlay .asd-tabs { display:flex; gap:8px; padding:12px 20px 8px; border-bottom:1px solid var(--kb-line-6); }
 #add-desktop-shortcut-overlay .asd-pane-sys { padding:16px 20px; overflow-y:auto; max-height:55vh; flex-direction:column; gap:8px; }
 #add-desktop-shortcut-overlay .asd-pane-custom { padding:20px; flex-direction:column; gap:14px; }
-#add-desktop-shortcut-overlay .asd-label { font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:4px; }
-#add-desktop-shortcut-overlay .asd-label-wide { font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:6px; }
-#add-desktop-shortcut-overlay .asd-input { width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--zn-shade-35); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); }
-#add-desktop-shortcut-overlay .asd-input-mono { width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--zn-shade-35); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); font-family:var(--font-mono); }
+#add-desktop-shortcut-overlay .asd-label { font-size:var(--kb-fs-xs); font-weight:700; color:var(--kb-text-soft); display:block; margin-bottom:4px; }
+#add-desktop-shortcut-overlay .asd-label-wide { font-size:var(--kb-fs-xs); font-weight:700; color:var(--kb-text-soft); display:block; margin-bottom:6px; }
+#add-desktop-shortcut-overlay .asd-input { width:100%; padding:8px 12px; font-size:var(--kb-fs-xs); border-radius:6px; background:var(--kb-shade-35); border:1px solid var(--kb-line-12); color:var(--kb-text-strong); }
+#add-desktop-shortcut-overlay .asd-input-mono { width:100%; padding:8px 12px; font-size:var(--kb-fs-xs); border-radius:6px; background:var(--kb-shade-35); border:1px solid var(--kb-line-12); color:var(--kb-text-strong); font-family:var(--font-mono); }
 #add-desktop-shortcut-overlay .asd-emojis { display:flex; flex-wrap:wrap; gap:6px; }
-#add-desktop-shortcut-overlay .asd-save { margin-top:6px; padding:10px 16px; border-radius:8px; font-size:var(--zn-fs-xs); font-weight:700; background:linear-gradient(135deg, #33cdb8, #33cdb8); color:#fff; border:1px solid #33cdb8; cursor:pointer; box-shadow:0 4px 14px rgba(51,205,184,0.3); }
-#add-desktop-shortcut-overlay .asd-card { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); border-radius:10px; gap:12px; }
+#add-desktop-shortcut-overlay .asd-save { margin-top:6px; padding:10px 16px; border-radius:8px; font-size:var(--kb-fs-xs); font-weight:700; background:linear-gradient(135deg, #33cdb8, #33cdb8); color:#fff; border:1px solid #33cdb8; cursor:pointer; box-shadow:0 4px 14px rgba(51,205,184,0.3); }
+#add-desktop-shortcut-overlay .asd-card { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--kb-glaze-3); border:1px solid var(--kb-line-8); border-radius:10px; gap:12px; }
 #add-desktop-shortcut-overlay .asd-card-main { display:flex; align-items:center; gap:12px; min-width:0; }
 #add-desktop-shortcut-overlay .asd-card-svg { width:20px; height:20px; fill:currentColor; }
 #add-desktop-shortcut-overlay .asd-card-text { min-width:0; }
 #add-desktop-shortcut-overlay .asd-card-row { display:flex; align-items:center; gap:6px; }
-#add-desktop-shortcut-overlay .asd-card-name { font-size:13px; font-weight:700; color:var(--zn-text-strong); }
-#add-desktop-shortcut-overlay .asd-card-desc { font-size:var(--zn-fs-xs); color:var(--muted); line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#add-desktop-shortcut-overlay .asd-card-name { font-size:13px; font-weight:700; color:var(--kb-text-strong); }
+#add-desktop-shortcut-overlay .asd-card-desc { font-size:var(--kb-fs-xs); color:var(--muted); line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }

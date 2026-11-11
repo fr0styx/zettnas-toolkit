@@ -11,7 +11,7 @@
   padding: 18px 20px;
   border-radius: 12px;
   background: var(--lt-b-11232773, rgba(17, 35, 39, 0.45));
-  border: 1px solid var(--zn-line-8);
+  border: 1px solid var(--kb-line-8);
   backdrop-filter: blur(16px);
   position: relative;
   transition: all 0.3s ease;
@@ -22,8 +22,8 @@
   min-width: 140px;
   padding: 16px 14px;
   border-radius: 10px;
-  background: var(--zn-glaze-3);
-  border: 1px solid var(--zn-line-7);
+  background: var(--kb-glaze-3);
+  border: 1px solid var(--kb-line-7);
   text-align: center;
   position: relative;
   transition: all 0.25s ease;
@@ -33,8 +33,8 @@
 }
 
 .ups-flow-card:hover {
-  background: var(--zn-glaze-5);
-  border-color: var(--zn-line-15);
+  background: var(--kb-glaze-5);
+  border-color: var(--kb-line-15);
 }
 
 .ups-card-status-dot {
@@ -68,7 +68,7 @@
 }
 
 .ups-card-label {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--muted);
@@ -79,19 +79,19 @@
 .ups-card-val {
   font-size: 20px;
   font-weight: 700;
-  color: var(--text, var(--zn-text-strong));
+  color: var(--text, var(--kb-text-strong));
   font-variant-numeric: tabular-nums;
   margin-bottom: 4px;
 }
 
 .ups-card-sub {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--ok2);
   font-weight: 500;
 }
 
 .ups-card-meta {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
   margin-top: 4px;
 }
@@ -129,7 +129,7 @@
 }
 
 .ups-flow-rate {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
   margin-top: 2px;
   text-transform: uppercase;
@@ -182,7 +182,7 @@
   justify-content: center;
   font-size: 13px;
   font-weight: 700;
-  color: var(--text, var(--zn-text-strong));
+  color: var(--text, var(--kb-text-strong));
 }
 
 /* Outage / Emergency State */
@@ -244,8 +244,8 @@
 }
 
 .ups-eb-desc {
-  font-size: var(--zn-fs-xs);
-  color: var(--text, var(--zn-text-strong));
+  font-size: var(--kb-fs-xs);
+  color: var(--text, var(--kb-text-strong));
 }
 
 .ups-countdown-badge {
@@ -278,20 +278,20 @@
   text-align: center;
   padding: 10px 8px;
   border-radius: 8px;
-  background: var(--zn-glaze-4);
-  border: 1px solid var(--zn-line-8);
+  background: var(--kb-glaze-4);
+  border: 1px solid var(--kb-line-8);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .ups-mode-box strong {
-  font-size: var(--zn-fs-xs);
-  color: var(--text, var(--zn-text-strong));
+  font-size: var(--kb-fs-xs);
+  color: var(--text, var(--kb-text-strong));
   margin-bottom: 2px;
 }
 
 .ups-mode-box small {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
 }
 
@@ -302,14 +302,14 @@
 }
 
 .ups-mode-box:hover {
-  background: var(--zn-glaze-8);
+  background: var(--kb-glaze-8);
 }
 
 .slider-val-badge {
   display: inline-block;
   min-width: 60px;
   text-align: right;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   color: var(--ok2);
   font-variant-numeric: tabular-nums;
@@ -317,7 +317,7 @@
 
 .drawer-field-label {
   display: block;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -326,8 +326,8 @@
 }
 
 .input-modern {
-  background: var(--zn-shade-40);
-  border: 1px solid var(--zn-line-12);
+  background: var(--kb-shade-40);
+  border: 1px solid var(--kb-line-12);
   border-radius: 8px;
   color: var(--fg);
   font-size: 13px;
@@ -378,7 +378,7 @@ body.theme-yak .input-modern:focus {
 }
 
 .ups-save-badge {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   color: var(--ok2);
   background: rgba(51, 205, 184, 0.12);

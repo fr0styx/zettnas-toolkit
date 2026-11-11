@@ -32,8 +32,8 @@ export function aiSwitchesHtml(access) {
   return html`<div class="kids-ai" role="group" aria-label="${t('kids.ai', 'Kib, the AI helper')}">
     ${roles.map(
       (r) => html`<div class="kids-ai-row"><span class="kids-ai-role">${roleName(r.id)}</span>
-        <label class="zn-toggle"><input type="checkbox" role="switch" data-kids-ai="roles" data-role="${r.id}" ${r.on ? 'checked' : ''}><span>${t('ai.access_ask', 'Ask Kib')}</span></label>
-        <label class="zn-toggle"><input type="checkbox" role="switch" data-kids-ai="search_roles" data-role="${r.id}" ${r.search !== false ? 'checked' : ''}><span>${t('ai.access_search', 'AI search')}</span></label></div>`,
+        <label class="kb-toggle"><input type="checkbox" role="switch" data-kids-ai="roles" data-role="${r.id}" ${r.on ? 'checked' : ''}><span>${t('ai.access_ask', 'Ask Kib')}</span></label>
+        <label class="kb-toggle"><input type="checkbox" role="switch" data-kids-ai="search_roles" data-role="${r.id}" ${r.search !== false ? 'checked' : ''}><span>${t('ai.access_search', 'AI search')}</span></label></div>`,
     )}</div>`;
 }
 
@@ -47,17 +47,17 @@ function filterText(people, username) {
 export function kidsRulesHtml(users, access, filter) {
   const kids = (users || []).filter((u) => KID_ROLES.includes(u.role_id));
   const rows = kids.length
-    ? html`<table class="zn-datatable kids-table"><thead><tr>
+    ? html`<table class="kb-datatable kids-table"><thead><tr>
         <th>${t('users.col_person', 'Person')}</th><th>${t('kids.col_hours', 'May sign in')}</th>
         <th>${t('kids.col_devices', 'Their devices')}</th><th></th></tr></thead>
       <tbody>${kids.map(
-        (u) => html`<tr data-kid="${u.id}"><td>${u.display_name || u.username} <span class="zn-muted">${roleName(u.role_id)}</span></td>
+        (u) => html`<tr data-kid="${u.id}"><td>${u.display_name || u.username} <span class="kb-muted">${roleName(u.role_id)}</span></td>
           <td>${hoursText(u.signin_hours)}</td>
           <td>${filter ? filterText(filter.people, u.username) : '—'}</td>
           <td class="kids-actions"><button type="button" class="btn-pill-toggle is-small" data-kids-edit="${u.id}">${t('kids.change_hours', 'Change hours')}</button>
             ${filter ? html`<button type="button" class="btn-pill-toggle is-small" data-kids-filter>${t('kids.change_devices', 'Filter devices')}</button>` : ''}</td></tr>`,
       )}</tbody></table>`
-    : html`<p class="zn-muted">${t('kids.none', 'No kid or guest accounts yet. Add a person with the Kid role to set their rules here.')}</p>`;
+    : html`<p class="kb-muted">${t('kids.none', 'No kid or guest accounts yet. Add a person with the Kid role to set their rules here.')}</p>`;
   const ai = aiSwitchesHtml(access);
   return html`${rows}
     ${ai ? html`<h5 class="kids-sub">${t('kids.ai', 'Kib, the AI helper')}</h5>${ai}` : ''}

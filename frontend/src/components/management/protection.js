@@ -34,12 +34,12 @@ function toggleHtml(j) {
 }
 
 export function jobsHtml(jobs) {
-  if (!jobs.length) return html`<p class="zn-muted">${t('prot.none', 'Nothing protects your data yet. Set up a backup below.')}</p>`;
-  return html`<table class="zn-table prot-table"><thead><tr><th>${t('prot.what', 'What')}</th><th>${t('prot.name', 'Name')}</th>
+  if (!jobs.length) return html`<p class="kb-muted">${t('prot.none', 'Nothing protects your data yet. Set up a backup below.')}</p>`;
+  return html`<table class="kb-table prot-table"><thead><tr><th>${t('prot.what', 'What')}</th><th>${t('prot.name', 'Name')}</th>
     <th>${t('prot.state', 'State')}</th><th>${t('prot.last_ok', 'Last success')}</th><th></th></tr></thead>
     <tbody>${jobs.map(
       (j) => html`<tr class="prot-row prot-${j.status}"><td>${label(KIND, j.kind)}</td><td>${j.name}</td>
-        <td><span class="prot-status">${label(STATUS, j.status)}</span>${j.why ? html` <small class="zn-muted">${j.why}</small>` : ''}</td>
+        <td><span class="prot-status">${label(STATUS, j.status)}</span>${j.why ? html` <small class="kb-muted">${j.why}</small>` : ''}</td>
         <td>${j.last_ok ? formatDateTime(Number(j.last_ok) * 1000) : '—'}</td><td>${toggleHtml(j)}</td></tr>`,
     )}</tbody></table>`;
 }

@@ -77,7 +77,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   }
 
   // Column 3: Hardware Badges
-  let hwHtml = '<span style="color:var(--muted); font-size:var(--zn-fs-xs);">—</span>';
+  let hwHtml = '<span style="color:var(--muted); font-size:var(--kb-fs-xs);">—</span>';
   if (c.hardware_badges && c.hardware_badges.length > 0) {
     hwHtml = c.hardware_badges
       .map(
@@ -88,7 +88,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   }
 
   // Column 4: Telemetry (CPU / RAM)
-  let telemHtml = '<span style="color:var(--muted); font-size:var(--zn-fs-xs);">—</span>';
+  let telemHtml = '<span style="color:var(--muted); font-size:var(--kb-fs-xs);">—</span>';
   if (isRunning) {
     const cpuStr = `${formatFixed(c.cpu_pct || 0, 1)}%`;
     const memStr = c.mem_used ? `${formatFixed(c.mem_used / (1024 * 1024), 0)} MB` : '--';
@@ -96,7 +96,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   }
 
   // Column 5: Ports & Web UI
-  let portsHtml = '<span style="color:var(--muted); font-size:var(--zn-fs-xs);">—</span>';
+  let portsHtml = '<span style="color:var(--muted); font-size:var(--kb-fs-xs);">—</span>';
   const portParts = [];
   if (c.webui_url && c.primary_port) {
     const resolvedUrl = c.webui_url.replace('[HOST]', currentHost);
@@ -178,8 +178,8 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
     <td class="docker-name-cell">
       <div style="display:flex; align-items:center; gap:6px;">
         <input type="checkbox" class="docker-row-select" data-id="${escapeHtml(c.id)}" ${checkedAttr} title="${escapeHtml(t('dkt.select', 'Select {name}', { name: c.name }))}" style="margin:0; cursor:pointer; accent-color:var(--brand, #33cdb8); flex-shrink:0;">
-        <button class="btn-docker-name-link clickable-container-name" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" style="background:none; border:none; padding:0; color:var(--zn-text-strong); font-size:var(--zn-fs-xs); font-weight:700; cursor:pointer; text-align:left; font-family:inherit;" title="${escapeHtml(t('dkt.inspect', 'Inspect {name}', { name: c.name }))}">${escapeHtml(c.name)}</button>
-        <code style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(idShort)}</code>
+        <button class="btn-docker-name-link clickable-container-name" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" style="background:none; border:none; padding:0; color:var(--kb-text-strong); font-size:var(--kb-fs-xs); font-weight:700; cursor:pointer; text-align:left; font-family:inherit;" title="${escapeHtml(t('dkt.inspect', 'Inspect {name}', { name: c.name }))}">${escapeHtml(c.name)}</button>
+        <code style="font-size:var(--kb-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(idShort)}</code>
         ${updateBadge}
       </div>
     </td>
@@ -268,7 +268,7 @@ export function updateContainerRow(tr, c, currentHost, updateInfo = null) {
         telemCell.innerHTML = `<span class="docker-telemetry-pill"><span class="telem-cpu">${cpuStr}</span><span style="opacity:0.4;">•</span><span class="telem-mem">${memStr}</span></span>`;
       }
     } else {
-      telemCell.innerHTML = '<span style="color:var(--muted); font-size:var(--zn-fs-xs);">—</span>';
+      telemCell.innerHTML = '<span style="color:var(--muted); font-size:var(--kb-fs-xs);">—</span>';
     }
   }
 

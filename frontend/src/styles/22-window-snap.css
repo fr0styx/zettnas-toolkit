@@ -20,8 +20,8 @@
 .snap-ghost-indicator {
   background: var(--lt-b-0a1113d9, rgba(10, 17, 19, 0.85));
   border: 1px solid var(--focus-ring);
-  color: var(--zn-text-strong);
-  font-size: var(--zn-fs-xs);
+  color: var(--kb-text-strong);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   padding: 8px 18px;
@@ -37,7 +37,7 @@
   position: fixed;
   z-index: 9999;
   background: var(--lt-b-132023f0, rgba(19, 32, 35, 0.94));
-  border: 1px solid var(--zn-line-18);
+  border: 1px solid var(--kb-line-18);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 1px rgba(255, 255, 255, 0.25) inset;
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
@@ -69,7 +69,7 @@
 }
 
 .snap-layout-title {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -85,8 +85,8 @@
 
 .snap-card {
   height: 52px;
-  background: var(--zn-glaze-4);
-  border: 1px solid var(--zn-line-10);
+  background: var(--kb-glaze-4);
+  border: 1px solid var(--kb-line-10);
   border-radius: 6px;
   display: flex;
   padding: 4px;
@@ -97,13 +97,13 @@
 
 .snap-card:hover {
   border-color: var(--focus-ring);
-  background: var(--zn-glaze-8);
+  background: var(--kb-glaze-8);
 }
 
 .snap-slot {
   flex: 1;
   height: 100%;
-  background: var(--zn-glaze-10);
+  background: var(--kb-glaze-10);
   border-radius: 4px;
   border: none;
   cursor: pointer;

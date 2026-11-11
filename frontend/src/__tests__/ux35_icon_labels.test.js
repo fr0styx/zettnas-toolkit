@@ -22,8 +22,8 @@ describe('icons apart from the words', () => {
     const { renderLdapPanel } = await import('../components/sso.js');
     await renderPushCard().catch(() => {});
     await renderLdapPanel().catch(() => {});
-    expect(iconAndWords(document.querySelector('#push-device-card .zn-title'))).toEqual(['📱', '📱 Notifications on this device']);
-    expect(iconAndWords(document.querySelector('#sec-ldap-card .zn-title'))).toEqual(['🏢', '🏢 LDAP / Active Directory']);
+    expect(iconAndWords(document.querySelector('#push-device-card .kb-title'))).toEqual(['📱', '📱 Notifications on this device']);
+    expect(iconAndWords(document.querySelector('#sec-ldap-card .kb-title'))).toEqual(['🏢', '🏢 LDAP / Active Directory']);
   });
 
   it('a failed backup job', async () => {
@@ -31,7 +31,7 @@ describe('icons apart from the words', () => {
     vi.spyOn(api, 'get').mockResolvedValue({ jobs: [{ id: 'j1', name: 'photos', last_status: 'error', last_error: 'disk full', schedule: 'daily' }] });
     const { fetchAndRenderBackupJobs } = await import('../components/management/backup.js');
     await fetchAndRenderBackupJobs();
-    expect(iconAndWords(document.querySelector('.zn-state--crit'))).toEqual(['⚠', '⚠ Failed']);
+    expect(iconAndWords(document.querySelector('.kb-state--crit'))).toEqual(['⚠', '⚠ Failed']);
   });
 
   it('a model too big for the hardware warns in plain words', async () => {

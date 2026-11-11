@@ -56,24 +56,24 @@ export async function fetchAndRenderBackupJobs(mountEl) {
       const isRemote = job.destination_type === 'remote';
       const isSettings = job.kind === 'config';
       const destBadge = isRemote
-        ? `<span class="badge zn-tag zn-tag--info">☁️ ${escapeHtml(job.remote_name || 'Cloud')}:${escapeHtml(job.remote_path || '')}</span>`
+        ? `<span class="badge kb-tag kb-tag--info">☁️ ${escapeHtml(job.remote_name || 'Cloud')}:${escapeHtml(job.remote_path || '')}</span>`
         : job.destination_type === 'local_folder'
-          ? `<span class="badge zn-tag zn-tag--ok">📁 ${escapeHtml(job.local_path || '')}</span>`
-          : `<span class="badge zn-tag zn-tag--ok">📸 ${escapeHtml(t('backup.dest_snapshot', 'Snapshot on this server'))}</span>`;
+          ? `<span class="badge kb-tag kb-tag--ok">📁 ${escapeHtml(job.local_path || '')}</span>`
+          : `<span class="badge kb-tag kb-tag--ok">📸 ${escapeHtml(t('backup.dest_snapshot', 'Snapshot on this server'))}</span>`;
 
-      const schedBadge = `<span class="badge zn-tag zn-tag--plain">${escapeHtml(job.schedule || 'daily')}</span>`;
+      const schedBadge = `<span class="badge kb-tag kb-tag--plain">${escapeHtml(job.schedule || 'daily')}</span>`;
       
       let statusHtml;
       if (job.last_status === 'running') {
-        statusHtml = `<span class="zn-state zn-state--busy"><span class="spinner-inline zn-spinner-sm"></span> ${escapeHtml(t('backup.state_running', 'Running…'))}</span>`;
+        statusHtml = `<span class="kb-state kb-state--busy"><span class="spinner-inline kb-spinner-sm"></span> ${escapeHtml(t('backup.state_running', 'Running…'))}</span>`;
       } else if (job.last_status === 'success') {
-        statusHtml = `<span class="zn-state zn-state--ok">${escapeHtml(t('backup.state_ok', '✓ Done'))}</span>`;
+        statusHtml = `<span class="kb-state kb-state--ok">${escapeHtml(t('backup.state_ok', '✓ Done'))}</span>`;
       } else if (job.last_status === 'skipped') {
         statusHtml = `<span class="backup-skipped" title="${escapeHtml(job.last_error || '')}">${escapeHtml(t('backup.skipped', 'Skipped'))}</span>`;
       } else if (job.last_status === 'error') {
-        statusHtml = `<span class="zn-state zn-state--crit" title="${escapeHtml(job.last_error || '')}"><span aria-hidden="true">⚠</span> ${escapeHtml(t('backup.state_failed', 'Failed'))}</span>`;
+        statusHtml = `<span class="kb-state kb-state--crit" title="${escapeHtml(job.last_error || '')}"><span aria-hidden="true">⚠</span> ${escapeHtml(t('backup.state_failed', 'Failed'))}</span>`;
       } else {
-        statusHtml = `<span class="zn-state zn-state--idle">${escapeHtml(t('backup.state_idle', 'Not run yet'))}</span>`;
+        statusHtml = `<span class="kb-state kb-state--idle">${escapeHtml(t('backup.state_idle', 'Not run yet'))}</span>`;
       }
 
       const lastRunStr = formatDateTime(job.last_run_at, undefined, t('common.never', 'Never'));
@@ -82,23 +82,23 @@ export async function fetchAndRenderBackupJobs(mountEl) {
         <tr>
           <td class="is-strong">
             <div>${escapeHtml(job.name)}</div>
-            <div class="zn-sub">${isSettings
+            <div class="kb-sub">${isSettings
               ? escapeHtml(t('backup.kind_config_source', 'Kiboto settings (encrypted)'))
               : `${escapeHtml(t('backup.source_folder', 'Folder:'))} <code>${escapeHtml(job.source_subvolume || '@shares')}</code>`}</div>
           </td>
           <td>${destBadge}</td>
           <td>
-            <div class="zn-inline zn-inline--wrap">
+            <div class="kb-inline kb-inline--wrap">
               ${schedBadge}
-              <span class="zn-sub">${escapeHtml(t('backup.keep_n', 'Keep {count}', { count: job.retention_count || 7 }))}</span>
+              <span class="kb-sub">${escapeHtml(t('backup.keep_n', 'Keep {count}', { count: job.retention_count || 7 }))}</span>
             </div>
           </td>
           <td>
             <div>${statusHtml}</div>
-            <div class="zn-sub">${lastRunStr}</div>
+            <div class="kb-sub">${lastRunStr}</div>
           </td>
           <td class="is-end">
-            <div class="zn-actions">
+            <div class="kb-actions">
               ${isRemote && !isSettings && !job.migrated_to ? `<button class="btn-rect btn-migrate-backup-job" data-job-id="${escapeHtml(job.id)}" title="${escapeHtml(t('backup.migrate_help', 'Make this an off-site backup: versions of every file, encrypted. The copy so far stays where it is.'))}">${escapeHtml(t('backup.migrate', 'Move to off-site backup'))}</button>` : ''}
               <button class="btn-rect primary btn-run-backup-job" data-job-id="${escapeHtml(job.id)}" title="${t('ui.run_backup_job_now', 'Run Backup Job Now')}">
                 <span aria-hidden="true">▶</span> ${escapeHtml(t('backup.run', 'Run'))}
@@ -113,8 +113,8 @@ export async function fetchAndRenderBackupJobs(mountEl) {
     }).join('');
 
     mount.innerHTML = `
-      <div class="zn-datatable-wrap">
-        <table class="zn-datatable">
+      <div class="kb-datatable-wrap">
+        <table class="kb-datatable">
           <thead>
             <tr>
               <th>${escapeHtml(t('backup.col_job', 'What'))}</th>
@@ -135,7 +135,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
         const origText = btn.innerHTML;
         try {
           btn.disabled = true;
-          btn.innerHTML = `<span class="spinner-inline zn-spinner-xs"></span>`;
+          btn.innerHTML = `<span class="spinner-inline kb-spinner-xs"></span>`;
           showToast(t('toast.triggering_backup_pipeline', 'Triggering backup pipeline {jobId}...', { jobId: jobId }), 'info');
           await api.post(`/api/backup/schedule/${jobId}/run`);
           showToast(t('toast.backup_started', 'The backup started. You will get a notification when it finishes.'), 'success');
@@ -169,7 +169,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
     });
 
   } catch (err) {
-    mount.innerHTML = `<div class="zn-load-error">${escapeHtml(t('backup.jobs_failed', 'The backup jobs couldn\'t be loaded: {error}', { error: err.message }))}</div>`;
+    mount.innerHTML = `<div class="kb-load-error">${escapeHtml(t('backup.jobs_failed', 'The backup jobs couldn\'t be loaded: {error}', { error: err.message }))}</div>`;
   }
 }
 
@@ -215,7 +215,7 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
             ${createdDate}
           </td>
           <td class="is-end">
-            <div class="zn-actions">
+            <div class="kb-actions">
               <button class="btn-rect btn-sys-browse-snap" data-snap-name="${escapeHtml(s.name)}" title="${t('snap.browse', 'Browse and restore files')}">
                 <svg class="ic" aria-hidden="true"><use href="#i-storage"/></svg> ${t('snap.browse_short', 'Files')}
               </button>
@@ -229,8 +229,8 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
     }).join('');
 
     mount.innerHTML = `
-      <div class="zn-datatable-wrap">
-        <table class="zn-datatable zn-datatable--compact">
+      <div class="kb-datatable-wrap">
+        <table class="kb-datatable kb-datatable--compact">
           <thead>
             <tr>
               <th>${escapeHtml(t('backup.col_snap', 'Snapshot'))}</th>
@@ -265,7 +265,7 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
     });
 
   } catch (err) {
-    mount.innerHTML = `<div class="zn-load-error">${escapeHtml(t('backup.snaps_failed', 'The snapshots couldn\'t be loaded: {error}', { error: err.message }))}</div>`;
+    mount.innerHTML = `<div class="kb-load-error">${escapeHtml(t('backup.snaps_failed', 'The snapshots couldn\'t be loaded: {error}', { error: err.message }))}</div>`;
   }
 }
 
@@ -308,8 +308,8 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
     const rowsHtml = backups.map(b => {
       const isUninstall = b.reason === 'uninstall';
       const reasonBadge = isUninstall
-        ? `<span class="badge zn-tag zn-tag--crit">⚠️ ${escapeHtml(t('backup.app_reason_uninstall', 'When removed'))}</span>`
-        : `<span class="badge zn-tag zn-tag--warn">💾 ${escapeHtml(t('backup.app_reason_manual', 'By hand'))}</span>`;
+        ? `<span class="badge kb-tag kb-tag--crit">⚠️ ${escapeHtml(t('backup.app_reason_uninstall', 'When removed'))}</span>`
+        : `<span class="badge kb-tag kb-tag--warn">💾 ${escapeHtml(t('backup.app_reason_manual', 'By hand'))}</span>`;
 
       const createdDate = formatDateTime(b.created_at ?? b.created_at_iso, undefined, 'N/A');
       // the record's own fields: the table read names the server never sent, so the file column
@@ -317,26 +317,26 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
       const fileName = b.filename || b.id;
       const sizeStr = b.size_human || b.size_formatted || (b.size_bytes ? formatBytes(b.size_bytes) : '--');
       const appName = b.container_name || b.vm_name || b.app_name || b.id;
-      const missingHtml = b.missing ? `<div class="zn-sub is-spaced"><span class="zn-tag zn-tag--warn">${escapeHtml(t('backup.app_missing', 'The file is not there right now'))}</span></div>` : '';
-      const stackHtml = b.stack ? `<span class="zn-sub" style="margin-left:6px;">(${escapeHtml(t('backup.app_stack', 'Stack:'))} <code>${escapeHtml(b.stack)}</code>)</span>` : '';
+      const missingHtml = b.missing ? `<div class="kb-sub is-spaced"><span class="kb-tag kb-tag--warn">${escapeHtml(t('backup.app_missing', 'The file is not there right now'))}</span></div>` : '';
+      const stackHtml = b.stack ? `<span class="kb-sub" style="margin-left:6px;">(${escapeHtml(t('backup.app_stack', 'Stack:'))} <code>${escapeHtml(b.stack)}</code>)</span>` : '';
       const mountsCount = b.mounts_count || (b.mounts ? b.mounts.length : 0);
 
       return `
         <tr>
           <td class="is-strong">
-            <div class="zn-inline">
+            <div class="kb-inline">
               <span aria-hidden="true">📦</span>
               <strong>${escapeHtml(appName)}</strong>
               ${stackHtml}
             </div>
-            <div class="zn-sub is-spaced">
-              ${escapeHtml(t('backup.app_image', 'Image:'))} <code class="zn-sub" style="color:var(--zn-text-soft);">${escapeHtml(b.image || 'N/A')}</code>
+            <div class="kb-sub is-spaced">
+              ${escapeHtml(t('backup.app_image', 'Image:'))} <code class="kb-sub" style="color:var(--kb-text-soft);">${escapeHtml(b.image || 'N/A')}</code>
             </div>
           </td>
           <td>${reasonBadge}</td>
           <td>
-            <div class="is-mono zn-sub" style="color: var(--zn-text);">${escapeHtml(fileName)}</div>
-            <div class="zn-sub is-spaced">
+            <div class="is-mono kb-sub" style="color: var(--kb-text);">${escapeHtml(fileName)}</div>
+            <div class="kb-sub is-spaced">
               ${escapeHtml(sizeStr)} • ${escapeHtml(t('backup.app_volumes', '{count, plural, one {# volume} other {# volumes}}', { count: mountsCount }))}
             </div>
             ${missingHtml}
@@ -345,7 +345,7 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
             ${createdDate}
           </td>
           <td class="is-end">
-            <div class="zn-actions">
+            <div class="kb-actions">
               <button class="btn-rect btn-download-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(fileName)}"${b.missing ? ' disabled' : ''} title="${t('ui.download_archive_tar_gz', 'Download Archive (.tar.gz)')}">
                 <span aria-hidden="true">⬇️</span> ${escapeHtml(t('backup.download', 'Download'))}
               </button>
@@ -362,8 +362,8 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
     }).join('');
 
     mount.innerHTML = `
-      <div class="zn-datatable-wrap">
-        <table class="zn-datatable">
+      <div class="kb-datatable-wrap">
+        <table class="kb-datatable">
           <thead>
             <tr>
               <th>${escapeHtml(t('backup.col_app', 'App'))}</th>
@@ -443,6 +443,6 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
     });
 
   } catch (err) {
-    mount.innerHTML = `<div class="zn-load-error">${escapeHtml(t('backup.apps_failed', 'The app backups couldn\'t be loaded: {error}', { error: err.message }))}</div>`;
+    mount.innerHTML = `<div class="kb-load-error">${escapeHtml(t('backup.apps_failed', 'The app backups couldn\'t be loaded: {error}', { error: err.message }))}</div>`;
   }
 }

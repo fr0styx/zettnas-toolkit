@@ -190,7 +190,7 @@ def _ls(path: str) -> list[str]:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Snapshot round trips on real pools.")
     ap.add_argument("--btrfs", default="", help="an empty folder on a btrfs pool")
-    ap.add_argument("--zfs-scratch", default="", help="a ZFS dataset to create for the run, e.g. tank/zn-roundtrip")
+    ap.add_argument("--zfs-scratch", default="", help="a ZFS dataset to create for the run, e.g. tank/kb-roundtrip")
     args = ap.parse_args(argv)
     if not args.btrfs and not args.zfs_scratch:
         ap.error("give --btrfs, --zfs-scratch or both")

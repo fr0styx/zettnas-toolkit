@@ -20,7 +20,7 @@ describe('dangerous questions are red in every language (SET-00)', () => {
     vi.advanceTimersByTime(20);
     expect(card().dataset.destructive).toBe('true');
     expect(document.activeElement).toBe(cancel());
-    expect(ok().style.background).toContain('zn-confirm-danger');
+    expect(ok().style.background).toContain('kb-confirm-danger');
   });
 
   it('keeps the short form: a question and what to do', () => {

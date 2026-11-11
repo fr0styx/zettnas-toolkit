@@ -37,11 +37,11 @@ tr.docker-row-selected {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
-  color: var(--zn-text-bright);
+  color: var(--kb-text-bright);
   padding-right: 10px;
-  border-right: 1px solid var(--zn-line-12);
+  border-right: 1px solid var(--kb-line-12);
 }
 
 .docker-floating-bulk-bar .bulk-bar-count {
@@ -54,7 +54,7 @@ tr.docker-row-selected {
   border-radius: 10px;
   background: var(--brand);
   color: var(--accent-contrast-fg);
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
 }
 
@@ -70,11 +70,11 @@ tr.docker-row-selected {
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
-  color: var(--zn-text);
-  background: var(--zn-glaze-8);
-  border: 1px solid var(--zn-line-10);
+  color: var(--kb-text);
+  background: var(--kb-glaze-8);
+  border: 1px solid var(--kb-line-10);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -82,7 +82,7 @@ tr.docker-row-selected {
 
 .docker-floating-bulk-bar .btn-bulk-action:hover {
   background: var(--lt-b-ffffff29, rgba(255, 255, 255, 0.16));
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
   transform: translateY(-1px);
 }
 
@@ -94,7 +94,7 @@ tr.docker-row-selected {
 
 .docker-floating-bulk-bar .btn-bulk-cancel {
   padding: 4px 8px;
-  color: var(--zn-text-muted);
+  color: var(--kb-text-muted);
 }
 
 
@@ -219,11 +219,11 @@ tr.docker-row-selected {
 
 /* replaces inline onmouseover handlers (FE-06) */
 [data-hover-bg]:hover {
-  background: var(--zn-glaze-5) !important;
+  background: var(--kb-glaze-5) !important;
 }
 
 /* "Can't reach Kiboto" banner (FE-16) */
-.zn-offline-banner {
+.kb-offline-banner {
   position: fixed;
   top: 10px;
   left: 50%;
@@ -232,25 +232,25 @@ tr.docker-row-selected {
   padding: 8px 16px;
   border-radius: 999px;
   background: var(--lt-b-7f1d1dff, #7f1d1d);
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
   font-size: 13px;
   font-weight: 600;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
-.zn-offline-banner[hidden] {
+.kb-offline-banner[hidden] {
   display: none;
 }
 
 
 /* Single sign-on button on the login screen (M6) */
 .login-sso-btn { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; margin-top: 10px; background: rgba(79,216,196,0.12); }
-.login-sso-error { margin: 10px 0 0; font-size: var(--zn-fs-xs); color: var(--lt-t-fca5a5ff, #fca5a5); }
+.login-sso-error { margin: 10px 0 0; font-size: var(--kb-fs-xs); color: var(--lt-t-fca5a5ff, #fca5a5); }
 
 /* Docker cleanup progress */
-.dpm-bar { height: 8px; border-radius: 999px; background: var(--zn-glaze-8); overflow: hidden; }
+.dpm-bar { height: 8px; border-radius: 999px; background: var(--kb-glaze-8); overflow: hidden; }
 .dpm-bar-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--brand), var(--ok2)); transition: width 0.4s ease; }
-.dpm-progress-pct { font-size: var(--zn-fs-xs); color: var(--zn-text-strong); font-variant-numeric: tabular-nums; }
-.dpm-step-icon { width: 14px; text-align: center; color: var(--zn-text-muted); }
+.dpm-progress-pct { font-size: var(--kb-fs-xs); color: var(--kb-text-strong); font-variant-numeric: tabular-nums; }
+.dpm-step-icon { width: 14px; text-align: center; color: var(--kb-text-muted); }
 .dpm-step.is-done .dpm-step-icon { color: var(--ok); }
 .dpm-step.is-error .dpm-step-icon { color: var(--crit); }
 .dpm-step.is-running .dpm-step-icon { color: var(--lt-ink-brand, var(--brand)); display: inline-block; animation: dpm-spin 1.2s linear infinite; }

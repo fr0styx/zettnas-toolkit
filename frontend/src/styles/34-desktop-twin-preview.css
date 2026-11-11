@@ -187,19 +187,19 @@
 
 .wallpaper-cat-pill {
   padding: 3px 10px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   border-radius: 12px;
-  border: 1px solid var(--zn-line-10);
-  background: var(--zn-glaze-4);
+  border: 1px solid var(--kb-line-10);
+  background: var(--kb-glaze-4);
   color: var(--muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .wallpaper-cat-pill:hover {
-  background: var(--zn-glaze-8);
-  color: var(--zn-text-strong);
+  background: var(--kb-glaze-8);
+  color: var(--kb-text-strong);
 }
 
 .wallpaper-cat-pill.active {
@@ -228,7 +228,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  background: var(--zn-glaze-3);
+  background: var(--kb-glaze-3);
   border: 1.5px solid var(--lt-r-ffffff17, rgba(255, 255, 255, 0.09));
   border-radius: 10px;
   padding: 7px;
@@ -244,7 +244,7 @@
 .wallpaper-card:hover {
   transform: translateY(-3px);
   border-color: var(--lt-r-ffffff40, rgba(255, 255, 255, 0.25));
-  background: var(--zn-glaze-6);
+  background: var(--kb-glaze-6);
   box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.5);
 }
 
@@ -265,7 +265,7 @@
   aspect-ratio: 16 / 9;
   border-radius: 7px;
   overflow: hidden;
-  background: var(--zn-shade-40);
+  background: var(--kb-shade-40);
 }
 
 .wallpaper-card-thumb {
@@ -295,7 +295,7 @@
   gap: 3px;
   background: var(--ok2);
   color: var(--accent-contrast-fg);
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   letter-spacing: 0.5px;
   padding: 2px 7px;
@@ -327,8 +327,8 @@
 .wallpaper-action-btn {
   background: var(--lt-b-0b1517d9, rgba(11, 21, 23, 0.85));
   backdrop-filter: blur(8px);
-  border: 1px solid var(--zn-line-15);
-  color: var(--zn-text-bright);
+  border: 1px solid var(--kb-line-15);
+  color: var(--kb-text-bright);
   border-radius: 5px;
   padding: 4px 6px;
   cursor: pointer;
@@ -339,7 +339,7 @@
 }
 
 .wallpaper-action-btn:hover {
-  background: var(--zn-glaze-15);
+  background: var(--kb-glaze-15);
   border-color: var(--lt-r-ffffff4c, rgba(255, 255, 255, 0.3));
 }
 
@@ -357,9 +357,9 @@
 }
 
 .wallpaper-card-title {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
-  color: var(--zn-text-soft);
+  color: var(--kb-text-soft);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -367,7 +367,7 @@
 }
 
 .wallpaper-card.active .wallpaper-card-title {
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
   font-weight: 700;
 }
 

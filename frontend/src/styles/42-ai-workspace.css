@@ -99,7 +99,7 @@
 
 #mgmt-pane-ai-rag::-webkit-scrollbar-track,
 #mgmt-pane-ai-index::-webkit-scrollbar-track {
-  background: var(--zn-shade-25) !important;
+  background: var(--kb-shade-25) !important;
   border-radius: 4px !important;
 }
 
@@ -115,6 +115,6 @@
 
 
 /* Sentences the sources do not back up (AI-1) */
-.ai-unsupported { font-size: var(--zn-fs-xs, 12px); color: var(--muted); }
+.ai-unsupported { font-size: var(--kb-fs-xs, 12px); color: var(--muted); }
 .ai-unsupported summary { cursor: pointer; }
 .ai-unsupported ul { margin: 4px 0 0; padding-left: 18px; }

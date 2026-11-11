@@ -144,7 +144,7 @@ def install_os_thread_names() -> bool:
     original = getattr(threading.Thread, "run", None)
     if original is None:
         return False  # threading.Thread replaced (tests)
-    if getattr(original, "_zn_named", False):
+    if getattr(original, "_kb_named", False):
         return True
 
     def run(self):  # type: ignore[no-untyped-def]
@@ -154,6 +154,6 @@ def install_os_thread_names() -> bool:
             logger.debug("supervisor: thread name not set", exc_info=True)
         return original(self)
 
-    run._zn_named = True  # type: ignore[attr-defined]
+    run._kb_named = True  # type: ignore[attr-defined]
     threading.Thread.run = run  # type: ignore[method-assign]
     return True

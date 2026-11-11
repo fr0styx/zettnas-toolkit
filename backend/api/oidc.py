@@ -46,7 +46,7 @@ def sso_public_config() -> dict[str, Any]:
     return oidc.public_config()
 
 
-STATE_COOKIE = "zn_sso_state"
+STATE_COOKIE = "kb_sso_state"
 
 
 @router.get("/login")

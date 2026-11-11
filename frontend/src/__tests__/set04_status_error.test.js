@@ -23,7 +23,7 @@ describe('the Kib page when its status cannot be loaded (SET-04)', () => {
     ai = await import('../components/management/ai.js');
     document.body.innerHTML = `
       <div id="mgmt-sec-ai">
-        <div id="ai-status-error" class="zn-alert zn-alert--danger" role="alert" hidden></div>
+        <div id="ai-status-error" class="kb-alert kb-alert--danger" role="alert" hidden></div>
         <span id="ai-chat-active-model-badge">🤖 Active LLM: DeepSeek-R1-Distill-Qwen-1.5B • ⚡ Tier 1 NPU</span>
         <span id="ai-accel-active-label" data-sample>Tier 1: NPU ➔ GPU ➔ CPU</span>
         <span id="ai-active-llm-label">qwen2.5:3b</span>

@@ -253,7 +253,7 @@ def ensure_measured(model: str, dim: int | None, host: str | None, background: b
                 _RUNNING.discard(key)
 
     if background:
-        threading.Thread(target=run, name="zn-vec-calibrate", daemon=True).start()
+        threading.Thread(target=run, name="kb-vec-calibrate", daemon=True).start()
     else:
         run()
 

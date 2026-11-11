@@ -7,7 +7,7 @@ migration from legacy scrypt and unsalted SHA-256 formats.
 Target format: $argon2id$v=19$m=65536,t=3,p=4$...
 Legacy format 1: scrypt$<n>$<r>$<p>$<salt_hex>$<hash_hex>
 Legacy format 2: <64 hex chars> (sha256(password))
-Wrapped legacy:  $zn-sha256-argon2id$<argon2id of the old sha256 hex digest> (ARC-9): the
+Wrapped legacy:  $kb-sha256-argon2id$<argon2id of the old sha256 hex digest> (ARC-9): the
                  weak hash is never stored as is; the next sign-in replaces it with Argon2id.
 """
 
@@ -55,7 +55,9 @@ def hash_password(password: str) -> str:
     return f"scrypt${_N}${_R}${_P}${salt.hex()}${dk.hex()}"
 
 
-WRAPPED_SHA256 = "$zn-sha256-argon2id$"
+WRAPPED_SHA256 = "$kb-sha256-argon2id$"
+# the same format under the name it had before 2.0.2; still read, never written
+WRAPPED_SHA256_BEFORE = "$" + "zn-sha256-argon2id$"
 
 
 def is_unsalted_sha256(stored: str) -> bool:
@@ -94,9 +96,10 @@ def verify_password(password: str, stored: str) -> bool:
         return False
 
     # 0. An old SHA-256 hash wrapped in Argon2id
-    if stored.startswith(WRAPPED_SHA256):
-        digest = hashlib.sha256(password.encode()).hexdigest()
-        return verify_password(digest, stored[len(WRAPPED_SHA256) :])
+    for prefix in (WRAPPED_SHA256, WRAPPED_SHA256_BEFORE):
+        if stored.startswith(prefix):
+            digest = hashlib.sha256(password.encode()).hexdigest()
+            return verify_password(digest, stored[len(prefix) :])
 
     # 1. Argon2id (RFC 9106)
     if stored.startswith("$argon2"):

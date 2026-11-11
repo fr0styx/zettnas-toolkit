@@ -11,7 +11,7 @@ describe('showLoadError (NUX-14)', () => {
     const mount = document.createElement('div');
     const retry = vi.fn();
     showLoadError(mount, new Error('The server is busy.'), retry);
-    const box = mount.querySelector('.zn-load-error');
+    const box = mount.querySelector('.kb-load-error');
     expect(box.getAttribute('role')).toBe('alert');
     expect(box.textContent).toContain("This couldn't be loaded: The server is busy.");
     mount.querySelector('button').click();

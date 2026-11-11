@@ -10,7 +10,7 @@ import sys
 ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
 DRY = "--dry" in sys.argv
 SMALL = r"(?:[0-9]|1[0-2])(?:\.\d+)?px"
-TOKEN = "var(--zn-fs-xs)"
+TOKEN = "var(--kb-fs-xs)"
 LCD_SEL = re.compile(
     r"#screen|lcd(?!-(?:style|theme)-chip)|mini-|\.dt-|desktop-twin|chassis-|bay-|\.dn\b|\.dt\b|disk-tile|#console-window|screensaver-clock"
     r"|\.nas-name|\.pill\b|\.clock\b|\.bmc-|\.lph-|\.nio-|\.uc-|\.sl-|\.slot-|\.fv\b|\.u\b|\.m2-|\.h-left|card-disks|\.io-dot|standby-zzz",

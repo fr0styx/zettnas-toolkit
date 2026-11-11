@@ -15,15 +15,15 @@ export const hasPhotoFilters = () => Boolean(chosen.taken || chosen.place);
 function chip(kind, item) {
   const on = chosen[kind] === item.value;
   const label = kind === 'place' ? item.value.split(',')[0] : item.value;
-  return html`<button type="button" class="btn-pill-toggle is-small${on ? ' active' : ''}" data-photo-${kind}="${item.value}" aria-pressed="${on ? 'true' : 'false'}" title="${item.value}">${label} <span class="zn-muted">${item.count}</span></button>`;
+  return html`<button type="button" class="btn-pill-toggle is-small${on ? ' active' : ''}" data-photo-${kind}="${item.value}" aria-pressed="${on ? 'true' : 'false'}" title="${item.value}">${label} <span class="kb-muted">${item.count}</span></button>`;
 }
 
 export function photoFiltersHtml(data) {
   const years = ((data && data.years) || []).slice(0, 10);
   const places = ((data && data.places) || []).slice(0, 12);
   if (!years.length && !places.length) return html``;
-  return html`<span class="zn-muted">${t('photo_filters.title', 'Photos from:')}</span>${years.map((y) => chip('taken', y))}${
-    places.length ? html`<span class="zn-muted">·</span>${places.map((p) => chip('place', p))}` : ''
+  return html`<span class="kb-muted">${t('photo_filters.title', 'Photos from:')}</span>${years.map((y) => chip('taken', y))}${
+    places.length ? html`<span class="kb-muted">·</span>${places.map((p) => chip('place', p))}` : ''
   }${hasPhotoFilters() ? html`<button type="button" class="btn-pill-toggle is-small" data-photo-clear>${t('tags.clear', 'Clear')}</button>` : ''}`;
 }
 
@@ -32,7 +32,7 @@ export async function installPhotoFilters(root = document, onChange = () => {}) 
   if (!anchor) return;
   let box = root.getElementById(BOX_ID);
   if (!box) {
-    box = Object.assign(document.createElement('div'), { id: BOX_ID, className: 'zn-row' });
+    box = Object.assign(document.createElement('div'), { id: BOX_ID, className: 'kb-row' });
     box.setAttribute('role', 'group');
     box.setAttribute('aria-label', t('photo_filters.group', 'Photo filters'));
     placeFilter(box, anchor, root);

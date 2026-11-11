@@ -13,8 +13,8 @@ export function userDataHtml(user, own) {
   const desc = own
     ? t('udata.desc_own', 'Download what Kiboto keeps about you: your account, chats with Kib, when you asked it, and which of your files search learned. Or have your chats, that log and the search data forgotten; your files stay.')
     : t('udata.desc_other', "Download or erase what Kiboto keeps about {name}: chats with Kib, when they asked it, and which of their files search learned. Erasing leaves their files and account in place.", { name: user.display_name || user.username });
-  return html`<p class="zn-muted">${desc}</p>
-    <div class="zn-row">
+  return html`<p class="kb-muted">${desc}</p>
+    <div class="kb-row">
       <button type="button" class="btn-pill-toggle" data-udata="export">${t('udata.export', 'Download data')}</button>
       <button type="button" class="btn-pill-toggle" data-udata="erase">${t('udata.erase', 'Erase chats, Kib log and search data')}</button>
     </div>`;
@@ -69,7 +69,7 @@ export async function installMyData(root = document) {
   }
   const user = me.user || me;
   if (!user || !user.id) return;
-  const card = Object.assign(document.createElement('div'), { id: CARD_ID, className: 'zn-card zn-card--divided' });
+  const card = Object.assign(document.createElement('div'), { id: CARD_ID, className: 'kb-card kb-card--divided' });
   anchor.insertAdjacentElement('afterend', card);
   renderUserData(card, user, true);
 }

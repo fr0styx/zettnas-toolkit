@@ -30,13 +30,13 @@
 }
 
 .sec-advisor-action-pill {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 4px;
-  background: var(--zn-glaze-8);
+  background: var(--kb-glaze-8);
   border: 1px solid var(--lt-r-ffffff29, rgba(255, 255, 255, 0.16));
-  color: var(--zn-text-bright);
+  color: var(--kb-text-bright);
   letter-spacing: 0.3px;
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
@@ -98,15 +98,15 @@
 
 /* B11 safe defaults: the "Add a person" dialog asks which shared folders they can open */
 .add-user-shares-label {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   color: var(--muted);
   margin-bottom: 4px;
   letter-spacing: 0.5px;
 }
 .add-user-shares-hint {
-  font-size: var(--zn-fs-xs);
-  color: var(--zn-text-muted);
+  font-size: var(--kb-fs-xs);
+  color: var(--kb-text-muted);
   margin-bottom: 6px;
 }
 .add-user-shares-list {
@@ -121,17 +121,17 @@
   padding: 3px 0;
 }
 .add-user-share-name {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .add-user-share-level {
-  background: var(--zn-shade-35);
-  color: var(--zn-text-strong);
-  border: 1px solid var(--zn-line-15);
+  background: var(--kb-shade-35);
+  color: var(--kb-text-strong);
+  border: 1px solid var(--kb-line-15);
   border-radius: 4px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   padding: 2px 4px;
 }

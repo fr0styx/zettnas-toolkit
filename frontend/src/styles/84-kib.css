@@ -7,10 +7,10 @@
   display: block;
   min-height: 18px;
   padding-left: 40px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   line-height: 18px;
-  color: var(--zn-text-accent);
+  color: var(--kb-text-accent);
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 36'%3E%3Cpath d='M11.0 0.75H53.0A10.25 10.25 0 0 1 63.25 11.0V25.0A10.25 10.25 0 0 1 53.0 35.25H11.0A10.25 10.25 0 0 1 0.75 25.0V11.0A10.25 10.25 0 0 1 11.0 0.75Z' fill='%230e1c1e' stroke='%232b393d' stroke-width='1.5'/%3E%3Cpath d='M22.75 10H22.75A3.75 3.75 0 0 1 26.5 13.75V22.25A3.75 3.75 0 0 1 22.75 26H22.75A3.75 3.75 0 0 1 19 22.25V13.75A3.75 3.75 0 0 1 22.75 10Z' fill='%234fd8c4'/%3E%3Cpath d='M41.25 10H41.25A3.75 3.75 0 0 1 45.0 13.75V22.25A3.75 3.75 0 0 1 41.25 26H41.25A3.75 3.75 0 0 1 37.5 22.25V13.75A3.75 3.75 0 0 1 41.25 10Z' fill='%234fd8c4'/%3E%3C/svg%3E") left center / 32px 18px no-repeat;
 }
 /* looking: while the answer is being written */

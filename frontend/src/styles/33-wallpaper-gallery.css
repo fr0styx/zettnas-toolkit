@@ -17,7 +17,7 @@
   gap: 10px;
   padding: 10px 14px;
   background: var(--lt-b-ffffff06, rgba(255, 255, 255, 0.025));
-  border: 1px solid var(--zn-line-6);
+  border: 1px solid var(--kb-line-6);
   border-radius: 8px;
 }
 
@@ -28,7 +28,7 @@
 }
 
 .wallpaper-count-badge {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   padding: 3px 9px;
   background: var(--lt-b-ffffff12, rgba(255, 255, 255, 0.07));

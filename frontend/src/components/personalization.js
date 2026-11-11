@@ -42,7 +42,7 @@ export function initPersonalization() {
 
         <div class="personalization-container" style="display: flex; flex: 1; height: calc(100% - 38px); overflow: hidden;">
           <!-- Left Navigation Sidebar -->
-          <div class="personalization-sidebar" style="width: 220px; background: var(--zn-shade-20); border-right: 1px solid var(--zn-line-8); display: flex; flex-direction: column; padding: 12px 8px; gap: 4px; overflow-y: auto;">
+          <div class="personalization-sidebar" style="width: 220px; background: var(--kb-shade-20); border-right: 1px solid var(--kb-line-8); display: flex; flex-direction: column; padding: 12px 8px; gap: 4px; overflow-y: auto;">
             <button class="personalization-nav-item active" data-tab="wallpaper">
               <span class="p-nav-icon">🖼️</span>
               <span class="p-nav-text" data-i18n="mgmt.subtab_wallpaper">${t('mgmt.subtab_wallpaper', 'Wallpaper')}</span>

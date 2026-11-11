@@ -218,7 +218,7 @@ docker exec -i kiboto python3 -m pytest -v /app/tests/test_docker_updates.py
 - **Updating Releases**: When cutting a release, update `CHANGELOG.md` under `## vX.Y.Z (YYYY-MM-DD) - Stable`. The CI workflow automatically extracts this section to populate the GitHub Release notes.
 
 ### 5.4 Conventions the tests enforce
-- **Colours**: use the semantic tokens (`--zn-text-*`, `--zn-line-N`, `--zn-glaze-N`, `--zn-shade-N`) from `50-components.css`. After adding a hard-coded colour, run `python scripts/light_theme.py convert`: it writes the token when one exists and a light-theme wrapper otherwise, then regenerates `58-light-palette.css`.
+- **Colours**: use the semantic tokens (`--kb-text-*`, `--kb-line-N`, `--kb-glaze-N`, `--kb-shade-N`) from `50-components.css`. After adding a hard-coded colour, run `python scripts/light_theme.py convert`: it writes the token when one exists and a light-theme wrapper otherwise, then regenerates `58-light-palette.css`.
 - **HTML from JavaScript**: write `el.innerHTML = html`...`` with `html` from `frontend/src/html.js`; it escapes every value (wrap your own trusted markup in `raw()`). Do not add `window.x = ...` globals: export the function or send an event. Both are ratcheted per file (`tests/test_ui_ratchets.py`).
 - **Markup**: buttons are `.btn-pill-toggle` (variants `is-primary`, `is-danger`, `is-ghost`, `is-small`); build new markup with `frontend/src/ui/primitives.js` instead of inline styles. Text is at least 13 px.
 - **Lazy windows**: a window's code, markup (`frontend/src/windows/`) and own stylesheet load on first use. Only move a stylesheet into a lazy bundle when `tests/test_lazy_css.py` says its cascade order cannot change.

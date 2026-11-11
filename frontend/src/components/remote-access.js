@@ -66,7 +66,7 @@ function connectForm() {
   const form = el(
     'form',
     { class: 'remote-form', 'data-remote-form': '' },
-    el('p', { class: 'zn-muted', text: t('remote.intro', 'Open Kiboto and your photos on your phone away from home, through a private network between your devices. Nothing is opened on your router.') }),
+    el('p', { class: 'kb-muted', text: t('remote.intro', 'Open Kiboto and your photos on your phone away from home, through a private network between your devices. Nothing is opened on your router.') }),
     el(
       'fieldset',
       {},
@@ -93,7 +93,7 @@ export function connectBody(form) {
 async function signInView(s) {
   return el(
     'div',
-    { class: 'zn-row remote-step' },
+    { class: 'kb-row remote-step' },
     await qrBox(s.auth_url, t('remote.signin_qr', 'Sign-in link as a QR code')),
     el(
       'div',
@@ -107,9 +107,9 @@ async function signInView(s) {
 function httpsHint(s) {
   if (s.https) return null;
   if (s.login_server) {
-    return el('p', { class: 'zn-muted', text: t('remote.no_https_headscale', 'Headscale gives no HTTPS certificates, so the addresses start with http://. The connection is still encrypted end to end by the private network.') });
+    return el('p', { class: 'kb-muted', text: t('remote.no_https_headscale', 'Headscale gives no HTTPS certificates, so the addresses start with http://. The connection is still encrypted end to end by the private network.') });
   }
-  return el('p', { class: 'zn-muted', text: t('remote.no_https', 'For https:// addresses, turn on MagicDNS and HTTPS certificates on the DNS page of the Tailscale admin console, then press "Turn on HTTPS".') });
+  return el('p', { class: 'kb-muted', text: t('remote.no_https', 'For https:// addresses, turn on MagicDNS and HTTPS certificates on the DNS page of the Tailscale admin console, then press "Turn on HTTPS".') });
 }
 
 const APPS_OPEN_KEY = 'kiboto_remote_apps_open';
@@ -145,7 +145,7 @@ export function addressesView(addresses = {}, open = appsOpen()) {
   const apps = [...(addresses.apps || [])].sort((a, b) => String(a.name).localeCompare(String(b.name)));
   const main = el(
     'ul',
-    { class: 'zn-list remote-addresses' },
+    { class: 'kb-list remote-addresses' },
     kiboto ? el('li', {}, `${t('remote.addr_kiboto', 'Kiboto')}: `, link(kiboto, kiboto)) : null,
     immich ? el('li', {}, `${t('remote.addr_immich', 'Immich (photo backup)')}: `, link(immich, immich)) : null,
   );
@@ -178,7 +178,7 @@ async function connectedView(s) {
   const newApps = s.https && apps.some((a) => !a.url.startsWith('https://'));
   const actions = el(
     'div',
-    { class: 'zn-row remote-actions' },
+    { class: 'kb-row remote-actions' },
     !kiboto.startsWith('https://') ? button(t('remote.publish', 'Turn on HTTPS'), 'publish', true)
       : newApps ? button(t('remote.publish_apps', 'Turn on HTTPS for new apps'), 'publish', true) : null,
     button(t('remote.disconnect', 'Disconnect'), 'disconnect'),
@@ -187,7 +187,7 @@ async function connectedView(s) {
     'div',
     { class: 'remote-step' },
     el('p', { text: t('remote.connected', 'Connected as {name}. On a phone with the Tailscale app signed in to the same network, scan the code to open Kiboto.', { name: s.name || (s.ips || [])[0] || '' }) }),
-    el('div', { class: 'zn-row' }, kiboto ? await qrBox(kiboto, t('remote.addr_qr', 'Kiboto address as a QR code')) : null, list),
+    el('div', { class: 'kb-row' }, kiboto ? await qrBox(kiboto, t('remote.addr_qr', 'Kiboto address as a QR code')) : null, list),
     httpsHint(s),
     actions,
   );
@@ -211,7 +211,7 @@ export async function renderRemoteAccess(card, s = null, polls = 0) {
     }
   }
   card.hidden = false;
-  card.replaceChildren(el('div', { class: 'zn-card zn-card--boxed' }, el('div', { class: 'zn-title', text: t('remote.title', 'Use from anywhere') }), await remoteBody(status)));
+  card.replaceChildren(el('div', { class: 'kb-card kb-card--boxed' }, el('div', { class: 'kb-title', text: t('remote.title', 'Use from anywhere') }), await remoteBody(status)));
   card.querySelector('[data-remote-form]')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     try {

@@ -100,7 +100,7 @@ def _behaviour(tmp):
             continue
         try:
             params = inspect.signature(cls).parameters
-            adapter = cls(pool_path="/tmp/zn-pal-golden") if "pool_path" in params else cls()
+            adapter = cls(pool_path="/tmp/kb-pal-golden") if "pool_path" in params else cls()
             out["capabilities"][name] = adapter.get_capabilities().model_dump(mode="json")
         except Exception as e:  # recorded too: the split must not change it
             out["capabilities"][name] = f"raised {type(e).__name__}"

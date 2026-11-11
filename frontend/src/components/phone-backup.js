@@ -12,24 +12,24 @@ const CARD_ID = 'phone-backup-card';
 export function phoneBackupHtml(s, qrSvg = '') {
   const url = (s && (s.url || s.detected)) || '';
   if (!url) {
-    return html`<p class="zn-muted">${t('phone.no_immich', 'Immich backs up the photos and videos on your phone to this server, automatically. Install it from the app catalog first.')}</p>
+    return html`<p class="kb-muted">${t('phone.no_immich', 'Immich backs up the photos and videos on your phone to this server, automatically. Install it from the app catalog first.')}</p>
       <button type="button" class="btn-pill-toggle is-primary" data-phone-open="catalog">${t('phone.open_catalog', 'Open the app catalog')}</button>`;
   }
   const signIn = s.sso
     ? t('phone.step3_sso', 'Tap "Sign in with Kiboto" and use your Kiboto account.')
     : t('phone.step3', 'Sign in with your Immich account.');
-  return html`<div class="zn-row phone-backup">
+  return html`<div class="kb-row phone-backup">
       <div class="phone-qr" aria-hidden="true">${raw(qrSvg)}</div>
-      <ol class="zn-list phone-steps">
+      <ol class="kb-list phone-steps">
         <li>${t('phone.step1', 'Install the Immich app on your phone (App Store or Google Play).')}</li>
         <li>${t('phone.step2', 'Open it and scan this code, or type the address:')} <code>${url}</code></li>
         <li>${signIn}</li>
         <li>${t('phone.step4', 'Tap the cloud icon and turn on backup. Photos you take from now on are copied here.')}</li>
       </ol>
     </div>
-    <p class="zn-muted">${t('phone.away', 'Away from home, the phone backs up when it can reach this server, for example through Tailscale (Network).')}</p>
+    <p class="kb-muted">${t('phone.away', 'Away from home, the phone backs up when it can reach this server, for example through Tailscale (Network).')}</p>
     ${s.phone_done
-      ? html`<p class="zn-muted">✓ ${t('phone.done_note', 'You said your phone backs up here.')}</p>`
+      ? html`<p class="kb-muted">✓ ${t('phone.done_note', 'You said your phone backs up here.')}</p>`
       : html`<button type="button" class="btn-pill-toggle" data-phone-done>${t('phone.done', 'Done, my phone backs up')}</button>`}`;
 }
 

@@ -759,7 +759,7 @@ function buildPoolBlockInner(pool, isObserver, can = { scrub: true }) {
     <div class="topo-pool-actions cv-row-5">
       ${can.scrub ? `<button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name || pool.id)}" title="${t('ui.trigger_filesystem_scrub_or_parity', 'Trigger filesystem scrub or parity check')}">${ico('⚡')} ${t('chassis.scrub_pool', 'Scrub pool')}</button>` : ''}
       ${!isObserver ? `<button class="btn-pool-rename btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name)}" title="${t('ui.rename_storage_pool', 'Rename storage pool')}">${ico('✏️')} ${t('chassis.rename', 'Rename')}</button>` : ''}
-      ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--zn-text-warn);" title="${t('ui.safely_flush_dirty_cache_and', 'Safely flush dirty cache and detach pool')}">${ico('⏏️')} ${t('chassis.eject', 'Safely eject')}</button>` : ''}
+      ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--kb-text-warn);" title="${t('ui.safely_flush_dirty_cache_and', 'Safely flush dirty cache and detach pool')}">${ico('⏏️')} ${t('chassis.eject', 'Safely eject')}</button>` : ''}
       ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle is-danger" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.destroy_storage_pool', 'Destroy storage pool')}">${ico('🗑️')} ${t('chassis.destroy', 'Destroy')}</button>` : ''}
     </div>
   `;
@@ -1048,10 +1048,10 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = '') {
           <span class="webdav-status-pill ${sftpPillClass}">${sftpPillText}</span>
         </div>
         <div class="cv-row-7">
-          <button class="btn-pill-toggle btn-sftp-toggle-action" id="btn-sftp-header-toggle" style="padding:5px 12px; font-size:var(--zn-fs-xs); font-weight:700; ${isRunning ? 'background:rgba(239,68,68,0.15); color:var(--zn-text-crit); border-color:rgba(239,68,68,0.3);' : ''}">
+          <button class="btn-pill-toggle btn-sftp-toggle-action" id="btn-sftp-header-toggle" style="padding:5px 12px; font-size:var(--kb-fs-xs); font-weight:700; ${isRunning ? 'background:rgba(239,68,68,0.15); color:var(--kb-text-crit); border-color:rgba(239,68,68,0.3);' : ''}">
             ${isRunning ? `${ico('⏹')} ${t('chassis.sftp_stop', 'Stop SFTP')}` : `${ico('▶')} ${t('chassis.sftp_start', 'Start SFTP')}`}
           </button>
-          <button class="btn-pill-toggle btn-sftp-users-action" id="btn-sftp-header-users" style="background: rgba(51,205,184,0.15); color: var(--zn-text-accent); border-color: rgba(51,205,184,0.3);" title="${t('ui.manage_sftp_users_and_permissions', 'Manage SFTP users and permissions')}">
+          <button class="btn-pill-toggle btn-sftp-users-action" id="btn-sftp-header-users" style="background: rgba(51,205,184,0.15); color: var(--kb-text-accent); border-color: rgba(51,205,184,0.3);" title="${t('ui.manage_sftp_users_and_permissions', 'Manage SFTP users and permissions')}">
             ${ico('👥')} ${t('chassis.manage_users', 'Manage users ({count})', { count: usersCount })}
           </button>
         </div>
@@ -1059,7 +1059,7 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = '') {
 
       <div class="cv-row-xs-muted">
         <span>${t('chassis.port', 'Port:')} <strong class="cv-strong">${port}</strong></span>
-        <span>${t('chassis.host_shell', 'Host shell:')} <strong style="color:var(--ok2, #22c55e); background:rgba(34,197,94,0.12); padding:1px 6px; border-radius:4px; font-size:var(--zn-fs-xs);">${t('chassis.no_shell', 'Not allowed (no PTY)')}</strong></span>
+        <span>${t('chassis.host_shell', 'Host shell:')} <strong style="color:var(--ok2, #22c55e); background:rgba(34,197,94,0.12); padding:1px 6px; border-radius:4px; font-size:var(--kb-fs-xs);">${t('chassis.no_shell', 'Not allowed (no PTY)')}</strong></span>
       </div>
 
       <!-- Quick Connect Grid -->
@@ -1750,7 +1750,7 @@ export async function fetchAndRenderRemoteStorage(container) {
             <div class="remote-card-actions">
               <div>
                 ${isMounted ? `
-                  <button class="btn-remote-reveal btn-pill-toggle" data-path="${escapeHtml(r.mount_path)}" title="${t('ui.open_in_file_explorer', 'Open in File Explorer')}" style="background: rgba(51,205,184,0.15); color: var(--zn-text-accent); border-color: rgba(51,205,184,0.3);">
+                  <button class="btn-remote-reveal btn-pill-toggle" data-path="${escapeHtml(r.mount_path)}" title="${t('ui.open_in_file_explorer', 'Open in File Explorer')}" style="background: rgba(51,205,184,0.15); color: var(--kb-text-accent); border-color: rgba(51,205,184,0.3);">
                     ${ico('📂')} ${t('ui.open_in_file_explorer', 'Open in File Explorer')}
                   </button>
                 ` : `
@@ -1864,7 +1864,7 @@ export async function fetchAndRenderRemoteStorage(container) {
             <div class="cv-fs13-bold-strong">
               ${t('chassis.remotes_count', 'Connected cloud drives ({count})', { count: remotes ? remotes.length : 0 })}
             </div>
-            <button class="btn-pill-toggle btn-trigger-new-remote" style="background: rgba(51,205,184,0.15); color: var(--zn-text-accent); border-color: rgba(51,205,184,0.3);" title="${t('ui.connect_new_cloud_remote', 'Connect New Cloud Remote')}">
+            <button class="btn-pill-toggle btn-trigger-new-remote" style="background: rgba(51,205,184,0.15); color: var(--kb-text-accent); border-color: rgba(51,205,184,0.3);" title="${t('ui.connect_new_cloud_remote', 'Connect New Cloud Remote')}">
               ${ico('☁️')} ${t('chassis.add_remote', 'Add cloud drive')}
             </button>
           </div>
@@ -2257,14 +2257,14 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   <span class="cv-fs18">🔑</span>
                   <span class="cv-fs13-bold-strong-2">${escapeHtml(t('chassis.oauth_connect', 'Connect {name}', { name: provTitle }))}</span>
                 </div>
-                <span style="font-size: var(--zn-fs-xs); padding: 2px 8px; background: rgba(34, 197, 94, 0.15); color: var(--lt-t-4ade80ff, #4ade80); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; font-weight: 600;">
+                <span style="font-size: var(--kb-fs-xs); padding: 2px 8px; background: rgba(34, 197, 94, 0.15); color: var(--lt-t-4ade80ff, #4ade80); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; font-weight: 600;">
                   ${t('chassis.oauth_badge', 'Sign in here, no terminal needed')}
                 </span>
               </div>
 
               <!-- Auth Mode Switcher (Tabs) -->
               <div class="cv-row-box-3">
-                <button type="button" id="tab-oauth-desktop" style="flex: 1; padding: 6px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border-radius: 4px; border: none; cursor: pointer; background: #0a7a70; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s;">
+                <button type="button" id="tab-oauth-desktop" style="flex: 1; padding: 6px 10px; font-size: var(--kb-fs-xs); font-weight: 700; border-radius: 4px; border: none; cursor: pointer; background: #0a7a70; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s;">
                   <span>${ico('💻')} ${t('chassis.oauth_tab_desktop', 'On this computer')}</span>
                 </button>
                 <button type="button" id="tab-oauth-qr" class="btn-pill-toggle is-ghost is-small cv-grow" style="display: flex;">
@@ -2274,20 +2274,20 @@ export async function openNewCloudRemoteModal(onSuccess) {
 
               <!-- Step 1: Desktop Panel -->
               <div id="oauth-desktop-panel">
-                <button type="button" id="btn-oauth-browser" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; background: linear-gradient(135deg, #0a7a70 0%, #08695f 100%); border: 1px solid var(--zn-line-20); color: #fff; border-radius: 7px; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(10, 122, 112, 0.35); transition: all 0.2s;">
+                <button type="button" id="btn-oauth-browser" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; background: linear-gradient(135deg, #0a7a70 0%, #08695f 100%); border: 1px solid var(--kb-line-20); color: #fff; border-radius: 7px; font-size: var(--kb-fs-xs); font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(10, 122, 112, 0.35); transition: all 0.2s;">
                   <span>🌐 ${escapeHtml(brandBtnLabel)}</span>
                 </button>
 
-                <div style="margin-top: 8px; margin-bottom: 12px; padding: 8px 10px; background: rgba(51, 205, 184, 0.07); border: 1px dashed rgba(51, 205, 184, 0.28); border-radius: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-soft); line-height: 1.45;">
-                  <strong class="cv-accent">${ico('📌')} ${t('chassis.oauth_expect', 'What to expect:')}</strong> ${t('chassis.oauth_expect_1', 'After you approve the sign-in, the new tab shows')} <code style="color:var(--zn-text-crit); background:rgba(239,68,68,0.15); padding:1px 4px; border-radius:3px;">This site can't be reached (localhost:53682)</code>. <strong>${t('chassis.oauth_expect_2', 'That is normal.')}</strong> ${t('chassis.oauth_expect_3', 'Copy the address from that tab and paste it in step 2 below.')}
+                <div style="margin-top: 8px; margin-bottom: 12px; padding: 8px 10px; background: rgba(51, 205, 184, 0.07); border: 1px dashed rgba(51, 205, 184, 0.28); border-radius: 6px; font-size: var(--kb-fs-xs); color: var(--kb-text-soft); line-height: 1.45;">
+                  <strong class="cv-accent">${ico('📌')} ${t('chassis.oauth_expect', 'What to expect:')}</strong> ${t('chassis.oauth_expect_1', 'After you approve the sign-in, the new tab shows')} <code style="color:var(--kb-text-crit); background:rgba(239,68,68,0.15); padding:1px 4px; border-radius:3px;">This site can't be reached (localhost:53682)</code>. <strong>${t('chassis.oauth_expect_2', 'That is normal.')}</strong> ${t('chassis.oauth_expect_3', 'Copy the address from that tab and paste it in step 2 below.')}
                 </div>
               </div>
 
               <!-- Step 1: Mobile QR Code Panel -->
               <div class="cv-x-7" id="oauth-qr-panel" style="display: none;">
-                <div id="oauth-qr-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; background: var(--zn-shade-35); border: 1px dashed rgba(51, 205, 184, 0.35); border-radius: 8px;">
+                <div id="oauth-qr-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; background: var(--kb-shade-35); border: 1px dashed rgba(51, 205, 184, 0.35); border-radius: 8px;">
                   <div id="oauth-qr-target" style="display: inline-flex; align-items: center; justify-content: center; padding: 8px; background: #ffffff; border-radius: 8px; min-width: 140px; min-height: 140px; box-shadow: 0 4px 14px rgba(0,0,0,0.6);">
-                    <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-0a7a70ff, #0a7a70); font-weight: 600;">${ico('⏳')} ${t('chassis.qr_loading', 'Making the QR code…')}</div>
+                    <div style="font-size: var(--kb-fs-xs); color: var(--lt-t-0a7a70ff, #0a7a70); font-weight: 600;">${ico('⏳')} ${t('chassis.qr_loading', 'Making the QR code…')}</div>
                   </div>
                   <div class="cv-row-xs-semi">
                     <span>${ico('📱')} ${t('chassis.qr_scan', 'Scan with your phone or tablet camera to sign in')}</span>
@@ -2314,7 +2314,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                     ${ico('📋')} ${t('chassis.paste', 'Paste')}
                   </button>
                 </div>
-                <button type="button" id="btn-oauth-exchange" style="margin-top: 10px; width: 100%; padding: 10px 14px; background: var(--ok2, #22c55e); color: var(--accent-contrast-fg); font-size: var(--zn-fs-xs); font-weight: 700; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);">
+                <button type="button" id="btn-oauth-exchange" style="margin-top: 10px; width: 100%; padding: 10px 14px; background: var(--ok2, #22c55e); color: var(--accent-contrast-fg); font-size: var(--kb-fs-xs); font-weight: 700; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);">
                   <span>${ico('✓')} ${t('chassis.oauth_finish', 'Finish sign-in')}</span>
                 </button>
               </div>
@@ -2340,7 +2340,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                       ${escapeHtml(f.label.toUpperCase())} ${f.required ? '<span style="color:var(--crit,#ef4444);">*</span>' : ''}
                     </label>
                     ${prov.authorize_cmd ? `
-                      <button type="button" class="remote-copy-cmd-btn" data-cmd="${escapeHtml(prov.authorize_cmd)}" style="background:rgba(51,205,184,0.15); border:1px solid rgba(51,205,184,0.3); color:var(--zn-text-accent); font-size:var(--zn-fs-xs); font-weight:600; padding:2px 8px; border-radius:4px; cursor:pointer;">
+                      <button type="button" class="remote-copy-cmd-btn" data-cmd="${escapeHtml(prov.authorize_cmd)}" style="background:rgba(51,205,184,0.15); border:1px solid rgba(51,205,184,0.3); color:var(--kb-text-accent); font-size:var(--kb-fs-xs); font-weight:600; padding:2px 8px; border-radius:4px; cursor:pointer;">
                         ${ico('📋')} ${escapeHtml(t('chassis.copy_cmd', 'Copy: {cmd}', { cmd: prov.authorize_cmd }))}
                       </button>
                     ` : ''}
@@ -2462,7 +2462,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 if (qrBox && !directLink) {
                   directLink = document.createElement('div');
                   directLink.className = 'oauth-direct-links';
-                  directLink.style.cssText = 'margin-top: 8px; font-size: var(--zn-fs-xs); text-align: center; line-height: 1.5;';
+                  directLink.style.cssText = 'margin-top: 8px; font-size: var(--kb-fs-xs); text-align: center; line-height: 1.5;';
                   qrBox.appendChild(directLink);
                 }
                 if (directLink) {
@@ -2520,7 +2520,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
               }
               if (qrBtn) qrBtn.disabled = true;
               if (qrTarget && isQr) {
-                noteIn(qrTarget, t('chassis.qr_loading', 'Making the QR code…'), 'font-size: var(--zn-fs-xs); color: var(--lt-t-0a7a70ff, #0a7a70); font-weight: 600;');
+                noteIn(qrTarget, t('chassis.qr_loading', 'Making the QR code…'), 'font-size: var(--kb-fs-xs); color: var(--lt-t-0a7a70ff, #0a7a70); font-weight: 600;');
               }
 
               showNote(statusEl, 'busy', '⏳', '', t('chassis.oauth_starting', 'Starting the sign-in…'));
@@ -2565,9 +2565,9 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 showNote(statusEl, 'error', '❌', '', t('chassis.oauth_start_failed', 'Could not start the sign-in: {error}', { error: err.message || t('toast.unknown_error', 'Unknown error') }));
                 if (isQr && qrTarget) {
                   qrTarget.innerHTML = `
-                    <div style="padding: 12px; text-align: center; color: var(--lt-t-ef4444ff, #ef4444); font-size: var(--zn-fs-xs);">
+                    <div style="padding: 12px; text-align: center; color: var(--lt-t-ef4444ff, #ef4444); font-size: var(--kb-fs-xs);">
                       <div>${ico('❌')} ${escapeHtml(err.message || t('chassis.oauth_start_failed_short', 'Could not start the sign-in'))}</div>
-                      <button type="button" class="btn-retry-qr" style="margin-top: 8px; padding: 4px 10px; font-size: var(--zn-fs-xs); background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: var(--zn-text-strong); border-radius: 4px; cursor: pointer;">${ico('🔄')} ${t('chassis.retry', 'Retry')}</button>
+                      <button type="button" class="btn-retry-qr" style="margin-top: 8px; padding: 4px 10px; font-size: var(--kb-fs-xs); background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: var(--kb-text-strong); border-radius: 4px; cursor: pointer;">${ico('🔄')} ${t('chassis.retry', 'Retry')}</button>
                     </div>
                   `;
                   const retryBtn = qrTarget.querySelector('.btn-retry-qr');
@@ -2935,7 +2935,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
 
   // Populate available physical disks
   if (disksContainer) {
-    noteIn(disksContainer, t('chassis.scanning_disks', 'Looking for free drives…'), 'color:var(--muted); font-size:var(--zn-fs-xs);');
+    noteIn(disksContainer, t('chassis.scanning_disks', 'Looking for free drives…'), 'color:var(--muted); font-size:var(--kb-fs-xs);');
     try {
       const overview = await api.get('/api/storage/overview').catch(() => null);
       let disksList = overview?.unassigned_disks;
@@ -2953,7 +2953,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
       });
 
       if (filtered.length === 0) {
-        noteIn(disksContainer, t('chassis.no_free_disks', 'No free drives.'), 'color:var(--muted); font-size:var(--zn-fs-xs);');
+        noteIn(disksContainer, t('chassis.no_free_disks', 'No free drives.'), 'color:var(--muted); font-size:var(--kb-fs-xs);');
       } else {
         disksContainer.innerHTML = filtered.map((d) => `
           <label class="cv-row-xs-strong">
@@ -2963,7 +2963,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
         `).join('');
       }
     } catch (dErr) {
-      noteIn(disksContainer, t('chassis.scan_failed', 'Could not look for drives.'), 'color:var(--muted); font-size:var(--zn-fs-xs);');
+      noteIn(disksContainer, t('chassis.scan_failed', 'Could not look for drives.'), 'color:var(--muted); font-size:var(--kb-fs-xs);');
     }
   }
 

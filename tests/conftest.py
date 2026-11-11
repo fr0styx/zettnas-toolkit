@@ -358,7 +358,7 @@ def _install_response_hook():
 
     from starlette.testclient import TestClient
 
-    if getattr(TestClient, "_zn_response_hook", False):
+    if getattr(TestClient, "_kb_response_hook", False):
         return
     record_to = os.environ.get("KIBOTO_RECORD_RESPONSES")
     original = TestClient.request
@@ -384,7 +384,7 @@ def _install_response_hook():
         return resp
 
     TestClient.request = request
-    TestClient._zn_response_hook = True
+    TestClient._kb_response_hook = True
 
 
 _install_response_hook()
@@ -536,11 +536,11 @@ def pytest_configure(config):
         import random
 
         seed = str(random.SystemRandom().randrange(1, 10**6))
-    config._zn_random_seed = seed
+    config._kb_random_seed = seed
 
 
 def pytest_collection_modifyitems(config, items):
-    seed = getattr(config, "_zn_random_seed", None)
+    seed = getattr(config, "_kb_random_seed", None)
     if seed:
         import random
 
@@ -548,7 +548,7 @@ def pytest_collection_modifyitems(config, items):
 
 
 def pytest_report_header(config):
-    seed = getattr(config, "_zn_random_seed", None)
+    seed = getattr(config, "_kb_random_seed", None)
     return f"random order: seed {seed} (re-run with --random-order={seed})" if seed else None
 
 

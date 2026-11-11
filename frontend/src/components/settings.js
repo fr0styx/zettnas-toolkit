@@ -733,8 +733,8 @@ export function initSettings() {
               <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
                 <span>${icon}</span>
                 <div style="min-width:0;">
-                  <span style="font-weight:600; color:var(--zn-text-strong); font-size:var(--zn-fs-xs);">${escapeHtml(chk.title)}: </span>
-                  <span style="color:${color}; font-size:var(--zn-fs-xs);">${escapeHtml(chk.message)}</span>
+                  <span style="font-weight:600; color:var(--kb-text-strong); font-size:var(--kb-fs-xs);">${escapeHtml(chk.title)}: </span>
+                  <span style="color:${color}; font-size:var(--kb-fs-xs);">${escapeHtml(chk.message)}</span>
                 </div>
               </div>
               <span class="sec-advisor-action-pill">${actionText}</span>
@@ -1157,7 +1157,7 @@ export async function sampleWallpaperPalette() {
   }
 
   try {
-    container.innerHTML = `<span style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--brand)); display:flex; align-items:center; gap:6px;"><span class="spinner-inline" style="width:12px; height:12px; border-width:2px;"></span> ${t('stg.sampling', 'Sampling wallpaper pixels...')}</span>`;
+    container.innerHTML = `<span style="font-size:var(--kb-fs-xs); color:var(--lt-ink-brand, var(--brand)); display:flex; align-items:center; gap:6px;"><span class="spinner-inline" style="width:12px; height:12px; border-width:2px;"></span> ${t('stg.sampling', 'Sampling wallpaper pixels...')}</span>`;
 
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -1982,7 +1982,7 @@ export function tokenRights(scopes) {
 export function tokenRowHtml(tok) {
   const folders = Array.isArray(tok.folders) ? tok.folders : [];
   const reach = folders.length
-    ? `${escapeHtml(t('tokens.only_folders', 'Only:'))} ${folders.map((f) => `<span class="zn-tag zn-tag--info is-mono">${escapeHtml(f)}</span>`).join(' ')}`
+    ? `${escapeHtml(t('tokens.only_folders', 'Only:'))} ${folders.map((f) => `<span class="kb-tag kb-tag--info is-mono">${escapeHtml(f)}</span>`).join(' ')}`
     : escapeHtml(t('tokens.all_folders', 'All folders the account can open'));
   let used = t('tokens.never_used', 'Never used');
   if (tok.last_used_at) {
@@ -1991,14 +1991,14 @@ export function tokenRowHtml(tok) {
     if (tok.last_client) used += ' ' + t('tokens.last_client', 'by {client}', { client: tok.last_client });
   }
   return `
-    <div class="zn-token-main">
+    <div class="kb-token-main">
       <div class="is-strong">${escapeHtml(tok.name)}</div>
-      <div class="zn-sub is-mono">${escapeHtml(tok.masked_token)}</div>
-      <div class="zn-sub" title="${escapeHtml((tok.scopes || []).join(', '))}">${escapeHtml(t('tokens.may', 'May: {what}', { what: tokenRights(tok.scopes) }))}</div>
-      <div class="zn-sub">${reach}</div>
-      <div class="zn-sub" data-token-used>${escapeHtml(used)}</div>
+      <div class="kb-sub is-mono">${escapeHtml(tok.masked_token)}</div>
+      <div class="kb-sub" title="${escapeHtml((tok.scopes || []).join(', '))}">${escapeHtml(t('tokens.may', 'May: {what}', { what: tokenRights(tok.scopes) }))}</div>
+      <div class="kb-sub">${reach}</div>
+      <div class="kb-sub" data-token-used>${escapeHtml(used)}</div>
     </div>
-    <div class="zn-actions"><button type="button" class="btn-rect danger" data-id="${escapeHtml(tok.id)}">${escapeHtml(t('tokens.revoke', 'Revoke'))}</button></div>`;
+    <div class="kb-actions"><button type="button" class="btn-rect danger" data-id="${escapeHtml(tok.id)}">${escapeHtml(t('tokens.revoke', 'Revoke'))}</button></div>`;
 }
 
 export async function renderApiTokens() {
@@ -2009,14 +2009,14 @@ export async function renderApiTokens() {
     const tokens = await api.get('/api/tokens');
 
     if (tokens.length === 0) {
-      list.innerHTML = `<div class="zn-datatable-msg">${escapeHtml(t('tokens.none', 'No API tokens yet.'))}</div>`;
+      list.innerHTML = `<div class="kb-datatable-msg">${escapeHtml(t('tokens.none', 'No API tokens yet.'))}</div>`;
       return;
     }
 
     list.innerHTML = '';
     tokens.forEach((tok) => {
       const row = document.createElement('div');
-      row.className = 'zn-token-row';
+      row.className = 'kb-token-row';
       row.innerHTML = tokenRowHtml(tok);
       row.querySelector('button').addEventListener('click', async () => {
         showConfirmToast(
@@ -2035,7 +2035,7 @@ export async function renderApiTokens() {
       list.appendChild(row);
     });
   } catch (err) {
-    list.innerHTML = `<div class="zn-datatable-msg is-crit">${escapeHtml(t('tokens.load_failed', "Couldn't load the tokens."))}</div>`;
+    list.innerHTML = `<div class="kb-datatable-msg is-crit">${escapeHtml(t('tokens.load_failed', "Couldn't load the tokens."))}</div>`;
   }
 }
 
@@ -2078,13 +2078,13 @@ function showCreatedToken(box, token) {
   const parts = mcpSnippets(window.location.origin, token);
   box.innerHTML = `
     <div class="is-strong">${escapeHtml(t('tokens.created_title', 'Copy the token now'))}</div>
-    <div class="zn-sub is-spaced">${escapeHtml(t('tokens.created_hint', 'It is shown only once. Paste it into the app, or use one of these to connect an AI client.'))}</div>
-    <div class="zn-token-copy"><code class="is-mono" data-copy-src>${escapeHtml(token)}</code>
+    <div class="kb-sub is-spaced">${escapeHtml(t('tokens.created_hint', 'It is shown only once. Paste it into the app, or use one of these to connect an AI client.'))}</div>
+    <div class="kb-token-copy"><code class="is-mono" data-copy-src>${escapeHtml(token)}</code>
       <button type="button" class="btn-pill-toggle" data-copy="token">${escapeHtml(t('tokens.copy', 'Copy'))}</button></div>
     ${parts
       .map(
-        (p) => `<div class="zn-sub is-spaced">${escapeHtml(p.label)}</div>
-    <div class="zn-token-copy"><pre class="is-mono">${escapeHtml(p.text)}</pre>
+        (p) => `<div class="kb-sub is-spaced">${escapeHtml(p.label)}</div>
+    <div class="kb-token-copy"><pre class="is-mono">${escapeHtml(p.text)}</pre>
       <button type="button" class="btn-pill-toggle" data-copy="${p.id}">${escapeHtml(t('tokens.copy', 'Copy'))}</button></div>`
       )
       .join('')}

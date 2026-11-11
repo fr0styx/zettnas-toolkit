@@ -377,7 +377,7 @@ export function updateManagementTelemetry(stats) {
         npuFrameworksEl.innerHTML = stats.npu.frameworks
           .map(
             f =>
-              `<span class="gpu-codec-tag" style="background:rgba(168,85,247,0.12); color:var(--zn-text-ai); border-color:rgba(168,85,247,0.25);">${escapeHtml(f)}</span>`
+              `<span class="gpu-codec-tag" style="background:rgba(168,85,247,0.12); color:var(--kb-text-ai); border-color:rgba(168,85,247,0.25);">${escapeHtml(f)}</span>`
           )
           .join('');
       } else {
@@ -924,7 +924,7 @@ export function initManagement() {
             const osType = vm.os_family ? (vm.os_family.charAt(0).toUpperCase() + vm.os_family.slice(1)) : (vm.os_type || 'Linux');
 
             return `
-              <div class="mgmt-vm-card" data-vm-id="${escapeHtml(vm.id)}" style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-7); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: border-color 0.2s;">
+              <div class="mgmt-vm-card" data-vm-id="${escapeHtml(vm.id)}" style="background: var(--kb-glaze-3); border: 1px solid var(--kb-line-7); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: border-color 0.2s;">
                 <div class="mgx-row">
                   <div class="mgx-row-2">
                     <span class="mgx-fs18">🖥️</span>
@@ -933,7 +933,7 @@ export function initManagement() {
                       <div class="mgx-xs-muted">${escapeHtml(osType)} • ${cores} vCPU • ${ramGb} RAM</div>
                     </div>
                   </div>
-                  <span style="padding: 2px 8px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; text-transform: uppercase; background: ${statusBg}; color: ${statusColor};">
+                  <span style="padding: 2px 8px; border-radius: 4px; font-size: var(--kb-fs-xs); font-weight: 700; text-transform: uppercase; background: ${statusBg}; color: ${statusColor};">
                     ${escapeHtml(isShuttingDown(vm) ? t('vmp.st_shutting', 'Shutting down') : vm.state || 'stopped')}
                   </span>
                 </div>
@@ -1023,7 +1023,7 @@ export function initManagement() {
           <div class="mgx-col-box">
             <div class="mgx-row">
               <div class="mgx-fs13-bold-strong-2">${t('mvm.virt_ext', 'Hardware Virtualization Extension')}</div>
-              <span style="padding: 3px 8px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; background: ${tel.kvm.state === 'active' ? 'rgba(51,205,184,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${tel.kvm.state === 'active' ? 'var(--ok2)' : 'var(--danger)'};">
+              <span style="padding: 3px 8px; border-radius: 4px; font-size: var(--kb-fs-xs); font-weight: 700; background: ${tel.kvm.state === 'active' ? 'rgba(51,205,184,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${tel.kvm.state === 'active' ? 'var(--ok2)' : 'var(--danger)'};">
                 ${escapeHtml(tel.kvm.badge || 'KVM')}
               </span>
             </div>

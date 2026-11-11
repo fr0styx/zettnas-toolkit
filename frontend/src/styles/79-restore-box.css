@@ -1,9 +1,9 @@
 /* Restore a whole box from its recovery kit (restore-box.js), and where it is offered */
 #restore-box { width: min(640px, 94vw); }
-#restore-box .restorebox-kit { width: 100%; min-height: 9em; font-family: var(--zn-font-mono, monospace); font-size: var(--zn-fs-xs); resize: vertical; }
-#restore-box .restorebox-row { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: center; justify-content: space-between; margin-top: var(--zn-space-2); }
-#restore-box .restorebox-name { margin: 0 0 var(--zn-space-2); overflow-wrap: anywhere; }
-#restore-box .restorebox-steps { margin: 0; padding-left: 1.4em; display: grid; gap: var(--zn-space-3); }
-#restore-box .restorebox-steps p { margin: 0 0 var(--zn-space-1); }
-.setup-restore-offer { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: center; justify-content: space-between; }
-.offsite-connect { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: center; }
+#restore-box .restorebox-kit { width: 100%; min-height: 9em; font-family: var(--kb-font-mono, monospace); font-size: var(--kb-fs-xs); resize: vertical; }
+#restore-box .restorebox-row { display: flex; flex-wrap: wrap; gap: var(--kb-space-2); align-items: center; justify-content: space-between; margin-top: var(--kb-space-2); }
+#restore-box .restorebox-name { margin: 0 0 var(--kb-space-2); overflow-wrap: anywhere; }
+#restore-box .restorebox-steps { margin: 0; padding-left: 1.4em; display: grid; gap: var(--kb-space-3); }
+#restore-box .restorebox-steps p { margin: 0 0 var(--kb-space-1); }
+.setup-restore-offer { display: flex; flex-wrap: wrap; gap: var(--kb-space-2); align-items: center; justify-content: space-between; }
+.offsite-connect { display: flex; flex-wrap: wrap; gap: var(--kb-space-2); align-items: center; }

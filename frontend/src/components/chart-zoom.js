@@ -1,6 +1,6 @@
 // X-axis zoom and pan for the metrics chart (ARC-15), on pointer events: wheel zooms around
 // the cursor, a drag pans, two fingers pinch. It replaces chartjs-plugin-zoom, which pulled in
-// the unmaintained hammerjs. Options live under plugins.znZoom:
+// the unmaintained hammerjs. Options live under plugins.kbZoom:
 //   { wheelSpeed: 0.08, minPoints: 5, onChange: (chart, zoomed) => {} }
 // chart.resetZoom() shows every point again.
 
@@ -23,7 +23,7 @@ function setWindow(chart, lo, hi) {
   const n = pointCount(chart);
   const last = Math.max(0, n - 1);
   let span = hi - lo;
-  const minSpan = Math.min(last, Math.max(1, (chart.options.plugins?.znZoom?.minPoints ?? 5) - 1));
+  const minSpan = Math.min(last, Math.max(1, (chart.options.plugins?.kbZoom?.minPoints ?? 5) - 1));
   if (span < minSpan) {
     const mid = (lo + hi) / 2;
     lo = mid - minSpan / 2;
@@ -48,7 +48,7 @@ function setWindow(chart, lo, hi) {
   x.min = full ? undefined : Math.round(lo);
   x.max = full ? undefined : Math.round(hi);
   chart.update('none');
-  chart.options.plugins?.znZoom?.onChange?.(chart, !full);
+  chart.options.plugins?.kbZoom?.onChange?.(chart, !full);
 }
 
 /** Zoom by `factor` (< 1 zooms in) around the data index `anchor`. */
@@ -78,12 +78,12 @@ function pointsPerPixel(chart) {
   return scale ? (hi - lo) / Math.max(1, scale.right - scale.left) : 0;
 }
 
-export const znZoomPlugin = {
-  id: 'znZoom',
+export const kbZoomPlugin = {
+  id: 'kbZoom',
   afterInit(chart) {
     const canvas = chart.canvas;
     if (!canvas || typeof canvas.addEventListener !== 'function') return;
-    const opts = () => chart.options.plugins?.znZoom || {};
+    const opts = () => chart.options.plugins?.kbZoom || {};
     const pointers = new Map();
     let drag = null;
     let pinch = null;
@@ -140,7 +140,7 @@ export const znZoomPlugin = {
     canvas.addEventListener('pointercancel', onUp);
     canvas.style.touchAction = 'pan-y'; // vertical scrolling stays with the page
     chart.resetZoom = () => setWindow(chart, 0, Math.max(0, pointCount(chart) - 1));
-    chart._znZoomCleanup = () => {
+    chart._kbZoomCleanup = () => {
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('pointerdown', onDown);
       canvas.removeEventListener('pointermove', onMove);
@@ -149,6 +149,6 @@ export const znZoomPlugin = {
     };
   },
   afterDestroy(chart) {
-    chart._znZoomCleanup?.();
+    chart._kbZoomCleanup?.();
   },
 };

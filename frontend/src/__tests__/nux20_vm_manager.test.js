@@ -210,7 +210,7 @@ describe('connect dialog and KVM checks (NUX-20)', () => {
     expect(modal.textContent).toContain('4. The container may use /dev/kvm');
     expect(modal.textContent).not.toContain('How to fix it');
     expect(modal.querySelector('#kvm-diag-close').getAttribute('aria-label')).toBe('Close');
-    expect(modal.innerHTML).toContain('var(--zn-text-ok)');
+    expect(modal.innerHTML).toContain('var(--kb-text-ok)');
   });
 
   it('explains how to fix a container without /dev/kvm', () => {
@@ -222,7 +222,7 @@ describe('connect dialog and KVM checks (NUX-20)', () => {
     expect(modal.textContent).toContain('How to fix it (Docker or Unraid container settings)');
     expect(modal.textContent).toContain('add the flag above under Extra Parameters');
     expect(modal.querySelector('#btn-copy-kvm-param').textContent).toBe('Copy');
-    expect(modal.innerHTML).toContain('var(--zn-text-crit)');
+    expect(modal.innerHTML).toContain('var(--kb-text-crit)');
     openKvmDiagnosticsModal({ state: 'restricted', remediation: 'Load the kvm module.' });
     expect(document.getElementById('modal-kvm-diagnose').textContent).toContain('Load the kvm module.');
   });

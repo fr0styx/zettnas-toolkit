@@ -80,12 +80,12 @@ def variant(decls: dict[str, str]) -> str | None:
     elif bare:
         v = "is-ghost"
     elif bg and not any(
-        t in bg for t in ("glaze", "255, 255, 255", "rgba(255,255,255", "transparent", "none", "--zn-surface", "--card")
+        t in bg for t in ("glaze", "255, 255, 255", "rgba(255,255,255", "transparent", "none", "--kb-surface", "--card")
     ):
         return None  # a coloured fill this tool cannot name: leave it
     else:
         v = ""
-    if "--zn-fs-xs" in decls.get("font-size", "") or (first and int(first.group(1)) <= 4):
+    if "--kb-fs-xs" in decls.get("font-size", "") or (first and int(first.group(1)) <= 4):
         v = (v + " is-small").strip()
     return v
 

@@ -37,7 +37,7 @@ export function renderEventLog(events) {
     : events.filter((e) => e.level === _currentFilter);
 
   if (filtered.length === 0) {
-    list.innerHTML = `<div style="padding: 14px; text-align: center; color: var(--muted); font-size: var(--zn-fs-xs);">${escapeHtml(t('evx.none', 'No {level} events.', { level: _currentFilter }))}</div>`;
+    list.innerHTML = `<div style="padding: 14px; text-align: center; color: var(--muted); font-size: var(--kb-fs-xs);">${escapeHtml(t('evx.none', 'No {level} events.', { level: _currentFilter }))}</div>`;
     return;
   }
 
@@ -58,15 +58,15 @@ export function renderEventLog(events) {
       <div style="display: flex; gap: 10px; align-items: flex-start;">
         <span style="font-size: 14px; margin-top: 2px;">${icon}</span>
         <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
-          <div style="font-size: var(--zn-fs-xs); color: ${color}; font-weight: 700; letter-spacing: 0.3px;">${escapeHtml(text.title)}</div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-strong);">${escapeHtml(text.message)}</div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(timeStr)}</div>
+          <div style="font-size: var(--kb-fs-xs); color: ${color}; font-weight: 700; letter-spacing: 0.3px;">${escapeHtml(text.title)}</div>
+          <div style="font-size: var(--kb-fs-xs); color: var(--kb-text-strong);">${escapeHtml(text.message)}</div>
+          <div style="font-size: var(--kb-fs-xs); color: var(--muted);">${escapeHtml(timeStr)}</div>
         </div>
         <div style="display: flex; gap: 6px; align-items: center; padding-top: 2px;">
-          <button class="event-inspect-btn" type="button" title="${t('ui.view_full_event_details', 'View full event details')}" style="background: rgba(51, 205, 184, 0.15); border: 1px solid rgba(51, 205, 184, 0.35); color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 7px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
+          <button class="event-inspect-btn" type="button" title="${t('ui.view_full_event_details', 'View full event details')}" style="background: rgba(51, 205, 184, 0.15); border: 1px solid rgba(51, 205, 184, 0.35); color: var(--kb-text-accent); font-size: var(--kb-fs-xs); font-weight: 700; padding: 2px 7px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
             <span aria-hidden="true">🔍</span> <span>${t('evx.more', 'More Info')}</span>
           </button>
-          <span style="font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer; padding: 2px 4px;"><span aria-hidden="true">▼</span> ${t('evx.details', 'Details')}</span>
+          <span style="font-size: var(--kb-fs-xs); color: var(--muted); cursor: pointer; padding: 2px 4px;"><span aria-hidden="true">▼</span> ${t('evx.details', 'Details')}</span>
         </div>
       </div>
     `;
@@ -74,7 +74,7 @@ export function renderEventLog(events) {
     row.innerHTML = topHtml;
 
     const detailsBox = document.createElement('pre');
-    detailsBox.style.cssText = 'display: none; margin: 0; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 6px; font-size: var(--zn-fs-xs); color: #a4b8bc; border: 1px solid rgba(255,255,255,0.05); white-space: pre-wrap; word-break: break-all;';
+    detailsBox.style.cssText = 'display: none; margin: 0; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 6px; font-size: var(--kb-fs-xs); color: #a4b8bc; border: 1px solid rgba(255,255,255,0.05); white-space: pre-wrap; word-break: break-all;';
     detailsBox.textContent = JSON.stringify(e, null, 2);
     row.appendChild(detailsBox);
 

@@ -18,10 +18,10 @@ describe('UI primitives (UX-11)', () => {
 
   it('builds a field, a card and a pane header', () => {
     expect(uiField({ label: 'Name', control: '<input id="n">', hint: 'Your name', id: 'n' }))
-      .toBe('<label class="zn-field" for="n"><span>Name</span><input id="n"><span class="zn-muted">Your name</span></label>');
+      .toBe('<label class="kb-field" for="n"><span>Name</span><input id="n"><span class="kb-muted">Your name</span></label>');
     expect(uiCard({ title: 'Disks', body: '<p>2</p>', variant: 'boxed' }))
-      .toBe('<div class="zn-card zn-card--boxed"><div class="zn-title">Disks</div><p>2</p></div>');
-    expect(uiCard({ body: 'x', variant: 'odd' })).toBe('<div class="zn-card">x</div>');
+      .toBe('<div class="kb-card kb-card--boxed"><div class="kb-title">Disks</div><p>2</p></div>');
+    expect(uiCard({ body: 'x', variant: 'odd' })).toBe('<div class="kb-card">x</div>');
     expect(uiPaneHeader({ title: 'Wallpapers', desc: 'Pick one', iconName: 'screen' }))
       .toBe('<div class="mgmt-card-intro"><div class="mgmt-card-intro-title"><svg class="ic" aria-hidden="true"><use href="#i-screen"/></svg><span>Wallpapers</span></div><div class="mgmt-card-intro-desc">Pick one</div></div>');
   });

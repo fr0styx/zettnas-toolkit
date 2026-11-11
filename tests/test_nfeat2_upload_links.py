@@ -48,7 +48,7 @@ def test_files_arrive_and_the_folder_is_never_shown(client, setup):
     r = send(client, link["token"], "beach%20day.jpg", b"another")
     assert r.json()["name"] == "beach day (2).jpg"  # never overwritten
     assert (setup["inbox"] / "beach day.jpg").read_bytes() == b"jpeg bytes"
-    assert not [p for p in setup["inbox"].iterdir() if p.name.startswith(".zn-upload")]
+    assert not [p for p in setup["inbox"].iterdir() if p.name.startswith(".kb-upload")]
     listed = client.get("/api/fs/share-links", headers={"Authorization": client.headers.get("Authorization", "")})
     assert listed.status_code in (200, 401)
 
@@ -63,7 +63,7 @@ def test_names_cannot_leave_the_folder_or_hide(client, setup):
     ):
         assert send(client, token, raw, b"x").json()["name"] == want
     assert not (setup["pool"] / "passwd").exists()
-    assert upload_links.safe_name(".zn-upload-x.part") == "_zn-upload-x.part"
+    assert upload_links.safe_name(".kb-upload-x.part") == "_kb-upload-x.part"
 
 
 def test_limits_size_and_length(client, setup):

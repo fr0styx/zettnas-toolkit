@@ -17,8 +17,8 @@
   justify-content: center;
   padding: 6px 4px;
   border-radius: 6px;
-  background: var(--zn-glaze-3);
-  border: 1px solid var(--zn-line-6);
+  background: var(--kb-glaze-3);
+  border: 1px solid var(--kb-line-6);
   font-family: var(--font-mono);
   transition: all 0.2s ease;
   cursor: pointer;
@@ -26,18 +26,18 @@
 
 .drive-temp-cell:hover {
   transform: translateY(-1px);
-  border-color: var(--zn-line-18);
+  border-color: var(--kb-line-18);
 }
 
 .drive-temp-bay {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .drive-temp-val {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   margin-top: 1px;
 }
@@ -55,8 +55,8 @@
 }
 
 .drive-temp-cell.temp-standby .drive-temp-val {
-  color: var(--zn-text-accent);
-  font-size: var(--zn-fs-xs);
+  color: var(--kb-text-accent);
+  font-size: var(--kb-fs-xs);
 }
 
 .net-dial-svg-wrap {
@@ -80,10 +80,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   font-family: var(--font-mono);
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
 }
 
 /* AI Accelerator Dual Gauge Widget */
@@ -112,27 +112,27 @@
 }
 
 .ai-gauge-chip-name {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--zn-text);
+  color: var(--kb-text);
 }
 
 .ai-metric-pill {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 4px;
-  background: var(--zn-glaze-6);
+  background: var(--kb-glaze-6);
   color: var(--muted);
-  border: 1px solid var(--zn-line-10);
+  border: 1px solid var(--kb-line-10);
   letter-spacing: 0.3px;
   white-space: nowrap;
 }
 
 .ai-metric-pill.sleep {
-  color: var(--zn-text-accent);
+  color: var(--kb-text-accent);
   background: rgba(79, 216, 196, 0.1);
   border-color: rgba(79, 216, 196, 0.25);
 }
@@ -145,7 +145,7 @@
 }
 
 .ai-metric-pill.active-gpu {
-  color: var(--zn-text-ai);
+  color: var(--kb-text-ai);
   background: rgba(168, 85, 247, 0.15);
   border-color: rgba(168, 85, 247, 0.35);
   animation: pulse-ai-glow 1.5s infinite alternate;
@@ -171,14 +171,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   font-family: var(--font-mono);
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
 }
 
 .ai-gauge-sub {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   font-family: var(--font-mono);
   color: var(--muted);
@@ -187,16 +187,16 @@
 .ai-gauge-divider {
   width: 1px;
   height: 48px;
-  background: var(--zn-glaze-8);
+  background: var(--kb-glaze-8);
 }
 
 .ai-engine-footer {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
-  border-top: 1px solid var(--zn-line-6);
+  border-top: 1px solid var(--kb-line-6);
   padding-top: 6px;
   margin-top: 2px;
   white-space: nowrap;

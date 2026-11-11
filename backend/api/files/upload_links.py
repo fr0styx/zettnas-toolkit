@@ -132,7 +132,7 @@ async def receive(item: dict[str, Any], folder: str, request: Request) -> tuple[
     if size + FREE_MARGIN > free:
         raise HTTPException(status_code=507, detail="The NAS doesn't have room for that file.")
     name = safe_name(request.headers.get("x-file-name") or "")
-    part = os.path.join(folder, f".zn-upload-{secrets.token_hex(6)}.part")
+    part = os.path.join(folder, f".kb-upload-{secrets.token_hex(6)}.part")
     written = 0
     try:
         async with aiofiles.open(part, "wb") as f:

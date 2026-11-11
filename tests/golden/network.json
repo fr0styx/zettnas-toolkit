@@ -817,12 +817,12 @@
      "http",
      "POST",
      "/networks/create",
-     "{\"Name\":\"zn-test\",\"Driver\":\"bridge\",\"CheckDuplicate\":true,\"IPAM\":{\"Config\":[{\"Subnet\":\"172.30.0.0/16\",\"Gateway\":\"172.30.0.1\"}]}}"
+     "{\"Name\":\"kb-test\",\"Driver\":\"bridge\",\"CheckDuplicate\":true,\"IPAM\":{\"Config\":[{\"Subnet\":\"172.30.0.0/16\",\"Gateway\":\"172.30.0.1\"}]}}"
     ]
    ],
    "result": {
     "id": "net123",
-    "message": "Network 'zn-test' created",
+    "message": "Network 'kb-test' created",
     "status": "ok"
    }
   },
@@ -840,11 +840,11 @@
     [
      "http",
      "DELETE",
-     "/networks/zn-test"
+     "/networks/kb-test"
     ]
    ],
    "result": {
-    "message": "Network 'zn-test' deleted",
+    "message": "Network 'kb-test' deleted",
     "status": "ok"
    }
   },
@@ -1479,7 +1479,7 @@
      "gateway": "172.30.0.1",
      "id": "n3",
      "is_custom": true,
-     "name": "zn-apps",
+     "name": "kb-apps",
      "subnet": "172.30.0.0/16"
     }
    ]
@@ -1578,7 +1578,7 @@
       "gateway": "172.30.0.1",
       "id": "n3",
       "is_custom": true,
-      "name": "zn-apps",
+      "name": "kb-apps",
       "subnet": "172.30.0.0/16"
      }
     ],

@@ -254,7 +254,7 @@ export async function fetchAndRenderSecurityPosture() {
         badge.style.borderColor = 'rgba(51,205,184,0.3)';
       } else if (data.score >= 75) {
         badge.style.background = 'rgba(79,216,196,0.15)';
-        badge.style.color = 'var(--zn-text-accent)';
+        badge.style.color = 'var(--kb-text-accent)';
         badge.style.borderColor = 'rgba(79,216,196,0.3)';
       } else if (data.score >= 50) {
         badge.style.background = 'rgba(234,179,8,0.15)';
@@ -276,14 +276,14 @@ export async function fetchAndRenderSecurityPosture() {
         return `
           <div class="sec-advisor-item ${c.passed ? 'passed' : 'needs-action'}" data-check-id="${escapeHtml(c.id)}" role="button" tabindex="0" title="${t('sec.click_to_configure', 'Click to configure')}" style="background:${badgeBg}; border:1px solid ${c.passed ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.3)'};">
             <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
-              <span class="sec-advisor-item-icon" style="color:${passColor}; font-weight:800; font-size: var(--zn-fs-sm); line-height:1;">${passIcon}</span>
+              <span class="sec-advisor-item-icon" style="color:${passColor}; font-weight:800; font-size: var(--kb-fs-sm); line-height:1;">${passIcon}</span>
               <div style="min-width:0;">
-                <div style="font-weight:600; color:var(--lt-t-f5f9f9ff, #f5f9f9); font-size: var(--zn-fs-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
-                <div style="font-size: var(--zn-fs-xs); color:${c.passed ? 'var(--zn-text-muted)' : 'var(--lt-t-fca5a5ff, #fca5a5)'}; margin-top:2px;">${escapeHtml(c.details || '')}</div>
+                <div style="font-weight:600; color:var(--lt-t-f5f9f9ff, #f5f9f9); font-size: var(--kb-fs-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
+                <div style="font-size: var(--kb-fs-xs); color:${c.passed ? 'var(--kb-text-muted)' : 'var(--lt-t-fca5a5ff, #fca5a5)'}; margin-top:2px;">${escapeHtml(c.details || '')}</div>
               </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-              <span class="sec-advisor-status-badge" style="font-size: var(--zn-fs-xs); font-weight:700; color:${passColor}; text-transform:uppercase; letter-spacing:0.5px;">${c.passed ? 'PASSED' : 'NEEDS ACTION'}</span>
+              <span class="sec-advisor-status-badge" style="font-size: var(--kb-fs-xs); font-weight:700; color:${passColor}; text-transform:uppercase; letter-spacing:0.5px;">${c.passed ? 'PASSED' : 'NEEDS ACTION'}</span>
               ${c.fix ? `<button type="button" class="sec-advisor-fix-btn btn btn-sm" data-fix="${escapeHtml(c.fix)}">${escapeHtml(t(`sec.fix.${c.fix}`, c.fix_label || t('sec.fix_btn', 'Fix it')))}</button>` : ''}
               <span class="sec-advisor-action-pill">${actionText}</span>
             </div>

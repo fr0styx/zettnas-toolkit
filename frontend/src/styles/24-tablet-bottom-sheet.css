@@ -66,7 +66,7 @@
     border-radius: 6px;
   }
   #management-modal-overlay .mgmt-advanced-row:has(input:checked) {
-    background: var(--zn-glaze-5);
+    background: var(--kb-glaze-5);
   }
   #management-modal-overlay .mgmt-advanced-icon {
     display: block;
@@ -229,7 +229,7 @@ body.mobile-mode .desktop-icons-container .desktop-icon-label {
 }
 
 body.mobile-mode .desktop-icons-container .desktop-icon-label .icon-text {
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
   font-weight: 600 !important;
   line-height: 1.15 !important;
   text-align: center !important;
@@ -284,7 +284,7 @@ body.mobile-mode #desktop-widgets-container .widget-header {
 }
 
 body.mobile-mode #desktop-widgets-container .widget-title {
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
   letter-spacing: 0.5px !important;
   gap: 4px !important;
 }
@@ -295,26 +295,26 @@ body.mobile-mode #desktop-widgets-container .widget-title svg.ic {
 }
 
 body.mobile-mode #desktop-widgets-container .widget-badge {
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
   padding: 1px 5px !important;
   border-radius: 4px !important;
 }
 
 body.mobile-mode #desktop-widgets-container span[id^="w-"] {
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
 }
 
 body.mobile-mode #desktop-widgets-container #w-net-rx,
 body.mobile-mode #desktop-widgets-container #w-net-tx {
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
 }
 
 body.mobile-mode #desktop-widgets-container span[style*="font-size: 12px"] {
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
 }
 
 body.mobile-mode #desktop-widgets-container span[style*="font-size: 10px"] {
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
 }
 
 body.mobile-mode #desktop-widgets-container div[style*="height: 4px"] {
@@ -333,7 +333,7 @@ body.mobile-mode #desktop-widgets-container #w-clock-time {
   font-size: 20px !important;
 }
 body.mobile-mode #desktop-widgets-container #w-clock-sec {
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
 }
 body.mobile-mode #desktop-widgets-container #w-weather-temp {
   font-size: 16px !important;
@@ -342,11 +342,11 @@ body.mobile-mode #desktop-widgets-container #w-weather-icon {
   font-size: 20px !important;
 }
 body.mobile-mode #desktop-widgets-container .cal-weekday {
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
   padding: 2px 0 !important;
 }
 body.mobile-mode #desktop-widgets-container .cal-day {
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
   padding: 3px 0 !important;
 }
 body.mobile-mode #desktop-widgets-container .cal-day.cal-holiday::after {
@@ -355,7 +355,7 @@ body.mobile-mode #desktop-widgets-container .cal-day.cal-holiday::after {
   bottom: 1px !important;
 }
 body.mobile-mode #desktop-widgets-container .cal-glance-bar {
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
   min-height: 18px !important;
   padding-top: 4px !important;
   margin-top: 6px !important;
@@ -629,12 +629,12 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
   }
 
   body.mobile-mode .fm-path-input {
-    font-size: var(--zn-fs-xs) !important;
+    font-size: var(--kb-fs-xs) !important;
     padding: 4px 8px !important;
   }
 
   body.mobile-mode .fm-path-breadcrumbs {
-    font-size: var(--zn-fs-xs) !important;
+    font-size: var(--kb-fs-xs) !important;
     right: 8px !important;
     padding-left: 6px !important;
   }
@@ -658,20 +658,20 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     padding: 0 8px !important;
     gap: 4px !important;
     height: 34px !important;
-    font-size: var(--zn-fs-xs) !important;
+    font-size: var(--kb-fs-xs) !important;
   }
 
   body.mobile-mode .fm-row {
     padding: 0 8px !important;
     gap: 4px !important;
     height: 42px !important;
-    font-size: var(--zn-fs-xs) !important;
+    font-size: var(--kb-fs-xs) !important;
   }
 
   body.mobile-mode .fm-col-name {
     flex: 1 !important;
     min-width: 0 !important;
-    font-size: var(--zn-fs-xs) !important;
+    font-size: var(--kb-fs-xs) !important;
     display: flex !important;
     align-items: center !important;
     gap: 6px !important;
@@ -696,7 +696,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
   body.mobile-mode .fm-col-size {
     flex: 0 0 54px !important;
     text-align: right !important;
-    font-size: var(--zn-fs-xs) !important;
+    font-size: var(--kb-fs-xs) !important;
   }
 
   body.mobile-mode .fm-col-actions {
@@ -813,7 +813,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     min-height: auto !important;
     padding: 2px 2px 6px 2px !important;
     gap: 6px 8px !important;
-    border-bottom: 1px solid var(--zn-line-8) !important;
+    border-bottom: 1px solid var(--kb-line-8) !important;
   }
 
   body.mobile-mode #console-window #screen .h-left {
@@ -1143,7 +1143,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     min-height: 42px !important;
     max-height: 42px !important;
     flex-shrink: 0 !important;
-    border-bottom: 1px solid var(--zn-line-8) !important;
+    border-bottom: 1px solid var(--kb-line-8) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
@@ -1201,7 +1201,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     flex-shrink: 0 !important;
     background: var(--lt-b-0b1517fa, rgba(11, 21, 23, 0.98)) !important;
     border-right: none !important;
-    border-bottom: 1px solid var(--zn-line-8) !important;
+    border-bottom: 1px solid var(--kb-line-8) !important;
     padding: 6px 8px !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
@@ -1222,7 +1222,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
   body.mobile-mode #management-modal-overlay .mgmt-sidebar-item {
     width: auto !important;
     padding: 6px 10px !important;
-    font-size: var(--zn-fs-xs) !important;
+    font-size: var(--kb-fs-xs) !important;
     border-radius: 6px !important;
     gap: 5px !important;
     flex-shrink: 0 !important;
@@ -1239,7 +1239,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
   }
 
   body.mobile-mode #management-modal-overlay .mgmt-sidebar-text {
-    font-size: var(--zn-fs-xs) !important;
+    font-size: var(--kb-fs-xs) !important;
   }
 
   body.mobile-mode #management-modal-overlay .mgmt-content-pane {
@@ -1269,7 +1269,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
   }
 
   body.mobile-mode #management-modal-overlay .mgmt-app-desc {
-    font-size: var(--zn-fs-xs) !important;
+    font-size: var(--kb-fs-xs) !important;
     line-height: 1.4 !important;
   }
 
@@ -1303,7 +1303,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
 
   body.mobile-mode #management-modal-overlay .mgmt-inner-tab {
     padding: 5px 10px !important;
-    font-size: var(--zn-fs-xs) !important;
+    font-size: var(--kb-fs-xs) !important;
     flex-shrink: 0 !important;
   }
 body.mobile-mode .os-dock-container {
@@ -1333,7 +1333,7 @@ body.mobile-mode .os-dock {
   border-left: none !important;
   border-right: none !important;
   border-bottom: none !important;
-  border-top: 1px solid var(--zn-line-12) !important;
+  border-top: 1px solid var(--kb-line-12) !important;
   background: var(--lt-b-0b1719f0, rgba(11, 23, 25, 0.94)) !important;
   -webkit-backdrop-filter: blur(24px) !important;
   backdrop-filter: blur(24px) !important;
@@ -1371,7 +1371,7 @@ body.mobile-mode .dock-item {
 }
 body.mobile-mode .dock-item:active {
   transform: scale(0.92) !important;
-  background: var(--zn-glaze-8) !important;
+  background: var(--kb-glaze-8) !important;
 }
 body.mobile-mode .dock-item.active-window::before,
 body.mobile-mode .dock-item.active::before {
@@ -1406,7 +1406,7 @@ body.mobile-mode #top-toast-container #top-notification-toast {
   max-width: 100% !important;
   box-sizing: border-box !important;
   padding: 9px 13px !important;
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
 }
 
 /* Visible Custom Scrollbars for Mobile-Mode Windows & Panes */
@@ -1437,7 +1437,7 @@ body.mobile-mode #console-window.chassis-front-panel::-webkit-scrollbar-track,
 body.mobile-mode .smart-modal-window::-webkit-scrollbar-track,
 body.mobile-mode .smart-modal-body::-webkit-scrollbar-track,
 body.mobile-mode .slide-drawer::-webkit-scrollbar-track {
-  background: var(--zn-shade-25) !important;
+  background: var(--kb-shade-25) !important;
   border-radius: 4px !important;
 }
 
@@ -1449,7 +1449,7 @@ body.mobile-mode .smart-modal-body::-webkit-scrollbar-thumb,
 body.mobile-mode .slide-drawer::-webkit-scrollbar-thumb {
   background: rgba(37, 194, 160, 0.6) !important;
   border-radius: 4px !important;
-  border: 1px solid var(--zn-line-8) !important;
+  border: 1px solid var(--kb-line-8) !important;
 }
 
 body.mobile-mode #management-modal-overlay .mgmt-content-pane::-webkit-scrollbar-thumb:active,
@@ -1504,7 +1504,7 @@ body.mobile-mode .copy-history-table.responsive-cards tbody tr {
   display: flex !important;
   flex-direction: column !important;
   background: var(--lt-b-0e1c1ea6, rgba(14, 28, 30, 0.65)) !important;
-  border: 1px solid var(--zn-line-8) !important;
+  border: 1px solid var(--kb-line-8) !important;
   border-radius: 10px !important;
   padding: 12px 14px !important;
   gap: 8px !important;
@@ -1521,8 +1521,8 @@ body.mobile-mode .copy-history-table.responsive-cards tbody td {
   justify-content: space-between !important;
   align-items: center !important;
   padding: 4px 0 !important;
-  border-bottom: 1px solid var(--zn-line-5) !important;
-  font-size: var(--zn-fs-xs) !important;
+  border-bottom: 1px solid var(--kb-line-5) !important;
+  font-size: var(--kb-fs-xs) !important;
   min-height: 26px !important;
   width: 100% !important;
   box-sizing: border-box !important;
@@ -1569,9 +1569,9 @@ body.mobile-mode .btn-docker-more-sheet {
   touch-action: manipulation !important;
   font-size: 14px !important;
   font-weight: 700 !important;
-  background: var(--zn-glaze-8) !important;
-  color: var(--zn-text) !important;
-  border: 1px solid var(--zn-line-20) !important;
+  background: var(--kb-glaze-8) !important;
+  color: var(--kb-text) !important;
+  border: 1px solid var(--kb-line-20) !important;
   border-radius: 6px !important;
 }
 body.mobile-mode .btn-docker-more-sheet:active {
@@ -1697,7 +1697,7 @@ body.mobile-mode .btn-webui-badge:not([style*="display: none"], [style*="display
   background: var(--lt-b-0e1c1ef5, rgba(14, 28, 30, 0.96));
   -webkit-backdrop-filter: blur(28px);
   backdrop-filter: blur(28px);
-  border-top: 1px solid var(--zn-line-12);
+  border-top: 1px solid var(--kb-line-12);
   border-radius: 20px 20px 0 0;
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.65);
   z-index: 10051;
@@ -1732,7 +1732,7 @@ body.mobile-mode .btn-webui-badge:not([style*="display: none"], [style*="display
 .sheet-header {
   margin-bottom: 10px;
   padding: 0 4px 8px 4px;
-  border-bottom: 1px solid var(--zn-line-8);
+  border-bottom: 1px solid var(--kb-line-8);
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
@@ -1740,14 +1740,14 @@ body.mobile-mode .btn-webui-badge:not([style*="display: none"], [style*="display
 .sheet-title {
   font-size: 15px;
   font-weight: 700;
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .sheet-subtitle {
-  font-size: var(--zn-fs-xs);
-  color: var(--zn-text-muted);
+  font-size: var(--kb-fs-xs);
+  color: var(--kb-text-muted);
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -1772,10 +1772,10 @@ body.mobile-mode .btn-webui-badge:not([style*="display: none"], [style*="display
   width: 100%;
   min-height: 48px;
   padding: 10px 14px;
-  background: var(--zn-glaze-4);
-  border: 1px solid var(--zn-line-6);
+  background: var(--kb-glaze-4);
+  border: 1px solid var(--kb-line-6);
   border-radius: 10px;
-  color: var(--zn-text-bright);
+  color: var(--kb-text-bright);
   font-family: inherit;
   font-size: 13.5px;
   font-weight: 500;
@@ -1787,13 +1787,13 @@ body.mobile-mode .btn-webui-badge:not([style*="display: none"], [style*="display
 }
 .sheet-action-item:hover,
 .sheet-action-item:focus-visible {
-  background: var(--zn-glaze-8);
+  background: var(--kb-glaze-8);
   border-color: var(--lt-r-ffffff29, rgba(255, 255, 255, 0.16));
   outline: none;
 }
 .sheet-action-item:active {
   transform: scale(0.98);
-  background: var(--zn-glaze-12);
+  background: var(--kb-glaze-12);
 }
 .sheet-action-item.destructive {
   color: var(--lt-t-fb7185ff, #fb7185);
@@ -1804,7 +1804,7 @@ body.mobile-mode .btn-webui-badge:not([style*="display: none"], [style*="display
 .sheet-action-item.destructive:focus-visible {
   background: rgba(244, 63, 94, 0.18);
   border-color: #f43f5e;
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
 }
 
 .sheet-action-icon {
@@ -1828,16 +1828,16 @@ body.mobile-mode .btn-webui-badge:not([style*="display: none"], [style*="display
 .sheet-footer {
   margin-top: 10px;
   padding-top: 8px;
-  border-top: 1px solid var(--zn-line-8);
+  border-top: 1px solid var(--kb-line-8);
 }
 .sheet-cancel-btn {
   width: 100%;
   min-height: 44px;
   padding: 10px;
-  background: var(--zn-glaze-6);
-  border: 1px solid var(--zn-line-10);
+  background: var(--kb-glaze-6);
+  border: 1px solid var(--kb-line-10);
   border-radius: 10px;
-  color: var(--zn-text-soft);
+  color: var(--kb-text-soft);
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -1847,7 +1847,7 @@ body.mobile-mode .btn-webui-badge:not([style*="display: none"], [style*="display
 }
 .sheet-cancel-btn:hover,
 .sheet-cancel-btn:active {
-  background: var(--zn-glaze-12);
-  color: var(--zn-text-strong);
+  background: var(--kb-glaze-12);
+  color: var(--kb-text-strong);
 }
 

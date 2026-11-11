@@ -38,17 +38,17 @@ function el(tag, attrs = {}, ...children) {
 /** One row of the table, built from text nodes only. */
 export function activityRow(item) {
   const what = el('td', {}, el('div', { class: 'is-mono', text: item.path || '—' }));
-  if (item.target) what.append(el('div', { class: 'zn-sub is-mono', text: `→ ${item.target}` }));
-  if (item.detail) what.append(el('div', { class: 'zn-sub', text: item.detail }));
+  if (item.target) what.append(el('div', { class: 'kb-sub is-mono', text: `→ ${item.target}` }));
+  if (item.detail) what.append(el('div', { class: 'kb-sub', text: item.detail }));
   const who = el('td', {}, el('div', { class: 'is-strong', text: item.username || '—' }));
   const sub = [item.ip, item.via].filter(Boolean).join(' · ');
-  if (sub) who.append(el('div', { class: 'zn-sub', text: sub }));
+  if (sub) who.append(el('div', { class: 'kb-sub', text: sub }));
   return el(
     'tr',
     {},
     el('td', { class: 'is-muted', text: formatDateTime(item.ts) }),
     who,
-    el('td', {}, el('span', { class: `zn-tag zn-tag--${item.action === 'delete_permanent' || item.action === 'empty_bin' ? 'crit' : 'plain'}`, text: actionLabel(item.action) })),
+    el('td', {}, el('span', { class: `kb-tag kb-tag--${item.action === 'delete_permanent' || item.action === 'empty_bin' ? 'crit' : 'plain'}`, text: actionLabel(item.action) })),
     what
   );
 }
@@ -71,7 +71,7 @@ export async function renderFileActivity(host = document.getElementById('file-ac
   const body = el('tbody');
   const more = el('button', { type: 'button', class: 'btn-pill-toggle', text: t('activity.more', 'Older') });
   more.hidden = true;
-  const table = el('div', { class: 'zn-datatable-wrap' }, el('table', { class: 'zn-datatable zn-datatable--compact' },
+  const table = el('div', { class: 'kb-datatable-wrap' }, el('table', { class: 'kb-datatable kb-datatable--compact' },
     el('thead', {}, el('tr', {}, ...[t('activity.when', 'When'), t('activity.who', 'Who'), t('activity.what', 'What'), t('activity.file', 'File')].map((h) => el('th', { text: h })))),
     body));
   let next = null;
@@ -86,7 +86,7 @@ export async function renderFileActivity(host = document.getElementById('file-ac
         host.hidden = true; // only for accounts that may read the audit log
         return;
       }
-      body.replaceChildren(el('tr', {}, el('td', { colspan: '4', class: 'zn-datatable-msg is-crit', text: t('activity.load_failed', "Couldn't load the file activity.") })));
+      body.replaceChildren(el('tr', {}, el('td', { colspan: '4', class: 'kb-datatable-msg is-crit', text: t('activity.load_failed', "Couldn't load the file activity.") })));
       return;
     }
     if (action.options.length === 1) {
@@ -94,7 +94,7 @@ export async function renderFileActivity(host = document.getElementById('file-ac
     }
     const rows = (res.items || []).map(activityRow);
     if (append) body.append(...rows);
-    else body.replaceChildren(...(rows.length ? rows : [el('tr', {}, el('td', { colspan: '4', class: 'zn-datatable-msg', text: t('activity.none', 'Nothing in the last 90 days matches.') }))]));
+    else body.replaceChildren(...(rows.length ? rows : [el('tr', {}, el('td', { colspan: '4', class: 'kb-datatable-msg', text: t('activity.none', 'Nothing in the last 90 days matches.') }))]));
     next = res.next_before;
     more.hidden = !next;
   }
@@ -108,9 +108,9 @@ export async function renderFileActivity(host = document.getElementById('file-ac
 
   host.hidden = false;
   host.replaceChildren(
-    el('div', { class: 'zn-title', text: t('activity.title', 'File activity') }),
-    el('div', { class: 'zn-sub is-spaced', text: t('activity.intro', 'Who deleted, moved, renamed, restored or uploaded what in the File Explorer or through the API. Kept for 90 days.') }),
-    el('div', { class: 'zn-activity-filters' }, q, user, action),
+    el('div', { class: 'kb-title', text: t('activity.title', 'File activity') }),
+    el('div', { class: 'kb-sub is-spaced', text: t('activity.intro', 'Who deleted, moved, renamed, restored or uploaded what in the File Explorer or through the API. Kept for 90 days.') }),
+    el('div', { class: 'kb-activity-filters' }, q, user, action),
     table,
     more
   );

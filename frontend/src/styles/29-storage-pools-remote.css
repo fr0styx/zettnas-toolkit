@@ -10,8 +10,8 @@
   border: 1px solid var(--lt-r-3bf58b33, rgba(59, 245, 139, 0.2));
   border-radius: 8px;
   padding: 10px 14px;
-  font-size: var(--zn-fs-xs);
-  color: var(--zn-text-soft);
+  font-size: var(--kb-fs-xs);
+  color: var(--kb-text-soft);
   margin-bottom: 16px;
 }
 
@@ -26,8 +26,8 @@
 }
 
 .topo-pool-block {
-  background: var(--zn-shade-30);
-  border: 1px solid var(--zn-line-8);
+  background: var(--kb-shade-30);
+  border: 1px solid var(--kb-line-8);
   border-radius: 10px;
   padding: 16px;
   display: flex;
@@ -61,7 +61,7 @@
 }
 
 .topo-pool-fs {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
   text-transform: uppercase;
 }
@@ -78,14 +78,14 @@
   border: 1px solid var(--lt-r-3bf58b4c, rgba(59, 245, 139, 0.3));
   padding: 3px 8px;
   border-radius: 6px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
 }
 
 .topo-status-pill {
   padding: 3px 8px;
   border-radius: 6px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   letter-spacing: 0.5px;
 }
@@ -123,12 +123,12 @@
 .topo-usage-labels {
   display: flex;
   justify-content: space-between;
-  font-size: var(--zn-fs-xs);
-  color: var(--zn-text-muted);
+  font-size: var(--kb-fs-xs);
+  color: var(--kb-text-muted);
 }
 
 .topo-usage-labels strong {
-  color: var(--zn-text-bright);
+  color: var(--kb-text-bright);
 }
 
 .topo-free-space {
@@ -137,7 +137,7 @@
 
 .topo-usage-track {
   height: 8px;
-  background: var(--zn-glaze-8);
+  background: var(--kb-glaze-8);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -152,12 +152,12 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-top: 1px solid var(--zn-line-6);
+  border-top: 1px solid var(--kb-line-6);
   padding-top: 10px;
 }
 
 .topo-members-label {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   color: var(--muted);
   letter-spacing: 0.5px;
@@ -170,8 +170,8 @@
 }
 
 .topo-disk-card {
-  background: var(--zn-glaze-3);
-  border: 1px solid var(--zn-line-6);
+  background: var(--kb-glaze-3);
+  border: 1px solid var(--kb-line-6);
   border-radius: 8px;
   padding: 10px;
   display: flex;
@@ -181,8 +181,8 @@
 }
 
 .topo-disk-card:hover {
-  background: var(--zn-glaze-5);
-  border-color: var(--zn-line-12);
+  background: var(--kb-glaze-5);
+  border-color: var(--kb-line-12);
 }
 
 .topo-disk-card.disk-standby {
@@ -198,7 +198,7 @@
 }
 
 .topo-role-badge {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
@@ -224,32 +224,32 @@
 
 .topo-role-badge.role-boot {
   background: rgba(149, 168, 171, 0.15);
-  color: var(--zn-text-muted);
+  color: var(--kb-text-muted);
   border: 1px solid rgba(149, 168, 171, 0.3);
 }
 
 .topo-dev-name {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
-  color: var(--zn-text-bright);
+  color: var(--kb-text-bright);
 }
 
 .topo-temp-badge {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: 600;
 }
 
 .topo-temp-badge.thermal-standby {
-  color: var(--zn-text-muted);
+  color: var(--kb-text-muted);
   background: rgba(149, 168, 171, 0.1);
 }
 
 .topo-disk-sub {
   display: flex;
   justify-content: space-between;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
 }
 
@@ -260,10 +260,10 @@
 }
 
 .btn-locate-topo {
-  background: var(--zn-glaze-6);
-  border: 1px solid var(--zn-line-12);
-  color: var(--zn-text-soft);
-  font-size: var(--zn-fs-xs);
+  background: var(--kb-glaze-6);
+  border: 1px solid var(--kb-line-12);
+  color: var(--kb-text-soft);
+  font-size: var(--kb-fs-xs);
   padding: 3px 8px;
   border-radius: 4px;
   cursor: pointer;
@@ -284,8 +284,8 @@
 }
 
 .storage-share-card {
-  background: var(--zn-shade-30);
-  border: 1px solid var(--zn-line-8);
+  background: var(--kb-shade-30);
+  border: 1px solid var(--kb-line-8);
   border-radius: 10px;
   padding: 16px;
   display: flex;
@@ -296,7 +296,7 @@
 
 .storage-share-card:hover {
   border-color: var(--lt-r-ffffff29, rgba(255, 255, 255, 0.16));
-  background: var(--zn-shade-35);
+  background: var(--kb-shade-35);
 }
 
 .share-card-header {
@@ -325,13 +325,13 @@
 }
 
 .share-comment {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
   margin-top: 2px;
 }
 
 .share-sec-badge {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 4px;
@@ -359,7 +359,7 @@
 }
 
 .proto-tag {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
@@ -378,10 +378,10 @@
 }
 
 .share-cache-tag {
-  font-size: var(--zn-fs-xs);
-  color: var(--zn-text-soft);
-  background: var(--zn-glaze-5);
-  border: 1px solid var(--zn-line-8);
+  font-size: var(--kb-fs-xs);
+  color: var(--kb-text-soft);
+  background: var(--kb-glaze-5);
+  border: 1px solid var(--kb-line-8);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -395,13 +395,13 @@
 .share-usage-labels {
   display: flex;
   justify-content: space-between;
-  font-size: var(--zn-fs-xs);
-  color: var(--zn-text-muted);
+  font-size: var(--kb-fs-xs);
+  color: var(--kb-text-muted);
 }
 
 .share-progress-track {
   height: 6px;
-  background: var(--zn-glaze-8);
+  background: var(--kb-glaze-8);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -419,10 +419,10 @@
 }
 
 .btn-share-reveal {
-  background: var(--zn-glaze-5);
-  border: 1px solid var(--zn-line-10);
-  color: var(--zn-text-soft);
-  font-size: var(--zn-fs-xs);
+  background: var(--kb-glaze-5);
+  border: 1px solid var(--kb-line-10);
+  color: var(--kb-text-soft);
+  font-size: var(--kb-fs-xs);
   padding: 5px 12px;
   border-radius: 6px;
   cursor: pointer;
@@ -446,8 +446,8 @@
 
 .webdav-server-card,
 .sftp-server-card {
-  background: var(--zn-shade-35);
-  border: 1px solid var(--zn-line-8);
+  background: var(--kb-shade-35);
+  border: 1px solid var(--kb-line-8);
   border-radius: 10px;
   padding: 16px 20px;
   display: flex;
@@ -470,7 +470,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  border-bottom: 1px solid var(--zn-line-6);
+  border-bottom: 1px solid var(--kb-line-6);
   padding-bottom: 12px;
 }
 
@@ -480,12 +480,12 @@
   gap: 10px;
   font-size: 15px;
   font-weight: 800;
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
   letter-spacing: 0.3px;
 }
 
 .webdav-status-pill {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 6px;
@@ -503,7 +503,7 @@
 
 .webdav-status-pill.stopped {
   background: rgba(149, 168, 171, 0.15);
-  color: var(--zn-text-muted);
+  color: var(--kb-text-muted);
   border: 1px solid rgba(149, 168, 171, 0.25);
 }
 
@@ -514,8 +514,8 @@
 }
 
 .webdav-qc-item {
-  background: var(--zn-glaze-3);
-  border: 1px solid var(--zn-line-6);
+  background: var(--kb-glaze-3);
+  border: 1px solid var(--kb-line-6);
   border-radius: 8px;
   padding: 10px 12px;
   display: flex;
@@ -524,7 +524,7 @@
 }
 
 .webdav-qc-label {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   color: var(--muted);
   letter-spacing: 0.5px;
@@ -536,12 +536,12 @@
 
 .webdav-qc-code {
   font-family: var(--font-mono);
-  font-size: var(--zn-fs-xs);
-  color: var(--zn-text-accent);
-  background: var(--zn-shade-40);
+  font-size: var(--kb-fs-xs);
+  color: var(--kb-text-accent);
+  background: var(--kb-shade-40);
   padding: 6px 8px;
   border-radius: 4px;
-  border: 1px solid var(--zn-line-6);
+  border: 1px solid var(--kb-line-6);
   word-break: break-all;
   display: flex;
   align-items: center;
@@ -560,8 +560,8 @@
 }
 
 .btn-qc-copy:hover {
-  color: var(--zn-text-strong);
-  background: var(--zn-glaze-10);
+  color: var(--kb-text-strong);
+  background: var(--kb-glaze-10);
 }
 
 .remotes-grid {
@@ -571,8 +571,8 @@
 }
 
 .remote-card {
-  background: var(--zn-shade-35);
-  border: 1px solid var(--zn-line-8);
+  background: var(--kb-shade-35);
+  border: 1px solid var(--kb-line-8);
   border-radius: 10px;
   padding: 16px;
   display: flex;
@@ -607,22 +607,22 @@
 .remote-name {
   font-size: 14px;
   font-weight: 700;
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
 }
 
 .remote-type-tag {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 4px;
   background: rgba(79, 216, 196, 0.12);
-  color: var(--zn-text-accent);
+  color: var(--kb-text-accent);
   border: 1px solid rgba(79, 216, 196, 0.25);
   text-transform: uppercase;
 }
 
 .remote-mount-status {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
   display: flex;
   align-items: center;
@@ -640,7 +640,7 @@
   align-items: center;
   margin-top: auto;
   padding-top: 8px;
-  border-top: 1px solid var(--zn-line-6);
+  border-top: 1px solid var(--kb-line-6);
 }
 
 

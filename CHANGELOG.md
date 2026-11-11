@@ -296,6 +296,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   A row with a one-click fix now offers it (Kiboto asks first); the others open the place where
   they are dealt with.
 
+#### Changes
+
+- **The last traces of the old name's short form are gone.** Names inside Kiboto that still began
+  with "zn" (from ZettNAS) begin with "kb": the page's style names, temporary files while an
+  upload or a photo import runs (".kb-upload-…", ".kb-import"), the sign-in cookie used during
+  single sign-on, and the names in logs and test containers. Nothing to do on upgrade: passwords
+  stored in the old wrapped form keep working and are rewritten at the next sign-in, and a
+  staging folder an interrupted import left under the old name is still tidied up. A sign-in
+  through single sign-on that is in progress during the upgrade has to be started again.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

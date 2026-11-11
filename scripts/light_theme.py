@@ -79,45 +79,45 @@ BRAND_INK = "#08695f"
 
 # Semantic colour tokens (UX-10): (kind, rrggbbaa) -> token. t = text, r = border, b = background.
 # Lines, glazes (white over a surface) and shades (black over it) are named by their opacity
-# in percent: --zn-line-8 is a white line at 8 %.
+# in percent: --kb-line-8 is a white line at 8 %.
 SEMANTIC = {
-    ("t", "ffffffff"): "zn-text-strong",
-    ("t", "f1f7f7ff"): "zn-text-bright",
-    ("t", "e6efefff"): "zn-text",
-    ("t", "c9d6d7ff"): "zn-text-soft",
-    ("t", "95a8abff"): "zn-text-muted",
-    ("t", "4fd8c4ff"): "zn-text-accent",
-    ("t", "34d399ff"): "zn-text-ok",
-    ("t", "fbbf24ff"): "zn-text-warn",
-    ("t", "f87171ff"): "zn-text-crit",
-    ("t", "c084fcff"): "zn-text-ai",
-    ("r", "ffffff0d"): "zn-line-5",
-    ("r", "ffffff0f"): "zn-line-6",
-    ("r", "ffffff12"): "zn-line-7",
-    ("r", "ffffff14"): "zn-line-8",
-    ("r", "ffffff1a"): "zn-line-10",
-    ("r", "ffffff1f"): "zn-line-12",
-    ("r", "ffffff24"): "zn-line-14",
-    ("r", "ffffff26"): "zn-line-15",
-    ("r", "ffffff2e"): "zn-line-18",
-    ("r", "ffffff33"): "zn-line-20",
-    ("b", "ffffff05"): "zn-glaze-2",
-    ("b", "ffffff08"): "zn-glaze-3",
-    ("b", "ffffff0a"): "zn-glaze-4",
-    ("b", "ffffff0d"): "zn-glaze-5",
-    ("b", "ffffff0f"): "zn-glaze-6",
-    ("b", "ffffff14"): "zn-glaze-8",
-    ("b", "ffffff1a"): "zn-glaze-10",
-    ("b", "ffffff1f"): "zn-glaze-12",
-    ("b", "ffffff26"): "zn-glaze-15",
-    ("b", "00000033"): "zn-shade-20",
-    ("b", "00000040"): "zn-shade-25",
-    ("b", "0000004c"): "zn-shade-30",
-    ("b", "00000059"): "zn-shade-35",
-    ("b", "00000066"): "zn-shade-40",
+    ("t", "ffffffff"): "kb-text-strong",
+    ("t", "f1f7f7ff"): "kb-text-bright",
+    ("t", "e6efefff"): "kb-text",
+    ("t", "c9d6d7ff"): "kb-text-soft",
+    ("t", "95a8abff"): "kb-text-muted",
+    ("t", "4fd8c4ff"): "kb-text-accent",
+    ("t", "34d399ff"): "kb-text-ok",
+    ("t", "fbbf24ff"): "kb-text-warn",
+    ("t", "f87171ff"): "kb-text-crit",
+    ("t", "c084fcff"): "kb-text-ai",
+    ("r", "ffffff0d"): "kb-line-5",
+    ("r", "ffffff0f"): "kb-line-6",
+    ("r", "ffffff12"): "kb-line-7",
+    ("r", "ffffff14"): "kb-line-8",
+    ("r", "ffffff1a"): "kb-line-10",
+    ("r", "ffffff1f"): "kb-line-12",
+    ("r", "ffffff24"): "kb-line-14",
+    ("r", "ffffff26"): "kb-line-15",
+    ("r", "ffffff2e"): "kb-line-18",
+    ("r", "ffffff33"): "kb-line-20",
+    ("b", "ffffff05"): "kb-glaze-2",
+    ("b", "ffffff08"): "kb-glaze-3",
+    ("b", "ffffff0a"): "kb-glaze-4",
+    ("b", "ffffff0d"): "kb-glaze-5",
+    ("b", "ffffff0f"): "kb-glaze-6",
+    ("b", "ffffff14"): "kb-glaze-8",
+    ("b", "ffffff1a"): "kb-glaze-10",
+    ("b", "ffffff1f"): "kb-glaze-12",
+    ("b", "ffffff26"): "kb-glaze-15",
+    ("b", "00000033"): "kb-shade-20",
+    ("b", "00000040"): "kb-shade-25",
+    ("b", "0000004c"): "kb-shade-30",
+    ("b", "00000059"): "kb-shade-35",
+    ("b", "00000066"): "kb-shade-40",
 }
 # Tokens whose light value 50-components.css sets by hand (they predate the tool)
-LIGHT_BY_HAND = {"zn-text-strong", "zn-text", "zn-text-soft", "zn-text-muted"}
+LIGHT_BY_HAND = {"kb-text-strong", "kb-text", "kb-text-soft", "kb-text-muted"}
 TOKEN_FILE = os.path.join(FRONTEND, "src", "styles", "50-components.css")
 
 
@@ -415,7 +415,7 @@ def sources() -> list[str]:
 
 
 def tokenize(text: str) -> str:
-    """var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)) -> var(--zn-line-8)"""
+    """var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)) -> var(--kb-line-8)"""
 
     def swap(m):
         name = SEMANTIC.get((m.group(1), m.group(2)))

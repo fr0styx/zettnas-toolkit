@@ -19,8 +19,8 @@ function fileRow(f, group) {
   const last = group.files.length < 2;
   return html`<li class="dup-file">
     ${group.kind === 'photo' ? html`<img class="dup-thumb" src="/api/media/thumbnail/${f.file_id}" alt="" loading="lazy">` : ''}
-    <span class="dup-where"><strong>${f.name}</strong><span class="zn-muted">${folderOf(f.path)}</span></span>
-    <span class="zn-muted">${formatBytes(f.size)}</span>
+    <span class="dup-where"><strong>${f.name}</strong><span class="kb-muted">${folderOf(f.path)}</span></span>
+    <span class="kb-muted">${formatBytes(f.size)}</span>
     ${last ? '' : html`<button type="button" class="btn-pill-toggle is-small" data-dup-bin="${f.path}">${t('dup.to_bin', 'Move to recycle bin')}</button>`}
   </li>`;
 }
@@ -28,18 +28,18 @@ function fileRow(f, group) {
 function groupHtml(g) {
   const label = g.kind === 'photo' ? t('dup.photo_group', 'Photos that look the same') : t('dup.file_group', 'Identical files');
   return html`<section class="dup-group">
-    <div class="zn-row zn-row--between"><strong>${label}</strong><span class="zn-muted">${t('dup.saves', '{size} to free', { size: formatBytes(g.wasted_bytes) })}</span></div>
+    <div class="kb-row kb-row--between"><strong>${label}</strong><span class="kb-muted">${t('dup.saves', '{size} to free', { size: formatBytes(g.wasted_bytes) })}</span></div>
     <ul class="dup-files">${g.files.map((f) => fileRow(f, g))}</ul>
   </section>`;
 }
 
 export function duplicatesHtml(data) {
-  if (!data) return html`<p class="zn-muted">${t('dup.load_failed', "Couldn't load the duplicates.")}</p>`;
+  if (!data) return html`<p class="kb-muted">${t('dup.load_failed', "Couldn't load the duplicates.")}</p>`;
   const groups = data.groups || [];
-  if (!groups.length) return html`<p class="zn-muted">${t('dup.none', 'No duplicates found. Copies are found as folders are indexed.')}</p>`;
+  if (!groups.length) return html`<p class="kb-muted">${t('dup.none', 'No duplicates found. Copies are found as folders are indexed.')}</p>`;
   const more = (data.total_groups || 0) > groups.length;
   return html`<p>${t('dup.summary', '{groups, plural, one {# set of copies} other {# sets of copies}}; {size} could be freed.', { groups: data.total_groups, size: formatBytes(data.wasted_bytes) })}</p>
-    ${more ? html`<p class="zn-muted">${t('dup.more', 'Showing the {shown} largest of {total}.', { shown: groups.length, total: data.total_groups })}</p>` : ''}
+    ${more ? html`<p class="kb-muted">${t('dup.more', 'Showing the {shown} largest of {total}.', { shown: groups.length, total: data.total_groups })}</p>` : ''}
     ${groups.map(groupHtml)}`;
 }
 
@@ -131,7 +131,7 @@ export async function loadDuplicates() {
 
 export async function openDuplicates() {
   const host = dupWindow();
-  host.querySelector('.dup-body').innerHTML = html`<p class="zn-muted">${t('dup.loading', 'Looking for copies…')}</p>`;
+  host.querySelector('.dup-body').innerHTML = html`<p class="kb-muted">${t('dup.loading', 'Looking for copies…')}</p>`;
   host.classList.add('open');
   await loadDuplicates();
   render(host);
@@ -142,7 +142,7 @@ export async function openDuplicates() {
 function buttonLabel(data) {
   const n = data?.total_groups || 0;
   return n
-    ? html`${t('dup.button', 'Duplicates')} <span class="zn-muted">${formatBytes(data.wasted_bytes)}</span>`
+    ? html`${t('dup.button', 'Duplicates')} <span class="kb-muted">${formatBytes(data.wasted_bytes)}</span>`
     : html`${t('dup.button', 'Duplicates')}`;
 }
 

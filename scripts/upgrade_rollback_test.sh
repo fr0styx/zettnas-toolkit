@@ -8,8 +8,8 @@ set -eu
 OLD=$1
 NEW=$2
 BROKEN=${3:-busybox:1.37.0}
-NAME=zn-upgrade-test
-PORT=${ZN_TEST_PORT:-18090}
+NAME=kb-upgrade-test
+PORT=${KIBOTO_TEST_PORT:-18090}
 DATA=$(mktemp -d)
 
 # The containers write the data folder as root (owner-only files), and CI runs this script
@@ -17,7 +17,7 @@ DATA=$(mktemp -d)
 in_data() { docker run --rm -v "$DATA":/d "$BROKEN" sh -c "$1"; }
 
 cleanup() {
-  docker rm -f "$NAME" "$NAME-rollback" zn-upgrade-helper >/dev/null 2>&1 || true
+  docker rm -f "$NAME" "$NAME-rollback" kb-upgrade-helper >/dev/null 2>&1 || true
   in_data "rm -rf /d/* /d/.[!.]*" >/dev/null 2>&1 || true
   rm -rf "$DATA" 2>/dev/null || true
 }
@@ -74,7 +74,7 @@ verify() {
 result() { in_data "cat /d/update_result.json" 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin).get('result'))" 2>/dev/null; }
 has_seed() { in_data "cat /d/upgrade_marker.json" 2>/dev/null | grep -q '"seed": 42'; }
 helper() {
-  docker run --rm --name zn-upgrade-helper \
+  docker run --rm --name kb-upgrade-helper \
     -v /var/run/docker.sock:/var/run/docker.sock -v "$DATA":/kiboto-data \
     "$NEW" python3 -m backend.services.self_updater --apply --target "$NAME" --image "$1" --delay 1 --data-dir /kiboto-data
 }

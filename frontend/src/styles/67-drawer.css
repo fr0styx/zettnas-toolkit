@@ -7,54 +7,54 @@
 #led-drawer .drw-x-3 { margin-right: 4px; }
 #led-drawer .drw-row { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 #led-drawer .drw-row-2 { display: flex; align-items: center; gap: 6px; }
-#led-drawer .drw-xs-semi-muted { font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 600; }
+#led-drawer .drw-xs-semi-muted { font-size: var(--kb-fs-xs); color: var(--muted); font-weight: 600; }
 #led-drawer .drw-box { width: 22px; height: 22px; border: none; padding: 0; background: none; cursor: pointer; border-radius: 3px; }
-#led-drawer .drw-xs-muted-mono { font-size: var(--zn-fs-xs); font-family: monospace; color: var(--muted); }
-#led-drawer .drw-row-box { margin-top: 10px; padding: 8px 10px; background: var(--zn-shade-20); border: 1px solid var(--zn-line-6); border-radius: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-#led-drawer .drw-xs-bold-strong { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); }
-#led-drawer .drw-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); }
+#led-drawer .drw-xs-muted-mono { font-size: var(--kb-fs-xs); font-family: monospace; color: var(--muted); }
+#led-drawer .drw-row-box { margin-top: 10px; padding: 8px 10px; background: var(--kb-shade-20); border: 1px solid var(--kb-line-6); border-radius: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+#led-drawer .drw-xs-bold-strong { font-size: var(--kb-fs-xs); font-weight: 700; color: var(--kb-text-strong); }
+#led-drawer .drw-xs-muted { font-size: var(--kb-fs-xs); color: var(--muted); }
 #led-drawer .drw-row-3 { display: flex; align-items: center; gap: 8px; }
 #led-drawer .drw-row-4 { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-#led-drawer .drw-xs-bold { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--text); }
-#led-drawer .drw-row-xs { display: flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs); }
+#led-drawer .drw-xs-bold { font-size: var(--kb-fs-xs); font-weight: 700; color: var(--text); }
+#led-drawer .drw-row-xs { display: flex; align-items: center; gap: 6px; font-size: var(--kb-fs-xs); }
 #led-drawer .drw-size { width: 96px; padding: 3px 6px; }
-#led-drawer .drw-xs-muted-2 { color: var(--muted); font-size: var(--zn-fs-xs); }
+#led-drawer .drw-xs-muted-2 { color: var(--muted); font-size: var(--kb-fs-xs); }
 #led-drawer .drw-size-2 { width: 48px; padding: 3px 6px; }
 #led-drawer .drw-size-3 { width: 170px; }
-#led-drawer .drw-xs-bold-muted { font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 700; }
+#led-drawer .drw-xs-bold-muted { font-size: var(--kb-fs-xs); color: var(--muted); font-weight: 700; }
 #led-drawer .drw-x-4 { margin-top: 6px; }
-#led-drawer .drw-row-xs-2 { margin-top: 6px; display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); }
-#led-drawer .drw-xs-bold-muted-2 { color: var(--muted); font-size: var(--zn-fs-xs); font-weight: 700; }
+#led-drawer .drw-row-xs-2 { margin-top: 6px; display: flex; align-items: center; gap: 8px; font-size: var(--kb-fs-xs); }
+#led-drawer .drw-xs-bold-muted-2 { color: var(--muted); font-size: var(--kb-fs-xs); font-weight: 700; }
 #led-drawer .drw-x-5 { margin-right: 6px; }
 #led-drawer .drw-x-6 { cursor: pointer; }
-#led-drawer .drw-xs-bold-ok { font-size: var(--zn-fs-xs); font-weight: 800; color: var(--ok2); }
+#led-drawer .drw-xs-bold-ok { font-size: var(--kb-fs-xs); font-weight: 800; color: var(--ok2); }
 #led-drawer .drw-row-5 { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
-#led-drawer .drw-xs-bold-2 { opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; cursor: pointer; }
-#led-drawer .drw-xs-bold-ok-mono { font-family: monospace; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--ok2); }
+#led-drawer .drw-xs-bold-2 { opacity: 0.8; font-size: var(--kb-fs-xs); text-transform: uppercase; font-weight: 700; cursor: pointer; }
+#led-drawer .drw-xs-bold-ok-mono { font-family: monospace; font-size: var(--kb-fs-xs); font-weight: 700; color: var(--ok2); }
 #led-drawer .drw-x-7 { margin-top: 4px; }
 #led-drawer .drw-row-6 { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-#led-drawer .drw-xs-semi-box { font-size: var(--zn-fs-xs); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--zn-line-10); font-weight: 600; }
+#led-drawer .drw-xs-semi-box { font-size: var(--kb-fs-xs); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--kb-line-10); font-weight: 600; }
 #led-drawer .drw-row-7 { margin-top: 12px; display: flex; justify-content: space-between; align-items: center; }
 #led-drawer .drw-x-8 { grid-template-columns: repeat(5, 1fr); }
 #led-drawer .drw-col { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
 #led-drawer .drw-row-8 { display: flex; justify-content: space-between; align-items: center; }
 #led-drawer .drw-row-9 { display: flex; gap: 8px; align-items: center; }
-#led-drawer .drw-xs { height: 28px; padding: 0 12px; font-size: var(--zn-fs-xs); }
+#led-drawer .drw-xs { height: 28px; padding: 0 12px; font-size: var(--kb-fs-xs); }
 #led-drawer .drw-col-2 { display: flex; flex-direction: column; align-items: flex-end; }
-#led-drawer .drw-xs-bold-muted-3 { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--text-dim, var(--zn-text-muted)); }
-#led-drawer .drw-xs-accent-mono { font-size: var(--zn-fs-xs); font-family: monospace; color: var(--accent, var(--zn-text-accent)); }
-#led-drawer .drw-box-2 { height: 4px; width: 100%; background: var(--zn-glaze-6); border-radius: 2px; overflow: hidden; }
-#led-drawer .drw-box-3 { background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 8px; min-height: 80px; }
+#led-drawer .drw-xs-bold-muted-3 { font-size: var(--kb-fs-xs); font-weight: 700; color: var(--text-dim, var(--kb-text-muted)); }
+#led-drawer .drw-xs-accent-mono { font-size: var(--kb-fs-xs); font-family: monospace; color: var(--accent, var(--kb-text-accent)); }
+#led-drawer .drw-box-2 { height: 4px; width: 100%; background: var(--kb-glaze-6); border-radius: 2px; overflow: hidden; }
+#led-drawer .drw-box-3 { background: var(--kb-shade-25); border: 1px solid var(--kb-line-8); border-radius: 6px; padding: 8px; min-height: 80px; }
 #led-drawer .drw-size-4 { width: 100%; height: 80px; }
-#led-drawer .drw-xs-muted-center { font-size: var(--zn-fs-xs); color: var(--text-dim, var(--zn-text-muted)); margin-top: 4px; text-align: center; }
+#led-drawer .drw-xs-muted-center { font-size: var(--kb-fs-xs); color: var(--text-dim, var(--kb-text-muted)); margin-top: 4px; text-align: center; }
 #led-drawer .drw-x-9 { cursor: default; }
-#led-drawer .drw-xs-bold-3 { font-size: var(--zn-fs-xs); font-weight: 700; text-transform: uppercase; opacity: 0.8; }
-#led-drawer .drw-box-4 { margin-top: 15px; border-top: 1px solid var(--zn-line-5); padding-top: 15px; }
+#led-drawer .drw-xs-bold-3 { font-size: var(--kb-fs-xs); font-weight: 700; text-transform: uppercase; opacity: 0.8; }
+#led-drawer .drw-box-4 { margin-top: 15px; border-top: 1px solid var(--kb-line-5); padding-top: 15px; }
 #led-drawer .drw-x-10 { flex-direction: column; align-items: flex-start; gap: 6px; }
 #led-drawer .drw-row-10 { display: flex; justify-content: space-between; width: 100%; align-items: center; }
-#led-drawer .drw-xs-bold-4 { opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+#led-drawer .drw-xs-bold-4 { opacity: 0.8; font-size: var(--kb-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
 #led-drawer .drw-row-11 { display: flex; gap: 6px; align-items: center; }
-#led-drawer .drw-xs-2 { font-size: var(--zn-fs-xs); }
+#led-drawer .drw-xs-2 { font-size: var(--kb-fs-xs); }
 #led-drawer .drw-x-11 { margin: 0; }
 #led-drawer .drw-size-5 { width: 100%; box-sizing: border-box; appearance: auto; }
 #led-drawer .drw-x-12 { flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 12px; }
@@ -63,6 +63,6 @@
 #led-drawer .drw-size-6 { text-transform: uppercase; margin: 0; height: auto; }
 #led-drawer .drw-row-13 { margin-top: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 #led-drawer .drw-col-3 { display: flex; flex-direction: column; }
-#led-drawer .drw-xs-muted-3 { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px; }
+#led-drawer .drw-xs-muted-3 { font-size: var(--kb-fs-xs); color: var(--muted); margin-top: 3px; }
 #led-drawer .drw-x-13 { margin-top: 15px; justify-content: flex-end; }
 #led-drawer .drw-size-7 { width: 100%; justify-content: center; }

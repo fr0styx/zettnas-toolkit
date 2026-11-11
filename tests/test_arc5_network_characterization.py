@@ -373,7 +373,7 @@ class _Host:
                         "Containers": {},
                     },
                     {
-                        "Name": "zn-apps",
+                        "Name": "kb-apps",
                         "Id": "n3",
                         "Driver": "bridge",
                         "Scope": "local",
@@ -399,7 +399,7 @@ class _Host:
         if request.method == "DELETE" and path.startswith("/networks/"):
             return (
                 httpx.Response(204)
-                if path.endswith("zn-test")
+                if path.endswith("kb-test")
                 else httpx.Response(404, json={"message": "network not found"})
             )
         return httpx.Response(404, json={"message": "not faked"})
@@ -544,9 +544,9 @@ def _scenario(host, root):
     ):
         call(f"update_port_config eth2 {updates}", net.update_port_config, "eth2", updates)
     call("update_port_config missing", net.update_port_config, "nope0", {"mtu": 1500})
-    call("create_docker_network", net.create_docker_network, "zn-test", "bridge", "172.30.0.0/16", "172.30.0.1")
+    call("create_docker_network", net.create_docker_network, "kb-test", "bridge", "172.30.0.0/16", "172.30.0.1")
     call("create_docker_network bad", net.create_docker_network, "bad name!", "weird")
-    call("delete_docker_network", net.delete_docker_network, "zn-test")
+    call("delete_docker_network", net.delete_docker_network, "kb-test")
     call("delete_docker_network missing", net.delete_docker_network, "nope")
     call("_parse_proc_net_vlan", net._parse_proc_net_vlan)
     call("get_vlans", net.get_vlans)

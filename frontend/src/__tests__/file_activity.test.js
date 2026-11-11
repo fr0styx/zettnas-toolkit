@@ -18,8 +18,8 @@ describe('file activity (FEAT-12)', () => {
   });
 
   it('marks deletes for good in red', () => {
-    expect(activityRow({ action: 'delete_permanent', path: '/x' }).querySelector('.zn-tag--crit')).not.toBeNull();
-    expect(activityRow({ action: 'copy', path: '/x' }).querySelector('.zn-tag--crit')).toBeNull();
+    expect(activityRow({ action: 'delete_permanent', path: '/x' }).querySelector('.kb-tag--crit')).not.toBeNull();
+    expect(activityRow({ action: 'copy', path: '/x' }).querySelector('.kb-tag--crit')).toBeNull();
     expect(actionLabel('unknown')).toBe('unknown');
   });
 });

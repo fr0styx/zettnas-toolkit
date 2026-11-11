@@ -114,7 +114,7 @@ export function initContainersManager() {
               <button id="btn-cw-check-updates" class="btn-pill-toggle" title="${t('ui.check_remote_registries_for_container', 'Check remote registries for container image updates')}">
                 <span style="color: var(--ok2, #33cdb8);">✓</span> <span>${t('cw.check_updates', 'Check for updates')}</span>
               </button>
-              <button id="btn-cw-update-all" class="btn-pill-toggle" style="display: none; color: var(--zn-text-warn); border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="${t('ui.update_all_containers_with_available', 'Update all containers with available image updates')}">
+              <button id="btn-cw-update-all" class="btn-pill-toggle" style="display: none; color: var(--kb-text-warn); border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="${t('ui.update_all_containers_with_available', 'Update all containers with available image updates')}">
                 <span aria-hidden="true">↑</span> <span>${t('cw.update_all', 'Update all')} (<span id="cw-updates-count-badge">0</span>)</span>
               </button>
               <button id="btn-cw-stacks" class="btn-pill-toggle" title="${t('ui.manage_docker_compose_stacks', 'Manage Docker Compose Stacks')}" style="color: var(--lt-ink-brand, var(--accent-cyan, #4fd8c4));">
@@ -1186,7 +1186,7 @@ function bindCwTableEvents(tbody) {
       if (act === 'update-single') {
         showConfirmToast(
           t('cw.update_one_title', 'Update “{name}”?', { name: cname }),
-          `${escapeHtml(t('cw.update_one_msg', 'This pulls the latest image and updates {name} to its newest release.', { name: cname })).replace(escapeHtml(cname), () => `<strong>${escapeHtml(cname)}</strong>`)}<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(t('cw.update_keeps', 'Volumes, folders and environment settings stay as they are.'))}</span>`,
+          `${escapeHtml(t('cw.update_one_msg', 'This pulls the latest image and updates {name} to its newest release.', { name: cname })).replace(escapeHtml(cname), () => `<strong>${escapeHtml(cname)}</strong>`)}<br><br><span style="font-size:var(--kb-fs-xs); color:var(--muted);">${escapeHtml(t('cw.update_keeps', 'Volumes, folders and environment settings stay as they are.'))}</span>`,
           async () => {
             actBtn.disabled = true;
             const originalContent = actBtn.innerHTML;

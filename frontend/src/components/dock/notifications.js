@@ -184,7 +184,7 @@ export function showDockToast(msg, targetId = null) {
 
   const toast = document.createElement('div');
   toast.className = 'dock-pin-toast';
-  toast.style.cssText = 'background:rgba(19,32,34,0.92); border:1px solid rgba(255,255,255,0.22); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); color:#fff; font-size:var(--zn-fs-xs); font-weight:600; padding:6px 14px; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,0.6), 0 0 1px rgba(255,255,255,0.2) inset; pointer-events:none; transition:opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1); transform:translateY(8px) scale(0.96); opacity:0; white-space:nowrap;';
+  toast.style.cssText = 'background:rgba(19,32,34,0.92); border:1px solid rgba(255,255,255,0.22); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); color:#fff; font-size:var(--kb-fs-xs); font-weight:600; padding:6px 14px; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,0.6), 0 0 1px rgba(255,255,255,0.2) inset; pointer-events:none; transition:opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1); transform:translateY(8px) scale(0.96); opacity:0; white-space:nowrap;';
   toast.textContent = msg;
   container.appendChild(toast);
 
@@ -274,7 +274,7 @@ export function renderNotificationCenter() {
     const emptySig = `empty_${currentNotifFilter}_${getLanguage()}`;
     if (list._lastRenderedSignature === emptySig) return;
     list._lastRenderedSignature = emptySig;
-    list.innerHTML = `<div style="padding:28px 16px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);">${escapeHtml(emptyMsg)}</div>`;
+    list.innerHTML = `<div style="padding:28px 16px; text-align:center; color:var(--muted); font-size:var(--kb-fs-xs);">${escapeHtml(emptyMsg)}</div>`;
     return;
   }
   
@@ -325,10 +325,10 @@ export function renderNotificationCenter() {
       <span class="notif-center-icon" style="font-size: 14px; margin-top:2px; flex-shrink:0;">${icon}</span>
       <div style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div class="notif-center-title" style="font-size:var(--zn-fs-xs); font-weight:700; color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${isChecked ? 'opacity:0.75;' : ''}">${escapeHtml(view.title)}</div>
-          <span style="font-size:var(--zn-fs-xs); color:var(--muted); opacity:0.8; margin-left:6px; flex-shrink:0;">🔍</span>
+          <div class="notif-center-title" style="font-size:var(--kb-fs-xs); font-weight:700; color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${isChecked ? 'opacity:0.75;' : ''}">${escapeHtml(view.title)}</div>
+          <span style="font-size:var(--kb-fs-xs); color:var(--muted); opacity:0.8; margin-left:6px; flex-shrink:0;">🔍</span>
         </div>
-        <div class="notif-center-msg" style="font-size:var(--zn-fs-xs); color:${isChecked ? 'var(--muted)' : '#fff'}; line-height:1.4; word-break:break-word;">${escapeHtml(view.message)}</div>
+        <div class="notif-center-msg" style="font-size:var(--kb-fs-xs); color:${isChecked ? 'var(--muted)' : '#fff'}; line-height:1.4; word-break:break-word;">${escapeHtml(view.message)}</div>
         <div class="notif-center-when">${escapeHtml([formatDateTime(dt), view.repeated].filter(Boolean).join(' · '))}</div>
       </div>
       ${!isChecked ? `<div class="notif-unread-dot" style="width:6px; height:6px; border-radius:50%; background:var(--brand, #33cdb8); margin-left:auto; margin-top:6px; flex-shrink:0;"></div>` : ''}

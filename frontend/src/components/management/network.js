@@ -236,7 +236,7 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
           : '<span class="nw-muted">--</span>';
 
       const statusPill = p.online
-        ? '<span class="mgmt-app-pill" style="color:var(--lt-t-3bf58bff, #3bf58b); background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); font-size:var(--zn-fs-xs); padding:2px 7px;">' + t('net.online', 'Online') + '</span>'
+        ? '<span class="mgmt-app-pill" style="color:var(--lt-t-3bf58bff, #3bf58b); background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); font-size:var(--kb-fs-xs); padding:2px 7px;">' + t('net.online', 'Online') + '</span>'
         : '<span class="mgmt-app-pill nw-xs-muted-box">' + t('net.offline', 'Offline') + '</span>';
 
       const safeIpId = (p.ip || 'no_ip').replace(/[^a-zA-Z0-9]/g, '_');
@@ -520,7 +520,7 @@ export async function fetchAndRenderWireguard() {
             taildropList.innerHTML = files
               .map(
                 f => `
-              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid var(--zn-line-5); font-size:var(--zn-fs-xs); cursor:pointer; border-radius:4px; transition:background 0.2s;" data-hover-bg title="${t('ui.click_to_view_folder_in', 'Click to view folder in Files')}">
+              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid var(--kb-line-5); font-size:var(--kb-fs-xs); cursor:pointer; border-radius:4px; transition:background 0.2s;" data-hover-bg title="${t('ui.click_to_view_folder_in', 'Click to view folder in Files')}">
                 <span class="nw-semi-strong" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name)}</span>
                 <span class="nw-xs-muted">${escapeHtml(f.size_formatted)} · ${escapeHtml(f.modified_at)}</span>
               </div>
@@ -922,7 +922,7 @@ export async function fetchAndRenderWireguard() {
         const featName = res.feature === 'funnel' ? 'Funnel' : 'Serve';
         showConfirmToast(
           t('net.approve_title', 'Tailscale {feature} needs approval', { feature: featName }),
-          `${escapeHtml(t('net.approve_msg', 'Tailscale {feature} is not allowed on your tailnet yet. Approve this device in the Tailscale admin console:', { feature: featName }))}<br><br><a href="${escapeHtml(res.approval_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:bold; word-break:break-all;">${escapeHtml(res.approval_url)}</a><br><br>${escapeHtml(t('net.approve_after', 'After approving it in Tailscale, turn this switch on again.'))}`,
+          `${escapeHtml(t('net.approve_msg', 'Tailscale {feature} is not allowed on your tailnet yet. Approve this device in the Tailscale admin console:', { feature: featName }))}<br><br><a href="${escapeHtml(res.approval_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--kb-text-accent); text-decoration:underline; font-weight:bold; word-break:break-all;">${escapeHtml(res.approval_url)}</a><br><br>${escapeHtml(t('net.approve_after', 'After approving it in Tailscale, turn this switch on again.'))}`,
           () => {
             window.open(res.approval_url, '_blank', 'noopener,noreferrer');
           },

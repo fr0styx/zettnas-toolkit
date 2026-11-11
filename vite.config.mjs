@@ -20,7 +20,7 @@ export const withoutIndent = (html) =>
     .map((part, i) => (i % 3 === 1 ? part : i % 3 === 2 ? '' : part.replace(/\n[ \t]+/g, '\n')))
     .join('');
 export const stripHtmlComments = () => ({
-  name: 'zn-strip-html-comments',
+  name: 'kb-strip-html-comments',
   transformIndexHtml: { order: 'post', handler: (html) => withoutIndent(withoutComments(html)) },
 });
 

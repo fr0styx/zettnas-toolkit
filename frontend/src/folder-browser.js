@@ -106,7 +106,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (displayDirs.length === 0) {
       const none = document.createElement("div");
-      none.style.cssText = "padding: 10px 14px; color: var(--muted); font-size: var(--zn-fs-xs);";
+      none.style.cssText = "padding: 10px 14px; color: var(--muted); font-size: var(--kb-fs-xs);";
       none.textContent = t("modal.fb_none", "No folders found.");
       fbList.appendChild(none);
       return;
@@ -130,7 +130,7 @@ window.addEventListener('DOMContentLoaded', () => {
       
       const text = document.createElement("span");
       text.textContent = d.name;
-      text.style.fontSize = "var(--zn-fs-xs)";
+      text.style.fontSize = "var(--kb-fs-xs)";
       text.style.color = d.name === ".." ? "var(--muted)" : "#fff";
       
       div.appendChild(icon);

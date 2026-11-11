@@ -200,7 +200,7 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
       </div>
       <div class="quicklook-body" id="quicklook-body">
         <div class="qlv-col-muted">
-          <div class="spinner" style="width:28px; height:28px; border:2px solid var(--zn-line-20); border-top-color:var(--accent-cyan, #33cdb8); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+          <div class="spinner" style="width:28px; height:28px; border:2px solid var(--kb-line-20); border-top-color:var(--accent-cyan, #33cdb8); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
           <span class="qlv-xs">${t('ql.loading', 'Loading preview…')}</span>
         </div>
       </div>
@@ -493,9 +493,9 @@ async function loadCurrentItem() {
       : '';
     bodyEl.innerHTML = `
       <div class="qlv-col">
-        <div style="width:100%; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; border-radius:8px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.28); font-size:var(--zn-fs-xs); color:var(--lt-t-6ee7b7ff, #6ee7b7);">
+        <div style="width:100%; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; border-radius:8px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.28); font-size:var(--kb-fs-xs); color:var(--lt-t-6ee7b7ff, #6ee7b7);">
           <span>💤 <strong>${t('ql.asleep_title', 'The disk is asleep:')}</strong> ${t('ql.asleep_msg', 'this preview comes from the fast drive, so the disks stay asleep.')}</span>
-          <button type="button" class="btn-pill-toggle" id="btn-quicklook-wake-load" style="color: var(--zn-text-accent); border-color: rgba(79,216,196,0.4);">⚡ ${t('ql.wake_load', 'Wake the disk and load the whole file')}</button>
+          <button type="button" class="btn-pill-toggle" id="btn-quicklook-wake-load" style="color: var(--kb-text-accent); border-color: rgba(79,216,196,0.4);">⚡ ${t('ql.wake_load', 'Wake the disk and load the whole file')}</button>
         </div>
         ${thumbHtml}
         ${excerptHtml}

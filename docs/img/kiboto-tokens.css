@@ -100,11 +100,11 @@ body.theme-light {
   --accent-glow: rgba(var(--kb-brand-rgb), .30); --accent-hover: rgba(var(--kb-brand-rgb), .14);
   --focus-ring: var(--kb-focus); --focus-shadow: 0 0 0 3px rgba(var(--kb-brand-rgb), .35);
   --font-sans: var(--kb-font-sans); --font-mono: var(--kb-font-mono);
-  --window-radius: var(--kb-radius-lg); --zn-radius: var(--kb-radius-md); --zn-radius-sm: var(--kb-radius-sm);
-  --zn-text-strong: var(--kb-text); --zn-text: var(--kb-text); --zn-text-muted: var(--kb-text-muted);
-  --zn-line: var(--kb-line); --zn-line-strong: var(--kb-border); --zn-surface: var(--kb-surface);
-  --zn-danger-bg: var(--kb-danger-soft); --zn-danger-text: var(--kb-danger-text);
+  --window-radius: var(--kb-radius-lg); --kb-radius: var(--kb-radius-md); --kb-radius-sm: var(--kb-radius-sm);
+  --kb-text-strong: var(--kb-text); --kb-text: var(--kb-text); --kb-text-muted: var(--kb-text-muted);
+  --kb-line: var(--kb-line); --kb-line-strong: var(--kb-border); --kb-surface: var(--kb-surface);
+  --kb-danger-bg: var(--kb-danger-soft); --kb-danger-text: var(--kb-danger-text);
   /* Confirm buttons keep white labels in every theme, so they stay on the deep fills */
-  --zn-confirm-ok: #0a7a70; --zn-confirm-ok-line: #08695f; --zn-confirm-danger: #c8322b; --zn-confirm-danger-line: #a52521;
-  --zn-confirm-title: var(--kb-primary-text); --zn-confirm-danger-title: var(--kb-danger-text);
+  --kb-confirm-ok: #0a7a70; --kb-confirm-ok-line: #08695f; --kb-confirm-danger: #c8322b; --kb-confirm-danger-line: #a52521;
+  --kb-confirm-title: var(--kb-primary-text); --kb-confirm-danger-title: var(--kb-danger-text);
 }

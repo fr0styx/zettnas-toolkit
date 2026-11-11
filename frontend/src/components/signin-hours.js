@@ -45,20 +45,20 @@ export function installSigninHours(box, user, { canBeLimited = true } = {}) {
   const dayBoxes = dayNames().map((n, i) => {
     const c = el('input', { type: 'checkbox', 'data-hours-day': true, value: String(i) });
     c.checked = days.has(i);
-    return el('label', { class: 'zn-hours-day' }, c, el('span', { text: n }));
+    return el('label', { class: 'kb-hours-day' }, c, el('span', { text: n }));
   });
   const start = el('input', { type: 'time', class: 'tz-select-input', 'data-hours-start': true });
   start.value = hours ? hours.start : '07:00';
   const end = el('input', { type: 'time', class: 'tz-select-input', 'data-hours-end': true });
   end.value = hours ? hours.end : '20:00';
-  const fields = el('div', { class: 'zn-hours', 'data-hours-fields': true },
-    el('div', { class: 'zn-hours-days', role: 'group', 'aria-label': t('hours.days', 'Days') }, dayBoxes),
-    el('div', { class: 'zn-hours-times' },
+  const fields = el('div', { class: 'kb-hours', 'data-hours-fields': true },
+    el('div', { class: 'kb-hours-days', role: 'group', 'aria-label': t('hours.days', 'Days') }, dayBoxes),
+    el('div', { class: 'kb-hours-times' },
       el('label', {}, t('hours.from', 'From'), ' ', start),
       el('label', {}, t('hours.until', 'Until'), ' ', end)),
-    el('div', { class: 'zn-sub', text: serverTimeHint() }));
+    el('div', { class: 'kb-sub', text: serverTimeHint() }));
   fields.hidden = !hours;
-  box.replaceChildren(el('label', { class: 'zn-toggle' }, on, el('span', { text: t('hours.only_at', 'Only at these times') })), fields);
+  box.replaceChildren(el('label', { class: 'kb-toggle' }, on, el('span', { text: t('hours.only_at', 'Only at these times') })), fields);
   let changed = false;
   on.addEventListener('change', () => { fields.hidden = !on.checked; });
   box.addEventListener('change', () => { changed = true; });

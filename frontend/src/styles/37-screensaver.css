@@ -61,7 +61,7 @@
   bottom: 32px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   color: rgba(255, 255, 255, 0.35);
   letter-spacing: 1px;
@@ -117,7 +117,7 @@
 .shortcut-system-card:hover {
   transform: translateY(-1.5px);
   border-color: var(--lt-r-ffffff38, rgba(255, 255, 255, 0.22)) !important;
-  background: var(--zn-glaze-5) !important;
+  background: var(--kb-glaze-5) !important;
 }
 
 .btn-emoji-chip {

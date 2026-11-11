@@ -148,11 +148,11 @@ export async function fetchAndRenderUpsEvents() {
     }
     tbody.innerHTML = events.map(ev => {
       const dateStr = formatDateTime(ev.ts);
-      let typeBadge = `<span class="badge" style="background:var(--lt-b-33cdb826, rgba(51,205,184,0.15)); border:1px solid #33cdb8; color:var(--lt-t-33cdb8ff, #33cdb8); padding:2px 8px; border-radius:4px; font-size:var(--zn-fs-xs);">${escapeHtml(ev.event_type)}</span>`;
+      let typeBadge = `<span class="badge" style="background:var(--lt-b-33cdb826, rgba(51,205,184,0.15)); border:1px solid #33cdb8; color:var(--lt-t-33cdb8ff, #33cdb8); padding:2px 8px; border-radius:4px; font-size:var(--kb-fs-xs);">${escapeHtml(ev.event_type)}</span>`;
       if (ev.event_type.includes('OUTAGE') || ev.event_type.includes('FAILSAFE')) {
-        typeBadge = `<span class="badge" style="background:rgba(245,166,35,0.15); border:1px solid #f5a623; color:var(--lt-t-f5a623ff, #f5a623); padding:2px 8px; border-radius:4px; font-size:var(--zn-fs-xs);">${escapeHtml(ev.event_type)}</span>`;
+        typeBadge = `<span class="badge" style="background:rgba(245,166,35,0.15); border:1px solid #f5a623; color:var(--lt-t-f5a623ff, #f5a623); padding:2px 8px; border-radius:4px; font-size:var(--kb-fs-xs);">${escapeHtml(ev.event_type)}</span>`;
       } else if (ev.event_type.includes('SELF_TEST')) {
-        typeBadge = `<span class="badge" style="background:rgba(51,205,184,0.15); border:1px solid #33cdb8; color:var(--lt-t-33cdb8ff, #33cdb8); padding:2px 8px; border-radius:4px; font-size:var(--zn-fs-xs);">${escapeHtml(ev.event_type)}</span>`;
+        typeBadge = `<span class="badge" style="background:rgba(51,205,184,0.15); border:1px solid #33cdb8; color:var(--lt-t-33cdb8ff, #33cdb8); padding:2px 8px; border-radius:4px; font-size:var(--kb-fs-xs);">${escapeHtml(ev.event_type)}</span>`;
       }
       const durStr = ev.duration_sec ? `${ev.duration_sec}s` : '--';
       const battDelta = ev.start_battery_pct != null && ev.end_battery_pct != null
@@ -161,11 +161,11 @@ export async function fetchAndRenderUpsEvents() {
       const action = ev.action_taken || ev.status || '--';
 
       return `<tr>
-        <td style="font-size:var(--zn-fs-xs); font-variant-numeric:tabular-nums;">${escapeHtml(dateStr)}</td>
+        <td style="font-size:var(--kb-fs-xs); font-variant-numeric:tabular-nums;">${escapeHtml(dateStr)}</td>
         <td>${typeBadge}</td>
-        <td style="font-size:var(--zn-fs-xs);">${escapeHtml(durStr)}</td>
-        <td style="font-size:var(--zn-fs-xs);">${escapeHtml(battDelta)}</td>
-        <td style="font-size:var(--zn-fs-xs); color:var(--text);">${escapeHtml(action)}</td>
+        <td style="font-size:var(--kb-fs-xs);">${escapeHtml(durStr)}</td>
+        <td style="font-size:var(--kb-fs-xs);">${escapeHtml(battDelta)}</td>
+        <td style="font-size:var(--kb-fs-xs); color:var(--text);">${escapeHtml(action)}</td>
       </tr>`;
     }).join('');
   } catch (err) {
@@ -668,7 +668,7 @@ export function initUpsDrawerControls() {
       const candidates = res && Array.isArray(res.candidates) ? res.candidates : [];
       if (!discoverContainer) return;
       if (candidates.length === 0) {
-        discoverContainer.innerHTML = `<div style="font-size:var(--zn-fs-xs); color:var(--muted); padding:6px 0;">${t('upx.none_found', 'No active UPS daemons or USB devices detected on local ports.')}</div>`;
+        discoverContainer.innerHTML = `<div style="font-size:var(--kb-fs-xs); color:var(--muted); padding:6px 0;">${t('upx.none_found', 'No active UPS daemons or USB devices detected on local ports.')}</div>`;
         return;
       }
       discoverContainer.innerHTML = candidates.map((cand, idx) => {
@@ -680,10 +680,10 @@ export function initUpsDrawerControls() {
           ? (cand.description || `USB ${cand.vendor_id || ''}:${cand.product_id || ''}`)
           : (cand.port ? `${cand.host}:${cand.port}` : (cand.path || cand.host || 'local'));
         const displayTitle = cand.title || cand.label || typeLabel;
-        return `<div class="ups-discover-item" data-idx="${idx}" style="display:flex; justify-content:space-between; align-items:center; background:var(--zn-shade-30); border:1px solid var(--zn-line-8); padding:8px 12px; border-radius:6px; cursor:pointer;">
+        return `<div class="ups-discover-item" data-idx="${idx}" style="display:flex; justify-content:space-between; align-items:center; background:var(--kb-shade-30); border:1px solid var(--kb-line-8); padding:8px 12px; border-radius:6px; cursor:pointer;">
           <div>
-            <div style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--zn-text-strong);">${escapeHtml(displayTitle)}</div>
-            <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(typeLabel)} • <code>${escapeHtml(hostPort)}</code></div>
+            <div style="font-size:var(--kb-fs-xs); font-weight:600; color:var(--kb-text-strong);">${escapeHtml(displayTitle)}</div>
+            <div style="font-size:var(--kb-fs-xs); color:var(--muted);">${escapeHtml(typeLabel)} • <code>${escapeHtml(hostPort)}</code></div>
           </div>
           <button type="button" class="btn-rect is-small">${t('upx.apply', 'Apply')}</button>
         </div>`;

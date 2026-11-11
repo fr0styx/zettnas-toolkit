@@ -87,7 +87,7 @@ export function initVmManager() {
         <!-- Telemetry & Headroom Summary Header -->
         <div id="vm-telemetry-header" class="vm-telemetry-header vmm-box" style="display: flex;">
           <div class="vmm-row">
-            <div id="vm-kvm-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: var(--zn-fs-xs); font-weight: 600; background: rgba(16,185,129,0.15); color: var(--zn-text-ok); border: 1px solid rgba(16,185,129,0.3);">
+            <div id="vm-kvm-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: var(--kb-fs-xs); font-weight: 600; background: rgba(16,185,129,0.15); color: var(--kb-text-ok); border: 1px solid rgba(16,185,129,0.3);">
               <span aria-hidden="true">⚡</span> <span>${t('vmm.loading_kvm', 'Checking virtualization support…')}</span>
             </div>
             <div class="vm-action-btns-wrap vmm-row-2">
@@ -128,7 +128,7 @@ export function initVmManager() {
             <div class="vmm-box-2">
               <div class="vmm-row-xs">
                 <span class="vmm-semi-muted">${t('vmm.vcpu_alloc', 'vCPU threads in use')}</span>
-                <span id="vm-cpu-ratio-badge" style="font-size: var(--zn-fs-xs); padding: 1px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--zn-text-ok);">${t('vmm.ratio_default', '1:1 physical')}</span>
+                <span id="vm-cpu-ratio-badge" style="font-size: var(--kb-fs-xs); padding: 1px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--kb-text-ok);">${t('vmm.ratio_default', '1:1 physical')}</span>
               </div>
               <div class="vmm-row-3">
                 <span class="vmm-fs18-bold-strong" id="vm-cpu-allocated">0</span>
@@ -463,7 +463,7 @@ function buildVmCardHtml(vm, vms) {
         ? 'rgba(245,158,11,0.15)'
         : 'rgba(255,255,255,0.06)';
 
-      const stateBadge = `<span style="padding: 2px 7px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; background: ${statusBg}; color: ${statusColor}; text-transform: uppercase;">${escapeHtml(vmStateLabel(vm.state))}</span>`;
+      const stateBadge = `<span style="padding: 2px 7px; border-radius: 4px; font-size: var(--kb-fs-xs); font-weight: 700; background: ${statusBg}; color: ${statusColor}; text-transform: uppercase;">${escapeHtml(vmStateLabel(vm.state))}</span>`;
 
       const vncPort = vm.vnc_port || (5901 + (vms.findIndex((v) => v.id === vm.id) % 10));
       const vncDisplay = Math.max(1, vncPort - 5900);
@@ -484,7 +484,7 @@ function buildVmCardHtml(vm, vms) {
           : `<svg class="vmm-x-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#95a8ab" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
 
       return `
-      <div class="glassmorphic-card" data-vm-id="${escapeHtml(vm.id)}" data-state-key="${escapeHtml(stateKey)}" style="border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--zn-line-8); background: var(--lt-b-132225a6, rgba(19, 34, 37, 0.65));">
+      <div class="glassmorphic-card" data-vm-id="${escapeHtml(vm.id)}" data-state-key="${escapeHtml(stateKey)}" style="border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--kb-line-8); background: var(--lt-b-132225a6, rgba(19, 34, 37, 0.65));">
         <div>
           <div class="vmm-row-4">
             <div class="vmm-row-5">
@@ -511,7 +511,7 @@ function buildVmCardHtml(vm, vms) {
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: var(--zn-fs-xs); margin: 12px 0 8px; background: var(--zn-shade-30); padding: 8px; border-radius: 6px; border: 1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04));">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: var(--kb-fs-xs); margin: 12px 0 8px; background: var(--kb-shade-30); padding: 8px; border-radius: 6px; border: 1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04));">
             <div><span class="vmm-muted-2">${t('vm.compute', 'Compute')}:</span> <strong class="vmm-strong">${vm.vcpus} vCPUs</strong></div>
             <div><span class="vmm-muted-2">${t('vm.memory', 'Memory')}:</span> <strong class="vmm-accent">${vm.ram_gb} GB</strong></div>
             <div><span class="vmm-muted-2">${t('vm.disk', 'Disk')}:</span> <strong class="vmm-strong">${vm.disk_size_gb} GB (${vm.disk_format})</strong></div>
@@ -559,7 +559,7 @@ function buildVmCardHtml(vm, vms) {
                 </button>
               </span>
             </div>
-            <button class="btn-vm-join-toggle" data-id="${vm.id}" style="background: rgba(51,205,184,0.15); border: 1px solid rgba(51,205,184,0.3); border-radius: 4px; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; cursor: pointer; flex-shrink: 0;" title="${t('ui.join_vm_connection_options', 'Join VM connection options')}">
+            <button class="btn-vm-join-toggle" data-id="${vm.id}" style="background: rgba(51,205,184,0.15); border: 1px solid rgba(51,205,184,0.3); border-radius: 4px; color: var(--kb-text-accent); font-size: var(--kb-fs-xs); font-weight: 700; padding: 2px 6px; cursor: pointer; flex-shrink: 0;" title="${t('ui.join_vm_connection_options', 'Join VM connection options')}">
               ${t('vmm.join', 'Connect')} ${ico('▾')}
             </button>
           </div>
@@ -567,16 +567,16 @@ function buildVmCardHtml(vm, vms) {
           ${
             vm.iso_path
               ? `
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--zn-fs-xs); padding: 6px 10px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); border-radius: 4px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--kb-fs-xs); padding: 6px 10px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); border-radius: 4px; margin-bottom: 10px;">
               <span class="vmm-row-semi-warn">
                 <span aria-hidden="true">💿</span>
                 <span>${escapeHtml(t('vmm.iso_attached', 'ISO inserted ({name})', { name: vm.iso_path.split('/').pop() }))}</span>
               </span>
               <div class="vmm-row-7">
-                <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: var(--zn-text-warn); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; cursor: pointer;">
+                <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: var(--kb-text-warn); font-size: var(--kb-fs-xs); font-weight: 700; padding: 2px 8px; cursor: pointer;">
                   ${t('vmm.open_console', 'Open console')} ${ico('🖥️')}
                 </button>
-                <button class="btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: var(--zn-text-warn); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; cursor: pointer;" title="${t('vm.open_separate', 'Open in Separate Window')}">
+                <button class="btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: var(--kb-text-warn); font-size: var(--kb-fs-xs); font-weight: 700; padding: 2px 6px; cursor: pointer;" title="${t('vm.open_separate', 'Open in Separate Window')}">
                   ↗
                 </button>
               </div>
@@ -584,7 +584,7 @@ function buildVmCardHtml(vm, vms) {
           `
               : vm.ip_address
               ? `
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--zn-fs-xs); padding: 4px 8px; background: rgba(51,205,184,0.1); border: 1px solid rgba(51,205,184,0.25); border-radius: 4px; margin-bottom: 10px; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--kb-fs-xs); padding: 4px 8px; background: rgba(51,205,184,0.1); border: 1px solid rgba(51,205,184,0.25); border-radius: 4px; margin-bottom: 10px; position: relative;">
               <span class="vmm-row-accent-mono">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                 ${escapeHtml(vm.ip_address)}
@@ -612,11 +612,11 @@ function buildVmCardHtml(vm, vms) {
                 </div>
                 <div class="join-popover-item btn-join-web" data-ip="${escapeHtml(vm.ip_address)}">
                   <span>🌐 ${t('vm.open_web', 'Open Web UI (HTTP)')}</span>
-                  <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-a78bfaff, #a78bfa);">http://${escapeHtml(vm.ip_address)}</span>
+                  <span style="font-size: var(--kb-fs-xs); color: var(--lt-t-a78bfaff, #a78bfa);">http://${escapeHtml(vm.ip_address)}</span>
                 </div>
                 <div class="join-popover-item btn-join-vnc" data-id="${vm.id}">
                   <span>🔗 ${t('vm.native_vnc', 'Native VNC Client (vnc://)')}</span>
-                  <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-f59e0bff, #f59e0b);">${t('vmm.port', 'Port {port}', { port: vncPort })}</span>
+                  <span style="font-size: var(--kb-fs-xs); color: var(--lt-t-f59e0bff, #f59e0b);">${t('vmm.port', 'Port {port}', { port: vncPort })}</span>
                 </div>
                 <div class="join-popover-item btn-join-rdp" data-ip="${escapeHtml(vm.ip_address)}">
                   <span>🪟 ${t('vm.rdp', 'Remote Desktop (RDP)')}</span>
@@ -639,16 +639,16 @@ function buildVmCardHtml(vm, vms) {
           `
               : isRunning
               ? `
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--zn-fs-xs); padding: 6px 10px; background: rgba(51,205,184,0.08); border: 1px solid rgba(51,205,184,0.2); border-radius: 4px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--kb-fs-xs); padding: 6px 10px; background: rgba(51,205,184,0.08); border: 1px solid rgba(51,205,184,0.2); border-radius: 4px; margin-bottom: 10px;">
               <span class="vmm-row-accent-2">
                 <span aria-hidden="true">🖥️</span>
                 <span>${t('vmm.console_active', 'Display is on')}</span>
               </span>
               <div class="vmm-row-7">
-                <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(51,205,184,0.2); border: 1px solid rgba(51,205,184,0.4); border-radius: 4px; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; cursor: pointer;">
+                <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(51,205,184,0.2); border: 1px solid rgba(51,205,184,0.4); border-radius: 4px; color: var(--kb-text-accent); font-size: var(--kb-fs-xs); font-weight: 700; padding: 2px 8px; cursor: pointer;">
                   ${t('vmm.open_console', 'Open console')} ${ico('🖥️')}
                 </button>
-                <button class="btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui" style="background: rgba(51,205,184,0.2); border: 1px solid rgba(51,205,184,0.4); border-radius: 4px; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; cursor: pointer;" title="${t('vm.open_separate', 'Open in Separate Window')}">
+                <button class="btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui" style="background: rgba(51,205,184,0.2); border: 1px solid rgba(51,205,184,0.4); border-radius: 4px; color: var(--kb-text-accent); font-size: var(--kb-fs-xs); font-weight: 700; padding: 2px 6px; cursor: pointer;" title="${t('vm.open_separate', 'Open in Separate Window')}">
                   ↗
                 </button>
               </div>

@@ -1,4 +1,4 @@
-import { znZoomPlugin } from './chart-zoom.js'; // replaces chartjs-plugin-zoom and hammerjs (ARC-15)
+import { kbZoomPlugin } from './chart-zoom.js'; // replaces chartjs-plugin-zoom and hammerjs (ARC-15)
 /**
  * Kiboto Historical Metrics Chart
  * Multi-device time-series telemetry for CPU, RAM, individual Disks, and Fans.
@@ -58,7 +58,7 @@ async function getChart() {
       Legend,
       Tooltip,
       Filler,
-      znZoomPlugin
+      kbZoomPlugin
     );
     _ChartLib = Chart;
   }
@@ -414,7 +414,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
             padding: 10,
             cornerRadius: 8
           },
-          znZoom: {
+          kbZoom: {
             wheelSpeed: 0.08,
             onChange: (_chart, zoomed) => {
               _zoomed = Boolean(zoomed); // a zoomed chart is not read again under the reader

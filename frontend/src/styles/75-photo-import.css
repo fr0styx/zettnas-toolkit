@@ -3,8 +3,8 @@
 #modal-photo-import .phi-window { pointer-events: auto; width: min(520px, calc(100vw - 32px)); height: auto; min-height: 0; }
 #modal-photo-import .phi-body { display: flex; flex-direction: column; gap: 10px; }
 #modal-photo-import .phi-found { margin: 0; font-weight: 600; }
-#modal-photo-import .phi-label { font-size: var(--zn-fs-xs); font-weight: 600; color: var(--muted); }
+#modal-photo-import .phi-label { font-size: var(--kb-fs-xs); font-weight: 600; color: var(--muted); }
 #modal-photo-import .phi-row { display: flex; gap: 8px; }
-#modal-photo-import .phi-input { flex: 1; min-width: 0; padding: 8px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong); font-family: monospace; font-size: var(--zn-fs-xs); }
-#modal-photo-import .phi-note { margin: 0; font-size: var(--zn-fs-xs); color: var(--muted); }
+#modal-photo-import .phi-input { flex: 1; min-width: 0; padding: 8px 10px; background: var(--kb-shade-30); border: 1px solid var(--kb-line-15); border-radius: 6px; color: var(--kb-text-strong); font-family: monospace; font-size: var(--kb-fs-xs); }
+#modal-photo-import .phi-note { margin: 0; font-size: var(--kb-fs-xs); color: var(--muted); }
 #modal-photo-import .phi-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }

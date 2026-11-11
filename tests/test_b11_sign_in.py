@@ -21,21 +21,21 @@ def test_starting_sign_in_binds_it_to_this_browser(client, sso):
     res = client.get("/api/auth/oidc/login", follow_redirects=False)
     assert res.status_code == 303
     cookie = res.headers["set-cookie"]
-    assert "zn_sso_state=abc123" in cookie and "HttpOnly" in cookie and "samesite=lax" in cookie.lower()
+    assert "kb_sso_state=abc123" in cookie and "HttpOnly" in cookie and "samesite=lax" in cookie.lower()
 
 
 def test_a_sign_in_started_in_another_browser_is_refused(client, sso):
-    client.cookies.set("zn_sso_state", "someone-elses", path="/api")
+    client.cookies.set("kb_sso_state", "someone-elses", path="/api")
     res = client.get("/api/auth/oidc/callback?code=c&state=abc123", follow_redirects=False)
     assert res.status_code == 303 and "sso_error=" in res.headers["location"]
     assert "another%20browser" in res.headers["location"]
 
 
 def test_the_same_browser_signs_in_and_the_cookie_is_cleared(client, sso):
-    client.cookies.set("zn_sso_state", "abc123", path="/api")
+    client.cookies.set("kb_sso_state", "abc123", path="/api")
     res = client.get("/api/auth/oidc/callback?code=c&state=abc123", follow_redirects=False)
     assert res.status_code == 303 and res.headers["location"] == "/"
-    assert any("zn_sso_state=" in c and "Max-Age=0" in c for c in res.headers.get_list("set-cookie"))
+    assert any("kb_sso_state=" in c and "Max-Age=0" in c for c in res.headers.get_list("set-cookie"))
 
 
 def test_without_the_cookie_the_sign_in_is_refused(client, sso):

@@ -6,45 +6,45 @@
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-x { cursor: move; user-select: none; justify-content: space-between; align-items: center; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-fs16 { font-size: 16px; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-fs135-bold-strong { font-weight: 700; color: var(--zn-text-strong); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-fs135-bold-strong { font-weight: 700; color: var(--kb-text-strong); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-2 { display: flex; gap: 6px; align-items: center; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-xs-muted { display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); color: var(--muted); min-width: 0; overflow: hidden; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-xs-muted { display: flex; align-items: center; gap: 8px; font-size: var(--kb-fs-xs); color: var(--muted); min-width: 0; overflow: hidden; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-mono { font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 420px; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-box { display: flex; gap: 4px; padding: 8px 14px; background: var(--zn-shade-30); border-bottom: 1px solid var(--zn-line-8); }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-box { display: flex; gap: 4px; padding: 8px 14px; background: var(--kb-shade-30); border-bottom: 1px solid var(--kb-line-8); }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-col { flex: 1; overflow-y: auto; padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-grow { flex-direction: column; flex: 1; gap: 8px; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-3 { display: flex; justify-content: space-between; align-items: center; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted { font-size: var(--zn-fs-xs); color: var(--muted); }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted { font-size: var(--kb-fs-xs); color: var(--muted); }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-4 { display: flex; gap: 6px; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-mono-box-grow { flex: 1; width: 100%; height: 100%; min-height: 280px; background: transparent; border: none; outline: none; resize: none; padding: 12px; color: var(--zn-text-bright); font-family: var(--font-mono); font-size: var(--zn-fs-xs); line-height: 1.55; box-sizing: border-box; tab-size: 2; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-mono-box-grow-2 { flex: 1; width: 100%; height: 100%; min-height: 280px; background: transparent; border: none; outline: none; resize: none; padding: 12px; color: var(--zn-text-bright); font-family: var(--font-mono); font-size: var(--zn-fs-xs); line-height: 1.55; box-sizing: border-box; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-mono-box-grow { flex: 1; width: 100%; height: 100%; min-height: 280px; background: transparent; border: none; outline: none; resize: none; padding: 12px; color: var(--kb-text-bright); font-family: var(--font-mono); font-size: var(--kb-fs-xs); line-height: 1.55; box-sizing: border-box; tab-size: 2; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-mono-box-grow-2 { flex: 1; width: 100%; height: 100%; min-height: 280px; background: transparent; border: none; outline: none; resize: none; padding: 12px; color: var(--kb-text-bright); font-family: var(--font-mono); font-size: var(--kb-fs-xs); line-height: 1.55; box-sizing: border-box; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-grow-2 { flex-direction: column; flex: 1; gap: 10px; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-x-2 { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 10px; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-5 { display: flex; gap: 8px; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-box { background: var(--zn-glaze-10); }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-2 { color: var(--muted); font-size: var(--zn-fs-xs); grid-column: 1/-1; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-box { font-size: var(--zn-fs-xs); background: var(--zn-glaze-6); padding: 1px 4px; border-radius: 3px; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-col-box { padding: 12px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); border-radius: 8px; display: flex; flex-direction: column; gap: 8px; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-bold-strong { font-weight: 700; color: var(--zn-text-strong); font-size: var(--zn-fs-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-3 { font-size: var(--zn-fs-xs); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-box { background: var(--kb-glaze-10); }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-2 { color: var(--muted); font-size: var(--kb-fs-xs); grid-column: 1/-1; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-box { font-size: var(--kb-fs-xs); background: var(--kb-glaze-6); padding: 1px 4px; border-radius: 3px; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-col-box { padding: 12px; background: var(--kb-glaze-3); border: 1px solid var(--kb-line-8); border-radius: 8px; display: flex; flex-direction: column; gap: 8px; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-bold-strong { font-weight: 700; color: var(--kb-text-strong); font-size: var(--kb-fs-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-3 { font-size: var(--kb-fs-xs); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-6 { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-7 { display: flex; justify-content: flex-end; gap: 6px; margin-top: 4px; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-8 { display: flex; justify-content: space-between; align-items: center; user-select: none; cursor: move; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-9 { display: flex; align-items: center; gap: 8px; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-fs135-bold-strong-2 { font-weight: 700; color: var(--zn-text-strong); font-size: 13.5px; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-col-box-2 { padding: 12px 16px; background: var(--zn-shade-35); border-bottom: 1px solid var(--zn-line-6); display: flex; flex-direction: column; gap: 8px; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-fs135-bold-strong-2 { font-weight: 700; color: var(--kb-text-strong); font-size: 13.5px; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-col-box-2 { padding: 12px 16px; background: var(--kb-shade-35); border-bottom: 1px solid var(--kb-line-6); display: flex; flex-direction: column; gap: 8px; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-10 { position: relative; display: flex; align-items: center; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-4 { position: absolute; left: 10px; font-size: var(--zn-fs-xs); color: var(--muted); pointer-events: none; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-strong-box { width: 100%; padding: 7px 10px 7px 30px; font-size: var(--zn-fs-xs); background: var(--zn-shade-40); border: 1px solid var(--zn-line-12); border-radius: 6px; color: var(--zn-text-strong); outline: none; box-sizing: border-box; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-4 { position: absolute; left: 10px; font-size: var(--kb-fs-xs); color: var(--muted); pointer-events: none; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-strong-box { width: 100%; padding: 7px 10px 7px 30px; font-size: var(--kb-fs-xs); background: var(--kb-shade-40); border: 1px solid var(--kb-line-12); border-radius: 6px; color: var(--kb-text-strong); outline: none; box-sizing: border-box; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-grow-3 { flex: 1; overflow-y: auto; padding: 12px 16px; flex-direction: column; gap: 8px; min-height: 160px; max-height: 450px; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-5 { font-size: var(--zn-fs-xs); color: var(--muted); font-style: italic; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-center { text-align: center; padding: 32px 16px; color: var(--muted); font-size: var(--zn-fs-xs); }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-xs-muted-box { display: inline-flex; align-items: center; gap: 5px; font-size: var(--zn-fs-xs); color: var(--muted); background: var(--zn-glaze-6); padding: 2px 8px; border-radius: 12px; border: 1px solid var(--zn-line-10); }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-5 { font-size: var(--kb-fs-xs); color: var(--muted); font-style: italic; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-center { text-align: center; padding: 32px 16px; color: var(--muted); font-size: var(--kb-fs-xs); }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-xs-muted-box { display: inline-flex; align-items: center; gap: 5px; font-size: var(--kb-fs-xs); color: var(--muted); background: var(--kb-glaze-6); padding: 2px 8px; border-radius: 12px; border: 1px solid var(--kb-line-10); }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-box-2 { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-soft-mono-box { font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: var(--zn-glaze-6); color: var(--zn-text-soft); border: 1px solid var(--zn-line-10); font-family: var(--font-mono); }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-soft-mono-box { font-size: var(--kb-fs-xs); padding: 2px 6px; border-radius: 4px; background: var(--kb-glaze-6); color: var(--kb-text-soft); border: 1px solid var(--kb-line-10); font-family: var(--font-mono); }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-11 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-fs14 { font-size: 14px; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-fs135-strong { font-size: 13.5px; color: var(--zn-text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-mono { font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-fs135-strong { font-size: 13.5px; color: var(--kb-text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-mono { font-size: var(--kb-fs-xs); color: var(--muted); font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 :is(#stack-inspector-overlay, #stack-picker-overlay) .stk-row-12 { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
-:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-6 { font-size: var(--zn-fs-xs); color: var(--muted); margin-right: 2px; }
+:is(#stack-inspector-overlay, #stack-picker-overlay) .stk-xs-muted-6 { font-size: var(--kb-fs-xs); color: var(--muted); margin-right: 2px; }

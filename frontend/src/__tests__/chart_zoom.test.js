@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { panBy, windowOf, zoomAround, znZoomPlugin } from '../components/chart-zoom.js';
+import { panBy, windowOf, zoomAround, kbZoomPlugin } from '../components/chart-zoom.js';
 
 function fakeChart(n = 101, extra = {}) {
   return {
     data: { labels: Array.from({ length: n }, (_, i) => String(i)) },
-    options: { scales: { x: {} }, plugins: { znZoom: { minPoints: 5, ...extra } } },
+    options: { scales: { x: {} }, plugins: { kbZoom: { minPoints: 5, ...extra } } },
     scales: { x: { left: 0, right: 1000 } },
     update: vi.fn(),
   };
@@ -39,7 +39,7 @@ describe('chart zoom without hammerjs (ARC-15)', () => {
     canvas.style = {};
     canvas.getBoundingClientRect = () => ({ left: 0 });
     const c = { ...fakeChart(), canvas };
-    znZoomPlugin.afterInit(c);
+    kbZoomPlugin.afterInit(c);
     expect(canvas.style.touchAction).toBe('pan-y');
 
     const plain = Object.assign(new Event('wheel', { cancelable: true }), { deltaY: -1, clientX: 500 });
@@ -68,6 +68,6 @@ describe('chart zoom without hammerjs (ARC-15)', () => {
 
     c.resetZoom();
     expect(windowOf(c)).toEqual([0, 100]);
-    znZoomPlugin.afterDestroy(c);
+    kbZoomPlugin.afterDestroy(c);
   });
 });

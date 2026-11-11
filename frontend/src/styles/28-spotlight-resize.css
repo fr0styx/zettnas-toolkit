@@ -46,7 +46,7 @@
   width: 620px;
   max-width: 92vw;
   background: var(--lt-b-0e1c1fe0, rgba(14, 28, 31, 0.88));
-  border: 1px solid var(--zn-line-14);
+  border: 1px solid var(--kb-line-14);
   border-radius: 12px;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
   overflow: hidden;
@@ -59,8 +59,8 @@
   align-items: center;
   gap: 12px;
   padding: 14px 18px;
-  border-bottom: 1px solid var(--zn-line-8);
-  background: var(--zn-shade-25);
+  border-bottom: 1px solid var(--kb-line-8);
+  background: var(--kb-shade-25);
 }
 
 .spotlight-search-icon {
@@ -86,11 +86,11 @@
 }
 
 .spotlight-kbd-badge {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   font-family: var(--font-mono);
-  background: var(--zn-glaze-8);
-  border: 1px solid var(--zn-line-12);
+  background: var(--kb-glaze-8);
+  border: 1px solid var(--kb-line-12);
   color: var(--muted);
   padding: 2px 6px;
   border-radius: 4px;
@@ -139,20 +139,20 @@
 .spotlight-item-label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--zn-text-bright);
+  color: var(--kb-text-bright);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .spotlight-item-sub {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
   margin-left: 6px;
 }
 
 .spotlight-badge {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   padding: 2px 6px;
@@ -162,13 +162,13 @@
 
 .spotlight-badge-app {
   background: rgba(51, 205, 184, 0.15);
-  color: var(--zn-text-accent);
+  color: var(--kb-text-accent);
   border: 1px solid rgba(51, 205, 184, 0.3);
 }
 
 .spotlight-badge-action {
   background: rgba(245, 166, 35, 0.15);
-  color: var(--zn-text-warn);
+  color: var(--kb-text-warn);
   border: 1px solid rgba(245, 166, 35, 0.3);
 }
 
@@ -180,7 +180,7 @@
 
 .spotlight-badge-setting {
   background: rgba(192, 132, 252, 0.15);
-  color: var(--zn-text-ai);
+  color: var(--kb-text-ai);
   border: 1px solid rgba(192, 132, 252, 0.3);
 }
 
@@ -189,9 +189,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 14px;
-  background: var(--zn-shade-35);
-  border-top: 1px solid var(--zn-line-6);
-  font-size: var(--zn-fs-xs);
+  background: var(--kb-shade-35);
+  border-top: 1px solid var(--kb-line-6);
+  font-size: var(--kb-fs-xs);
   color: var(--muted);
 }
 

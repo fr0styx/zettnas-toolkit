@@ -4,7 +4,7 @@ Runs the search and answer eval (tests/rag_eval) against the model servers a Kib
 actually uses (the embedder and the chat server, read-only: nothing is installed, pulled or
 changed on them) and compares with the last recorded result of this machine.
 
-    /opt/zn-eval/bin/python scripts/hardware_ai_eval.py \\
+    /opt/kb-eval/bin/python scripts/hardware_ai_eval.py \\
         --embedder http://zettnas-eg2:11434 --embedding-model embeddinggemma-2-ov --dim 768 \\
         --chat http://zettnas-ovms:8000/v1 --chat-model Qwen3-4B
 
@@ -46,7 +46,7 @@ def _isolated_env() -> None:
     )
 
 
-def lock_matches(lock_path: str, recorded_path: str = "/opt/zn-eval/lock.sha256") -> bool:
+def lock_matches(lock_path: str, recorded_path: str = "/opt/kb-eval/lock.sha256") -> bool:
     """The runner's packages were installed from this checkout's requirements.lock."""
     try:
         with open(lock_path, "rb") as f:

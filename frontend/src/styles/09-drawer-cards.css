@@ -14,17 +14,17 @@
 .drawer-cards-flow.locked .drag-handle { display: none; }
 
 .preview-container {
-  background: var(--lt-b-080e10ff, #080e10); border: 1px solid var(--zn-line-6); border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;
+  background: var(--lt-b-080e10ff, #080e10); border: 1px solid var(--kb-line-6); border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;
 }
-.preview-label-row { display: flex; justify-content: space-between; align-items: center; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 1px; }
+.preview-label-row { display: flex; justify-content: space-between; align-items: center; font-size: var(--kb-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 1px; }
 .preview-housing { height: 14px; background: var(--lt-b-162325ff, #162325); border-radius: 7px; padding: 2px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); display: flex; align-items: center; }
 .preview-bar-element { width: 100%; height: 100%; border-radius: 5px; transition: background 0.2s, box-shadow 0.2s, opacity 0.2s; }
 
 .profiles-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 4px; }
 .profile-pill {
-  background: var(--lt-b-1f3337ff, #1f3337); color: var(--zn-text-muted); border: 1px solid var(--zn-line-8); border-radius: 8px; height: 34px; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; transition: all 0.15s ease;
+  background: var(--lt-b-1f3337ff, #1f3337); color: var(--kb-text-muted); border: 1px solid var(--kb-line-8); border-radius: 8px; height: 34px; font-size: var(--kb-fs-xs); font-weight: 700; cursor: pointer; transition: all 0.15s ease;
 }
-.profile-pill:hover { background: var(--lt-b-274045ff, #274045); color: var(--zn-text-strong); }
+.profile-pill:hover { background: var(--lt-b-274045ff, #274045); color: var(--kb-text-strong); }
 
 .profile-pill.active {
   background: rgba(51, 205, 184, 0.15);
@@ -38,7 +38,7 @@
 .fan-presets-bar {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid var(--zn-line-8);
+  border-top: 1px solid var(--kb-line-8);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -54,7 +54,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
@@ -82,10 +82,10 @@ select.fan-preset-select {
   width: 100%;
   height: 32px;
   background-color: var(--lt-b-122225ff, #122225);
-  border: 1px solid var(--zn-line-12);
+  border: 1px solid var(--kb-line-12);
   border-radius: 8px;
-  color: var(--zn-text-bright);
-  font-size: var(--zn-fs-xs);
+  color: var(--kb-text-bright);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   padding: 0 28px 0 10px;
   cursor: pointer;
@@ -107,7 +107,7 @@ select.fan-preset-select:focus {
   height: 32px;
   padding: 0 12px;
   border-radius: 8px;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -128,13 +128,13 @@ select.fan-preset-select:focus {
 
 .btn-fan-save {
   background: var(--lt-b-1f3337ff, #1f3337);
-  color: var(--zn-text);
-  border: 1px solid var(--zn-line-14);
+  color: var(--kb-text);
+  border: 1px solid var(--kb-line-14);
 }
 
 .btn-fan-save:hover {
   background: var(--lt-b-29454aff, #29454a);
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
   border-color: rgba(249, 115, 22, 0.5);
   box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
 }
@@ -157,7 +157,7 @@ select.fan-preset-select:focus {
   background: rgba(51, 205, 184, 0.28);
   border-color: var(--ok2);
   box-shadow: 0 0 10px rgba(51, 205, 184, 0.35);
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
 }
 
 .btn-fan-apply:active:not(:disabled) {
@@ -167,8 +167,8 @@ select.fan-preset-select:focus {
 .btn-fan-apply:disabled {
   opacity: 0.38;
   cursor: not-allowed;
-  border-color: var(--zn-line-8);
-  background: var(--zn-glaze-4);
+  border-color: var(--kb-line-8);
+  background: var(--kb-glaze-4);
   color: var(--lt-t-6c8084ff, #6c8084);
   box-shadow: none;
 }
@@ -180,13 +180,13 @@ select.fan-preset-select:focus {
 .btn-fan-delete {
   padding: 0 10px;
   background: rgba(239, 68, 68, 0.12);
-  color: var(--zn-text-crit);
+  color: var(--kb-text-crit);
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .btn-fan-delete:hover {
   background: rgba(239, 68, 68, 0.24);
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
   border-color: #ef4444;
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
 }
@@ -225,11 +225,11 @@ body.theme-yak select.fan-preset-select:focus {
 }
 
 
-.drawer-card { background: var(--lt-b-16272aff, #16272a); border: 1px solid var(--zn-line-6); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: opacity 0.25s ease, filter 0.25s ease; width: 100%; }
+.drawer-card { background: var(--lt-b-16272aff, #16272a); border: 1px solid var(--kb-line-6); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: opacity 0.25s ease, filter 0.25s ease; width: 100%; }
 .card-headline { display: flex; justify-content: space-between; align-items: center; }
-.card-head-title { font-size: 13px; font-weight: 800; color: var(--zn-text-bright); display: flex; align-items: center; white-space: nowrap; }
+.card-head-title { font-size: 13px; font-weight: 800; color: var(--kb-text-bright); display: flex; align-items: center; white-space: nowrap; }
 .card-head-val { font-size: 14px; font-weight: 800; color: var(--ok2); }
-.card-instruction { font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.35; }
+.card-instruction { font-size: var(--kb-fs-xs); color: var(--muted); line-height: 1.35; }
 
 .drawer-card.manual-override-disabled,
 .drawer-card.disabled {
@@ -244,18 +244,18 @@ body.theme-yak select.fan-preset-select:focus {
 
 .effects-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 4px; }
 .effect-btn {
-  background: var(--lt-b-1f3337ff, #1f3337); color: var(--zn-text-muted); border: 1px solid var(--zn-line-8); border-radius: 8px; height: 34px; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; transition: all 0.15s ease;
+  background: var(--lt-b-1f3337ff, #1f3337); color: var(--kb-text-muted); border: 1px solid var(--kb-line-8); border-radius: 8px; height: 34px; font-size: var(--kb-fs-xs); font-weight: 700; cursor: pointer; transition: all 0.15s ease;
 }
-.effect-btn:hover { background: var(--lt-b-274045ff, #274045); color: var(--zn-text-strong); }
+.effect-btn:hover { background: var(--lt-b-274045ff, #274045); color: var(--kb-text-strong); }
 .effect-btn.active { background: rgba(51, 205, 184, 0.15); color: var(--ok2); border-color: var(--ok2); box-shadow: 0 0 8px rgba(51, 205, 184, 0.25); }
 
 /* The system button (UX-6): secondary by default; .is-primary, .is-danger, .is-ghost;
    .is-small for dense rows; .is-block to fill the row. Sizes come from 50-components. */
 .btn-pill-toggle {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  min-height: var(--zn-btn-h, 32px); padding: 0 var(--zn-btn-px, 12px); line-height: 1.2; white-space: nowrap;
-  background: var(--lt-b-253c40ff, #253c40); color: var(--zn-text); border: 1px solid var(--zn-line-8); border-radius: 6px;
-  font-size: var(--zn-fs-sm, 13px); font-weight: 600; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  min-height: var(--kb-btn-h, 32px); padding: 0 var(--kb-btn-px, 12px); line-height: 1.2; white-space: nowrap;
+  background: var(--lt-b-253c40ff, #253c40); color: var(--kb-text); border: 1px solid var(--kb-line-8); border-radius: 6px;
+  font-size: var(--kb-fs-sm, 13px); font-weight: 600; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .btn-pill-toggle:hover { background: var(--lt-b-2a4449ff, #2a4449); } /* dark enough to get a light-theme value */
 .btn-pill-toggle.active {
@@ -279,11 +279,11 @@ body.theme-yak select.fan-preset-select:focus {
 #update-channel-chooser {
   display: inline-flex;
   align-items: center;
-  background: var(--zn-shade-35);
+  background: var(--kb-shade-35);
   padding: 2px;
   border-radius: 6px;
-  border: 1px solid var(--zn-line-10);
-  font-size: var(--zn-fs-xs);
+  border: 1px solid var(--kb-line-10);
+  font-size: var(--kb-fs-xs);
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -300,7 +300,7 @@ body.theme-yak select.fan-preset-select:focus {
 
 .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 4px; }
 .color-chip, .color-chip2 {
-  border: 2px solid transparent; border-radius: 8px; height: 34px; font-size: var(--zn-fs-xs); font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.15s ease, border-color 0.15s ease; position: relative; overflow: hidden;
+  border: 2px solid transparent; border-radius: 8px; height: 34px; font-size: var(--kb-fs-xs); font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.15s ease, border-color 0.15s ease; position: relative; overflow: hidden;
 }
 .color-chip:hover, .color-chip2:hover { transform: scale(1.04); }
 .color-chip.active, .color-chip2.active { border-color: #fff; box-shadow: 0 0 10px rgba(51, 205, 184, 0.5); }
@@ -312,7 +312,7 @@ body.theme-yak select.fan-preset-select:focus {
 .switch { position: relative; display: inline-block; width: 38px; height: 20px; flex-shrink: 0; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .toggle-slider {
-  position: absolute; cursor: pointer; inset: 0; background-color: var(--lt-b-253c40ff, #253c40); transition: .25s; border-radius: 20px; border: 1px solid var(--zn-line-10);
+  position: absolute; cursor: pointer; inset: 0; background-color: var(--lt-b-253c40ff, #253c40); transition: .25s; border-radius: 20px; border: 1px solid var(--kb-line-10);
 }
 .toggle-slider:before {
   position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; background-color: #95a8ab; transition: .25s; border-radius: 50%;

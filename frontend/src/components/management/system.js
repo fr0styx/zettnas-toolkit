@@ -57,7 +57,7 @@ function syncUpdateChannelUI() {
   const looks = {
     stable: ['rgba(51, 205, 184, 0.25)', 'var(--lt-t-33cdb8ff, #33cdb8)'],
     beta: ['rgba(245, 183, 49, 0.22)', 'var(--lt-t-f5b731ff, #f5b731)'],
-    edge: ['rgba(51, 205, 184, 0.25)', 'var(--zn-text-accent)'],
+    edge: ['rgba(51, 205, 184, 0.25)', 'var(--kb-text-accent)'],
   };
   for (const ch of UPDATE_CHANNELS) {
     const btn = document.getElementById(`btn-channel-${ch}`);
@@ -518,7 +518,7 @@ export function openDiagnosticsPreviewModal(data) {
         <div class="syj-row">
           <div class="syj-row-2">
             <span class="syj-fs14">${icon}</span>
-            <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: ${badgeColor}; letter-spacing: 0.5px;">${escapeHtml(title)}</span>
+            <span style="font-size: var(--kb-fs-xs); font-weight: 800; color: ${badgeColor}; letter-spacing: 0.5px;">${escapeHtml(title)}</span>
           </div>
           <span class="syj-xs-muted-mono">${escapeHtml(t('sys.kernel', 'ZettOS kernel {platform}', { platform: data.platform || '' }))}</span>
         </div>
@@ -553,12 +553,12 @@ export function openDiagnosticsPreviewModal(data) {
       <div class="syj-box">
         <div class="syj-xs-bold-muted">${t('dgx.storage', 'Storage')}</div>
         <div class="syj-xs-bold-strong">${t('dgx.pools', '{count, plural, one {# Pool} other {# Pools}}', { count: storage.pools_count || 0 })}</div>
-        <div style="font-size:var(--zn-fs-xs); color:${(storage.degraded_disks?.length || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${escapeHtml(t('sys.drives_standby', '{count, plural, one {# drive} other {# drives}} ({standby} asleep)', { count: storage.disks_count || 0, standby: storage.standby_count || 0 }))}</div>
+        <div style="font-size:var(--kb-fs-xs); color:${(storage.degraded_disks?.length || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${escapeHtml(t('sys.drives_standby', '{count, plural, one {# drive} other {# drives}} ({standby} asleep)', { count: storage.disks_count || 0, standby: storage.standby_count || 0 }))}</div>
       </div>
       <div class="syj-box">
         <div class="syj-xs-bold-muted">${t('dgx.docker', 'Docker Fleet')}</div>
         <div class="syj-xs-bold-strong">${docker.running || 0} / ${docker.total || 0} Running</div>
-        <div style="font-size:var(--zn-fs-xs); color:${(docker.restarting || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${escapeHtml(t('sys.restarting_dead', '{restarting} restarting, {dead} failed', { restarting: docker.restarting || 0, dead: docker.dead || 0 }))}</div>
+        <div style="font-size:var(--kb-fs-xs); color:${(docker.restarting || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${escapeHtml(t('sys.restarting_dead', '{restarting} restarting, {dead} failed', { restarting: docker.restarting || 0, dead: docker.dead || 0 }))}</div>
       </div>
       <div class="syj-box">
         <div class="syj-xs-bold-muted">${t('dgx.vms', 'Virtual Machines')}</div>

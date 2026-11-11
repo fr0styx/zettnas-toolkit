@@ -54,7 +54,7 @@ function renderPortAlert(st) {
   if (!alert) {
     alert = document.createElement('div');
     alert.id = 'pl-port-alert';
-    alert.className = 'zn-alert zn-alert--danger';
+    alert.className = 'kb-alert kb-alert--danger';
     alert.setAttribute('role', 'alert');
     $('pl-status').insertAdjacentElement('afterend', alert);
   }

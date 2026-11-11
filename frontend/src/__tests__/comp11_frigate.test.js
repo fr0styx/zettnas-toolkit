@@ -75,7 +75,7 @@ describe('camera alerts from Frigate (COMP-11)', () => {
     api.get.mockRejectedValueOnce(new Error('forbidden'));
     await renderFrigateEvents(mount);
     expect(mount.textContent).toContain("forbidden"); // with a sentence and Retry (NUX-14)
-    expect(mount.querySelector(".zn-load-error button")).not.toBeNull();
+    expect(mount.querySelector(".kb-load-error button")).not.toBeNull();
     await renderFrigateEvents(null);
   });
 });

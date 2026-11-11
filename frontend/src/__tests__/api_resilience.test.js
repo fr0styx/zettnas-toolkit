@@ -32,7 +32,7 @@ describe('API client resilience (FE-16)', () => {
     vi.spyOn(window, 'fetch').mockRejectedValueOnce(new TypeError('Failed to fetch')).mockResolvedValueOnce(ok({ a: 1 }));
     await api.get('/api/x').catch(() => {});
     expect(isOffline()).toBe(true);
-    expect(document.getElementById('zn-offline-banner').hidden).toBe(false);
+    expect(document.getElementById('kb-offline-banner').hidden).toBe(false);
     await api.get('/api/x');
     expect(isOffline()).toBe(false);
   });

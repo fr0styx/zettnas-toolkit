@@ -161,24 +161,24 @@ function _showTopNotification(msg, type = "error") {
   let icon = "ℹ️";
   let tagText = t('toast.info', "Information");
   // heading colours from the theme: the light theme needs darker ones for 4.5:1 (UX-27)
-  let tagColor = "var(--zn-toast-info)";
+  let tagColor = "var(--kb-toast-info)";
 
   if (isErr) {
     borderColor = "#ef4444";
     icon = "⚠️";
     // Security wording only for security events; an ordinary failure is just an error.
     tagText = isSecurity ? t('toast.security_alert', "Security alert") : t('toast.error_heading', "Error");
-    tagColor = "var(--zn-toast-err)";
+    tagColor = "var(--kb-toast-err)";
   } else if (isWarn) {
     borderColor = "#f59e0b";
     icon = "⚠️";
     tagText = t('toast.warning', "Warning");
-    tagColor = "var(--zn-toast-warn)";
+    tagColor = "var(--kb-toast-warn)";
   } else if (isSucc) {
     borderColor = "#22c55e";
     icon = "✅";
     tagText = t('toast.success', "Done");
-    tagColor = "var(--zn-toast-ok)";
+    tagColor = "var(--kb-toast-ok)";
   }
 
   toast.style.borderLeft = `4px solid ${borderColor}`;
@@ -188,7 +188,7 @@ function _showTopNotification(msg, type = "error") {
   toast.innerHTML = `
     <div class="tst-ico" aria-hidden="true">${icon}</div>
     <div class="tst-body">
-      <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: ${tagColor};">${escapeHtml(tagText)}</div>
+      <div style="font-size: var(--kb-fs-xs); font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: ${tagColor};">${escapeHtml(tagText)}</div>
       <div class="tst-msg">${escapeHtml(msg)}</div>
       ${details ? `<details class="top-toast-details"><summary>${escapeHtml(t('toast.details', 'Details'))}</summary><div class="top-toast-details-text">${escapeHtml(details)}</div></details>` : ''}
     </div>
@@ -387,17 +387,17 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     titleEl.innerHTML = `<span aria-hidden="true">${icon}</span> ${safeTitle}`;
     okBtn.innerHTML = escapeHtml(label);
     if (destructive) {
-      okBtn.style.background = "var(--zn-confirm-danger)";
-      okBtn.style.border = "1px solid var(--zn-confirm-danger-line)";
+      okBtn.style.background = "var(--kb-confirm-danger)";
+      okBtn.style.border = "1px solid var(--kb-confirm-danger-line)";
       headerBg.style.background = "rgba(239, 68, 68, 0.1)";
-      titleEl.style.color = "var(--zn-confirm-danger-title)";
+      titleEl.style.color = "var(--kb-confirm-danger-title)";
       card.style.borderColor = "rgba(239, 68, 68, 0.45)";
       card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(239, 68, 68, 0.15)";
     } else {
-      okBtn.style.background = "var(--zn-confirm-ok)";
-      okBtn.style.border = "1px solid var(--zn-confirm-ok-line)";
+      okBtn.style.background = "var(--kb-confirm-ok)";
+      okBtn.style.border = "1px solid var(--kb-confirm-ok-line)";
       headerBg.style.background = "rgba(51, 205, 184, 0.1)";
-      titleEl.style.color = "var(--zn-confirm-title)";
+      titleEl.style.color = "var(--kb-confirm-title)";
       card.style.borderColor = "";
       card.style.boxShadow = "";
     }

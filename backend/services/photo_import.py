@@ -271,7 +271,7 @@ def _safe_name(name: str) -> str:
 def _copy_in(e: Entry, folder: str) -> tuple[str, str, bytes]:
     """Copies the entry into a hidden part file in `folder`: (part path, sha256, first bytes)."""
     os.makedirs(folder, exist_ok=True)
-    part = os.path.join(folder, f".zn-import-{secrets.token_hex(6)}.part")
+    part = os.path.join(folder, f".kb-import-{secrets.token_hex(6)}.part")
     h, head = hashlib.sha256(), b""
     with e.open() as src, open(part, "wb") as dst:
         for chunk in iter(lambda: src.read(_CHUNK), b""):
@@ -310,7 +310,7 @@ def file_entry(e: Entry, when: float | None, destination: str, known: set[str]) 
     part = None
     try:
         name = _safe_name(e.name)
-        part, digest, head = _copy_in(e, os.path.join(destination, ".zn-import"))
+        part, digest, head = _copy_in(e, os.path.join(destination, ".kb-import"))
         if when is None and thumbs.kind(name) == "image":
             when = exif_taken(head)
         when = when if when is not None else e.mtime
@@ -370,15 +370,19 @@ class Importer:
             logger.warning("[PhotoImport] %s failed: %s", e.path, exc)
 
     def tidy(self) -> None:
-        """Removes the staging folder when it is empty (it is, unless the NAS stopped mid-copy)."""
-        staging = os.path.join(self.destination, ".zn-import")
-        try:
-            for n in os.listdir(staging):
-                if n.endswith(".part"):
-                    os.remove(os.path.join(staging, n))
-            os.rmdir(staging)
-        except OSError:
-            logger.debug("Could not tidy %s", staging, exc_info=True)  # kept: something else is in it
+        """Removes the staging folder when it is empty (it is, unless the NAS stopped mid-copy),
+        and the one an import before 2.0.2 left under its old name."""
+        for name in (".kb-import", "." + "zn-import"):
+            staging = os.path.join(self.destination, name)
+            if not os.path.isdir(staging):
+                continue
+            try:
+                for n in os.listdir(staging):
+                    if n.endswith(".part"):
+                        os.remove(os.path.join(staging, n))
+                os.rmdir(staging)
+            except OSError:
+                logger.debug("Could not tidy %s", staging, exc_info=True)  # kept: something else is in it
 
 
 # --- as a job --------------------------------------------------------------------------------------

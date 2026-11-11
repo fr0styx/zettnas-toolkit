@@ -26,18 +26,18 @@ const KINDS = {
 
 /** One row per role: Ask Kib and AI search (B11, AI-26). */
 export function rolesHtml(roles) {
-  return html`<table class="zn-table ai-access-roles"><thead><tr><th></th>
+  return html`<table class="kb-table ai-access-roles"><thead><tr><th></th>
       <th>${t('ai.access_ask', 'Ask Kib')}</th><th>${t('ai.access_search', 'AI search')}</th></tr></thead>
     <tbody>${roles.map(
-      (r) => html`<tr><td>${formatRole(r.id, r.name)}${r.locked ? html` <span class="zn-muted">${t('ai.access_always', 'Always on')}</span>` : ''}</td>
+      (r) => html`<tr><td>${formatRole(r.id, r.name)}${r.locked ? html` <span class="kb-muted">${t('ai.access_always', 'Always on')}</span>` : ''}</td>
         <td><input type="checkbox" role="switch" aria-label="${t('ai.access_ask', 'Ask Kib')}: ${r.name}" data-ai-role="${r.id}" data-ai-feature="roles" ${r.on ? 'checked' : ''} ${r.locked ? 'disabled' : ''}></td>
         <td><input type="checkbox" role="switch" aria-label="${t('ai.access_search', 'AI search')}: ${r.name}" data-ai-role="${r.id}" data-ai-feature="search_roles" ${r.search !== false ? 'checked' : ''} ${r.locked ? 'disabled' : ''}></td></tr>`,
     )}</tbody></table>`;
 }
 
 export function logHtml(rows) {
-  if (!rows || !rows.length) return html`<p class="zn-muted">${t('ai.access_log_empty', 'Nobody has asked Kib yet.')}</p>`;
-  return html`<table class="zn-table"><thead><tr>
+  if (!rows || !rows.length) return html`<p class="kb-muted">${t('ai.access_log_empty', 'Nobody has asked Kib yet.')}</p>`;
+  return html`<table class="kb-table"><thead><tr>
       <th>${t('ai.access_when', 'When')}</th><th>${t('ai.access_who', 'Who')}</th><th>${t('ai.access_model', 'Model')}</th>
       <th>${t('ai.access_kind', 'What')}</th><th>${t('ai.access_web', 'Web')}</th><th>${t('ai.access_result', 'Result')}</th></tr></thead>
     <tbody>${rows.map(
@@ -47,10 +47,10 @@ export function logHtml(rows) {
 }
 
 export function renderAiAccess(card, access, log) {
-  const body = html`<p class="zn-muted">${t('ai.access_desc_both', 'Choose which roles may ask Kib and use AI search. Kids and guests start switched off.')}</p>
+  const body = html`<p class="kb-muted">${t('ai.access_desc_both', 'Choose which roles may ask Kib and use AI search. Kids and guests start switched off.')}</p>
     ${rolesHtml(access.roles || [])}
     <details class="ai-access-log"><summary>${t('ai.access_log', 'Who asked Kib')}</summary>
-    <p class="zn-muted">${t('ai.access_log_desc', 'When, who, the model, web search and the result, for {days} days. What was asked is not kept here.', { days: access.log_days || 90 })}</p>
+    <p class="kb-muted">${t('ai.access_log_desc', 'When, who, the model, web search and the result, for {days} days. What was asked is not kept here.', { days: access.log_days || 90 })}</p>
     ${logHtml(log || [])}</details>`;
   card.innerHTML = uiCard({ title: t('ai.access_title', 'Who can use Kib'), body: String(body), variant: 'boxed' });
   card.querySelectorAll('[data-ai-role]').forEach((sw) => {

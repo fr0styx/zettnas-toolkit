@@ -23,7 +23,7 @@ function toggle(label, checked, onChange) {
   const input = el('input', { type: 'checkbox' });
   input.checked = Boolean(checked);
   input.addEventListener('change', () => onChange(input.checked));
-  return el('label', { class: 'zn-toggle' }, input, el('span', { text: label }));
+  return el('label', { class: 'kb-toggle' }, input, el('span', { text: label }));
 }
 
 async function save(changes) {
@@ -44,15 +44,15 @@ export async function renderGuardPanel() {
   try {
     [st, blocks] = await Promise.all([api.get('/api/security/ransomware'), api.get('/api/security/ip-blocks')]);
   } catch (err) {
-    host.replaceChildren(el('div', { class: 'zn-muted', text: t('guard.load_failed', 'Could not load the ransomware guard: {error}', { error: err.message }) }));
+    host.replaceChildren(el('div', { class: 'kb-muted', text: t('guard.load_failed', 'Could not load the ransomware guard: {error}', { error: err.message }) }));
     return;
   }
-  const title = el('div', { class: 'zn-title' });
+  const title = el('div', { class: 'kb-title' });
   setIconLabel(title, '🛡️', t('guard.title', 'Ransomware guard'));
   const parts = [title];
   if (st.frozen) {
     parts.push(
-      el('div', { class: 'zn-alert zn-alert--danger', role: 'alert' },
+      el('div', { class: 'kb-alert kb-alert--danger', role: 'alert' },
         el('strong', { text: t('guard.frozen', 'Writes are frozen.') }),
         ' ',
         t('guard.frozen_reason', '{reason} ({when}). Source: {user} from {ip}.', {
@@ -62,7 +62,7 @@ export async function renderGuardPanel() {
           ip: st.source?.ip || '-',
         }),
         el('button', {
-          class: 'btn-pill-toggle zn-push-end',
+          class: 'btn-pill-toggle kb-push-end',
           text: t('guard.unfreeze', 'Lift the freeze'),
           onclick: async () => {
             if (!window.confirm(t('guard.unfreeze_confirm', 'Only lift the freeze after the computer that made the changes is cleaned up. Continue?'))) return;
@@ -75,24 +75,24 @@ export async function renderGuardPanel() {
     );
   }
   parts.push(
-    el('div', { class: 'zn-muted', text: t('guard.desc', 'Stops all writes, snapshots pools that support it, blocks the address and alerts you when files are renamed or deleted en masse, renamed to ransomware extensions, or a guard file changes.') }),
+    el('div', { class: 'kb-muted', text: t('guard.desc', 'Stops all writes, snapshots pools that support it, blocks the address and alerts you when files are renamed or deleted en masse, renamed to ransomware extensions, or a guard file changes.') }),
     toggle(t('guard.enabled', 'Watch for ransomware'), st.enabled, (v) => save({ enabled: v })),
     toggle(
       t('guard.canaries', 'Place guard files in shares ({count} placed). Catches attacks over SMB and NFS too.', { count: st.canary_count || 0 }),
       st.canaries,
       (v) => save({ canaries: v })
     ),
-    el('div', { class: 'zn-title zn-title--sub', text: t('guard.blocked_title', 'Blocked addresses') })
+    el('div', { class: 'kb-title kb-title--sub', text: t('guard.blocked_title', 'Blocked addresses') })
   );
   if (!blocks.length) {
-    parts.push(el('div', { class: 'zn-muted', text: t('guard.none_blocked', 'None. Addresses with 20 failed sign-ins in 15 minutes are blocked for an hour.') }));
+    parts.push(el('div', { class: 'kb-muted', text: t('guard.none_blocked', 'None. Addresses with 20 failed sign-ins in 15 minutes are blocked for an hour.') }));
   } else {
-    const list = el('ul', { class: 'zn-list' });
+    const list = el('ul', { class: 'kb-list' });
     blocks.forEach((b) => {
       list.append(
         el('li', {},
           el('code', { text: b.ip }),
-          el('span', { class: 'zn-muted', text: ` ${b.reason || ''}${b.until ? ` · ${t('guard.until', 'until {when}', { when: formatDateTime(b.until * 1000) })}` : ''}` }),
+          el('span', { class: 'kb-muted', text: ` ${b.reason || ''}${b.until ? ` · ${t('guard.until', 'until {when}', { when: formatDateTime(b.until * 1000) })}` : ''}` }),
           el('button', {
             class: 'btn-pill-toggle',
             text: t('guard.unblock', 'Unblock'),

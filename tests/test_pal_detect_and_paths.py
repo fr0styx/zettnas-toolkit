@@ -79,20 +79,20 @@ def host_dev(tmp_path, monkeypatch):
 
 
 def test_disks_resolve_to_the_most_stable_by_id_name(host_dev):
-    a = GenericLinuxStorageAdapter(pool_path="/tmp/zn-pool")
+    a = GenericLinuxStorageAdapter(pool_path="/tmp/kb-pool")
     assert a._resolve_disk_path("sdzq") == str(host_dev / "disk" / "by-id" / "wwn-0x5000c500a1b2c3d4")
     assert a._resolve_disk_path("/dev/sdzq").endswith("wwn-0x5000c500a1b2c3d4")
 
 
 def test_disks_without_by_id_names_fall_back_to_the_node(host_dev):
-    a = GenericLinuxStorageAdapter(pool_path="/tmp/zn-pool")
+    a = GenericLinuxStorageAdapter(pool_path="/tmp/kb-pool")
     assert a._resolve_disk_path("sdzr") == str(host_dev / "sdzr")
     assert a._resolve_disk_path("/dev/sdzr") == "/dev/sdzr"  # absolute, not under the host /dev: kept
     assert a._resolve_disk_path("sdzx") == "/dev/sdzx"  # unknown: the conventional node
 
 
 def test_by_id_paths_are_kept_or_mapped_to_the_host(host_dev):
-    a = GenericLinuxStorageAdapter(pool_path="/tmp/zn-pool")
+    a = GenericLinuxStorageAdapter(pool_path="/tmp/kb-pool")
     on_host = "/disk/by-id/ata-WDC_WD40_XYZ"
     assert a._resolve_disk_path(on_host) == str(host_dev / "disk" / "by-id" / "ata-WDC_WD40_XYZ")
     assert a._resolve_disk_path("/dev/disk/by-id/missing-disk") == "/dev/disk/by-id/missing-disk"
@@ -101,7 +101,7 @@ def test_by_id_paths_are_kept_or_mapped_to_the_host(host_dev):
 def test_commands_report_failures_as_codes(monkeypatch):
     import subprocess
 
-    a = GenericLinuxStorageAdapter(pool_path="/tmp/zn-pool")
+    a = GenericLinuxStorageAdapter(pool_path="/tmp/kb-pool")
     monkeypatch.setattr(subprocess, "run", lambda *x, **k: (_ for _ in ()).throw(RuntimeError("boom")))
     assert a._run_cmd(["zfs", "list"]) == (1, "", "boom")
 

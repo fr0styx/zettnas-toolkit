@@ -1,12 +1,12 @@
 /* Apps from anywhere (public-apps.js): the published list, the form and the warning */
-#pa-card .pa-list, #fa-card .pa-list, #fleet-card .pa-list { list-style: none; margin: var(--zn-space-2) 0; padding: 0; display: grid; gap: var(--zn-space-2); }
-#pa-card .pa-item, #fa-card .pa-item { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: center; justify-content: space-between; overflow-wrap: anywhere; }
-#pa-card .pa-form { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: flex-end; margin: var(--zn-space-2) 0; }
-#pa-card .pa-form label { display: grid; gap: 4px; font-size: var(--zn-fs-xs); }
-#pa-card .pa-warn, #fa-card .pa-warn, #fleet-card .pa-warn { color: var(--alert, #ef4444); font-size: var(--zn-fs-xs); flex-basis: 100%; }
+#pa-card .pa-list, #fa-card .pa-list, #fleet-card .pa-list { list-style: none; margin: var(--kb-space-2) 0; padding: 0; display: grid; gap: var(--kb-space-2); }
+#pa-card .pa-item, #fa-card .pa-item { display: flex; flex-wrap: wrap; gap: var(--kb-space-2); align-items: center; justify-content: space-between; overflow-wrap: anywhere; }
+#pa-card .pa-form { display: flex; flex-wrap: wrap; gap: var(--kb-space-2); align-items: flex-end; margin: var(--kb-space-2) 0; }
+#pa-card .pa-form label { display: grid; gap: 4px; font-size: var(--kb-fs-xs); }
+#pa-card .pa-warn, #fa-card .pa-warn, #fleet-card .pa-warn { color: var(--alert, #ef4444); font-size: var(--kb-fs-xs); flex-basis: 100%; }
 #pa-card .pa-item .pa-warn, #fa-card .pa-item .pa-warn { flex-basis: auto; }
-.funnel-steps { display: grid; gap: 6px; margin: var(--zn-space-2) 0; }
+.funnel-steps { display: grid; gap: 6px; margin: var(--kb-space-2) 0; }
 .funnel-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
-.funnel-step { display: flex; flex-wrap: wrap; gap: 6px var(--zn-space-2); align-items: center; }
+.funnel-step { display: flex; flex-wrap: wrap; gap: 6px var(--kb-space-2); align-items: center; }
 .funnel-step.is-done { opacity: 0.7; }
-.funnel-mark { width: 1.2em; text-align: center; font-weight: 700; color: var(--zn-text-accent); }
+.funnel-mark { width: 1.2em; text-align: center; font-weight: 700; color: var(--kb-text-accent); }

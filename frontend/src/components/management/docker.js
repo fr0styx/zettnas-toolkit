@@ -457,7 +457,7 @@ function _bindDockerEvents() {
       const count = _dockerUpdatesCache?.updates_available_count || 0;
       showConfirmToast(
         t('dk.update_all_title', 'Update all containers'),
-        `${escapeHtml(t('dk.update_all_q', 'Update the {count, plural, one {# container} other {# containers}} with a newer image?', { count }))}<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(t('dk.update_all_note', 'Each one is pulled again and recreated; if it does not start, the old one comes back.'))}</span>`,
+        `${escapeHtml(t('dk.update_all_q', 'Update the {count, plural, one {# container} other {# containers}} with a newer image?', { count }))}<br><br><span style="font-size:var(--kb-fs-xs); color:var(--muted);">${escapeHtml(t('dk.update_all_note', 'Each one is pulled again and recreated; if it does not start, the old one comes back.'))}</span>`,
         async () => {
           btnUpdateAll.disabled = true;
           btnUpdateAll.innerHTML = '<span aria-hidden="true">⏳</span> <span>' + t('dk.updating_all', 'Updating all…') + '</span>';
@@ -676,7 +676,7 @@ export function renderDockerContainersTable() {
       <div class="dkr-col">
         <div class="dkr-fs32">🐳</div>
         <div class="dkr-fs135-semi-strong">${t('mgmt.docker_none_title', 'No Docker Containers Deployed')}</div>
-        <div style="font-size:var(--zn-fs-xs); color:var(--muted, #95a8ab); max-width:420px; line-height:1.5;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</div>
+        <div style="font-size:var(--kb-fs-xs); color:var(--muted, #95a8ab); max-width:420px; line-height:1.5;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</div>
         <button id="btn-empty-deploy-app" class="btn-pill-toggle is-primary dkr-x">
           🚀 ${t('mgmt.docker_open_catalog', 'Browse App Catalog')}
         </button>
@@ -891,7 +891,7 @@ function bindDockerTableEvents(tbody) {
       if (act === 'update-single') {
         showConfirmToast(
           t('dk.update_one_title', 'Update “{name}”', { name: cname }),
-          `${t('dk.update_one_q', 'Pull the newest image and update {name} to its latest release?', { name: bold(cname) })}<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(t('dk.update_one_note', 'Volumes, folders and environment settings stay as they are.'))}</span>`,
+          `${t('dk.update_one_q', 'Pull the newest image and update {name} to its latest release?', { name: bold(cname) })}<br><br><span style="font-size:var(--kb-fs-xs); color:var(--muted);">${escapeHtml(t('dk.update_one_note', 'Volumes, folders and environment settings stay as they are.'))}</span>`,
           async () => {
             actBtn.disabled = true;
             const originalContent = actBtn.innerHTML;
@@ -1233,7 +1233,7 @@ export async function openAppDeployModal(appId) {
             <!-- Pre-existing Container Action Choice Box -->
             <div id="adm-existing-box" style="display:none; padding:11px 13px; border-radius:6px; background:rgba(245, 166, 35, 0.09); border:1px solid rgba(245, 166, 35, 0.35); flex-direction:column; gap:8px;">
               <div class="dkd-row-3">
-                <div style="display:flex; align-items:center; gap:6px; color:var(--warn, #f5a623); font-weight:700; font-size:var(--zn-fs-xs);">
+                <div style="display:flex; align-items:center; gap:6px; color:var(--warn, #f5a623); font-weight:700; font-size:var(--kb-fs-xs);">
                   <span aria-hidden="true">⚠️</span> <span id="adm-existing-title">${t('catalog.existing_title', 'This app is already installed')}</span>
                 </div>
                 <span class="dkd-xs-bold-mono-box" id="adm-existing-status-badge">${t('catalog.state_running', 'Running')}</span>
@@ -1277,7 +1277,7 @@ export async function openAppDeployModal(appId) {
                       <button class="btn-pill-toggle" id="adm-download-btn">${ico('⬇️')} ${t('dk.download', 'Download')}</button>
                     </div>
                   </div>
-                  <pre id="adm-compose-pre" style="margin:0; background:var(--lt-b-091213ff, #091213); border:1px solid var(--zn-line-10); border-radius:6px; padding:10px; max-height:200px; overflow:auto; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--zn-text); line-height:1.45;"></pre>
+                  <pre id="adm-compose-pre" style="margin:0; background:var(--lt-b-091213ff, #091213); border:1px solid var(--kb-line-10); border-radius:6px; padding:10px; max-height:200px; overflow:auto; font-family:var(--font-mono, monospace); font-size:var(--kb-fs-xs); color:var(--kb-text); line-height:1.45;"></pre>
                 </div>
               </div>
             </details>
@@ -1304,7 +1304,7 @@ export async function openAppDeployModal(appId) {
             <!-- Real-time Activity Log Terminal -->
             <div class="dkd-x-3">
               <div class="dkd-xs-bold-muted">${t('catalog.install_log', 'What is happening')}</div>
-              <div id="adm-deploy-logs" style="background:var(--lt-b-060d0eff, #060d0e); border:1px solid var(--zn-line-10); border-radius:6px; height:160px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.5; color:var(--zn-text-soft);">
+              <div id="adm-deploy-logs" style="background:var(--lt-b-060d0eff, #060d0e); border:1px solid var(--kb-line-10); border-radius:6px; height:160px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--kb-fs-xs); line-height:1.5; color:var(--kb-text-soft);">
                 <div class="dkd-muted">${t('catalog.waiting', 'Starting...')}</div>
               </div>
             </div>
@@ -1312,10 +1312,10 @@ export async function openAppDeployModal(appId) {
             <!-- Success Callout -->
             <div id="adm-success-box" style="display:none; padding:12px 14px; background:rgba(51,205,184,0.12); border:1px solid var(--ok2, #33cdb8); border-radius:6px; align-items:center; justify-content:space-between; gap:12px;">
               <div>
-                <div style="font-weight:700; color:var(--ok2, #33cdb8); font-size:var(--zn-fs-xs);">🚀 ${t('catalog.live', 'The app is running')}</div>
+                <div style="font-weight:700; color:var(--ok2, #33cdb8); font-size:var(--kb-fs-xs);">🚀 ${t('catalog.live', 'The app is running')}</div>
                 <div class="dkd-xs-soft-2" id="adm-success-msg">${t('catalog.live_desc', 'It is installed and started.')}</div>
               </div>
-              <a id="adm-webui-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:var(--ok2, #33cdb8); color:var(--accent-contrast-fg); font-weight:700; font-size:var(--zn-fs-xs); padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+              <a id="adm-webui-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:var(--ok2, #33cdb8); color:var(--accent-contrast-fg); font-weight:700; font-size:var(--kb-fs-xs); padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
                 🌐 ${t('catalog.open_app', 'Open the app')} ↗
               </a>
             </div>
@@ -2192,8 +2192,8 @@ export async function openDockerPruneModal() {
                 <div class="dkd-xs-bold-strong" id="dpm-df-volumes">${t('common.loading', 'Loading…')}</div>
               </div>
               <div style="background:var(--lt-b-33cdb80f, rgba(51,205,184,0.06)); border:1px solid var(--lt-r-33cdb833, rgba(51,205,184,0.2)); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); text-transform:uppercase; font-weight:700;">${t('dk.reclaimable', 'Can be freed')}</div>
-                <div id="dpm-df-reclaimable" style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--ok2, #33cdb8); margin-top:2px;">--</div>
+                <div style="font-size:var(--kb-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); text-transform:uppercase; font-weight:700;">${t('dk.reclaimable', 'Can be freed')}</div>
+                <div id="dpm-df-reclaimable" style="font-size:var(--kb-fs-xs); font-weight:800; color:var(--ok2, #33cdb8); margin-top:2px;">--</div>
               </div>
             </div>
 
@@ -2224,7 +2224,7 @@ export async function openDockerPruneModal() {
                 <input class="dkd-x-5" type="checkbox" id="dpm-opt-volumes">
                 <div>
                   <strong>${t('dk.p_volumes', 'Remove unused local volumes')}</strong>
-                  <div style="font-size:var(--zn-fs-xs); color:var(--warn, #f5a623);">${t('dk.p_volumes_d', 'Careful: removes anonymous local volumes no container mounts.')}</div>
+                  <div style="font-size:var(--kb-fs-xs); color:var(--warn, #f5a623);">${t('dk.p_volumes_d', 'Careful: removes anonymous local volumes no container mounts.')}</div>
                 </div>
               </label>
               <label class="dkd-row-xs">
@@ -2237,14 +2237,14 @@ export async function openDockerPruneModal() {
             </div>
 
             <!-- Progress while the cleanup runs (it continues if this dialog is closed) -->
-            <div id="dpm-progress" class="zn-card zn-box" hidden>
-              <div class="zn-row zn-row--between">
-                <span id="dpm-progress-msg" class="zn-muted"></span>
+            <div id="dpm-progress" class="kb-card kb-box" hidden>
+              <div class="kb-row kb-row--between">
+                <span id="dpm-progress-msg" class="kb-muted"></span>
                 <strong id="dpm-progress-pct" class="dpm-progress-pct">0%</strong>
               </div>
               <div class="dpm-bar" id="dpm-bar" role="progressbar" aria-label="${t('ui.cleanup_progress', 'Cleanup progress')}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="dpm-bar-fill" id="dpm-bar-fill"></div></div>
-              <ul class="zn-list" id="dpm-steps"></ul>
-              <div class="zn-muted" id="dpm-freed"></div>
+              <ul class="kb-list" id="dpm-steps"></ul>
+              <div class="kb-muted" id="dpm-freed"></div>
             </div>
           </div>
           <div class="dkd-row-box">
@@ -2420,7 +2420,7 @@ export function renderPruneJob(job) {
       let detail = s.detail || '';
       if (s.key === 'images' && s.state === 'running' && job.images_total) detail = `${job.images_done} / ${job.images_total}`;
       if (s.freed_bytes > 0) detail = `${detail}${detail ? ' · ' : ''}${formatSize(s.freed_bytes)}`;
-      const det = Object.assign(document.createElement('span'), { className: 'zn-push-end zn-muted', textContent: detail });
+      const det = Object.assign(document.createElement('span'), { className: 'kb-push-end kb-muted', textContent: detail });
       li.append(icon, name, det);
       return li;
     }));
@@ -2519,7 +2519,7 @@ export async function openAppSourcesModal() {
               <div>
                 <div class="dkd-row-xs-bold-strong">
                   <span>${ico('⭐')} ${t('dk.lissy', 'Lissy93 Portainer templates')}</span>
-                  <span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(51,205,184,0.2); color:var(--accent);">790+ Apps</span>
+                  <span class="ci-badge" style="font-size:var(--kb-fs-xs); background:rgba(51,205,184,0.2); color:var(--accent);">790+ Apps</span>
                 </div>
                 <div class="dkd-xs-muted-3">
                   ${t('dk.lissy_desc', 'A large community list of self-hosted apps, web tools and stacks.')}
@@ -2696,10 +2696,10 @@ async function refreshSourcesUI() {
       const isBuiltin = src.id === 'builtin';
       const isEnabled = src.enabled !== false;
       const statusBadge = src.status === 'ok'
-        ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(51,205,184,0.15); color:var(--accent);">${ico('✓')} ${escapeHtml(t('dk.synced', 'Synced ({when})', { when: formatRelativeTime(src.last_synced) }))}</span>`
+        ? `<span class="ci-badge" style="font-size:var(--kb-fs-xs); background:rgba(51,205,184,0.15); color:var(--accent);">${ico('✓')} ${escapeHtml(t('dk.synced', 'Synced ({when})', { when: formatRelativeTime(src.last_synced) }))}</span>`
         : (src.status === 'error'
-          ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(239,68,68,0.15); color:var(--lt-t-fca5a5ff, #fca5a5);" title="${escapeHtml(src.error || 'Sync failed')}">${ico('⚠️')} ${t('ui.error', 'Error')}</span>`
-          : `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(51,205,184,0.15); color:var(--zn-text-accent);">🔄 ${escapeHtml(src.status || 'pending')}</span>`);
+          ? `<span class="ci-badge" style="font-size:var(--kb-fs-xs); background:rgba(239,68,68,0.15); color:var(--lt-t-fca5a5ff, #fca5a5);" title="${escapeHtml(src.error || 'Sync failed')}">${ico('⚠️')} ${t('ui.error', 'Error')}</span>`
+          : `<span class="ci-badge" style="font-size:var(--kb-fs-xs); background:rgba(51,205,184,0.15); color:var(--kb-text-accent);">🔄 ${escapeHtml(src.status || 'pending')}</span>`);
 
       const toggleBtnClass = isEnabled ? 'btn-pill-toggle active' : 'btn-pill-toggle';
       const toggleText = isEnabled ? 'Enabled' : 'Disabled';
@@ -2715,7 +2715,7 @@ async function refreshSourcesUI() {
             <div class="dkd-xs-muted-mono">
               ${escapeHtml(src.url)}
             </div>
-            ${src.error ? `<div style="font-size:var(--zn-fs-xs); color:var(--lt-t-fca5a5ff, #fca5a5); margin-top:3px;">${escapeHtml(src.error)}</div>` : ''}
+            ${src.error ? `<div style="font-size:var(--kb-fs-xs); color:var(--lt-t-fca5a5ff, #fca5a5); margin-top:3px;">${escapeHtml(src.error)}</div>` : ''}
           </div>
           <div class="dkd-row-8">
             <button class="${toggleBtnClass} asm-btn-toggle dkd-xs-3" data-sourceid="${escapeHtml(src.id)}" data-enabled="${isEnabled ? 'true' : 'false'}">
@@ -2878,7 +2878,7 @@ export function openSideloadAppModal() {
         showToast(t('toast.failed_to_inspect_manifest', 'Failed to inspect manifest: {error}', { error: err.message }), 'error');
         if (resultBox) {
           resultBox.style.display = 'block';
-          resultBox.innerHTML = `<div style="color:var(--alert, var(--lt-t-ef4444ff, #ef4444)); font-size:var(--zn-fs-xs);">${escapeHtml(t('dk.inspect_failed', 'Check failed: {error}', { error: err.message }))}</div>`;
+          resultBox.innerHTML = `<div style="color:var(--alert, var(--lt-t-ef4444ff, #ef4444)); font-size:var(--kb-fs-xs);">${escapeHtml(t('dk.inspect_failed', 'Check failed: {error}', { error: err.message }))}</div>`;
         }
       } finally {
         btnInspect.disabled = false;
@@ -2928,12 +2928,12 @@ export function renderSideloadInspection(app, rating, flags, container) {
           ${flags.map((f) => `<li>${escapeHtml(f)}</li>`).join('')}
         </ul>
       </div>`
-    : `<div style="margin-top:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-4ade80ff, #4ade80);">${ico('✓')} ${t('dk.audit_clean', 'No high-privilege risks found: a standard, isolated container.')}</div>`;
+    : `<div style="margin-top:8px; font-size:var(--kb-fs-xs); color:var(--lt-t-4ade80ff, #4ade80);">${ico('✓')} ${t('dk.audit_clean', 'No high-privilege risks found: a standard, isolated container.')}</div>`;
 
   container.innerHTML = `
     <div class="dkr-row">
       <div class="dkr-fs13-bold-strong">${escapeHtml(app.name)}</div>
-      <span class="ci-badge" style="font-size:var(--zn-fs-xs); background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; padding:2px 8px; border-radius:4px;">${badgeText}</span>
+      <span class="ci-badge" style="font-size:var(--kb-fs-xs); background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; padding:2px 8px; border-radius:4px;">${badgeText}</span>
     </div>
     <div class="dkr-xs-muted-2">
       <div><strong>${t('dk.image_l', 'Image:')}</strong> <code>${escapeHtml(app.image || 'compose-stack')}</code></div>

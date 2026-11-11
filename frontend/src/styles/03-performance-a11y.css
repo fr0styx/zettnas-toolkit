@@ -332,7 +332,7 @@ body.lcd-direct.lcd-theme-light.text-clarity-on #screen {
 
 /* Desktop Theme Active Badge indicator (in Mission Control) */
 .desktop-theme-active-badge {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   letter-spacing: 0.8px;
   text-transform: uppercase;
@@ -359,7 +359,7 @@ body.lcd-direct.lcd-theme-light.text-clarity-on #screen {
   border-radius: 6px;
   cursor: pointer;
   color: #cbd5e1;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 600;
   transition: all 0.15s ease;
   user-select: none;

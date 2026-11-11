@@ -10,7 +10,7 @@
 }
 .drawer-fan-unified-col {
   background: var(--lt-b-0e1b1dff, #0e1b1d);
-  border: 1px solid var(--zn-line-6);
+  border: 1px solid var(--kb-line-6);
   border-radius: 10px;
   padding: 10px 8px;
   display: flex;
@@ -49,19 +49,19 @@
 .df-tach-box .df-rpm {
   font-size: 15px;
   font-weight: 800;
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
   font-variant-numeric: tabular-nums;
   margin-top: 2px;
 }
 .df-tach-box .df-label {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   letter-spacing: 1px;
   color: var(--muted);
 }
 .df-zone-box {
   width: 100%;
-  border-top: 1px solid var(--zn-line-6);
+  border-top: 1px solid var(--kb-line-6);
   padding-top: 6px;
   display: flex;
   flex-direction: column;
@@ -70,7 +70,7 @@
   text-align: center;
 }
 .df-zone-box .zp-lbl {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   color: var(--muted);
   letter-spacing: 0.5px;
@@ -78,11 +78,11 @@
 .df-zone-box .zp-val {
   font-size: 13px;
   font-weight: 800;
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
   font-variant-numeric: tabular-nums;
 }
 .df-zone-box .zp-pwm {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 700;
   color: var(--ok2);
 }
@@ -92,7 +92,7 @@
    ========================================================================= */
 .fan-curve-box {
   background: var(--lt-b-080e10ff, #080e10);
-  border: 1px solid var(--zn-line-8);
+  border: 1px solid var(--kb-line-8);
   border-radius: 10px;
   padding: 12px 14px;
   display: flex;
@@ -153,13 +153,13 @@
 }
 
 .mgmt-hardware-tab-slot .curve-legend-row {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   padding: 4px 2px 0 2px;
   gap: 10px;
 }
 
 .mgmt-hardware-tab-slot .legend-item {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   gap: 6px;
   padding: 3px 6px;
 }
@@ -170,19 +170,19 @@
 }
 
 .mgmt-hardware-tab-slot #fan-curve-range-val {
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   padding: 3px 10px;
 }
 
 .mgmt-hardware-tab-slot #curve-readout-text {
-  font-size: var(--zn-fs-xs) !important;
+  font-size: var(--kb-fs-xs) !important;
 }
 
 .curve-legend-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   color: var(--muted);
   letter-spacing: 0.8px;
@@ -199,7 +199,7 @@
   border-radius: 4px;
 }
 .legend-item:hover {
-  background: var(--zn-glaze-5);
+  background: var(--kb-glaze-5);
 }
 .legend-dot {
   width: 7px;
@@ -208,9 +208,9 @@
 }
 .btn-reset-curve-view {
   background: var(--lt-b-1b2e32ff, #1b2e32);
-  border: 1px solid var(--zn-line-10);
+  border: 1px solid var(--kb-line-10);
   color: var(--lt-t-a8bcc0ff, #a8bcc0);
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 5px;
@@ -219,12 +219,12 @@
 }
 .btn-reset-curve-view:hover {
   background: var(--lt-b-274045ff, #274045);
-  color: var(--zn-text-strong);
+  color: var(--kb-text-strong);
 }
 
 .thermal-inspector-box {
   background: var(--lt-b-0e1b1dff, #0e1b1d);
-  border: 1px solid var(--zn-line-6);
+  border: 1px solid var(--kb-line-6);
   border-radius: 8px;
   padding: 10px 12px;
   display: flex;
@@ -235,14 +235,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
 }
 .ti-row span {
   color: var(--muted);
   font-weight: 700;
 }
 .ti-row strong {
-  color: var(--zn-text);
+  color: var(--kb-text);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -414,14 +414,14 @@
 #stack-inspector-overlay .stack-inspector-window,
 .stack-inspector-window {
   background: var(--lt-b-0e1b1dff, #0e1b1d) !important;
-  border: 1px solid var(--zn-line-12) !important;
+  border: 1px solid var(--kb-line-12) !important;
   box-shadow: 0 25px 65px rgba(0, 0, 0, 0.9) !important;
   border-radius: 12px;
   overflow: hidden;
 }
 #stack-inspector-overlay .smart-modal-header {
   background: var(--lt-b-122225ff, #122225) !important;
-  border-bottom: 1px solid var(--zn-line-8);
+  border-bottom: 1px solid var(--kb-line-8);
 }
 
 #console-modal-overlay:not(.open),

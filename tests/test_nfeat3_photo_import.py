@@ -93,7 +93,7 @@ def test_a_takeout_in_two_parts_comes_home_by_date_once(tmp_path):
     assert f"{ym(1609459200)}/IMG_0003-edited.jpg" in got  # the original's sidecar
     assert f"{ym(1700000000)}/Screenshot_20190731-101130_WhatsApp_Business_Extra.jpg" in got  # cut-short name
     assert any(k.endswith("VID_0004.mp4") for k in got)  # no record: the zip's own date
-    assert not any(".part" in k or ".zn-import" in k for k in got)
+    assert not any(".part" in k or ".kb-import" in k for k in got)
 
 
 def test_running_it_again_brings_nothing_twice(tmp_path):
@@ -193,7 +193,7 @@ def test_it_runs_as_a_job_for_who_started_it(tmp_path, clean_jobs):
     done = _wait_done(job_id)
     assert done["status"] == "done" and done["owner"] == "ana" and done["kind"] == "photo_import"
     assert done["title_params"] == {"source": "Google Photos"} and done["detail"] == "5 brought home, 1 already there"
-    assert not os.path.exists(os.path.join(dest, ".zn-import"))
+    assert not os.path.exists(os.path.join(dest, ".kb-import"))
 
 
 def test_an_unreadable_export_fails_the_job_with_the_reason(tmp_path, clean_jobs):

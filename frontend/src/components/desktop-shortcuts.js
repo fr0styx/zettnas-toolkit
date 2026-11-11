@@ -578,13 +578,13 @@ function renderSystemShortcutsList(overlay) {
           <div class="asd-card-text">
             <div class="asd-card-row">
               <span class="asd-card-name">${escapeHtml(s.name)}</span>
-              ${s.badge ? `<span style="font-size:var(--zn-fs-xs); padding:1px 5px; border-radius:3px; background:var(--zn-glaze-8); color:var(--muted); font-family:var(--font-mono, monospace); text-transform:uppercase;">${escapeHtml(s.badge)}</span>` : ''}
+              ${s.badge ? `<span style="font-size:var(--kb-fs-xs); padding:1px 5px; border-radius:3px; background:var(--kb-glaze-8); color:var(--muted); font-family:var(--font-mono, monospace); text-transform:uppercase;">${escapeHtml(s.badge)}</span>` : ''}
             </div>
             <div class="asd-card-desc">${escapeHtml(s.desc)}</div>
           </div>
         </div>
 
-        <button class="btn-pill-toggle shortcut-toggle-btn ${isActive ? 'active' : ''}" data-shortcut-id="${s.id}" style="flex-shrink:0; padding:5px 12px; font-size:var(--zn-fs-xs); font-weight:700; cursor:pointer; ${isActive ? 'color:var(--lt-t-22c55eff, #22c55e); border-color:rgba(34,197,94,0.4); background:rgba(34,197,94,0.14);' : 'color:var(--zn-text-accent); border-color:rgba(79,216,196,0.4); background:rgba(51,205,184,0.12);'}">
+        <button class="btn-pill-toggle shortcut-toggle-btn ${isActive ? 'active' : ''}" data-shortcut-id="${s.id}" style="flex-shrink:0; padding:5px 12px; font-size:var(--kb-fs-xs); font-weight:700; cursor:pointer; ${isActive ? 'color:var(--lt-t-22c55eff, #22c55e); border-color:rgba(34,197,94,0.4); background:rgba(34,197,94,0.14);' : 'color:var(--kb-text-accent); border-color:rgba(79,216,196,0.4); background:rgba(51,205,184,0.12);'}">
           ${isActive ? '✓ On Desktop' : '+ Add to Desktop'}
         </button>
       </div>

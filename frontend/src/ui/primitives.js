@@ -3,8 +3,8 @@
 // They write the classes the app already styles (see docs/UI_PRIMITIVES.md), so new markup
 // looks like the rest without inline styles:
 //   Button     .btn-pill-toggle (+ is-primary | is-danger | is-ghost, is-small, is-block)
-//   Field      .zn-field: a label above its control, with an optional hint
-//   Card       .zn-card (+ zn-card--boxed | zn-card--divided), with an optional .zn-title
+//   Field      .kb-field: a label above its control, with an optional hint
+//   Card       .kb-card (+ kb-card--boxed | kb-card--divided), with an optional .kb-title
 //   PaneHeader .mgmt-card-intro: the icon, title and one-line description atop a pane
 //
 // Text arguments are escaped (html``). body and control are markup: pass an html`` result.
@@ -35,14 +35,14 @@ export function uiButton({ label = '', variant = '', small = false, block = fals
 
 export function uiField({ label = '', control = '', hint = '', id } = {}) {
   const forAttr = id ? html` for="${id}"` : '';
-  const hintHtml = hint ? html`<span class="zn-muted">${hint}</span>` : '';
-  return String(html`<label class="zn-field"${forAttr}><span>${label}</span>${raw(control)}${hintHtml}</label>`);
+  const hintHtml = hint ? html`<span class="kb-muted">${hint}</span>` : '';
+  return String(html`<label class="kb-field"${forAttr}><span>${label}</span>${raw(control)}${hintHtml}</label>`);
 }
 
 export function uiCard({ title = '', body = '', variant = '' } = {}) {
-  const cls = ['zn-card'];
-  if (variant === 'boxed' || variant === 'divided') cls.push(`zn-card--${variant}`);
-  const head = title ? html`<div class="zn-title">${title}</div>` : '';
+  const cls = ['kb-card'];
+  if (variant === 'boxed' || variant === 'divided') cls.push(`kb-card--${variant}`);
+  const head = title ? html`<div class="kb-title">${title}</div>` : '';
   return String(html`<div class="${cls.join(' ')}">${head}${raw(body)}</div>`);
 }
 

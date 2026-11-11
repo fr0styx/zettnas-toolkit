@@ -123,7 +123,7 @@ def test_the_log_file_rotates_and_goes_into_the_bundle(tmp_path, monkeypatch):
     from backend import logging_config
 
     monkeypatch.setattr(logging_config, "test_mode", lambda: False)  # NARC-6: the one switch
-    root = logging.getLogger("zn-test-file")
+    root = logging.getLogger("kb-test-file")
     root.propagate = False
     path = logging_config._add_file_handler(root, logging.Formatter("%(message)s"))
     assert path == str(tmp_path / "logs" / "kiboto.log")
@@ -147,8 +147,8 @@ def test_no_log_file_in_tests_or_when_switched_off(tmp_path, monkeypatch):
 
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
     monkeypatch.setenv("TESTING", "1")
-    assert logging_config._add_file_handler(logging.getLogger("zn-x"), logging.Formatter()) is None
+    assert logging_config._add_file_handler(logging.getLogger("kb-x"), logging.Formatter()) is None
     monkeypatch.delenv("TESTING")
     monkeypatch.setenv("KIBOTO_LOG_FILE", "0")
-    assert logging_config._add_file_handler(logging.getLogger("zn-x"), logging.Formatter()) is None
+    assert logging_config._add_file_handler(logging.getLogger("kb-x"), logging.Formatter()) is None
     assert not os.path.exists(tmp_path / "logs")

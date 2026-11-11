@@ -2,7 +2,7 @@
  * ARC-31: values put into HTML templates (innerHTML, outerHTML, insertAdjacentHTML) are escaped.
  * Each file may not gain an unescaped ${value}: wrap it in escapeHtml(), or build the element
  * with textContent. Numbers, t(), icons and other HTML builders count as safe. After removing
- * some, record the new numbers: ZN_UPDATE_HTML_BASELINE=1 npx vitest run arc31_html_escape
+ * some, record the new numbers: KIBOTO_UPDATE_HTML_BASELINE=1 npx vitest run arc31_html_escape
  */
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
@@ -70,7 +70,7 @@ describe('HTML templates escape what they insert (ARC-31)', () => {
       const n = unescapedValues(readFileSync(file, 'utf8')).length;
       if (n) now[relative(ROOT, file)] = n;
     }
-    if (process.env.ZN_UPDATE_HTML_BASELINE) {
+    if (process.env.KIBOTO_UPDATE_HTML_BASELINE) {
       writeFileSync(BASELINE, JSON.stringify(Object.fromEntries(Object.entries(now).sort()), null, 2) + '\n');
       return;
     }

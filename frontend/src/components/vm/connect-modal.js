@@ -86,7 +86,7 @@ export function openVmConnectModal(vmId, vmObj = null) {
             </span>
             <span class="vmk-xs-bold-strong">${escapeHtml(name)}</span>
           </div>
-          <span style="font-size: var(--zn-fs-xs); font-family: monospace; color: ${ip ? '#4fd8c4' : 'var(--muted)'};">
+          <span style="font-size: var(--kb-fs-xs); font-family: monospace; color: ${ip ? '#4fd8c4' : 'var(--muted)'};">
             ${ip ? `IP: ${escapeHtml(ip)}` : t('vmc.no_ip', 'No network address yet (waiting for DHCP)')}
           </span>
         </div>
@@ -102,10 +102,10 @@ export function openVmConnectModal(vmId, vmObj = null) {
               </div>
             </div>
             <div class="vmk-row-4">
-              <button class="btn-console-act btn-connect-gui" style="padding: 4px 10px; font-size: var(--zn-fs-xs); background: #0a7a70; color: #fff; border-color: #33cdb8;">
+              <button class="btn-console-act btn-connect-gui" style="padding: 4px 10px; font-size: var(--kb-fs-xs); background: #0a7a70; color: #fff; border-color: #33cdb8;">
                 ${t('vmc.launch_gui', 'Open the desktop')}
               </button>
-              <button class="btn-console-act btn-connect-tty" style="padding: 4px 10px; font-size: var(--zn-fs-xs); background: rgba(52,211,153,0.15); color: var(--zn-text-ok); border-color: rgba(52,211,153,0.4);">
+              <button class="btn-console-act btn-connect-tty" style="padding: 4px 10px; font-size: var(--kb-fs-xs); background: rgba(52,211,153,0.15); color: var(--kb-text-ok); border-color: rgba(52,211,153,0.4);">
                 ${t('vmc.tty', 'Serial terminal')}
               </button>
             </div>
@@ -142,11 +142,11 @@ export function openVmConnectModal(vmId, vmObj = null) {
                 <div class="vmk-xs-muted">${t('vmc.ssh_desc', 'A terminal command for OpenSSH or PuTTY')}</div>
               </div>
             </div>
-            <button class="btn-console-act btn-connect-copy-ssh" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: var(--zn-fs-xs); ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
+            <button class="btn-console-act btn-connect-copy-ssh" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: var(--kb-fs-xs); ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
               ${ico('📋')} ${t('vm.copy_ssh', 'Copy SSH Command')}
             </button>
           </div>
-          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--zn-shade-35); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--zn-fs-xs); color: ${ip ? '#34d399' : 'var(--muted)'};">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--kb-shade-35); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--kb-fs-xs); color: ${ip ? '#34d399' : 'var(--muted)'};">
             <span>${ip ? escapeHtml(sshCmd) : t('vm.why_no_ip', 'Waiting for the VM to get a network address')}</span>
           </div>
         </div>
@@ -162,15 +162,15 @@ export function openVmConnectModal(vmId, vmObj = null) {
               </div>
             </div>
             <div class="vmk-row-4">
-              <button class="btn-console-act btn-connect-copy-rdp" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: var(--zn-fs-xs); ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
+              <button class="btn-console-act btn-connect-copy-rdp" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: var(--kb-fs-xs); ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
                 ${ico('📋')} ${t('vmc.copy_rdp', 'Copy RDP address')}
               </button>
-              <button class="btn-console-act btn-connect-dl-rdp" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: var(--zn-fs-xs); ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
+              <button class="btn-console-act btn-connect-dl-rdp" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: var(--kb-fs-xs); ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
                 ${ico('⬇')} ${t('vmc.dl_rdp', '.rdp file')}
               </button>
             </div>
           </div>
-          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--zn-shade-35); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--zn-fs-xs); color: ${ip ? '#eab308' : 'var(--muted)'};">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--kb-shade-35); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--kb-fs-xs); color: ${ip ? '#eab308' : 'var(--muted)'};">
             <span>${ip ? escapeHtml(rdpUri) : t('vm.why_no_ip', 'Waiting for the VM to get a network address')}</span>
             <span class="vmk-xs-muted-2">${t('vmm.port', 'Port {port}', { port: 3389 })}</span>
           </div>
@@ -339,7 +339,7 @@ export function openKvmDiagnosticsModal(kvm = null) {
           ${kvmChecks(k).map((c) => `
           <div class="vmk-row-xs-box">
             <span>${c.label}</span>
-            <span style="font-weight: 700; color: var(--zn-text-${c.tone});">${ico(c.icon)} ${c.text}</span>
+            <span style="font-weight: 700; color: var(--kb-text-${c.tone});">${ico(c.icon)} ${c.text}</span>
           </div>`).join('')}
         </div>
 
@@ -354,7 +354,7 @@ export function openKvmDiagnosticsModal(kvm = null) {
             </div>
             
             <div class="vmk-x-2">
-              <pre style="margin: 0; padding: 8px 12px; background: var(--lt-b-0d191bff, #0d191b); border: 1px solid var(--zn-line-10); border-radius: 4px; font-size: var(--zn-fs-xs); color: var(--zn-text-accent); font-family: monospace;">--device /dev/kvm</pre>
+              <pre style="margin: 0; padding: 8px 12px; background: var(--lt-b-0d191bff, #0d191b); border: 1px solid var(--kb-line-10); border-radius: 4px; font-size: var(--kb-fs-xs); color: var(--kb-text-accent); font-family: monospace;">--device /dev/kvm</pre>
               <button id="btn-copy-kvm-param" class="btn-pill-toggle vmk-xs-3">${t('catalog.copy', 'Copy')}</button>
             </div>
 

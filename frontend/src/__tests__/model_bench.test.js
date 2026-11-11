@@ -32,13 +32,13 @@ describe('model benchmark card (D2)', () => {
     await renderModelBench();
     const card = document.getElementById('ai-model-bench-card');
     expect(card.hidden).toBe(false);
-    expect(card.querySelectorAll('.zn-table tr').length).toBe(3);
+    expect(card.querySelectorAll('.kb-table tr').length).toBe(3);
     // the long document question: measured for the first model, a dash where it is missing
-    const rows = [...card.querySelectorAll('.zn-table tr')].map((tr) => [...tr.children].map((c) => c.textContent));
+    const rows = [...card.querySelectorAll('.kb-table tr')].map((tr) => [...tr.children].map((c) => c.textContent));
     expect(rows[0]).toContain('Long question');
     expect(rows[1][3]).toBe('26.6 s');
     expect(rows[2][3]).toBe('—');
-    const use = [...card.querySelectorAll('.zn-row button')].find((b) => b.textContent.includes('balanced'));
+    const use = [...card.querySelectorAll('.kb-row button')].find((b) => b.textContent.includes('balanced'));
     use.click();
     await vi.waitFor(() => expect(posts).toContainEqual(['/api/ai/models/benchmark/apply', { tier: 'balanced' }]));
     // the click handler finishes with its message; let that and anything it logs settle before the

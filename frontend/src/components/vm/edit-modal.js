@@ -44,7 +44,7 @@ export function openQemuErrorModal(vmName, errorMsg, vmId = null) {
         <div class="vme-fs13-strong">
           ${t('vmd.fail_msg', '{name} could not start. The hypervisor reported this error:', { name: `<strong>${escapeHtml(vmName)}</strong>` })}
         </div>
-        <div class="qemu-error-box" style="background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 12px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--lt-t-fca5a5ff, #fca5a5); line-height: 1.5; white-space: pre-wrap; word-break: break-all; max-height: 160px; overflow-y: auto;">${escapeHtml(errorMsg || t('vmd.fail_exit', 'The process stopped early with an error code.'))}</div>
+        <div class="qemu-error-box" style="background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 12px; font-family: monospace; font-size: var(--kb-fs-xs); color: var(--lt-t-fca5a5ff, #fca5a5); line-height: 1.5; white-space: pre-wrap; word-break: break-all; max-height: 160px; overflow-y: auto;">${escapeHtml(errorMsg || t('vmd.fail_exit', 'The process stopped early with an error code.'))}</div>
         <div class="vme-xs-muted">
           <strong>${t('vmd.try_this', 'What to try:')}</strong>
           <ul class="vme-x">
@@ -55,7 +55,7 @@ export function openQemuErrorModal(vmName, errorMsg, vmId = null) {
         </div>
       </div>
       <div class="smart-modal-footer vme-row-box">
-        <button id="btn-qemu-error-diag" class="btn-console-act" style="background: rgba(51, 205, 184, 0.2); border-color: #4fd8c4; color: var(--zn-text-accent);">
+        <button id="btn-qemu-error-diag" class="btn-console-act" style="background: rgba(51, 205, 184, 0.2); border-color: #4fd8c4; color: var(--kb-text-accent);">
           ${ico('🛠️')} ${t('vmd.run_diag', 'Run KVM checks')}
         </button>
         ${vmId ? `
@@ -156,7 +156,7 @@ export function openVmEditModal(vmId, vmObj = null) {
 
       <div class="smart-modal-body vme-col-3">
         ${isRunning ? `
-          <div style="background: rgba(51,205,184,0.12); border: 1px solid rgba(51,205,184,0.3); border-radius: 6px; padding: 10px 14px; font-size: var(--zn-fs-xs); color: var(--zn-text-accent); display: flex; align-items: center; gap: 8px;">
+          <div style="background: rgba(51,205,184,0.12); border: 1px solid rgba(51,205,184,0.3); border-radius: 6px; padding: 10px 14px; font-size: var(--kb-fs-xs); color: var(--kb-text-accent); display: flex; align-items: center; gap: 8px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             <span>${t('vmd.running_note', 'This VM is running. Hardware changes (vCPUs, memory, boot order) take effect when it next restarts.')}</span>
           </div>
@@ -204,7 +204,7 @@ export function openVmEditModal(vmId, vmObj = null) {
               <input type="checkbox" id="vm-edit-override-toggle" ${targetVm.override_active ? 'checked' : ''} style="accent-color: #f59e0b;" />
               <span>${t('vmd.override', 'Advanced: ignore the NAS’s reserve')}</span>
             </label>
-            <span id="vm-edit-override-pill" style="display: ${targetVm.override_active ? 'inline-block' : 'none'}; font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(245,158,11,0.2); color: var(--zn-text-warn); border: 1px solid rgba(245,158,11,0.4);">
+            <span id="vm-edit-override-pill" style="display: ${targetVm.override_active ? 'inline-block' : 'none'}; font-size: var(--kb-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(245,158,11,0.2); color: var(--kb-text-warn); border: 1px solid rgba(245,158,11,0.4);">
               ${ico('⚡')} ${t('vmd.bypassed', 'NAS reserve ignored')}
             </span>
           </div>
@@ -221,7 +221,7 @@ export function openVmEditModal(vmId, vmObj = null) {
             <span>1 vCPU</span>
             <span>${t('vmd.thread_limit', 'Physical limit: {count, plural, one {# thread} other {# threads}}', { count: hostThreads })}</span>
           </div>
-          <div id="vm-edit-overcommit-warning" style="display: ${(targetVm.vcpus || 2) > hostThreads ? 'block' : 'none'}; margin-top: 8px; font-size: var(--zn-fs-xs); padding: 6px 10px; border-radius: 4px; background: rgba(245,158,11,0.15); color: var(--zn-text-warn); border: 1px solid rgba(245,158,11,0.3);">
+          <div id="vm-edit-overcommit-warning" style="display: ${(targetVm.vcpus || 2) > hostThreads ? 'block' : 'none'}; margin-top: 8px; font-size: var(--kb-fs-xs); padding: 6px 10px; border-radius: 4px; background: rgba(245,158,11,0.15); color: var(--kb-text-warn); border: 1px solid rgba(245,158,11,0.3);">
             ${ico('⚠️')} ${t('vmd.over_threads', 'More cores than the host has threads: busy moments may slow the VM down.')}
           </div>
         </div>
@@ -233,7 +233,7 @@ export function openVmEditModal(vmId, vmObj = null) {
               <label class="vme-xs-bold-muted-2" for="vm-edit-iso">${t('vmd.iso_label', 'ISO image (CD-ROM)')}</label>
               ${targetVm.iso_path ? `<span class="vme-xs-warn">${ico('💿')} ${t('vmd.iso_attached', 'Attached')}</span>` : ''}
             </div>
-            <select id="vm-edit-iso" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
+            <select id="vm-edit-iso" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--kb-line-12); color: var(--kb-text-strong); font-size: var(--kb-fs-xs); box-sizing: border-box;">
               <option value="">${t('vmd.iso_none', 'None (empty drive)')}</option>
               ${vmState.isos.map((iso) => `<option value="${escapeHtml(iso.path)}" ${iso.path === targetVm.iso_path ? 'selected' : ''}>${escapeHtml(iso.name)} (${iso.size_formatted})</option>`).join('')}
             </select>
@@ -294,11 +294,11 @@ export function openVmEditModal(vmId, vmObj = null) {
               <div class="vme-xs-bold-strong" data-i18n="vm.video_title">${t('vm.video_title', 'Display & Video Adapter')}</div>
               <div class="vme-xs-muted-3">${t('vmd.video_desc', 'Choose the virtual graphics card, or a text console only')}</div>
             </div>
-            <span style="font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.15); color: var(--zn-text-ok); border: 1px solid rgba(16,185,129,0.3);">
+            <span style="font-size: var(--kb-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.15); color: var(--kb-text-ok); border: 1px solid rgba(16,185,129,0.3);">
               ${t('vmd.gpu_accel', 'GPU accelerated')}
             </span>
           </div>
-          <select id="vm-edit-video-adapter" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
+          <select id="vm-edit-video-adapter" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--kb-line-12); color: var(--kb-text-strong); font-size: var(--kb-fs-xs); box-sizing: border-box;">
             <option value="virtio-gpu" ${targetVideo === 'virtio-gpu' ? 'selected' : ''}>${t('vmd.v_virtio', 'VirtIO-GPU (recommended, 2D/3D acceleration on Linux)')}</option>
             <option value="qxl" ${targetVideo === 'qxl' ? 'selected' : ''}>${t('vmd.v_qxl', 'QXL (SPICE, Windows drivers)')}</option>
             <option value="vga" ${targetVideo === 'vga' ? 'selected' : ''}>${t('vmd.v_vga', 'Standard VGA (works everywhere)')}</option>
@@ -333,7 +333,7 @@ export function openVmEditModal(vmId, vmObj = null) {
             <input class="vme-xs-strong-box-2" type="text" id="vm-edit-custom-vid" placeholder="VID (10c4)" data-sample maxlength="4" />
             <input class="vme-xs-strong-box-2" type="text" id="vm-edit-custom-pid" placeholder="PID (ea60)" data-sample maxlength="4" />
             <input type="text" id="vm-edit-custom-desc" class="usb-custom-desc vme-xs-strong-box-3" placeholder="${t('ui.device_label_e_g_zigbee', 'Device Label (e.g. Zigbee Dongle)')}" />
-            <button type="button" id="btn-edit-add-custom-usb" class="btn-console-act btn-custom-add" style="padding: 4px 10px; font-size: var(--zn-fs-xs); background: rgba(16,185,129,0.2); border-color: #34d399; color: var(--zn-text-ok); cursor: pointer;">
+            <button type="button" id="btn-edit-add-custom-usb" class="btn-console-act btn-custom-add" style="padding: 4px 10px; font-size: var(--kb-fs-xs); background: rgba(16,185,129,0.2); border-color: #34d399; color: var(--kb-text-ok); cursor: pointer;">
               ${t('vmd.add', 'Add')}
             </button>
           </div>
@@ -604,11 +604,11 @@ export function openVmEditModal(vmId, vmObj = null) {
     row.innerHTML = `
       <input type="text" class="share-host-path vme-xs-strong-box-grow" placeholder="/mnt/user/appdata" value="${escapeHtml(share.host_path || '/mnt/user/appdata')}" />
       <input type="text" class="share-mount-tag vme-xs-strong-box-grow-2" placeholder="appdata" value="${escapeHtml(share.mount_tag || 'appdata')}" />
-      <select class="share-driver" style="flex: 1; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
+      <select class="share-driver" style="flex: 1; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--kb-line-10); color: var(--kb-text-strong); font-size: var(--kb-fs-xs);">
         <option value="virtiofs" ${share.driver === 'virtiofs' ? 'selected' : ''}>${'VirtIO-FS'}</option>
         <option value="9p" ${share.driver === '9p' ? 'selected' : ''}>9p</option>
       </select>
-      <select class="share-mode" style="width: 60px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
+      <select class="share-mode" style="width: 60px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--kb-line-10); color: var(--kb-text-strong); font-size: var(--kb-fs-xs);">
         <option value="rw" ${!shareReadOnly(share) ? 'selected' : ''}>RW</option>
         <option value="ro" ${shareReadOnly(share) ? 'selected' : ''}>RO</option>
       </select>
@@ -635,7 +635,7 @@ export function openVmEditModal(vmId, vmObj = null) {
     row.innerHTML = `
       <input type="text" class="disk-name vme-xs-strong-box-grow" placeholder="${t('ui.disk_name', 'Disk Name')}" value="${escapeHtml(disk.name || `data-disk-${idx}`)}" />
       <input type="number" class="disk-size vme-xs-strong-box-4" min="5" max="4000" placeholder="${t('ui.size_gb', 'Size (GB)')}" value="${disk.size_gb || 50}" />
-      <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
+      <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1a2629ff, #1a2629); border: 1px solid var(--kb-line-10); color: var(--kb-text-strong); font-size: var(--kb-fs-xs);">
         <option value="virtio" ${disk.bus === 'virtio' ? 'selected' : ''}>virtio</option>
         ${['sata', 'nvme'].includes(disk.bus) ? `<option value="${disk.bus}" selected>${escapeHtml(t('vmp.bus_broken', '{bus} (does not start: choose virtio)', { bus: disk.bus }))}</option>` : ''}
       </select>
@@ -661,7 +661,7 @@ export function openVmEditModal(vmId, vmObj = null) {
   };
   const PCI_HIDDEN_CLASSES = new Set(['0600', '0601', '0604']); // host/ISA/PCI bridges
   const pciNote = (text, warn = false) =>
-    `<div class="vm-pci-note${warn ? ' warn' : ''}" style="font-size: var(--zn-fs-xs); padding: 6px 10px; border-radius: 4px; background: ${warn ? 'rgba(245,158,11,0.12)' : 'rgba(0,0,0,0.2)'}; color: ${warn ? '#fbbf24' : 'var(--muted)'};">${escapeHtml(text)}</div>`;
+    `<div class="vm-pci-note${warn ? ' warn' : ''}" style="font-size: var(--kb-fs-xs); padding: 6px 10px; border-radius: 4px; background: ${warn ? 'rgba(245,158,11,0.12)' : 'rgba(0,0,0,0.2)'}; color: ${warn ? '#fbbf24' : 'var(--muted)'};">${escapeHtml(text)}</div>`;
   const renderPciList = (data) => {
     if (!pciList) return;
     if (!data || !data.iommu_enabled) {
@@ -688,12 +688,12 @@ export function openVmEditModal(vmId, vmObj = null) {
           ? 'vfio-pci'
           : t('vm.pci_needs_vfio', 'On {driver}; bind to vfio-pci first', { driver: dev.driver || t('vm.pci_no_driver', 'no driver') });
         rows.push(`
-          <label class="vm-pci-row${ready ? '' : ' disabled'}" style="display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); padding: 4px 8px; border-radius: 4px; background: var(--zn-shade-20); cursor: ${ready || checked ? 'pointer' : 'not-allowed'}; opacity: ${ready || checked ? '1' : '0.6'};">
+          <label class="vm-pci-row${ready ? '' : ' disabled'}" style="display: flex; align-items: center; gap: 8px; font-size: var(--kb-fs-xs); padding: 4px 8px; border-radius: 4px; background: var(--kb-shade-20); cursor: ${ready || checked ? 'pointer' : 'not-allowed'}; opacity: ${ready || checked ? '1' : '0.6'};">
             <input type="checkbox" class="vm-pci-check" data-slot="${escapeHtml(slot)}" data-name="${escapeHtml(`${kind} ${dev.name || ''}`.trim())}" ${checked ? 'checked' : ''} ${ready || checked ? '' : 'disabled'} />
             <span class="vme-bold-strong">${escapeHtml(kind)}</span>
             <span class="vme-accent-mono">${escapeHtml(slot)}</span>
             <span class="vme-muted-grow">${escapeHtml(dev.name || '')}</span>
-            <span class="vm-pci-driver" style="font-size: var(--zn-fs-xs); color: ${ready ? '#34d399' : '#fbbf24'}; white-space: nowrap;">${escapeHtml(driverText)}</span>
+            <span class="vm-pci-driver" style="font-size: var(--kb-fs-xs); color: ${ready ? '#34d399' : '#fbbf24'}; white-space: nowrap;">${escapeHtml(driverText)}</span>
           </label>
         `);
       }

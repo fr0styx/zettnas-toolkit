@@ -1,11 +1,11 @@
 /* Where a share's space goes (storage-analyzer.js): the treemap, the kinds bar and the lists */
 #space-modal .space-window { width: min(760px, 94vw); height: auto; min-width: 0; min-height: 0; max-height: 88vh; }
-#space-modal .smart-modal-body { overflow: auto; display: grid; gap: var(--zn-space-2); }
-#space-modal h4 { margin: var(--zn-space-2) 0 0; }
+#space-modal .smart-modal-body { overflow: auto; display: grid; gap: var(--kb-space-2); }
+#space-modal h4 { margin: var(--kb-space-2) 0 0; }
 #space-modal .space-treemap { width: 100%; height: auto; display: block; }
 #space-modal .space-cell.is-open { cursor: pointer; }
 #space-modal .space-cell.is-open:hover .space-cell-rect, #space-modal .space-cell.is-open:focus .space-cell-rect { opacity: 0.85; }
-#space-modal .space-cell-label { font-size: var(--zn-fs-xs); fill: var(--zn-text-strong); pointer-events: none; }
+#space-modal .space-cell-label { font-size: var(--kb-fs-xs); fill: var(--kb-text-strong); pointer-events: none; }
 #space-modal .space-tone-0 { fill: color-mix(in srgb, var(--accent, #3bf58b) 45%, transparent); }
 #space-modal .space-tone-1 { fill: color-mix(in srgb, var(--accent, #3bf58b) 32%, transparent); }
 #space-modal .space-tone-2 { fill: color-mix(in srgb, var(--accent, #3bf58b) 24%, transparent); }
@@ -21,10 +21,10 @@
 #space-modal .space-kind-disk_image { fill: #ef4444; }
 #space-modal .space-kind-backup { fill: #6c8084; }
 #space-modal .space-kind-other { fill: #95a8ab; }
-#space-modal .space-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--zn-space-2) var(--zn-space-3); font-size: var(--zn-fs-xs); }
+#space-modal .space-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--kb-space-2) var(--kb-space-3); font-size: var(--kb-fs-xs); }
 #space-modal .space-legend li { display: flex; align-items: center; gap: 6px; }
 #space-modal .space-swatch { width: 10px; height: 10px; }
-#space-modal .space-largest { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: var(--zn-fs-xs); }
-#space-modal .space-largest li { display: grid; grid-template-columns: 1fr auto auto; gap: var(--zn-space-2); align-items: center; }
+#space-modal .space-largest { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: var(--kb-fs-xs); }
+#space-modal .space-largest li { display: grid; grid-template-columns: 1fr auto auto; gap: var(--kb-space-2); align-items: center; }
 #space-modal .space-path { overflow-wrap: anywhere; }
-#space-modal .space-actions { display: flex; gap: var(--zn-space-2); flex-wrap: wrap; }
+#space-modal .space-actions { display: flex; gap: var(--kb-space-2); flex-wrap: wrap; }

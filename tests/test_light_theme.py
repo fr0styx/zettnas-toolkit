@@ -64,7 +64,7 @@ def test_other_themes_get_the_original_colour():
     assert "var(--lt-b-0d141eff, #0d141e)" in out
     assert "var(--lt-r-ffffff17, rgba(255,255,255,0.09))" in out
     # colours with a semantic token (UX-10) get the token, whose dark value is that colour
-    assert lt.rewrite_css(".y { color: #e6efef; }") == ".y { color: var(--zn-text); }"
+    assert lt.rewrite_css(".y { color: #e6efef; }") == ".y { color: var(--kb-text); }"
     # every fallback is exactly the original literal
     for _k, key, fallback in re.findall(r"var\(--lt-([tbr])-([0-9a-f]{8}), ([^()]*(?:\([^()]*\))?)\)", out):
         assert lt.key(lt.parse(fallback)) == key
@@ -75,7 +75,7 @@ def test_lcd_and_previews_are_left_alone():
     assert lt.rewrite_css(css) == css
     html = '<div id="console-window"><div id="screen"><span style="color:#e6efef">x</span></div></div><b style="color:#e6efef">y</b>'
     out = lt.rewrite_markup(html)
-    assert '<span style="color:#e6efef">' in out and "var(--zn-text)" in out
+    assert '<span style="color:#e6efef">' in out and "var(--kb-text)" in out
 
 
 def test_white_text_on_a_coloured_fill_stays_white():
@@ -145,9 +145,9 @@ def test_hard_coded_colours_do_not_grow():
 
 def test_new_colours_get_the_token_directly():
     assert lt.rewrite_block("color: #fff; border: 1px solid rgba(255,255,255,0.08)") == (
-        "color: var(--zn-text-strong); border: 1px solid var(--zn-line-8)"
+        "color: var(--kb-text-strong); border: 1px solid var(--kb-line-8)"
     )
-    assert lt.tokenize("background: var(--lt-b-0000004c, rgba(0, 0, 0, 0.3))") == "background: var(--zn-shade-30)"
+    assert lt.tokenize("background: var(--lt-b-0000004c, rgba(0, 0, 0, 0.3))") == "background: var(--kb-shade-30)"
     # a mismatched fallback is not swapped
     assert lt.tokenize("color: var(--lt-t-ffffffff, #eee)") == "color: var(--lt-t-ffffffff, #eee)"
 
@@ -158,4 +158,4 @@ def test_token_light_values_match_what_they_replaced():
             assert lt.token_light(name) is not None, name
     with open(lt.PALETTE, encoding="utf-8") as f:
         palette = f.read()
-    assert f"--zn-shade-30: {lt.token_light('zn-shade-30')};" in palette
+    assert f"--kb-shade-30: {lt.token_light('kb-shade-30')};" in palette

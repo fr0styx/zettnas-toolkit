@@ -34,7 +34,7 @@ describe('console status pill (NUX-20)', () => {
     for (const [kind, words, tone] of cases) {
       setConsoleStatus(el, kind);
       expect(el.textContent).toBe(`● ${words}`);
-      expect(el.style.color).toBe(`var(--zn-text-${tone})`);
+      expect(el.style.color).toBe(`var(--kb-text-${tone})`);
     }
     setConsoleStatus(el, 'reconnecting', { s: 3 });
     expect(el.textContent).toBe('● Reconnecting (3 s)…');

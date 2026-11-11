@@ -321,7 +321,7 @@ export class FileManagerWindow {
               <div class="fm-aux-tool-group fmx-row-4">
                 <button type="button" id="fm-btn-transfers" class="fm-tool-btn fm-btn-transfers-toggle" title="${t('fm.transfers', 'Transfers')}" data-i18n-title="fm.transfers" aria-label="${t('transfers.title', 'Transfers')}">
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>
-                  <span class="fm-transfers-count-badge" style="display: none; background: #0a7a70; color: #fff; font-size: var(--zn-fs-xs); font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
+                  <span class="fm-transfers-count-badge" style="display: none; background: #0a7a70; color: #fff; font-size: var(--kb-fs-xs); font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
                 </button>
                 <button type="button" id="fm-btn-inspector" class="fm-tool-btn fm-btn-inspector-toggle" title="${t('fm.inspector_toggle', 'Toggle Inspector')}" data-i18n-title="fm.inspector_toggle" aria-label="${t('fm.inspector_toggle', 'Toggle Inspector')}">
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -440,7 +440,7 @@ export class FileManagerWindow {
             <div class="fm-aux-tool-group fmx-row-4">
               <button type="button" class="fm-tool-btn fm-btn-transfers-toggle" title="${t('fm.transfers', 'Transfers')}" data-i18n-title="fm.transfers" aria-label="${t('transfers.title', 'Transfers')}">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>
-                <span class="fm-transfers-count-badge" style="display: none; background: #0a7a70; color: #fff; font-size: var(--zn-fs-xs); font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
+                <span class="fm-transfers-count-badge" style="display: none; background: #0a7a70; color: #fff; font-size: var(--kb-fs-xs); font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
               </button>
               <button type="button" class="fm-tool-btn fm-btn-inspector-toggle" title="${t('fm.inspector_toggle', 'Toggle Inspector')}" data-i18n-title="fm.inspector_toggle" aria-label="${t('fm.inspector_toggle', 'Toggle Inspector')}">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -1901,7 +1901,7 @@ export class FileManagerWindow {
             const ellipsis = document.createElement('span');
             ellipsis.textContent = '...';
             ellipsis.className = 'fm-breadcrumb-ellipsis';
-            ellipsis.style.cssText = 'padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.08); cursor: pointer; font-size: var(--zn-fs-xs); margin: 0 2px;';
+            ellipsis.style.cssText = 'padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.08); cursor: pointer; font-size: var(--kb-fs-xs); margin: 0 2px;';
             ellipsis.title = t('ui.show_intermediate_folders', 'Show intermediate folders');
             ellipsis.onclick = (e) => {
               e.stopPropagation();
@@ -2033,7 +2033,7 @@ export class FileManagerWindow {
     menu = document.createElement('div');
     menu.id = 'fm-breadcrumbs-dropdown';
     menu.className = 'os-context-menu';
-    menu.style.cssText = 'position: fixed; z-index: 10000; background: rgba(19,32,34,0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); backdrop-filter: blur(12px); font-size: var(--zn-fs-xs); font-family: monospace; max-height: 200px; overflow-y: auto;';
+    menu.style.cssText = 'position: fixed; z-index: 10000; background: rgba(19,32,34,0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); backdrop-filter: blur(12px); font-size: var(--kb-fs-xs); font-family: monospace; max-height: 200px; overflow-y: auto;';
 
     for (let i = from; i < to; i++) {
       const segPath = '/' + parts.slice(0, i + 1).join('/');
@@ -2388,7 +2388,7 @@ export class FileManagerWindow {
       const subLine = file.name === '..' ? '' : (file.is_dir ? mtimeStr : `${formatBytes(file.size)} · ${mtimeStr}`);
       row.innerHTML = `
         <div class="fm-col fm-col-check">${file.name !== '..' ? `<input type="checkbox" class="fm-checkbox fm-row-checkbox" ${this.selectedPaths.has(file.path) ? 'checked' : ''} data-path="${escPath}" title="${t('ui.select_item', 'Select item')}" />` : ''}</div>
-        <div class="fm-col fm-col-name">${leading} <span class="fm-name-stack"><span class="fm-name-text">${escName}</span>${this._inBin && goesSoon(file) ? `<span class="zn-tag zn-tag--warn fm-bin-goes">${escapeHtml(goesLabel(file))}</span>` : ''}<span class="fm-row-sub">${escapeHtml(subLine)}</span></span></div>
+        <div class="fm-col fm-col-name">${leading} <span class="fm-name-stack"><span class="fm-name-text">${escName}</span>${this._inBin && goesSoon(file) ? `<span class="kb-tag kb-tag--warn fm-bin-goes">${escapeHtml(goesLabel(file))}</span>` : ''}<span class="fm-row-sub">${escapeHtml(subLine)}</span></span></div>
         <div class="fm-col fm-col-type">${file.name === '..' ? '--' : escapeHtml(fileType)}</div>
         <div class="fm-col fm-col-size">${file.is_dir ? '--' : formatBytes(file.size)}</div>
         <div class="fm-col fm-col-mtime">${file.name === '..' ? '--' : mtimeStr}</div>
@@ -3761,7 +3761,7 @@ export function showCollisionModal({ sources, destinationDir, action, conflicts,
         ${(conflicts || [])
           .map(
             (c) => `
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 4px; border-bottom: 1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04)); font-size: var(--zn-fs-xs);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 4px; border-bottom: 1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04)); font-size: var(--kb-fs-xs);">
             <div class="fmx-row-8">
               <span>${c.is_dir ? '📁' : '📄'}</span>
               <span class="fmx-semi-strong">${escapeHtml(c.name)}</span>
@@ -3934,12 +3934,12 @@ export function openMediaOrganizerModal(initialPath = '') {
                 .map((it) => {
                   const isTv = it.media_type === 'tv';
                   const typeBadge = isTv
-                    ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(168,85,247,0.15); color:var(--zn-text-ai); border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(t('media.org_tv', 'TV show · S{season}E{episode}', { season: String(it.season || 1).padStart(2, '0'), episode: String(it.episode || 1).padStart(2, '0') }))}</span>`
-                    : `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(51,205,184,0.15); color:var(--zn-text-accent); border:1px solid rgba(51,205,184,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(t('media.org_movie', 'Movie'))} ${it.year ? `(${it.year})` : ''}</span>`;
+                    ? `<span class="ci-badge" style="font-size:var(--kb-fs-xs); background:rgba(168,85,247,0.15); color:var(--kb-text-ai); border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(t('media.org_tv', 'TV show · S{season}E{episode}', { season: String(it.season || 1).padStart(2, '0'), episode: String(it.episode || 1).padStart(2, '0') }))}</span>`
+                    : `<span class="ci-badge" style="font-size:var(--kb-fs-xs); background:rgba(51,205,184,0.15); color:var(--kb-text-accent); border:1px solid rgba(51,205,184,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(t('media.org_movie', 'Movie'))} ${it.year ? `(${it.year})` : ''}</span>`;
                   const qualBadge = `<span class="ci-badge fmx-xs-soft-box">${escapeHtml(it.resolution || '1080p')} · ${escapeHtml(it.codec || 'x264')}</span>`;
 
                   return `
-                  <div style="padding:8px 12px; border-bottom:1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04)); display:flex; flex-direction:column; gap:4px; font-size:var(--zn-fs-xs);">
+                  <div style="padding:8px 12px; border-bottom:1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04)); display:flex; flex-direction:column; gap:4px; font-size:var(--kb-fs-xs);">
                     <div class="fmx-row-10">
                       <div class="fmx-bold-strong">${escapeHtml(it.title || it.original_filename)}</div>
                       <div class="fmx-row-11">${typeBadge}${qualBadge}</div>
@@ -3965,7 +3965,7 @@ export function openMediaOrganizerModal(initialPath = '') {
       } catch (err) {
         showToast(t('toast.preview_failed', 'Preview failed: {error}', { error: err.message }), 'error');
         if (previewWrap) {
-          previewWrap.innerHTML = `<div style="text-align:center; padding:25px; color:var(--alert, var(--lt-t-ef4444ff, #ef4444)); font-size:var(--zn-fs-xs);">${escapeHtml(t('media.org_failed', 'Failed: {error}', { error: err.message }))}</div>`;
+          previewWrap.innerHTML = `<div style="text-align:center; padding:25px; color:var(--alert, var(--lt-t-ef4444ff, #ef4444)); font-size:var(--kb-fs-xs);">${escapeHtml(t('media.org_failed', 'Failed: {error}', { error: err.message }))}</div>`;
         }
       } finally {
         btnPreview.disabled = false;

@@ -19,7 +19,7 @@ export function wireTablist(list) {
   if (!list || list.dataset.tabA11y === '1') return;
   list.dataset.tabA11y = '1';
   for (const tab of tabsOf(list)) {
-    if (!tab.id) tab.id = `zn-tab-${++_seq}`;
+    if (!tab.id) tab.id = `kb-tab-${++_seq}`;
     const target = tab.dataset.tabTarget || tab.getAttribute('aria-controls');
     const panel = target ? document.getElementById(target) : null;
     if (panel) {

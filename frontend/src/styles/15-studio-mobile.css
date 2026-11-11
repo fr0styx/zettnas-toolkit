@@ -63,7 +63,7 @@
   background: transparent;
   border: none;
   color: var(--muted);
-  font-size: var(--zn-fs-xs);
+  font-size: var(--kb-fs-xs);
   cursor: pointer;
   padding: 4px;
   margin-left: 8px;

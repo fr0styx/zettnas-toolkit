@@ -18,11 +18,11 @@ describe('time format buttons', () => {
     resetTimezoneChoice();
     updateTzModalPreview();
     expect(b24.style.color).toBe('var(--accent-contrast-fg)');
-    expect(b12.style.color).toBe('var(--zn-text-muted)');
+    expect(b12.style.color).toBe('var(--kb-text-muted)');
     saveWidgetConfig({ clockTimezone: 'auto', clockFormat: '12' });
     resetTimezoneChoice();
     updateTzModalPreview();
     expect(b12.style.color).toBe('var(--accent-contrast-fg)');
-    expect(b24.style.color).toBe('var(--zn-text-muted)');
+    expect(b24.style.color).toBe('var(--kb-text-muted)');
   });
 });

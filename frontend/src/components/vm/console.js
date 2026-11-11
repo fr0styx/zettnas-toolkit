@@ -30,7 +30,7 @@ export function setConsoleStatus(pill, kind, params) {
   if (!pill) return;
   const [key, words, tone] = CONSOLE_STATUS[kind];
   pill.textContent = `● ${t(key, words, params)}`;
-  pill.style.color = `var(--zn-text-${tone})`;
+  pill.style.color = `var(--kb-text-${tone})`;
 }
 
 /**
@@ -1057,7 +1057,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
             <span class="toolbar-stat"><span class="stat-dot-pulse"></span> 60 FPS</span>
             <span class="toolbar-stat" id="vm-console-resolution-stat">${initialMode === 'cli' ? '80 × 25 TTY' : '1920 × 1080'}</span>
             <span class="toolbar-stat" id="vm-console-adapter-stat" style="color: ${initialMode === 'cli' ? '#34d399' : '#4fd8c4'};">${initialMode === 'cli' ? 'Serial TTY' : 'VirtIO-GPU'}</span>
-            <span class="toolbar-stat" id="vm-console-kbd-pill" style="color: var(--zn-text-accent); font-weight: 500; cursor: pointer;" title="${t('ui.keyboard_captured_by_vm_console', 'Keyboard captured by VM console. Click outside or minimize to release.')}"><span aria-hidden="true">⌨️</span> ${t('ui.captured', 'Captured')}</span>
+            <span class="toolbar-stat" id="vm-console-kbd-pill" style="color: var(--kb-text-accent); font-weight: 500; cursor: pointer;" title="${t('ui.keyboard_captured_by_vm_console', 'Keyboard captured by VM console. Click outside or minimize to release.')}"><span aria-hidden="true">⌨️</span> ${t('ui.captured', 'Captured')}</span>
           </div>
           <div class="console-toolbar-right">
             <button class="btn-console-act" id="btn-vnc-softkbd" title="${t('vm.soft_kbd', 'Keyboard')}">
@@ -1100,7 +1100,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
           <div id="vm-vnc-container" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
             <canvas id="vm-console-canvas" tabindex="0" width="880" height="510"></canvas>
           </div>
-          <div id="vm-cli-container" tabindex="0" style="width: 100%; height: 100%; display: none; background: var(--lt-b-0b1517ff, #0b1517); padding: 10px 8px 10px 12px; color: var(--zn-text-ok); overflow: hidden; box-sizing: border-box; outline: none;">
+          <div id="vm-cli-container" tabindex="0" style="width: 100%; height: 100%; display: none; background: var(--lt-b-0b1517ff, #0b1517); padding: 10px 8px 10px 12px; color: var(--kb-text-ok); overflow: hidden; box-sizing: border-box; outline: none;">
             <div id="vm-cli-output" style="width: 100%; height: 100%;"></div>
           </div>
           <div class="console-scanlines" style="pointer-events: none;"></div>
@@ -1254,7 +1254,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
           try {
             window.close();
           } catch (_) {}
-          document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:var(--lt-b-071011ff, #071011);color:var(--zn-text-muted);font-family:sans-serif;font-size:14px;">' + escapeHtml(t('vmc.disconnected_close', 'Console disconnected. You can close this window.')) + '</div>';
+          document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:var(--lt-b-071011ff, #071011);color:var(--kb-text-muted);font-family:sans-serif;font-size:14px;">' + escapeHtml(t('vmc.disconnected_close', 'Console disconnected. You can close this window.')) + '</div>';
           return;
         }
         consoleWin.classList.add('window-minimized');

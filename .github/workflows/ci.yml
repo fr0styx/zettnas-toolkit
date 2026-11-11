@@ -85,8 +85,8 @@ jobs:
         # Failing tests are also posted as an annotation, readable without log access
         run: |
           set -o pipefail
-          if ! pytest --cov=backend --cov=app --cov-report=xml --cov-fail-under=81 -v -rfEs 2>&1 | tee /tmp/zn-unit.log; then
-            body=$( (grep -E '^(FAILED|ERROR)|^E  |Required test coverage|Coverage failure' /tmp/zn-unit.log | tail -n 40) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+          if ! pytest --cov=backend --cov=app --cov-report=xml --cov-fail-under=81 -v -rfEs 2>&1 | tee /tmp/kb-unit.log; then
+            body=$( (grep -E '^(FAILED|ERROR)|^E  |Required test coverage|Coverage failure' /tmp/kb-unit.log | tail -n 40) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=Unit tests::$body"
             exit 1
           fi
@@ -224,11 +224,11 @@ jobs:
         run: |
           mkdir -p "$KIBOTO_E2E_MEDIA_DIR"
           annotate() {
-            body=$( (echo "$2"; echo '--- server warnings ---'; grep -v 'Auth failed' /tmp/zn-server.log | grep -E 'WARNING|ERROR|CRITICAL|Traceback|Error' | tail -n 25; echo '--- server log ---'; tail -n 15 /tmp/zn-server.log) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            body=$( (echo "$2"; echo '--- server warnings ---'; grep -v 'Auth failed' /tmp/kb-server.log | grep -E 'WARNING|ERROR|CRITICAL|Traceback|Error' | tail -n 25; echo '--- server log ---'; tail -n 15 /tmp/kb-server.log) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=$1::$body"
           }
           # Start background server
-          python3 -m backend.main > /tmp/zn-server.log 2>&1 &
+          python3 -m backend.main > /tmp/kb-server.log 2>&1 &
           SERVER_PID=$!
 
           # Poll health endpoint until server is ready
@@ -249,13 +249,13 @@ jobs:
           # PERF-10: one idle minute with nobody using the app. Starting more than 10 processes a
           # minute fails the run; wakeups and CPU are warnings (a shared runner is noisy).
           HOST_PROC=/proc python3 scripts/hardware_budgets.py --pid "$SERVER_PID" --scope tree --warmup 30 \
-            --seconds 60 --only spawns,wakeups,idle-cpu --strict spawns --show --results /tmp/zn-idle ||
+            --seconds 60 --only spawns,wakeups,idle-cpu --strict spawns --show --results /tmp/kb-idle ||
             { annotate 'Idle minute' 'The idle backend started more than 10 processes a minute'; exit 1; }
 
           # Execute full Playwright E2E Integration Suite; skips count as failures here
           set -o pipefail
-          if ! KIBOTO_E2E_REQUIRED=1 pytest tests/test_e2e_integration.py tests/test_e2e_a11y.py tests/test_e2e_keyboard_german.py tests/test_e2e_journeys.py -v -rfE 2>&1 | tee /tmp/zn-e2e.log; then
-            annotate 'E2E tests' "$(grep -E '^(FAILED|ERROR|E  )|Error|assert' /tmp/zn-e2e.log | tail -n 25)"
+          if ! KIBOTO_E2E_REQUIRED=1 pytest tests/test_e2e_integration.py tests/test_e2e_a11y.py tests/test_e2e_keyboard_german.py tests/test_e2e_journeys.py -v -rfE 2>&1 | tee /tmp/kb-e2e.log; then
+            annotate 'E2E tests' "$(grep -E '^(FAILED|ERROR|E  )|Error|assert' /tmp/kb-e2e.log | tail -n 25)"
             exit 1
           fi
 
