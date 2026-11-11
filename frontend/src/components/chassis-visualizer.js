@@ -785,7 +785,6 @@ function buildPoolBlockInner(pool, isObserver) {
     <div class="topo-pool-actions cv-row-5">
       <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.trigger_filesystem_scrub_or_parity', 'Trigger filesystem scrub or parity check')}">${ico('⚡')} ${t('chassis.scrub_pool', 'Scrub pool')}</button>
       ${!isObserver ? `<button class="btn-pool-rename btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name)}" title="${t('ui.rename_storage_pool', 'Rename storage pool')}">${ico('✏️')} ${t('chassis.rename', 'Rename')}</button>` : ''}
-      ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(51,205,184,0.15); border-color: rgba(51,205,184,0.3); color: var(--zn-text-accent);" title="${t('ui.manage_subvolume_snapshots', 'Manage Subvolume Snapshots')}">${ico('📸')} ${t('chassis.snapshots', 'Snapshots')}</button>` : ''}
       ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--zn-text-warn);" title="${t('ui.safely_flush_dirty_cache_and', 'Safely flush dirty cache and detach pool')}">${ico('⏏️')} ${t('chassis.eject', 'Safely eject')}</button>` : ''}
       ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle is-danger" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.destroy_storage_pool', 'Destroy storage pool')}">${ico('🗑️')} ${t('chassis.destroy', 'Destroy')}</button>` : ''}
     </div>
@@ -824,13 +823,6 @@ function bindTopologyTreeEvents(tree, container) {
       const pid = renameBtn.dataset.poolId;
       const pname = renameBtn.dataset.poolName || pid;
       openRenameStoragePoolModal(pid, pname, () => fetchAndRenderStorageTopology(container));
-      return;
-    }
-
-    const snapBtn = e.target.closest('.btn-pool-snaps');
-    if (snapBtn) {
-      e.stopPropagation();
-      openSnapshotsModal(snapBtn.dataset.poolId);
       return;
     }
 
@@ -945,14 +937,9 @@ export async function fetchAndRenderStorageTopology(container) {
 
     const canCreatePools = platformData?.capabilities?.can_create_pools ?? false;
     const btnCreatePool = document.getElementById('btn-create-storage-pool');
-    const btnSnapshots = document.getElementById('btn-manage-snapshots');
     if (btnCreatePool) {
       btnCreatePool.style.display = canCreatePools ? 'inline-flex' : 'none';
       btnCreatePool.onclick = () => openCreateStoragePoolModal(() => fetchAndRenderStorageTopology(container));
-    }
-    if (btnSnapshots) {
-      btnSnapshots.style.display = canCreatePools ? 'inline-flex' : 'none';
-      btnSnapshots.onclick = () => openSnapshotsModal();
     }
 
     const discoveredList = discoveredData?.discovered_pools || [];
@@ -3238,172 +3225,6 @@ export function openCreateNetworkShareModal(onSuccess) {
     };
   }
 }
-
-/**
- * Opens Btrfs Subvolume Snapshots Manager Modal
- */
-export async function openSnapshotsModal(poolId = 'default_pool') {
-  const modal = document.getElementById('modal-btrfs-snapshots');
-  if (!modal) return;
-
-  const closeBtn = document.getElementById('modal-snapshots-close-btn');
-  const snapNameInput = document.getElementById('snap-name-input');
-  const takeSnapBtn = document.getElementById('btn-take-snapshot-submit');
-  const listMount = document.getElementById('snapshots-list-mount');
-
-  const close = () => {
-    modal.classList.remove('open');
-    modal.style.display = 'none';
-  };
-
-  if (closeBtn) closeBtn.onclick = close;
-
-  const modalWin = modal.querySelector('.smart-modal-window');
-  const modalHdr = modal.querySelector('.smart-modal-header');
-  if (modalWin && modalHdr) makeDraggable(modalWin, modalHdr);
-
-  modal.classList.add('open');
-  modal.style.display = 'flex';
-
-  async function loadSnapshots() {
-    if (!listMount) return;
-    noteIn(listMount, t('chassis.loading_snapshots', 'Loading snapshots…'), 'padding:15px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);');
-    try {
-      const snaps = await api.get(`/api/storage/pools/${poolId}/snapshots`);
-      if (!Array.isArray(snaps) || snaps.length === 0) {
-        noteIn(listMount, t('chassis.no_snapshots', 'No snapshots yet.'), 'padding:20px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);');
-        return;
-      }
-
-      let tbody = listMount.querySelector('tbody');
-      if (!tbody) {
-        listMount.innerHTML = `
-          <table class="copy-history-table cv-size">
-            <thead>
-              <tr>
-                <th>${t('chassis.col_snapshot', 'Snapshot')}</th>
-                <th>${t('chassis.col_path', 'Path')}</th>
-                <th>${t('chassis.col_created', 'Created')}</th>
-                <th>${t('chassis.col_action', 'Action')}</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        `;
-        tbody = listMount.querySelector('tbody');
-        bindSnapshotsTableEvents(tbody, poolId, loadSnapshots);
-      }
-
-      reconcileKeyedTable(
-        tbody,
-        snaps,
-        (s) => s.name,
-        (s) => {
-          const dt = formatDateTime(s.created_at);
-          const tr = document.createElement('tr');
-          tr.dataset.key = s.name;
-          tr.innerHTML = `
-            <td><strong>${escapeHtml(s.name)}</strong></td>
-            <td class="cv-xs-accent-mono">${escapeHtml(s.path)}</td>
-            <td class="cv-xs-muted-7">${dt}</td>
-            <td>
-              <div class="cv-row-11">
-                <button class="btn-snap-restore btn-pill-toggle is-small" data-snap="${escapeHtml(s.name)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--zn-text-warn);">
-                  ${ico('⏪')} ${t('chassis.revert', 'Restore')}
-                </button>
-                <button class="btn-snap-del btn-pill-toggle is-danger is-small" data-snap="${escapeHtml(s.name)}">
-                  ${ico('🗑️')} ${t('chassis.delete', 'Delete')}
-                </button>
-              </div>
-            </td>
-          `;
-          return tr;
-        },
-        (tr, s) => {
-          const dt = formatDateTime(s.created_at);
-          const pathTd = tr.children[1];
-          if (pathTd) pathTd.textContent = s.path;
-          const dtTd = tr.children[2];
-          if (dtTd) dtTd.textContent = dt;
-        }
-      );
-    } catch (err) {
-      noteIn(listMount, t('chassis.snapshots_failed', 'Could not load snapshots: {error}', { error: err.message || '' }), 'padding:15px; color:var(--zn-text-crit); font-size:var(--zn-fs-xs);');
-    }
-  }
-
-  function bindSnapshotsTableEvents(tbody, pId, onReload) {
-    if (tbody._eventsBound) return;
-    tbody._eventsBound = true;
-
-    tbody.addEventListener('click', (e) => {
-      const restoreBtn = e.target.closest('.btn-snap-restore');
-      if (restoreBtn) {
-        const sName = restoreBtn.dataset.snap;
-        showDangerConfirm(
-          t('chassis.snap_revert_title', 'Go back to snapshot'),
-          t('chassis.snap_revert_msg', 'Roll back to snapshot "{name}"? The current state is saved first.', { name: sName }),
-          async () => {
-            try {
-              await api.post(`/api/storage/pools/${pId}/snapshots/restore`, {
-                snapshot_name: sName,
-              }, { confirmed: true });
-              showToast(t('toast.snapshot_reverted_successfully', 'Snapshot \'{sName}\' reverted successfully!', { sName: sName }), 'success');
-              onReload();
-            } catch (err) {
-              showToast(err.message || t('chassis.snap_revert_failed', 'Could not go back to the snapshot'), 'error');
-            }
-          },
-          null,
-          { okText: t('chassis.snap_revert_title', 'Go back to snapshot'), cancelText: t('common.cancel', 'Cancel') }
-        );
-        return;
-      }
-
-      const btn = e.target.closest('.btn-snap-del');
-      if (!btn) return;
-      const sName = btn.dataset.snap;
-      showConfirmToast(
-        t('ui.delete_snapshot', 'Delete Snapshot'),
-        t('backup.snap_delete_q', 'Delete snapshot "{name}"?', { name: sName }),
-        async () => {
-          try {
-            await api.delete(`/api/storage/pools/${pId}/snapshots/${sName}`, { confirmed: true });
-            showToast(t('toast.snapshot_deleted_2', 'Snapshot \'{sName}\' deleted.', { sName: sName }), 'info');
-            onReload();
-          } catch (err) {
-            showToast(err.message || t('chassis.snap_delete_failed', 'Could not delete the snapshot'), 'error');
-          }
-        },
-        null,
-        { okText: t('ui.delete_snapshot', 'Delete Snapshot'), cancelText: t('common.cancel', 'Cancel') }
-      );
-    });
-  }
-
-  loadSnapshots();
-
-  if (takeSnapBtn && snapNameInput) {
-    takeSnapBtn.onclick = async () => {
-      const snapName = snapNameInput.value.trim() || `snap-${Date.now()}`;
-      try {
-        await api.post(`/api/storage/pools/${poolId}/snapshots`, {
-          subvolume: '@shares',
-          snapshot_name: snapName,
-          readonly: true,
-        });
-        showToast(t('toast.snapshot_taken', 'Snapshot \'{snapName}\' taken!', { snapName: snapName }), 'info');
-        snapNameInput.value = '';
-        loadSnapshots();
-      } catch (err) {
-        showToast(err.message || t('chassis.snap_create_failed', 'Could not take the snapshot'), 'error');
-      }
-    };
-  }
-}
-
-
-
 
 /**
  * Opens Rename Storage Pool Modal (OpenZFS / Btrfs)

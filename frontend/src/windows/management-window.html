@@ -3061,7 +3061,6 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
                   <button class="btn-pill-toggle is-primary" id="btn-create-storage-pool" style="display: none;" title="Create New Storage Pool" data-i18n-title="ui.create_new_storage_pool"><span aria-hidden="true">+</span> <span data-i18n="mw.create_pool">Create Pool</span></button>
-                  <button class="btn-pill-toggle" id="btn-manage-snapshots" style="display: none;" title="Manage Btrfs Snapshots" data-i18n-title="ui.manage_btrfs_snapshots"><span aria-hidden="true">📸</span> <span data-i18n="mw.snapshots">Snapshots</span></button>
                   <button class="btn-pill-toggle" id="btn-refresh-topo" title="Refresh Topology" data-i18n-title="ui.refresh_topology"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 </div>
               </div>
@@ -5632,39 +5631,6 @@
         <button type="submit" id="create-share-submit-btn" class="btn-pill-toggle is-primary is-small"><span aria-hidden="true">📁</span> <span data-i18n="ui.provision_share">Provision Share</span></button>
       </div>
     </form>
-  </div>
-</div>
-
-<!-- Btrfs Snapshots Manager Modal -->
-<div id="modal-btrfs-snapshots" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-snapshots-title" style="display: none;">
-  <div class="smart-modal-window" style="max-width: 600px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(51, 205, 184, 0.15); border: 1px solid var(--zn-line-12);">
-    <div class="smart-modal-header bsnap-x">
-      <span class="smart-modal-title bsnap-row" id="modal-snapshots-title">
-        <span class="bsnap-fs15">📸</span>
-        <span data-i18n="mw.btrfs_subvolume_snapshots">Btrfs Subvolume Snapshots</span>
-      </span>
-      <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-snapshots-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
-      </div>
-    </div>
-    <div class="smart-modal-body bsnap-col">
-      <!-- Take Snapshot Row -->
-      <div class="bsnap-box">
-        <label class="bsnap-xs-bold-muted" for="snap-name-input" data-i18n="mw.create_instant_snapshot">CREATE INSTANT SNAPSHOT</label>
-        <div class="bsnap-row-2">
-          <input type="text" id="snap-name-input" class="tz-select-input bsnap-xs-strong-box-grow" placeholder="snapshot-name (e.g. backup-daily)" data-i18n-placeholder="ph.snapshot_name" />
-          <button type="button" id="btn-take-snapshot-submit" class="btn-pill-toggle is-primary is-small"><span aria-hidden="true">📸</span> <span data-i18n="snap.take_btn">Take Snapshot</span></button>
-        </div>
-      </div>
-
-      <!-- Snapshots List -->
-      <div>
-        <div class="bsnap-xs-bold-muted-2" data-i18n="mw.active_snapshots">ACTIVE SNAPSHOTS</div>
-        <div class="bsnap-box-2" id="snapshots-list-mount">
-          <!-- Populated via JS -->
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 

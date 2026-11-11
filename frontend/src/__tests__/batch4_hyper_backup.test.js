@@ -145,10 +145,10 @@ describe('Batch 4: Hyper-Backup Orchestrator & Snapshot Manager UI', () => {
     expect(mount.innerHTML).toContain('shares_20261009_120000');
     expect(mount.innerHTML).toContain('documents_daily');
 
-    const restoreButtons = mount.querySelectorAll('.btn-sys-restore-snap');
-    const deleteButtons = mount.querySelectorAll('.btn-sys-delete-snap');
-    expect(restoreButtons.length).toBe(2);
-    expect(deleteButtons.length).toBe(2);
+    // no "Go back" on a row: it rolled back the wrong folder (SET-06). The safe rollback is in "Files".
+    expect(mount.querySelectorAll('.btn-sys-restore-snap').length).toBe(0);
+    expect(mount.querySelectorAll('.btn-sys-browse-snap').length).toBe(2);
+    expect(mount.querySelectorAll('.btn-sys-delete-snap').length).toBe(2);
   });
 
   it('renders empty notice when no snapshots exist', async () => {

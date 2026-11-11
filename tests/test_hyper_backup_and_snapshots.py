@@ -221,7 +221,7 @@ def test_execute_backup_job_local_and_remote(monkeypatch):
 
     result = execute_backup_job(job["id"])
     assert result["status"] == "success"
-    assert result["snapshot_name"].startswith("vault_")
+    assert result["snapshot_name"].startswith("vault@backup-")
     assert result["rclone_job_id"] == "sync-1234"
 
     # Verify history recorded
@@ -315,13 +315,6 @@ def test_api_snapshots_endpoints(client, auth_headers, monkeypatch):
     )
     assert c_res.status_code == 200
     assert c_res.json()["result"]["status"] == "created"
-
-    # Restore snapshot
-    r_res = client.post(
-        "/api/backup/restore-snapshot", json={"pool_id": "default", "snapshot_name": "snap1"}, headers=auth_headers
-    )
-    assert r_res.status_code == 200
-    assert r_res.json()["result"]["status"] == "restored"
 
     # Delete snapshot
     d_res = client.delete("/api/backup/snapshots/default/snap1", headers=auth_headers)

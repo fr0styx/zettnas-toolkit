@@ -60,7 +60,6 @@ describe('chassis and storage text in German (NUX-20)', () => {
     expect(c.textContent).toContain('LAUFWERKE IM POOL (0)');
     expect(c.textContent).toContain('Keine Laufwerke zugewiesen');
     expect(c.querySelector('.btn-pool-scrub').textContent).toContain('Pool prüfen (Scrub)');
-    expect(c.querySelector('.btn-pool-snaps').textContent).toContain('Snapshots');
     expect(c.querySelector('.btn-pool-destroy').textContent).toContain('Löschen');
     expect(c.querySelector('.topo-free-space').textContent).toMatch(/ frei$/);
   });

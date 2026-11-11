@@ -623,6 +623,26 @@ def record_backup_history(record: dict[str, Any]) -> None:
     atomic_write_json(BACKUP_HISTORY_FILE, history)
 
 
+JOB_TAG = "@backup-"  # a job's snapshot is "<folder>@backup-YYYYMMDD-HHMMSS"
+MANUAL_TAG = "@manual-"  # one taken by hand without a name is "<folder>@manual-YYYYMMDD-HHMMSS"
+
+
+def job_snapshot_name(subvol: str, tag: str = JOB_TAG) -> str:
+    """A snapshot name the rest of Kiboto understands (SET-06): the folder, "@", what made it and
+    when. With the folder before "@" the safe rollback applies and a restore lands in the share;
+    the old "<folder>_<time>" names got neither."""
+    return f"{subvol}{tag}{time.strftime('%Y%m%d-%H%M%S')}"
+
+
+def made_by_a_job(name: str, subvol: str) -> bool:
+    """True for a snapshot a backup job of `subvol` made: the new name, or the old one, which is
+    exactly the folder, "_" and a time. Pruning went by the prefix "<folder>_", which also took
+    snapshots made by hand and those of other shares ("photos_old_...")."""
+    if name.startswith(f"{subvol}{JOB_TAG}"):
+        return True
+    return bool(re.fullmatch(re.escape(subvol) + r"_\d{8}_\d{6}", name))
+
+
 def prune_job_snapshots(pool_id: str, subvol_name: str, retention_count: int) -> list[str]:
     """Enforces rotation policy by deleting oldest snapshots exceeding retention_count."""
     if retention_count <= 0 or not subvol_name:
@@ -631,9 +651,8 @@ def prune_job_snapshots(pool_id: str, subvol_name: str, retention_count: int) ->
     pruned: list[str] = []
     try:
         snapshots = pal.list_snapshots(pool_id)
-        # Match snapshots targeting this subvolume
-        prefix = f"{subvol_name}_"
-        matching = [s for s in snapshots if s.get("name", "").startswith(prefix)]
+        # only what a job of this folder made: never a hand-made snapshot or another share's
+        matching = [s for s in snapshots if made_by_a_job(s.get("name", ""), subvol_name)]
         # Sort oldest first
         matching.sort(key=lambda x: x.get("created_at", 0) or x.get("name", ""))
 
@@ -648,6 +667,30 @@ def prune_job_snapshots(pool_id: str, subvol_name: str, retention_count: int) ->
     except Exception as e:
         logger.warning(f"[HYPER-BACKUP] Snapshot pruning error: {e}")
     return pruned
+
+
+def _job_snapshot(
+    pal: Any, pool_id: str, subvol: str, snap_name: str, snapshot_only: bool
+) -> tuple[str, dict[str, Any] | None]:
+    """Takes a job's snapshot and reads the answer (SET-06). The storage layer answers "error"
+    instead of raising, and nobody read it: a job that only makes snapshots ended "Done" with no
+    snapshot made (a mistyped folder, a share that is a plain folder, missing tools, a host that
+    keeps its own snapshots). Such a job now fails. A job that also copies to a cloud goes on
+    with the live folder, and its history says the snapshot was skipped."""
+    why = ""
+    try:
+        res = pal.create_snapshot(pool_id=pool_id, subvol_name=subvol, snapshot_name=snap_name, readonly=True)
+    except PlatformCapabilityError as pce:
+        res, why = None, str(pce)
+    if res is not None and (res.get("status") in ("created", "ok") or res.get("success") is True):
+        logger.info("[HYPER-BACKUP] Created atomic snapshot: %s", snap_name)
+        return snap_name, res
+    if res is not None:
+        why = str(res.get("output") or res.get("error") or "the storage did not make it").strip()[:300]
+    if snapshot_only:
+        raise ValueError(f"No snapshot of {subvol} was made: {why}. Nothing was backed up.")
+    logger.info("[HYPER-BACKUP] No snapshot of %s (%s); copying the folder as it is.", subvol, why)
+    return f"skipped ({why})", None
 
 
 def _export_settings(job: dict[str, Any], retention: int) -> str:
@@ -815,19 +858,10 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
             history_record["dumps"] = _dump_databases(pal, pool_id, subvol)
             # Step 1: Create atomic local filesystem snapshot
             if subvol:
-                snap_name = f"{subvol}_{time.strftime('%Y%m%d_%H%M%S')}"
-                try:
-                    snap_result = pal.create_snapshot(
-                        pool_id=pool_id,
-                        subvol_name=subvol,
-                        snapshot_name=snap_name,
-                        readonly=True,
-                    )
-                    history_record["snapshot_name"] = snap_name
-                    logger.info("[HYPER-BACKUP] Created atomic snapshot: %s (%s)", snap_name, snap_result.get("status"))
-                except PlatformCapabilityError as pce:
-                    logger.info("[HYPER-BACKUP] Platform in observer mode (%s); skipping local snapshot.", pce)
-                    history_record["snapshot_name"] = f"skipped ({pce})"
+                snap_name = job_snapshot_name(subvol)
+                history_record["snapshot_name"], snap_result = _job_snapshot(
+                    pal, pool_id, subvol, snap_name, snapshot_only=dest_type != "remote"
+                )
 
                 # Prune older snapshots
                 pruned = prune_job_snapshots(pool_id, subvol, retention)
@@ -838,7 +872,11 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
                 # Determine source path - prioritize read-only snapshot directory for atomic point-in-time consistency
                 source_dir = None
                 if snap_result and isinstance(snap_result, dict):
-                    source_dir = snap_result.get("snapshot_path") or snap_result.get("path")
+                    # "snapshot" is the key the storage layer answers with; the two older names were
+                    # never sent, so the copy always read the live folder and not the snapshot
+                    source_dir = (
+                        snap_result.get("snapshot") or snap_result.get("snapshot_path") or snap_result.get("path")
+                    )
                 if not source_dir or not os.path.exists(source_dir):
                     pool_path = pal.get_pool_path(pool_id)
                     source_dir = os.path.join(pool_path, "@shares", subvol) if subvol else pool_path

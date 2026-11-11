@@ -34964,64 +34964,6 @@
     "title": "RestoreBackupResponse",
     "type": "object"
    },
-   "RestorePoolSnapshotResponse": {
-    "additionalProperties": true,
-    "description": "POST /backup/restore-snapshot",
-    "properties": {
-     "result": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/RestorePoolSnapshotResponseResult"
-       },
-       {
-        "type": "null"
-       }
-      ]
-     },
-     "status": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Status"
-     }
-    },
-    "title": "RestorePoolSnapshotResponse",
-    "type": "object"
-   },
-   "RestorePoolSnapshotResponseResult": {
-    "additionalProperties": true,
-    "properties": {
-     "snapshot": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Snapshot"
-     },
-     "status": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Status"
-     }
-    },
-    "title": "RestorePoolSnapshotResponseResult",
-    "type": "object"
-   },
    "RestoreResponse": {
     "additionalProperties": true,
     "description": "POST /offsite/repos/{repo_id}/snapshots/{snapshot_id}/restore",
@@ -36623,36 +36565,6 @@
     "title": "SnapshotCreateModel",
     "type": "object"
    },
-   "SnapshotRestoreModel": {
-    "properties": {
-     "pool_id": {
-      "default": "default",
-      "title": "Pool Id",
-      "type": "string"
-     },
-     "snapshot_name": {
-      "title": "Snapshot Name",
-      "type": "string"
-     },
-     "target_subvol": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "default": "",
-      "title": "Target Subvol"
-     }
-    },
-    "required": [
-     "snapshot_name"
-    ],
-    "title": "SnapshotRestoreModel",
-    "type": "object"
-   },
    "StackActionRequest": {
     "properties": {
      "action": {
@@ -37387,24 +37299,6 @@
      "snapshot_name"
     ],
     "title": "StorageSnapshotCreateRequest",
-    "type": "object"
-   },
-   "StorageSnapshotRestoreRequest": {
-    "properties": {
-     "snapshot_name": {
-      "title": "Snapshot Name",
-      "type": "string"
-     },
-     "target_subvol": {
-      "default": "",
-      "title": "Target Subvol",
-      "type": "string"
-     }
-    },
-    "required": [
-     "snapshot_name"
-    ],
-    "title": "StorageSnapshotRestoreRequest",
     "type": "object"
    },
    "SubKeys": {
@@ -46795,53 +46689,6 @@
      "backup:read",
      "backup:manage",
      "system:config"
-    ]
-   }
-  },
-  "/api/v1/backup/restore-snapshot": {
-   "post": {
-    "description": "Restores or rolls back an atomic filesystem snapshot.",
-    "operationId": "restore_pool_snapshot_api_v1_backup_restore_snapshot_post",
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/SnapshotRestoreModel"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/RestorePoolSnapshotResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "401": {
-      "$ref": "#/components/responses/Unauthorized"
-     },
-     "403": {
-      "$ref": "#/components/responses/Forbidden"
-     },
-     "422": {
-      "$ref": "#/components/responses/ValidationFailed"
-     }
-    },
-    "summary": "Restore Pool Snapshot",
-    "tags": [
-     "Backup"
-    ],
-    "x-required-scopes": [
-     "backup:write",
-     "backup:manage",
-     "system:config",
-     "storage:admin"
     ]
    }
   },
@@ -66538,67 +66385,6 @@
      }
     },
     "summary": "Break Glass Delete Snapshot",
-    "tags": [
-     "Storage Subsystem & PAL"
-    ],
-    "x-required-scopes": [
-     "storage:admin"
-    ]
-   }
-  },
-  "/api/v1/storage/pools/{pool_id}/snapshots/restore": {
-   "post": {
-    "description": "Restores or rolls back a Btrfs subvolume snapshot. Forbidden in Observer Mode.",
-    "operationId": "restore_storage_snapshot_api_v1_storage_pools__pool_id__snapshots_restore_post",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "pool_id",
-      "required": true,
-      "schema": {
-       "pattern": "^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$",
-       "title": "Pool Id",
-       "type": "string"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/StorageSnapshotRestoreRequest"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "additionalProperties": true,
-         "title": "Response Restore Storage Snapshot Api V1 Storage Pools  Pool Id  Snapshots Restore Post",
-         "type": "object"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "401": {
-      "$ref": "#/components/responses/Unauthorized"
-     },
-     "403": {
-      "$ref": "#/components/responses/Forbidden"
-     },
-     "404": {
-      "$ref": "#/components/responses/NotFound"
-     },
-     "422": {
-      "$ref": "#/components/responses/ValidationFailed"
-     }
-    },
-    "summary": "Restore Storage Snapshot",
     "tags": [
      "Storage Subsystem & PAL"
     ],

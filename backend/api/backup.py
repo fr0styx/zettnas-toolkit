@@ -64,12 +64,6 @@ class SnapshotCreateModel(BaseModel):
     readonly: bool = True
 
 
-class SnapshotRestoreModel(BaseModel):
-    pool_id: str = "default"
-    snapshot_name: SingleName
-    target_subvol: Annotated[str, AfterValidator(lambda v: single_name(v) if v else v)] | None = ""
-
-
 # -------------------------------------------------------------------------
 # Client Preferences
 # -------------------------------------------------------------------------
@@ -321,14 +315,27 @@ def list_pool_snapshots(pool_id: str = "default"):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+def _refuse_unless(res: Any, good: tuple[str, ...], what: str) -> None:
+    """The storage layer answers {"status": "error"} where it fails; that answer was passed on
+    under "ok", so "Take a snapshot" and deleting one said they worked when they had not."""
+    if isinstance(res, dict) and (res.get("status") in good or res.get("success") is True):
+        return
+    why = (
+        str((res or {}).get("output") or (res or {}).get("error") or "").strip()[:300] if isinstance(res, dict) else ""
+    )
+    raise HTTPException(status_code=502, detail=f"{what}{': ' + why if why else '.'}")
+
+
 @router.post(
     "/backup/snapshots",
     dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config", "storage:admin"))],
 )
 def create_pool_snapshot(req: SnapshotCreateModel):
     """Creates an atomic filesystem snapshot on the storage platform."""
+    from backend.services.backup_engine import MANUAL_TAG, job_snapshot_name
+
     pal = get_storage_platform()
-    snap_name = req.snapshot_name or f"{req.subvol_name}_{time.strftime('%Y%m%d_%H%M%S')}"
+    snap_name = req.snapshot_name or job_snapshot_name(req.subvol_name, MANUAL_TAG)
     try:
         res = pal.create_snapshot(
             pool_id=req.pool_id,
@@ -336,36 +343,14 @@ def create_pool_snapshot(req: SnapshotCreateModel):
             snapshot_name=snap_name,
             readonly=req.readonly,
         )
+        _refuse_unless(res, ("created", "ok"), "The snapshot could not be made")
         return {"status": "ok", "result": res}
+    except HTTPException:
+        raise
     except PlatformCapabilityError as pce:
         raise HTTPException(status_code=400, detail=str(pce)) from pce
     except Exception as e:
         logger.error(f"[SNAPSHOTS] Failed to create snapshot {snap_name}: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
-
-
-@router.post(
-    "/backup/restore-snapshot",
-    dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config", "storage:admin"))],
-)
-def restore_pool_snapshot(req: SnapshotRestoreModel):
-    """Restores or rolls back an atomic filesystem snapshot."""
-    pal = get_storage_platform()
-    try:
-        res = pal.restore_snapshot(
-            pool_id=req.pool_id,
-            snapshot_name=req.snapshot_name,
-            target_subvol=req.target_subvol or "",
-        )
-        if res.get("status") == "error":
-            raise HTTPException(status_code=400, detail=res.get("message") or "Snapshot restore failed")
-        return {"status": "ok", "result": res}
-    except PlatformCapabilityError as pce:
-        raise HTTPException(status_code=400, detail=str(pce)) from pce
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"[SNAPSHOTS] Failed to restore snapshot {req.snapshot_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -381,7 +366,10 @@ def delete_pool_snapshot(pool_id: str, snapshot_name: str):
     pal = get_storage_platform()
     try:
         res = pal.delete_snapshot(pool_id=pool_id, snapshot_name=snapshot_name)
+        _refuse_unless(res, ("deleted", "ok"), "The snapshot could not be deleted")
         return {"status": "ok", "result": res}
+    except HTTPException:
+        raise
     except PlatformCapabilityError as pce:
         raise HTTPException(status_code=400, detail=str(pce)) from pce
     except Exception as e:

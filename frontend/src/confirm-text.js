@@ -9,7 +9,6 @@ const ACTIONS = {
   'storage.pool.create': ['Create the pool', 'Create a storage pool? Everything on the selected disks is erased.', true],
   'storage.pool.delete': ['Delete the pool', 'Delete the storage pool {target}? Its data is lost.', true],
   'storage.snapshot.delete': ['Delete the snapshot', 'Delete the snapshot {target}?', true],
-  'storage.snapshot.restore': ['Roll back', 'Roll the pool back to the snapshot {target}? Changes made since then are lost.', true],
   'share.delete': ['Delete the share', 'Delete the share {target}?', true],
   'users.delete': ['Delete the account', 'Delete the account {target}?', true],
   'users.erase_data': ['Erase their data', 'Erase the chats, Kib log and search data of {target}?', true],

@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-717 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+715 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -143,7 +143,6 @@ request and response schemas.
 | `GET` | `/api/v1/backup/apps/{backup_id}/download` | any of `backup:read`, `backup:manage` | Downloads an application backup archive (.tar.gz) |
 | `POST` | `/api/v1/backup/apps/{backup_id}/restore` | any of `containers:manage`, `backup:write`, `backup:manage` | Restores application configuration and appdata from a backup archive |
 | `GET` | `/api/v1/backup/history` | any of `backup:read`, `backup:manage`, `system:config` | Retrieves recent execution history for backup pipelines |
-| `POST` | `/api/v1/backup/restore-snapshot` | any of `backup:write`, `backup:manage`, `system:config`, `storage:admin` | Restores or rolls back an atomic filesystem snapshot |
 | `GET` | `/api/v1/backup/schedule` | any of `backup:read`, `backup:manage`, `system:config` | Lists all scheduled backup jobs |
 | `POST` | `/api/v1/backup/schedule` | any of `backup:write`, `backup:manage`, `system:config` | Creates or updates a scheduled backup job |
 | `DELETE` | `/api/v1/backup/schedule/{job_id}` | any of `backup:write`, `backup:manage`, `system:config` | Deletes a scheduled backup job |
@@ -800,7 +799,6 @@ request and response schemas.
 | `GET` | `/api/v1/storage/pools/{pool_id}/snapshots` | any of `storage:read`, `storage:admin` | Lists filesystem subvolume snapshots for a storage pool |
 | `POST` | `/api/v1/storage/pools/{pool_id}/snapshots` | `storage:admin` | Creates an atomic Btrfs subvolume snapshot |
 | `POST` | `/api/v1/storage/pools/{pool_id}/snapshots/break-glass-delete` | `storage:admin` | Overrides Governance-mode WORM lock to delete a snapshot with mandatory audit logging |
-| `POST` | `/api/v1/storage/pools/{pool_id}/snapshots/restore` | `storage:admin` | Restores or rolls back a Btrfs subvolume snapshot |
 | `DELETE` | `/api/v1/storage/pools/{pool_id}/snapshots/{snapshot_name}` | `storage:admin` | Deletes a Btrfs subvolume snapshot |
 | `GET` | `/api/v1/storage/schedule` | `storage:read` | Retrieves current automated SMART self-test and storage scrub schedule |
 | `PUT` | `/api/v1/storage/schedule` | `storage:admin` | Updates automated SMART self-test and storage scrub schedule |

@@ -2986,18 +2986,6 @@ class RestoreAppBackupEndpointResponse(_Doc):
     status: str | None = None
 
 
-class RestorePoolSnapshotResponseResult(_Doc):
-    snapshot: str | None = None
-    status: str | None = None
-
-
-class RestorePoolSnapshotResponse(_Doc):
-    """POST /backup/restore-snapshot"""
-
-    result: RestorePoolSnapshotResponseResult | None = None
-    status: str | None = None
-
-
 class CreateOrUpdateBackupJobResponseJob(_Doc):
     bandwidth_limit_kbps: float | None = None
     created_at: float | None = None
@@ -5309,7 +5297,6 @@ ROUTE_RESPONSES: dict[str, Any] = {
     "POST /auth/mfa/setup": SetupMfaResponse,
     "POST /auth/ticket": RequestStreamTicketResponse,
     "POST /backup/apps/{backup_id}/restore": RestoreAppBackupEndpointResponse,
-    "POST /backup/restore-snapshot": RestorePoolSnapshotResponse,
     "POST /backup/schedule": CreateOrUpdateBackupJobResponse,
     "POST /backup/schedule/{job_id}/migrate": MigrateBackupJobResponse,
     "POST /backup/schedule/{job_id}/run": TriggerBackupJobResponse,

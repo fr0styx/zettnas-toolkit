@@ -6,7 +6,6 @@ import {
   openNewCloudRemoteModal,
   openCreateStoragePoolModal,
   openCreateNetworkShareModal,
-  openSnapshotsModal,
   openRenameStoragePoolModal,
 } from '../components/chassis-visualizer.js';
 
@@ -135,27 +134,6 @@ describe('storage dialogs in German (NUX-20)', () => {
     document.body.innerHTML = page;
     openCreateNetworkShareModal();
     await vi.waitFor(() => expect(matrix().textContent).toBe('Es gelten die üblichen Zugriffsregeln.'));
-  });
-
-  it('lists snapshots, or says there are none or that they could not be loaded', async () => {
-    const page = '<div id="modal-btrfs-snapshots"><div id="snapshots-list-mount"></div></div>';
-    const get = vi.spyOn(api, 'get').mockResolvedValue([]);
-    document.body.innerHTML = page;
-    await openSnapshotsModal('tank');
-    const mount = () => document.getElementById('snapshots-list-mount');
-    await vi.waitFor(() => expect(mount().textContent).toBe('Noch keine Snapshots.'));
-
-    get.mockResolvedValue([{ name: 'daily', path: '/mnt/tank/.snapshots/daily', created_at: 1700000000 }]);
-    document.body.innerHTML = page;
-    await openSnapshotsModal('tank');
-    await vi.waitFor(() => expect(mount().querySelector('th')?.textContent).toBe('Snapshot'));
-    expect([...mount().querySelectorAll('th')].map((th) => th.textContent)).toEqual(['Snapshot', 'Pfad', 'Erstellt', 'Aktion']);
-    expect(mount().querySelector('.btn-snap-restore').textContent).toContain('Wiederherstellen');
-
-    get.mockRejectedValue(new Error('nope'));
-    document.body.innerHTML = page;
-    await openSnapshotsModal('tank');
-    await vi.waitFor(() => expect(mount().textContent).toBe('Snapshots konnten nicht geladen werden: nope'));
   });
 
   it('says when a pool could not be renamed', async () => {

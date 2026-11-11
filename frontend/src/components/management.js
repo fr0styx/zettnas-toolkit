@@ -5,7 +5,7 @@ import { setIconLabel } from '../ui/primitives.js';
 import { syncDesktopThemeUI, openDrawer, restoreHardwareTabsToManagement } from './settings.js';
 import { ZettEventBus } from '../event-bus.js';
 import { fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
-import { fetchAndRenderChassisTwin, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, fetchAndRenderRemoteStorage, openNewCloudRemoteModal, openCreateStoragePoolModal, openCreateNetworkShareModal, openSnapshotsModal, getThermalLevel } from './chassis-visualizer.js';
+import { fetchAndRenderChassisTwin, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, fetchAndRenderRemoteStorage, openNewCloudRemoteModal, openCreateStoragePoolModal, openCreateNetworkShareModal, getThermalLevel } from './chassis-visualizer.js';
 import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { bringToFront, DockManager, makeDraggable, saveWindowBounds, saveOpenWindowsState } from './dock.js';
 import { state } from '../state.js';
@@ -1590,12 +1590,6 @@ export function initManagement() {
     });
   }
 
-  const manageSnapsBtn = document.getElementById('btn-manage-snapshots');
-  if (manageSnapsBtn) {
-    manageSnapsBtn.addEventListener('click', () => {
-      openSnapshotsModal();
-    });
-  }
 
   // Network shares refresh & create buttons
   const refreshSharesBtn = document.getElementById('btn-refresh-shares');

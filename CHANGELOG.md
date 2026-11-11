@@ -599,6 +599,26 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   the empty snapshot list is gone: it pressed a button of the pool's window, which did nothing,
   or snapshotted whichever pool that window had last been opened for.
 
+#### Changes
+
+- **A backup job that makes no snapshot now fails.** A job of the kind "Snapshots on this server
+  only" ended "Done" although no snapshot was made: with a mistyped folder, with a share that is
+  a plain folder, without the snapshot tools, and on a system that keeps its own snapshots, such
+  as Unraid. **Such jobs turn red at their next run.** They were never backups; the reason is in
+  the job's last error. A job that also copies to a cloud keeps running and notes that the
+  snapshot was skipped. "Take a snapshot" and deleting a snapshot now also say when they did not
+  work.
+- **"Go back" on a snapshot row is removed**, on the Backup page and in the pool's Snapshots
+  window, which is removed as well (snapshots are on the Backup page). "Go back" did not roll
+  back what it named: the target was guessed from the snapshot's name, so a scheduled snapshot
+  became a new folder, and a snapshot of one share could land on another. The safe way stays:
+  "Files" on a snapshot row, then "Roll the whole share back", which first keeps the share as it
+  is now.
+- **Snapshots made by a backup job or by hand are named after their folder** (`photos@backup-…`,
+  `photos@manual-…`), so "Roll the whole share back" and "Restore a copy" find the right share.
+  A job now removes only its own old snapshots; it used to remove hand-made ones and those of
+  other shares whose names began the same way.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

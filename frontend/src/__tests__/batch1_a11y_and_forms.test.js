@@ -52,7 +52,6 @@ describe('Batch 1: Accessibility, Form Label Linking & ARIA Radiogroups', () => 
       { labelFor: 'create-share-security', inputId: 'create-share-security' },
       { labelFor: 'create-share-path', inputId: 'create-share-path' },
       { labelFor: 'create-share-comment', inputId: 'create-share-comment' },
-      { labelFor: 'snap-name-input', inputId: 'snap-name-input' }
     ];
 
     expectedPairs.forEach(({ labelFor, inputId }) => {

@@ -59,10 +59,6 @@ def test_snapshot_requests_refuse_paths(client, auth_headers):
         "/api/backup/snapshots", headers=auth_headers, json={"subvol_name": "media", "snapshot_name": "../x"}
     )
     assert bad.status_code == 422
-    bad = client.post(
-        "/api/backup/restore-snapshot", headers=auth_headers, json={"snapshot_name": "s", "target_subvol": "../etc"}
-    )
-    assert bad.status_code == 422
 
 
 def test_resolve_within_still_answers_the_same(tmp_path):

@@ -141,11 +141,6 @@ class StorageSnapshotBreakGlassDeleteRequest(BaseModel):
     )
 
 
-class StorageSnapshotRestoreRequest(BaseModel):
-    snapshot_name: SingleName
-    target_subvol: Annotated[str, AfterValidator(lambda v: single_name(v) if v else v)] = ""
-
-
 @router.get("/platform", dependencies=[Depends(require_scope("storage:read", "shares:read", "system:view"))])
 def get_storage_platform_info() -> dict[str, Any]:
     """
@@ -756,32 +751,6 @@ def break_glass_delete_snapshot(pool_id: PoolId, req: StorageSnapshotBreakGlassD
             break_glass=True,
             reason=req.reason,
         )
-    except PlatformCapabilityError as e:
-        raise HTTPException(status_code=403, detail=str(e)) from e
-
-
-@router.post(
-    "/pools/{pool_id}/snapshots/restore",
-    dependencies=[Depends(require_scope("storage:admin")), Depends(require_confirmation("storage.snapshot.restore"))],
-)
-def restore_storage_snapshot(pool_id: PoolId, req: StorageSnapshotRestoreRequest) -> dict[str, Any]:
-    """
-    Restores or rolls back a Btrfs subvolume snapshot. Forbidden in Observer Mode.
-    """
-    adapter = get_storage_platform()
-    caps = adapter.get_capabilities()
-    if caps.is_observer_mode:
-        raise HTTPException(
-            status_code=403,
-            detail=f"Forbidden in Observer Mode on {adapter.get_platform_type().value}.",
-        )
-    try:
-        res = adapter.restore_snapshot(
-            pool_id=pool_id, snapshot_name=req.snapshot_name, target_subvol=req.target_subvol
-        )
-        if res.get("status") == "error":
-            raise HTTPException(status_code=400, detail=res.get("message") or "Snapshot restore failed")
-        return res
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e)) from e
 

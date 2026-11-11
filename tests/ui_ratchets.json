@@ -32,8 +32,8 @@
  "frontend/src/components/chassis-visualizer.js": {
   "buttons": 3,
   "globals": 1,
-  "styles": 44,
-  "templates": 22
+  "styles": 42,
+  "templates": 20
  },
  "frontend/src/components/container-modal.js": {
   "buttons": 0,
@@ -518,7 +518,7 @@
  "frontend/src/windows/management-window.html": {
   "buttons": 6,
   "globals": 0,
-  "styles": 557,
+  "styles": 554,
   "templates": 0
  }
 }

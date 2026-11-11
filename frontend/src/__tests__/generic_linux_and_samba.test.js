@@ -5,7 +5,6 @@ import {
   fetchAndRenderNetworkShares,
   openCreateStoragePoolModal,
   openCreateNetworkShareModal,
-  openSnapshotsModal,
 } from '../components/chassis-visualizer.js';
 import { api } from '../api.js';
 
@@ -65,9 +64,7 @@ describe('Sprint 5: Generic Linux Active Provisioner & Samba Engine (Frontend)',
     expect(scrubBtn).not.toBeNull();
     expect(scrubBtn.textContent).toContain('Scrub pool');
 
-    const snapsBtn = container.querySelector('.btn-pool-snaps');
-    expect(snapsBtn).not.toBeNull();
-    expect(snapsBtn.textContent).toContain('Snapshots');
+    expect(container.querySelector('.btn-pool-snaps')).toBeNull(); // snapshots are on the Backup page (SET-06)
 
     const destroyBtn = container.querySelector('.btn-pool-destroy');
     expect(destroyBtn).not.toBeNull();
@@ -80,11 +77,6 @@ describe('Sprint 5: Generic Linux Active Provisioner & Samba Engine (Frontend)',
     btnCreatePool.id = 'btn-create-storage-pool';
     btnCreatePool.style.display = 'none';
     document.body.appendChild(btnCreatePool);
-
-    const btnSnapshots = document.createElement('button');
-    btnSnapshots.id = 'btn-manage-snapshots';
-    btnSnapshots.style.display = 'none';
-    document.body.appendChild(btnSnapshots);
 
     vi.spyOn(api, 'get').mockImplementation((url) => {
       if (url === '/api/storage/pools') {
@@ -110,10 +102,8 @@ describe('Sprint 5: Generic Linux Active Provisioner & Samba Engine (Frontend)',
     await fetchAndRenderStorageTopology(container);
 
     expect(btnCreatePool.style.display).toBe('inline-flex');
-    expect(btnSnapshots.style.display).toBe('inline-flex');
 
     btnCreatePool.remove();
-    btnSnapshots.remove();
   });
 
   it('renders network shares with delete action in active mode and binds delete event', async () => {

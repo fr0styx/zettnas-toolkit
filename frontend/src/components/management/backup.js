@@ -218,9 +218,6 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
               <button class="btn-rect btn-sys-browse-snap" data-snap-name="${escapeHtml(s.name)}" title="${t('snap.browse', 'Browse and restore files')}">
                 <svg class="ic" aria-hidden="true"><use href="#i-storage"/></svg> ${t('snap.browse_short', 'Files')}
               </button>
-              <button class="btn-rect btn-sys-restore-snap" data-snap-name="${escapeHtml(s.name)}" data-pool-id="${escapeHtml(poolId)}" title="${t('ui.rollback_to_this_snapshot', 'Rollback to this snapshot')}">
-                <span aria-hidden="true">⏪</span> ${escapeHtml(t('backup.snap_restore', 'Go back'))}
-              </button>
               <button class="btn-rect danger btn-sys-delete-snap" data-snap-name="${escapeHtml(s.name)}" data-pool-id="${escapeHtml(poolId)}" title="${t('ui.delete_snapshot', 'Delete Snapshot')}">
                 🗑️
               </button>
@@ -248,26 +245,6 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
 
     mount.querySelectorAll('.btn-sys-browse-snap').forEach((btn) => {
       btn.addEventListener('click', () => openSnapshotBrowser(btn.dataset.snapName));
-    });
-
-    mount.querySelectorAll('.btn-sys-restore-snap').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const snapName = btn.dataset.snapName;
-        const poolId = btn.dataset.poolId || 'default';
-        showDangerConfirm(t('backup.snap_restore_q', 'Go back to snapshot "{name}"? The folder as it is now is kept as a snapshot first.', { name: snapName }), async () => {
-          try {
-            showToast(t('toast.restoring_snapshot', 'Restoring snapshot {snapName}...', { snapName: snapName }), 'info');
-            await api.post('/api/backup/restore-snapshot', {
-              pool_id: poolId,
-              snapshot_name: snapName,
-            });
-            showToast(t('toast.snapshot_successfully_restored', 'Snapshot "{snapName}" successfully restored!', { snapName: snapName }), 'success');
-            fetchAndRenderSystemSnapshots(mount);
-          } catch (err) {
-            showToast(t('toast.restore_failed', 'Restore failed: {error}', { error: err.message }), 'error');
-          }
-        });
-      });
     });
 
     mount.querySelectorAll('.btn-sys-delete-snap').forEach(btn => {
