@@ -27,7 +27,8 @@ describe('share protocol tags show the live service state', () => {
     const html = shareProtocolTags(share, { smb: { running: false }, webdav: { running: false, enabled: true }, sftp: { running: true, port: 2222 } });
     document.body.innerHTML = html;
     const tags = [...document.querySelectorAll('.proto-tag')].map((t) => [t.textContent, t.className.split(' ')[1]]);
-    expect(tags).toEqual([['SMB', 'proto-down'], ['NFS', 'proto-off'], ['WebDAV', 'proto-down'], ['SFTP :2222', 'proto-on']]);
+    // WebDAV and SFTP reach a share only for some administrators: no tag per share (SET-14)
+    expect(tags).toEqual([['SMB', 'proto-down'], ['NFS', 'proto-off']]);
   });
   it('does not claim WebDAV or SFTP when it does not know', () => {
     document.body.innerHTML = shareProtocolTags(share, {});

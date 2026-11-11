@@ -264,6 +264,18 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   with the reason; it was in the server log only. When a restart fails, the reason is shown
   instead of a general error.
 
+#### Fixes
+
+- **Shares no longer says things that are not true.** The SFTP card named a program and a
+  "chroot jail" that do not serve SFTP; it showed "Stopped" when its status could not be read; its
+  sample commands used "admin" when no SFTP user existed. Every share card carried WebDAV and SFTP
+  tags, although only administrators without two-step sign-in reach shares that way. Three cards
+  on the Network page said "ACTIVE" as fixed text, and the "Sharing services" button led there.
+  The people list in the dialog for a new share called an address the server does not have and
+  never loaded; it is replaced by a note that people are set under Users.
+- **"Stop sharing" says that the folder and its files stay.** The question only asked 'Remove the
+  share "x"?' and made you type the name.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

@@ -113,27 +113,12 @@ describe('storage dialogs in German (NUX-20)', () => {
     expect(profile.textContent).toContain('Einzelnes Volume (ein Laufwerk)');
   });
 
-  it('counts the people a new share is for', async () => {
-    const page = `
-      <div id="modal-create-network-share"><form id="create-share-form">
-        <div id="create-share-users-matrix"></div><span id="create-share-users-count"></span>
-      </form></div>`;
-    const get = vi.spyOn(api, 'get').mockResolvedValue([{ username: 'anna' }, { username: 'ben' }]);
-    document.body.innerHTML = page;
+  it('asks no address that does not exist for the people of a new share', async () => {
+    // the people list called /api/auth/users, which the server does not have, and never loaded (SET-14)
+    const get = vi.spyOn(api, 'get').mockResolvedValue([]);
+    document.body.innerHTML = '<div id="modal-create-network-share"><form id="create-share-form"></form></div>';
     openCreateNetworkShareModal();
-    const matrix = () => document.getElementById('create-share-users-matrix');
-    await vi.waitFor(() => expect(document.getElementById('create-share-users-count').textContent).toBe('2 Benutzer'));
-    expect(matrix().textContent).toContain('Verweigern');
-
-    get.mockResolvedValue([]);
-    document.body.innerHTML = page;
-    openCreateNetworkShareModal();
-    await vi.waitFor(() => expect(matrix().textContent).toBe('Noch keine Konten: Es gelten die Zugriffsregeln des Systems.'));
-
-    get.mockRejectedValue(new Error('x'));
-    document.body.innerHTML = page;
-    openCreateNetworkShareModal();
-    await vi.waitFor(() => expect(matrix().textContent).toBe('Es gelten die üblichen Zugriffsregeln.'));
+    expect(get).not.toHaveBeenCalledWith('/api/auth/users');
   });
 
   it('says when a pool could not be renamed', async () => {

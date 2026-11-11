@@ -80,7 +80,7 @@ describe('chassis and storage text in German (NUX-20)', () => {
     const html = buildSftpCardHtml({ running: false, port: 2222 }, 3, 'alice');
     expect(html).toContain('SFTP starten');
     expect(html).toContain('Benutzer verwalten (3)');
-    expect(html).toContain('Chroot-Käfig (/home/%u)');
+    expect(html).not.toContain('Chroot'); // not true: another program serves SFTP (SET-14)
     expect(html).toContain('Nicht erlaubt (kein PTY)');
     expect(html).toContain('SSHFS-Einbindung (Linux/macOS)');
     expect(html).toContain('<span aria-hidden="true">📋</span> Kopieren');

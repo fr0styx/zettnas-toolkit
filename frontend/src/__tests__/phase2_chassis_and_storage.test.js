@@ -396,7 +396,7 @@ describe('Sprint 3: Storage Pools Topology & Network Shares', () => {
     expect(container.textContent).toContain('application data');
     expect(container.textContent).toContain('PUBLIC');
     expect(container.textContent).toContain('SMB');
-    expect(container.textContent).toContain('WebDAV :8084');
+    expect(container.textContent).not.toContain('WebDAV :8084'); // no WebDAV tag per share (SET-14)
     expect(container.textContent).toContain('Cache: only (ark)');
 
     const openBtn = container.querySelector('.btn-share-reveal');

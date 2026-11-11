@@ -1632,15 +1632,6 @@ export function initManagement() {
     sharedLinksBtn.addEventListener('click', () => import('./shared-links.js').then((m) => m.openSharedLinks({ everyone: true })));
   }
 
-  // Quick Manage Protocols shortcut in Network Shares pane
-  const quickManageProtocolsBtn = document.getElementById('btn-quick-manage-protocols');
-  if (quickManageProtocolsBtn) {
-    quickManageProtocolsBtn.addEventListener('click', () => {
-      if (typeof window.openManagementWindow === 'function') {
-        window.openManagementWindow('mgmt-sec-network', 'mgmt-pane-network-services');
-      }
-    });
-  }
 
   // Remote & Cloud Storage refresh button
   const refreshRemotesBtn = document.getElementById('btn-refresh-remotes');

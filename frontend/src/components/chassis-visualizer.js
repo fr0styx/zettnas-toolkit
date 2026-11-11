@@ -1019,13 +1019,20 @@ export async function lookForPools(container, button) {
 /**
  * Builds HTML for Inbound SFTP Subsystem Server Card
  */
-export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admin') {
+export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = '') {
   const isRunning = Boolean(sftpStatus?.running);
   const port = sftpStatus?.port || 2222;
-  const sftpPillClass = isRunning ? 'running' : 'stopped';
-  const sftpPillText = isRunning ? `🟢 RUNNING (Port ${port})` : '⚪ STOPPED';
+  // a status that could not be read is not "stopped" (SET-14)
+  const known = !sftpStatus?.unknown;
+  const sftpPillClass = !known ? 'unknown' : isRunning ? 'running' : 'stopped';
+  const sftpPillText = !known
+    ? `? ${t('sftp.status_unknown', 'Status not known')}`
+    : isRunning
+      ? `🟢 ${t('sftp.running_port', 'Running (port {port})', { port })}`
+      : `⚪ ${t('sftp.stopped', 'Stopped')}`;
   const hostIp = window.location.hostname || '127.0.0.1';
-  const user = sampleUser || 'username';
+  // the sample commands used "admin" when no SFTP user existed
+  const user = sampleUser || t('sftp.your_name', 'your-name');
 
   const finderCmd = `sftp://${user}@${hostIp}:${port}/`;
   const terminalCmd = `sftp -P ${port} ${user}@${hostIp}`;
@@ -1052,8 +1059,6 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
 
       <div class="cv-row-xs-muted">
         <span>${t('chassis.port', 'Port:')} <strong class="cv-strong">${port}</strong></span>
-        <span>${t('chassis.subsystem', 'Subsystem:')} <code class="cv-accent">internal-sftp</code></span>
-        <span>${t('chassis.isolation', 'Isolation:')} <strong class="cv-strong">${t('chassis.chroot_jail', 'Chroot jail (/home/%u)')}</strong></span>
         <span>${t('chassis.host_shell', 'Host shell:')} <strong style="color:var(--ok2, #22c55e); background:rgba(34,197,94,0.12); padding:1px 6px; border-radius:4px; font-size:var(--zn-fs-xs);">${t('chassis.no_shell', 'Not allowed (no PTY)')}</strong></span>
       </div>
 
@@ -1181,7 +1186,7 @@ export async function fetchAndRenderNetworkShares(container) {
     const [sharesData, platformData, sftpStatus, sftpUsersRes, sambaStatus, webdavStatus] = await Promise.all([
       api.get('/api/storage/shares'),
       api.get('/api/storage/platform').catch(() => ({})),
-      api.get('/api/sftp/status').catch(() => ({ running: false, port: 2222 })),
+      api.get('/api/sftp/status').catch(() => ({ running: false, port: 2222, unknown: true })),
       api.get('/api/sftp/users').catch(() => []),
       api.get('/api/samba/status').catch(() => null),
       api.get('/api/webdav/status').catch(() => null),
@@ -1195,7 +1200,7 @@ export async function fetchAndRenderNetworkShares(container) {
     const canManageShares = platformData?.capabilities?.can_manage_shares ?? (!isObserver);
 
     const sftpUsers = Array.isArray(sftpUsersRes) ? sftpUsersRes : (sftpUsersRes?.users || []);
-    const sampleUser = sftpUsers[0]?.username || 'admin';
+    const sampleUser = sftpUsers[0]?.username || '';
 
     const btnCreateShare = document.getElementById('btn-create-network-share');
     if (btnCreateShare) {
@@ -1306,13 +1311,9 @@ export function shareProtocolTags(s, services = {}) {
   out.push(s.export_nfs
     ? tag('NFS', 'on', t('share.proto_on', 'Shared over {proto}', { proto: 'NFS' }))
     : tag('NFS', 'off', t('share.proto_not_shared', 'Not shared over {proto}', { proto: 'NFS' })));
-  const dav = services.webdav;
-  if (dav && dav.running) out.push(tag(`WebDAV :${dav.port}`, 'on', t('share.proto_on', 'Shared over {proto}', { proto: 'WebDAV' })));
-  else if (dav && dav.enabled) out.push(tag('WebDAV', 'down', t('share.proto_service_down', '{proto} is turned on but not running', { proto: 'WebDAV' })));
-  else if (dav) out.push(tag('WebDAV', 'off', t('share.proto_service_off', '{proto} is turned off', { proto: 'WebDAV' })));
-  const sftp = services.sftp;
-  if (sftp && sftp.running) out.push(tag(`SFTP :${sftp.port}`, 'on', t('share.proto_on', 'Shared over {proto}', { proto: 'SFTP' })));
-  else if (sftp) out.push(tag('SFTP', 'off', t('share.proto_service_off', '{proto} is turned off', { proto: 'SFTP' })));
+  // No WebDAV or SFTP tag per share: those services reach every share only for administrators
+  // without two-step sign-in, everyone else just their own folder. The tags said every share was
+  // served that way (SET-14); the services' own cards say whether they run.
   return out.join('\n      ');
 }
 
@@ -1421,7 +1422,7 @@ function bindSharesGridEvents(grid, container) {
       const sName = delBtn.dataset.shareName;
       showConfirmToast(
         t('shares.remove_share', 'Remove Share'),
-        t('chassis.remove_share_msg', 'Remove the share "{name}"?', { name: sName }),
+        t('chassis.remove_share_files_stay', 'Stop sharing "{name}"? The folder and its files stay where they are, in Files; only the network sharing ends.', { name: sName }),
         async () => {
           try {
             await api.delete(`/api/storage/shares/${sName}`, { confirmed: true });
@@ -1432,7 +1433,7 @@ function bindSharesGridEvents(grid, container) {
           }
         },
         null,
-        { okText: t('shares.remove_share', 'Remove Share'), destructive: true, typeToConfirm: sName }
+        { okText: t('shares.stop_sharing', 'Stop sharing'), destructive: true }
       );
     }
   });
@@ -1692,12 +1693,12 @@ export async function fetchAndRenderRemoteStorage(container) {
     const [webdavStatus, remotes, sftpStatus, sftpUsersRes] = await Promise.all([
       api.get('/api/webdav/status'),
       api.get('/api/remotes'),
-      api.get('/api/sftp/status').catch(() => ({ running: false, port: 2222 })),
+      api.get('/api/sftp/status').catch(() => ({ running: false, port: 2222, unknown: true })),
       api.get('/api/sftp/users').catch(() => []),
     ]);
 
     const sftpUsers = Array.isArray(sftpUsersRes) ? sftpUsersRes : (sftpUsersRes?.users || []);
-    const sampleUser = sftpUsers[0]?.username || 'admin';
+    const sampleUser = sftpUsers[0]?.username || '';
 
     const isRunning = webdavStatus.running;
     const webdavPillClass = isRunning ? 'running' : 'stopped';
@@ -3104,46 +3105,7 @@ export function openCreateNetworkShareModal(onSuccess) {
     toggleNfs();
   }
 
-  const usersMatrix = document.getElementById('create-share-users-matrix');
-  const usersCount = document.getElementById('create-share-users-count');
-  if (usersMatrix) {
-    noteIn(usersMatrix, t('chassis.loading_users', 'Loading accounts…'), 'font-size:var(--zn-fs-xs); color:var(--muted); padding:4px;');
-    api.get('/api/auth/users').then((data) => {
-      const users = Array.isArray(data) ? data : (data?.users || []);
-      if (!users.length) {
-        noteIn(usersMatrix, t('chassis.no_users', 'No accounts yet: the system’s access rules apply.'), 'font-size:var(--zn-fs-xs); color:var(--muted); padding:4px;');
-        if (usersCount) usersCount.textContent = t('ui.0_users', '0 Users');
-        return;
-      }
-      if (usersCount) usersCount.textContent = t('chassis.users_count', '{count, plural, one {# user} other {# users}}', { count: users.length });
-      usersMatrix.innerHTML = users.map((u) => {
-        const uname = u.username || u.name || 'user';
-        const role = u.role || 'user';
-        return `
-          <div class="user-perm-row cv-row-xs-box-2" data-username="${uname}">
-            <div class="cv-row-10">
-              <span class="cv-semi-strong-2">👤 ${uname}</span>
-              <span class="cv-xs-muted-box-2">${role}</span>
-            </div>
-            <div class="cv-row-3">
-              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:var(--zn-fs-xs); color:var(--lt-t-3bf58bff, #3bf58b);">
-                <input type="radio" name="perm-${uname}" value="rw" checked style="accent-color:#3bf58b; width:12px; height:12px;" /> RW
-              </label>
-              <label class="cv-row-xs-accent">
-                <input type="radio" name="perm-${uname}" value="ro" style="accent-color:#4fd8c4; width:12px; height:12px;" /> RO
-              </label>
-              <label class="cv-row-xs-crit">
-                <input type="radio" name="perm-${uname}" value="deny" style="accent-color:#f87171; width:12px; height:12px;" /> ${t('chassis.deny', 'Deny')}
-              </label>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }).catch(() => {
-      noteIn(usersMatrix, t('chassis.standard_rules', 'The usual access rules apply.'), 'font-size:var(--zn-fs-xs); color:var(--muted); padding:4px;');
-      if (usersCount) usersCount.textContent = t('ui.standard', 'Standard');
-    });
-  }
+  const usersMatrix = null; // the people list called an address that does not exist and never loaded (SET-14)
 
   if (form) {
     form.onsubmit = async (e) => {

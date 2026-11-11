@@ -29,12 +29,13 @@ describe('Feature 4: SFTP file access Card & User Management', () => {
     );
 
     expect(html).toContain('SFTP file access');
-    expect(html).toContain('RUNNING (Port 2222)');
+    expect(html).toContain('Running (port 2222)');
     expect(html).toContain('Stop SFTP');
     expect(html).toContain('Manage users (2)');
     expect(html).toMatch(/Port: <strong class="cv-strong">2222<\/strong>/);
-    expect(html).toContain('internal-sftp');
-    expect(html).toContain('Chroot jail (/home/%u)');
+    // another program serves SFTP: "internal-sftp" and the chroot jail were not true (SET-14)
+    expect(html).not.toContain('internal-sftp');
+    expect(html).not.toContain('Chroot jail');
     expect(html).toContain('Not allowed (no PTY)');
     expect(html).toContain('sftp://alice@');
     expect(html).toContain('sftp -P 2222 alice@');
@@ -78,7 +79,7 @@ describe('Feature 4: SFTP file access Card & User Management', () => {
     const sftpCard = container.querySelector('#mgmt-sftp-subsystem-card');
     expect(sftpCard).not.toBeNull();
     expect(sftpCard.textContent).toContain('SFTP file access');
-    expect(sftpCard.textContent).toContain('RUNNING (Port 2222)');
+    expect(sftpCard.textContent).toContain('Running (port 2222)');
     expect(sftpCard.textContent).toContain('Manage users (1)');
     expect(sftpCard.textContent).toContain('sftp://backups@');
   });
@@ -128,7 +129,7 @@ describe('Feature 4: SFTP file access Card & User Management', () => {
     const sftpCard = container.querySelector('#mgmt-sftp-subsystem-card');
     expect(sftpCard).not.toBeNull();
     expect(sftpCard.textContent).toContain('SFTP file access');
-    expect(sftpCard.textContent).toContain('STOPPED');
+    expect(sftpCard.textContent).toContain('Stopped');
     expect(sftpCard.textContent).toContain('Start SFTP');
     expect(sftpCard.textContent).toContain('Manage users (0)');
   });
