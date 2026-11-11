@@ -2,6 +2,16 @@
 
 Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep that name.
 
+## Unreleased
+
+#### Fixes
+
+- **No sample values on the pages.** Seventy-four places in Settings and on the desktop were shipped
+  with a believable reading written in: "Score: 100/100", "v1.9.1 • Stable", "Online", a board, a
+  processor, a graphics chip, a UPS. The real value was meant to replace each one; where its load
+  failed, or before it arrived, the sample stood there as if it had been measured. They now show a
+  dash until the real value is known, and a test keeps new ones out.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

@@ -49,7 +49,7 @@
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-docker" data-route="apps" title="Apps" data-i18n-title="mgmt.sidebar_containers">
             <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_containers">Apps</span>
-            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-docker-badge" style="display:none;" data-sample>0 Active</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-docker-badge" style="display:none;" data-sample>—</span>
           </button>
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-vms" data-route="vms" title="Virtual machines" data-i18n-title="mgmt.sidebar_vms">
             <svg class="mgmt-sidebar-svg"><use href="#i-vm"/></svg>
@@ -70,7 +70,7 @@
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-network" data-route="network" title="Network" data-i18n-title="mgmt.sidebar_network">
             <svg class="mgmt-sidebar-svg"><use href="#i-globe"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_network">Network</span>
-            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-net-badge" style="display:none;" data-sample>Online</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-net-badge" style="display:none;" data-sample>—</span>
           </button>
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ups" data-route="power" title="Power" data-i18n-title="mgmt.sidebar_ups">
             <svg class="mgmt-sidebar-svg"><use href="#i-bolt"/></svg>
@@ -143,7 +143,7 @@
             <div class="mgmt-app-info">
               <div class="mgmt-app-title-row">
                 <span class="mgmt-app-title" data-i18n="mgmt.hub_docker_title">Containers & Apps</span>
-                <span class="mgmt-app-pill" id="mgmt-hub-docker-pill" style="background:rgba(79,216,196,0.15); color:var(--zn-text-accent);" data-sample>0 Active</span>
+                <span class="mgmt-app-pill" id="mgmt-hub-docker-pill" style="background:rgba(79,216,196,0.15); color:var(--zn-text-accent);" data-sample>—</span>
               </div>
               <p class="mgmt-app-desc" data-i18n="mgmt.hub_docker_desc">Manage Docker fleet, inspect container logs, live port tuning, and 1-click curated app catalog.</p>
             </div>
@@ -323,7 +323,7 @@
                 <span style="font-size: var(--zn-fs-xs); font-weight: 700; letter-spacing: 0.5px; color: var(--zn-text-strong);" data-i18n="mgmt.preview_title">Desktop preview</span>
               </div>
               <div style="display:flex; align-items:center; gap: 6px;">
-                <span id="dt-theme-badge" class="desktop-twin-badge" style="font-size: var(--zn-fs-xs); font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--lt-b-33cdb826, rgba(51,205,184,0.15)); color: var(--lt-ink-brand, var(--brand, #33cdb8)); border: 1px solid var(--lt-r-33cdb84c, rgba(51,205,184,0.3));" data-sample>CYBER TEAL</span>
+                <span id="dt-theme-badge" class="desktop-twin-badge" style="font-size: var(--zn-fs-xs); font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--lt-b-33cdb826, rgba(51,205,184,0.15)); color: var(--lt-ink-brand, var(--brand, #33cdb8)); border: 1px solid var(--lt-r-33cdb84c, rgba(51,205,184,0.3));" data-sample>—</span>
                 <span style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono, monospace);" data-sample>16:9 PREVIEW</span>
               </div>
             </div>
@@ -382,7 +382,7 @@
                     <button class="wallpaper-cat-pill" data-cat="scenic" data-i18n="mw.scenic">Scenic</button>
                     <button class="wallpaper-cat-pill" data-cat="cyber" data-i18n="mw.cyberpunk">Cyberpunk</button>
                     <button class="wallpaper-cat-pill" data-cat="oled">OLED</button>
-                    <span id="wallpaper-count-badge" class="wallpaper-count-badge" data-sample>0 Wallpapers</span>
+                    <span id="wallpaper-count-badge" class="wallpaper-count-badge" data-sample>—</span>
                   </div>
                   <div class="wallpaper-toolbar-actions">
                     <input type="file" id="wallpaper-upload" accept="image/*" style="display:none;">
@@ -464,7 +464,7 @@
               <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-sliders"/></svg> <span data-i18n="mgmt.theme_title">Desktop Theme & Accent</span></div>
               <div class="mgmt-card-intro-desc" data-i18n="mgmt.theme_desc">Personalize the color palette, windows, and accent styling of your Kiboto desktop environment.</div>
               <div class="thm-x">
-                <span id="desktop-theme-active-badge" class="desktop-theme-active-badge" data-sample>CYBER TEAL</span>
+                <span id="desktop-theme-active-badge" class="desktop-theme-active-badge" data-sample>—</span>
               </div>
             </div>
             <div class="mgmt-detail-body">
@@ -563,7 +563,7 @@
                     <div class="thm-row-3">
                       <input class="thm-box-3" type="color" id="desktop-custom-color-picker" value="#33cdb8">
                       <span class="thm-xs-muted" id="desktop-custom-hex-val">#33cdb8</span>
-                      <span id="desktop-contrast-badge" class="desktop-contrast-badge" style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(34, 197, 94, 0.15); color: var(--lt-t-22c55eff, #22c55e); border: 1px solid rgba(34, 197, 94, 0.35);" data-sample>AA PASS</span>
+                      <span id="desktop-contrast-badge" class="desktop-contrast-badge" style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(34, 197, 94, 0.15); color: var(--lt-t-22c55eff, #22c55e); border: 1px solid rgba(34, 197, 94, 0.35);" data-sample>—</span>
                     </div>
                   </div>
                 </div>
@@ -1281,7 +1281,7 @@
                   
                   <!-- Month Navigator -->
                   <div class="cal-row-3">
-                    <div class="cal-fs15-bold-strong" id="modal-cal-month-title" data-sample>October 2026</div>
+                    <div class="cal-fs15-bold-strong" id="modal-cal-month-title" data-sample>—</div>
                     <div class="cal-row-4">
                       <button type="button" id="btn-modal-cal-prev" class="btn-icon cal-xs-soft-box">◀</button>
                       <button type="button" id="btn-modal-cal-today" class="btn-pill-toggle is-small cal-x" data-i18n="mw.today">Today</button>
@@ -1347,8 +1347,8 @@
                   <!-- Agenda Header -->
                   <div class="cal-row-box">
                     <div>
-                      <div class="cal-fs16-bold-strong" id="modal-cal-selected-date-str" data-sample>Monday, October 19, 2026</div>
-                      <div class="cal-xs-muted-2" id="modal-cal-selected-sub" data-sample>0 notes or reminders scheduled</div>
+                      <div class="cal-fs16-bold-strong" id="modal-cal-selected-date-str" data-sample>—</div>
+                      <div class="cal-xs-muted-2" id="modal-cal-selected-sub" data-sample>—</div>
                     </div>
                     <div class="cal-row-5">
                       <button type="button" id="btn-cal-filter-all" class="cal-filter-pill active" data-filter="all" data-i18n="mw.all">All</button>
@@ -1419,7 +1419,7 @@
                     <div class="lng-xs-muted-2" id="modal-tz-preview-date">--</div>
                   </div>
                   <div class="lng-col-3">
-                    <div id="modal-tz-active-pill" class="suite-badge" style="background: var(--lt-b-33cdb826, rgba(51,205,184,0.15)); color: var(--lt-ink-brand, var(--brand, #33cdb8)); border-color: var(--lt-r-33cdb859, rgba(51,205,184,0.35)); font-size: var(--zn-fs-xs); font-weight: 700; padding: 3px 10px; border-radius: 6px;" data-sample>Local Time (Auto)</div>
+                    <div id="modal-tz-active-pill" class="suite-badge" style="background: var(--lt-b-33cdb826, rgba(51,205,184,0.15)); color: var(--lt-ink-brand, var(--brand, #33cdb8)); border-color: var(--lt-r-33cdb859, rgba(51,205,184,0.35)); font-size: var(--zn-fs-xs); font-weight: 700; padding: 3px 10px; border-radius: 6px;" data-sample>—</div>
                     <!-- 12H / 24H Toggle -->
                     <div class="tz-format-toggle-group lng-row-box-2" role="radiogroup" aria-label="Clock format" data-i18n-aria-label="tz.format">
                       <button type="button" id="btn-tz-fmt-12" class="tz-fmt-btn lng-xs-bold-muted-box" role="radio" aria-checked="false" data-i18n="tz.h12">12 h</button>
@@ -1614,7 +1614,7 @@
                 <!-- Visual Front-Panel Switch Jack Matrix -->
                 <div class="network-section-header">
                   <span class="network-section-title" data-i18n="mw.hardware_switch_ports_physical_jacks">HARDWARE SWITCH PORTS (PHYSICAL JACKS)</span>
-                  <span class="network-section-badge" id="net-active-ports-badge" data-sample>-- Active</span>
+                  <span class="network-section-badge" id="net-active-ports-badge" data-sample>—</span>
                 </div>
                 <div class="network-switch-chassis" id="network-switch-chassis">
                   <div class="network-switch-faceplate" id="network-switch-faceplate">
@@ -1719,7 +1719,7 @@
                   <div class="network-card" id="tailscale-telemetry-card">
                     <div class="network-card-header">
                       <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-shield"/></svg> <span data-i18n="mw.tailscale_node_telemetry">Tailscale Node Telemetry</span></div>
-                      <span class="mgmt-app-pill" id="ts-connection-pill" style="background:var(--lt-b-6c808426, rgba(108,128,132,0.15)); color:var(--muted);" data-sample>Offline</span>
+                      <span class="mgmt-app-pill" id="ts-connection-pill" style="background:var(--lt-b-6c808426, rgba(108,128,132,0.15)); color:var(--muted);" data-sample>—</span>
                     </div>
                     <div class="wgd-col-xs">
                       <div class="wgd-row-box">
@@ -1845,7 +1845,7 @@
                               <input type="checkbox" id="ts-exit-node-toggle" style="accent-color:var(--accent-cyan, #4fd8c4);" />
                               <span data-i18n="net.tailscale_exit_node">Exit Node Gateway (--advertise-exit-node)</span>
                             </label>
-                            <span class="mgmt-app-pill wgd-xs-5" id="ts-exit-node-pill" data-sample>Inactive</span>
+                            <span class="mgmt-app-pill wgd-xs-5" id="ts-exit-node-pill" data-sample>—</span>
                           </div>
                           <div class="wgd-xs-4" data-i18n="net.tailscale_exit_desc">
                             Route all mobile/laptop internet traffic encrypted through this NAS when traveling.
@@ -1862,7 +1862,7 @@
                               <input type="checkbox" id="ts-ssh-toggle" style="accent-color:var(--accent-cyan, #4fd8c4);" />
                               <span data-i18n="net.tailscale_ssh">Tailscale SSH (--ssh)</span>
                             </label>
-                            <span class="mgmt-app-pill wgd-xs-5" id="ts-ssh-pill" data-sample>Disabled</span>
+                            <span class="mgmt-app-pill wgd-xs-5" id="ts-ssh-pill" data-sample>—</span>
                           </div>
                           <div class="wgd-xs-4" data-i18n="net.tailscale_ssh_desc">
                             Authenticate SSH connections via Tailnet identity without passwords or SSH keys.
@@ -1879,7 +1879,7 @@
                   <div class="network-card" id="tailscale-serve-card">
                     <div class="network-card-header">
                       <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-shield"/></svg> <span data-i18n="net.tailscale_serve">Tailscale Serve & Funnel (Instant TLS)</span></div>
-                      <span class="mgmt-app-pill wgd-xs-6" id="ts-serve-pill" data-sample>Disabled</span>
+                      <span class="mgmt-app-pill wgd-xs-6" id="ts-serve-pill" data-sample>—</span>
                     </div>
                     <div class="wgd-col-xs">
                       <div class="wgd-row-5">
@@ -1953,14 +1953,14 @@
                 <!-- Section 2: WireGuard Point-to-Point Tunnel & Subnet Router -->
                 <div class="network-section-header" id="section-header-wireguard">
                   <span class="network-section-title" data-i18n="mw.wireguard_point_to_point_tunnel_and">WIREGUARD POINT-TO-POINT TUNNEL & SUBNET ROUTER</span>
-                  <span class="network-section-badge" id="wg-tunnel-status-badge" data-sample>Curve25519 Ready</span>
+                  <span class="network-section-badge" id="wg-tunnel-status-badge" data-sample>—</span>
                 </div>
 
                 <div class="network-grid-two-col" id="network-wireguard-container">
                   <div class="network-card">
                     <div class="network-card-header">
                       <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-shield"/></svg> <span data-i18n="mw.wireguard_tunnel_status_wg0">WireGuard Tunnel Status (wg0)</span></div>
-                      <span class="mgmt-app-pill" id="wg-forwarding-pill" style="background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); color:var(--lt-t-3bf58bff, #3bf58b);" data-sample>Curve25519 Ready</span>
+                      <span class="mgmt-app-pill" id="wg-forwarding-pill" style="background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); color:var(--lt-t-3bf58bff, #3bf58b);" data-sample>—</span>
                     </div>
                     <div class="wgd-col-xs">
                       <div class="wgd-row-box-2">
@@ -1969,7 +1969,7 @@
                       </div>
                       <div class="wgd-row-box-2">
                         <span class="wgd-muted" data-i18n="mw.subnet_forwarding">Subnet Forwarding:</span>
-                        <span class="wgd-bold-ok" id="wg-ip-forward-status" data-sample>sysctl net.ipv4.ip_forward=1</span>
+                        <span class="wgd-bold-ok" id="wg-ip-forward-status" data-sample>—</span>
                       </div>
                       <div class="wgd-row-5">
                         <span class="wgd-muted" data-i18n="mw.subnet_nat_router">Subnet NAT Router:</span>
@@ -2414,7 +2414,7 @@
               <div class="mgmt-card-intro">
                 <div class="unr-row">
                   <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-sliders"/></svg> <span data-i18n="mgmt.hardware_sec_title">Hardware & Acoustic Profiles</span></div>
-                  <span class="mgmt-app-pill" id="unraid-profile-current-pill" style="background:rgba(51,205,184,0.15); color:var(--ok2);" data-sample>ACTIVE: AUTO DYNAMIC</span>
+                  <span class="mgmt-app-pill" id="unraid-profile-current-pill" style="background:rgba(51,205,184,0.15); color:var(--ok2);" data-sample>—</span>
                 </div>
                 <div class="mgmt-card-intro-desc" data-i18n="mgmt.hardware_sec_desc">Choose a cooling profile, watch hardware health and tune temperatures.</div>
               </div>
@@ -2457,7 +2457,7 @@
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.unraid_os_ver">OS Version</span>
-                        <span class="udi-val" id="mgmt-unraid-version" data-sample>Unraid OS</span>
+                        <span class="udi-val" id="mgmt-unraid-version" data-sample>—</span>
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.unraid_disks_cfg">Disks Configuration</span>
@@ -2465,11 +2465,11 @@
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.unraid_parity_status">Parity Check Status</span>
-                        <span class="udi-val" id="mgmt-unraid-parity" data-sample>Idle</span>
+                        <span class="udi-val" id="mgmt-unraid-parity" data-sample>—</span>
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.unraid_mover_act">Mover Activity</span>
-                        <span class="udi-val" id="mgmt-unraid-mover" data-sample>Idle</span>
+                        <span class="udi-val" id="mgmt-unraid-mover" data-sample>—</span>
                       </div>
                     </div>
 
@@ -2485,7 +2485,7 @@
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mw.host_uptime">Host Uptime</span>
-                        <span class="udi-val" id="mgmt-generic-uptime" data-sample>Active</span>
+                        <span class="udi-val" id="mgmt-generic-uptime" data-sample>—</span>
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mw.processor">Processor</span>
@@ -2493,7 +2493,7 @@
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mw.system_load">System Load</span>
-                        <span class="udi-val" id="mgmt-generic-load" data-sample>Normal</span>
+                        <span class="udi-val" id="mgmt-generic-load" data-sample>—</span>
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mw.storage_engine">Storage Engine</span>
@@ -2508,11 +2508,11 @@
                     <div class="unraid-details-grid" id="mgmt-board-details-grid">
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.board_vendor">Motherboard & Vendor</span>
-                        <span class="udi-val" id="mgmt-board-name" data-sample>Zettlab WY120</span>
+                        <span class="udi-val" id="mgmt-board-name" data-sample>—</span>
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.bios_version">BIOS Firmware</span>
-                        <span class="udi-val" id="mgmt-bios-ver" data-sample>WY120V016</span>
+                        <span class="udi-val" id="mgmt-bios-ver" data-sample>—</span>
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.cpu_governor">CPU Scaling Governor</span>
@@ -2520,7 +2520,7 @@
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.cpu_topology">Core Topology</span>
-                        <span class="udi-val" id="mgmt-cpu-cores" data-sample>18 Threads</span>
+                        <span class="udi-val" id="mgmt-cpu-cores" data-sample>—</span>
                       </div>
                     </div>
                   </div>
@@ -2529,7 +2529,7 @@
                   <div>
                     <div class="unr-row-2">
                       <label class="unr-xs-bold-muted-2" data-i18n="mgmt.gpu_transcode_label">Graphics (video transcoding)</label>
-                      <span class="suite-badge" id="mgmt-gpu-status-badge" style="background:rgba(51,205,184,0.15); color:var(--ok2); border-color:rgba(51,205,184,0.35);" data-sample>ACCELERATION ACTIVE</span>
+                      <span class="suite-badge" id="mgmt-gpu-status-badge" style="background:rgba(51,205,184,0.15); color:var(--ok2); border-color:rgba(51,205,184,0.35);" data-sample>—</span>
                     </div>
                     <div class="gpu-transcode-card">
                       <div class="gpu-transcode-header">
@@ -2538,11 +2538,11 @@
                         </div>
                         <div class="gpu-transcode-info">
                           <div class="gpu-title-row">
-                            <span class="gpu-name" id="mgmt-gpu-name" data-sample>Intel Arc Graphics (Meteor Lake-P GT1)</span>
-                            <span class="gpu-driver-badge" id="mgmt-gpu-driver" data-sample>Driver: i915</span>
+                            <span class="gpu-name" id="mgmt-gpu-name" data-sample>—</span>
+                            <span class="gpu-driver-badge" id="mgmt-gpu-driver" data-sample>—</span>
                             <span class="gpu-node-badge" id="mgmt-gpu-node">/dev/dri/renderD128</span>
                           </div>
-                          <div class="gpu-accel-desc" id="mgmt-gpu-accel" data-sample>Intel QuickSync Video (QSV) • VA-API 1.20</div>
+                          <div class="gpu-accel-desc" id="mgmt-gpu-accel" data-sample>—</div>
                         </div>
                       </div>
                       <div class="gpu-codecs-row">
@@ -2561,7 +2561,7 @@
                   <div class="unr-x" id="mgmt-npu-container">
                     <div class="unr-row-2">
                       <label class="unr-xs-bold-muted-2" data-i18n="mgmt.npu_engine_label">AI accelerator (NPU)</label>
-                      <span class="suite-badge" id="mgmt-npu-status-badge" style="background:rgba(168,85,247,0.15); color:var(--zn-text-ai); border-color:rgba(168,85,247,0.35);" data-sample>NPU ACTIVE</span>
+                      <span class="suite-badge" id="mgmt-npu-status-badge" style="background:rgba(168,85,247,0.15); color:var(--zn-text-ai); border-color:rgba(168,85,247,0.35);" data-sample>—</span>
                     </div>
                     <div class="gpu-transcode-card npu-card" style="border-left: 3px solid #a855f7;">
                       <div class="gpu-transcode-header">
@@ -2570,12 +2570,12 @@
                         </div>
                         <div class="gpu-transcode-info">
                           <div class="gpu-title-row">
-                            <span class="gpu-name" id="mgmt-npu-name" data-sample>Intel AI Boost NPU (Meteor Lake VPU 3720)</span>
-                            <span class="gpu-driver-badge" id="mgmt-npu-driver" data-sample>Driver: intel_vpu</span>
+                            <span class="gpu-name" id="mgmt-npu-name" data-sample>—</span>
+                            <span class="gpu-driver-badge" id="mgmt-npu-driver" data-sample>—</span>
                             <span class="gpu-node-badge" id="mgmt-npu-node" style="color:var(--zn-text-ai); background:rgba(168,85,247,0.08); border-color:rgba(168,85,247,0.25);">/dev/accel/accel0</span>
                             <span class="gpu-driver-badge" id="mgmt-npu-clock">1400 MHz</span>
                           </div>
-                          <div class="gpu-accel-desc unr-x-2" id="mgmt-npu-accel" data-sample>Intel OpenVINO • ONNX Runtime • DirectML</div>
+                          <div class="gpu-accel-desc unr-x-2" id="mgmt-npu-accel" data-sample>—</div>
                         </div>
                       </div>
                       <div class="gpu-codecs-row">
@@ -2728,7 +2728,7 @@
                 <div class="ups-card-icon">⚡</div>
                 <div class="ups-card-label" data-i18n="mgmt.ups_twin_grid">Utility Grid</div>
                 <div class="ups-card-val" id="ups-twin-linev">-- V</div>
-                <div class="ups-card-sub" id="ups-twin-grid-status" data-sample>120V / 60Hz Nominal</div>
+                <div class="ups-card-sub" id="ups-twin-grid-status" data-sample>—</div>
               </div>
 
               <!-- Animated Electron Flow Channel 1 -->
@@ -2749,7 +2749,7 @@
                   <div class="ups-radial-label" id="mgmt-ups-charge">--%</div>
                 </div>
                 <div class="ups-card-label" data-i18n="mgmt.ups_twin_battery">Battery</div>
-                <div class="ups-card-sub" id="mgmt-ups-runtime" data-sample>-- min remaining</div>
+                <div class="ups-card-sub" id="mgmt-ups-runtime" data-sample>—</div>
                 <div class="ups-card-meta" id="ups-twin-batt-volts">-- V • --°C</div>
               </div>
 
@@ -2767,7 +2767,7 @@
                 <div class="ups-card-icon">🖥️</div>
                 <div class="ups-card-label" data-i18n="mgmt.ups_twin_host">Host & Storage Load</div>
                 <div class="ups-card-val" id="ups-twin-watts">-- W</div>
-                <div class="ups-card-sub" id="mgmt-ups-load" data-sample>-- % of Capacity</div>
+                <div class="ups-card-sub" id="mgmt-ups-load" data-sample>—</div>
                 <div class="ups-card-meta" id="ups-twin-policy-badge" data-i18n="mw.policy_safe_shutdown">Policy: Safe Shutdown</div>
               </div>
             </div>
@@ -2793,11 +2793,11 @@
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.ups_model">UPS Model</span>
-                    <span class="udi-val" id="mgmt-ups-model" data-sample>Generic UPS</span>
+                    <span class="udi-val" id="mgmt-ups-model" data-sample>—</span>
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.ups_protocol">Connection Protocol</span>
-                    <span class="udi-val" id="mgmt-ups-protocol" data-sample>Auto / NIS</span>
+                    <span class="udi-val" id="mgmt-ups-protocol" data-sample>—</span>
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.ups_battv">Battery Voltage</span>
@@ -2809,7 +2809,7 @@
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.ups_active_policy">Failsafe Policy</span>
-                    <span class="udi-val" id="mgmt-ups-policy" data-sample>Runtime &lt; 5m</span>
+                    <span class="udi-val" id="mgmt-ups-policy" data-sample>—</span>
                   </div>
                 </div>
 
@@ -2915,7 +2915,7 @@
 
                 <!-- Collapsed Policy Summary Bar -->
                 <div class="ups-xs-muted-box-2" id="ups-policy-summary" style="display: none;">
-                  <span id="ups-policy-summary-text" data-sample>Active: Runtime &lt; 5 min · Docker WAL flush</span>
+                  <span id="ups-policy-summary-text" data-sample>—</span>
                   <span class="suite-badge" style="font-size:var(--zn-fs-xs); color:var(--ok2); border-color:rgba(51,205,184,0.3);">ACTIVE</span>
                 </div>
 
@@ -3294,7 +3294,7 @@
                 <svg class="ic sec-brand"><use href="#i-chip"/></svg>
                 <span data-i18n="sec.advisor_title">Security Advisor Hardening Checklist</span>
               </span>
-              <span id="sec-advisor-score-badge" class="ci-badge" style="background: rgba(51,205,184,0.15); color: var(--lt-t-33cdb8ff, #33cdb8); border: 1px solid rgba(51,205,184,0.3); font-size: var(--zn-fs-xs); font-weight: 700;" data-sample>Score: 100/100</span>
+              <span id="sec-advisor-score-badge" class="ci-badge" style="background: rgba(51,205,184,0.15); color: var(--lt-t-33cdb8ff, #33cdb8); border: 1px solid rgba(51,205,184,0.3); font-size: var(--zn-fs-xs); font-weight: 700;" data-sample>—</span>
             </div>
             <div class="sec-col-xs" id="sec-advisor-items">
               <!-- Dynamic checklist items -->
@@ -3571,7 +3571,7 @@
                     <div class="nt-sub" data-i18n="mgmt.notif_master_desc">When disabled, no external notifications or chat webhooks will be dispatched.</div>
                   </div>
                   <div class="nt-inline nt-inline--wide">
-                    <span id="notif-master-status-badge" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(51,205,184,0.15); color:var(--ok2); border:1px solid rgba(51,205,184,0.4);" data-sample>Active</span>
+                    <span id="notif-master-status-badge" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(51,205,184,0.15); color:var(--ok2); border:1px solid rgba(51,205,184,0.4);" data-sample>—</span>
                     <label class="switch-toggle nt-switch" for="notif-master-enabled" aria-label="Toggle Master Notification Engine" data-i18n-aria-label="ui.toggle_master_notification_engine">
                       <input class="nt-switch-input" type="checkbox" id="notif-master-enabled" checked>
                       <span class="slider round" style="position:absolute; cursor:pointer; inset:0; background:var(--lt-b-ffffff33, rgba(255,255,255,0.2)); border-radius:20px; transition:.3s;"></span>
@@ -3592,7 +3592,7 @@
                         <span class="nt-icon">💬</span>
                         <span class="nt-card-title">Discord</span>
                       </div>
-                      <span class="nt-badge" id="notif-badge-discord" data-sample>Off</span>
+                      <span class="nt-badge" id="notif-badge-discord" data-sample>—</span>
                     </div>
                     <div class="nt-desc" data-i18n="mw.rich_embed_alerts_to_any_discord">Rich embed alerts to any Discord channel via incoming webhook.</div>
                     <div class="nt-card-actions">
@@ -3608,7 +3608,7 @@
                         <span class="nt-icon">✈️</span>
                         <span class="nt-card-title">Telegram</span>
                       </div>
-                      <span class="nt-badge" id="notif-badge-telegram" data-sample>Off</span>
+                      <span class="nt-badge" id="notif-badge-telegram" data-sample>—</span>
                     </div>
                     <div class="nt-desc" data-i18n="mw.instant_push_messages_to_your_telegram">Instant push messages to your Telegram bot or group chat.</div>
                     <div class="nt-card-actions">
@@ -3624,7 +3624,7 @@
                         <span class="nt-icon">✉️</span>
                         <span class="nt-card-title" data-i18n="mw.email_smtp">Email (SMTP)</span>
                       </div>
-                      <span class="nt-badge" id="notif-badge-email" data-sample>Off</span>
+                      <span class="nt-badge" id="notif-badge-email" data-sample>—</span>
                     </div>
                     <div class="nt-desc" data-i18n="mw.standard_smtp_delivery_with_tls_encryption">Standard SMTP delivery with TLS encryption to administrator inbox.</div>
                     <div class="nt-card-actions">
@@ -3640,7 +3640,7 @@
                         <span class="nt-icon">🔔</span>
                         <span class="nt-card-title" data-i18n="mw.ntfy_push">ntfy Push</span>
                       </div>
-                      <span class="nt-badge" id="notif-badge-ntfy" data-sample>Off</span>
+                      <span class="nt-badge" id="notif-badge-ntfy" data-sample>—</span>
                     </div>
                     <div class="nt-desc" data-i18n="mw.lightweight_http_push_notifications_via_ntfy">Lightweight HTTP push notifications via ntfy.sh or self-hosted server.</div>
                     <div class="nt-card-actions">
@@ -3656,7 +3656,7 @@
                         <span class="nt-icon">🌐</span>
                         <span class="nt-card-title" data-i18n="mw.generic_webhook">Generic Webhook</span>
                       </div>
-                      <span class="nt-badge" id="notif-badge-webhook" data-sample>Off</span>
+                      <span class="nt-badge" id="notif-badge-webhook" data-sample>—</span>
                     </div>
                     <div class="nt-desc" data-i18n="mw.custom_http_post_json_endpoint_for">Custom HTTP POST JSON endpoint for Home Assistant, Node-RED, or scripts.</div>
                     <div class="nt-card-actions">
@@ -3932,7 +3932,7 @@
                 </div>
                 <div class="ab-row-3">
                   <span id="about-version-badge" class="badge-pill" style="background:rgba(51,205,184,0.15); border:1px solid rgba(51,205,184,0.4); color:var(--ok2); font-weight:700; font-size:var(--zn-fs-xs); padding:4px 10px; border-radius:20px;" data-sample>
-                    v1.9.1 • Stable
+                    —
                   </span>
                 </div>
               </div>
@@ -3948,7 +3948,7 @@
                 </div>
                 <div>
                   <div class="ab-xs-bold-muted" data-i18n="mw.runtime_environment">RUNTIME ENVIRONMENT</div>
-                  <div class="ab-xs-semi-soft" id="about-runtime-env" data-sample>Docker Container (Python 3.12)</div>
+                  <div class="ab-xs-semi-soft" id="about-runtime-env" data-sample>—</div>
                 </div>
                 <div>
                   <div class="ab-xs-bold-muted">UPTIME</div>
@@ -4174,7 +4174,7 @@
                         <button type="button" id="btn-ai-chat-rename" class="btn-ai-icon-action" title="Rename conversation" data-i18n-title="ui.rename_conversation">✏️</button>
                       </div>
                       <span id="ai-chat-active-model-badge" style="padding:3px 10px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(16,185,129,0.16); color:var(--zn-text-ok); border:1px solid rgba(16,185,129,0.4); white-space:nowrap;" data-sample>
-                        🤖 Active LLM: DeepSeek-R1-Distill-Qwen-1.5B • ⚡ Tier 1 NPU
+                        —
                       </span>
                     </div>
 
@@ -4320,7 +4320,7 @@
                 <div class="aix-row">
                   <span class="ai-tier-badge" id="ai-accel-chain-pill" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(51,205,184,0.18); color:var(--lt-ink-brand, var(--accent-cyan, #33cdb8)); border:1px solid rgba(51,205,184,0.4); flex-shrink:0;">
                     <span class="aix-xs">⚡</span>
-                    <span id="ai-accel-active-label" data-sample>Tier 1: NPU ➔ GPU ➔ CPU</span>
+                    <span id="ai-accel-active-label" data-sample>—</span>
                   </span>
                   <span id="ai-active-llm-pill" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(99,102,241,0.18); color:var(--lt-t-c7d2feff, #c7d2fe); border:1px solid rgba(99,102,241,0.4); flex-shrink:0;" title="This model answers in Ask Kib and writes the answers for AI search." data-i18n-title="ui.active_llm_leveraged_for_rag">
                     <span class="aix-xs">🤖</span>
@@ -4435,7 +4435,7 @@
                       </div>
                       <span style="font-size:var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(51,205,184,0.15); color:var(--ok2,#33cdb8); border:1px solid rgba(51,205,184,0.3);" data-i18n="mw.universal">Universal</span>
                     </div>
-                    <div class="aix-fs13-bold-strong" id="ai-hw-tier3-status" data-sample>Active &amp; Ready</div>
+                    <div class="aix-fs13-bold-strong" id="ai-hw-tier3-status" data-sample>—</div>
                   </div>
                 </div>
 
@@ -4621,7 +4621,7 @@
                 <div id="ai-sync-progress-banner" style="padding:9px 12px; border-radius:8px; background:var(--lt-b-0e1c1ea6, rgba(14,28,30,0.65)); border:1px solid rgba(79,216,196,0.22); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:var(--zn-fs-xs);">
                   <div class="aix-row-3">
                     <span id="ai-index-sync-state-pill" style="padding:2px 8px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(149,168,171,0.18); color:var(--zn-text);">IDLE</span>
-                    <span class="aix-xs-soft-2" id="ai-index-current-path" data-sample>Ready — Waiting for sync command (Sleeping drives protected)</span>
+                    <span class="aix-xs-soft-2" id="ai-index-current-path" data-sample>—</span>
                   </div>
                   <div id="ai-index-progress-counters" style="color:var(--muted,#95a8ab); font-size:var(--zn-fs-xs);">
                     <span data-i18n="ai.stat_indexed">Indexed:</span> <strong class="aix-ok" id="ai-prog-indexed">0</strong> • <span data-i18n="ai.prog_unchanged">Unchanged:</span> <strong class="aix-soft" id="ai-prog-unchanged">0</strong> • <span data-i18n="ai.prog_deferred">Deferred (standby):</span> <strong class="aix-warn" id="ai-prog-deferred">0</strong>
@@ -4671,7 +4671,7 @@
                           <span class="aix-bold" id="ai-watched-dropdown-summary" data-sample>Select Watched Folders for RAG...</span>
                         </div>
                         <div class="aix-row-15">
-                          <span id="ai-watched-dropdown-count-badge" style="font-size:var(--zn-fs-xs); font-weight:800; padding:2px 8px; border-radius:999px; background:rgba(51,205,184,0.2); border:1px solid rgba(51,205,184,0.45); color:var(--zn-text-ok);" data-sample>1 Checked</span>
+                          <span id="ai-watched-dropdown-count-badge" style="font-size:var(--zn-fs-xs); font-weight:800; padding:2px 8px; border-radius:999px; background:rgba(51,205,184,0.2); border:1px solid rgba(51,205,184,0.45); color:var(--zn-text-ok);" data-sample>—</span>
                           <span class="aix-xs-accent" id="ai-watched-dropdown-caret">▾</span>
                         </div>
                       </button>
@@ -5550,7 +5550,7 @@
       <div class="nshare-col-box" id="create-share-users-section">
         <div class="nshare-row-2">
           <span style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-ink-brand, var(--accent-cyan, #4fd8c4)); text-transform:uppercase; letter-spacing:0.5px;" data-i18n="mw.user_access_permissions">USER ACCESS PERMISSIONS</span>
-          <span class="nshare-xs-muted" id="create-share-users-count" data-sample>0 Users</span>
+          <span class="nshare-xs-muted" id="create-share-users-count" data-sample>—</span>
         </div>
         <div class="nshare-col-2" id="create-share-users-matrix">
           <!-- Dynamically populated user permission rows -->
@@ -5868,7 +5868,7 @@
       </div>
 
       <div class="sftp-row-xs-box">
-        <span class="sftp-accent" id="sftp-quick-connect-hint" data-sample>sftp -P 2222 username@&lt;host&gt;</span>
+        <span class="sftp-accent" id="sftp-quick-connect-hint" data-sample>—</span>
         <button type="button" class="btn-pill-toggle is-small" id="btn-copy-sftp-cmd"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
       </div>
 
