@@ -56,9 +56,8 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   switch and the role filter wrote over each other. The Overview's cards now follow the role as
   the sidebar does, a heading with nothing under it is hidden, and a page a person may not open
   is not opened by a link, an alert or the page remembered from before a reload either.
-- **Escape closes the window on top again.** Spotlight's hidden dialog counted as an open
-  question from the first page load on, so Escape closed no window at all. On a phone, the
-  browser's Back closes Settings; it did nothing there.
+- **On a phone, the browser's Back closes Settings.** It did nothing there: Settings counted as
+  a question on top of itself.
 - **The Advanced switch stays in reach.** With it on, the switch itself was below the fold. It now
   sticks to the bottom of the sidebar, and in a narrow sidebar it is an icon like the entries
   above it instead of a bare checkbox. Switching it off while on one of its pages goes back to

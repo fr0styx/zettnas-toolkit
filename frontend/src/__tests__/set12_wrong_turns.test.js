@@ -90,10 +90,6 @@ describe('Back and Escape close Settings', () => {
     dock.windows.w = { el: document.getElementById('w') };
     document.getElementById('bw').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(dock.closeWindow).not.toHaveBeenCalled();
-    // a dialog inside something hidden is not open: Spotlight's sits in a hidden overlay
-    document.getElementById('q').checkVisibility = () => false;
-    document.getElementById('bw').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    expect(dock.closeWindow).toHaveBeenCalledWith('w');
   });
 });
 

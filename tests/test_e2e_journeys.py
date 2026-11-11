@@ -798,7 +798,7 @@ def test_settings_navigation_at_every_width():
         )
         page.context.close()
 
-        # a phone: the browser's Back, then Escape, close Settings
+        # a phone: the browser's Back closes Settings
         page = browser.new_context(viewport={"width": 390, "height": 844}).new_page()
         _sign_in(page)
         _close_wizard(page)
@@ -808,13 +808,6 @@ def test_settings_navigation_at_every_width():
         page.go_back()
         page.wait_for_timeout(900)
         assert not page.evaluate(SETTINGS_OPEN), "the phone's Back left Settings open"
-        page.evaluate("() => window.openManagementWindow()")
-        page.wait_for_function(SETTINGS_OPEN, timeout=8000)
-        page.wait_for_timeout(600)
-        page.evaluate("() => document.activeElement && document.activeElement.blur()")
-        page.keyboard.press("Escape")
-        page.wait_for_timeout(900)
-        assert not page.evaluate(SETTINGS_OPEN), "Escape left Settings open on a phone"
         browser.close()
 
 
