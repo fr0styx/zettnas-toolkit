@@ -97,6 +97,31 @@ def zfs_dataset_at(path: str, mounts: str = "/proc/mounts") -> str:
     return next((ds for ds, mnt in zfs_mounts(mounts).items() if mnt == path), "")
 
 
+def own_usage(path: str, run) -> tuple[int, int] | None:
+    """A shared folder's own (used, limit) where the filesystem already keeps it: a ZFS dataset's
+    "used" and quota, or a btrfs subvolume's qgroup when quotas are on. Read from metadata, never
+    by walking the files, which would wake sleeping drives (B35, confirmed 11 Nov 2026). None when
+    the folder has no figure of its own; limit 0 means no quota."""
+    from backend.hardware.pal.base import storage_tools
+
+    tools = storage_tools()
+    if tools.get("zfs"):
+        ds = zfs_dataset_at(path)
+        if ds:
+            code, out, _ = run(["zfs", "get", "-Hp", "-o", "value", "used,quota", ds])
+            vals = out.split() if code == 0 else []
+            if len(vals) == 2 and vals[0].isdigit():
+                return int(vals[0]), int(vals[1]) if vals[1].isdigit() else 0
+    if tools.get("btrfs") and is_subvolume(path):
+        # qgroupid rfer excl max_rfer [path]; it fails when quotas are off
+        code, out, _ = run(["btrfs", "qgroup", "show", "-f", "-r", "--raw", path])
+        for line in out.splitlines() if code == 0 else []:
+            parts = line.split()
+            if len(parts) >= 3 and re.fullmatch(r"0/\d+", parts[0]) and parts[1].isdigit():
+                return int(parts[1]), int(parts[3]) if len(parts) > 3 and parts[3].isdigit() else 0
+    return None
+
+
 ZFS_NAME_PROP = "org.zettnas:name"  # the snapshot's own name: ZFS names can't hold its "@"
 ZFS_HOLD_TAG = "zettnas-worm"  # a hold stops zfs destroy, even by root, until released
 
@@ -800,6 +825,22 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
         return pools
 
+    def _share_figures(self, path: str) -> dict:
+        """Used, free and total for a share card: the folder's own where the filesystem keeps it
+        (usage_is_own), else the pool's, which the card shows as free space only (SET-14, B35)."""
+        try:
+            u = shutil.disk_usage(path if os.path.exists(path) else self._pool_path)
+            tot, usd, fre = u.total, u.used, u.free
+        except OSError:
+            tot, usd, fre = 0, 0, 0
+        own = own_usage(path, self._run_cmd) if os.path.isdir(path) else None
+        if own:
+            usd, limit = own
+            fre = max(0, limit - usd) if limit else fre
+            tot = usd + fre
+        pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+        return {"used_bytes": usd, "free_bytes": fre, "total_bytes": tot, "used_pct": pct, "usage_is_own": bool(own)}
+
     def list_shares(self) -> list[NetworkShare]:
         shares_map: dict[str, NetworkShare] = {}
         # 1. Inspect Samba Engine shares
@@ -810,12 +851,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             samba_shares = engine.list_shares()
             for s in samba_shares:
                 mount_p = s.path
-                try:
-                    u = shutil.disk_usage(mount_p if os.path.exists(mount_p) else self._pool_path)
-                    tot, usd, fre = u.total, u.used, u.free
-                except Exception:
-                    tot, usd, fre = 0, 0, 0
-                pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                fig = self._share_figures(mount_p)
 
                 shares_map[s.name] = NetworkShare(
                     name=s.name,
@@ -826,10 +862,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     export_webdav=True,
                     cache_mode="none",
                     mountpoint=mount_p,
-                    used_bytes=usd,
-                    free_bytes=fre,
-                    total_bytes=tot,
-                    used_pct=pct,
+                    **fig,
                 )
         except Exception as e:
             logger.debug("[PAL] SambaEngine shares query fallback: %s", e)
@@ -844,12 +877,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     shares_map[n.name].export_nfs = True
                 else:
                     mount_p = n.path
-                    try:
-                        u = shutil.disk_usage(mount_p if os.path.exists(mount_p) else self._pool_path)
-                        tot, usd, fre = u.total, u.used, u.free
-                    except Exception:
-                        tot, usd, fre = 0, 0, 0
-                    pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                    fig = self._share_figures(mount_p)
 
                     shares_map[n.name] = NetworkShare(
                         name=n.name,
@@ -860,10 +888,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                         export_webdav=False,
                         cache_mode="none",
                         mountpoint=mount_p,
-                        used_bytes=usd,
-                        free_bytes=fre,
-                        total_bytes=tot,
-                        used_pct=pct,
+                        **fig,
                     )
         except Exception as e:
             logger.debug("[PAL] NfsEngine exports query fallback: %s", e)
@@ -877,12 +902,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 for entry in sorted(os.listdir(self._pool_path)):
                     sub_p = os.path.join(self._pool_path, entry)
                     if os.path.isdir(sub_p) and not entry.startswith((".", "@")):
-                        try:
-                            u = shutil.disk_usage(sub_p)
-                            tot, usd, fre = u.total, u.used, u.free
-                        except Exception:
-                            tot, usd, fre = 0, 0, 0
-                        pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
+                        fig = self._share_figures(sub_p)
                         shares_map[entry] = NetworkShare(
                             name=entry,
                             comment="Managed Linux Share",
@@ -892,10 +912,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                             export_webdav=True,
                             cache_mode="none",
                             mountpoint=sub_p,
-                            used_bytes=usd,
-                            free_bytes=fre,
-                            total_bytes=tot,
-                            used_pct=pct,
+                            **fig,
                         )
             except Exception as e:
                 logger.debug(f"[PAL] Error listing generic shares: {e}")

@@ -396,6 +396,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Apprise can be switched off.** Its dialog's "Enable this channel" was ignored, and the addresses
   always sent. The switch is now kept and obeyed; addresses saved before stay on.
 
+#### Fixes
+
+- **More shared folders show their own size.** Where a folder is its own ZFS dataset, or a Btrfs
+  subvolume with quotas on, its card now shows a real usage bar (against its quota when it has one),
+  read from the filesystem's own figures without opening any files, so sleeping drives stay asleep.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

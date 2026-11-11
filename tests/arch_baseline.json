@@ -67,7 +67,7 @@
   "backend.hardware.pal.base": 15,
   "backend.hardware.pal.detect": 4,
   "backend.hardware.pal.fygoos": 2,
-  "backend.hardware.pal.generic_linux": 26,
+  "backend.hardware.pal.generic_linux": 23,
   "backend.hardware.pal.observer": 6,
   "backend.hardware.pal.proxmox": 1,
   "backend.hardware.pal.truenas": 1,

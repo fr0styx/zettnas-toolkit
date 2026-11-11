@@ -237,6 +237,7 @@
     "_resolve_disk_path": "(self, disk: str) -> str",
     "_run_cmd": "(self, cmd: list[str]) -> tuple[int, str, str]",
     "_scrub_answer": "(base: dict[str, typing.Any], pool: StoragePool, action: str, code: int, out: str, err: str) -> dict",
+    "_share_figures": "(self, path: str) -> dict",
     "_view_dir": "(zfs_name: str) -> str",
     "_zfs_snapshots": "(self, pool_id: str) -> list[dict[str, typing.Any]]",
     "can_convert": "(self, path: str) -> bool",
