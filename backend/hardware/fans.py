@@ -553,6 +553,37 @@ def cleanup_stale_fan_trackers(active_keys=None):
             Z_STATE.fan_state_tracker.pop(k, None)
 
 
+def usable_fan_settings(saved, defaults: dict) -> dict:
+    """The stored fan settings over their defaults, leaving out what the fan loop cannot use: an
+    empty value, or one of another kind than its default (text where a number belongs).
+
+    One such value, saved through the API, made the two-second loop fail on every pass: no fan
+    writes, no live values, no alerts, no power-cut handling (SET-08)."""
+    cfg = dict(defaults)
+    if not isinstance(saved, dict):
+        return cfg
+    for key, value in saved.items():
+        if value is None:
+            continue
+        default = defaults.get(key)
+        if isinstance(default, bool):
+            if not isinstance(value, bool):
+                continue
+        elif isinstance(default, (int, float)):
+            if isinstance(value, str):  # a number saved as text is still that number
+                try:
+                    number = float(value)
+                except ValueError:
+                    continue
+                value = int(number) if number.is_integer() else number
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                continue
+        elif isinstance(default, str) and not isinstance(value, str):
+            continue
+        cfg[key] = value
+    return cfg
+
+
 def sanitize_curve_points(points):
     """Normalize user curve points to a safe, monotonic, bounded curve.
 

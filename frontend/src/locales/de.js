@@ -2339,6 +2339,7 @@ export default {
   "fan.presets_title": "Benutzerdefinierte Profile",
   "fan.select_preset": "-- Profil auswählen --",
   "fan.save_preset": "Profil speichern",
+  "fan.not_saved": "Die Lüftereinstellung wurde nicht geändert: {error}",
   "fan.apply_preset": "Anwenden",
   "fan.show_all_zones": "Alle Zonen anzeigen",
   "fan.acoustic_hint": "Starten Sie den Test, um den Drehzahlverlauf zu zeichnen und Resonanzbereiche zu finden.",

@@ -22,7 +22,7 @@ from backend.config import (
     logger,
 )
 from backend.fsutil import SETTINGS_RECHECK_SECS, read_json_cached
-from backend.hardware.fans import apply_zone_pwm, calc_curve_pwm, set_fan_pwm
+from backend.hardware.fans import apply_zone_pwm, calc_curve_pwm, set_fan_pwm, usable_fan_settings
 from backend.hardware.storage import detect_chassis_model
 from backend.hardware.unraid import read_unraid_status
 from backend.ignored_errors import ignored
@@ -41,12 +41,11 @@ def fan_settings():
         "zero_rpm_nvme_ceiling": FAN_ZERO_RPM_DEFAULT_NVME_CEILING,
         "zero_rpm_stop_temp": FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
         "zero_rpm_start_temp": FAN_ZERO_RPM_DEFAULT_START_TEMP,
+        "zero_rpm_stop_delay": FAN_ZERO_RPM_STOP_DELAY,
         "disk_hold_secs": FAN_DISK_HOLD_SECS,
         "cpu_hold_secs": FAN_CPU_HOLD_SECS,
     }
-    loaded_fan_cfg = read_json_cached(FAN_STATE_FILE, {}, max_age=SETTINGS_RECHECK_SECS)
-    if isinstance(loaded_fan_cfg, dict):
-        fan_cfg.update(loaded_fan_cfg)
+    fan_cfg = usable_fan_settings(read_json_cached(FAN_STATE_FILE, {}, max_age=SETTINGS_RECHECK_SECS), fan_cfg)
 
     profile = fan_cfg.get("profile", "auto")
     ctrl_cpu_fan = fan_cfg.get("ctrl_cpu_fan", False)

@@ -767,6 +767,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Every shutdown says that it starts.** With "after a set time on battery" nobody was told.
 - **Overview reports a power cut on every kind of UPS connection**, not on one spelling only.
 
+#### Fixes
+
+- **One empty fan setting can no longer stop Kiboto's two-second loop.** An empty value sent
+  through the API was saved; the loop that drives the fans then failed on every pass, and with it
+  the live values, the alerts and the power-cut handling. Empty values are now refused, and
+  stored settings that cannot be used fall back to their defaults.
+- **The Fans tab changes only what you change.** Every switch or drag sent the tab's whole
+  picture: the mode it had last drawn, the whole curve and two fixed temperatures. That silently
+  undid a mode chosen elsewhere. A change the server refuses is now said, and the controls go
+  back to what is really set.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

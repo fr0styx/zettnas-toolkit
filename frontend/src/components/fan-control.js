@@ -17,6 +17,7 @@ export function standbyReason(fc, remaining) {
   return t('fan.why_cooling', 'Cooling down');
 }
 import { showToast } from '../toast.js';
+import { manualChange, modeChange, saveFans } from './fan-save.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -390,28 +391,16 @@ export function initFanControl() {
     }
   }
 
-  async function postFanPwm(profile, manualPct, ctrlCpu, tMin, tMax, cPoints, zeroRpm) {
-    const curMin = tMin !== undefined ? tMin : 37;
-    const curMax = tMax !== undefined ? tMax : 50;
-    const mPct = (manualPct === null || manualPct === undefined) ? (fanPwmSlider ? fanPwmSlider.value : 60) : manualPct;
-    const isZeroRpm = zeroRpm !== undefined ? zeroRpm : (zeroRpmToggle ? zeroRpmToggle.checked : false);
-    try {
-      const data = await api.post('/api/fans', {
-        profile,
-        manual_pct: parseInt(mPct, 10),
-        ctrl_cpu_fan: ctrlCpu !== undefined ? ctrlCpu : (cpuFanToggle ? cpuFanToggle.checked : false),
-        temp_min: curMin,
-        temp_max: curMax,
-        zero_rpm_enabled: isZeroRpm,
-        curve_points: cPoints || state.curvePoints
-      });
-      updateFanUiState(data.profile, data.manual_pct);
-      if (zeroRpmToggle && data.zero_rpm_enabled !== undefined) {
-        zeroRpmToggle.checked = !!data.zero_rpm_enabled;
-      }
-    } catch (e) {
-      console.warn('Failed to update fans', e);
-    }
+  /** Saves one change (only its own fields) and draws what the server now holds. */
+  function saveChange(change) {
+    return saveFans(change, {
+      onSaved: (data) => {
+        updateFanUiState(data.profile, data.manual_pct);
+        if (zeroRpmToggle && data.zero_rpm_enabled !== undefined) zeroRpmToggle.checked = !!data.zero_rpm_enabled;
+        if (cpuFanToggle && data.ctrl_cpu_fan !== undefined) cpuFanToggle.checked = !!data.ctrl_cpu_fan;
+      },
+      reread: () => fetchFanState(),
+    });
   }
 
   async function fetchFanState() {
@@ -452,7 +441,7 @@ export function initFanControl() {
 
   if (cpuFanToggle) {
     cpuFanToggle.addEventListener('change', (e) => {
-      postFanPwm(currentFanProfile, parseInt(fanPwmSlider ? fanPwmSlider.value : 60, 10), e.target.checked);
+      saveChange({ ctrl_cpu_fan: e.target.checked });
     });
   }
 
@@ -462,18 +451,14 @@ export function initFanControl() {
       if (cpuHoldValDisplay) cpuHoldValDisplay.textContent = `${val}s`;
       clearTimeout(cpuHoldDebounce);
       cpuHoldDebounce = setTimeout(async () => {
-        try {
-          await api.post('/api/fans', { cpu_hold_secs: val });
-        } catch (err) {
-          console.warn('Failed to update cpu hold delay', err);
-        }
+        await saveChange({ cpu_hold_secs: val });
       }, 250);
     });
   }
 
   if (zeroRpmToggle) {
     zeroRpmToggle.addEventListener('change', (e) => {
-      postFanPwm(currentFanProfile, undefined, undefined, undefined, undefined, undefined, e.target.checked);
+      saveChange({ zero_rpm_enabled: e.target.checked });
     });
   }
 
@@ -483,11 +468,7 @@ export function initFanControl() {
       if (zeroRpmDelayValDisplay) zeroRpmDelayValDisplay.textContent = `${val}s`;
       clearTimeout(zeroRpmDelayDebounce);
       zeroRpmDelayDebounce = setTimeout(async () => {
-        try {
-          await api.post('/api/fans', { zero_rpm_stop_delay: val });
-        } catch (err) {
-          console.warn('Failed to update zero rpm stop delay', err);
-        }
+        await saveChange({ zero_rpm_stop_delay: val });
       }, 250);
     });
   }
@@ -498,7 +479,7 @@ export function initFanControl() {
       const map = { auto: 60, quiet: 37, balanced: 66, performance: 85, full: 100 };
       const pct = map[pr] || 60;
       updateFanUiState(pr, pct);
-      postFanPwm(pr, pct);
+      saveChange(modeChange(pr));
     });
   });
 
@@ -507,7 +488,7 @@ export function initFanControl() {
       const val = parseInt(e.target.value, 10);
       updateFanUiState('manual', val);
       clearTimeout(fanPwmDebounce);
-      fanPwmDebounce = setTimeout(() => postFanPwm('manual', val), 120);
+      fanPwmDebounce = setTimeout(() => saveChange(manualChange(val)), 120);
     });
   }
 
@@ -574,7 +555,7 @@ export function initFanControl() {
       dragIndex = -1;
       _lastCurveSaveTime = Date.now();
       const savedPoints = state.curvePoints.map((p) => [...p]);
-      postFanPwm(currentFanProfile, null, undefined, undefined, undefined, savedPoints)
+      saveChange({ curve_points: savedPoints })
         .finally(() => {
           state.setCurvePoints(savedPoints);
           isDraggingCurve = false;

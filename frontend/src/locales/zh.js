@@ -2339,6 +2339,7 @@ export default {
   "fan.presets_title": "自定义预设",
   "fan.select_preset": "-- 选择预设 --",
   "fan.save_preset": "保存预设",
+  "fan.not_saved": "风扇设置未更改：{error}",
   "fan.apply_preset": "应用",
   "fan.show_all_zones": "显示所有区域",
   "fan.acoustic_hint": "运行测试以绘制转速曲线并找出共振区间。",

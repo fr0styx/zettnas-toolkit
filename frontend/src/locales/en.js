@@ -2339,6 +2339,7 @@ export default {
   "fan.presets_title": "Custom Presets",
   "fan.select_preset": "-- Select Preset --",
   "fan.save_preset": "Save Preset",
+  "fan.not_saved": "The fan setting was not changed: {error}",
   "fan.apply_preset": "Apply",
   "fan.show_all_zones": "Show All Zones",
   "fan.acoustic_hint": "Run test to plot RPM linearity and identify acoustic rattle zones.",

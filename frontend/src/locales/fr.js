@@ -2339,6 +2339,7 @@ export default {
   "fan.presets_title": "Préréglages personnalisés",
   "fan.select_preset": "-- Choisir un préréglage --",
   "fan.save_preset": "Enregistrer",
+  "fan.not_saved": "Le réglage des ventilateurs n’a pas été modifié : {error}",
   "fan.apply_preset": "Appliquer",
   "fan.show_all_zones": "Afficher toutes les zones",
   "fan.acoustic_hint": "Lancez le test pour tracer la courbe de vitesse et repérer les zones de résonance.",

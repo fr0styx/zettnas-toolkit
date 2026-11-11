@@ -2339,6 +2339,7 @@ export default {
   "fan.presets_title": "Perfiles personalizados",
   "fan.select_preset": "-- Seleccionar perfil --",
   "fan.save_preset": "Guardar perfil",
+  "fan.not_saved": "El ajuste de los ventiladores no se ha cambiado: {error}",
   "fan.apply_preset": "Aplicar",
   "fan.show_all_zones": "Mostrar todas las zonas",
   "fan.acoustic_hint": "Ejecuta la prueba para trazar la curva de velocidad y detectar las zonas de resonancia.",

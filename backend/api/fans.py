@@ -18,6 +18,7 @@ from backend.hardware.fans import (
     sanitize_curve_points,
     start_acoustic_sweep,
     stop_acoustic_sweep,
+    usable_fan_settings,
 )
 from backend.models.schemas import (
     FanAcousticSweepRequest,
@@ -45,11 +46,7 @@ VALID_PROFILES = {"auto", "quiet", "balanced", "performance", "full", "manual"}
 
 
 def _load_fans():
-    cfg = dict(FAN_DEFAULTS)
-    saved = read_json(FAN_STATE_FILE, {})
-    if isinstance(saved, dict):
-        cfg.update(saved)
-    return cfg
+    return usable_fan_settings(read_json(FAN_STATE_FILE, {}), FAN_DEFAULTS)
 
 
 @router.get("/fans", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
@@ -61,6 +58,13 @@ def get_fans():
 @json_locked(lambda *a, **k: FAN_STATE_FILE)
 def post_fans(req: FanConfigRequest):
     data = req.model_dump(exclude_unset=True)
+    # an empty value is refused: saved, it stopped the fan loop (SET-08). Leaving a setting out keeps it.
+    empty = sorted(key for key, value in data.items() if value is None)
+    if empty:
+        raise HTTPException(
+            status_code=400,
+            detail=f"An empty value cannot be saved ({', '.join(empty)}). Leave a setting out to keep it as it is.",
+        )
 
     if "profile" in data and data["profile"] is not None and data["profile"] not in VALID_PROFILES:
         raise HTTPException(status_code=400, detail="Invalid fan profile")
