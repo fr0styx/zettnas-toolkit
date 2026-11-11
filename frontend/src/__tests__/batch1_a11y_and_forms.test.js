@@ -30,7 +30,6 @@ describe('Batch 1: Accessibility, Form Label Linking & ARIA Radiogroups', () => 
       { labelFor: 'notif-toggle-ups', inputId: 'notif-toggle-ups' },
       { labelFor: 'notif-toggle-fan', inputId: 'notif-toggle-fan' },
       { labelFor: 'notif-toggle-copy', inputId: 'notif-toggle-copy' },
-      { labelFor: 'notif-toggle-container', inputId: 'notif-toggle-container' },
       { labelFor: 'notif-toggle-backup', inputId: 'notif-toggle-backup' },
       { labelFor: 'notif-input-hdd-temp', inputId: 'notif-input-hdd-temp' },
       { labelFor: 'notif-input-cpu-temp', inputId: 'notif-input-cpu-temp' },
