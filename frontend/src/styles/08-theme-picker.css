@@ -86,18 +86,3 @@
   transform: scale(1.18);
   box-shadow: 0 0 8px currentColor;
 }
-
-/* APP-B: mode, True black, the theme cards' miniatures and the tint slider (tokens only) */
-.look-mode { display: inline-flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--c-raised); border: 1px solid var(--c-border); margin: 6px 0 10px; }
-.look-mode-btn { min-height: 32px; padding: 0 14px; border: 0; border-radius: 8px; background: transparent; color: var(--c-text); font: inherit; cursor: pointer; }
-.look-mode-btn.active { background: var(--brand); color: var(--accent-contrast-fg); font-weight: 600; }
-.look-mode-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.look-true-black { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; color: var(--c-text); font-size: 13px; }
-.look-true-black input:disabled + span { color: var(--c-muted); }
-.theme-mini { position: relative; flex: none; width: 44px; height: 30px; border-radius: 8px; border: 1px solid var(--c-border); background: linear-gradient(135deg, var(--m-dark) 50%, var(--m-light) 50%); }
-.theme-mini::before, .theme-mini::after { content: ""; position: absolute; width: 10px; height: 10px; border-radius: 50%; }
-.theme-mini::before { left: 6px; top: 5px; background: var(--m-p); }
-.theme-mini::after { right: 6px; bottom: 5px; background: var(--m-pl); }
-.look-tint { display: grid; gap: 4px; margin-top: 14px; max-width: 360px; }
-.look-tint input[type="range"] { width: 100%; accent-color: var(--brand); }
-.look-tint-ends { display: flex; justify-content: space-between; color: var(--c-muted); font-size: 13px; }

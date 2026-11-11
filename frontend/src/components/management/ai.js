@@ -769,9 +769,10 @@ export function updateAiSyncProgressUi(syncProg = {}, standbyGuard = {}, kibStat
     const sleepCnt = Number(standbyGuard.sleeping_disks_count || 0);
     const runCnt = Number(standbyGuard.running_disks_count || 0);
     if (sleepCnt > 0 || runCnt > 0) {
-      guardText.textContent = t('ait.guard', 'Standby Guard ({running} Active, {sleeping} Sleeping)', { running: runCnt, sleeping: sleepCnt });
+      // the real counts; nothing counts wake-ups, so no "0 wakeups" (SET-15, AI 2)
+      guardText.textContent = t('ait.guard', 'Drives: {running} awake, {sleeping} asleep', { running: runCnt, sleeping: sleepCnt });
       if (guardBadge) {
-        guardBadge.title = t('ait.guard_title', 'Standby Guard: Active (0 Wakeups • {running} Running, {sleeping} Sleeping)', { running: runCnt, sleeping: sleepCnt });
+        guardBadge.title = t('ait.guard_title', 'Kib reads a sleeping drive the next time it is awake, unless you allow it to wake drives.');
       }
     }
   }
@@ -1143,8 +1144,8 @@ export function initAiKnowledgeEngine() {
       await updateAiServiceConfig({ enabled });
       showToast(
         enabled
-          ? t('ai.service_enabled_toast', 'Kib service enabled — AI learning & search active.')
-          : t('ai.service_disabled_toast', 'Kib service disabled — unfinished learning tasks paused.'),
+          ? t('ai.service_enabled_toast', 'Kib reads your files again.')
+          : t('ai.service_disabled_toast', 'Kib no longer reads your files or describes your photos. Chat and search still work with what it knows.'),
         enabled ? 'success' : 'warn'
       );
     });
@@ -2668,7 +2669,6 @@ export async function runAiVisualSearch(rawQuery = null) {
           ${autoColors.length ? `<span class="aik-accent">🎨 ${t('aiq.color', 'Color:')} <b>${escapeHtml(autoColors.join(', '))}</b></span>` : ''}
           ${autoScenes.length ? `<span style="margin-left:8px; color:var(--lt-t-6ee7b7ff, #6ee7b7);">🏷️ ${t('aiq.scene', 'Scene:')} <b>${escapeHtml(autoScenes.join(', '))}</b></span>` : ''}
           <span style="margin-left:8px; color:var(--lt-t-c7d2feff, #c7d2fe);">⚡ ${t('aiq.mode', 'Mode:')} <b>${escapeHtml((_aiSelectedMatchTab || 'semantic').toUpperCase())}</b></span>
-          <span class="aik-muted-2">• 🛡️💤 ${t('aiq.zero_wake', 'Zero Disk Wakeups')}</span>
         `;
       } else {
         intentBanner.style.display = 'none';

@@ -18,7 +18,7 @@ from backend.services import chat_tool_registry as reg
         ),
         (
             {"tool": "get_disks_and_standby_status", "running_disks_count": 2, "sleeping_disks_count": 3},
-            "2 active, 3 sleeping in standby (0 wakeups)",
+            "2 awake, 3 asleep",
         ),
         (
             {"tool": "get_fan_and_thermal_status", "profile": "quiet", "temp_min_c": 35, "temp_max_c": 50},

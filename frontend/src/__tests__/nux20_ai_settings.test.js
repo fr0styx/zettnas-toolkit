@@ -82,8 +82,9 @@ describe('AI settings words (NUX-20)', () => {
     renderAiLearningResultsData({});
     expect(byId('ai-learn-failed-list').textContent).toBe('✓ All learned files succeeded with 0 errors.');
     updateAiSyncProgressUi({}, { sleeping_disks_count: 3, running_disks_count: 1 });
-    expect(byId('ai-standby-guard-text').textContent).toBe('Standby Guard (1 Active, 3 Sleeping)');
-    expect(byId('ai-standby-guard-badge').title).toBe('Standby Guard: Active (0 Wakeups • 1 Running, 3 Sleeping)');
+    // the real counts, and no "0 wakeups": nothing counts them (SET-15, AI 2)
+    expect(byId('ai-standby-guard-text').textContent).toBe('Drives: 1 awake, 3 asleep');
+    expect(byId('ai-standby-guard-badge').title).not.toMatch(/wakeups/i);
     renderAiWatchedFoldersAndShares([], []);
     expect(byId('ai-watched-dropdown-summary').textContent).toBe('No folders checked — click to select folders for RAG');
     expect(byId('ai-watched-dropdown-count-badge').textContent).toBe('0 Checked');
@@ -150,7 +151,8 @@ describe('AI settings words (NUX-20)', () => {
     expect(byId('ai-visual-results-grid').textContent).toBe('🔍 Searching visual & multi-modal index...');
     await run;
     const banner = byId('ai-visual-intent-banner').textContent;
-    for (const w of ['Parsed Visual Intent:', 'Color:', 'red', 'Scene:', 'beach', 'Mode:', 'Zero Disk Wakeups']) expect(banner).toContain(w);
+    for (const w of ['Parsed Visual Intent:', 'Color:', 'red', 'Scene:', 'beach', 'Mode:']) expect(banner).toContain(w);
+    expect(banner).not.toContain('Wakeups'); // a fixed promise nothing measured (SET-15, AI 2)
     expect(byId('ai-visual-results-grid').textContent.trim()).toBe('No matching files found for red beach. Click Sync Shares above or configure folders in the ⚙️ AI Configuration tab.');
     post.mockResolvedValueOnce({ results: [], parsed_intent: {} });
     await runAiVisualSearch('cat');

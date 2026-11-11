@@ -5,13 +5,17 @@ If something here is wrong, please open an issue.
 
 ## Stays on the NAS
 
-- Your files, the search index (`rag_index.db`) and AI conversations.
+- Your files, the search index (`rag_index.db`) and AI conversations. The index and the
+  conversations are encrypted when the install has a data key (`KIBOTO_DATA_KEY`, see
+  [Installation](INSTALLATION.md)); without one they are plain files on the NAS.
 - Questions you ask Ask Kib and the answers, when the chat model runs on this NAS
-  (Ollama or OpenVINO Model Server). Kiboto only talks to AI runtimes on this machine or
-  its Docker network, or to the address you set in **AI settings**; it never tries your
-  router or other LAN hosts.
+  (Ollama or OpenVINO Model Server). Kiboto looks for AI runtimes by the names `ollama` and
+  `ovms` on this machine or its Docker network, or uses the chat address set for Kib; it never
+  tries your router or other machines by address. A machine on your network that answers to the
+  name `ollama` or `ovms` would be used.
 - Photos sent for captions and text reading. They go to the vision model on this NAS,
-  at most 896 pixels on the long side, and nowhere else.
+  at most 896 pixels on the long side (scanned PDF pages up to 1600), and nowhere else unless
+  you set a server for photo search (below).
 - Hardware readings, logs and settings, and the file activity log (who changed which file,
   kept 90 days).
 - The event log: alerts, finished and failed backups, power, app and hardware events, kept 90
@@ -27,8 +31,13 @@ health report below, which is off unless you turn it on.
 
 | Feature | Goes to | What is sent | When |
 |---|---|---|---|
-| Ask Kib web search | DuckDuckGo (duckduckgo.com, html.duckduckgo.com, api.duckduckgo.com), Wikipedia (en.wikipedia.org), and the pages found | your question (or search words from it) | only in chats where you turned on **Web**; the answer lists the services used |
-| Ask Kib weather | wttr.in | the place name | same as above |
+| Ask Kib web search | DuckDuckGo (duckduckgo.com, html.duckduckgo.com, api.duckduckgo.com), Wikipedia (en.wikipedia.org), and a page whose link you typed (found pages are not opened) | at most the first 200 characters of your question (or search words from it) | while **Web** is on. The switch is remembered in your browser, so it stays on for later chats until you turn it off. The Kid and Guest roles never use the web. The answer lists the services used |
+| Ask Kib weather | wttr.in | a place name you typed | same as above |
+| Immich connection | the Immich server you connect | your search text and your Immich key | when you search with Immich connected |
+| Second check of search results (reranker) | the address you set | your search text and excerpts of the matching files | on each search, if you set one |
+| Speech to text | the speech server you set | what you dictate | when you dictate, if you set one |
+| Find photos by what is in them | the photo server you set | a small copy of every photo | when photos are read, if you set one |
+| Model that reads your files, on another machine | the address you set for it | text from your files, and your searches | when files are read and searched, if you set one |
 | Desktop weather widget | api.open-meteo.com and geocoding-api.open-meteo.com (from your browser) | city name, then its coordinates | while the widget is on the desktop |
 | Calendar holidays | date.nager.at (from your browser) | year and country code | when the calendar shows public holidays |
 | Update check | api.github.com, ghcr.io | your IP address and the version request | when you open **Updates** |
@@ -56,11 +65,11 @@ missing from this page.
 
 ## Your controls
 
-- The **Web** toggle in each chat, off by default.
+- The **Web** switch in the chat, off until you turn it on; your browser remembers it.
 - **Help improve Kiboto** (Settings, under Software Updates), off by default; it shows the
   exact report before you turn it on, and turning it off forgets the random id.
-- **Watched** and **Excluded** folders decide what the index may read; **Forget** removes a
-  folder from it.
+- The folders you tick decide what Kib reads. **Forget** deletes what Kib learned from a folder
+  and takes it off the list; Kib's regular passes skip it until you tick it again.
 - **Delete chats not used for…** sets conversation retention.
 - Security Advisor warns if an AI runtime on this NAS is reachable from your network
   without authentication.

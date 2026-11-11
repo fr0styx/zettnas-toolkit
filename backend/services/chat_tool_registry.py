@@ -175,7 +175,7 @@ def _format_tool_trace_summary(tr: dict[str, Any], tool_name: str) -> str:
     if tname == "get_system_telemetry":
         return f"CPU {tr.get('cpu_load_pct')}% ({tr.get('cpu_temp_c')}°C), RAM {tr.get('ram_used_gb')}/{tr.get('ram_total_gb')} GB"
     elif tname == "get_disks_and_standby_status":
-        return f"{tr.get('running_disks_count', 0)} active, {tr.get('sleeping_disks_count', 0)} sleeping in standby (0 wakeups)"
+        return f"{tr.get('running_disks_count', 0)} awake, {tr.get('sleeping_disks_count', 0)} asleep"
     elif tname == "get_fan_and_thermal_status":
         return f"Profile: {tr.get('profile')} ({tr.get('temp_min_c')}°C–{tr.get('temp_max_c')}°C)"
     elif tname == "set_fan_profile":

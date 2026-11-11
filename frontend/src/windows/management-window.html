@@ -4091,8 +4091,7 @@
                   <span class="pulsing-dot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#33cdb8;"></span>
                   <strong style="color:var(--kb-text-strong);" data-i18n="ai.reindex_in_progress">Re-indexing Knowledge Base...</strong>
                   <span id="ai-reindex-univ-chunks" style="font-size:var(--kb-fs-xs); color:var(--kb-text-soft); font-family:monospace;">0 / 0 chunks</span>
-                  <span style="font-size:var(--kb-fs-xs); color:var(--kb-text-ok); margin-left:4px;"><span aria-hidden="true">🔒</span> <span data-i18n="mw.100_standby_safe">100% Standby-Safe</span></span>
-                </div>
+                  </div>
                 <div style="display:flex; align-items:center; gap:12px;">
                   <span id="ai-reindex-univ-speed" style="font-size:var(--kb-fs-xs); color:var(--kb-text-muted);">0 chunks/s</span>
                   <span id="ai-reindex-univ-eta" style="font-size:var(--kb-fs-xs); color:var(--kb-text-warn); font-weight:600;">ETA: --</span>
@@ -4485,12 +4484,12 @@
               <div style="background:var(--lt-b-0e1c1e80, rgba(14,28,30,0.5)); border:1px solid rgba(51,205,184,0.3); border-radius:10px; padding:14px; margin-bottom:12px;">
                 <div class="aix-row-box-2">
                   <div>
-                    <div class="aix-fs13-bold-strong-2" data-i18n="ai.config_policy_title">🛡️ Service Control, Learning Scope &amp; Disk Standby Policy</div>
-                    <div style="font-size:var(--kb-fs-xs); color:var(--muted,#95a8ab); margin-top:2px;" data-i18n="ai.config_policy_desc">Configure when and how Kib learns from your NAS storage while protecting sleeping hard drives.</div>
+                    <div class="aix-fs13-bold-strong-2" data-i18n="ai.config_policy_title">What Kib reads</div>
+                    <div style="font-size:var(--kb-fs-xs); color:var(--muted,#95a8ab); margin-top:2px;" data-i18n="ai.config_policy_desc">Choose whether and what Kib reads. Switched off, Kib keeps what it knows, so chat and search still work.</div>
                   </div>
                   <label style="display:inline-flex; align-items:center; gap:8px; padding:5px 12px; border-radius:999px; background:rgba(99,102,241,0.18); border:1px solid rgba(99,102,241,0.45); font-size:var(--kb-fs-xs); font-weight:700; color:var(--lt-t-e0e7ffff, #e0e7ff); cursor:pointer;" title="Enable or disable Kib service globally. Turning off pauses unfinished learning tasks." data-i18n-title="ui.enable_or_disable_kib_service">
                     <input type="checkbox" id="ai-master-enable-toggle" checked style="accent-color:#6366f1; cursor:pointer;" />
-                    <span data-i18n="ai.service_switch_label">Kib Service Enabled</span>
+                    <span data-i18n="ai.service_switch_label">Kib reads my files</span>
                   </label>
                 </div>
 
@@ -4522,7 +4521,7 @@
                   <!-- 3. Merged Standby-Safe Auto-Learn Policy -->
                   <label style="display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:8px; background:var(--lt-b-0e1c1e99, rgba(14,28,30,0.6)); border:1px solid rgba(51,205,184,0.28); font-size:var(--kb-fs-xs); font-weight:600; color:var(--lt-t-6ee7b7ff, #6ee7b7); cursor:pointer;" title="Never wakes sleeping drives; defers sleeping disks and automatically learns when they spin up" data-i18n-title="ui.never_wakes_sleeping_drives_defers">
                     <input type="checkbox" id="ai-index-respect-standby" checked />
-                    <span aria-hidden="true">⚡</span> <span data-i18n="ai.respect_standby_label">Standby-Safe Auto-Learn (Only Sync When Disk Running)</span>
+                    <span aria-hidden="true">⚡</span> <span data-i18n="ai.respect_standby_label">Kib does not wake drives to read your files</span>
                   </label>
 
                   <!-- 5. Photo captions with a local vision model (AI-14) -->

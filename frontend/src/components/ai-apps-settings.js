@@ -31,7 +31,7 @@ export function appsHtml(data) {
         .join('')}</ul>`
     : '';
   return `<p class="immich-note">${escapeHtml(
-    t('aiapps.desc', 'Apps such as Paperless-ngx, Open WebUI and Home Assistant can use this server\'s chat model and embedder through one OpenAI-compatible address. Give each app its own key; a key can do nothing else.'),
+    t('aiapps.desc', 'Apps such as Paperless-ngx, Open WebUI and Home Assistant can use Kib\'s model through one OpenAI-compatible address. They cannot search your files. Give each app its own key; a key works on that address and nowhere else.'),
   )}</p>
     <p class="immich-note">${escapeHtml(t('aiapps.address', 'Address'))}: <code>${escapeHtml(data.base_url || '')}</code></p>
     ${rows}

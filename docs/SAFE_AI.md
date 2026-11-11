@@ -6,16 +6,20 @@ names the test or the page that holds it, so you can check it yourself.
 ## It runs here
 
 - **Search runs on the NAS.** Files are indexed and searched on this server; the index
-  (`rag_index.db`) and your conversations stay on it, encrypted with the install's data key.
+  (`rag_index.db`) and your conversations stay on it. They are encrypted when the install has a
+  data key (`KIBOTO_DATA_KEY`); without one they are plain files on the NAS.
   Search works without any AI model (see [Search quality](SEARCH_QUALITY.md)).
-- **Answers come from a model on the NAS** (Ollama or OpenVINO Model Server), unless you set
-  another address in **AI settings**. Kiboto never looks for AI servers on your network.
+- **Answers come from a model on the NAS** (Ollama or OpenVINO Model Server), or from the chat
+  address set for Kib. Kiboto looks for them only by the names `ollama` and `ovms` and never
+  tries other machines by address; a machine on your network with one of those names would be used.
 - **No account, no subscription.** Nothing needs signing up, and no feature is behind a plan.
-- **Web search is off** in every chat until you turn on **Web** for it. A web search carries
-  the question without addresses, e-mail addresses, file paths, long numbers or keys, and a
-  search that repeats text from your files is refused. Everything that can leave the NAS is
-  listed in [PRIVACY.md](PRIVACY.md); `tests/test_sec38_privacy.py` fails when the code
-  contacts a host that page doesn't name.
+- **Web search is off** until you turn on **Web** in the chat. Your browser remembers the
+  switch, so it stays on for later chats until you turn it off; the Kid and Guest roles never
+  use the web. A web search carries at most the first 200 characters of the question, without
+  IP addresses, e-mail addresses, file paths, long numbers or keys, and a search Kib asks for
+  that repeats six or more words from your files is refused. Everything that can leave the NAS,
+  including the optional servers you may set, is listed in [PRIVACY.md](PRIVACY.md);
+  `tests/test_sec38_privacy.py` fails when the code contacts a host that page doesn't name.
 
 ## It sees only what you may see
 
@@ -35,7 +39,8 @@ names the test or the page that holds it, so you can check it yourself.
   stopping an app or indexing a folder shows what will happen and runs only after you click
   **Confirm**. For an MCP client, that is a link you open in Kiboto; it expires after 10
   minutes and works only for the same account.
-- **Every tool call is in the security audit log** (`ai.tool.call`, `ai.tool.confirmed`).
+- **Every tool that reads system details or changes something is in the security audit log**
+  (`ai.tool.call`, `ai.tool.confirmed`). File and web searches are not written there.
 - **Risky Compose files are flagged.** When an answer contains a Compose file with privileged
   mode, the Docker socket, host networking, system folders, raw disks or default passwords,
   it ends with a note listing them.
@@ -51,8 +56,8 @@ names the test or the page that holds it, so you can check it yourself.
 
 ## You can make it forget
 
-- **Forget** on a watched folder deletes everything learned from it and stops it being read
-  again; **Excluded** folders are never read.
+- **Forget** on a folder deletes everything Kib learned from it and takes it off the list Kib
+  reads; Kib's regular passes skip it until you tick it again.
 - **Delete chats not used for…** removes old conversations after 7, 30, 90 or 365 days, and
   **Flush index** deletes the whole index.
 

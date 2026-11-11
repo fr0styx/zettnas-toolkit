@@ -540,6 +540,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **The cooling mode leaves the light alone.** Choosing Quiet no longer dims the light to 20 %.
 - A refused cooling change says so and shows the mode the fans really have.
 
+#### Changes
+
+- **Kib's switch says what it does: "Kib reads my files".** Switched off, Kib stops reading your files
+  and describing your photos; chat and search keep working with what it already knows.
+- **The AI page and the guides say only what is true.** No more "0 wakeups", "Zero Disk Wakeups" or
+  "100 % Standby-Safe" (nothing counted them); the drive line shows how many drives are awake and
+  asleep. The privacy page now says that the index and chats are encrypted only with a data key,
+  that the Web switch is remembered in your browser, and it lists the optional servers you can set
+  (Immich, a reranker, speech to text, photo search, a separate model for reading files) and what
+  each receives.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
