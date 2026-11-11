@@ -42,7 +42,11 @@ describe('chart zoom without hammerjs (ARC-15)', () => {
     znZoomPlugin.afterInit(c);
     expect(canvas.style.touchAction).toBe('pan-y');
 
-    const wheel = Object.assign(new Event('wheel', { cancelable: true }), { deltaY: -1, clientX: 500 });
+    const plain = Object.assign(new Event('wheel', { cancelable: true }), { deltaY: -1, clientX: 500 });
+    canvas.dispatchEvent(plain);
+    expect(plain.defaultPrevented).toBe(false); // the wheel alone scrolls the page (SET-13)
+    expect(windowOf(c)).toEqual([0, 100]);
+    const wheel = Object.assign(new Event('wheel', { cancelable: true }), { deltaY: -1, clientX: 500, ctrlKey: true });
     canvas.dispatchEvent(wheel);
     expect(wheel.defaultPrevented).toBe(true);
     const [lo, hi] = windowOf(c);

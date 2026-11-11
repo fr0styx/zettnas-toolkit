@@ -138,6 +138,31 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - The Event Log is called "Event Log" (it was "System Event & Audit Log"), and its description
   no longer promises drive wake-ups and sign-ins, which it never recorded.
 
+#### Fixes
+
+- **The history chart says when it has nothing to show.** While loading, with no history yet and
+  after a failed load it showed five buttons and a blank area; the error went to the browser
+  console only. It now says which of the three it is, with "Try again", and is read again every
+  five minutes while it is on screen. It was read once, when the page opened.
+- **The chart no longer draws values nobody measured.** A sleeping drive is stored with the
+  temperature it had when it fell asleep, so it got a flat line and a number; it now has a gap,
+  and the row of values says "Asleep". On 7 and 30 days, drive temperatures and fan speeds were
+  one arbitrary sample per period next to averaged processor values; they are averages now, a
+  drive's over the time it was awake. The drive axis was fixed at 15 to 65 °C and the fan axis at
+  0 to 3,500 RPM, so anything beyond left the chart; both fit their values now.
+- **The row of values above the chart says what it is**: "Stored reading from 14:05", or the
+  average of the last 30 or 120 minutes on the longer ranges. It looked like a live reading and
+  mixed live network numbers into stored ones.
+- **Fans are "Fan 1", "Fan 2"…, as many as the machine reports.** The chart named three fans
+  after one machine's layout, with different names in the row of values and in the chart.
+- **The chart can be read in light mode**: its text takes its colours from the theme (the legend
+  had a contrast of 1.4:1), and its words and times follow the language.
+- **The mouse wheel scrolls the page over a chart**; Ctrl + wheel zooms. The wheel always
+  zoomed, so the page could not be scrolled there.
+- A zip being made is listed as "Make an archive from 2 items" in Jobs (it read "Transfer 2
+  items to /folder"), and the Activity card on the Overview no longer promises live readings and
+  card copies, which that page does not have.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

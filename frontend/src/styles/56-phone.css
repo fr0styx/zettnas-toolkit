@@ -149,6 +149,12 @@ body.phone-shell .ai-chat-composer-row #ai-chat-input { flex: 1 0 100%; min-widt
 .mgmt-advanced-row small { display: block; color: var(--muted); font-size: var(--zn-fs-xs); line-height: 1.35; margin-top: 2px; }
 .mgmt-sidebar-item[hidden], .mgmt-app-card[hidden] { display: none; }
 .notif-center-when { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px; }
+.metrics-reading-note { flex-basis: 100%; font-size: var(--zn-fs-xs); color: var(--muted); }
+.dmp-val.is-hot { color: var(--crit); }
+.dmp-val.is-ok { color: var(--ok2); }
+.dmp-val.is-muted { color: var(--muted); }
+.metrics-chart-state { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.metrics-chart-state[hidden] { display: none; }
 .notif-see-all { flex-shrink: 0; margin: 0; padding: 8px 12px; border: 0; border-top: 1px solid var(--track); background: none; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 600; text-align: left; cursor: pointer; }
 .notif-see-all:hover, .notif-see-all:focus-visible { text-decoration: underline; }
 

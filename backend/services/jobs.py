@@ -203,6 +203,9 @@ _TRANSFER_STATUS = {
 }
 
 
+_TRANSFER_TITLES = ("move", "copy", "archive_create", "archive_extract")
+
+
 def _transfers() -> list[Job]:
     from backend.services.fs_transfer import transfer_manager
 
@@ -210,13 +213,20 @@ def _transfers() -> list[Job]:
     for t in transfer_manager.list_tasks():
         status = _TRANSFER_STATUS.get(str(t.get("status")), "running")
         n = len(t.get("sources") or [])
-        verb = {"move": "Move", "copy": "Copy"}.get(str(t.get("action")), str(t.get("action") or "Transfer").title())
+        action = str(t.get("action") or "")
+        # a zip being made read "Transfer 2 items to /folder" (SET-13)
+        title = {
+            "move": f"Move {n} item(s) to {t.get('destination')}",
+            "copy": f"Copy {n} item(s) to {t.get('destination')}",
+            "archive_create": f"Make an archive from {n} item(s)",
+            "archive_extract": f"Unpack an archive into {t.get('destination')}",
+        }.get(action, f"Transfer {n} item(s) to {t.get('destination')}")
         out.append(
             Job(
                 id=f"transfer:{t['id']}",
                 kind="transfer",
-                title=f"{verb} {n} item(s) to {t.get('destination')}",
-                title_id=f"jobs.t.{t.get('action')}" if t.get("action") in ("move", "copy") else "jobs.t.transfer",
+                title=title,
+                title_id=f"jobs.t.{action}" if action in _TRANSFER_TITLES else "jobs.t.transfer",
                 title_params={"n": n, "dest": t.get("destination") or ""},
                 status=status,
                 owner=t.get("owner"),

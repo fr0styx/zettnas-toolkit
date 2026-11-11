@@ -94,6 +94,9 @@ export const znZoomPlugin = {
     };
     const onWheel = (e) => {
       if (opts().enabled === false) return;
+      // the wheel alone scrolls the page: over a chart it always zoomed, so the page could not be
+      // scrolled there (SET-13). Ctrl (or Cmd) + wheel zooms, as in a map.
+      if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       const speed = opts().wheelSpeed ?? 0.08;
       zoomAround(chart, e.deltaY < 0 ? 1 - speed : 1 + speed, indexAt(chart, local(e)));

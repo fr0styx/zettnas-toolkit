@@ -340,107 +340,102 @@ def log_metrics(
         logger.info(f"[Kiboto] DB Log Error: {db_e}")
 
 
-def query_history(range_str: str = "24h"):
-    now_ts = int(time.time())
+# What each range of the history chart covers: (seconds back, seconds per point; 0 = every sample)
+_HISTORY_RANGES = {
+    "1h": (3600, 0),
+    "6h": (21600, 0),
+    "24h": (86400, 0),
+    "7d": (86400 * 7, 1800),
+    "30d": (86400 * 30, 7200),
+}
+_HISTORY_NUMBERS = ("cpu_temp", "cpu_util", "mem_pct", "net_rx", "net_tx", "disk_read", "disk_write")
 
+
+def _json_list(text: Any) -> list:
+    if not text:
+        return []
+    try:
+        value = json.loads(text)
+    except ValueError:
+        return []
+    return value if isinstance(value, list) else []
+
+
+def _mean(values: list, digits: int = 1) -> float | None:
+    return round(sum(values) / len(values), digits) if values else None
+
+
+def _history_sample(row: Any) -> dict[str, Any]:
+    """One stored sample as the chart reads it. A sleeping drive is stored with the last
+    temperature it had; that is not a measurement, so it carries no value here (SET-13: the
+    chart drew a flat line and a number for a drive that was asleep)."""
+    drives = []
+    for d in _json_list(row["disks_json"]):
+        if not isinstance(d, dict) or not d.get("name"):
+            continue
+        asleep = bool(d.get("standby"))
+        temp = d.get("temp")
+        measured = isinstance(temp, (int, float)) and not isinstance(temp, bool) and not asleep
+        drives.append({"name": d["name"], "temp": temp if measured else None, "standby": asleep})
+    sample: dict[str, Any] = {"ts": row["ts"]}
+    for key in _HISTORY_NUMBERS:
+        sample[key] = round(row[key], 1) if row[key] else 0
+    sample["disks"] = drives
+    sample["fans"] = [
+        f if isinstance(f, (int, float)) and not isinstance(f, bool) else None for f in _json_list(row["fans_json"])
+    ]
+    return sample
+
+
+def _history_point(ts: int, samples: list[dict[str, Any]]) -> dict[str, Any]:
+    """The average of one period's samples: each drive over the samples in which it was awake
+    (asleep in all of them: no value), each fan over the samples that have a reading. The 7 and
+    30 day views averaged the processor and memory and took one arbitrary sample's drives and fans."""
+    point: dict[str, Any] = {"ts": ts}
+    for key in _HISTORY_NUMBERS:
+        point[key] = _mean([s[key] for s in samples]) or 0
+    temps: dict[str, list] = {}
+    for s in samples:
+        for d in s["disks"]:
+            seen = temps.setdefault(d["name"], [])
+            if d["temp"] is not None:
+                seen.append(d["temp"])
+    point["disks"] = [{"name": name, "temp": _mean(seen), "standby": not seen} for name, seen in temps.items()]
+    fans = []
+    for i in range(max((len(s["fans"]) for s in samples), default=0)):
+        speed = _mean([s["fans"][i] for s in samples if i < len(s["fans"]) and s["fans"][i] is not None], 0)
+        fans.append(None if speed is None else int(speed))
+    point["fans"] = fans
+    point["samples"] = len(samples)
+    return point
+
+
+def query_history(range_str: str = "24h"):
+    """The history chart's points, oldest first: every sample for a day or less, averages per
+    half hour for 7 days and per two hours for 30 days."""
+    span, period = _HISTORY_RANGES.get(range_str, _HISTORY_RANGES["24h"])
+    cutoff = int(time.time()) - span
     with db_read_session() as conn:
         conn.row_factory = sqlite3.Row
-        cur = conn.execute("PRAGMA table_info(metrics)")
-        cols = {row[1] for row in cur.fetchall()}
-        has_net_io = "net_rx_bytes_sec" in cols
-
-        if has_net_io:
-            if range_str == "1h":
-                cutoff = now_ts - 3600
-                group_sql = (
-                    "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json, "
-                    "net_rx_bytes_sec AS net_rx, net_tx_bytes_sec AS net_tx, "
-                    "disk_read_bytes_sec AS disk_read, disk_write_bytes_sec AS disk_write "
-                    "FROM metrics WHERE ts > ? ORDER BY ts ASC"
-                )
-            elif range_str == "6h":
-                cutoff = now_ts - 21600
-                group_sql = (
-                    "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json, "
-                    "net_rx_bytes_sec AS net_rx, net_tx_bytes_sec AS net_tx, "
-                    "disk_read_bytes_sec AS disk_read, disk_write_bytes_sec AS disk_write "
-                    "FROM metrics WHERE ts > ? ORDER BY ts ASC"
-                )
-            elif range_str == "7d":
-                cutoff = now_ts - (86400 * 7)
-                group_sql = (
-                    "SELECT (ts / 1800) * 1800 AS ts, "
-                    "ROUND(AVG(cpu_temp), 1) AS cpu_temp, ROUND(AVG(cpu_util), 1) AS cpu_util, ROUND(AVG(mem_pct), 1) AS mem_pct, "
-                    "ROUND(AVG(COALESCE(net_rx_bytes_sec, 0.0)), 1) AS net_rx, ROUND(AVG(COALESCE(net_tx_bytes_sec, 0.0)), 1) AS net_tx, "
-                    "ROUND(AVG(COALESCE(disk_read_bytes_sec, 0.0)), 1) AS disk_read, ROUND(AVG(COALESCE(disk_write_bytes_sec, 0.0)), 1) AS disk_write, "
-                    "disks_json, fans_json FROM metrics WHERE ts > ? GROUP BY (ts / 1800) ORDER BY ts ASC"
-                )
-            elif range_str == "30d":
-                cutoff = now_ts - (86400 * 30)
-                group_sql = (
-                    "SELECT (ts / 7200) * 7200 AS ts, "
-                    "ROUND(AVG(cpu_temp), 1) AS cpu_temp, ROUND(AVG(cpu_util), 1) AS cpu_util, ROUND(AVG(mem_pct), 1) AS mem_pct, "
-                    "ROUND(AVG(COALESCE(net_rx_bytes_sec, 0.0)), 1) AS net_rx, ROUND(AVG(COALESCE(net_tx_bytes_sec, 0.0)), 1) AS net_tx, "
-                    "ROUND(AVG(COALESCE(disk_read_bytes_sec, 0.0)), 1) AS disk_read, ROUND(AVG(COALESCE(disk_write_bytes_sec, 0.0)), 1) AS disk_write, "
-                    "disks_json, fans_json FROM metrics WHERE ts > ? GROUP BY (ts / 7200) ORDER BY ts ASC"
-                )
-            else:  # default 24h
-                cutoff = now_ts - 86400
-                group_sql = (
-                    "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json, "
-                    "net_rx_bytes_sec AS net_rx, net_tx_bytes_sec AS net_tx, "
-                    "disk_read_bytes_sec AS disk_read, disk_write_bytes_sec AS disk_write "
-                    "FROM metrics WHERE ts > ? ORDER BY ts ASC"
-                )
-        else:
-            if range_str == "1h":
-                cutoff = now_ts - 3600
-                group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
-            elif range_str == "6h":
-                cutoff = now_ts - 21600
-                group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
-            elif range_str == "7d":
-                cutoff = now_ts - (86400 * 7)
-                group_sql = "SELECT (ts / 1800) * 1800 AS ts, ROUND(AVG(cpu_temp), 1) AS cpu_temp, ROUND(AVG(cpu_util), 1) AS cpu_util, ROUND(AVG(mem_pct), 1) AS mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? GROUP BY (ts / 1800) ORDER BY ts ASC"
-            elif range_str == "30d":
-                cutoff = now_ts - (86400 * 30)
-                group_sql = "SELECT (ts / 7200) * 7200 AS ts, ROUND(AVG(cpu_temp), 1) AS cpu_temp, ROUND(AVG(cpu_util), 1) AS cpu_util, ROUND(AVG(mem_pct), 1) AS mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? GROUP BY (ts / 7200) ORDER BY ts ASC"
-            else:  # default 24h
-                cutoff = now_ts - 86400
-                group_sql = "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json FROM metrics WHERE ts > ? ORDER BY ts ASC"
-
-        rows = conn.execute(group_sql, (cutoff,)).fetchall()
-        data = []
-        for r in rows:
-            disks = []
-            if "disks_json" in r.keys() and r["disks_json"]:
-                try:
-                    disks = json.loads(r["disks_json"])
-                except Exception:
-                    disks = []
-
-            fans = []
-            if "fans_json" in r.keys() and r["fans_json"]:
-                try:
-                    fans = json.loads(r["fans_json"])
-                except Exception:
-                    fans = []
-
-            data.append(
-                {
-                    "ts": r["ts"],
-                    "cpu_temp": round(r["cpu_temp"], 1) if r["cpu_temp"] else 0,
-                    "cpu_util": round(r["cpu_util"], 1) if r["cpu_util"] else 0,
-                    "mem_pct": round(r["mem_pct"], 1) if r["mem_pct"] else 0,
-                    "net_rx": round(r["net_rx"], 1) if "net_rx" in r.keys() and r["net_rx"] else 0.0,
-                    "net_tx": round(r["net_tx"], 1) if "net_tx" in r.keys() and r["net_tx"] else 0.0,
-                    "disk_read": round(r["disk_read"], 1) if "disk_read" in r.keys() and r["disk_read"] else 0.0,
-                    "disk_write": round(r["disk_write"], 1) if "disk_write" in r.keys() and r["disk_write"] else 0.0,
-                    "disks": disks,
-                    "fans": fans,
-                }
-            )
-        return data
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(metrics)").fetchall()}
+        rates = (
+            "net_rx_bytes_sec AS net_rx, net_tx_bytes_sec AS net_tx, "
+            "disk_read_bytes_sec AS disk_read, disk_write_bytes_sec AS disk_write"
+            if "net_rx_bytes_sec" in cols
+            else "0.0 AS net_rx, 0.0 AS net_tx, 0.0 AS disk_read, 0.0 AS disk_write"
+        )
+        rows = conn.execute(
+            "SELECT ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json, " + rates + " FROM metrics"
+            " WHERE ts > ? ORDER BY ts ASC",
+            (cutoff,),
+        ).fetchall()
+        samples = [_history_sample(r) for r in rows]
+    if not period:
+        return samples
+    periods: dict[int, list[dict[str, Any]]] = {}
+    for s in samples:
+        periods.setdefault(s["ts"] // period * period, []).append(s)
+    return [_history_point(ts, group) for ts, group in periods.items()]
 
 
 def log_copy_event(

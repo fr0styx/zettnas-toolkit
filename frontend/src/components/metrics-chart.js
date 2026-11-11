@@ -1,13 +1,14 @@
 import { znZoomPlugin } from './chart-zoom.js'; // replaces chartjs-plugin-zoom and hammerjs (ARC-15)
-import { escapeHtml } from '../utils.js';
 /**
  * Kiboto Historical Metrics Chart
  * Multi-device time-series telemetry for CPU, RAM, individual Disks, and Fans.
  */
 import { api } from '../api.js';
-import { state } from '../state.js';
 import { t } from '../i18n.js';
 import { formatFixed } from '../format.js';
+import { explain } from '../error-text.js';
+import { showState } from './state-block.js';
+import { REFRESH_MS, axisRange, chartColors, driveNames, driveSeries, fanSeries, pointLabel, readingNote, readingPills } from './metrics-view.js';
 
 let _metricsChart = null;
 let _metricsRange = '24h';
@@ -15,6 +16,8 @@ let _metricsGroup = 'all'; // 'all' | 'system' | 'disks' | 'fans'
 let _cachedData = null;
 let _ChartLib = null;
 let _renderRequestId = 0;
+let _refreshTimer = null;
+let _zoomed = false;
 
 const DISK_COLORS = [
   '#33cdb8', // teal
@@ -77,95 +80,71 @@ function formatRate(bytesSec) {
 
 function updateSummaryStrip(data) {
   const strip = document.getElementById('metrics-device-summary-strip');
-  if (!strip || !data || data.length === 0) return;
-
+  if (!strip) return;
+  if (!data || data.length === 0) {
+    strip.replaceChildren();
+    return;
+  }
+  const pill = (name, value, look = '') => {
+    const el = document.createElement('div');
+    el.className = 'device-metric-pill';
+    const label = document.createElement('span');
+    label.className = 'dmp-name';
+    label.textContent = `${name}:`;
+    const val = document.createElement('span');
+    val.className = look ? `dmp-val is-${look}` : 'dmp-val';
+    val.textContent = value;
+    el.append(label, val);
+    return el;
+  };
+  // the row is the last stored sample, not a live reading: it says which, and when
+  const note = document.createElement('div');
+  note.className = 'metrics-reading-note';
+  note.textContent = readingNote(data, _metricsRange);
   const latest = data[data.length - 1];
-  const pills = [];
-
-  // CPU Pill
-  pills.push(`
-    <div class="device-metric-pill">
-      <span class="dmp-name">CPU:</span>
-      <span class="dmp-val">${latest.cpu_temp}°C (${latest.cpu_util}%)</span>
-    </div>
-  `);
-
-  // RAM Pill
-  pills.push(`
-    <div class="device-metric-pill">
-      <span class="dmp-name">RAM:</span>
-      <span class="dmp-val">${latest.mem_pct}%</span>
-    </div>
-  `);
-
-  // Disks Pills
-  if (latest.disks && Array.isArray(latest.disks)) {
-    latest.disks.forEach((d) => {
-      const tempStr = d.temp != null ? `${d.temp}°C` : (d.standby ? 'Standby' : '--');
-      const tempColor = d.temp != null && d.temp > 50 ? 'var(--crit)' : d.standby ? 'var(--muted)' : 'var(--ok2)';
-      pills.push(`
-        <div class="device-metric-pill">
-          <span class="dmp-name">${escapeHtml(d.name)}:</span>
-          <span class="dmp-val" style="color:${tempColor};">${tempStr}</span>
-        </div>
-      `);
-    });
+  const pills = readingPills(data).map(([name, value, look]) => pill(name, value, look));
+  pills.push(pill(t('mch.net_name', 'Network'), `↓ ${formatRate(latest.net_rx || 0)} · ↑ ${formatRate(latest.net_tx || 0)}`));
+  if ((latest.disk_read || 0) > 0 || (latest.disk_write || 0) > 0) {
+    pills.push(pill(t('mch.drive_io_name', 'Drive activity'), `R ${formatRate(latest.disk_read || 0)} · W ${formatRate(latest.disk_write || 0)}`));
   }
+  strip.replaceChildren(note, ...pills);
+}
 
-  // Fans Pills
-  if (latest.fans && Array.isArray(latest.fans)) {
-    latest.fans.forEach((rpm, idx) => {
-      const fanNames = ['Rear Fan', 'Drive Bay Fan', 'CPU Fan'];
-      const name = fanNames[idx] || `Fan ${idx + 1}`;
-      pills.push(`
-        <div class="device-metric-pill">
-          <span class="dmp-name">${name}:</span>
-          <span class="dmp-val">${rpm} RPM</span>
-        </div>
-      `);
-    });
+/** The place for "loading", "nothing yet" and "could not load": the chart showed a blank area
+ *  for all three, and an error went to the browser console only (SET-13). */
+function say(canvas, kind, opts) {
+  const frame = canvas.parentElement;
+  if (!frame) return;
+  let box = /** @type {HTMLElement | null} */ (frame.querySelector('.metrics-chart-state'));
+  if (!box) {
+    box = document.createElement('div');
+    box.className = 'metrics-chart-state';
+    frame.append(box);
   }
+  box.hidden = !kind;
+  canvas.hidden = Boolean(kind);
+  if (kind) showState(box, kind, opts);
+  else box.replaceChildren();
+}
 
-  // Network Bandwidth Pill (Combined by default)
-  const rxRate = latest.net_rx || 0;
-  const txRate = latest.net_tx || 0;
-  pills.push(`
-    <div class="device-metric-pill" title="${t('ui.combined_lan_throughput_all_physical', 'Combined LAN Throughput (all physical interfaces)')}">
-      <span class="dmp-name">${t('mch.net', 'Net:')}</span>
-      <span class="dmp-val">↓ ${formatRate(rxRate)} · ↑ ${formatRate(txRate)} <span style="opacity:0.65; font-size:var(--zn-fs-xs);">${t('mch.combined', '(Combined)')}</span></span>
-    </div>
-  `);
-
-  const liveNetIfaces = state?.latestStats?.net?.interfaces;
-  if (liveNetIfaces && typeof liveNetIfaces === 'object') {
-    Object.keys(liveNetIfaces).forEach((ifName) => {
-      const ifInfo = liveNetIfaces[ifName];
-      if (ifInfo && (ifInfo.is_physical || ifInfo.is_bond)) {
-        pills.push(`
-          <div class="device-metric-pill" title="${escapeHtml(t('mch.throughput', '{name} Throughput', { name: ifName }))}">
-            <span class="dmp-name">${escapeHtml(ifName)}:</span>
-            <span class="dmp-val">↓ ${escapeHtml(ifInfo.rx || '0 B/s')} · ↑ ${escapeHtml(ifInfo.tx || '0 B/s')}</span>
-          </div>
-        `);
-      }
-    });
-  }
-
-  // Disk I/O Pill
-  if (latest.disk_read != null || latest.disk_write != null) {
-    const rRate = latest.disk_read || 0;
-    const wRate = latest.disk_write || 0;
-    if (rRate > 0 || wRate > 0) {
-      pills.push(`
-        <div class="device-metric-pill">
-          <span class="dmp-name">${t('mch.disk_io', 'Disk I/O:')}</span>
-          <span class="dmp-val">R: ${formatRate(rRate)} · W: ${formatRate(wRate)}</span>
-        </div>
-      `);
+/** While the chart is on screen it is read again as new samples are stored; it was read once,
+ *  when the page opened. Nothing is read once the page is closed. */
+function keepFresh() {
+  if (_refreshTimer) return;
+  _refreshTimer = setInterval(() => {
+    const canvas = document.getElementById('metricsChart');
+    if (!canvas || !canvas.isConnected || canvas.offsetParent === null) {
+      stopMetricsRefresh();
+      return;
     }
-  }
+    if (!document.hidden && !_zoomed) fetchAndRenderMetrics(false);
+  }, REFRESH_MS);
+}
 
-  strip.innerHTML = pills.join('');
+/** Stops reading the chart again (the page went away). */
+export function stopMetricsRefresh() {
+  if (_refreshTimer) clearInterval(_refreshTimer);
+  _refreshTimer = null;
 }
 
 export async function fetchAndRenderMetrics(skipFetch = false) {
@@ -174,39 +153,47 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
     _metricsChart.destroy();
     _metricsChart = null;
   }
+  const canvas = /** @type {HTMLCanvasElement | null} */ (document.getElementById('metricsChart'));
+  if (!canvas) return;
 
   try {
-    const canvas = document.getElementById('metricsChart');
-    if (!canvas) return;
-
     if (!skipFetch || !_cachedData) {
+      if (!_cachedData) say(canvas, 'loading');
       _cachedData = await api.get(`/api/history?range=${_metricsRange}`);
     }
+  } catch (e) {
+    if (reqId !== _renderRequestId) return;
+    _cachedData = null;
+    updateSummaryStrip(null);
+    say(canvas, 'failed', { text: t('mch.failed', 'The history could not be loaded.'), detail: explain(e), retry: () => fetchAndRenderMetrics(false) });
+    return;
+  }
+
+  try {
     if (reqId !== _renderRequestId) return;
     const data = _cachedData;
-    if (!data || data.length === 0) return;
-
     updateSummaryStrip(data);
+    if (!data || data.length === 0) {
+      say(canvas, 'empty', { text: t('mch.empty', 'No history yet. The first reading is stored five minutes after Kiboto starts.') });
+      keepFresh();
+      return;
+    }
+    say(canvas, null);
+    keepFresh();
 
     const Chart = await getChart();
     if (!Chart || reqId !== _renderRequestId) return;
 
-    const labels = data.map((d) => {
-      const dt = new Date(d.ts * 1000);
-      if (_metricsRange === '1h' || _metricsRange === '6h' || _metricsRange === '24h') {
-        return dt.getHours().toString().padStart(2, '0') + ':' + dt.getMinutes().toString().padStart(2, '0');
-      } else {
-        return (dt.getMonth() + 1) + '/' + dt.getDate() + ' ' + dt.getHours().toString().padStart(2, '0') + ':00';
-      }
-    });
+    const colors = chartColors(); // from the theme: fixed light greys could not be read in light mode
+    const labels = data.map((d) => pointLabel(d.ts, _metricsRange));
 
     const datasets = [];
     const scales = {
-      x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { maxTicksLimit: 8 } },
+      x: { grid: { color: colors.grid }, ticks: { maxTicksLimit: 8 } },
       y: {
-        grid: { color: 'rgba(255,255,255,0.05)' },
+        grid: { color: colors.grid },
         beginAtZero: true,
-        title: { display: true, text: t('mch.util_temp', 'Utilization (%) / Temp (°C)'), font: { size: 9 }, color: '#95a8ab' }
+        title: { display: true, text: t('mch.util_temp', 'Utilization (%) / Temp (°C)'), font: { size: 11 }, color: colors.muted }
       }
     };
 
@@ -246,66 +233,43 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
       });
       scales.y.max = 100;
     } else if (_metricsGroup === 'disks') {
-      // Find all unique disk names across data
-      const diskNames = new Set();
-      data.forEach((d) => {
-        if (d.disks && Array.isArray(d.disks)) {
-          d.disks.forEach((disk) => {
-            if (disk.name) diskNames.add(disk.name);
-          });
-        }
-      });
-
-      const sortedDisks = Array.from(diskNames).sort();
-      sortedDisks.forEach((diskName, idx) => {
-        const color = DISK_COLORS[idx % DISK_COLORS.length];
-        const diskTemps = data.map((d) => {
-          if (!d.disks) return null;
-          const match = d.disks.find((x) => x.name === diskName);
-          return match && match.temp != null ? match.temp : null;
-        });
-
+      const temps = driveNames(data).map((name) => driveSeries(data, name));
+      driveNames(data).forEach((diskName, idx) => {
         datasets.push({
-          label: `${diskName.toUpperCase()} (°C)`,
-          data: diskTemps,
-          borderColor: color,
+          label: `${diskName} (°C)`,
+          data: temps[idx],
+          borderColor: DISK_COLORS[idx % DISK_COLORS.length],
           backgroundColor: 'transparent',
           borderWidth: 2,
           tension: 0.3,
-          spanGaps: true,
+          spanGaps: false, // a drive that slept has a gap, not a line through it
           pointRadius: 0,
           pointHoverRadius: 4
         });
       });
 
-      scales.y.title.text = 'Temperature (°C)';
-      scales.y.min = 15;
-      scales.y.max = 65;
+      scales.y.title.text = t('mch.temp_axis', 'Temperature (°C)');
+      scales.y.beginAtZero = false;
+      Object.assign(scales.y, axisRange(temps, { floor: 20, step: 5 }));
     } else if (_metricsGroup === 'fans') {
-      const fanNames = ['Rear / Exhaust Fan', 'Drive Bay Fan', 'CPU Cooler Fan'];
-      const maxFans = Math.max(...data.map((d) => (d.fans ? d.fans.length : 0)), 1);
-
-      for (let f = 0; f < maxFans; f++) {
-        const color = FAN_COLORS[f % FAN_COLORS.length] || '#33cdb8';
-        const label = fanNames[f] || `Fan ${f + 1}`;
-        const fanSpeeds = data.map((d) => (d.fans && d.fans[f] != null ? d.fans[f] : null));
-
+      // as many fans as this machine reports, by number: the names assumed three fans in fixed places
+      const fans = fanSeries(data);
+      fans.forEach((fan, f) => {
         datasets.push({
-          label: `${label} (RPM)`,
-          data: fanSpeeds,
-          borderColor: color,
+          label: `${fan.label} (RPM)`,
+          data: fan.data,
+          borderColor: FAN_COLORS[f % FAN_COLORS.length],
           backgroundColor: 'transparent',
           borderWidth: 2,
           tension: 0.3,
-          spanGaps: true,
+          spanGaps: false,
           pointRadius: 0,
           pointHoverRadius: 4
         });
-      }
+      });
 
-      scales.y.title.text = 'Speed (RPM)';
-      scales.y.min = 0;
-      scales.y.max = 3500;
+      scales.y.title.text = t('mch.speed_axis', 'Speed (RPM)');
+      Object.assign(scales.y, axisRange(fans.map((fan) => fan.data), { floor: 0, step: 500 }));
     } else if (_metricsGroup === 'network') {
       const maxNet = Math.max(...data.map((d) => Math.max(d.net_rx || 0, d.net_tx || 0)), 0);
       const useMB = maxNet >= 1024 * 1024;
@@ -362,7 +326,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
         });
       }
 
-      scales.y.title.text = `Throughput (${unitStr})`;
+      scales.y.title.text = t('mch.rate_axis', 'Throughput ({unit})', { unit: unitStr });
       scales.y.beginAtZero = true;
     } else {
       // 'all' view: CPU, RAM, Disk Temps (clean single 0-100 scale, no conflicting fan RPM axis)
@@ -378,7 +342,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
         pointHoverRadius: 4
       });
       datasets.push({
-        label: 'CPU (%)',
+        label: t('mch.cpu_util', 'CPU Util (%)'),
         data: data.map((d) => d.cpu_util),
         borderColor: '#4fd8c4',
         borderWidth: 1.5,
@@ -386,7 +350,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
         pointRadius: 0
       });
       datasets.push({
-        label: 'RAM (%)',
+        label: t('mch.memory', 'Memory (%)'),
         data: data.map((d) => d.mem_pct),
         borderColor: '#a78bfa',
         borderWidth: 1.5,
@@ -394,32 +358,16 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
         pointRadius: 0
       });
 
-      // Individual Disk lines in 'all' view
-      const diskNames = new Set();
-      data.forEach((d) => {
-        if (d.disks && Array.isArray(d.disks)) {
-          d.disks.forEach((disk) => {
-            if (disk.name) diskNames.add(disk.name);
-          });
-        }
-      });
-      const sortedDisks = Array.from(diskNames).sort();
-      sortedDisks.forEach((diskName, idx) => {
-        const color = DISK_COLORS[idx % DISK_COLORS.length];
-        const diskTemps = data.map((d) => {
-          if (!d.disks) return null;
-          const match = d.disks.find((x) => x.name === diskName);
-          return match && match.temp != null ? match.temp : null;
-        });
-
+      // each drive's line in the 'all' view
+      driveNames(data).forEach((diskName, idx) => {
         datasets.push({
           label: `${diskName} (°C)`,
-          data: diskTemps,
-          borderColor: color,
+          data: driveSeries(data, diskName),
+          borderColor: DISK_COLORS[idx % DISK_COLORS.length],
           backgroundColor: 'transparent',
           borderWidth: 1.5,
           tension: 0.3,
-          spanGaps: true,
+          spanGaps: false,
           pointRadius: 0,
           pointHoverRadius: 4
         });
@@ -439,7 +387,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
     }
 
     const ctx = canvas.getContext('2d');
-    Chart.defaults.color = '#a4b8bc';
+    Chart.defaults.color = colors.muted;
     Chart.defaults.font.family = 'Inter, sans-serif';
 
     _metricsChart = new Chart(ctx, {
@@ -456,11 +404,13 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
         plugins: {
           legend: {
             position: 'top',
-            labels: { boxWidth: 10, usePointStyle: true, font: { size: 10 }, color: '#c9d6d7' }
+            labels: { boxWidth: 10, usePointStyle: true, font: { size: 11 }, color: colors.text }
           },
           tooltip: {
-            backgroundColor: 'rgba(14, 27, 29, 0.95)',
-            borderColor: 'rgba(255, 255, 255, 0.15)',
+            backgroundColor: colors.panel,
+            titleColor: colors.text,
+            bodyColor: colors.text,
+            borderColor: colors.grid,
             borderWidth: 1,
             padding: 10,
             cornerRadius: 8
@@ -468,6 +418,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
           znZoom: {
             wheelSpeed: 0.08,
             onChange: (_chart, zoomed) => {
+              _zoomed = Boolean(zoomed); // a zoomed chart is not read again under the reader
               const resetBtn = document.getElementById('metrics-reset-zoom-btn');
               if (resetBtn) resetBtn.style.display = zoomed ? 'inline-flex' : 'none';
             }
@@ -477,10 +428,12 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
       }
     });
 
+    _zoomed = false;
     const resetBtn = document.getElementById('metrics-reset-zoom-btn');
     if (resetBtn) resetBtn.style.display = 'none';
   } catch (e) {
-    console.error('Failed to load metrics history:', e);
+    console.error('Failed to draw the history chart:', e);
+    say(canvas, 'failed', { text: t('mch.failed', 'The history could not be loaded.'), detail: explain(e), retry: () => fetchAndRenderMetrics(false) });
   }
 }
 
@@ -499,6 +452,7 @@ export function initMetricsChart() {
     resetBtn.addEventListener('click', () => {
       if (_metricsChart && typeof _metricsChart.resetZoom === 'function') {
         _metricsChart.resetZoom();
+        _zoomed = false;
         resetBtn.style.display = 'none';
       }
     });
@@ -506,8 +460,12 @@ export function initMetricsChart() {
 
   // Device category filter buttons
   document.querySelectorAll('.metrics-device-btn').forEach((btn) => {
+    btn.setAttribute('aria-pressed', String(btn.classList.contains('active')));
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.metrics-device-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.metrics-device-btn').forEach((b) => {
+        b.classList.toggle('active', b === btn);
+        b.setAttribute('aria-pressed', String(b === btn)); // the chosen group was shown by colour only
+      });
       _metricsGroup = btn.dataset.metricGroup || 'all';
       fetchAndRenderMetrics(true); // Re-use cached history data for instant tab switching
     });
@@ -515,9 +473,7 @@ export function initMetricsChart() {
 
   // Re-render chart on language switch to update localized labels
   window.addEventListener('kiboto:lang-changed', () => {
-    if (_metricsChart) {
-      fetchAndRenderMetrics(true);
-    }
+    if (_cachedData) fetchAndRenderMetrics(true); // the row of values and the states too, not only a drawn chart
   });
 }
 
