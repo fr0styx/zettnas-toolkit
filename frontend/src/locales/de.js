@@ -126,6 +126,7 @@ export default {
   "ai.search_placeholder_sub": "Geben Sie oben eine Suchanfrage ein, um Dokumente, Rezepte, Fotos oder Audio zu durchsuchen, oder stellen Sie Kib eine Frage. Ergebnisse erscheinen hier nach der Suche.",
   "ai.tab_visual": "Visuelle & Farb-Fotosuche",
   "ai.tab_index": "Konfiguration",
+  "ai.status_failed": "Der Status von Kib konnte nicht geladen werden: {error}",
   "ai.ask_btn": "Suchen & Fragen",
   "ai.visual_search_btn": "Bildsuche",
   "ai.visual_filters_btn": "Farbe & Szene",

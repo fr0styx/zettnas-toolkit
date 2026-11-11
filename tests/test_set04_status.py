@@ -7,6 +7,7 @@ import types
 
 import pytest
 
+from backend import legacy_names
 from backend.api import media as media_api
 from backend.services import media_engine
 from backend.users_db import create_user, delete_user, get_user_by_username
@@ -15,7 +16,7 @@ FULL = {
     "status": "ok",
     "enabled": True,
     "kib_status": "Idle",
-    "zettai_status": "Idle",
+    legacy_names.OLD_KIB_STATUS_KEY: "Idle",
     "is_gated": False,
     "gate_reason": None,
     "total_ram_bytes": 16 * 1024**3,

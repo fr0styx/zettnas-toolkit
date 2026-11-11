@@ -2088,10 +2088,48 @@ export async function fetchAndRenderAiStatus() {
     const availFolders = res.available_folders || [];
     renderAiWatchedFoldersAndShares(watchedList, availFolders);
 
+    _aiStatusLoaded = true;
+    const errorBox = document.getElementById('ai-status-error');
+    if (errorBox) errorBox.hidden = true;
     return res;
   } catch (err) {
+    _showAiStatusError(err);
     return null;
   }
+}
+
+let _aiStatusLoaded = false;
+const _AI_STAND_INS = ['ai-active-llm-label', 'ai-standby-guard-text', 'ai-chat-active-model-badge'];
+
+/**
+ * The status could not be loaded: say so. The page's markup ships stand-in texts (a hardware
+ * tier, a model name, "Standby Guard: Active", "1 Checked", "Probing NPU..."), which stayed on
+ * screen as if they were measured (SET-04). Until a first answer arrives they become a dash.
+ * @param {unknown} err
+ */
+function _showAiStatusError(err) {
+  const box = document.getElementById('ai-status-error');
+  if (box) {
+    const message = err instanceof Error ? err.message : String(err);
+    box.textContent = `${t('ai.status_failed', 'Kib’s status could not be loaded: {error}', { error: message })} `;
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'btn-pill-toggle is-small';
+    retry.textContent = t('links.try_again', 'Try again');
+    retry.addEventListener('click', () => { fetchAndRenderAiStatus(); });
+    box.appendChild(retry);
+    box.hidden = false;
+  }
+  if (_aiStatusLoaded) return; // what the last good answer showed stays; the alert says it is not current
+  const root = document.getElementById('mgmt-sec-ai');
+  const standIns = [
+    ...(root ? root.querySelectorAll('[data-sample]:not(input):not(textarea)') : []),
+    ..._AI_STAND_INS.map((id) => document.getElementById(id)).filter(Boolean),
+  ];
+  standIns.forEach((el) => {
+    el.removeAttribute('data-i18n'); // a later language pass must not write the stand-in back
+    el.textContent = '—';
+  });
 }
 
 /** "p. 4" for a passage from a PDF page (AI-21); empty otherwise. */
@@ -3738,6 +3776,7 @@ export async function sendAiChatMessage(rawMessage = null) {
         allow_web_search: allowWeb,
         allow_nas_tools: allowTools,
         conversation_id: _activeConversationId,
+        new_conversation: !_activeConversationId,
         focus_path: _aiFocus?.path || undefined,
       });
       if (res && res.conversation_title && _activeConversationId) {
@@ -3777,6 +3816,7 @@ export async function sendAiChatMessage(rawMessage = null) {
             allow_web_search: allowWeb,
             allow_nas_tools: allowTools,
             conversation_id: currentConvId,
+            new_conversation: !currentConvId,
           }),
           signal: _aiActiveAbortController.signal,
         });
@@ -3995,6 +4035,7 @@ export async function sendAiChatMessage(rawMessage = null) {
           allow_web_search: allowWeb,
           allow_nas_tools: allowTools,
           conversation_id: _activeConversationId,
+          new_conversation: !_activeConversationId,
           focus_path: _aiFocus?.path || undefined,
         });
         }
@@ -4009,6 +4050,13 @@ export async function sendAiChatMessage(rawMessage = null) {
     }
 
     if (!res) return null;
+
+    // typed without "+ New Chat": the server started a conversation for it, and this is it from
+    // now on, so the chat is saved and shows in the list (SET-04)
+    if (!_activeConversationId && res.conversation_id) {
+      _activeConversationId = res.conversation_id;
+      fetchAndRenderAiConversations().catch(() => {});
+    }
 
     const replyMd = res.reply || res.answer || 'No response generated.';
     const llmTel = res.llm_telemetry || {};

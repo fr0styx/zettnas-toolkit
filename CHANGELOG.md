@@ -482,6 +482,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   and adding it again takes it off the forgotten list, so the two never disagree. Folder lists
   sent to the settings are checked like a folder added on the page.
 
+#### Fixes
+
+- **A chat with Kib is saved even when you did not press "+ New Chat" first**: such a chat was
+  never kept. The list said "No conversations yet" beside the exchange, and "Clear Chat" removed
+  the only copy. The first message now starts a conversation by itself.
+- **The Kib page says when it cannot load its status**: it showed stand-in values as if they were
+  measured, among them a hardware tier, a model that is not installed and "Standby Guard:
+  Active". It now shows an alert with the reason and "Try again", and a dash where no value is
+  known.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

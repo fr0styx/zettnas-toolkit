@@ -126,6 +126,7 @@ export default {
   "ai.search_placeholder_sub": "在上方输入关键词以检索文档、食谱、照片或音频，或直接询问 Kib。搜索结果将在检索后在此呈现。",
   "ai.tab_visual": "视觉与色彩照片搜索",
   "ai.tab_index": "配置",
+  "ai.status_failed": "无法加载 Kib 的状态：{error}",
   "ai.ask_btn": "搜索与提问",
   "ai.visual_search_btn": "视觉搜索",
   "ai.visual_filters_btn": "色彩与场景",

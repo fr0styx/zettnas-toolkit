@@ -50,6 +50,7 @@ OLD_PART_SUFFIX = ".zettnas-part"  # a half-copied file left by a transfer befor
 OLD_STAGE_INFIX = ".zettnas-stage-"  # a move's staging folder from before the rebrand: swept
 OLD_METRIC_PREFIX = "zettnas_"  # /api/metrics repeats every kiboto_ series under this prefix
 OLD_BACKUP_TAG = "zettnas"  # the restic tag on every off-site file backup: existing ones carry it, so it stays
+OLD_KIB_STATUS_KEY = "zettai_status"  # the Kib status answer repeats "kib_status" under this key
 OLD_LOG_FILE = "zettnas.log"  # the log file and its rotations carry on under the new name
 
 

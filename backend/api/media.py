@@ -21,6 +21,7 @@ from backend.ignored_errors import ignored
 
 logger = logging.getLogger(__name__)
 
+from backend import legacy_names
 from backend.api.system import check_user_path_access
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import ALLOWED_BROWSE_ROOTS, POOL_PATH
@@ -274,6 +275,8 @@ class AiChatRequest(BaseModel):
     allow_nas_tools: bool = True
     model: str | None = Field(default=None, max_length=256)
     conversation_id: str | None = Field(default=None, max_length=64)
+    # a chat that has no conversation yet: start one for it, so it is saved (SET-04)
+    new_conversation: bool = False
     # "Ask Kib about this" in File Explorer: answer from this file or folder (missing feature 6)
     focus_path: str | None = Field(default=None, max_length=4096)
 
@@ -289,6 +292,23 @@ def _checked_focus(req: "AiChatRequest", principal: AuthenticatedPrincipal) -> s
     if target is None or not user_can_access_path(target, principal):
         raise HTTPException(status_code=403, detail="You can't ask about that file.")
     return target
+
+
+def _start_conversation_if_asked(req: "AiChatRequest", uid: str) -> None:
+    """A chat typed without "+ New Chat" had no conversation, so it was never saved: the list said
+    "No conversations yet" beside the exchange, and "Clear Chat" destroyed the only copy. The page
+    now asks for one with new_conversation; the answer carries its id (SET-04). Callers that send
+    neither (a widget, a script) are not given saved chats they did not ask for."""
+    if req.conversation_id or not req.new_conversation:
+        return
+    import sqlite3
+
+    try:
+        from backend.services.ai_conversations_db import create_conversation
+
+        req.conversation_id = create_conversation(uid, model=req.model or "")["id"]
+    except (sqlite3.Error, OSError, RuntimeError) as e:
+        logger.warning("[AI Chat] Could not start a conversation, the chat is not saved: %s", e)
 
 
 class FavoriteToggleRequest(BaseModel):
@@ -329,7 +349,7 @@ _STATUS_FOR_EVERYONE = (
     "status",
     "enabled",
     "kib_status",
-    "zettai_status",
+    legacy_names.OLD_KIB_STATUS_KEY,
     "is_gated",
     "gate_reason",
     "learning_results",  # already only the files the person may open
@@ -1329,6 +1349,7 @@ async def chat_with_kib_agent(
     history = req.history
     uid = (principal.user_id or principal.username or "admin").strip().lower()
     focus = _checked_focus(req, principal)
+    _start_conversation_if_asked(req, uid)
 
     if req.conversation_id:
         try:
@@ -1416,6 +1437,7 @@ async def chat_with_kib_agent_stream(
     history = req.history
     uid = (principal.user_id or principal.username or "admin").strip().lower()
     focus = _checked_focus(req, principal)
+    _start_conversation_if_asked(req, uid)
 
     if req.conversation_id:
         try:

@@ -88,6 +88,20 @@ def folder_inside(path: str, folders: list[str]) -> str:
     return ""
 
 
+def read_nothing(status: str, path: str, message: str) -> dict[str, Any]:
+    """The answer of a reading that read nothing, and why."""
+    return {
+        "status": status,
+        "path": path,
+        "paths": [path] if path else [],
+        "indexed_files": 0,
+        "skipped_unchanged": 0,
+        "deferred_standby": 0,
+        "errors": 0,
+        "message": message,
+    }
+
+
 class RagIndexingMixin:
     """Indexing files and folders, forgetting and flushing for RagSearchEngine (split out of rag_engine.py, ARCH-1)."""
 
@@ -349,15 +363,7 @@ class RagIndexingMixin:
         if not clean_paths:
             clean_paths = self.get_config().get("watched_paths") or []
         if not clean_paths:  # no folder is chosen: nothing to read, never the whole pool (SET-04)
-            return {
-                "status": "nothing_to_read",
-                "indexed_files": 0,
-                "skipped_unchanged": 0,
-                "deferred_standby": 0,
-                "errors": 0,
-                "paths": [],
-                "message": "Kib has no folder to read. Choose a folder first.",
-            }
+            return read_nothing("nothing_to_read", "", "Kib has no folder to read. Choose a folder first.")
 
         is_spinup = bool(auto_spinup_devs)
         dev_label = ", ".join(f"/dev/{d}" for d in (auto_spinup_devs or []) if d) or "array disk"
@@ -506,26 +512,10 @@ class RagIndexingMixin:
         norm_root = os.path.normpath(root_path)
         cfg = self.get_config()
         if cfg.get("enabled") is False:
-            return {
-                "status": "disabled",
-                "path": norm_root,
-                "indexed_files": 0,
-                "skipped_unchanged": 0,
-                "deferred_standby": 0,
-                "errors": 0,
-                "message": "Kib service is disabled — learning paused.",
-            }
+            return read_nothing("disabled", norm_root, "Kib service is disabled — learning paused.")
         forgotten = folder_inside(norm_root, cfg.get("excluded_paths") or [])
         if forgotten:  # "Forget" holds for every way in, not only for the walk below it (SET-04)
-            return {
-                "status": "excluded",
-                "path": norm_root,
-                "indexed_files": 0,
-                "skipped_unchanged": 0,
-                "deferred_standby": 0,
-                "errors": 0,
-                "message": f"Kib was told to forget {forgotten} and does not read it.",
-            }
+            return read_nothing("excluded", norm_root, f"Kib was told to forget {forgotten} and does not read it.")
 
         if _reset_control_flags:
             self._stop_requested = False

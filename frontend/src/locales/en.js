@@ -126,6 +126,7 @@ export default {
   "ai.search_placeholder_sub": "Type a query above to search documents, recipes, photos, or audio, or ask Kib a question. Results will appear here once you search.",
   "ai.tab_visual": "Visual & Color Photo Search",
   "ai.tab_index": "Configuration",
+  "ai.status_failed": "Kib’s status could not be loaded: {error}",
   "ai.ask_btn": "Search & Ask",
   "ai.visual_search_btn": "Visual Search",
   "ai.visual_filters_btn": "Color & Scene",
