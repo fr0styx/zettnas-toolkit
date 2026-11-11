@@ -5558,6 +5558,7 @@ export default {
   "chassis.deny": "拒绝",
   "chassis.standard_rules": "适用常规访问规则。",
   "chassis.share_create_failed": "无法创建共享",
+  "chassis.tm_needs_limit": "请为时间机器文件夹设置大小上限，以免备份占满存储空间。",
   "chassis.loading_snapshots": "正在加载快照…",
   "chassis.no_snapshots": "还没有快照。",
   "chassis.col_snapshot": "快照",

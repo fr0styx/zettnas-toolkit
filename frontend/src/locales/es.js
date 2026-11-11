@@ -5558,6 +5558,7 @@ export default {
   "chassis.deny": "Denegar",
   "chassis.standard_rules": "Se aplican las reglas de acceso habituales.",
   "chassis.share_create_failed": "No se pudo crear la carpeta compartida",
+  "chassis.tm_needs_limit": "Pon un límite de tamaño a la carpeta de Time Machine, para que las copias no llenen el almacenamiento.",
   "chassis.loading_snapshots": "Cargando instantáneas…",
   "chassis.no_snapshots": "Aún no hay instantáneas.",
   "chassis.col_snapshot": "Instantánea",

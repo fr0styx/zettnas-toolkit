@@ -5558,6 +5558,7 @@ export default {
   "chassis.deny": "Deny",
   "chassis.standard_rules": "The usual access rules apply.",
   "chassis.share_create_failed": "Could not create the share",
+  "chassis.tm_needs_limit": "Give a Time Machine folder a size limit, so the backups cannot fill the storage.",
   "chassis.loading_snapshots": "Loading snapshots…",
   "chassis.no_snapshots": "No snapshots yet.",
   "chassis.col_snapshot": "Snapshot",

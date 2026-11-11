@@ -5558,6 +5558,7 @@ export default {
   "chassis.deny": "Verweigern",
   "chassis.standard_rules": "Es gelten die üblichen Zugriffsregeln.",
   "chassis.share_create_failed": "Die Freigabe konnte nicht erstellt werden",
+  "chassis.tm_needs_limit": "Geben Sie einem Time-Machine-Ordner eine Größenbegrenzung, damit die Sicherungen den Speicher nicht füllen können.",
   "chassis.loading_snapshots": "Snapshots werden geladen…",
   "chassis.no_snapshots": "Noch keine Snapshots.",
   "chassis.col_snapshot": "Snapshot",

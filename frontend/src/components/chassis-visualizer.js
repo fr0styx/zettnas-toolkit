@@ -3186,6 +3186,13 @@ export function openCreateNetworkShareModal(onSuccess) {
       }
 
       if (!name) return;
+      if (isTm && !quotaGb) {
+        if (errorBox) {
+          errorBox.textContent = t('chassis.tm_needs_limit', 'Give a Time Machine folder a size limit, so the backups cannot fill the storage.');
+          errorBox.style.display = 'block';
+        }
+        return;
+      }
       if (!(await confirmOpenShare(security === 'public', exportNfs && nfsClients === '*'))) return;
 
       if (submitBtn) {
@@ -3210,23 +3217,8 @@ export function openCreateNetworkShareModal(onSuccess) {
           nfs_sync: nfsSync,
           nfs_clients: nfsClients,
           nfs_allow_everyone: nfsClients === '*',
+          timemachine: isTm, // one request: the server keeps the people lists and applies the size limit
         });
-
-        if (isTm) {
-          try {
-            await api.post('/api/samba/shares', {
-              name,
-              path: path || `/mnt/storage/${name}`,
-              comment: comment || 'Apple Time Machine Backup',
-              read_only: readOnly,
-              guest_ok: security === 'public',
-              browseable: true,
-              timemachine: true,
-            });
-          } catch (tmErr) {
-            console.warn('[Samba] Time Machine configuration warning:', tmErr);
-          }
-        }
 
         close();
         playChirp(880, 0.12, 'sine');

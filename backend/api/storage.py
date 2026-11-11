@@ -100,6 +100,7 @@ class StorageShareCreateRequest(BaseModel):
     nfs_anongid: int = Field(default=1000, description="Mapped GID for anonymous/squashed users")
     nfs_sync: bool = Field(default=True, description="True for synchronous commits (ACID), False for async")
     nfs_clients: str = Field(default="", description="Allowed client host or CIDR subnet; empty = this home network")
+    timemachine: bool = Field(default=False, description="A Time Machine destination; needs SMB and a size limit")
     nfs_allow_everyone: bool = Field(default=False, description="True to export to every host (*), chosen explicitly")
 
 
@@ -425,6 +426,13 @@ def create_storage_share(req: StorageShareCreateRequest) -> dict[str, Any]:
             detail=f"Forbidden in Observer Mode on {adapter.get_platform_type().value}. "
             "Network shares must be configured via host OS to ensure proper Samba driver integration.",
         )
+    if req.timemachine and not req.export_smb:
+        raise HTTPException(status_code=400, detail="A Time Machine folder is reached over SMB: keep SMB on for it.")
+    if req.timemachine and not (req.quota_gb or 0) > 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Give a Time Machine folder a size limit, so the backups cannot fill the storage.",
+        )
     try:
         created = adapter.create_share(
             name=req.name,
@@ -444,6 +452,11 @@ def create_storage_share(req: StorageShareCreateRequest) -> dict[str, Any]:
         )
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e)) from e
+    except ValueError as e:
+        # a folder outside the allowed places, a reserved name, a bad client list: say which (SET-01)
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    if req.timemachine:
+        _make_time_machine(req.name, int(req.quota_gb or 0))
     try:
         from backend.services import snapshot_service
 
@@ -451,6 +464,25 @@ def create_storage_share(req: StorageShareCreateRequest) -> dict[str, Any]:
     except Exception as e:
         logger.warning(f"[Storage] No default snapshots for {one_line(req.name)}: {one_line(e)}")
     return created
+
+
+def _make_time_machine(name: str, size_gb: int) -> None:
+    """Marks the share just created as a Time Machine destination and keeps what it was created
+    with (its people lists, read-only). The page used to send a second request that replaced them,
+    without a size limit, and hid its failure (SET-01)."""
+    from backend.services import nas_name
+    from backend.services.samba_engine import get_samba_engine
+
+    engine = get_samba_engine()
+    share = engine.get_share(name)
+    problem = f"The folder {name} is shared, but Time Machine could not be turned on for it"
+    if share is None:
+        raise HTTPException(status_code=400, detail=f"{problem}.")
+    try:
+        engine.add_or_update_share(share.model_copy(update={"timemachine": True, "timemachine_quota_gb": size_gb}))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"{problem}: {e}") from e
+    nas_name.refresh()  # a Time Machine share is announced to Macs (FEAT-09)
 
 
 class ShareCompressionRequest(BaseModel):

@@ -255,6 +255,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   one folder off the network for an administrator, set that person to "none" for it in
   Users → Shared folders.
 
+#### Fixes
+
+- **Creating a shared folder says what is wrong**: a folder outside the storage, a reserved name or a
+  bad list of NFS clients came back as "Something went wrong on the server". The dialog now shows the
+  reason.
+- **A Time Machine folder keeps its people and gets a size limit**: ticking "Time Machine" sent a
+  second request that replaced the new folder's settings (the people chosen for it were dropped),
+  set no size limit, so a Mac could fill the storage, and hid its own failure. It is one request now.
+  A Time Machine folder needs a size limit; the dialog asks for one.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

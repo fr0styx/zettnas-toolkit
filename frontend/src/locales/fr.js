@@ -5558,6 +5558,7 @@ export default {
   "chassis.deny": "Refuser",
   "chassis.standard_rules": "Les règles d’accès habituelles s’appliquent.",
   "chassis.share_create_failed": "Impossible de créer le partage",
+  "chassis.tm_needs_limit": "Donnez une taille maximale au dossier Time Machine, pour que les sauvegardes ne remplissent pas le stockage.",
   "chassis.loading_snapshots": "Chargement des instantanés…",
   "chassis.no_snapshots": "Aucun instantané pour l’instant.",
   "chassis.col_snapshot": "Instantané",
