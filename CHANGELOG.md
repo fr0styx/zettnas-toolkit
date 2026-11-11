@@ -2,7 +2,60 @@
 
 Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep that name.
 
-## Unreleased
+## v2.0.1 (2026-11-11)
+### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
+
+Every page of Settings was reviewed, and this release carries what the reviews found that could lose
+data, show something to the wrong person, or put something on the internet without being asked: in
+Shares, Network, Kib, Files, Backup, Apps, Virtual machines, Power, Storage and Users. It also brings
+what has landed since 2.0.0: passkeys, two-step sign-in required by role, one sign-in for the family's
+apps, "Family from anywhere" and "Apps from anywhere" through Tailscale, pairing two Kiboto boxes for
+buddy backups, bringing a whole box back from its recovery kit, a malware scan for incoming files,
+Home Assistant sensors, and a map of where a share's space goes.
+
+Read **Before you upgrade**: several defaults are stricter, and a few API calls changed.
+
+#### Before you upgrade
+
+- **Run the security check once after updating** (Settings → Security). On an install upgraded from an
+  earlier version, kids and guests who could still change every shared folder stay as they are until
+  you press the fix there; the fix now also reaches the network shares.
+- **If you run virtual machines**: "Shut down" now asks the system inside and never ends a machine;
+  only "Turn off now" does. Before an update or a restart Kiboto shuts the machines down and starts
+  them again afterwards. When the container is stopped from outside, Kiboto waits for them: the
+  Compose files now set `stop_grace_period: 150s`; with another kind of install, raise the stop time
+  yourself (`docker stop -t 150`, or your template's stop time). No port of the NAS leads into a
+  machine any more, so `ssh -p 222x` to the NAS stops working: use the machine's own address.
+  Snapshots are made, restored and deleted only while the machine is off. A folder you marked
+  read-only in Edit is read-only from the machine's next start.
+- **Shared links**: a link that never ends needs a password, and a link made without choosing an end
+  lasts one day.
+- **Redfish is off until you turn it on, and the SNMP routes are gone.** A monitoring tool that used
+  either needs Redfish turned on through the API, or another source.
+- **An administrator's set-up is read by administrators only**: the security check, the alert set-up,
+  device addresses and sign-in links. A tool that read these with another role's token needs an
+  administrator's token. Virtual machines are read by the owner only.
+- **Kib reads only the folders you chose.** An empty list means nothing is read, and a new install
+  reads no folder until you choose one. A key made for an app works on the address for apps only
+  (`/api/ai/openai/`).
+- **Backup**: the settings file is always encrypted, and its plain download
+  (`GET /api/system/backup`) is removed: a script must send a passphrase. A backup job fails when no
+  snapshot could be made, so a job of the kind "Snapshots on this server only" turns red where the
+  storage cannot take snapshots (for example on Unraid, which keeps its own). "Go back" on a snapshot
+  row is removed; use "Files" on the row, then "Roll the whole share back".
+- **Power cuts**: the safe shutdown starts at the first limit reached: the UPS's own low-battery
+  signal, the minutes of runtime left, or the charge. Until now only the one you had chosen counted.
+  A UPS that reports neither runtime nor charge shuts the NAS down after the set time on battery
+  (five minutes unless changed). Check the three numbers in Power.
+- **Drive temperatures**: Drive Health calls a hard drive "too hot" at 55 °C and an NVMe drive at
+  75 °C, the limits the alerts and the fans already use (it was 60 and 80 °C).
+- **For scripts that use the API**: an upload onto a taken name keeps both files unless `on_conflict`
+  says otherwise; `prune_containers` is `false` unless sent; `delete` has left
+  `POST /api/docker/containers/bulk-action` (use `DELETE /api/docker/containers/{id}`); a virtual
+  machine's `stop` answers `stopped` or `shutting_down`; `POST /api/fans` refuses an empty value;
+  `POST /api/security` changes the caller's own password; a wrong code on
+  `POST /api/auth/mfa/disable` answers 403; `GET /api/storage/pools/discover` finds nothing in a
+  container install.
 
 #### Kiboto
 
