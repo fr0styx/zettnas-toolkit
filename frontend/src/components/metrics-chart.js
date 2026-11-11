@@ -436,6 +436,17 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
   }
 }
 
+let _wired = false;
+
+/** Opens the history page: wires its controls once, then draws the chart. */
+export function showMetricsPage() {
+  if (!_wired) {
+    _wired = true;
+    initMetricsChart();
+  }
+  return fetchAndRenderMetrics();
+}
+
 export function initMetricsChart() {
   const rs = document.getElementById('metrics-range-select');
   if (rs) {

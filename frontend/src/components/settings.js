@@ -10,7 +10,6 @@ import { state, ZOOM_PROFILES } from '../state.js';
 import { ZettEventBus } from '../event-bus.js';
 import { applyTheme, applyDesktopTheme, applyLcdTheme, setScreenLayoutStyle, hexToRgb, getContrastRatio, syncDesktopTwinPreview } from './dashboard.js';
 import { fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
-import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { t } from '../i18n.js';
 import { formatDateTime, formatFixed } from '../format.js';
 import { escapeHtml, copyTextToClipboard } from '../utils.js';

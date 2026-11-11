@@ -341,7 +341,6 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   initWallpapers();
   onManagementDom(() => import('./components/events.js').then((m) => m.initEvents())); // not in the first load (FE-01)
   loadLater(); // the settings drawer and the users code (B6 first-load budget)
-  onManagementDom(() => import('./components/metrics-chart.js').then((m) => m.initMetricsChart())); // with Mission Control
   initSetupWizardLauncher(); // the wizard itself loads when it is needed (PERF-9)
   // Mission Control's markup (FE-04) and code (FE-02) load on first use, or a few seconds
   // after start when the browser is idle

@@ -9,7 +9,6 @@ import { syncDesktopThemeUI, openDrawer, restoreHardwareTabsToManagement } from 
 import { ZettEventBus } from '../event-bus.js';
 import { fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
 import { fetchAndRenderChassisTwin, fetchAndRenderStorageTopology, fetchAndRenderNetworkShares, fetchAndRenderRemoteStorage, openNewCloudRemoteModal, openCreateStoragePoolModal, openCreateNetworkShareModal, getThermalLevel } from './chassis-visualizer.js';
-import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { bringToFront, DockManager, makeDraggable, saveWindowBounds, saveOpenWindowsState } from './dock.js';
 import { state } from '../state.js';
 import { api } from '../api.js';
@@ -719,7 +718,9 @@ export function initManagement() {
         window.initCalendarView();
       }
     } else if (paneId === 'mgmt-pane-metrics') {
-      setTimeout(fetchAndRenderMetrics, 50);
+      // the chart's code loads when its page opens: it came with Settings, in the first seconds
+      // after sign-in, and took the page over its download budget
+      setTimeout(() => import('./metrics-chart.js').then((m) => m.showMetricsPage()), 50);
     } else if (paneId === 'mgmt-pane-copy') {
       fetchAndRenderCopyHistory();
     } else if (paneId === 'mgmt-pane-network' || paneId === 'mgmt-pane-network-physical') {

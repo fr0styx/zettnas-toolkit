@@ -24,7 +24,7 @@ vi.mock('../api.js', () => ({ api: { get: vi.fn() } }));
 const { api } = await import('../api.js');
 const { state } = await import('../state.js');
 const { setLanguage } = await import('../i18n.js');
-const { initMetricsChart, fetchAndRenderMetrics, stopMetricsRefresh } = await import('../components/metrics-chart.js');
+const { initMetricsChart, fetchAndRenderMetrics, stopMetricsRefresh, showMetricsPage } = await import('../components/metrics-chart.js');
 const view = await import('../components/metrics-view.js');
 
 const SAMPLE = {
@@ -141,6 +141,15 @@ describe('the history chart', () => {
     Object.defineProperty(canvas, 'offsetParent', { configurable: true, get: () => null });
     await vi.advanceTimersByTimeAsync(view.REFRESH_MS * 3);
     expect(api.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('opening the page wires it once and draws the chart', async () => {
+    // the module is loaded when the page opens, not with Settings in the first seconds
+    api.get.mockResolvedValue([SAMPLE]);
+    await showMetricsPage();
+    await showMetricsPage();
+    expect(api.get).toHaveBeenCalledTimes(2);
+    expect(drawn.length).toBeGreaterThan(0);
   });
 
   it('switches the group buttons', () => {

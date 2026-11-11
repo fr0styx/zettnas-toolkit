@@ -42,7 +42,8 @@ def test_a_sleeping_drive_has_no_value(history):
 
 
 def test_seven_days_average_each_drive_and_fan_over_the_period(history):
-    period = int(time.time()) // 1800 * 1800 - 3600
+    # the start of a two-hour period: its two half hours are one point on the 30-day view, whatever the clock
+    period = int(time.time()) // 7200 * 7200 - 7200
     db.log_metrics(
         period + 10, 40, 10, 30, [_drive("sda", 30), _drive("sdb", 50, standby=True)], [1000, 2000], 100.0, 200.0
     )
