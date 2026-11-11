@@ -1,4 +1,5 @@
 import { escapeHtml, trapFocus, copyTextToClipboard, reconcileKeyedTable } from '../utils.js';
+import { locateSaid } from './locate-text.js';
 import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
@@ -66,57 +67,26 @@ function noteIn(el, text, css) {
  * - Persistent User Bay Slot Mapping Modal
  */
 
-// Zero-asset Web Audio Synthesizer for tactical user feedback
-export function playChirp(freq = 880, duration = 0.12, type = 'sine') {
-  try {
-    if (typeof window === 'undefined') return;
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    gain.gain.setValueAtTime(0.06, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + duration);
-  } catch (_) {}
-}
-
 /**
- * Triggers physical and visual drive identification (Locate Drive / Blink Bay)
+ * "Find this drive": asks the server to blink a light that belongs to this drive, and speaks
+ * after the answer. It names the light that moves, or says that none could be blinked.
  */
 export async function triggerLocateDisk(devName, targetElement = null) {
   if (!devName) return;
-
-  // 1. Play tactile acoustic feedback
-  playChirp(880, 0.08);
-  setTimeout(() => playChirp(1320, 0.1), 90);
-
-  // 2. Visual strobe on DOM element if provided
-  if (targetElement) {
+  let said;
+  try {
+    said = locateSaid(await api.post('/api/disk/locate', { dev: devName, duration: 5 }), devName);
+  } catch (err) {
+    said = locateSaid({ success: false, error: err?.detail || err?.message || '' }, devName);
+  }
+  if (said.blinking && targetElement) {
     targetElement.classList.add('strobe-active');
     setTimeout(() => {
       targetElement.classList.remove('strobe-active');
     }, 5200);
   }
-
-  // 3. Screen reader a11y announcement & user toast
-  announceA11y(`Locating drive ${devName}. Physical bay indicator flashing.`);
-  showToast(t('toast.locating_drive_dev_pulsing_physical_activity', 'Locating drive /dev/{devName}: Pulsing physical activity LED and backplane indicator for 5s to identify bay.', { devName: devName }), 'info');
-
-  // 4. Issue backend hardware strobe request
-  try {
-    await api.request('/api/disk/locate', {
-      method: 'POST',
-      body: { dev: devName, duration: 5 }
-    });
-  } catch (err) {
-    console.warn('[LocateDisk] Hardware strobe request failed:', err);
-  }
+  announceA11y(said.text);
+  showToast(said.text, said.tone);
 }
 
 /**
@@ -1391,7 +1361,6 @@ function bindSharesGridEvents(grid, container) {
     const revealBtn = e.target.closest('.btn-share-reveal');
     if (revealBtn) {
       const path = revealBtn.dataset.path;
-      playChirp(720, 0.08, 'triangle');
       ZettEventBus.emit('window:open', { id: 'file-manager-window', path });
       showToast(t('mgmt.opened_share', `Opened share in File Explorer: ${path}`), 'info');
       return;
@@ -1872,7 +1841,6 @@ export async function fetchAndRenderRemoteStorage(container) {
     // Event bindings
     // WebDAV toggle
     container.querySelector('#btn-webdav-toggle')?.addEventListener('click', async () => {
-      playChirp(600, 0.08, 'sine');
       try {
         await api.post('/api/webdav/toggle', { enabled: !isRunning });
         showToast(isRunning ? 'WebDAV server stopped.' : 'WebDAV server started on port ' + webdavStatus.port, 'info');
@@ -1884,7 +1852,6 @@ export async function fetchAndRenderRemoteStorage(container) {
 
     // WebDAV restart
     container.querySelector('#btn-webdav-restart')?.addEventListener('click', async () => {
-      playChirp(700, 0.08, 'sine');
       try {
         await api.post('/api/webdav/restart');
         showToast(t('toast.webdav_server_restarted', 'WebDAV server restarted.'), 'info');
@@ -1896,7 +1863,6 @@ export async function fetchAndRenderRemoteStorage(container) {
 
     // WebDAV settings modal open
     container.querySelector('#btn-webdav-config-open')?.addEventListener('click', () => {
-      playChirp(640, 0.08, 'triangle');
       openWebdavConfigModal(webdavStatus, () => fetchAndRenderRemoteStorage(container));
     });
 
@@ -1906,7 +1872,6 @@ export async function fetchAndRenderRemoteStorage(container) {
         const text = btn.dataset.copy;
         if (text) {
           const ok = await copyTextToClipboard(text);
-          playChirp(880, 0.08, 'triangle');
           if (ok) {
             showToast(t('toast.copied_to_clipboard_3', 'Copied to clipboard!'), 'info');
           } else {
@@ -1920,7 +1885,6 @@ export async function fetchAndRenderRemoteStorage(container) {
     container.querySelectorAll('.btn-trigger-new-remote').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        playChirp(640, 0.08, 'triangle');
         openNewCloudRemoteModal(() => fetchAndRenderRemoteStorage(container));
       });
     });
@@ -1929,7 +1893,6 @@ export async function fetchAndRenderRemoteStorage(container) {
     container.querySelectorAll('.btn-remote-reveal').forEach((btn) => {
       btn.addEventListener('click', () => {
         const path = btn.dataset.path || `/mnt/remotes/${btn.dataset.name || ''}`;
-        playChirp(720, 0.08, 'triangle');
         ZettEventBus.emit('window:open', { id: 'file-manager-window', path });
         ZettEventBus.emit('fm:refresh');
         showToast(t('toast.opened_in_file_explorer', 'Opened {path} in File Explorer', { path: path }), 'info');
@@ -1944,7 +1907,6 @@ export async function fetchAndRenderRemoteStorage(container) {
         btn.disabled = true;
         try {
           await api.post(`/api/remotes/${name}/mount`, {});
-          playChirp(800, 0.1, 'sine');
           showToast(t('toast.remote_mounted_to_mnt_remotes', 'Remote \'{name}\' mounted to /mnt/remotes/{name}', { name: name }), 'info');
           fetchAndRenderRemoteStorage(container);
           ZettEventBus.emit('fm:refresh');
@@ -1964,7 +1926,6 @@ export async function fetchAndRenderRemoteStorage(container) {
         btn.disabled = true;
         try {
           await api.post(`/api/remotes/${name}/unmount`);
-          playChirp(500, 0.1, 'sine');
           showToast(t('toast.remote_unmounted', 'Remote \'{name}\' unmounted.', { name: name }), 'info');
           fetchAndRenderRemoteStorage(container);
           ZettEventBus.emit('fm:refresh');
@@ -1988,7 +1949,6 @@ export async function fetchAndRenderRemoteStorage(container) {
           async () => {
             try {
               await api.delete(`/api/remotes/${name}`);
-              playChirp(440, 0.1, 'sawtooth');
               showToast(t('remotes.deleted', `Remote '${name}' deleted successfully.`), 'info');
               fetchAndRenderRemoteStorage(container);
               ZettEventBus.emit('fm:refresh');
@@ -2061,7 +2021,6 @@ export function openWebdavConfigModal(currentConfig, onSuccess) {
       try {
         await api.post('/api/webdav/config', payload);
         close();
-        playChirp(880, 0.1, 'sine');
         showToast(t('toast.webdav_configuration_saved_and_server_restarted', 'WebDAV configuration saved and server restarted!'), 'info');
         if (onSuccess) onSuccess();
       } catch (err) {
@@ -2444,7 +2403,6 @@ export async function openNewCloudRemoteModal(onSuccess) {
               if (tabDesktop && tabDesktop.parentElement) tabDesktop.parentElement.style.display = 'none';
               if (qrBox) qrBox.style.display = 'none';
               if (step2Box) step2Box.style.display = 'none';
-              playChirp(880, 0.12, 'sine');
               showToast(t('toast.cloud_credentials_verified_token_auto_populated', 'Cloud credentials verified & token auto-populated!'), 'info');
             };
 
@@ -2754,7 +2712,6 @@ export async function openNewCloudRemoteModal(onSuccess) {
           });
 
           if (res && res.success) {
-            playChirp(880, 0.12, 'sine');
             testBtn.classList.add('tested-green');
             testBtn.innerHTML = `<span><span aria-hidden="true">✅</span> ${t('remotes.test_btn_success', 'Connection Successful')}</span>`;
             showToast(t('remotes.test_success', 'Connection test successful! Valid credentials and remote accessible.'), 'ok');
@@ -2845,7 +2802,6 @@ export async function openNewCloudRemoteModal(onSuccess) {
           }
 
           close();
-          playChirp(880, 0.12, 'sine');
           showToast(t('toast.cloud_remote_connected_successfully', 'Cloud remote \'{name}\' connected successfully!', { name: name }), 'info');
           ZettEventBus.emit('fm:refresh');
           ZettEventBus.emit('storage:mount_changed', { name, path: `/mnt/remotes/${name}`, action: 'create' });
@@ -3036,7 +2992,6 @@ export async function openCreateStoragePoolModal(onSuccess) {
         }
 
         close();
-        playChirp(880, 0.12, 'sine');
         showToast(t('toast.storage_pool_provisioned_successfully', 'Storage pool \'{name}\' provisioned successfully!', { name: name }), 'info');
         if (onSuccess) onSuccess();
       } catch (err) {
@@ -3219,7 +3174,6 @@ export function openCreateNetworkShareModal(onSuccess) {
         });
 
         close();
-        playChirp(880, 0.12, 'sine');
         showToast(t('toast.share_created_successfully', 'Share \'{name}\' created successfully!', { name: name }), 'info');
         if (onSuccess) onSuccess();
       } catch (err) {
@@ -3297,7 +3251,6 @@ export function openRenameStoragePoolModal(poolId, currentName, onSuccess) {
         });
 
         close();
-        playChirp(880, 0.12, 'sine');
         showToast(t('toast.storage_pool_renamed_to_successfully', 'Storage pool \'{currentName}\' renamed to \'{newName}\' successfully!', { currentName: currentName, newName: newName }), 'info');
         if (onSuccess) onSuccess();
       } catch (err) {

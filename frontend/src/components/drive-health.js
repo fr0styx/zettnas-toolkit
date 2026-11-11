@@ -198,6 +198,7 @@ export function detailHtml(drive, detail, tests) {
       <div class="dh-test-buttons">
         <button type="button" class="btn-pill-toggle" data-dh-test="short"${active ? ' disabled' : ''}>${escapeHtml(t('dh.run_short', 'Run a short test'))}</button>
         <button type="button" class="btn-pill-toggle" data-dh-test="long"${active ? ' disabled' : ''}>${escapeHtml(t('dh.run_long', 'Run a long test'))}</button>
+        <button type="button" class="btn-pill-toggle" data-dh-find>${escapeHtml(t('dh.find', 'Find this drive'))}</button>
       </div>
       <ul class="dh-tests">${testRowsHtml(tests && tests.history)}</ul>
     </section>
@@ -373,6 +374,7 @@ function ensureWindow() {
     if (card) return void selectDrive(card.dataset.dhDev);
     const test = /** @type {HTMLElement | null} */ (target.closest('[data-dh-test]'));
     if (test) return void runTest(test.dataset.dhTest);
+    if (target.closest('[data-dh-find]')) return void findDrive(_selected);
     if (target.closest('[data-dh-wake]')) return void loadDetail(_selected, true);
     if (target.closest('[data-dh-report]')) return void openReport('drive');
     if (target.closest('[data-dh-notes]')) return void editNotes();
@@ -411,6 +413,13 @@ export async function openDriveHealth(dev = null) {
   _listTimer = setInterval(() => {
     if (shouldPoll(_win, document)) loadDrives();
   }, LIST_POLL_MS);
+}
+
+/** "Find this drive" from Drive Health: the same light and the same words as on the Storage page. */
+export async function findDrive(dev) {
+  if (!dev) return;
+  const { triggerLocateDisk } = await import('./chassis-visualizer.js');
+  await triggerLocateDisk(dev);
 }
 
 /** The list is read again only while someone can see it: not in a closed window, and not in a

@@ -789,6 +789,22 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   from the readings Kiboto takes every 30 minutes, the window stops asking while its tab is in the
   background, and "Refresh" still reads at once.
 
+#### Changes
+
+- **No more beeps on the Storage page.** Nineteen places played a sound, with no setting to turn
+  it off.
+
+#### Fixes
+
+- **"Find this drive" speaks after it has tried, and says which light moves.** It beeped, marked
+  the tile and announced "pulsing… for 5s" before asking the server, and threw the answer away.
+  It now says "the light of the bay blinks" or "the activity light of the drive flickers", or that
+  no light could be blinked and why. Drive Health has the button too.
+- **The activity light really flickers.** The reads that make it flicker went through the
+  system's cache, so on a drive in use nothing reached the drive. They now go straight to it.
+- **The light bar is left alone when you look for a drive.** It flashed the same for every drive,
+  which finds none, and stayed white afterwards instead of going back to your setting.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

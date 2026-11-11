@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fleetHtml, kindText, aboutHtml, historyBody, scheduleText, shouldPoll, reportCsv } from '../components/drive-health.js';
+import { fleetHtml, kindText, aboutHtml, historyBody, scheduleText, shouldPoll, findDrive, reportCsv } from '../components/drive-health.js';
 import { scale, lineChart } from '../components/drive-charts.js';
 
 describe('Drive Health revamp', () => {
@@ -62,6 +62,15 @@ describe('Drive Health revamp', () => {
     expect(shouldPoll({ hidden: true, style: { display: 'flex' } }, { hidden: false })).toBe(false);
     expect(shouldPoll({ hidden: false, style: { display: 'none' } }, { hidden: false })).toBe(false);
     expect(shouldPoll(null, { hidden: false })).toBe(false);
+  });
+
+  it('finds a drive by its light from Drive Health too (SET-09)', async () => {
+    const chassis = await import('../components/chassis-visualizer.js');
+    const spy = vi.spyOn(chassis, 'triggerLocateDisk').mockResolvedValue(undefined);
+    await findDrive('sdb');
+    await findDrive('');
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith('sdb');
   });
 
   it('says the schedule', () => {

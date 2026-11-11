@@ -66,7 +66,7 @@ def test_locate_uses_the_bay_lights_and_asks_only_before_reading_the_disk(client
 
     def lights_only(dev, duration, allow_read_strobe=True):
         calls.append(allow_read_strobe)
-        return {"success": True, "tier": "argb"}
+        return {"success": True, "tier": "ses"}
 
     monkeypatch.setattr(system, "locate_disk", lights_only)
     assert client.post("/api/disk/locate", json={"dev": "sdb"}, headers=auth_headers).status_code == 200
@@ -87,7 +87,6 @@ def test_locate_uses_the_bay_lights_and_asks_only_before_reading_the_disk(client
 
 def test_locate_never_reads_the_disk_unless_allowed(monkeypatch):
     monkeypatch.setattr(locate.os.path, "exists", lambda p: False)  # no SES backplane
-    monkeypatch.setattr(locate, "find_led_port", lambda: None)  # no light bar
     assert locate.locate_drive_multitier("sdb", "/dev/sdb", 5, allow_read_strobe=False) == {
         "success": False,
         "needs_wake": True,

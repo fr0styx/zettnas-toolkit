@@ -11,8 +11,7 @@ import {
   fetchAndRenderStorageTopology,
   fetchAndRenderNetworkShares,
   formatBytes,
-  formatNumber,
-  playChirp
+  formatNumber
 } from '../components/chassis-visualizer.js';
 
 import { ZettEventBus } from '../event-bus.js';
@@ -171,17 +170,14 @@ describe('Phase 2: Parametric Chassis Twin & Locate Strobe', () => {
     expect(slotsBtn).not.toBeNull();
   });
 
-  it('triggers locate disk API and activates visual strobe with audio chirp', async () => {
-    const apiSpy = vi.spyOn(api, 'request').mockResolvedValue({ ok: true, json: async () => ({ success: true }) });
+  it('asks the server to blink a light and marks the tile once it answered', async () => {
+    const apiSpy = vi.spyOn(api, 'post').mockResolvedValue({ success: true, method: 'bay_light', duration: 5 });
     const slot = document.createElement('div');
     container.appendChild(slot);
 
     await triggerLocateDisk('sda', slot);
 
-    expect(apiSpy).toHaveBeenCalledWith('/api/disk/locate', {
-      method: 'POST',
-      body: { dev: 'sda', duration: 5 }
-    });
+    expect(apiSpy).toHaveBeenCalledWith('/api/disk/locate', { dev: 'sda', duration: 5 });
     expect(slot.classList.contains('strobe-active')).toBe(true);
 
     apiSpy.mockRestore();

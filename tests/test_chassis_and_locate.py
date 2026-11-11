@@ -10,18 +10,57 @@ from backend.hardware.hal import PhysicalDiskRecord
 from backend.hardware.locate import locate_drive_multitier
 
 
-def test_locate_drive_tier3_strobe_fallback():
-    """Verify that Tier 3 gentle read strobe executes when SES and ARGB are absent."""
+def test_without_an_enclosure_light_the_drives_own_light_flickers_by_real_reads():
+    """SET-09: the reads go past the system's cache and move over the drive. Block 0 through the
+    cache was answered from memory on a drive in use, so nothing flickered."""
+    import os
+
+    from backend.hardware import locate
+
+    seen = {"flags": [], "offsets": []}
+
+    def fake_open(path, flags):
+        seen["flags"].append(flags)
+        return 7
+
+    def fake_preadv(fd, bufs, offset):
+        seen["offsets"].append(offset)
+        return locate.BLOCK
+
+    started = []
     with (
         patch("os.path.exists", return_value=False),
-        patch("backend.hardware.locate.find_led_port", return_value=None),
-        patch("builtins.open", MagicMock()) as mock_open,
+        patch("os.open", side_effect=fake_open),
+        patch("os.close"),
+        patch("os.preadv", side_effect=fake_preadv),
+        patch.object(locate.time, "sleep"),
+        # the reads run in a thread; here it must not outlive these stand-ins (it would close a real file)
+        patch.object(locate.threading, "Thread", side_effect=lambda **kw: started.append(kw) or MagicMock()),
     ):
         res = locate_drive_multitier("sda", "/dev/sda", duration_sec=2)
-        assert res["success"] is True
-        assert res["tier"] == "strobe"
-        assert res["method"] == "direct_read_activity"
-        assert res["dev"] == "sda"
+        assert len(started) == 1
+        assert res == {"success": True, "tier": "strobe", "method": "activity_light", "dev": "sda", "duration": 2}
+        assert locate._flicker("/dev/sda", 0.05) >= 1
+    assert os.O_DIRECT in [f & os.O_DIRECT for f in seen["flags"]]
+    assert seen["offsets"][0] == 0 and all(o % locate.BLOCK == 0 for o in seen["offsets"])
+    if len(seen["offsets"]) > 1:
+        assert len(set(seen["offsets"])) > 1  # not the same block again and again
+
+
+def test_a_drive_that_can_not_be_read_is_said_and_a_sleeping_one_is_not_read_unasked():
+    with patch("os.path.exists", return_value=False), patch("os.open", side_effect=OSError(5, "Input/output error")):
+        res = locate_drive_multitier("sdx", "/dev/sdx", duration_sec=2)
+    assert res["success"] is False and "could not be read" in res["error"]
+    with patch("os.path.exists", return_value=False), patch("os.open") as opened:
+        res = locate_drive_multitier("sdy", "/dev/sdy", duration_sec=2, allow_read_strobe=False)
+    assert res == {"success": False, "needs_wake": True, "dev": "sdy"} and not opened.called
+
+
+def test_the_light_bar_is_left_alone():
+    """It flashed the same for every drive, which finds none, and was left white afterwards."""
+    from backend.hardware import locate
+
+    assert not hasattr(locate, "send_led_packet") and not hasattr(locate, "find_led_port")
 
 
 def test_locate_drive_tier1_ses():
@@ -31,7 +70,7 @@ def test_locate_drive_tier1_ses():
         res = locate_drive_multitier("sdb", "/dev/sdb", duration_sec=2)
         assert res["success"] is True
         assert res["tier"] == "ses"
-        assert res["method"] == "ledctl"
+        assert res["method"] == "bay_light"
 
 
 def test_chassis_engine_auto_profile_classification():

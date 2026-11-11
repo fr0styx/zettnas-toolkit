@@ -49,7 +49,7 @@
   "backend.hardware.host_telemetry": 16,
   "backend.hardware.kernel_telemetry": 16,
   "backend.hardware.led": 4,
-  "backend.hardware.locate": 5,
+  "backend.hardware.locate": 1,
   "backend.hardware.media_slots": 2,
   "backend.hardware.memory": 2,
   "backend.hardware.net.bonds_bridges": 5,
