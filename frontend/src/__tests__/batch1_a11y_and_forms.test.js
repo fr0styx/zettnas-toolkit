@@ -21,8 +21,6 @@ describe('Batch 1: Accessibility, Form Label Linking & ARIA Radiogroups', () => 
 
   it('verifies explicit label for attributes match target input/select IDs across all forms', () => {
     const expectedPairs = [
-      { labelFor: 'sec-username', inputId: 'sec-username' },
-      { labelFor: 'sec-email', inputId: 'sec-email' },
       { labelFor: 'sec-new-pwd', inputId: 'sec-new-pwd' },
       { labelFor: 'sec-confirm-pwd', inputId: 'sec-confirm-pwd' },
       { labelFor: 'sec-cur-pwd', inputId: 'sec-cur-pwd' },

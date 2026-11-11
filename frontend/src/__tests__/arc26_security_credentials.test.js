@@ -18,7 +18,7 @@ describe('credentials card', () => {
   beforeAll(() => {
     vi.spyOn(api, 'get').mockResolvedValue({});
     document.body.innerHTML = `
-      <input id="sec-username"><input id="sec-email"><input id="sec-cur-pwd">
+      <input id="sec-cur-pwd">
       <input id="sec-new-pwd"><input id="sec-confirm-pwd"><div id="sec-pwd-mismatch-msg" style="display:none"></div>
       <button id="sec-save-btn"><span aria-hidden="true">💾</span> <span>Save</span></button>
       <button id="btn-disable-default-admin"></button>`;
@@ -64,33 +64,36 @@ describe('credentials card', () => {
     expect(last()[1]).toBe('error');
   });
 
-  it('saves the name and e-mail, and the label comes back translated', async () => {
+  it('changes the signed-in person\'s own password and keeps this browser signed in (SET-10)', async () => {
+    localStorage.setItem('kiboto_signed_in', '1');
+    vi.spyOn(api, 'get').mockImplementation(async (url) => (url === '/api/auth/me' ? { id: 'usr_anna', username: 'anna', role: 'superadmin' } : {}));
+    const post = vi.spyOn(api, 'post').mockResolvedValue({ status: 'ok' });
     byId('sec-cur-pwd').value = 'old';
-    byId('sec-username').value = 'alice';
-    const post = vi.spyOn(api, 'post').mockResolvedValue({});
+    byId('sec-new-pwd').value = 'a long new password';
+    byId('sec-confirm-pwd').value = 'a long new password';
     byId('sec-save-btn').click();
     await vi.waitFor(() => expect(showToast.mock.calls.some(([m, k]) => k === 'success' && /updated/i.test(m))).toBe(true));
-    expect(post).toHaveBeenCalledWith('/api/security', { current_password: 'old', new_password: '', username: 'alice', email: '' });
+    // her own account, not the built-in administrator's form
+    expect(post).toHaveBeenCalledWith('/api/users/usr_anna/password', { current_password: 'old', new_password: 'a long new password' });
+    expect(post.mock.calls.map((c) => c[0])).not.toContain('/api/security');
     expect(byId('sec-save-btn').textContent).toBe('💾 Save');
     expect(byId('sec-cur-pwd').value).toBe('');
+    expect(byId('sec-new-pwd').value).toBe('');
+    expect(localStorage.getItem('kiboto_signed_in')).toBe('1');
 
     byId('sec-cur-pwd').value = 'old';
+    byId('sec-new-pwd').value = 'a long new password';
+    byId('sec-confirm-pwd').value = 'a long new password';
     post.mockRejectedValueOnce(new Error('Wrong current password'));
     byId('sec-save-btn').click();
     await vi.waitFor(() => expect(showToast).toHaveBeenCalledWith('Wrong current password', 'error'));
     expect(byId('sec-save-btn').textContent).toBe('💾 Save');
   });
 
-  it('a new password signs this browser out', async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout'] });
-    localStorage.setItem('kiboto_signed_in', '1');
+  it('asks for a new password: the form saves nothing else any more', () => {
     byId('sec-cur-pwd').value = 'old';
-    byId('sec-new-pwd').value = 'a long new password';
-    byId('sec-confirm-pwd').value = 'a long new password';
-    vi.spyOn(api, 'post').mockResolvedValue({});
     byId('sec-save-btn').click();
-    await vi.waitFor(() => expect(localStorage.getItem('kiboto_signed_in')).toBeNull());
-    expect(byId('sec-new-pwd').value).toBe('');
+    expect(showToast.mock.calls.at(-1)).toEqual(['Enter a new password.', 'error']);
   });
 
   it('turning off the default admin asks first', async () => {

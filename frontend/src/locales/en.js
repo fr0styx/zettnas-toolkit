@@ -1762,6 +1762,7 @@ export default {
   "mgmt.sec_err_pwd_mismatch": "New passwords do not match. Please verify and try again.",
   "mgmt.sec_err_confirm_required": "Please confirm your new password.",
   "mgmt.sec_err_min_8": "New password must be at least 8 characters.",
+  "mgmt.sec_err_new_required": "Enter a new password.",
   "mgmt.sec_err_not_admin": "Please choose a password other than the default.",
   "mgmt.sec_err_cur_pwd_required": "Current password is required to save changes.",
   "mgmt.sec_saved": "Security settings updated successfully.",

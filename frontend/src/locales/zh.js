@@ -1762,6 +1762,7 @@ export default {
   "mgmt.sec_err_pwd_mismatch": "新密码输入不一致，请核对后重试。",
   "mgmt.sec_err_confirm_required": "请确认新密码。",
   "mgmt.sec_err_min_8": "新密码长度至少需要 8 个字符。",
+  "mgmt.sec_err_new_required": "请输入新密码。",
   "mgmt.sec_err_not_admin": "请设置不同于默认密码的密码。",
   "mgmt.sec_err_cur_pwd_required": "需要输入当前密码才能保存更改。",
   "mgmt.sec_saved": "安全凭据已成功更新。",

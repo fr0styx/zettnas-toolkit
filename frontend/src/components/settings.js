@@ -2,6 +2,7 @@
  * Kiboto Settings & Preferences Controller
  * Handles settings drawer, tabs, screen backlight, timezone, hardware buttons, card layout locks, and security credentials.
  */
+import { changeOwnPassword } from './own-password.js';
 import { isAdministrator } from '../admin-only.js';
 import { onManagementDom } from '../management-dom.js';
 import { api, auth, ApiError, apiFetch } from '../api.js';
@@ -690,8 +691,6 @@ export function initSettings() {
   async function fetchSecurity() {
     try {
       const data = await api.get('/api/security');
-      if ($('sec-username')) $('sec-username').value = data.username || '';
-      if ($('sec-email')) $('sec-email').value = data.email || '';
       if (data.is_default_password) {
         const warnEl = $('sec-default-pwd-warning');
         if (warnEl) warnEl.style.display = 'block';
@@ -884,16 +883,18 @@ export function initSettings() {
         }
       }
 
-      const payload = {
-        current_password: curPwd,
-        new_password: newPwd,
-        username: $('sec-username') ? $('sec-username').value : '',
-        email: $('sec-email') ? $('sec-email').value : ''
-      };
+      // the signed-in person's own password, for every role. "Admin username" renamed nothing and
+      // "Email for notifications" sent nothing: both fields are gone (SET-10)
+      const payload = { current_password: curPwd, new_password: newPwd };
+      if (!newPwd) {
+        showToast(t('mgmt.sec_err_new_required', 'Enter a new password.'), 'error');
+        if (newPwdEl) newPwdEl.focus();
+        return;
+      }
 
       secSaveBtn.textContent = t('setup.saving', 'Saving...');
       try {
-        await api.post('/api/security', payload);
+        await changeOwnPassword(curPwd, newPwd);
         showToast(t('mgmt.sec_saved', 'Security settings updated successfully.'), 'success');
         if ($('sec-cur-pwd')) $('sec-cur-pwd').value = '';
         if (newPwdEl) {
@@ -907,11 +908,7 @@ export function initSettings() {
         if (mismatchMsg) mismatchMsg.style.display = 'none';
         fetchSecurity();
 
-        if (payload.new_password) {
-          localStorage.removeItem('kiboto_token');
-          localStorage.removeItem('kiboto_signed_in');
-          setTimeout(() => window.location.reload(), 1000);
-        }
+        // this browser stays signed in: the change ends the person's other sessions, not this one
       } catch (err) {
         showToast(err.message || 'Failed to update settings', 'error');
       }

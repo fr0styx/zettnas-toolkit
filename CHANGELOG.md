@@ -819,6 +819,21 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **"Refresh" on the Storage page speaks after the answer.** Drive bays, pools and cloud drives
   said "refreshed" at once, whatever came back; a refresh that failed now says so.
 
+#### Fixes
+
+- **The password form changes your own password.** The form in Settings acted on the built-in
+  administrator's account, whoever was signed in. A second administrator who entered their own
+  current password changed the built-in account's password and signed everyone out, while their
+  own stayed as it was; family members and kids were refused. The form now changes the password
+  of the person who is signed in, for every role, and keeps this browser signed in. "Admin
+  username" (which renamed nothing) and "Email for notifications" (which sent nothing) are gone.
+- **Sign-in hours hold for a session that is already open.** A session started after the hours
+  were saved was never checked again and worked past their end, for up to 30 days. It now pauses
+  at the end of the hours and resumes by itself when they start again.
+- **A wrong code when turning off two-step sign-in no longer signs you out.** The answer was read
+  as "your session ended": the sign-in screen appeared, and after signing in the same wrong
+  request was sent again.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

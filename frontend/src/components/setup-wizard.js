@@ -314,6 +314,7 @@ export function initSetupWizard() {
         } catch (meErr) {
           console.warn('[SetupWizard] Could not load the current user', meErr);
         }
+        // for a second administrator the server now changes their own password as well (SET-10)
         if (me && me.role && me.role !== 'superadmin') {
           await api.post(`/api/users/${encodeURIComponent(me.id)}/password`, {
             current_password: currentPwd,

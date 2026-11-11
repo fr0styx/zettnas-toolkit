@@ -829,8 +829,12 @@ def disable_mfa(data: MfaDisableRequest, request: Request):
             actor_username=user["username"],
             actor_ip=_client_ip(request),
         )
+        # 403, not 401: the app reads a 401 as "your session ended", showed the sign-in screen and
+        # sent the same wrong request again after signing in (SET-10)
         return error_response(
-            401, "To turn off two-factor sign-in, enter your password and a current code or a recovery code."
+            403,
+            "To turn off two-factor sign-in, enter your password and a current code or a recovery code.",
+            error="invalid_credentials",
         )
     _clear_failures(lock_key)
 
@@ -1591,6 +1595,19 @@ async def post_security(data: SecurityUpdateRequest, request: Request):
         problem = password_problem(new_pwd)
         if problem:
             return error_response(400, problem, error="weak_password")
+        if caller and not caller.get("is_system") and not _is_builtin_admin(caller):
+            # another administrator: their own password. It was the built-in account's that
+            # changed, with everyone signed out, while their own stayed as it was (SET-10)
+            update_user_password(caller["id"], new_pwd, keep_token=getattr(request.state, "token", None))
+            log_security_event(
+                "user.password.changed",
+                "success",
+                actor_id=caller["id"],
+                actor_username=caller["username"],
+                actor_ip=ip,
+                details={"target_user_id": caller["id"]},
+            )
+            return {"status": "ok", "own_account": True}
         config.STORED_PASSWORD_HASH = await run_in_threadpool(hash_password, new_pwd)
         invalidate_all_sessions()
 

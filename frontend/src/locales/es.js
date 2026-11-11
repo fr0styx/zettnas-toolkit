@@ -1762,6 +1762,7 @@ export default {
   "mgmt.sec_err_pwd_mismatch": "Las contraseñas no coinciden. Por favor verifique e intente de nuevo.",
   "mgmt.sec_err_confirm_required": "Por favor confirme su nueva contraseña.",
   "mgmt.sec_err_min_8": "La nueva contraseña debe tener al menos 8 caracteres.",
+  "mgmt.sec_err_new_required": "Introduce una contraseña nueva.",
   "mgmt.sec_err_not_admin": "Por favor elija una contraseña distinta a la predeterminada.",
   "mgmt.sec_err_cur_pwd_required": "Se requiere la contraseña actual para guardar los cambios.",
   "mgmt.sec_saved": "Configuración de seguridad actualizada correctamente.",

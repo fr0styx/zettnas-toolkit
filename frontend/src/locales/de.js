@@ -1762,6 +1762,7 @@ export default {
   "mgmt.sec_err_pwd_mismatch": "Die Passwörter stimmen nicht überein. Bitte überprüfen und erneut versuchen.",
   "mgmt.sec_err_confirm_required": "Bitte bestätigen Sie Ihr neues Passwort.",
   "mgmt.sec_err_min_8": "Das neue Passwort muss mindestens 8 Zeichen lang sein.",
+  "mgmt.sec_err_new_required": "Geben Sie ein neues Passwort ein.",
   "mgmt.sec_err_not_admin": "Bitte wählen Sie ein anderes Passwort als das Standardpasswort.",
   "mgmt.sec_err_cur_pwd_required": "Das aktuelle Passwort ist erforderlich, um Änderungen zu speichern.",
   "mgmt.sec_saved": "Sicherheitseinstellungen erfolgreich aktualisiert.",

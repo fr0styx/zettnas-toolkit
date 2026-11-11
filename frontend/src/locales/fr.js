@@ -1762,6 +1762,7 @@ export default {
   "mgmt.sec_err_pwd_mismatch": "Les mots de passe ne correspondent pas. Veuillez vérifier et réessayer.",
   "mgmt.sec_err_confirm_required": "Veuillez confirmer votre nouveau mot de passe.",
   "mgmt.sec_err_min_8": "Le nouveau mot de passe doit comporter au moins 8 caractères.",
+  "mgmt.sec_err_new_required": "Saisissez un nouveau mot de passe.",
   "mgmt.sec_err_not_admin": "Veuillez choisir un mot de passe différent du mot de passe par défaut.",
   "mgmt.sec_err_cur_pwd_required": "Le mot de passe actuel est requis pour enregistrer les modifications.",
   "mgmt.sec_saved": "Paramètres de sécurité mis à jour avec succès.",

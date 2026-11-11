@@ -887,7 +887,7 @@ def create_user_session(
 
         u_row = conn.execute(
             """
-            SELECT u.role_id, u.must_change_password, r.scopes_json
+            SELECT u.role_id, u.must_change_password, u.signin_hours_json, r.scopes_json
             FROM users u
             JOIN roles r ON u.role_id = r.id
             WHERE u.id = ?
@@ -913,6 +913,9 @@ def create_user_session(
         "must_change_password": must_change,
         # without it a remembered session got the short idle limit until the next restart (SEC-36)
         "is_remembered": bool(is_remembered),
+        # the account's sign-in hours. A session started after the hours were saved was remembered
+        # without them and never checked again: it worked past their end for up to 30 days (SET-10)
+        "signin_hours": _signin_hours_of(u_row) if u_row else None,
     }
     with _SESSION_CACHE_LOCK:
         _SESSION_CACHE[token_hash] = session_data
