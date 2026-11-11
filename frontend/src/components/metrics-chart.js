@@ -6,7 +6,6 @@ import { znZoomPlugin } from './chart-zoom.js'; // replaces chartjs-plugin-zoom 
 import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { formatFixed } from '../format.js';
-import { explain } from '../error-text.js';
 import { showState } from './state-block.js';
 import { REFRESH_MS, axisRange, chartColors, driveNames, driveSeries, fanSeries, pointLabel, readingNote, readingPills } from './metrics-view.js';
 
@@ -165,7 +164,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
     if (reqId !== _renderRequestId) return;
     _cachedData = null;
     updateSummaryStrip(null);
-    say(canvas, 'failed', { text: t('mch.failed', 'The history could not be loaded.'), detail: explain(e), retry: () => fetchAndRenderMetrics(false) });
+    say(canvas, 'failed', { text: t('mch.failed', 'The history could not be loaded.'), detail: e instanceof Error ? e.message : '', retry: () => fetchAndRenderMetrics(false) });
     return;
   }
 
@@ -433,7 +432,7 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
     if (resetBtn) resetBtn.style.display = 'none';
   } catch (e) {
     console.error('Failed to draw the history chart:', e);
-    say(canvas, 'failed', { text: t('mch.failed', 'The history could not be loaded.'), detail: explain(e), retry: () => fetchAndRenderMetrics(false) });
+    say(canvas, 'failed', { text: t('mch.failed', 'The history could not be loaded.'), detail: e instanceof Error ? e.message : '', retry: () => fetchAndRenderMetrics(false) });
   }
 }
 

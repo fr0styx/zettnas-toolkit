@@ -87,6 +87,7 @@ describe('the history chart', () => {
     api.get.mockRejectedValueOnce(new Error('offline'));
     await fetchAndRenderMetrics(false);
     expect(said().querySelector('[role="alert"]').textContent).toContain('The history could not be loaded.'); // it went to the console only
+    expect(said().querySelector('.state-block-detail').textContent).toBe('offline'); // what the server said, without "Error:"
     expect(strip()).toBe('');
 
     let answer;
