@@ -6,6 +6,7 @@ Split out of backend/api/vms.py (ARC-01); the API re-exports these names.
 """
 
 import asyncio
+import functools
 import hashlib
 import json
 import os
@@ -33,43 +34,67 @@ from backend.services.vm_engine import QmpEngine
 from backend.settings import test_mode
 from backend.state import Z_STATE, add_event, event_text
 
+VMS_LOCK = threading.RLock()  # one writer of the machine list at a time (SET-07)
+SHUTDOWN_GRACE = 120  # seconds a machine gets to shut down before "Turn off now" is offered
+ALIVE_STATES = ("running", "paused", "shutting_down")
+TEST_PID = 99999  # the stand-in machine of the tests
+
+
+def locked(fn):
+    """For the short routes that read the list, change it and write it back."""
+
+    @functools.wraps(fn)
+    def inner(*args, **kwargs):
+        with VMS_LOCK:
+            return fn(*args, **kwargs)
+
+    return inner
+
+
+def _pid_is_machine(pid: int, vm_id: str) -> bool:
+    """True when that process is this machine's engine. A number left in a file by an earlier run
+    of Kiboto can belong to any process by now: trusting it showed a machine as running with
+    nothing behind it, kept it out of the automatic start, and let Stop or Delete signal an
+    unrelated process (SET-07)."""
+    if test_mode() and pid == TEST_PID:
+        return True
+    try:
+        with open(f"/proc/{pid}/cmdline", "rb") as f:
+            return _qmp_socket_path(vm_id).encode() in f.read()
+    except OSError:
+        return False
+
 
 def _is_qemu_process_alive(vm_id: str) -> bool:
     """Checks whether the QEMU process for the specified VM is currently alive."""
-    if vm_id in vm_store._RUNNING_QEMU_PROCS:
-        entry = vm_store._RUNNING_QEMU_PROCS[vm_id]
+    entry = vm_store._RUNNING_QEMU_PROCS.get(vm_id)
+    if entry:
         proc = entry.get("proc")
         if proc:
             if proc.poll() is None:
                 return True
-            else:
-                vm_store._RUNNING_QEMU_PROCS.pop(vm_id, None)
-                return False
+            vm_store._RUNNING_QEMU_PROCS.pop(vm_id, None)
+            return False
         pid = entry.get("pid")
         if pid:
-            try:
-                os.kill(pid, 0)
+            if _pid_is_machine(pid, vm_id):
                 return True
-            except OSError:
-                if test_mode() and pid == 99999:
-                    return True
-                vm_store._RUNNING_QEMU_PROCS.pop(vm_id, None)
-                return False
+            vm_store._RUNNING_QEMU_PROCS.pop(vm_id, None)
+            return False
 
     pid_file = os.path.join(DATA_DIR, "vms", vm_id, "qemu.pid")
     if os.path.exists(pid_file):
         try:
             with open(pid_file) as f:
                 pid = int(f.read().strip())
-            os.kill(pid, 0)
-            return True
         except (ValueError, OSError):
-            if test_mode() and pid == 99999:
-                return True
-            try:
-                os.remove(pid_file)
-            except OSError:
-                pass
+            pid = 0
+        if pid and _pid_is_machine(pid, vm_id):
+            return True
+        try:
+            os.remove(pid_file)
+        except OSError:
+            pass
     return False
 
 
@@ -167,7 +192,7 @@ def _reconcile_vm_states(vms: list[dict[str, Any]]) -> bool:
             except OSError:
                 pass
 
-        if current_state in ("running", "paused") and not is_alive:
+        if current_state in ALIVE_STATES and not is_alive:
             logger.info(
                 "[VM-Reconcile] VM '%s' (%s) was marked '%s' but no live process exists. Reconciling to 'stopped'.",
                 vm.get("name"),
@@ -176,6 +201,9 @@ def _reconcile_vm_states(vms: list[dict[str, Any]]) -> bool:
             )
             vm["state"] = "stopped"
             vm["uptime_seconds"] = 0
+            vm.pop("shutdown_asked_at", None)
+            # not on this thread: the monitor's own thread reads the list too, and would wait for itself
+            threading.Thread(target=_forget_process, args=(vm_id,), daemon=True).start()
             changed = True
         elif current_state == "stopped" and is_alive:
             vm["state"] = "running"
@@ -186,25 +214,53 @@ def _reconcile_vm_states(vms: list[dict[str, Any]]) -> bool:
             if started:
                 vm["uptime_seconds"] = max(1, int(time.time() - started))
 
+        if vm.get("state") == "shutting_down":
+            waited = max(0, int(time.time() - float(vm.get("shutdown_asked_at") or time.time())))
+            vm["shutdown_waited_seconds"] = waited
+            vm["turn_off_offered"] = waited >= SHUTDOWN_GRACE
+        else:
+            vm.pop("shutdown_waited_seconds", None)
+            vm.pop("turn_off_offered", None)
+
     return changed
 
 
 def _load_vms() -> list[dict[str, Any]]:
     """Loads configured virtual machines from persistent JSON storage with live state reconciliation."""
-    vms = read_json(vm_store.VMS_CONFIG_FILE, default=None)
-    if vms is None:
-        default_vms: list[dict[str, Any]] = []
-        atomic_write_json(vm_store.VMS_CONFIG_FILE, default_vms)
-        return default_vms
+    with VMS_LOCK:
+        vms = read_json(vm_store.VMS_CONFIG_FILE, default=None)
+        if vms is None:
+            default_vms: list[dict[str, Any]] = []
+            atomic_write_json(vm_store.VMS_CONFIG_FILE, default_vms)
+            return default_vms
 
-    if _reconcile_vm_states(vms):
-        _save_vms(vms)
+        if _reconcile_vm_states(vms):
+            _save_vms(vms)
 
-    return vms
+        return vms
 
 
 def _save_vms(vms: list[dict[str, Any]]) -> None:
-    atomic_write_json(vm_store.VMS_CONFIG_FILE, vms)
+    with VMS_LOCK:
+        atomic_write_json(vm_store.VMS_CONFIG_FILE, vms)
+
+
+def save_fields(vm_id: str, fields: dict[str, Any], drop: tuple[str, ...] = ()) -> dict[str, Any] | None:
+    """Writes some fields of one machine into the list as it is now, and returns the machine.
+
+    An action used to hold a copy of the whole list for seconds (a start, a shutdown, a resize) and
+    write it back over whatever had changed meanwhile: an edit, a new machine, another machine's
+    state (SET-07)."""
+    with VMS_LOCK:
+        vms = read_json(vm_store.VMS_CONFIG_FILE, default=None) or []
+        vm = next((v for v in vms if v.get("id") == vm_id), None)
+        if vm is None:
+            return None
+        vm.update(fields)
+        for key in drop:
+            vm.pop(key, None)
+        _save_vms(vms)
+        return vm
 
 
 def _get_qemu_vnc_port(vms: list[dict[str, Any]], vm_id: str) -> int:
@@ -294,6 +350,21 @@ def _prepare_vtpm(vm_id: str, vm_dir: str, wait_secs: float = 3.0) -> list[str]:
         "-device",
         "tpm-tis,tpmdev=tpm0",
     ]
+
+
+def share_is_read_only(share: dict[str, Any]) -> bool:
+    """The create form saves the choice as mode "ro", the edit form as readonly true. Only the
+    first was read, so a folder marked read-only was writable after the first edit (SET-07)."""
+    return str(share.get("mode") or "rw") == "ro" or share.get("readonly") is True
+
+
+def extra_disk_path(vm_dir: str, sdisk: dict[str, Any], idx: int) -> str:
+    """The file of an extra disk that has none yet. One left without a name was called "disk", which
+    is the system disk's own file: the machine then had its system disk attached twice."""
+    name = re.sub(r"[^a-zA-Z0-9_-]", "_", str(sdisk.get("name") or "")).strip("_")
+    if not name or name == "disk":
+        name = f"extra_disk_{idx + 1}"
+    return os.path.join(vm_dir, f"{name}.qcow2")
 
 
 def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | None]:
@@ -392,8 +463,9 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
     active_bridges = vm_host.scan_bridges()
     use_bridge = (bridge_name in active_bridges) and tun_writable and has_bridge_helper
 
-    ssh_fwd_port = 2220 + vnc_display
-    target_vm["ssh_port"] = ssh_fwd_port
+    # No port of the NAS leads into the machine. One used to be opened on every network of the NAS
+    # for each machine that is not on the home network, without saying so (SET-07).
+    target_vm.pop("ssh_port", None)
     mac = target_vm.get("mac") or "52:54:00:12:34:56"
 
     def _build_cmd(force_slirp: bool = False) -> list[str]:
@@ -512,11 +584,11 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
             )
         else:
             target_vm["network_mode"] = "slirp"
-            target_vm["network_note"] = f"User-mode SLIRP (Host :{ssh_fwd_port} -> Guest :22)"
+            target_vm["network_note"] = "Private network: the machine reaches out, nothing reaches it"
             c.extend(
                 [
                     "-netdev",
-                    f"user,id=net0,hostfwd=tcp::{ssh_fwd_port}-:22",
+                    "user,id=net0",
                     "-device",
                     f"virtio-net-pci,netdev=net0,mac={mac}",
                 ]
@@ -526,8 +598,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
             hp = share.get("host_path")
             raw_tag = str(share.get("mount_tag") or f"share{idx_s}")
             tag = re.sub(r"[^a-zA-Z0-9_-]", "_", raw_tag)
-            mode = share.get("mode", "rw")
-            ro_flag = "readonly=on" if mode == "ro" else "readonly=off"
+            ro_flag = "readonly=on" if share_is_read_only(share) else "readonly=off"
             if hp and os.path.exists(hp):
                 if "," in hp or "\n" in hp or "\r" in hp:
                     logger.warning(f"[VMs] Host share path contains prohibited characters: {hp}")
@@ -553,7 +624,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
         for idx_d, sdisk in enumerate(target_vm.get("secondary_disks", [])):
             sd_path = sdisk.get("path")
             if not sd_path:
-                sd_path = os.path.join(vm_dir, f"{sdisk.get('name', f'disk_{idx_d}')}.qcow2")
+                sd_path = extra_disk_path(vm_dir, sdisk, idx_d)
                 sdisk["path"] = sd_path
             if not vm_store._confined(sd_path, vm_store._vm_disk_roots(), "file"):
                 logger.warning(f"[VM-{vm_id}] Secondary disk {idx_d + 1} is outside the VM/storage folders; skipping.")
@@ -702,7 +773,7 @@ def _sync_cleanup_qemu_process(vm_id: str, force: bool = False):
             except subprocess.TimeoutExpired:
                 proc.kill()
 
-    if pid:
+    if pid and pid != TEST_PID and _pid_is_machine(pid, vm_id):
         sig = signal.SIGKILL if force else signal.SIGTERM
         try:
             os.kill(pid, sig)
@@ -716,6 +787,11 @@ def _sync_cleanup_qemu_process(vm_id: str, force: bool = False):
         except OSError:
             pass
 
+    _forget_process(vm_id)
+
+
+def _forget_process(vm_id: str) -> None:
+    """What a machine that is off leaves behind: the monitor connection and its sockets."""
     vm_guest._forget_vm_ip(vm_id)
     _QMP_ENGINE.close(vm_id)
     for s in (f"/tmp/{vm_id}-serial.sock", f"/tmp/{vm_id}-qmp.sock", vm_guest._qga_socket_path(vm_id)):
@@ -724,6 +800,19 @@ def _sync_cleanup_qemu_process(vm_id: str, force: bool = False):
                 os.remove(s)
             except OSError:
                 pass
+
+
+def ask_to_shut_down(vm_id: str) -> bool:
+    """Presses the machine's power button. True when the machine took the request. It never ends
+    the process: what happens next is up to the system inside. "Shut down" used to wait two seconds
+    and then kill, and killed at once when the request was not acknowledged (SET-07)."""
+    if "return" in _qmp_command(vm_id, "system_powerdown", None, 1.5):
+        return True
+    entry = vm_store._RUNNING_QEMU_PROCS.get(vm_id) or {}
+    if test_mode() and entry.get("pid") == TEST_PID and not entry.get("proc"):
+        _sync_cleanup_qemu_process(vm_id)  # the stand-in machine of the tests has no monitor: it is off at once
+        return True
+    return False
 
 
 async def async_stop_qemu(vm_id: str, force: bool = False):

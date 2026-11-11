@@ -47,9 +47,9 @@ def test_graceful_stop_sends_powerdown_without_bogus_arguments():
 
 
 def test_snapshot_monitor_commands_pass_arguments_then_timeout():
+    # snapshots no longer go through the monitor at all: only a machine that is off takes one (SET-07)
     src = " ".join(inspect.getsource(vms).split())
-    assert '"human-monitor-command", 10.0' not in src
-    assert src.count('"human-monitor-command", {"command-line": cmd_str}, 10.0 )') == 3
+    assert "human-monitor-command" not in src
 
 
 def test_cleanup_closes_engine_connection():

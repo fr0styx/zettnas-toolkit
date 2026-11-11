@@ -1,5 +1,5 @@
 """VM snapshot routes (backend/api/vms.py): names are held to one rule before they reach QEMU,
-running VMs go through the monitor, stopped ones through qemu-img, and the list merges both."""
+only a machine that is off takes a snapshot action (through qemu-img), and the list merges both."""
 
 import json
 import os
@@ -80,36 +80,40 @@ def test_stopped_vm_uses_qemu_img_and_keeps_metadata(client, auth_headers, vm):
     assert calls.qmp == []
 
 
-def test_running_vm_uses_the_monitor(client, auth_headers, vm):
-    vm["state"] = "running"
+@pytest.mark.parametrize("state", ["running", "paused", "shutting_down"])
+def test_a_machine_that_is_not_off_takes_no_snapshot_action(client, auth_headers, vm, state):
+    """SET-07: through the monitor a failed save came back as "done"; a paused machine went through
+    qemu-img while its engine still held the disk open."""
+    vm["state"] = state
     calls = vm["calls"]
-    assert client.post("/api/vms/vm-1/snapshots", json={"name": "live1"}, headers=auth_headers).status_code == 200
-    assert client.post("/api/vms/vm-1/snapshots/live1/revert", headers=auth_headers).status_code == 200
-    assert client.delete("/api/vms/vm-1/snapshots/live1", headers=auth_headers).status_code == 200
-    assert calls.qmp == ["savevm live1", "loadvm live1", "delvm live1"]
-    assert calls.run == []
-
-
-def test_monitor_errors(client, auth_headers, vm):
-    vm["state"] = "running"
-    vm["calls"].qmp_reply = {"error": "no space"}
-    r = client.post("/api/vms/vm-1/snapshots", json={"name": "s1"}, headers=auth_headers)
-    assert r.status_code == 500  # the details go to the server log, not the response
-    r = client.post("/api/vms/vm-1/snapshots/s1/revert", headers=auth_headers)
-    assert r.status_code == 500
-    assert "s1" not in vms_api._get_vm_snapshots_metadata("vm-1")  # a failed snapshot is not recorded
-    # deleting a snapshot the monitor no longer knows still clears our record
-    assert client.delete("/api/vms/vm-1/snapshots/s1", headers=auth_headers).status_code == 200
+    for r in (
+        client.post("/api/vms/vm-1/snapshots", json={"name": "live1"}, headers=auth_headers),
+        client.post("/api/vms/vm-1/snapshots/live1/revert", headers=auth_headers),
+        client.delete("/api/vms/vm-1/snapshots/live1", headers=auth_headers),
+    ):
+        assert r.status_code == 409
+        assert "Shut" in r.json()["detail"]
+    assert calls.qmp == [] and calls.run == []
+    assert "live1" not in vms_api._get_vm_snapshots_metadata("vm-1")
 
 
 def test_qemu_img_errors_and_missing_disk(client, auth_headers, vm):
     vm["calls"].run_error = subprocess.CalledProcessError(1, "qemu-img", stderr="locked")
     r = client.post("/api/vms/vm-1/snapshots", json={"name": "s1"}, headers=auth_headers)
-    assert r.status_code == 500
+    assert r.status_code == 502 and "locked" in r.json()["detail"]
+    assert "s1" not in vms_api._get_vm_snapshots_metadata("vm-1")  # a failed snapshot is not recorded
     r = client.post("/api/vms/vm-1/snapshots/s1/revert", headers=auth_headers)
-    assert r.status_code == 500
-    assert client.delete("/api/vms/vm-1/snapshots/s1", headers=auth_headers).status_code == 200  # a warning only
+    assert r.status_code == 502
+    # a snapshot that could not be removed is said, and its record stays
+    vms_api._save_vm_snapshots_metadata("vm-1", {"s1": {"id": "s1"}})
+    assert client.delete("/api/vms/vm-1/snapshots/s1", headers=auth_headers).status_code == 502
+    assert "s1" in vms_api._get_vm_snapshots_metadata("vm-1")
+    # one the disk no longer knows is only forgotten
+    vm["calls"].run_error = subprocess.CalledProcessError(1, "qemu-img", stderr="snapshot not found")
+    assert client.delete("/api/vms/vm-1/snapshots/s1", headers=auth_headers).status_code == 200
+    assert "s1" not in vms_api._get_vm_snapshots_metadata("vm-1")
 
+    vm["calls"].run_error = None
     os.remove(vm["disk_path"])
     assert client.post("/api/vms/vm-1/snapshots", json={"name": "s2"}, headers=auth_headers).status_code == 400
     assert client.post("/api/vms/vm-1/snapshots/s2/revert", headers=auth_headers).status_code == 400

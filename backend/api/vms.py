@@ -619,6 +619,7 @@ def get_host_usb_devices():
 
 
 @router.post("", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
+@vm_qemu.locked
 def create_vm(req: VmCreateRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """Provisions a new virtual machine with dynamic headroom validation and volume mappings."""
     vm_store._validate_vm_inputs(req.secondary_disks, req.iso_path, req.host_shares)
@@ -837,6 +838,7 @@ def get_vm_detail(vm_id: VmId):
 
 @router.put("/{vm_id}", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 @router.patch("/{vm_id}", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
+@vm_qemu.locked
 def update_vm(
     vm_id: VmId,
     req: VmUpdateRequest,
@@ -853,6 +855,12 @@ def update_vm(
 
     if req.name is not None and req.name.strip():
         new_name = req.name.strip()
+        # a new name follows the rule of a first one; it goes into the start command and into the
+        # names of backup folders, where a comma or a slash changed them
+        if new_name != target_vm.get("name") and not re.fullmatch(r"[a-zA-Z0-9_-]{2,64}", new_name):
+            raise HTTPException(
+                status_code=400, detail="A name has 2 to 64 letters, digits, hyphens or underscores, and no spaces."
+            )
         if any(v["id"] != vm_id and v["name"].lower() == new_name.lower() for v in vms):
             raise HTTPException(status_code=400, detail=f"Virtual machine '{new_name}' already exists.")
         target_vm["name"] = new_name
@@ -870,7 +878,7 @@ def update_vm(
             raise HTTPException(status_code=400, detail="Cannot alter RAM while VM is running. Stop it first.")
         target_vm["ram_gb"] = req.ram_gb
 
-    if req.iso_path is not None:
+    if "iso_path" in req.model_fields_set:  # sent as null means "none": it used to mean "no change"
         target_vm["iso_path"] = req.iso_path.strip() if req.iso_path and req.iso_path.strip() else None
 
     if req.boot_order is not None:
@@ -925,23 +933,16 @@ def get_vm_connection_info(
 
     vnc_port = vm_qemu._get_qemu_vnc_port(vms, vm_id)
     ip = target_vm.get("ip_address") or ""
-    ssh_port = target_vm.get("ssh_port") or (2220 + (vnc_port - 5900))
     is_iso_boot = bool(target_vm.get("iso_path"))
 
     host_ip = vm_host._get_host_ip()
-    ssh_cmd = ""
-    if not is_iso_boot:
-        if ip:
-            ssh_cmd = f"ssh root@{ip}"
-        else:
-            ssh_cmd = f"ssh -p {ssh_port} root@{host_ip}"
+    ssh_cmd = f"ssh root@{ip}" if ip and not is_iso_boot else ""
 
     return {
         "vm_id": vm_id,
         "name": target_vm["name"],
         "state": target_vm.get("state", "stopped"),
         "ip_address": ip,
-        "ssh_port": ssh_port,
         "ssh_command": ssh_cmd,
         "vnc_port": vnc_port,
         "vnc_uri": f"vnc://{host_ip}:{vnc_port}",
@@ -1131,13 +1132,59 @@ async def websocket_vm_serial(websocket: WebSocket, vm_id: VmId):
     await stream_unix_socket_to_websocket(websocket, sock_path)
 
 
+_START_KEEPS = ("disk_path", "kvm_accelerated", "acceleration", "network_mode", "network_note", "secondary_disks")
+
+
+async def _shut_down(vm_id: str, target_vm: dict[str, Any]) -> dict[str, Any]:
+    """Presses the machine's power button and never ends its process. Returns the fields to save:
+    "stopped" when it is off within a moment, else "shutting_down" with the time of asking."""
+    if not await asyncio.to_thread(vm_qemu._is_qemu_process_alive, vm_id):
+        return {"state": "stopped", "uptime_seconds": 0}
+    if target_vm.get("state") == "paused":
+        await asyncio.to_thread(vm_qemu._qmp_command, vm_id, "cont")  # a frozen machine hears nothing
+    if not await asyncio.to_thread(vm_qemu.ask_to_shut_down, vm_id):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"'{target_vm['name']}' did not take the request to shut down and keeps running. "
+                '"Turn off now" ends it like pulling the plug.'
+            ),
+        )
+    for _ in range(10):
+        if not await asyncio.to_thread(vm_qemu._is_qemu_process_alive, vm_id):
+            await asyncio.to_thread(vm_qemu._forget_process, vm_id)
+            return {"state": "stopped", "uptime_seconds": 0}
+        await asyncio.sleep(0.1)
+    return {"state": "shutting_down", "shutdown_asked_at": time.time()}
+
+
+async def _start(vm_id: str, target_vm: dict[str, Any], vnc_port: int) -> dict[str, Any]:
+    """Starts the machine and returns the fields to save."""
+    vm_guest._forget_vm_ip(vm_id)
+    ok, err_msg = await asyncio.to_thread(vm_qemu._start_qemu, target_vm, vnc_port)
+    if not ok:
+        await asyncio.to_thread(vm_qemu.save_fields, vm_id, {"state": "stopped", "last_error": err_msg})
+        raise ShownServerError(
+            f"Failed to start virtual machine '{target_vm['name']}': {err_msg}", error="vm_start_failed"
+        )
+    fields = {k: target_vm[k] for k in _START_KEEPS if k in target_vm}
+    fields.update(state="running", last_error=None, uptime_seconds=1, ip_address="")
+    if not target_vm.get("iso_path"):
+        resolved_ip = vm_guest._resolve_vm_ip_by_mac(target_vm.get("mac") or "")
+        fields["ip_address"] = resolved_ip or target_vm.get("ip_address") or ""
+    return fields
+
+
 @router.post("/{vm_id}/action", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 async def execute_vm_action(
     vm_id: VmId,
     req: VmActionRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    """Executes lifecycle action on target VM: start, stop, restart, reboot, acpi_shutdown, pause, resume, force_off."""
+    """Executes lifecycle action on target VM: start, stop, restart, reboot, acpi_shutdown, pause, resume, force_off.
+
+    "stop" and "acpi_shutdown" press the power button and never end the machine: the answer is
+    "stopped" or "shutting_down". Only "force_off" ends it."""
     vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
     if not target_vm:
@@ -1146,37 +1193,15 @@ async def execute_vm_action(
     action = req.action
     current_state = target_vm.get("state", "stopped")
     vnc_port = vm_qemu._get_qemu_vnc_port(vms, vm_id)
+    fields: dict[str, Any] = {}
+    if action == "start" and current_state == "paused":
+        action = "resume"  # "Start" on a frozen machine marked it running while it stayed frozen
 
     if action == "start":
-        vm_guest._forget_vm_ip(vm_id)
-        ok, err_msg = await asyncio.to_thread(vm_qemu._start_qemu, target_vm, vnc_port)
-        if not ok:
-            target_vm["state"] = "stopped"
-            target_vm["last_error"] = err_msg
-            vm_qemu._save_vms(vms)
-            raise ShownServerError(
-                f"Failed to start virtual machine '{target_vm['name']}': {err_msg}", error="vm_start_failed"
-            )
-        target_vm["state"] = "running"
-        target_vm["last_error"] = None
-        target_vm["uptime_seconds"] = 1
-        if target_vm.get("iso_path"):
-            target_vm["ip_address"] = ""
-        else:
-            resolved_ip = vm_guest._resolve_vm_ip_by_mac(target_vm.get("mac") or "")
-            target_vm["ip_address"] = resolved_ip or target_vm.get("ip_address") or ""
+        fields = await _start(vm_id, target_vm, vnc_port)
 
-    elif action == "stop":
-        await vm_qemu.async_stop_qemu(vm_id, force=False)
-        target_vm["state"] = "stopped"
-        target_vm["uptime_seconds"] = 0
-
-    elif action == "acpi_shutdown":
-        qmp_res = await asyncio.to_thread(vm_qemu._qmp_command, vm_id, "system_powerdown")
-        if "error" in qmp_res:
-            await vm_qemu.async_stop_qemu(vm_id, force=False)
-        target_vm["state"] = "stopped"
-        target_vm["uptime_seconds"] = 0
+    elif action in ("stop", "acpi_shutdown"):
+        fields = await _shut_down(vm_id, target_vm)
 
     elif action in ("restart", "reboot"):
         qmp_res = await asyncio.to_thread(vm_qemu._qmp_command, vm_id, "system_reset")
@@ -1185,39 +1210,37 @@ async def execute_vm_action(
             await asyncio.sleep(0.5)
             ok, err_msg = await asyncio.to_thread(vm_qemu._start_qemu, target_vm, vnc_port)
             if not ok:
-                target_vm["state"] = "stopped"
-                target_vm["last_error"] = err_msg
-                vm_qemu._save_vms(vms)
+                await asyncio.to_thread(vm_qemu.save_fields, vm_id, {"state": "stopped", "last_error": err_msg})
                 raise HTTPException(
                     status_code=500,
                     detail=f"Failed to restart VM '{target_vm['name']}': {err_msg}",
                 )
-        target_vm["state"] = "running"
-        target_vm["uptime_seconds"] = 1
+        fields = {"state": "running", "uptime_seconds": 1}
 
     elif action == "pause":
         if current_state == "running":
             await asyncio.to_thread(vm_qemu._qmp_command, vm_id, "stop")
-            target_vm["state"] = "paused"
+            fields = {"state": "paused"}
 
     elif action == "resume":
         if current_state == "paused":
             await asyncio.to_thread(vm_qemu._qmp_command, vm_id, "cont")
-            target_vm["state"] = "running"
+            fields = {"state": "running"}
 
     elif action == "force_off":
         await vm_qemu.async_stop_qemu(vm_id, force=True)
-        target_vm["state"] = "stopped"
-        target_vm["uptime_seconds"] = 0
+        fields = {"state": "stopped", "uptime_seconds": 0}
 
-    vm_qemu._save_vms(vms)
+    # into the list as it is now, not over it: this copy is seconds old after a start or a shutdown
+    drop = ("ssh_port",) if fields.get("state") == "shutting_down" else ("ssh_port", "shutdown_asked_at")
+    saved = await asyncio.to_thread(vm_qemu.save_fields, vm_id, fields, drop) or target_vm
     add_event(
-        "info",
+        "warning" if action == "force_off" else "info",
         "VM State Changed",
         f"VM '{target_vm['name']}' action '{action}' executed.",
         event_text("vm_state", name=target_vm["name"], action=action),
     )
-    return {"status": "ok", "state": target_vm["state"]}
+    return {"status": "ok", "state": saved.get("state", "stopped")}
 
 
 @router.post("/{vm_id}/start", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
@@ -1419,11 +1442,10 @@ def resize_vm_disk(
         vm_qemu._qmp_command(vm_id, "block_resize", {"device": device_tag, "size": new_bytes})
 
     if disk_index == 0:
-        target_vm["disk_size_gb"] = req.new_size_gb
+        vm_qemu.save_fields(vm_id, {"disk_size_gb": req.new_size_gb})
     else:
         target_vm["secondary_disks"][disk_index - 1]["size_gb"] = req.new_size_gb
-
-    vm_qemu._save_vms(vms)
+        vm_qemu.save_fields(vm_id, {"secondary_disks": target_vm["secondary_disks"]})
     add_event(
         "info",
         "VM Disk Resized",
@@ -1444,6 +1466,7 @@ def resize_vm_disk(
     "/{vm_id}",
     dependencies=[Depends(require_scope("vms:manage", "system:config")), Depends(require_confirmation("vm.delete"))],
 )
+@vm_qemu.locked
 def delete_vm(
     vm_id: VmId,
     purge_disks: bool = True,
@@ -1455,7 +1478,7 @@ def delete_vm(
     if not target:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
-    if target.get("state") == "running":
+    if target.get("state") in vm_qemu.ALIVE_STATES:  # a paused machine could be deleted
         raise HTTPException(status_code=400, detail="Cannot delete a running virtual machine. Stop it first.")
 
     # Sync endpoint (runs in FastAPI's threadpool); a forced stop needs no ACPI wait.
@@ -1474,6 +1497,36 @@ def delete_vm(
 
 
 # ---- VM Snapshots Lifecycle & Host IOMMU Groups ----
+
+
+def _must_be_off(target_vm: dict[str, Any], vm_id: str) -> None:
+    """Snapshots are made, restored and deleted only while the machine is off. On a running one a
+    failed save or restore came back as "done" and one that took over ten seconds as failed; on a
+    paused one the disk was changed under the engine that still held it open (SET-07)."""
+    if target_vm.get("state") in vm_qemu.ALIVE_STATES or vm_qemu._is_qemu_process_alive(vm_id):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Shut '{target_vm['name']}' down first. Snapshots are made, restored and deleted only while the machine is off.",
+        )
+
+
+async def _qemu_img_snapshot(flag: str, name: str, disk_path: str, what: str) -> None:
+    qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
+    try:
+        await asyncio.to_thread(
+            subprocess.run,
+            [qemu_img, "snapshot", flag, name, disk_path],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=120.0,
+        )
+    except subprocess.CalledProcessError as e:
+        raise HTTPException(
+            status_code=502, detail=f"The snapshot was not {what}: {(e.stderr or str(e)).strip()}"
+        ) from e
+    except subprocess.TimeoutExpired as e:
+        raise HTTPException(status_code=502, detail=f"The snapshot was not {what}: it took too long.") from e
 
 
 def _get_vm_snapshots_metadata(vm_id: str) -> dict[str, Any]:
@@ -1599,32 +1652,12 @@ async def create_vm_snapshot(vm_id: VmId, req: VmSnapshotCreateRequest):
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
     name = _snapshot_name(req.name)
-    is_running = target_vm.get("state") == "running" and vm_qemu._is_qemu_process_alive(vm_id)
+    _must_be_off(target_vm, vm_id)
     vm_dir = child_path(os.path.join(DATA_DIR, "vms"), vm_id)
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
-
-    if is_running:
-        cmd_str = f"savevm {name}"
-        qmp_res = await asyncio.to_thread(
-            vm_qemu._qmp_command, vm_id, "human-monitor-command", {"command-line": cmd_str}, 10.0
-        )
-        if "error" in qmp_res:
-            raise HTTPException(status_code=500, detail=f"QMP savevm failed: {qmp_res['error']}")
-    else:
-        if not os.path.exists(disk_path):
-            raise HTTPException(status_code=400, detail="Primary disk not found to snapshot.")
-        qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
-        try:
-            await asyncio.to_thread(
-                subprocess.run,
-                [qemu_img, "snapshot", "-c", name, disk_path],
-                check=True,
-                capture_output=True,
-                text=True,
-                timeout=15.0,
-            )
-        except subprocess.CalledProcessError as e:
-            raise HTTPException(status_code=500, detail=f"qemu-img snapshot failed: {e.stderr or e}") from e
+    if not os.path.exists(disk_path):
+        raise HTTPException(status_code=400, detail="This machine has no disk yet. Start it once, then shut it down.")
+    await _qemu_img_snapshot("-c", name, disk_path, "made")
 
     meta = await asyncio.to_thread(_get_vm_snapshots_metadata, vm_id)
     meta[name] = {
@@ -1632,7 +1665,7 @@ async def create_vm_snapshot(vm_id: VmId, req: VmSnapshotCreateRequest):
         "name": name,
         "description": req.description or "",
         "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "state": target_vm.get("state", "stopped"),
+        "state": "stopped",
     }
     await asyncio.to_thread(_save_vm_snapshots_metadata, vm_id, meta)
     add_event(
@@ -1656,32 +1689,12 @@ async def revert_vm_snapshot(vm_id: VmId, snapshot_name: str):
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
     name = _snapshot_name(snapshot_name)
-    is_running = target_vm.get("state") == "running" and vm_qemu._is_qemu_process_alive(vm_id)
+    _must_be_off(target_vm, vm_id)
     vm_dir = child_path(os.path.join(DATA_DIR, "vms"), vm_id)
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
-
-    if is_running:
-        cmd_str = f"loadvm {name}"
-        qmp_res = await asyncio.to_thread(
-            vm_qemu._qmp_command, vm_id, "human-monitor-command", {"command-line": cmd_str}, 10.0
-        )
-        if "error" in qmp_res:
-            raise HTTPException(status_code=500, detail=f"QMP loadvm failed: {qmp_res['error']}")
-    else:
-        if not os.path.exists(disk_path):
-            raise HTTPException(status_code=400, detail="Primary disk not found.")
-        qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
-        try:
-            await asyncio.to_thread(
-                subprocess.run,
-                [qemu_img, "snapshot", "-a", name, disk_path],
-                check=True,
-                capture_output=True,
-                text=True,
-                timeout=15.0,
-            )
-        except subprocess.CalledProcessError as e:
-            raise HTTPException(status_code=500, detail=f"qemu-img revert failed: {e.stderr or e}") from e
+    if not os.path.exists(disk_path):
+        raise HTTPException(status_code=400, detail="Primary disk not found.")
+    await _qemu_img_snapshot("-a", name, disk_path, "restored")
 
     add_event(
         "info",
@@ -1707,31 +1720,16 @@ async def delete_vm_snapshot(vm_id: VmId, snapshot_name: str):
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
     name = _snapshot_name(snapshot_name)
-    is_running = target_vm.get("state") == "running" and vm_qemu._is_qemu_process_alive(vm_id)
+    _must_be_off(target_vm, vm_id)
     vm_dir = child_path(os.path.join(DATA_DIR, "vms"), vm_id)
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
-
-    if is_running:
-        cmd_str = f"delvm {name}"
-        qmp_res = await asyncio.to_thread(
-            vm_qemu._qmp_command, vm_id, "human-monitor-command", {"command-line": cmd_str}, 10.0
-        )
-        if "error" in qmp_res:
-            logger.warning("QMP delvm warning: %s", qmp_res["error"])
-    else:
-        if os.path.exists(disk_path):
-            qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
-            try:
-                await asyncio.to_thread(
-                    subprocess.run,
-                    [qemu_img, "snapshot", "-d", name, disk_path],
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                    timeout=15.0,
-                )
-            except Exception as e:
-                logger.warning("qemu-img delete snapshot warning: %s", e)
+    # a record with no snapshot behind it is only forgotten; a real one that cannot be removed is said
+    if os.path.exists(disk_path):
+        try:
+            await _qemu_img_snapshot("-d", name, disk_path, "deleted")
+        except HTTPException as e:
+            if "not found" not in str(e.detail).lower():
+                raise
 
     meta = await asyncio.to_thread(_get_vm_snapshots_metadata, vm_id)
     if name in meta:

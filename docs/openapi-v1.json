@@ -70815,7 +70815,7 @@
   },
   "/api/v1/vms/{vm_id}/action": {
    "post": {
-    "description": "Executes lifecycle action on target VM: start, stop, restart, reboot, acpi_shutdown, pause, resume, force_off.",
+    "description": "Executes lifecycle action on target VM: start, stop, restart, reboot, acpi_shutdown, pause, resume, force_off.\n\n\"stop\" and \"acpi_shutdown\" press the power button and never end the machine: the answer is\n\"stopped\" or \"shutting_down\". Only \"force_off\" ends it.",
     "operationId": "execute_vm_action_api_v1_vms__vm_id__action_post",
     "parameters": [
      {

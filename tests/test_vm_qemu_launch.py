@@ -74,7 +74,8 @@ class TestCommandLine:
         line = args(host["started"][0])
         assert "-m 2048" in line and "-smp 2" in line and "-accel tcg -cpu qemu64" in line
         assert "-vnc 127.0.0.1:1" in line and "-boot order=c" in line and "-vga virtio" in line
-        assert "user,id=net0,hostfwd=tcp::2221-:22" in line and target["network_mode"] == "slirp"
+        assert "user,id=net0 " in line + " " and target["network_mode"] == "slirp"
+        assert "hostfwd" not in line and "ssh_port" not in target  # no port of the NAS leads into it (SET-07)
         assert vm_store._RUNNING_QEMU_PROCS[target["id"]]["pid"] == 4242
 
     def test_kvm_topology_uefi_and_iso(self, host, monkeypatch):
@@ -228,9 +229,28 @@ class TestProcessState:
     def test_by_pid_file(self, host, monkeypatch):
         vm_dir = os.path.join(vm_qemu.DATA_DIR, "vms", "pidvm")
         os.makedirs(vm_dir, exist_ok=True)
+        import select
+        import signal
+
+        # a process whose command line names this machine's monitor socket is the machine
+        engine = os.spawnv(os.P_NOWAIT, "/bin/sh", ["sh", "-c", "sleep 30; : /tmp/pidvm-qmp.sock"])
+        try:
+            for _ in range(100):  # until the new process is the shell and no longer a copy of this one
+                with open(f"/proc/{engine}/cmdline", "rb") as f:
+                    if b"pidvm-qmp.sock" in f.read():
+                        break
+                select.select([], [], [], 0.02)  # the fixture turns time.sleep off
+            with open(os.path.join(vm_dir, "qemu.pid"), "w") as f:
+                f.write(str(engine))
+            assert vm_qemu._is_qemu_process_alive("pidvm")
+        finally:
+            os.kill(engine, signal.SIGKILL)
+            os.waitpid(engine, 0)
+        # any other live process is not (SET-07: the number in the file was trusted as it stood)
         with open(os.path.join(vm_dir, "qemu.pid"), "w") as f:
             f.write(str(os.getpid()))
-        assert vm_qemu._is_qemu_process_alive("pidvm")
+        assert not vm_qemu._is_qemu_process_alive("pidvm")
+        assert not os.path.exists(os.path.join(vm_dir, "qemu.pid"))
         with open(os.path.join(vm_dir, "qemu.pid"), "w") as f:
             f.write("999999999")
         assert not vm_qemu._is_qemu_process_alive("pidvm")

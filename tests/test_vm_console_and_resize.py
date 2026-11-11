@@ -118,7 +118,7 @@ def vm(tmp_path, monkeypatch):
     saved = []
     monkeypatch.setattr(vms_api, "DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setattr(vms_api.vm_qemu, "_load_vms", lambda: [rec])
-    monkeypatch.setattr(vms_api.vm_qemu, "_save_vms", lambda v: saved.append([dict(x) for x in v]))
+    monkeypatch.setattr(vms_api.vm_qemu, "save_fields", lambda vm_id, fields, drop=(): saved.append(dict(fields)))
     monkeypatch.setattr(vms_api.vm_qemu, "_is_qemu_process_alive", lambda vm_id: rec.get("running", False))
     monkeypatch.setattr(vms_api, "add_event", lambda *a, **k: None)
     fake_qemu_img = tmp_path / "qemu-img"
@@ -143,7 +143,7 @@ def test_resize_grows_the_primary_disk(client, auth_headers, vm):
     body = r.json()
     assert r.status_code == 200 and body["previous_size_gb"] == 32 and body["new_size_gb"] == 64
     assert vm["runs"][-1][1:] == ["resize", "-f", "qcow2", vm["disk_path"], "64G"]
-    assert vm["saved"][-1][0]["disk_size_gb"] == 64
+    assert vm["saved"][-1] == {"disk_size_gb": 64}  # its own field, not the whole list (SET-07)
     assert vm["qmp"] == []
 
 
@@ -160,7 +160,7 @@ def test_resize_creates_a_missing_secondary_raw_disk_and_tells_a_running_vm(clie
     assert r.status_code == 200
     assert vm["runs"][-1][1:4] == ["create", "-f", "raw"] and vm["runs"][-1][-1] == "40G"
     assert vm["qmp"] == [("block_resize", {"device": "sdisk0", "size": 40 * 1024**3})]
-    assert vm["saved"][-1][0]["secondary_disks"][0]["size_gb"] == 40
+    assert vm["saved"][-1]["secondary_disks"][0]["size_gb"] == 40
 
 
 def test_resize_unknown_vm_and_disk(client, auth_headers, vm):

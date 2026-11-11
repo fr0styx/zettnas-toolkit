@@ -688,6 +688,33 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   the new one cannot be created or started, stops at once, or the window is closed in between. It
   is removed only once the new one runs.
 
+#### Fixes
+
+- **"Shut down" on a virtual machine asks the system inside and never ends it.** It sent the
+  power-button signal, waited two seconds and then ended the machine, and ended it at once when
+  the signal was not acknowledged. The machine now shows "shutting down" until the system inside
+  has finished. Only "Turn off now" ends a machine. For scripts: `stop` answers `stopped` or
+  `shutting_down`, and 409 when the machine did not take the request.
+- **A virtual machine is counted as running only if its process really is that machine.** After a
+  restart of Kiboto a process number left in a file was trusted when any process had it: a
+  machine could show "running" with nothing behind it and was left out of the automatic start,
+  and Stop or Delete signalled an unrelated process.
+- **Snapshots of a virtual machine only while it is off.** On a running machine a failed save or
+  restore was reported as done, and one that took longer than ten seconds as failed; on a paused
+  one the disk was changed while the machine still held it. A snapshot that cannot be made,
+  restored or deleted is now said, with the reason.
+- **No port of the NAS leads into a virtual machine any more.** For each machine that was not on
+  the home network, a remote-login port was opened on every network of the NAS without saying so.
+- **Read-only folders of a virtual machine are read-only.** The choice made when creating a
+  machine was saved under one name and the one made in Edit under another, and only the first was
+  read: a read-only folder became writable at the first edit. After this update a folder you
+  marked read-only in Edit is read-only at the machine's next start.
+- **Virtual machines, smaller repairs:** "Start" on a paused machine resumes it instead of marking
+  it running while it stays frozen; a paused machine cannot be deleted; an extra disk left without
+  a name gets its own file instead of the system disk's; "None" removes the installer image; a new
+  name follows the rule for names; a change made while a machine starts or shuts down is no longer
+  written over.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 
