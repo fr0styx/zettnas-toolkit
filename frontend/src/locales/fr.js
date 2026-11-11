@@ -5938,6 +5938,8 @@ export default {
   "ci.connecting": "Connexion au journal en direct…",
   "ci.log_ended": "Le journal en direct est terminé : l'application ne tourne pas.",
   "ci.secret_not_allowed": "Seules les personnes qui gèrent les applications peuvent voir cette valeur.",
+  "ci.compose_rebuilt": "Reconstruit à partir de l’application en cours",
+  "ci.compose_rebuilt_masked": "Reconstruit à partir de l’application en cours, secrets masqués (désactivez le masque pour voir le fichier sur le disque)",
   "ci.logs_failed": "Impossible de lire les journaux : {error}",
   "ci.no_logs": "Aucune ligne de journal pour cette période.",
   "ci.delete_q": "Supprimer définitivement le conteneur {name} ({id}) ?",

@@ -5938,6 +5938,8 @@ export default {
   "ci.connecting": "Conectando con el registro en vivo…",
   "ci.log_ended": "El registro en directo ha terminado: la aplicación no se está ejecutando.",
   "ci.secret_not_allowed": "Solo las personas que gestionan aplicaciones pueden ver este valor.",
+  "ci.compose_rebuilt": "Reconstruido a partir de la aplicación en ejecución",
+  "ci.compose_rebuilt_masked": "Reconstruido a partir de la aplicación en ejecución, con los secretos ocultos (desactiva la máscara para ver el archivo en disco)",
   "ci.logs_failed": "No se pudieron leer los registros: {error}",
   "ci.no_logs": "No hay líneas de registro en este periodo.",
   "ci.delete_q": "¿Eliminar para siempre el contenedor {name} ({id})?",

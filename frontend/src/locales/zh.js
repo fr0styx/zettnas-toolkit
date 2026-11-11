@@ -5938,6 +5938,8 @@ export default {
   "ci.connecting": "正在连接实时日志…",
   "ci.log_ended": "实时日志已结束：该应用未在运行。",
   "ci.secret_not_allowed": "只有管理应用的人才能查看此值。",
+  "ci.compose_rebuilt": "根据运行中的应用重建",
+  "ci.compose_rebuilt_masked": "根据运行中的应用重建，已隐藏机密（关闭遮罩以查看磁盘上的文件）",
   "ci.logs_failed": "无法读取日志：{error}",
   "ci.no_logs": "此时段没有日志。",
   "ci.delete_q": "要永久删除容器 {name}（{id}）吗？",

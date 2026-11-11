@@ -1233,25 +1233,11 @@ function renderEnvTab(details) {
 
 async function loadContainerCompose(cid) {
   const codeEl = document.getElementById('ci-compose-code');
-  const badgeEl = document.getElementById('ci-compose-source-badge');
   if (codeEl) codeEl.textContent = t('ui.generating_docker_compose_definition', 'Generating Docker Compose definition...');
 
   try {
     const data = await api.get(`/api/docker/containers/${encodeURIComponent(cid)}/compose`);
     _activeComposeData = data;
-
-    if (badgeEl) {
-      if (data.source === 'disk') {
-        setIconLabel(badgeEl, '📄', t('ui.read_from_disk', 'Read from Disk'));
-        badgeEl.style.color = '#4fd8c4';
-        badgeEl.style.background = 'rgba(79, 216, 196, 0.15)';
-      } else {
-        setIconLabel(badgeEl, '✨', t('ui.synthesized_compose_spec_v3_8', 'Synthesized Compose Spec v3.8'));
-        badgeEl.style.color = 'var(--ok2)';
-        badgeEl.style.background = 'rgba(51, 205, 184, 0.15)';
-      }
-    }
-
     renderComposeCode();
   } catch (err) {
     if (codeEl) codeEl.textContent = `# ${t('ci.compose_failed', 'Could not make the compose file: {error}', { error: err.message })}`;
@@ -1272,7 +1258,34 @@ async function renderComposeCode() {
       showToast(t('toast.cannot_unmask_insufficient_permissions', 'Cannot unmask: insufficient permissions.'), 'error');
     }
   }
-  codeEl.textContent = mask ? _activeComposeData.masked_yaml : (_activeComposeData.compose_yaml || _activeComposeData.masked_yaml);
+  const shown = mask ? _activeComposeData.masked_yaml : (_activeComposeData.compose_yaml || _activeComposeData.masked_yaml);
+  codeEl.textContent = shown;
+  setComposeBadge(_activeComposeData, shown);
+}
+
+/**
+ * The badge says what is on screen: the file read from disk, or one rebuilt from the running app.
+ * With secrets masked the server always sends a rebuilt file, and the badge said "Read from Disk"
+ * over it (SET-14, Apps 26).
+ */
+export function setComposeBadge(data, shown) {
+  const badgeEl = document.getElementById('ci-compose-source-badge');
+  if (!badgeEl || !data) return;
+  const fromDisk = data.source === 'disk' && shown === data.compose_yaml && shown !== data.masked_yaml;
+  if (fromDisk) {
+    setIconLabel(badgeEl, '📄', t('ui.read_from_disk', 'Read from Disk'));
+    badgeEl.style.color = '#4fd8c4';
+    badgeEl.style.background = 'rgba(79, 216, 196, 0.15)';
+    badgeEl.title = data.compose_file_path || '';
+  } else {
+    const label = data.source === 'disk'
+      ? t('ci.compose_rebuilt_masked', 'Rebuilt from the running app, secrets hidden (turn off the mask to see the file on disk)')
+      : t('ci.compose_rebuilt', 'Rebuilt from the running app');
+    setIconLabel(badgeEl, '✨', label);
+    badgeEl.style.color = 'var(--ok2)';
+    badgeEl.style.background = 'rgba(51, 205, 184, 0.15)';
+    badgeEl.title = '';
+  }
 }
 
 export function stopLogStream() {

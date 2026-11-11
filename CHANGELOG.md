@@ -337,6 +337,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   the copy button used the dots of the mask. They now fetch the value, for people who manage apps;
   others are told they may not see it, and nothing is copied.
 
+#### Fixes
+
+- **The Compose tab says where its file comes from.** With secrets hidden it showed a file rebuilt
+  from the running app under a "Read from Disk" badge. The badge now follows what is on screen.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

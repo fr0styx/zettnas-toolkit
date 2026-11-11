@@ -5938,6 +5938,8 @@ export default {
   "ci.connecting": "Connecting to the live log…",
   "ci.log_ended": "The live log has ended: the app is not running.",
   "ci.secret_not_allowed": "Only people who manage apps can see this value.",
+  "ci.compose_rebuilt": "Rebuilt from the running app",
+  "ci.compose_rebuilt_masked": "Rebuilt from the running app, secrets hidden (turn off the mask to see the file on disk)",
   "ci.logs_failed": "Could not read the logs: {error}",
   "ci.no_logs": "No log lines for this period.",
   "ci.delete_q": "Delete the container {name} ({id}) for good?",

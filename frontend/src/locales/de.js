@@ -5938,6 +5938,8 @@ export default {
   "ci.connecting": "Verbindung zum Live-Protokoll…",
   "ci.log_ended": "Das Live-Protokoll ist beendet: Die App läuft nicht.",
   "ci.secret_not_allowed": "Nur Personen, die Apps verwalten, können diesen Wert sehen.",
+  "ci.compose_rebuilt": "Aus der laufenden App nachgebaut",
+  "ci.compose_rebuilt_masked": "Aus der laufenden App nachgebaut, Geheimnisse verborgen (Maske ausschalten, um die Datei auf dem Datenträger zu sehen)",
   "ci.logs_failed": "Protokoll konnte nicht gelesen werden: {error}",
   "ci.no_logs": "Keine Protokollzeilen für diesen Zeitraum.",
   "ci.delete_q": "Den Container {name} ({id}) endgültig löschen?",
