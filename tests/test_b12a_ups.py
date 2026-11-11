@@ -89,6 +89,7 @@ def test_the_drill_reports_kibotos_own_shutdown_command(monkeypatch):
         "by": "kiboto",
         "ok": True,
         "detail": "Kiboto shuts the server down with /host/powerdown.",
+        "text": {"msg_key": "srv.power_kiboto_shuts", "params": {}},  # the page translates it (SET-15)
     }
     monkeypatch.setattr(uw, "host_shutdown_paths", lambda: [])
     assert uw.shutdown_path_report()["ok"] is False

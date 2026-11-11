@@ -2700,6 +2700,12 @@
               </div>
             </div>
 
+            <!-- One sentence for the state, and who switches the NAS off (SET-15, Power 2) -->
+            <div id="ups-status-line" class="ups-status-line" data-state="none" role="status">
+              <div class="ups-status-main"><span id="ups-status-icon" class="ups-status-icon" aria-hidden="true">○</span> <strong id="ups-status-sentence" data-sample>No battery backup.</strong></div>
+              <div id="ups-shutdown-line" class="ups-shutdown-line" hidden></div>
+            </div>
+
             <!-- Emergency Warning Banner (Shown when on battery or simulating) -->
             <div id="ups-emergency-banner" class="ups-emergency-banner" style="display:none;">
               <div class="ups-eb-icon">⚠️</div>

@@ -192,3 +192,14 @@
 #mgmt-pane-network-wireguard .wgd-grid-2 { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: stretch; }
 #mgmt-pane-network-wireguard .wgd-box-2 { flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: var(--kb-glaze-3); border: 1px solid var(--kb-line-8); border-radius: 8px; padding: 8px 12px; min-width: 130px; }
 #mgmt-pane-network-wireguard .wgd-xs-bold-muted-2 { font-size: var(--kb-fs-xs); color: var(--muted); text-align: center; font-weight: 700; letter-spacing: 0.3px; }
+
+/* the Power page's status line: icon and words for each state (SET-15, Power 2); no UPS is neutral (Power 7) */
+.ups-status-line { margin: 0 0 14px; padding: 12px 14px; border-radius: 8px; border: 1px solid var(--kb-line-12); border-left-width: 4px; background: var(--kb-glaze-3); }
+.ups-status-main { display: flex; align-items: center; gap: 8px; font-size: var(--kb-fs-sm); }
+.ups-status-icon { font-weight: 800; }
+.ups-status-line[data-state="none"] { border-left-color: var(--kb-line-15); }
+.ups-status-line[data-state="mains"] { border-left-color: var(--ok2, #33cdb8); }
+.ups-status-line[data-state="look"], .ups-status-line[data-state="unreadable"] { border-left-color: var(--warn, #f5a623); }
+.ups-status-line[data-state="cut"] { border-left-color: var(--err, #eb5757); }
+.ups-shutdown-line { margin-top: 6px; font-size: var(--kb-fs-xs); color: var(--kb-text-soft); }
+.ups-shutdown-line.is-bad { color: var(--err, #eb5757); font-weight: 600; }

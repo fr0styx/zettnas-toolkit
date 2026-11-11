@@ -92,6 +92,14 @@ async def get_ups_telemetry():
     return await asyncio.to_thread(read_ups_status, reprobe=True)
 
 
+@router.get("/ups/shutdown-path", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
+async def get_ups_shutdown_path():
+    """Who switches the NAS off when the battery runs out, for the Power page's permanent line (SET-15)."""
+    from backend.services.ups_watchdog import shutdown_path_report
+
+    return await asyncio.to_thread(shutdown_path_report)
+
+
 class NutServerRequest(BaseModel):
     enabled: bool | None = None
     port: int | None = Field(default=None, ge=1, le=65535)

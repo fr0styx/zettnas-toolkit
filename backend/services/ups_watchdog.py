@@ -21,6 +21,7 @@ from typing import Any, Optional
 
 from backend.config import logger
 from backend.db import log_ups_event
+from backend.errors import said
 from backend.hardware import ups_state
 from backend.hardware.ups import load_ups_config, read_ups_status
 from backend.services.nut_server import forced_shutdown as nut_forced_shutdown
@@ -262,6 +263,7 @@ def shutdown_path_report() -> dict[str, Any]:
                 "ok": False,
                 "detail": f"{host}'s UPS service does not answer, so nothing shuts the server down when the battery "
                 f"runs out. Turn it on in {host}'s UPS settings.",
+                "text": said("power_host_silent", host=host),
             }
         when = ""
         if svc.get("battery_pct") or svc.get("minutes"):
@@ -271,15 +273,22 @@ def shutdown_path_report() -> dict[str, Any]:
             "ok": True,
             "detail": f"{host}'s UPS service ({svc['kind']}) shuts the server down{when}. "
             "Before that Kiboto stops its apps and saves what is in memory.",
+            "text": said("power_host_shuts", host=host, kind=svc["kind"]),
         }
     paths = host_shutdown_paths()
     if paths:
-        return {"by": "kiboto", "ok": True, "detail": f"Kiboto shuts the server down with {paths[0]}."}
+        return {
+            "by": "kiboto",
+            "ok": True,
+            "detail": f"Kiboto shuts the server down with {paths[0]}.",
+            "text": said("power_kiboto_shuts"),
+        }
     return {
         "by": "kiboto",
         "ok": False,
         "detail": "Kiboto has no way to shut this server down (no host shutdown command is mounted). "
         "Set up the host's own UPS shutdown, or mount a powerdown command at /host/powerdown.",
+        "text": said("power_nobody"),
     }
 
 

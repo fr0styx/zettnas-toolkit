@@ -2,6 +2,7 @@
  * Mission Control: UPS telemetry, events and the UPS settings drawer.
  * Split out of management.js (ARCH-1); management.js re-exports everything here.
  */
+import { serverSaid } from '../../server-text.js';
 import { api } from '../../api.js';
 import { showToast, showConfirmToast } from '../../toast.js';
 import { escapeHtml } from '../../utils.js';
@@ -185,11 +186,73 @@ export async function fetchAndRenderUpsEvents() {
   }
 }
 
+/** The state in one word: none (no UPS), unreadable, cut (on battery), look (low or replace), mains. */
+export function upsState(ups) {
+  if (!ups) return 'none';
+  if (ups.permission_error || ups.unreadable) return 'unreadable';
+  if (!ups.available) return 'none';
+  if (ups.on_battery) return 'cut';
+  const words = String(ups.status || '').toUpperCase().split(/\s+/);
+  if (words.includes('RB') || words.includes('LB') || (ups.battery_charge_pct != null && ups.battery_charge_pct <= 20)) return 'look';
+  return 'mains';
+}
+
+const STATE_ICON = { none: '○', unreadable: '!', cut: '⚡', look: '⚠', mains: '✓' };
+
+/** The sentence for a state, in the reader's language (SET-15, Power 2). */
+export function upsSentence(ups) {
+  const state = upsState(ups);
+  if (state === 'none') return t('upx.say_none', 'No battery backup. If the power goes out, the NAS goes off at once.');
+  if (state === 'unreadable') return t('upx.say_unreadable', 'A UPS was found, but Kiboto cannot read it.');
+  if (state === 'cut') {
+    return ups.time_left_min != null
+      ? t('upx.say_cut_min', 'Power cut: the NAS runs on its battery, about {min} min left.', { min: Math.round(ups.time_left_min) })
+      : t('upx.say_cut', 'Power cut: the NAS runs on its battery.');
+  }
+  if (state === 'look') {
+    const words = String(ups.status || '').toUpperCase().split(/\s+/);
+    if (words.includes('RB')) return t('upx.say_replace', 'The UPS says its battery needs replacing.');
+    return t('upx.say_low', 'The UPS battery is low.');
+  }
+  return t('upx.say_mains', 'On mains power. Kiboto shuts your NAS down safely when the battery is nearly empty.');
+}
+
+function renderUpsStatusLine(ups) {
+  const box = document.getElementById('ups-status-line');
+  if (!box) return;
+  const state = upsState(ups);
+  box.dataset.state = state;
+  const icon = document.getElementById('ups-status-icon');
+  if (icon) icon.textContent = STATE_ICON[state];
+  const sentence = document.getElementById('ups-status-sentence');
+  if (sentence) sentence.textContent = upsSentence(ups);
+  const line = document.getElementById('ups-shutdown-line');
+  if (line && state === 'none') line.hidden = true; // nothing to switch off by battery without a UPS
+}
+
+let _pathAt = 0;
+/** Who switches the NAS off, asked at most once a minute (it may look for the host's UPS service). */
+async function renderShutdownLine(ups) {
+  const line = document.getElementById('ups-shutdown-line');
+  if (!line || upsState(ups) === 'none' || Date.now() - _pathAt < 60000) return;
+  _pathAt = Date.now();
+  try {
+    const path = await api.get('/api/ups/shutdown-path');
+    line.textContent = serverSaid(path, path?.detail || '');
+    line.classList.toggle('is-bad', path?.ok === false);
+    line.hidden = !line.textContent;
+  } catch (_) {
+    _pathAt = 0;
+  }
+}
+
 export async function fetchAndRenderUpsTelemetry() {
   try {
     const ups = await api.get('/api/ups');
     if (!ups) return;
     renderUpsTelemetry(ups);
+    renderUpsStatusLine(ups);
+    renderShutdownLine(ups);
     fetchAndRenderUpsEvents();
   } catch (err) {
     console.debug('Failed to fetch UPS telemetry:', err);

@@ -69272,6 +69272,36 @@
     ]
    }
   },
+  "/api/v1/ups/shutdown-path": {
+   "get": {
+    "description": "Who switches the NAS off when the battery runs out, for the Power page's permanent line (SET-15).",
+    "operationId": "get_ups_shutdown_path_api_v1_ups_shutdown_path_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Ups Shutdown Path",
+    "tags": [
+     "UPS & Power Integrity"
+    ],
+    "x-required-scopes": [
+     "hardware:read",
+     "system:view"
+    ]
+   }
+  },
   "/api/v1/ups/simulate": {
    "post": {
     "description": "Triggers simulated power outage drill for desktop UI testing.",
