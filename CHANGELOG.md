@@ -325,6 +325,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   heading and its "3d 4h" figure, the update channel's name, and a few update and support messages
   were English in every language.
 
+#### Fixes
+
+- **An app's live log shows that app only.** With "Follow live" on, the next app's lines were added
+  under the previous one's, and on a stopped app the last lines came again every few seconds. The
+  log now starts fresh for each app and says when it has ended.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

@@ -5936,6 +5936,7 @@ export default {
   "ci.col_value": "Value",
   "ci.compose_failed": "Could not make the compose file: {error}",
   "ci.connecting": "Connecting to the live log…",
+  "ci.log_ended": "The live log has ended: the app is not running.",
   "ci.logs_failed": "Could not read the logs: {error}",
   "ci.no_logs": "No log lines for this period.",
   "ci.delete_q": "Delete the container {name} ({id}) for good?",

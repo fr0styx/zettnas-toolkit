@@ -5936,6 +5936,7 @@ export default {
   "ci.col_value": "Valeur",
   "ci.compose_failed": "Impossible de créer le fichier compose : {error}",
   "ci.connecting": "Connexion au journal en direct…",
+  "ci.log_ended": "Le journal en direct est terminé : l'application ne tourne pas.",
   "ci.logs_failed": "Impossible de lire les journaux : {error}",
   "ci.no_logs": "Aucune ligne de journal pour cette période.",
   "ci.delete_q": "Supprimer définitivement le conteneur {name} ({id}) ?",

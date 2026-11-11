@@ -5936,6 +5936,7 @@ export default {
   "ci.col_value": "值",
   "ci.compose_failed": "无法生成 compose 文件：{error}",
   "ci.connecting": "正在连接实时日志…",
+  "ci.log_ended": "实时日志已结束：该应用未在运行。",
   "ci.logs_failed": "无法读取日志：{error}",
   "ci.no_logs": "此时段没有日志。",
   "ci.delete_q": "要永久删除容器 {name}（{id}）吗？",

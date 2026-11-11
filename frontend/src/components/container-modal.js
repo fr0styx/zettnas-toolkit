@@ -1258,17 +1258,37 @@ export function startLogStream(cid) {
   if (!cid) return;
   const tailSelect = document.getElementById('ci-logs-tail-select');
   const tail = tailSelect ? tailSelect.value : 100;
-  const token = auth.getToken();
-  const url = `/api/docker/containers/${encodeURIComponent(cid)}/logs/stream?tail=${tail}&follow=1${token ? `` : ''}`;
+  const url = `/api/docker/containers/${encodeURIComponent(cid)}/logs/stream?tail=${tail}&follow=1`;
 
+  // A stream starts with the app's last lines, so the buffer starts empty: the next app's lines were
+  // appended to the previous one's, and each reconnect repeated the tail (SET-14, Apps 26)
+  _activeLogLines = [];
   const terminal = document.getElementById('ci-logs-terminal');
-  if (terminal && _activeLogLines.length === 0) {
+  if (terminal) {
     terminal.innerHTML = '<div class="ci-logs-note ci-muted-center-2">' + t('ci.connecting', 'Connecting to the live log…') + '</div>';
   }
 
   try {
-    _logEventSource = new EventSource(url);
-    _logEventSource.onmessage = (e) => {
+    const source = new EventSource(url);
+    _logEventSource = source;
+    // the server says when the log ends (a stopped app) or fails; without this the browser
+    // reconnected every few seconds and the last lines came again
+    source.addEventListener('done', () => {
+      if (_logEventSource !== source) return;
+      stopLogStream();
+      appendLogNote(t('ci.log_ended', 'The live log has ended: the app is not running.'));
+    });
+    source.addEventListener('error', (e) => {
+      if (_logEventSource !== source || !(/** @type {any} */ (e).data)) return; // a dropped connection retries by itself
+      let why = '';
+      try {
+        why = JSON.parse(/** @type {any} */ (e).data).error || '';
+      } catch (_) {}
+      stopLogStream();
+      appendLogNote(t('ci.logs_failed', 'Could not read the logs: {error}', { error: why }));
+    });
+    source.onmessage = (e) => {
+      if (_logEventSource !== source) return; // a line from the app shown before
       try {
         const item = JSON.parse(e.data);
         if (item && item.msg !== undefined) {
@@ -1288,12 +1308,24 @@ export function startLogStream(cid) {
   }
 }
 
-export function appendLogLine(l) {
+/** A muted line under the log (the stream ended or failed). */
+function appendLogNote(text) {
   const terminal = document.getElementById('ci-logs-terminal');
   if (!terminal) return;
   const placeholder = terminal.querySelector('.ci-logs-note');
+  if (placeholder && _activeLogLines.length === 0) terminal.innerHTML = '';
+  const row = document.createElement('div');
+  row.className = 'ci-logs-note ci-logs-end';
+  row.textContent = text;
+  terminal.appendChild(row);
+}
+
+export function appendLogLine(l) {
+  const terminal = document.getElementById('ci-logs-terminal');
+  if (!terminal) return;
+  const placeholder = terminal.querySelector('.ci-logs-note:not(.ci-logs-end)');
   if (placeholder) {
-    terminal.innerHTML = '';
+    placeholder.remove();
   }
   if (_activeLogFilter) {
     const textMatch = (l.msg || '').toLowerCase().includes(_activeLogFilter) || (l.ts || '').toLowerCase().includes(_activeLogFilter);
