@@ -5967,7 +5967,7 @@ export default {
   "ci.add_mount": "Ordner hinzufügen",
   "ci.env_title": "Umgebungsvariablen",
   "ci.add_var": "Variable hinzufügen",
-  "ci.keep_backup": "Sicherungs-Container behalten (der alte bleibt als {name}.backup)",
+  "ci.keep_backup": "Sicherungs-Container behalten (der alte bleibt als {name}.backup mit Datum und Uhrzeit)",
   "ci.save_recreate": "Speichern und Container neu erstellen",
   "ci.row_container": "Container:",
   "ci.row_host": "Host:",

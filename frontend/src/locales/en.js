@@ -5967,7 +5967,7 @@ export default {
   "ci.add_mount": "Add folder",
   "ci.env_title": "Environment variables",
   "ci.add_var": "Add variable",
-  "ci.keep_backup": "Keep a backup container (the old one stays as {name}.backup)",
+  "ci.keep_backup": "Keep a backup container (the old one stays as {name}.backup with the date and time)",
   "ci.save_recreate": "Save and recreate the container",
   "ci.row_container": "Container:",
   "ci.row_host": "Host:",

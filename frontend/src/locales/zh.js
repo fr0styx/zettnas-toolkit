@@ -5967,7 +5967,7 @@ export default {
   "ci.add_mount": "添加文件夹",
   "ci.env_title": "环境变量",
   "ci.add_var": "添加变量",
-  "ci.keep_backup": "保留备份容器（旧容器保留为 {name}.backup）",
+  "ci.keep_backup": "保留备份容器（旧容器保留为 {name}.backup 加日期和时间）",
   "ci.save_recreate": "保存并重建容器",
   "ci.row_container": "容器：",
   "ci.row_host": "主机：",

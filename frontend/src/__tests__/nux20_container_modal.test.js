@@ -84,7 +84,8 @@ describe('container details in German (NUX-20)', () => {
     const form = document.getElementById('cie-form-host').textContent;
     expect(form).toContain('Container-Einstellungen');
     expect(form).toContain('Port-Zuordnungen');
-    expect(form).toContain('Sicherungs-Container behalten (der alte bleibt als {name}.backup)');
+    expect(form).toContain('Sicherungs-Container behalten (der alte bleibt als ');
+    expect(form).not.toContain('{name}'); // the app name is filled in (SET-14)
     expect(document.getElementById('cie-btn-cancel').textContent).toBe('Abbrechen');
     expect(get).toHaveBeenCalled();
   });

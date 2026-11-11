@@ -1682,7 +1682,7 @@ async function renderContainerEditTab(cid) {
       <div class="ci-row-box-4">
         <label class="ci-row-xs-muted-3">
           <input class="ci-x-2" type="checkbox" id="cie-cb-backup" ${isToolkit ? 'disabled' : ''}>
-          <span>${t('ci.keep_backup', 'Keep a backup container (the old one stays as {name}.backup)')}</span>
+          <span>${escapeHtml(t('ci.keep_backup', 'Keep a backup container (the old one stays as {name}.backup with the date and time)', { name: _activeCname || '' }))}</span>
         </label>
         <div class="ci-row-11">
           <button class="btn-pill-toggle" id="cie-btn-cancel">${t('common.cancel', 'Cancel')}</button>
