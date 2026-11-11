@@ -325,11 +325,11 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   }
 
   setWindowRestorationComplete(false);
-  initI18n();
+  const textsReady = initI18n();
   initDockSystem();
   installDialogChrome();
   installWindowFocus(DockManager);
-  initInviteLanding(); // the sign-up form for invite links, over the sign-in screen
+  initInviteLanding(textsReady); // the sign-up form for invite links, over the sign-in screen, in the person's language
   initAuth();
   initDashboardClicks();
   // the fan and LED controls are in the settings drawer, whose markup arrives after the first

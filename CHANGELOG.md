@@ -860,6 +860,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **"Revert to previous version" can be reached.** The button sat inside the box that is hidden
   while Kiboto is up to date, which is exactly when it is needed after an update.
 
+#### Fixes
+
+- **The invite page is in the invited person's language.** It was drawn before the texts were
+  loaded, so it was English whatever the language, and it called the role "ShareUser". It now
+  waits for the language and says "Family member", "Kid" or "Guest".
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

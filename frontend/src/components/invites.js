@@ -87,10 +87,24 @@ export function inviteTokenFromHash(hash) {
   return m ? m[1] : null;
 }
 
-/** Shows the sign-up form when the page was opened from an invite link. */
-export async function initInviteLanding() {
+/** The role of an invite in the reader's language ("Family member", not "ShareUser"). */
+export function inviteRoleName(info) {
+  return Object.fromEntries(ROLES())[info?.role_id] || info?.role || '';
+}
+
+/**
+ * Shows the sign-up form when the page was opened from an invite link. `textsReady` is the promise of the language loading: the
+ * page was drawn before the texts were there, so it was in English whatever the language (SET-10).
+ * @param {Promise<unknown>} [textsReady]
+ */
+export async function initInviteLanding(textsReady) {
   const token = inviteTokenFromHash(window.location.hash);
   if (!token) return false;
+  try {
+    await textsReady;
+  } catch (e) {
+    /* the page is then drawn in English */
+  }
   const dlg = document.createElement('dialog');
   dlg.className = 'invite-landing';
   dlg.setAttribute('aria-labelledby', 'invite-landing-title');
@@ -105,7 +119,7 @@ export async function initInviteLanding() {
     return true;
   }
   dlg.innerHTML = `<h2 id="invite-landing-title">${escapeHtml(t('invite.welcome', 'You are invited to this NAS'))}</h2>
-    <p>${escapeHtml(t('invite.as', 'Your account will be: {role}', { role: info.role }))}</p>
+    <p>${escapeHtml(t('invite.as', 'Your account will be: {role}', { role: inviteRoleName(info) }))}</p>
     <form data-invite-accept class="invite-accept">
       <label>${escapeHtml(t('invite.username', 'Username'))}<input name="username" required minlength="2" maxlength="32" pattern="[a-z_][a-z0-9_.\\-]*" autocomplete="username"></label>
       <label>${escapeHtml(t('invite.display', 'Your name'))}<input name="display_name" maxlength="80" autocomplete="name"></label>

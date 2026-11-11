@@ -82,7 +82,13 @@ def check_invite(token: str, request: Request):
     if not inv:
         raise HTTPException(status_code=404, detail="This invite link is not valid any more.")
     role = get_role(inv["role_id"]) or {}
-    return {"valid": True, "role": role.get("name", inv["role_id"]), "expires_at": inv["expires_at"]}
+    # role_id lets the page name the role in the person's language; "role" alone read "ShareUser"
+    return {
+        "valid": True,
+        "role": role.get("name", inv["role_id"]),
+        "role_id": inv["role_id"],
+        "expires_at": inv["expires_at"],
+    }
 
 
 @router.post("/invite/{token}/accept")
