@@ -267,7 +267,49 @@ def get_media_status(principal: AuthenticatedPrincipal = Depends(get_current_pri
     status = engine.get_status(principal=principal)
     status["config"] = get_rag_engine().get_config()
     status["reindex_status"] = get_ai_reindex_status()
-    return status
+    return _status_for(principal, status)
+
+
+# What everyone who may use Kib gets from the status: whether it is on and busy, and counts.
+_STATUS_FOR_EVERYONE = (
+    "status",
+    "enabled",
+    "kib_status",
+    "zettai_status",
+    "is_gated",
+    "gate_reason",
+    "learning_results",  # already only the files the person may open
+    "sync_state",
+    "is_scanning",
+    "is_paused",
+    "indexed_count",
+    "last_scan_timestamp",
+    "categories",
+    "reindex_status",
+)
+_PROGRESS_FOR_EVERYONE = ("state", "indexed_files", "skipped_unchanged", "deferred_standby", "errors")
+_GUARD_FOR_EVERYONE = ("active", "respect_standby", "sleeping_disks_count", "running_disks_count")
+
+
+def _status_for(principal: AuthenticatedPrincipal, status: dict[str, Any]) -> dict[str, Any]:
+    """The status answer for the person who asks (SET-04). People who manage Kib get all of it.
+    Everyone else got it too: every watched folder's name, the drives' names, the memory size, the
+    whole settings (addresses of other servers, the household's shared favourites with other
+    people's file paths) and the path being read. They now get what Ask Kib and AI search need."""
+    if principal.is_system or principal.has_any_scope("system:config", "storage:admin"):
+        return status
+    cfg = status.get("config") or {}
+    model = cfg.get("active_model") or cfg.get("llm_model") or ""
+    out: dict[str, Any] = {k: status[k] for k in _STATUS_FOR_EVERYONE if k in status}
+    out["active_model"] = model
+    out["config"] = {"enabled": bool(cfg.get("enabled", True)), "active_model": model, "llm_model": model}
+    progress = status.get("sync_progress") or {}
+    out["sync_progress"] = {k: progress[k] for k in _PROGRESS_FOR_EVERYONE if k in progress}
+    guard = status.get("standby_guard") or {}
+    out["standby_guard"] = {k: guard[k] for k in _GUARD_FOR_EVERYONE if k in guard}
+    if principal.has_any_scope("system:view", "hardware:read"):  # the rule of the stats route
+        out["acceleration"] = out["hardware"] = status.get("acceleration")
+    return out
 
 
 @router.post("/media/scan", dependencies=[Depends(require_scope("system:config"))])

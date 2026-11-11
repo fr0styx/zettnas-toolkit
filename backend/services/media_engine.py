@@ -1320,13 +1320,9 @@ class MediaEngine:
         accel = detect_hardware_accelerator()
         persisted = read_json(MEDIA_STATUS_FILE, {})
         rag = get_rag_engine()
-        if not test_mode():
-            try:
-                rag.sync_watched_deferred_queue()
-                rag.check_and_trigger_spinup_auto_learn(background=True)
-            except Exception as e:
-                logger.debug(f"[MediaEngine] Spin-up auto-learn check error: {e}")
-
+        # Reading the status starts nothing (SET-04). It used to run the wake-up checks here, so
+        # any signed-in person opening the page could start a reading job; the watcher thread
+        # (rag_engine_learning._watch_tick) runs the same checks on its own.
         rag_stats = rag.get_index_stats()
         rag_cfg = rag.get_config()
         sync_progress = rag.get_sync_progress()

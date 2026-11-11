@@ -86,10 +86,20 @@ export function renderAiSearchHistory() {
   });
 }
 
+/** False once Settings is closed or shows another section: nobody is looking at Kib's page. */
+function _kibOnScreen() {
+  const overlay = document.getElementById('management-modal-overlay');
+  const section = document.getElementById('mgmt-sec-ai');
+  return !(overlay && overlay.style.display === 'none') && !(section && section.style.display === 'none');
+}
+
 function _ensureAiSyncPoll(shouldPoll) {
   if (shouldPoll) {
     if (!_aiSyncPollTimer) {
       _aiSyncPollTimer = setInterval(() => {
+        // the timer stops with the window (SET-04); it used to ask the server every 1.5 s for
+        // as long as reading ran or was paused, whatever was on screen
+        if (!_kibOnScreen()) { _ensureAiSyncPoll(false); return; }
         fetchAndRenderAiStatus().catch(() => {});
       }, 1500);
     }

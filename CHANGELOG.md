@@ -464,6 +464,15 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   change answered with an error. They now see Ask Kib and AI search. **"Connect my Immich" moved
   to the AI search tab**, where everyone finds it: each person connects their own Immich.
 
+#### Security
+
+- **Kib's status tells each person only what they may see, and starts nothing**: everyone who
+  could open the Kib page, guests included, received the names of all folders Kib reads, the
+  drives' names, the memory size, the whole AI settings and the household's shared favourites.
+  People who do not manage Kib now get whether it is on and busy, the model that answers, and
+  counts. Opening the page could also start a reading job; it no longer does. The page's status
+  timer stops when Settings is closed or shows another section.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 
