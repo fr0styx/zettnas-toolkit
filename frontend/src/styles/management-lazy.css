@@ -36,6 +36,9 @@
 }
 
 .sec-advisor-action-pill {
+  font-family: inherit;
+  min-height: 24px;
+  cursor: pointer;
   font-size: var(--kb-fs-xs);
   font-weight: 700;
   padding: 3px 8px;
@@ -49,7 +52,7 @@
 }
 
 .sec-advisor-item:hover .sec-advisor-action-pill,
-.sec-advisor-item:focus-visible .sec-advisor-action-pill {
+.sec-advisor-action-pill:focus-visible {
   background: var(--brand, #4fd8c4);
   border-color: var(--brand, #4fd8c4);
   color: var(--accent-contrast-fg);

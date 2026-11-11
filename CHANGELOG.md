@@ -432,6 +432,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   image, resizing a disk and the screen picture answered one generic sentence. They now say what
   failed and, when the reason is a plain one (no space left, permission denied, read-only), why.
 
+#### Fixes
+
+- **The security check works with a keyboard and a screen reader.** Each row was a button with
+  buttons inside, which screen readers cannot reach. "Review" and "Configure" are now real buttons,
+  named after their row, beside the one-click fix.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

@@ -297,7 +297,7 @@ export async function fetchAndRenderSecurityPosture() {
         const badgeBg = c.passed ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)';
         const actionText = c.passed ? t('sec.action_review', 'Review ➔') : t('sec.action_configure', 'Configure ➔');
         return `
-          <div class="sec-advisor-item ${c.passed ? 'passed' : 'needs-action'}" data-check-id="${escapeHtml(c.id)}" role="button" tabindex="0" title="${t('sec.click_to_configure', 'Click to configure')}" style="background:${badgeBg}; border:1px solid ${c.passed ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.3)'};">
+          <div class="sec-advisor-item ${c.passed ? 'passed' : 'needs-action'}" data-check-id="${escapeHtml(c.id)}" style="background:${badgeBg}; border:1px solid ${c.passed ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.3)'};">
             <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
               <span class="sec-advisor-item-icon" style="color:${passColor}; font-weight:800; font-size: var(--kb-fs-sm); line-height:1;">${passIcon}</span>
               <div style="min-width:0;">
@@ -308,7 +308,7 @@ export async function fetchAndRenderSecurityPosture() {
             <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
               <span class="sec-advisor-status-badge" style="font-size: var(--kb-fs-xs); font-weight:700; color:${passColor}; text-transform:uppercase; letter-spacing:0.5px;">${escapeHtml(STATE_WORD[state]())}</span>
               ${c.fix ? `<button type="button" class="sec-advisor-fix-btn btn btn-sm" data-fix="${escapeHtml(c.fix)}">${escapeHtml(t(`sec.fix.${c.fix}`, c.fix_label || t('sec.fix_btn', 'Fix it')))}</button>` : ''}
-              <span class="sec-advisor-action-pill">${actionText}</span>
+              <button type="button" class="sec-advisor-action-pill" aria-label="${escapeHtml(`${actionText.replace(/\s*[➔→]\s*$/, '')}: ${checkName(c)}`)}">${escapeHtml(actionText)}</button>
             </div>
           </div>
         `;
@@ -319,19 +319,13 @@ export async function fetchAndRenderSecurityPosture() {
           e.stopPropagation();
           applySecurityFix(btn.dataset.fix, btn);
         });
-        btn.addEventListener('keydown', (e) => e.stopPropagation());
       });
 
+      // a row is not a button around buttons (screen readers lose the inner ones, SET-14): its
+      // "Review" / "Configure" is a real button, and a click anywhere else on the row does the same
       container.querySelectorAll('.sec-advisor-item').forEach(item => {
         const checkId = item.dataset.checkId;
-        const trigger = () => handleSecurityAdvisorClick(checkId);
-        item.addEventListener('click', trigger);
-        item.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            trigger();
-          }
-        });
+        item.addEventListener('click', () => handleSecurityAdvisorClick(checkId));
       });
     }
   } catch (err) {
