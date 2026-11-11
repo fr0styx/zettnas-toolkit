@@ -43,20 +43,22 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Use the runner's Ubuntu mirror when security.ubuntu.com does not resolve
+      - name: Use public DNS when the runner cannot resolve Ubuntu's package servers
         run: |
-          # On 11 Nov 2026 GitHub's runners could not resolve security.ubuntu.com for hours, and
-          # every apt install that reached for it failed (restic, rclone, Playwright's fonts). The
-          # runner's own archive mirror carries the security pocket too.
-          if ! getent hosts security.ubuntu.com >/dev/null; then
-            echo "::warning::security.ubuntu.com does not resolve: apt uses the runner's mirror for it"
-            TO=http://azure.archive.ubuntu.com/ubuntu
-            if [ -f /etc/apt/apt-mirrors.txt ]; then
-              sudo sed -i '/security\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt
-              TO=mirror+file:/etc/apt/apt-mirrors.txt
+          # On 11 Nov 2026 the runners' own resolver stopped answering for every ubuntu.com name for
+          # hours, so each apt install failed (restic, rclone, Playwright's fonts), mirrors included.
+          # Public resolvers still answered.
+          if ! getent hosts security.ubuntu.com >/dev/null || ! getent hosts archive.ubuntu.com >/dev/null; then
+            echo "::warning::the runner's resolver does not answer for ubuntu.com: switching to public DNS"
+            sudo mkdir -p /etc/systemd/resolved.conf.d
+            printf '[Resolve]\nDNS=1.1.1.1 8.8.8.8\nDomains=~.\n' | sudo tee /etc/systemd/resolved.conf.d/public-dns.conf >/dev/null
+            sudo systemctl restart systemd-resolved || true
+            sleep 2
+            if ! getent hosts archive.ubuntu.com >/dev/null; then
+              sudo rm -f /etc/resolv.conf
+              printf 'nameserver 1.1.1.1\nnameserver 8.8.8.8\n' | sudo tee /etc/resolv.conf >/dev/null
             fi
-            sudo sed -i -E "s#https?://security\.ubuntu\.com/ubuntu/?#$TO#g" \
-              /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list 2>/dev/null || true
+            getent hosts security.ubuntu.com archive.ubuntu.com || echo "::warning::ubuntu.com still does not resolve"
           fi
 
       - name: Install dependencies
@@ -231,20 +233,22 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Use the runner's Ubuntu mirror when security.ubuntu.com does not resolve
+      - name: Use public DNS when the runner cannot resolve Ubuntu's package servers
         run: |
-          # On 11 Nov 2026 GitHub's runners could not resolve security.ubuntu.com for hours, and
-          # every apt install that reached for it failed (restic, rclone, Playwright's fonts). The
-          # runner's own archive mirror carries the security pocket too.
-          if ! getent hosts security.ubuntu.com >/dev/null; then
-            echo "::warning::security.ubuntu.com does not resolve: apt uses the runner's mirror for it"
-            TO=http://azure.archive.ubuntu.com/ubuntu
-            if [ -f /etc/apt/apt-mirrors.txt ]; then
-              sudo sed -i '/security\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt
-              TO=mirror+file:/etc/apt/apt-mirrors.txt
+          # On 11 Nov 2026 the runners' own resolver stopped answering for every ubuntu.com name for
+          # hours, so each apt install failed (restic, rclone, Playwright's fonts), mirrors included.
+          # Public resolvers still answered.
+          if ! getent hosts security.ubuntu.com >/dev/null || ! getent hosts archive.ubuntu.com >/dev/null; then
+            echo "::warning::the runner's resolver does not answer for ubuntu.com: switching to public DNS"
+            sudo mkdir -p /etc/systemd/resolved.conf.d
+            printf '[Resolve]\nDNS=1.1.1.1 8.8.8.8\nDomains=~.\n' | sudo tee /etc/systemd/resolved.conf.d/public-dns.conf >/dev/null
+            sudo systemctl restart systemd-resolved || true
+            sleep 2
+            if ! getent hosts archive.ubuntu.com >/dev/null; then
+              sudo rm -f /etc/resolv.conf
+              printf 'nameserver 1.1.1.1\nnameserver 8.8.8.8\n' | sudo tee /etc/resolv.conf >/dev/null
             fi
-            sudo sed -i -E "s#https?://security\.ubuntu\.com/ubuntu/?#$TO#g" \
-              /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list 2>/dev/null || true
+            getent hosts security.ubuntu.com archive.ubuntu.com || echo "::warning::ubuntu.com still does not resolve"
           fi
 
       - name: Install Python dependencies & Playwright
@@ -253,7 +257,10 @@ jobs:
           pip install --require-hashes -r requirements.lock
           pip install --require-hashes -r requirements-dev.lock
           python scripts/check_lock_versions.py
-          python -m playwright install --with-deps chromium
+          python -m playwright install --with-deps chromium || {
+            echo "::warning::Playwright's system packages did not install: the browser alone (the runner image carries its libraries)"
+            python -m playwright install chromium
+          }
           # Run Playwright on the patched Node.js from setup-node, not its bundled copy
           echo "PLAYWRIGHT_NODEJS_PATH=$(command -v node)" >> "$GITHUB_ENV"
 
