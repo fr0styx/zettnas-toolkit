@@ -199,11 +199,25 @@ export function handleSecurityAdvisorClick(checkId) {
       break;
     }
 
-    default:
-      console.info('[SecurityAdvisor] Clicked check:', checkId);
+    default: {
+      // ten kinds of row did nothing here (SET-14): a row with a one-click fix offers it (the
+      // server asks first), the others open the place where they are dealt with
+      if (FIXABLE.includes(checkId)) {
+        applySecurityFix(checkId);
+      } else if (typeof window.openManagementWindow === 'function') {
+        const [section, pane] = PLACES[checkId] || ['mgmt-sec-system-group', 'mgmt-pane-security'];
+        window.openManagementWindow(section, pane);
+      }
       break;
+    }
   }
 }
+
+// the safe-defaults findings that carry a fix of the same name (backend/services/safe_defaults_advisor.py)
+export const FIXABLE = ['share_access_family', 'nfs_open_exports', 'auditor_reads_everything', 'ai_search_family', 'snapshots_off'];
+const PLACES = {
+  ai_runtime_exposure: ['mgmt-sec-ai', 'mgmt-pane-ai-rag'],
+};
 
 /** One-click fix for a setting looser than the safe defaults (B11). The server asks the person to confirm first. */
 export async function applySecurityFix(fixId, btn = null) {

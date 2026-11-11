@@ -290,6 +290,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   security check, a few clicks away, showed red rows. Serious findings of the security check
   (critical or high) are now one row on the Overview that opens Settings.
 
+#### Fixes
+
+- **Every row of the security check leads somewhere.** Ten kinds of row did nothing when clicked.
+  A row with a one-click fix now offers it (Kiboto asks first); the others open the place where
+  they are dealt with.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
