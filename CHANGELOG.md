@@ -251,9 +251,7 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   only the folders I choose", and each time Kiboto starts.
 - **A newly shared folder is no longer off for its owner**: on a new install a folder shared from
   Kiboto was switched off over the network for everyone, administrators included. Administrators and
-  storage administrators now open every shared folder from a computer, as they do in Files. To keep
-  one folder off the network for an administrator, set that person to "none" for it in
-  Users → Shared folders.
+  storage administrators now always open every shared folder from a computer, as they do in Files.
 
 #### Fixes
 

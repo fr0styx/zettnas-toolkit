@@ -1,7 +1,7 @@
 """SET-01: over the network, shared folders follow the people as they are now.
 
-- An administrator opens a newly shared folder (it used to be off for everyone on a new install),
-  unless the folder's own list says otherwise.
+- An administrator opens every shared folder (a new one used to be off for everyone on a new
+  install), whatever the folder's own list says.
 - The Samba settings are rewritten when a person is added or removed, after the Security Advisor's
   fix for kids and guests, and at start.
 """
@@ -33,21 +33,19 @@ def _valid(lines):
     return lines[0].split("=", 1)[1].split()
 
 
-def test_an_administrator_is_in_a_new_folders_list_and_can_be_taken_out():
+def test_an_administrator_is_always_in_a_folders_list():
     kid, store = _person("net_kid", "kid"), _person("net_store", "storage_admin")
     try:
         share_access.save_config({"default_level": "none", "shares": {}})
         valid = _valid(_lines())
         assert "admin" in valid and "net_store" in valid and "net_kid" not in valid
-        share_access.save_config({"default_level": "none", "shares": {"media": {"users": {"net_store": "read"}}}})
-        lines = _lines()
-        assert "net_store" in _valid(lines) and lines[1] == "   read list = net_store"
-        # taken out on purpose: the folder stays off the network for these two
+        # the folder's own list cannot take an administrator out, or make one read-only
         share_access.save_config(
-            {"default_level": "none", "shares": {"media": {"users": {"admin": "none", "net_store": "none"}}}}
+            {"default_level": "none", "shares": {"media": {"users": {"admin": "none", "net_store": "read"}}}}
         )
         lines = _lines()
-        assert lines == ["   available = no"] or not {"admin", "net_store"} & set(_valid(lines))
+        assert {"admin", "net_store"} <= set(_valid(lines))
+        assert not any(line.strip().startswith("read list") for line in lines)
     finally:
         delete_user(kid["id"])
         delete_user(store["id"])

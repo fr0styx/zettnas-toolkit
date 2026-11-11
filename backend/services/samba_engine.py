@@ -709,7 +709,6 @@ def access_lines(share: "SambaShareConfig") -> list[str]:
     from backend.users_db import list_users
 
     cfg = load_config()
-    own = cfg["shares"].get(share.name, {}).get("users") or {}
     admins = _files_admin_roles()
     levels = {}
     for u in list_users():
@@ -718,9 +717,10 @@ def access_lines(share: "SambaShareConfig") -> list[str]:
             continue
         role = u.get("role_id") or ""
         if role in admins:
-            # an administrator opens every shared folder, as in Files, unless this folder's own
-            # list says otherwise (SET-01: a new folder used to be off for its owner too)
-            levels[name] = own.get(name.lower()) or "write"
+            # an administrator opens every shared folder, as in Files, whatever the folder's own
+            # list says (SET-01, the owner's decision S1: always in; a new folder used to be off
+            # for its owner too)
+            levels[name] = "write"
         else:
             levels[name] = share_level(cfg, share.name, name, role)
     if levels and all(v == "write" for v in levels.values()):
