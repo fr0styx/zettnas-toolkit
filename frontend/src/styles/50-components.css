@@ -89,6 +89,8 @@ body.theme-light {
 
 /* Status */
 .zn-alert { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px var(--zn-space-3); border-radius: var(--zn-radius); font-size: var(--zn-fs); line-height: 1.45; }
+.bk-staged { margin-top: var(--zn-space-3); }
+.bk-staged .bk-staged-text { flex: 1 1 260px; display: flex; flex-direction: column; gap: 2px; }
 .zn-alert--danger { background: var(--zn-danger-bg); border: 1px solid var(--zn-danger-line); color: var(--zn-danger-text); }
 
 /* Lists and tables */

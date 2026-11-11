@@ -339,7 +339,7 @@
   "buttons": 0,
   "globals": 4,
   "styles": 7,
-  "templates": 5
+  "templates": 6
  },
  "frontend/src/components/setup-wizard-gate.js": {
   "buttons": 0,

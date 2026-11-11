@@ -277,6 +277,31 @@ def _clear_sessions_and_tokens(users_db: str) -> None:
         _TOKEN_CACHE.clear()
 
 
+def staged_restore_info(data_dir: str) -> dict[str, Any]:
+    """Whether a settings backup is checked and waiting for the next start, since when, and how
+    many files it replaces (SET-06). It waited with no sign of it, possibly for weeks."""
+    staged = os.path.join(data_dir, STAGED_RESTORE_DIR)
+    manifest = os.path.join(staged, STAGED_MANIFEST)
+    files = read_json(manifest, None)
+    if not os.path.isdir(staged) or not isinstance(files, list):
+        return {"staged": False}
+    try:
+        at = os.path.getmtime(manifest)
+    except OSError:
+        at = 0.0
+    return {"staged": True, "at": at, "files": len(files)}
+
+
+def discard_staged_restore(data_dir: str) -> bool:
+    """Drops a waiting settings backup: nothing of it is applied. True when there was one."""
+    staged = os.path.join(data_dir, STAGED_RESTORE_DIR)
+    if not os.path.isdir(staged):
+        return False
+    shutil.rmtree(staged, ignore_errors=True)
+    logger.warning("[BACKUP] A staged settings restore was discarded")
+    return not os.path.isdir(staged)
+
+
 def apply_staged_restore(data_dir: str) -> list[str]:
     """Moves a staged settings restore into place. Run at start, before any database is opened (REL-3)."""
     staged = os.path.join(data_dir, STAGED_RESTORE_DIR)

@@ -55,13 +55,14 @@ describe('settings words', () => {
     await vi.waitFor(() => expect($('btn-copy-status-text').textContent).toBe('DISABLED'));
   });
 
-  it('the backup passphrase box says when it may stay empty', async () => {
+  it('the backup passphrase box always asks for a passphrase', async () => {
     document.body.innerHTML = '<button id="btn-backup-download">Download</button><input type="file" id="backup-upload-input">';
     vi.spyOn(api, 'get').mockResolvedValue({});
     settings.initSystemTab();
     $('btn-backup-download').click();
     await vi.waitFor(() => expect(showPromptToast).toHaveBeenCalled());
-    expect(showPromptToast.mock.lastCall[5]).toMatchObject({ inputType: 'password', placeholder: 'Leave empty for no encryption' });
+    // a settings backup is always encrypted (SET-06): the box no longer offers to leave it empty
+    expect(showPromptToast.mock.lastCall[5]).toMatchObject({ inputType: 'password', placeholder: 'Backup passphrase' });
     showPromptToast.mock.lastCall[4]();  // cancel
     const upload = $('backup-upload-input');
     const file = new File(['ZETTBAK2rest'], 'nas.zettbak');

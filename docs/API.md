@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-715 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+717 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -152,11 +152,13 @@ request and response schemas.
 | `POST` | `/api/v1/backup/snapshots` | any of `backup:write`, `backup:manage`, `system:config`, `storage:admin` | Creates an atomic filesystem snapshot on the storage platform |
 | `DELETE` | `/api/v1/backup/snapshots/{pool_id}/{snapshot_name}` | any of `backup:write`, `backup:manage`, `system:config`, `storage:admin` | Deletes an atomic filesystem snapshot |
 | `POST` | `/api/v1/docker/containers/{container_id}/backup` | any of `containers:manage`, `backup:write`, `backup:manage` | Takes an on-demand backup of an installed container app's data and synthesized compose config |
-| `GET` | `/api/v1/system/backup` | `*` | Configuration backup as a plain zip (users, settings, shares, stacks, VM definitions) |
-| `POST` | `/api/v1/system/backup` | `*` | Configuration backup, encrypted with the given passphrase (AES-256-GCM, scrypt) |
+| `POST` | `/api/v1/system/backup` | `*` | The settings backup, always encrypted with the given passphrase (AES-256-GCM, scrypt) |
 | `GET` | `/api/v1/system/client-preferences` | signed in | Returns persistent client UI preferences (themes, widgets, window layouts) from DATA_DIR |
 | `POST` | `/api/v1/system/client-preferences` | `system:config` | Persists client UI preferences into DATA_DIR so they are preserved in backups and cross-device sync |
 | `POST` | `/api/v1/system/restore` | `*` | Restores configuration from a zip archive |
+| `POST` | `/api/v1/system/restore/apply` | `*` | Restarts Kiboto so the waiting settings backup is applied, where Docker starts it again by itself; otherwise says that someone has to res… |
+| `DELETE` | `/api/v1/system/restore/staged` | `*` | Discards the waiting settings backup: the settings stay as they are |
+| `GET` | `/api/v1/system/restore/staged` | `*` | Whether an uploaded settings backup is waiting for the next restart |
 
 ### Calendar & Notes
 

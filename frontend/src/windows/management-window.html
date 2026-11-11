@@ -3901,7 +3901,7 @@
               </div>
               <div class="bk-row">
                 <button id="btn-backup-download" class="btn-pill-toggle" style="flex: 1; color: var(--zn-text-accent); border-color: rgba(79,216,196,0.4); background: rgba(79,216,196,0.12);">
-                  <svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="settings.btn_download_backup">Download Backup Archive (.zip)</span>
+                  <svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="settings.btn_download_backup">Download Backup</span>
                 </button>
                 <div class="bk-upload">
                   <input class="bk-file-overlay" type="file" id="backup-upload-input" accept=".zip,.zettbak" title="Upload backup file" data-i18n-title="ui.upload_backup_file">
@@ -3910,6 +3910,7 @@
                   </button>
                 </div>
               </div>
+              <div id="restore-staged-card" class="zn-alert zn-alert--danger bk-staged" role="status" hidden></div>
             </div>
           </div>
         </div>

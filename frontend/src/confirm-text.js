@@ -18,6 +18,7 @@ const ACTIONS = {
   'backup.delete': ['Delete the backup', 'Delete the backup {target}?', true],
   'system.restore': ['Restore settings', 'Restore the system settings from a backup? They replace the current ones.', true],
   'offsite.restore_all': ['Bring back the files', 'Put every folder of backup {target} back where it was? Files that are already there stay as they are.', false],
+  'system.apply_restore': ['Restart and apply', 'Restart Kiboto now and apply the settings backup that is waiting? It replaces people, passwords, two-step sign-in, shares and cloud keys with the ones in it. What was changed since the backup was made is lost. Everyone signs in again.', true],
   'system.reboot': ['Restart the server', 'Restart the server now?', false],
   'system.shutdown': ['Shut down', 'Shut down the server now?', false],
   'updates.apply': ['Update now', 'Update Kiboto and restart it?', false],

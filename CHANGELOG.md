@@ -619,6 +619,19 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   A job now removes only its own old snapshots; it used to remove hand-made ones and those of
   other shares whose names began the same way.
 
+#### Changes
+
+- **An uploaded settings backup shows that it is waiting.** Uploading one said "Restore
+  successful! Reloading…" and applied nothing: the backup was only checked and kept for the next
+  restart of Kiboto, with no sign of it and no way to cancel. At that restart, possibly weeks
+  later, it replaced people, passwords, shares and cloud keys, and every change made since was
+  lost. Settings now shows "A settings backup is ready" with **"Restart now"** and **"Discard"**,
+  and the question before the upload names what is replaced.
+- **The settings backup is always encrypted.** The download asked for a passphrase "or leave it
+  empty"; the plain file holds the keys of every off-site backup and your cloud accounts. A
+  passphrase of at least 8 characters is now required, and the plain download
+  (`GET /api/system/backup`) is removed. Backups you downloaded before can still be restored.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

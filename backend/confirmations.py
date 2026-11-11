@@ -43,6 +43,7 @@ ACTIONS: dict[str, str] = {
     "vm.delete": "Delete virtual machine {target}",
     "backup.delete": "Delete backup {target}",
     "system.restore": "Restore system settings from a backup, replacing the current ones",
+    "system.apply_restore": "Restart Kiboto now and apply the settings backup that is waiting. It replaces people, passwords, shares and cloud keys",
     "offsite.restore_all": "Put every folder of backup {target} back where it was. Files that are already there stay as they are",
     "system.reboot": "Reboot the server",
     "system.shutdown": "Shut down the server",

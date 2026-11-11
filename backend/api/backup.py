@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import AfterValidator, BaseModel, Field
 
 from backend.auth import require_scope
-from backend.config import CLIENT_PREFS_FILE, logger
+from backend.config import CLIENT_PREFS_FILE, DATA_DIR, logger
 from backend.confirmations import require_confirmation
 from backend.fsutil import atomic_write_json, read_json, single_name
 from backend.hardware.pal_storage import PlatformCapabilityError, get_storage_platform
@@ -114,28 +114,25 @@ class ConfigBackupRequest(BaseModel):
     passphrase: str = ""
 
 
-def _backup_response(passphrase: str = "") -> StreamingResponse:
+def _backup_response(passphrase: str) -> StreamingResponse:
     buf = generate_backup_zip_stream(passphrase=passphrase)
-    ts = time.strftime("%Y%m%d_%H%M%S")
-    name = f"zettnas_backup_{ts}.zettbak" if passphrase else f"zettnas_backup_{ts}.zip"
+    name = f"kiboto_settings_{time.strftime('%Y%m%d_%H%M%S')}.zettbak"
     return StreamingResponse(
         buf,
-        media_type="application/octet-stream" if passphrase else "application/zip",
+        media_type="application/octet-stream",
         headers={"Content-Disposition": f"attachment; filename={name}"},
     )
 
 
-@router.get("/system/backup", dependencies=[Depends(require_scope("*"))])
-def download_backup():
-    """Configuration backup as a plain zip (users, settings, shares, stacks, VM definitions)."""
-    return _backup_response()
-
-
 @router.post("/system/backup", dependencies=[Depends(require_scope("*"))])
 def download_encrypted_backup(req: ConfigBackupRequest):
-    """Configuration backup, encrypted with the given passphrase (AES-256-GCM, scrypt)."""
-    if req.passphrase and len(req.passphrase) < 8:
-        raise HTTPException(status_code=400, detail="Use a passphrase of at least 8 characters.")
+    """The settings backup, always encrypted with the given passphrase (AES-256-GCM, scrypt).
+    The plain download is gone (SET-06): the file holds the people and their password hashes, the
+    server's secret key, the keys of every off-site backup and the cloud accounts."""
+    if len(req.passphrase) < 8:
+        raise HTTPException(
+            status_code=400, detail="A settings backup is always encrypted: use a passphrase of at least 8 characters."
+        )
     return _backup_response(req.passphrase)
 
 
@@ -171,6 +168,7 @@ async def restore_backup(request: Request):
 
         return {
             "status": "ok",
+            "staged": True,  # nothing is applied yet: it waits for the next start (GET /system/restore/staged)
             "message": "The backup is checked and ready. Restart Kiboto to apply it; you will need to sign in again.",
             "restored_files": (result or {}).get("restored"),
             "client_preferences": client_prefs,
@@ -313,6 +311,37 @@ def list_pool_snapshots(pool_id: str = "default"):
     except Exception as e:
         logger.error(f"[SNAPSHOTS] Failed to list snapshots for pool {pool_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.get("/system/restore/staged", dependencies=[Depends(require_scope("*"))])
+def staged_restore():
+    """Whether an uploaded settings backup is waiting for the next restart."""
+    from backend.services.backup_engine import staged_restore_info
+
+    return staged_restore_info(DATA_DIR)
+
+
+@router.delete("/system/restore/staged", dependencies=[Depends(require_scope("*"))])
+def discard_staged():
+    """Discards the waiting settings backup: the settings stay as they are."""
+    from backend.services.backup_engine import discard_staged_restore
+
+    return {"status": "ok", "discarded": discard_staged_restore(DATA_DIR)}
+
+
+@router.post(
+    "/system/restore/apply",
+    dependencies=[Depends(require_scope("*")), Depends(require_confirmation("system.apply_restore"))],
+)
+def apply_staged_now():
+    """Restarts Kiboto so the waiting settings backup is applied, where Docker starts it again by
+    itself; otherwise says that someone has to restart the container."""
+    from backend.services.backup_engine import staged_restore_info
+    from backend.services.box_restore import restart_to_apply
+
+    if not staged_restore_info(DATA_DIR)["staged"]:
+        raise HTTPException(status_code=409, detail="No settings backup is waiting.")
+    return {"status": "ok", **restart_to_apply()}
 
 
 def _refuse_unless(res: Any, good: tuple[str, ...], what: str) -> None:

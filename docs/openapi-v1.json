@@ -67618,35 +67618,8 @@
    }
   },
   "/api/v1/system/backup": {
-   "get": {
-    "description": "Configuration backup as a plain zip (users, settings, shares, stacks, VM definitions).",
-    "operationId": "download_backup_api_v1_system_backup_get",
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      },
-      "description": "Successful Response"
-     },
-     "401": {
-      "$ref": "#/components/responses/Unauthorized"
-     },
-     "403": {
-      "$ref": "#/components/responses/Forbidden"
-     }
-    },
-    "summary": "Download Backup",
-    "tags": [
-     "Backup"
-    ],
-    "x-required-scopes": [
-     "*"
-    ]
-   },
    "post": {
-    "description": "Configuration backup, encrypted with the given passphrase (AES-256-GCM, scrypt).",
+    "description": "The settings backup, always encrypted with the given passphrase (AES-256-GCM, scrypt).\nThe plain download is gone (SET-06): the file holds the people and their password hashes, the\nserver's secret key, the keys of every off-site backup and the cloud accounts.",
     "operationId": "download_encrypted_backup_api_v1_system_backup_post",
     "requestBody": {
      "content": {
@@ -68283,6 +68256,91 @@
      }
     },
     "summary": "Restore Backup",
+    "tags": [
+     "Backup"
+    ],
+    "x-required-scopes": [
+     "*"
+    ]
+   }
+  },
+  "/api/v1/system/restore/apply": {
+   "post": {
+    "description": "Restarts Kiboto so the waiting settings backup is applied, where Docker starts it again by\nitself; otherwise says that someone has to restart the container.",
+    "operationId": "apply_staged_now_api_v1_system_restore_apply_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Apply Staged Now",
+    "tags": [
+     "Backup"
+    ],
+    "x-required-scopes": [
+     "*"
+    ]
+   }
+  },
+  "/api/v1/system/restore/staged": {
+   "delete": {
+    "description": "Discards the waiting settings backup: the settings stay as they are.",
+    "operationId": "discard_staged_api_v1_system_restore_staged_delete",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Discard Staged",
+    "tags": [
+     "Backup"
+    ],
+    "x-required-scopes": [
+     "*"
+    ]
+   },
+   "get": {
+    "description": "Whether an uploaded settings backup is waiting for the next restart.",
+    "operationId": "staged_restore_api_v1_system_restore_staged_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Staged Restore",
     "tags": [
      "Backup"
     ],

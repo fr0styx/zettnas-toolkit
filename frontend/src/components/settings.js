@@ -1791,19 +1791,69 @@ async function isEncryptedBackup(file) {
   }
 }
 
+/**
+ * The card that says a settings backup is waiting, with "Restart now" and "Discard" (SET-06, the
+ * owner's decision S17). Hidden while none waits, and for people who may not restore.
+ */
+export async function renderStagedRestore() {
+  const card = document.getElementById('restore-staged-card');
+  if (!card) return null;
+  let info;
+  try {
+    info = await api.get('/api/system/restore/staged');
+  } catch {
+    card.hidden = true;
+    return null;
+  }
+  card.hidden = !info.staged;
+  if (!info.staged) return info;
+  card.innerHTML = `
+    <div class="bk-staged-text"><strong>${escapeHtml(t('settings.staged_title', 'A settings backup is ready'))}</strong>
+      <span>${escapeHtml(t('settings.staged_msg', 'Uploaded {when}. It is applied when Kiboto restarts, and then replaces people, passwords, two-step sign-in, shares and cloud keys with the ones in it. What you change until then is lost.', { when: formatDateTime(info.at) }))}</span></div>
+    <button type="button" class="btn-pill-toggle is-danger is-small" data-staged="apply">${escapeHtml(t('settings.staged_apply', 'Restart now'))}</button>
+    <button type="button" class="btn-pill-toggle is-small" data-staged="discard">${escapeHtml(t('settings.staged_discard', 'Discard'))}</button>`;
+  card.querySelector('[data-staged="apply"]')?.addEventListener('click', async () => {
+    try {
+      const r = await api.post('/api/system/restore/apply', {});
+      if (r.restarting) {
+        card.textContent = t('settings.staged_restarting', 'Kiboto is restarting to apply the backup. This page reloads by itself; then sign in with the password from the backup.');
+        const { waitForRestart } = await import('./restore-box.js');
+        waitForRestart();
+      } else {
+        showToast(t('settings.staged_restart_yourself', 'Kiboto cannot restart itself here. Restart its container to apply the backup.'), 'warn');
+      }
+    } catch (err) {
+      if (err?.error !== 'cancelled') showToast(err.message || String(err), 'error');
+    }
+  });
+  card.querySelector('[data-staged="discard"]')?.addEventListener('click', async () => {
+    try {
+      await api.delete('/api/system/restore/staged');
+      showToast(t('settings.staged_discarded', 'The backup was discarded. Your settings stay as they are.'), 'info');
+    } catch (err) {
+      showToast(err.message || String(err), 'error');
+    }
+    renderStagedRestore();
+  });
+  return info;
+}
+
 export function initSystemTab() {
   if (typeof renderApiTokens !== 'undefined') renderApiTokens();
+  renderStagedRestore();
   syncClientPreferencesFromServerIfEmpty();
   const btnDownload = document.getElementById('btn-backup-download');
   if (btnDownload) {
     btnDownload.addEventListener('click', async () => {
       const origHtml = btnDownload.innerHTML;
+      // always encrypted (SET-06, the owner's decision S19): the plain file held the keys of every
+      // off-site backup and the cloud accounts
       const passphrase = await askBackupPassphrase(
-        'Encrypt this backup?',
-        'The backup holds users and password hashes, the server secret key, share and remote credentials. Enter a passphrase to encrypt it (recommended), or leave it empty.',
-        true
+        t('settings.backup_pass_title', 'A passphrase for this backup'),
+        t('settings.backup_pass_msg', 'The backup holds people and their password hashes, the server’s secret key, the keys of your off-site backups and your cloud accounts, so it is always encrypted. Choose a passphrase of at least 8 characters and keep it somewhere other than this NAS: without it the backup cannot be restored.'),
+        false
       );
-      if (passphrase === null) return;
+      if (!passphrase) return;
       try {
         btnDownload.disabled = true;
         btnDownload.innerHTML = `<span class="spinner-inline"></span> ${t('settings.generating_backup', 'Generating Backup...')}`;
@@ -1825,9 +1875,7 @@ export function initSystemTab() {
         }
 
         // 2. Fetch the backup archive stream (encrypted when a passphrase was given)
-        const res = passphrase
-          ? await apiFetch('/api/system/backup', { method: 'POST', body: { passphrase } })
-          : await apiFetch('/api/system/backup');
+        const res = await apiFetch('/api/system/backup', { method: 'POST', body: { passphrase } });
         if (!res.ok) throw await ApiError.from(res);
 
         const blob = await res.blob();
@@ -1837,7 +1885,7 @@ export function initSystemTab() {
         a.href = url;
 
         const disposition = res.headers.get('content-disposition');
-        let filename = `kiboto_backup_${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.zip`;
+        let filename = `kiboto_settings_${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.zettbak`;
         if (disposition && disposition.includes('filename=')) {
           filename = disposition.split('filename=')[1].replace(/["']/g, '').trim();
         }
@@ -1868,7 +1916,7 @@ export function initSystemTab() {
       }
       let restorePassphrase = '';
       if (await isEncryptedBackup(file)) {
-        restorePassphrase = await askBackupPassphrase('Encrypted backup', 'Enter the passphrase this backup was made with.', false);
+        restorePassphrase = await askBackupPassphrase(t('settings.restore_pass_title', 'Encrypted backup'), t('settings.restore_pass_msg', 'Enter the passphrase this backup was made with.'), false);
         if (restorePassphrase === null) {
           uploadInput.value = '';
           return;
@@ -1893,10 +1941,11 @@ export function initSystemTab() {
               applyClientPreferences(data.client_preferences);
             }
 
-            showToast(t('settings.restore_success', 'Restore successful! Reloading to apply all configurations...'), 'success');
-            setTimeout(() => {
-              window.location.reload();
-            }, 1200);
+            // Nothing is applied yet: the server keeps the checked backup for the next start. The
+            // page said the restore had succeeded and reloaded into unchanged settings,
+            // and the backup then replaced everything at some later restart (SET-06).
+            showToast(t('settings.restore_ready', 'The backup is checked and ready. It is applied when Kiboto restarts.'), 'success');
+            renderStagedRestore();
           } catch (err) {
             showToast(t('settings.restore_failed', 'Restore failed: ') + err.message, 'error');
           } finally {
