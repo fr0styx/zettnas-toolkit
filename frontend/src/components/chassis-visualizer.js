@@ -698,16 +698,16 @@ export function renderStructuredPoolsTopology(container, data) {
       const block = document.createElement('div');
       block.className = 'topo-pool-block';
       block.dataset.key = p.id || p.name;
-      block.innerHTML = buildPoolBlockInner(p, isObserver);
+      block.innerHTML = buildPoolBlockInner(p, isObserver, { scrub: data.can_trigger_scrub ?? true });
       return block;
     },
     (block, p) => {
-      block.innerHTML = buildPoolBlockInner(p, isObserver);
+      block.innerHTML = buildPoolBlockInner(p, isObserver, { scrub: data.can_trigger_scrub ?? true });
     }
   );
 }
 
-function buildPoolBlockInner(pool, isObserver) {
+function buildPoolBlockInner(pool, isObserver, can = { scrub: true }) {
   const usedStr = formatBytes(pool.used_bytes);
   const totalStr = formatBytes(pool.total_bytes);
   const freeStr = formatBytes(pool.free_bytes);
@@ -783,7 +783,7 @@ function buildPoolBlockInner(pool, isObserver) {
     </div>
 
     <div class="topo-pool-actions cv-row-5">
-      <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.trigger_filesystem_scrub_or_parity', 'Trigger filesystem scrub or parity check')}">${ico('⚡')} ${t('chassis.scrub_pool', 'Scrub pool')}</button>
+      ${can.scrub ? `<button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name || pool.id)}" title="${t('ui.trigger_filesystem_scrub_or_parity', 'Trigger filesystem scrub or parity check')}">${ico('⚡')} ${t('chassis.scrub_pool', 'Scrub pool')}</button>` : ''}
       ${!isObserver ? `<button class="btn-pool-rename btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name)}" title="${t('ui.rename_storage_pool', 'Rename storage pool')}">${ico('✏️')} ${t('chassis.rename', 'Rename')}</button>` : ''}
       ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--zn-text-warn);" title="${t('ui.safely_flush_dirty_cache_and', 'Safely flush dirty cache and detach pool')}">${ico('⏏️')} ${t('chassis.eject', 'Safely eject')}</button>` : ''}
       ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle is-danger" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.destroy_storage_pool', 'Destroy storage pool')}">${ico('🗑️')} ${t('chassis.destroy', 'Destroy')}</button>` : ''}
@@ -808,12 +808,23 @@ function bindTopologyTreeEvents(tree, container) {
     if (scrubBtn) {
       e.stopPropagation();
       const pid = scrubBtn.dataset.poolId;
-      try {
-        const res = await api.post('/api/storage/scrub', { pool_id: pid, action: 'start' });
-        showToast(res.message || 'Scrub initiated.', 'info');
-      } catch (err) {
-        showToast(err.message || 'Failed to trigger scrub', 'error');
-      }
+      const pool = scrubBtn.dataset.poolName || pid;
+      // a check spins the pool's drives up and keeps them busy for hours: it is asked first, and
+      // what is said afterwards is what the server answered (SET-06)
+      showConfirmToast(
+        t('chassis.scrub_q_title', 'Check this pool for errors'),
+        t('chassis.scrub_q', 'Check “{pool}” for errors now? Its drives spin up and stay busy until it is done, which can take hours.', { pool }),
+        async () => {
+          try {
+            await api.post('/api/storage/scrub', { pool_id: pid, action: 'start' });
+            showToast(t('chassis.scrub_started', 'The check of “{pool}” was started.', { pool }), 'info');
+          } catch (err) {
+            showToast(t('chassis.scrub_failed', 'The check of “{pool}” was not started: {error}', { pool, error: err.message || '' }), 'error');
+          }
+        },
+        null,
+        { okText: t('chassis.scrub_start', 'Start the check'), destructive: false }
+      );
       return;
     }
 

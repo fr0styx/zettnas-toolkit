@@ -227,6 +227,7 @@
     "_carry_over": "(self, src: str, dest: str) -> None",
     "_check_is_storage_busy_uncached": "(self) -> bool",
     "_convert_to_dataset": "(self, path: str) -> str",
+    "_fs_type_at": "(self, path: str) -> str",
     "_make_share_dir": "(self, full_path: str) -> str",
     "_must": "(self, cmd: list[str], what: str) -> str",
     "_nested_subvolumes": "(self, path: str) -> bool",
@@ -234,6 +235,7 @@
     "_release_view": "(self, zfs_name: str) -> None",
     "_resolve_disk_path": "(self, disk: str) -> str",
     "_run_cmd": "(self, cmd: list[str]) -> tuple[int, str, str]",
+    "_scrub_answer": "(base: dict[str, typing.Any], pool: StoragePool, action: str, code: int, out: str, err: str) -> dict",
     "_view_dir": "(zfs_name: str) -> str",
     "_zfs_snapshots": "(self, pool_id: str) -> list[dict[str, typing.Any]]",
     "can_convert": "(self, path: str) -> bool",
@@ -257,6 +259,7 @@
     "list_snapshots": "(self, pool_id: str) -> list[dict[str, typing.Any]]",
     "readable_snapshot_path": "(self, snap: dict[str, typing.Any]) -> str",
     "rename_pool": "(self, pool_id: str, new_name: str) -> dict[str, typing.Any]",
+    "resolve_pool": "(self, pool_id: str) -> StoragePool",
     "restore_snapshot": "(self, pool_id: str, snapshot_name: str, target_subvol: str = '') -> dict[str, typing.Any]",
     "swap_in_snapshot": "(self, live_root: str, snap_path: str, keep: tuple[str, ...]) -> None",
     "trigger_scrub": "(self, pool_id: str, action: str = 'start') -> dict[str, typing.Any]"

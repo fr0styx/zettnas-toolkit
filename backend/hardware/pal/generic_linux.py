@@ -423,68 +423,79 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         out_l = out.lower()
         return bool(code == 0 and ("scrub in progress" in out_l or "resilver in progress" in out_l))
 
-    def trigger_scrub(self, pool_id: str, action: str = "start") -> dict[str, Any]:
-        """Triggers or checks status of Btrfs scrub (or ZFS if pool_id is prefixed with 'zfs:')."""
-        self._busy_cache_ts = 0.0
-        if pool_id and (pool_id.startswith("zfs:") or pool_id.startswith("zpool:")):
-            zp = pool_id.split(":", 1)[1]
-            if action == "start":
-                code, out, err = self._run_cmd(["zpool", "scrub", zp])
-                return {
-                    "platform": "zfs",
-                    "pool_id": pool_id,
-                    "action": action,
-                    "status": "started" if code == 0 else "error",
-                    "output": out or err,
-                }
-            elif action == "cancel":
-                code, out, err = self._run_cmd(["zpool", "scrub", "-s", zp])
-                return {
-                    "platform": "zfs",
-                    "pool_id": pool_id,
-                    "action": action,
-                    "status": "cancelled" if code == 0 else "error",
-                    "output": out or err,
-                }
-            else:
-                code, out, err = self._run_cmd(["zpool", "status", zp])
-                return {
-                    "platform": "zfs",
-                    "pool_id": pool_id,
-                    "action": "status",
-                    "status": "active" if "scrub in progress" in out.lower() else "idle",
-                    "raw": out or err,
-                }
+    def resolve_pool(self, pool_id: str) -> StoragePool:
+        """The pool an id names, with its kind and its real folder (SET-06, engine rule 1). Scrub,
+        eject, rename, remove and the monthly check all ask here. Each of them used to work the
+        path out for itself, as "<pool folder>/<id>"; ids are device names, so for a btrfs,
+        ext4, XFS or md pool that folder does not exist, and every scrub ran on the main pool.
+        An id may carry "zfs:" in front (older callers); "default" is the main pool."""
+        wanted = str(pool_id or "").strip()
+        if wanted.startswith(("zfs:", "zpool:")):
+            wanted = wanted.split(":", 1)[1]
+        if wanted in ("", "default"):
+            wanted = "default_pool"
+        pools = self.list_pools()
+        found = next((p for p in pools if p.id == wanted), None) or next((p for p in pools if p.name == wanted), None)
+        if found is None and wanted == "default_pool":
+            # the main pool is always there, also where the list shows it under another id
+            at_main = next((p for p in pools if p.mountpoint == self._pool_path), None)
+            found = at_main or StoragePool(
+                id="default_pool",
+                name="Primary Storage Pool",
+                pool_type="single",
+                fs_type=self._fs_type_at(self._pool_path),
+                mountpoint=self._pool_path,
+            )
+        if found is None:
+            raise LookupError(f"There is no pool “{pool_id}” on this system.")
+        return found
 
-        target_path = self._pool_path
-        if action == "start":
-            code, out, err = self._run_cmd(["btrfs", "scrub", "start", target_path])
+    def _fs_type_at(self, path: str) -> str:
+        """The file system a folder is on, from the mount table; "unknown" when it does not say."""
+        best, fs_type = "", "unknown"
+        for m in self._parse_mounts():
+            target = str(m.get("target") or m.get("mountpoint") or "")
+            if target and (path == target or path.startswith(target.rstrip("/") + "/")) and len(target) > len(best):
+                best, fs_type = target, str(m.get("fstype") or m.get("fs_type") or "unknown")
+        return fs_type
+
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> dict[str, Any]:
+        """Starts, stops or reads the check of the pool that is named: `zpool scrub` for ZFS,
+        `btrfs scrub` on the pool's own folder for btrfs. Other file systems have no check of
+        their own; the answer says so and nothing is started."""
+        self._busy_cache_ts = 0.0
+        pool = self.resolve_pool(pool_id)
+        base = {"pool_id": pool.id, "pool": pool.name, "action": action if action in ("start", "cancel") else "status"}
+        if pool.fs_type == "zfs":
+            cmd = {"start": ["zpool", "scrub", pool.id], "cancel": ["zpool", "scrub", "-s", pool.id]}.get(action)
+            if cmd is None:
+                _code, out, err = self._run_cmd(["zpool", "status", pool.id])
+                state = "active" if "scrub in progress" in out.lower() else "idle"
+                return {**base, "platform": "zfs", "status": state, "raw": out or err}
+            return self._scrub_answer({**base, "platform": "zfs"}, pool, action, *self._run_cmd(cmd))
+        if pool.fs_type != "btrfs" or not pool.mountpoint:
             return {
+                **base,
                 "platform": "generic_linux",
-                "pool_id": pool_id,
-                "action": action,
-                "status": "started" if code == 0 else "error",
-                "output": out or err,
-                "message": f"Scrub initiated on {target_path}",
+                "status": "unsupported",
+                "message": f"{pool.name} is {pool.fs_type}, which has no check of its own. Nothing was started.",
             }
-        elif action == "cancel":
-            code, out, err = self._run_cmd(["btrfs", "scrub", "cancel", target_path])
-            return {
-                "platform": "generic_linux",
-                "pool_id": pool_id,
-                "action": action,
-                "status": "cancelled" if code == 0 else "error",
-                "output": out or err,
-            }
-        else:
-            code, out, err = self._run_cmd(["btrfs", "scrub", "status", "-d", target_path])
-            return {
-                "platform": "generic_linux",
-                "pool_id": pool_id,
-                "action": "status",
-                "status": "idle" if ("no scrub running" in out.lower() or "not running" in out.lower()) else "active",
-                "raw": out or err,
-            }
+        target = pool.mountpoint
+        if action in ("start", "cancel"):
+            answer = self._run_cmd(["btrfs", "scrub", action, target])
+            return self._scrub_answer({**base, "platform": "generic_linux"}, pool, action, *answer)
+        _code, out, err = self._run_cmd(["btrfs", "scrub", "status", "-d", target])
+        idle = "no scrub running" in out.lower() or "not running" in out.lower()
+        return {**base, "platform": "generic_linux", "status": "idle" if idle else "active", "raw": out or err}
+
+    @staticmethod
+    def _scrub_answer(base: dict[str, Any], pool: StoragePool, action: str, code: int, out: str, err: str) -> dict:
+        """What a start or a stop answers. The message names the pool only when it worked: it said
+        "Scrub initiated on ..." also when the command had failed."""
+        ok = code == 0
+        done = "started" if action == "start" else "cancelled"
+        said = f"The check of {pool.name} was {done}." if ok else f"The check of {pool.name} could not be {done}."
+        return {**base, "status": done if ok else "error", "output": out or err, "message": said}
 
     def list_pools(self) -> list[StoragePool]:
         pools: list[StoragePool] = []
@@ -998,9 +1009,9 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 "message": "Pool name unchanged",
             }
 
-        # 1. Check if it's an OpenZFS pool
-        code, _, _ = self._run_cmd(["zpool", "status", pool_id])
-        if code == 0:
+        pool = self.resolve_pool(pool_id)
+        pool_id = pool.id
+        if pool.fs_type == "zfs":
             exp_code, _, exp_err = self._run_cmd(["zpool", "export", pool_id])
             if exp_code != 0 and exp_code != 127:
                 raise RuntimeError(f"Failed to export zpool '{pool_id}': {exp_err or 'active I/O or busy'}")
@@ -1033,47 +1044,40 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 "compat_symlink": old_mnt,
             }
 
-        # 2. Check if Btrfs or generic pool directory
-        old_mnt = os.path.join(self._pool_path, pool_id) if pool_id != "default_pool" else self._pool_path
-        new_mnt = os.path.join(os.path.dirname(old_mnt), clean_name) if pool_id != "default_pool" else old_mnt
-
-        btrfs_code, _, _ = self._run_cmd(["btrfs", "filesystem", "label", old_mnt, clean_name])
-
-        if pool_id != "default_pool" and old_mnt != new_mnt:
-            try:
-                if os.path.exists(old_mnt) and not os.path.exists(new_mnt):
-                    os.rename(old_mnt, new_mnt)
-                    os.symlink(new_mnt, old_mnt)
-                    logger.info(f"[PAL] Renamed directory {old_mnt} -> {new_mnt} and created compatibility symlink")
-            except Exception as e:
-                logger.warning(f"[PAL] Directory rename or symlink creation error: {e}")
-
+        # 2. btrfs: the label is the pool's name, set on the pool's own folder. Nothing else can be
+        # renamed here, and a rename that did not happen is not reported as one.
+        if pool.fs_type != "btrfs" or not pool.mountpoint:
+            raise ValueError(f"{pool.name} is {pool.fs_type}: only ZFS and btrfs pools can be renamed here.")
+        code, out, err = self._run_cmd(["btrfs", "filesystem", "label", pool.mountpoint, clean_name])
+        if code != 0:
+            raise RuntimeError(f"{pool.name} could not be renamed: {(err or out or 'the label was not set').strip()}")
         return {
             "status": "renamed",
-            "old_name": pool_id,
+            "old_name": pool.name,
             "new_name": clean_name,
-            "fs_type": "btrfs" if btrfs_code == 0 else "generic",
-            "mountpoint": new_mnt,
-            "compat_symlink": old_mnt if old_mnt != new_mnt else None,
+            "fs_type": "btrfs",
+            "mountpoint": pool.mountpoint,
+            "compat_symlink": None,
         }
 
     def destroy_pool(self, pool_id: str) -> dict[str, Any]:
-        """Safely unmounts and removes a storage pool."""
-        target_mount = os.path.join(self._pool_path, pool_id) if pool_id != "default_pool" else self._pool_path
-        code, out, err = self._run_cmd(["umount", "-f", target_mount])
-        return {
-            "status": "destroyed",
-            "pool_id": pool_id,
-            "mountpoint": target_mount,
-            "unmount_code": code,
-        }
+        """Unmounts the pool that is named. It unmounted "<pool folder>/<id>", which for most
+        pools is no folder at all, and answered "destroyed" whatever happened."""
+        pool = self.resolve_pool(pool_id)
+        if not pool.mountpoint:
+            raise RuntimeError(f"{pool.name} is not mounted, so there is nothing to remove.")
+        code, out, err = self._run_cmd(["umount", "-f", pool.mountpoint])
+        if code != 0:
+            raise RuntimeError(f"{pool.name} could not be unmounted: {(err or out or 'it is in use').strip()}")
+        return {"status": "destroyed", "pool_id": pool.id, "mountpoint": pool.mountpoint, "unmount_code": code}
 
     def export_pool(self, pool_id: str, force: bool = False) -> dict[str, Any]:
         """Safely flushes dirty write cache, checks active file handles, and exports or unmounts a storage pool."""
-        code, _, _ = self._run_cmd(["zpool", "status", pool_id])
-        is_zfs = code == 0
+        pool = self.resolve_pool(pool_id)
+        pool_id = pool.id
+        is_zfs = pool.fs_type == "zfs"
 
-        target_mount = os.path.join(self._pool_path, pool_id) if pool_id != "default_pool" else self._pool_path
+        target_mount = pool.mountpoint or ""
         if is_zfs:
             c_mnt, o_mnt, _ = self._run_cmd(["zfs", "get", "-H", "-o", "value", "mountpoint", pool_id])
             if c_mnt == 0 and o_mnt.strip() and o_mnt.strip() != "none":

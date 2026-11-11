@@ -281,7 +281,7 @@ def run_scrubs_due(now: float | None = None) -> list[str]:
             done = float(last.get("finished_at") or 0)
             if now - max(done, float(entry.get("last_started") or 0)) < SCRUB_EVERY_S or last.get("state") == "running":
                 continue
-            res = adapter.trigger_scrub(f"zfs:{p.id}" if p.fs_type == "zfs" else p.id, "start")
+            res = adapter.trigger_scrub(p.id, "start")  # the storage layer finds the pool and its kind
             entry["last_started"] = now
             entry["last_start_result"] = str(res.get("status") or "")
             settings[p.id] = entry

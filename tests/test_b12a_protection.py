@@ -116,7 +116,7 @@ def test_the_monthly_scrub_starts_at_three_once(adapter):
     adapter.a = FakeAdapter(pools=[_pool("fast", False), _pool("big", True)], scrubs={"fast": old, "big": old})
     assert protection_jobs.run_scrubs_due(_at_3am() - 3 * 3600) == []  # midnight: not the hour
     assert protection_jobs.run_scrubs_due(_at_3am()) == ["fast"]  # the spinning pool is off
-    assert adapter.a.started == ["zfs:fast"]
+    assert adapter.a.started == ["fast"]  # by its id: the storage layer knows the pool's kind (SET-06)
     assert protection_jobs.run_scrubs_due(_at_3am() + 60) == []  # just started
 
 

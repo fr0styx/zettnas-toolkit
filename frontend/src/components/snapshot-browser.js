@@ -21,7 +21,7 @@ export function schedulesHtml(schedules, shares, convertible = []) {
           (s) => `<li class="snap-sched-row">
       <span class="snap-sched-share">${escapeHtml(s.share)}</span>
       <span>${escapeHtml(every[s.every] || s.every)} · ${escapeHtml(t('snap.keep_n', 'keep {n}', { n: s.keep }))}${
-            s.keep_daily ? ` · ${escapeHtml(t('snap.keep_daily_n', 'plus one a day for {n} days', { n: s.keep_daily }))}` : ''
+            s.keep_daily ? ` · ${escapeHtml(t('snap.keep_daily_n', '{n, plural, one {plus one a day for # day} other {plus one a day for # days}}', { n: s.keep_daily }))}` : ''
           }${
             s.immutable_days ? ` · <svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg> ${escapeHtml(t('snap.locked_days', 'locked {n} days', { n: s.immutable_days }))}` : ''
           }</span>

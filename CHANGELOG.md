@@ -632,6 +632,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   passphrase of at least 8 characters is now required, and the plain download
   (`GET /api/system/backup`) is removed. Backups you downloaded before can still be restored.
 
+#### Fixes
+
+- **A pool's buttons act on that pool.** On Kiboto's own storage, "Scrub pool" checked the main
+  pool whichever pool's button was pressed, and said "Scrub initiated" also when nothing had
+  started. "Destroy" unmounted nothing for most pools and answered "destroyed", and a rename that
+  failed said "renamed". Scrub, eject, rename, remove and the monthly check now find the pool
+  that was named, with its real folder and kind, and say what happened. A pool whose file system
+  has no check of its own says so.
+- **"Scrub pool" asks first**: a check spins the pool's drives up and keeps them busy for hours.
+  The button is shown only where the system can run a check.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

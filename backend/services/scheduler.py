@@ -351,7 +351,11 @@ def _run_scheduled_tasks():
                 logger.info("[Scheduler] Starting scheduled storage scrub")
                 cfg["last_scrub_run"] = now
                 save_smart_schedule(cfg)
-                res = adapter.trigger_scrub(pool_id="default", action="start")
+                try:
+                    res = adapter.trigger_scrub(pool_id="default", action="start")
+                except LookupError as e:  # no such pool: said in the log, the scheduler goes on
+                    logger.warning("[Scheduler] The scheduled scrub was not started: %s", e)
+                    continue
                 add_event(
                     "info",
                     "Scheduled Task",

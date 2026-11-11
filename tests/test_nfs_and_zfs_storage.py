@@ -240,8 +240,19 @@ def test_openzfs_discovery_in_list_pools():
 # ==============================================================================
 
 
+def _listed(adapter, pool_id, fs_type, mountpoint):
+    """Makes the adapter's system have this pool. Pool actions find their pool in the list of
+    pools (SET-06); they used to build a path from the id and never looked."""
+    from backend.hardware.pal.base import StoragePool
+
+    kind = "zfs_pool" if fs_type == "zfs" else "single"
+    pool = StoragePool(id=pool_id, name=pool_id, pool_type=kind, fs_type=fs_type, mountpoint=mountpoint)
+    adapter.list_pools = lambda: [pool]
+
+
 def test_rename_pool_zfs(tmp_path):
     adapter = GenericLinuxStorageAdapter(pool_path=str(tmp_path))
+    _listed(adapter, "oldtank", "zfs", "/mnt/oldtank")
     recorded_commands = []
 
     def mock_run_cmd(cmd):
@@ -332,6 +343,7 @@ def test_api_rename_storage_pool(client, auth_headers, monkeypatch, tmp_path):
     monkeypatch.setattr("backend.hardware.pal_storage.get_storage_platform", lambda: mock_adapter)
     monkeypatch.setattr("backend.api.storage.get_storage_platform", lambda: mock_adapter)
     monkeypatch.setattr(mock_adapter, "_run_cmd", lambda cmd: (0, "ok", ""))
+    _listed(mock_adapter, "oldpool", "btrfs", str(tmp_path / "pools" / "oldpool"))
 
     res = client.post(
         "/api/storage/pools/oldpool/rename",

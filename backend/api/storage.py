@@ -167,6 +167,9 @@ def get_storage_pools() -> dict[str, Any]:
     return {
         "platform": adapter.get_platform_type().value,
         "is_observer_mode": adapter.get_capabilities().is_observer_mode,
+        # what this platform can do with a pool: the page draws only those buttons (SET-06)
+        "can_trigger_scrub": bool(adapter.get_capabilities().can_trigger_scrub),
+        "can_export_pools": bool(adapter.get_capabilities().can_export_pools),
         "is_busy": adapter.is_storage_busy(),
         "pools": [p.model_dump() for p in pools],
     }
@@ -272,7 +275,15 @@ def trigger_storage_scrub(req: StorageScrubRequest) -> dict[str, Any]:
             status_code=403,
             detail=f"Storage scrub is disabled on {adapter.get_platform_type().value}.",
         )
-    return adapter.trigger_scrub(pool_id=req.pool_id, action=req.action)
+    try:
+        res = adapter.trigger_scrub(pool_id=req.pool_id, action=req.action)
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    # a check that did not start is an error, not an answer with "status": "error" under 200 (SET-06)
+    if isinstance(res, dict) and res.get("status") in ("error", "unsupported"):
+        why = str(res.get("message") or res.get("output") or "The check could not be started.").strip()
+        raise HTTPException(status_code=400 if res["status"] == "unsupported" else 502, detail=why)
+    return res
 
 
 @router.get("/schedule", dependencies=[Depends(require_scope("storage:read"))])
@@ -556,8 +567,12 @@ def rename_storage_pool(pool_id: PoolId, req: StoragePoolRenameRequest) -> dict[
         return adapter.rename_pool(pool_id=pool_id, new_name=req.new_name)
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e)) from e
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+    except RuntimeError as e:  # the rename did not happen: say why (a 500 hides its reason)
+        raise HTTPException(status_code=409, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -581,6 +596,10 @@ def delete_storage_pool(pool_id: PoolId) -> dict[str, Any]:
         return adapter.destroy_pool(pool_id=pool_id)
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e)) from e
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
 
 
 @router.post(
@@ -603,6 +622,8 @@ def export_storage_pool(pool_id: PoolId, req: StoragePoolExportRequest = Storage
         return adapter.export_pool(pool_id=pool_id, force=req.force)
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e)) from e
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except RuntimeError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
     except Exception as e:

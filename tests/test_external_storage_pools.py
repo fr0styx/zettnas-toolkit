@@ -72,6 +72,16 @@ def test_resolve_disk_path_by_id_symlink(tmp_path, monkeypatch):
 # ==============================================================================
 
 
+def _listed(adapter, pool_id, fs_type, mountpoint):
+    """Makes the adapter's system have this pool. Pool actions find their pool in the list of
+    pools (SET-06); they used to build a path from the id and never looked."""
+    from backend.hardware.pal.base import StoragePool
+
+    kind = "zfs_pool" if fs_type == "zfs" else "single"
+    pool = StoragePool(id=pool_id, name=pool_id, pool_type=kind, fs_type=fs_type, mountpoint=mountpoint)
+    adapter.list_pools = lambda: [pool]
+
+
 def test_export_pool_zfs_success(monkeypatch, tmp_path):
     adapter = GenericLinuxStorageAdapter()
     recorded_cmds = []
@@ -89,6 +99,7 @@ def test_export_pool_zfs_success(monkeypatch, tmp_path):
         return 0, "", ""
 
     adapter._run_cmd = mock_run_cmd
+    _listed(adapter, "ext_backup_pool", "zfs", None)
 
     res = adapter.export_pool("ext_backup_pool", force=False)
     assert res["status"] == "exported"
@@ -113,6 +124,7 @@ def test_export_pool_busy_without_force(monkeypatch, tmp_path):
 
     adapter._run_cmd = mock_run_cmd
     adapter._pool_path = str(tmp_path)
+    _listed(adapter, "busy_pool", "xfs", str(mount_dir))
 
     # Without force: should raise RuntimeError
     with pytest.raises(RuntimeError, match="has 2 active process"):

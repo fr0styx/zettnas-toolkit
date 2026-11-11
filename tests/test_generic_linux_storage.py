@@ -113,13 +113,30 @@ def test_btrfs_pool_creation_and_destruction(monkeypatch, tmp_path):
     assert len(recorded_cmds) >= 4  # mkfs, mount, subvolume @shares, subvolume @snapshots
 
     # Destroy pool
+    from backend.hardware.pal.base import StoragePool
+
+    vault = StoragePool(
+        id="vault", name="vault", pool_type="btrfs_raid", fs_type="btrfs", mountpoint=str(tmp_path / "pool_mount")
+    )
+    monkeypatch.setattr(adapter, "list_pools", lambda: [vault])
     destroy_res = adapter.destroy_pool("vault")
     assert destroy_res["status"] == "destroyed"
     assert any("umount" in cmd[0] for cmd in recorded_cmds)
 
 
+def _listed(adapter, pool_id, fs_type, mountpoint):
+    """Makes the adapter's system have this pool. Pool actions find their pool in the list of
+    pools (SET-06); they used to build a path from the id and never looked."""
+    from backend.hardware.pal.base import StoragePool
+
+    kind = "zfs_pool" if fs_type == "zfs" else "single"
+    pool = StoragePool(id=pool_id, name=pool_id, pool_type=kind, fs_type=fs_type, mountpoint=mountpoint)
+    adapter.list_pools = lambda: [pool]
+
+
 def test_btrfs_scrub_lifecycle(monkeypatch):
     adapter = GenericLinuxStorageAdapter()
+    _listed(adapter, "vault", "btrfs", "/mnt/vault")
 
     # Mock scrub start
     monkeypatch.setattr(adapter, "_run_cmd", lambda cmd: (0, "scrub started", ""))
@@ -352,6 +369,7 @@ def test_api_pool_snapshots_and_lifecycle(client, auth_headers, monkeypatch, tmp
     assert snap_res.json()["status"] == "created"
 
     # Delete pool via API
+    _listed(generic_adapter, "datapool", "btrfs", mount_dir)
     del_pool_res = client.delete("/api/storage/pools/datapool", headers=auth_headers)
     assert del_pool_res.status_code == 200
     assert del_pool_res.json()["status"] == "destroyed"
