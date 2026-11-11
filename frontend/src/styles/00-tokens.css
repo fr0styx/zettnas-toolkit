@@ -64,6 +64,9 @@
   --z-confirm-modal: 11001;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+/* The reset above takes the margin that centres a native dialog: the snapshot browser, the
+   restore window and the versions window opened in the top-left corner (SET-06). */
+dialog{margin:auto}
 
 /* A control marked hidden stays hidden (SET-00). The rule sits in a cascade layer because an
    important declaration in a layer wins over every unlayered one, whatever its selector: the phone

@@ -265,6 +265,25 @@ function _dismissToastItem(toast) {
 }
 
 // --- Confirm Toast (Top-centered below navbar with backdrop) ---
+/**
+ * A native modal window (the snapshot browser, the restore window, the versions of a backup) is
+ * in the browser's top layer: everything else on the page is under it and cannot be clicked. A
+ * question asked from such a window was drawn underneath, dimmed and dead; the only way on was to
+ * close the window (SET-06). While one is open, the question's two elements live inside it.
+ * @param {...HTMLElement} elements
+ */
+function _aboveModalWindows(...elements) {
+  const open = [...document.querySelectorAll('dialog[open]')].filter((d) => {
+    try {
+      return d.matches(':modal');
+    } catch {
+      return true; // a browser without the selector: an open dialog is taken as modal
+    }
+  });
+  const host = open.at(-1) || document.body;
+  for (const el of elements) if (el.parentNode !== host) host.appendChild(el);
+}
+
 function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   if (typeof msg === 'function') {
     options = onCancel || {};
@@ -289,6 +308,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     card.dataset.dialogChrome = "alert"; // standard title bar and close button (dialog-chrome.js)
     document.body.appendChild(card);
   }
+  _aboveModalWindows(backdrop, card);
   if (card.dataset.mode !== "confirm") {
     card.dataset.mode = "confirm";
     card.setAttribute("role", "alertdialog");
@@ -516,6 +536,7 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
     card.dataset.dialogChrome = "alert"; // standard title bar and close button (dialog-chrome.js)
     document.body.appendChild(card);
   }
+  _aboveModalWindows(backdrop, card);
 
   card.dataset.mode = "prompt";
   card.setAttribute("role", "dialog");

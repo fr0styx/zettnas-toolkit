@@ -561,6 +561,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   it goes.
 - **"Empty all Recycle Bins" is shown to the storage administrator**, who could always do it.
 
+#### Fixes
+
+- **The questions of the restore windows can be answered**: "Bring back the files", "Bring back
+  the settings", "Replace current" and "Roll the whole share back" asked "are you sure?" on a
+  card that was drawn under the window, dimmed and dead. The only way on was to close the
+  window. The question now appears inside the window it belongs to. The same window is what
+  first-run setup opens for "Had a Kiboto before?".
+- **The snapshot browser, the restore window and a backup's versions open in the middle of the
+  screen**, not in its top-left corner.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

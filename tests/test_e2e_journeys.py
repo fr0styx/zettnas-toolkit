@@ -464,6 +464,68 @@ def test_a_deleted_file_comes_back_from_the_bin_with_one_tap(journey_folder, wid
         browser.close()
 
 
+def test_a_question_from_the_restore_window_can_be_answered():
+    """SET-06: the restore window is a native modal window. Its "are you sure?" was drawn under
+    it, dimmed and dead, and the window opened in the top-left corner. The backup behind it is
+    played by the test: only the page is under test here."""
+    from playwright.sync_api import sync_playwright
+
+    asked = []
+    state = {
+        "repo": {"id": "old-nas", "name": "Old NAS", "location": "rclone:cloud:nas"},
+        "versions": [{"time": "2026-11-01T02:00:00Z", "paths": ["/mnt/user/Photos"]}],
+        "settings": [{"time": "2026-11-01T02:00:00Z"}],
+    }
+
+    def restore_settings(route):
+        asked.append(route.request.headers.get("x-confirm-token") or "")
+        route.fulfill(
+            status=428,
+            content_type="application/json",
+            body=json.dumps(
+                {
+                    "error": "confirmation_required",
+                    "detail": "Restore system settings from a backup, replacing the current ones. Confirm to continue.",
+                    "action": "system.restore",
+                    "target": "",
+                    "summary": "Restore system settings from a backup, replacing the current ones",
+                    "code": 428,
+                }
+            ),
+        )
+
+    with sync_playwright() as p:
+        browser = _browser(p)
+        page = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+        page.route(
+            "**/api/offsite/connect-kit",
+            lambda route: route.fulfill(status=200, content_type="application/json", body=json.dumps(state)),
+        )
+        page.route("**/api/offsite/repos/old-nas/restore-settings", restore_settings)
+        _sign_in(page)
+        _close_wizard(page)
+        page.evaluate("() => window.openManagementWindow && window.openManagementWindow('mgmt-pane-backups')")
+        page.click("[data-off=connect]", timeout=15000)
+        page.wait_for_selector("dialog#restore-box[open]")
+        box = page.locator("dialog#restore-box").bounding_box()
+        assert box["x"] > 100 and box["y"] > 20, f"the restore window is not centred: {box}"
+        assert abs((box["x"] + box["width"] / 2) - 720) < 30, box
+
+        page.fill("#restorebox-kit", "a recovery kit")
+        page.click("[data-rb=connect]")
+        page.click("[data-rb=settings]")
+        page.wait_for_selector("#confirm-toast-modal", state="visible", timeout=6000)
+        assert (
+            page.evaluate("() => document.getElementById('confirm-toast-modal').closest('dialog')?.id") == "restore-box"
+        )
+        # the answer can be given: this click timed out before, with the card under the window
+        page.click("#confirm-toast-modal #confirm-toast-cancel", timeout=5000)
+        page.wait_for_selector("#confirm-toast-modal", state="hidden", timeout=4000)
+        assert asked == [""], "the settings were asked for once, and never confirmed"
+        assert page.is_visible("dialog#restore-box [data-rb=settings]")  # the window is still there
+        browser.close()
+
+
 def _strings(lang):
     with open(os.path.join(ROOT, "frontend", "src", "locales", f"{lang}.js"), encoding="utf-8") as f:
         src = f.read()
