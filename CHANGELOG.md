@@ -358,6 +358,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   and takes the address off when the app is gone. A stopped app keeps its address; an update that
   recreates the app does too.
 
+#### Security
+
+- **Two answers no longer carry a secret**: adding a person answered the browser with that person's
+  stored password record (a one-way hash, not the password), which the other people routes already
+  left out. And the list of cloud drives returned the second password of an encrypted cloud drive,
+  in a form that can be turned back into the password, to every account that may look at storage.
+  Both are left out now.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

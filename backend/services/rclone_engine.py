@@ -56,7 +56,8 @@ SENSITIVE_KEYS = {
 
 def is_sensitive_key(k: str) -> bool:
     kl = k.lower()
-    if kl in SENSITIVE_KEYS:
+    # "password2" is the second password of an encrypted remote; rclone stores it reversibly (SET-03)
+    if kl in SENSITIVE_KEYS or kl.rstrip("0123456789") in ("pass", "password"):
         return True
     return bool(any(kl.endswith(f"_{s}") or kl.startswith(f"{s}_") for s in ["pass", "password", "token", "secret"]))
 

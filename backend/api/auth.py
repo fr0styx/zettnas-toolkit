@@ -1135,7 +1135,9 @@ def create_new_user(
             actor_ip=_client_ip(request),
             details={"created_user": data.username, "role": data.role_id},
         )
-        return {"status": "ok", "user": new_user}
+        # the same clean-up as the read and update routes: the stored password record, the two-step
+        # secret and its recovery codes never leave the server (SET-03)
+        return {"status": "ok", "user": _sanitize_user_dict(new_user)}
     except ValueError as e:
         return error_response(400, str(e), error="invalid_request")
 
