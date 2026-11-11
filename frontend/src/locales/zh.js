@@ -5974,6 +5974,7 @@ export default {
   "ci.row_container": "容器：",
   "ci.row_host": "主机：",
   "ci.row_host_path": "主机路径：",
+  "ci.row_volume": "卷：",
   "ci.save_note": "容器将被停止并用新设置重建。卷和文件夹保持不变。",
   "ci.error": "错误：{error}",
   "dk.sorted_asc": "升序排列",

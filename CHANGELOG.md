@@ -342,6 +342,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **The Compose tab says where its file comes from.** With secrets hidden it showed a file rebuilt
   from the running app under a "Read from Disk" badge. The badge now follows what is on screen.
 
+#### Fixes
+
+- **Editing an app keeps its Docker volumes.** The Edit form showed a volume as Docker's internal
+  folder for it, and saving turned the volume into that plain folder. Volumes now show and save by
+  their name.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

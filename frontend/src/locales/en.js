@@ -5974,6 +5974,7 @@ export default {
   "ci.row_container": "Container:",
   "ci.row_host": "Host:",
   "ci.row_host_path": "Host path:",
+  "ci.row_volume": "Volume:",
   "ci.save_note": "The container is stopped and recreated with the new settings. Volumes and folders stay as they are.",
   "ci.error": "Error: {error}",
   "dk.sorted_asc": "Sorted ascending",

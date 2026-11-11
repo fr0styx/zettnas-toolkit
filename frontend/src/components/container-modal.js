@@ -1591,11 +1591,16 @@ async function renderContainerEditTab(cid) {
     host_ip: p.ip || '0.0.0.0',
   }));
 
-  const mountsList = (details.mounts || []).map((m) => ({
-    source: m.source || '',
-    destination: m.destination || '',
-    mode: m.mode || (m.rw ? 'rw' : 'ro') || 'rw',
-  }));
+  const mountsList = (details.mounts || []).map((m) => {
+    const isVolume = m.type === 'volume' && Boolean(m.name);
+    return {
+      // a volume is saved by its name (name:/path:rw), never by Docker's folder for it
+      source: isVolume ? m.name : (m.source || ''),
+      destination: m.destination || '',
+      mode: m.mode === 'ro' || m.rw === false ? 'ro' : 'rw',
+      kind: isVolume ? 'volume' : 'bind',
+    };
+  });
 
   const envList = (details.env || []).map((e) => ({
     key: e.key || '',
@@ -1738,10 +1743,12 @@ async function renderContainerEditTab(cid) {
   function addMountRow(m = {}) {
     const row = document.createElement('div');
     row.className = 'cie-mount-row';
+    row.dataset.kind = m.kind || 'bind';
     row.style.cssText = 'display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px;';
+    const srcLabel = m.kind === 'volume' ? t('ci.row_volume', 'Volume:') : t('ci.row_host_path', 'Host path:');
     row.innerHTML = `
-      <span class="ci-xs-muted-6">${t('ci.row_host_path', 'Host path:')}</span>
-      <input type="text" class="tz-text-input cie-src-input ci-xs-mono-grow" placeholder="/mnt/user/appdata/app" value="${escapeHtml(m.source || '')}">
+      <span class="ci-xs-muted-6">${srcLabel}</span>
+      <input type="text" class="tz-text-input cie-src-input ci-xs-mono-grow" placeholder="${m.kind === 'volume' ? 'app-data' : '/mnt/user/appdata/app'}" value="${escapeHtml(m.source || '')}">
       <span class="ci-muted">➔</span>
       <span class="ci-xs-muted-6">${t('ci.row_container', 'Container:')}</span>
       <input type="text" class="tz-text-input cie-dst-input ci-xs-mono-grow" placeholder="/config" value="${escapeHtml(m.destination || '')}">

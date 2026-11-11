@@ -5974,6 +5974,7 @@ export default {
   "ci.row_container": "Conteneur :",
   "ci.row_host": "Hôte :",
   "ci.row_host_path": "Chemin de l’hôte :",
+  "ci.row_volume": "Volume :",
   "ci.save_note": "Le conteneur est arrêté et recréé avec les nouveaux réglages. Les volumes et dossiers restent intacts.",
   "ci.error": "Erreur : {error}",
   "dk.sorted_asc": "Tri croissant",

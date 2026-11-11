@@ -5974,6 +5974,7 @@ export default {
   "ci.row_container": "Contenedor:",
   "ci.row_host": "Host:",
   "ci.row_host_path": "Ruta del host:",
+  "ci.row_volume": "Volumen:",
   "ci.save_note": "El contenedor se detiene y se vuelve a crear con los ajustes nuevos. Los volúmenes y carpetas se conservan.",
   "ci.error": "Error: {error}",
   "dk.sorted_asc": "Orden ascendente",

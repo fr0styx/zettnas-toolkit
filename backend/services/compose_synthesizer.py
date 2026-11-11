@@ -354,6 +354,9 @@ def get_container_full_details(cid_or_name: str, allow_unmasked: bool = False) -
                 "mode": mode or ("rw" if rw else "ro"),
                 "rw": rw,
                 "type": m.get("Type", "bind"),
+                # a volume's Source is Docker's own folder for it; the Edit form needs its name, or a
+                # save turns the volume into a plain folder path (SET-14, Apps 26)
+                "name": m.get("Name") or "",
                 "is_appdata": is_appdata,
             }
         )
