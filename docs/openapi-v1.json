@@ -61519,7 +61519,6 @@
      "Notifications & Alerts"
     ],
     "x-required-scopes": [
-     "system:view",
      "system:config"
     ]
    },
@@ -61595,7 +61594,6 @@
      "Notifications & Alerts"
     ],
     "x-required-scopes": [
-     "system:view",
      "system:config"
     ]
    },
@@ -64236,8 +64234,7 @@
      "Authentication & Security"
     ],
     "x-required-scopes": [
-     "system:view",
-     "users:read"
+     "system:config"
     ]
    }
   },
@@ -64272,8 +64269,7 @@
      "Security"
     ],
     "x-required-scopes": [
-     "system:view",
-     "audit:read"
+     "system:config"
     ]
    },
    "post": {
@@ -64398,7 +64394,7 @@
      "Security"
     ],
     "x-required-scopes": [
-     "system:view"
+     "system:config"
     ]
    },
    "put": {
@@ -64575,8 +64571,7 @@
      "Security"
     ],
     "x-required-scopes": [
-     "system:view",
-     "audit:read"
+     "system:config"
     ]
    },
    "put": {
@@ -64651,8 +64646,7 @@
      "Security"
     ],
     "x-required-scopes": [
-     "system:view",
-     "audit:read"
+     "system:config"
     ]
    },
    "put": {
@@ -68009,8 +68003,6 @@
      "System Diagnostics"
     ],
     "x-required-scopes": [
-     "system:view",
-     "system:read",
      "system:config"
     ]
    }

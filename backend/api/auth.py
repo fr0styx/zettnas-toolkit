@@ -1417,7 +1417,7 @@ def disable_default_admin_endpoint(
         raise HTTPException(status_code=409, detail=str(e)) from e
 
 
-@router.get("/security/advisor", dependencies=[Depends(require_scope("system:view", "users:read"))])
+@router.get("/security/advisor", dependencies=[Depends(require_scope("system:config"))])
 def get_security_advisor_checklist():
     """
     Runs automated zero-wake security checks across identity, passwords, and sessions.

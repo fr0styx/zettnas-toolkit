@@ -2,6 +2,7 @@
  * Kiboto Settings & Preferences Controller
  * Handles settings drawer, tabs, screen backlight, timezone, hardware buttons, card layout locks, and security credentials.
  */
+import { isAdministrator } from '../admin-only.js';
 import { onManagementDom } from '../management-dom.js';
 import { api, auth, ApiError, apiFetch } from '../api.js';
 import { state, ZOOM_PROFILES } from '../state.js';
@@ -701,6 +702,7 @@ export function initSettings() {
   }
 
   async function fetchSecurityAdvisor() {
+    if (!isAdministrator()) return; // the security check is an administrator's (SET-03)
     try {
       const adv = await api.get('/api/security/advisor');
       const scoreBadge = $('sec-advisor-score-badge');

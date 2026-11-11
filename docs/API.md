@@ -125,7 +125,7 @@ request and response schemas.
 | `PUT` | `/api/v1/family-filter/people/{username}` | `users:write` | Filters this account's devices in AdGuard Home; no devices stops filtering them |
 | `GET` | `/api/v1/security` | any of `system:view`, `users:read`, `system:config` | Get Security |
 | `POST` | `/api/v1/security` | any of `users:manage`, `system:config` ⏱ | Post Security |
-| `GET` | `/api/v1/security/advisor` | any of `system:view`, `users:read` | Runs automated zero-wake security checks across identity, passwords, and sessions |
+| `GET` | `/api/v1/security/advisor` | `system:config` | Runs automated zero-wake security checks across identity, passwords, and sessions |
 | `GET` | `/api/v1/users` | `users:read` | Get Users List |
 | `POST` | `/api/v1/users` | `users:write` | Create New User |
 | `POST` | `/api/v1/users/admin/disable` | any of `users:manage`, `users:write` | 1-click action to disable the default admin account |
@@ -484,9 +484,9 @@ request and response schemas.
 
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/notifications/config` | any of `system:view`, `system:config` | Retrieve current notification settings with sensitive credentials masked |
+| `GET` | `/api/v1/notifications/config` | `system:config` | Retrieve current notification settings with sensitive credentials masked |
 | `POST` | `/api/v1/notifications/config` | `system:config` | Save notification settings, preserving existing secrets when masked |
-| `GET` | `/api/v1/notifications/frigate` | any of `system:view`, `system:config` | Frigate's detections as camera alerts (COMP-11): on or off, which objects and cameras |
+| `GET` | `/api/v1/notifications/frigate` | `system:config` | Frigate's detections as camera alerts (COMP-11): on or off, which objects and cameras |
 | `PUT` | `/api/v1/notifications/frigate` | `system:config` | Put Frigate Events |
 | `POST` | `/api/v1/notifications/frigate/test` | `system:config` | Whether Frigate answers at the saved address, its version and its cameras |
 | `GET` | `/api/v1/notifications/notifications/me` | signed in | This person's own alerts: where they go and which kinds (Batch 6) |
@@ -622,16 +622,16 @@ request and response schemas.
 
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/security/ip-blocks` | any of `system:view`, `audit:read` | List Ip Blocks |
+| `GET` | `/api/v1/security/ip-blocks` | `system:config` | List Ip Blocks |
 | `POST` | `/api/v1/security/ip-blocks` | `system:config` | Add Ip Block |
 | `DELETE` | `/api/v1/security/ip-blocks/{ip}` | `system:config` | Remove Ip Block |
-| `GET` | `/api/v1/security/malware-scan` | `system:view` | Whether ClamAV runs and answers, its signatures, what it scans, counts and the quarantine |
+| `GET` | `/api/v1/security/malware-scan` | `system:config` | Whether ClamAV runs and answers, its signatures, what it scans, counts and the quarantine |
 | `PUT` | `/api/v1/security/malware-scan` | `system:config` | Turns the scan on (confirmed first: 428 until then; starts ClamAV) or off, and chooses what it scans |
 | `DELETE` | `/api/v1/security/malware-scan/quarantine/{qid}` | `system:config` | Deletes a quarantined file for good (confirmed first) |
 | `POST` | `/api/v1/security/malware-scan/quarantine/{qid}/restore` | `system:config` | Puts a quarantined file back where it came from (confirmed first: ClamAV flagged it) |
-| `GET` | `/api/v1/security/mfa-policy` | any of `system:view`, `audit:read` | Which roles must use two-step sign-in; per role, how many people still have to set it up |
+| `GET` | `/api/v1/security/mfa-policy` | `system:config` | Which roles must use two-step sign-in; per role, how many people still have to set it up |
 | `PUT` | `/api/v1/security/mfa-policy` | `system:config` | Put Mfa Policy |
-| `GET` | `/api/v1/security/ransomware` | any of `system:view`, `audit:read` | Ransomware Status |
+| `GET` | `/api/v1/security/ransomware` | `system:config` | Ransomware Status |
 | `PUT` | `/api/v1/security/ransomware` | `system:config` | Ransomware Settings |
 | `POST` | `/api/v1/security/ransomware/unfreeze` | `system:config` | Ransomware Unfreeze |
 | `POST` | `/api/v1/security/rotate-secret-key` | `*` | Replaces the install's secret key and re-encrypts two-factor secrets and backup passphrases |
@@ -886,7 +886,7 @@ request and response schemas.
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/system/diagnostics-bundle` | `system:config` | Generates server-only diagnostics bundle via GET |
 | `POST` | `/api/v1/system/diagnostics-bundle` | `system:config` | Generates an in-memory zip archive containing complete sanitized system & client diagnostics: - system_summary.json (platform, kernel, ch… |
-| `GET` | `/api/v1/system/diagnostics-summary` | any of `system:view`, `system:read`, `system:config` | Returns a fast diagnostic summary for in-browser inspection and support markdown generation |
+| `GET` | `/api/v1/system/diagnostics-summary` | `system:config` | Returns a fast diagnostic summary for in-browser inspection and support markdown generation |
 
 ### Telemetry & Stats
 

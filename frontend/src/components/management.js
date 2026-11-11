@@ -1,4 +1,5 @@
 import { syncWidgetSettingsUI } from './widgets.js';
+import { loadSecurityPane, loadNotificationsPane } from './management/admin-panes.js';
 import { setIconLabel } from '../ui/primitives.js';
 import { syncDesktopThemeUI, openDrawer, restoreHardwareTabsToManagement } from './settings.js';
 import { ZettEventBus } from '../event-bus.js';
@@ -18,9 +19,9 @@ import { fetchAndRenderAppCatalog, fetchAndRenderDockerContainers, presetCatalog
 import { fetchAndRenderUpsTelemetry, initUpsDrawerControls, loadUpsConfigToDrawer, renderUpsTelemetry } from './management/ups.js';
 import { fetchAndRenderCopyHistory, fetchAndRenderNetworkTopology, fetchAndRenderReplication, fetchAndRenderWireguard, initNetworkControls } from './management/network.js';
 import { fetchAndRenderDisksInventory } from './management/disks.js';
-import { closeHttpsGuideModal, fetchAndRenderSecurityPosture, handleSecurityAdvisorClick } from './management/security.js';
+import { closeHttpsGuideModal, handleSecurityAdvisorClick } from './management/security.js';
 import { applySystemUpdate, closeDiagnosticsPreviewModal, copySupportMarkdown, downloadDiagnosticsBundle, fetchAndRenderSystemAbout, previewDiagnosticsSummary, revertSystemUpdate, setUpdateChannel, syncBackupJobForm } from './management/system.js';
-import { fetchAndRenderNotificationConfig, openChannelConfigModal, saveCurrentChannelModal, saveNotificationsConfig, testAllNotificationChannels, testSingleChannel } from './management/notifications.js';
+import { openChannelConfigModal, saveCurrentChannelModal, saveNotificationsConfig, testAllNotificationChannels, testSingleChannel } from './management/notifications.js';
 import { fetchAndRenderAppBackups, fetchAndRenderBackupJobs, fetchAndRenderSystemSnapshots } from './management/backup.js';
 import { installAdvancedSwitch, renderStatusSummary } from './management/overview.js';
 import { installHealthSignal } from './management/health-signal.js';
@@ -816,15 +817,9 @@ export function initManagement() {
       fetchAndRenderSystemSnapshots();
       fetchAndRenderAppBackups();
     } else if (paneId === 'mgmt-pane-security') {
-      import('./settings.js').then((m) => m.renderApiTokens && m.renderApiTokens()).catch(() => {});
-      import('./guard-panel.js').then((m) => m.renderGuardPanel()).catch(() => {});
-      import('./file-activity.js').then((m) => m.renderFileActivity()).catch(() => {}); // FEAT-12
-      import('./sso.js').then((m) => { m.renderSsoPanel(); m.renderLdapPanel(); }).catch(() => {});
-      import('./management/user-data.js').then((m) => m.installMyData()).catch(() => {}); // your data (B8)
-      fetchAndRenderSecurityPosture();
+      loadSecurityPane(); // an administrator's set-up only for administrators (SET-03)
     } else if (paneId === 'mgmt-pane-notifications') {
-      fetchAndRenderNotificationConfig();
-      import('./push-card.js').then((m) => m.renderPushCard()).catch(() => {});
+      loadNotificationsPane();
     } else if (paneId === 'mgmt-pane-users') {
       import('./users.js').then((m) => m.loadUsersPane(subTabId || 'users-pane-list'));
     } else if (paneId === 'mgmt-pane-about') {

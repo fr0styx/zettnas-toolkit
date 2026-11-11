@@ -19,4 +19,4 @@ def test_unresolved_token_is_not_the_admin(monkeypatch):
         headers={"origin": "http://h", "host": "h"},
         client=SimpleNamespace(host="203.0.113.5"),
     )
-    assert asyncio.run(docker_api._authenticate_ws(ws)) is False
+    assert not asyncio.run(docker_api._authenticate_ws(ws))  # nobody: None since SET-03

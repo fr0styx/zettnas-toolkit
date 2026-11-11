@@ -404,6 +404,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   stack's file may live. And **an app's terminal needs the right to run commands**, the same right
   the "run a command" route asks for; opening a terminal is written to the security log.
 
+#### Security
+
+- **An administrator's set-up is for administrators**: a family member, and the Viewer role, could
+  read the security check, the blocked addresses, who has no two-step sign-in, the malware
+  quarantine, the whole alert set-up and the diagnostics summary. These now need the right to change
+  settings, and Settings no longer draws those cards for anyone else: a family member sees their own
+  things there (their data, alerts on this device, "My alerts"). Tokens made for a monitoring tool
+  with a look-only role no longer read these either; give such a tool an administrator's token if it
+  needs them.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

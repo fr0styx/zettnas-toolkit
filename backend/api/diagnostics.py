@@ -563,7 +563,7 @@ def _build_summary_sync() -> dict[str, Any]:
 
 @router.get(
     "/system/diagnostics-summary",
-    dependencies=[Depends(require_scope("system:view", "system:read", "system:config"))],
+    dependencies=[Depends(require_scope("system:config"))],
 )
 async def get_diagnostics_summary():
     """

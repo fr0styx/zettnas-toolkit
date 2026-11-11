@@ -31,7 +31,7 @@ class BlockRequest(BaseModel):
     hours: float | None = Field(default=None, ge=0.1, le=24 * 365)
 
 
-@router.get("/ransomware", dependencies=[Depends(require_scope("system:view", "audit:read"))])
+@router.get("/ransomware", dependencies=[Depends(require_scope("system:config"))])
 def ransomware_status() -> dict[str, Any]:
     return get_guard().status()
 
@@ -46,7 +46,7 @@ def ransomware_unfreeze(principal: AuthenticatedPrincipal = Depends(get_current_
     return get_guard().unfreeze(by=principal.username)
 
 
-@router.get("/ip-blocks", dependencies=[Depends(require_scope("system:view", "audit:read"))])
+@router.get("/ip-blocks", dependencies=[Depends(require_scope("system:config"))])
 def list_ip_blocks() -> list[dict[str, Any]]:
     return ip_block.list_blocks()
 
@@ -98,7 +98,7 @@ def _mfa_policy_view() -> dict[str, Any]:
     return {"required_roles": sorted(mfa_policy.required_roles()), "without_two_step": people}
 
 
-@router.get("/mfa-policy", dependencies=[Depends(require_scope("system:view", "audit:read"))])
+@router.get("/mfa-policy", dependencies=[Depends(require_scope("system:config"))])
 def get_mfa_policy() -> dict[str, Any]:
     """Which roles must use two-step sign-in; per role, how many people still have to set it up."""
     return _mfa_policy_view()

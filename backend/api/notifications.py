@@ -87,7 +87,7 @@ class TestChannelRequest(BaseModel):
     config: dict[str, Any] = Field(default_factory=dict, description="Configuration parameters for the channel")
 
 
-@router.get("/config", dependencies=[Depends(require_scope("system:view", "system:config"))])
+@router.get("/config", dependencies=[Depends(require_scope("system:config"))])
 def get_notifications():
     """Retrieve current notification settings with sensitive credentials masked."""
     return mask_notification_config(load_notification_config())
@@ -166,7 +166,7 @@ class FrigateEventsIn(BaseModel):
     cooldown_min: int | None = Field(default=None, ge=1, le=240)
 
 
-@router.get("/frigate", dependencies=[Depends(require_scope("system:view", "system:config"))])
+@router.get("/frigate", dependencies=[Depends(require_scope("system:config"))])
 def get_frigate_events() -> dict[str, Any]:
     """Frigate's detections as camera alerts (COMP-11): on or off, which objects and cameras."""
     from backend.services import frigate_events

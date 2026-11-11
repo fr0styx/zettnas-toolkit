@@ -27,7 +27,10 @@ def test_only_emptying_the_bin_is_still_an_event():
     assert left == [("api/files/trash.py", True)], left  # it names no file
 
 
-def test_an_upload_is_in_file_activity_and_not_in_the_event_log(client, auth_headers):
+def test_an_upload_is_in_file_activity_and_not_in_the_event_log(client, auth_headers, monkeypatch, tmp_path):
+    from backend.api.files import uploads
+
+    monkeypatch.setattr(uploads, "_inbox_dir", lambda principal: str(tmp_path / "inbox"), raising=True)
     db.init_db()
     before = len(Z_STATE.event_log)
     res = client.post(
