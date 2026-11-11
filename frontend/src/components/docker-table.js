@@ -72,7 +72,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   if (c.stack) {
     stackHtml = `<span class="docker-stack-pill clickable-stack-pill" data-stack="${escapeHtml(c.stack)}" title="${escapeHtml(t('dkt.stack', 'Open & Edit Stack: {name}', { name: c.stack }))}" style="cursor:pointer;">📁 ${escapeHtml(c.stack)}</span>`;
   } else {
-    const originLabel = c.managed_by === 'unraid' ? 'Unraid' : 'Standalone';
+    const originLabel = c.managed_by === 'unraid' ? 'Unraid' : t('mgmt.docker_filter_standalone', 'Standalone');
     stackHtml = `<span class="docker-origin-pill">${originLabel}</span>`;
   }
 
@@ -131,7 +131,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   // Column 7: Actions
   const hasUpdate = Boolean(updateInfo?.has_update);
   const updateBadge = hasUpdate
-    ? `<button class="ci-badge badge-update-ready btn-container-act btn-docker-update-badge" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="${escapeHtml(t('dkt.click_update', 'Click to update {name} to latest image', { name: c.name }))}">⬆️ UPDATE</button>`
+    ? `<button class="ci-badge badge-update-ready btn-container-act btn-docker-update-badge" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="${escapeHtml(t('dkt.click_update', 'Click to update {name} to latest image', { name: c.name }))}">⬆️ ${escapeHtml(t('dkt.update_badge', 'Update'))}</button>`
     : '';
 
   const inspectBtn = `<button class="btn-container-act btn-docker-inspect" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="inspect" title="${escapeHtml(t('dkt.inspect', 'Inspect {name}', { name: c.name }))}">🔍</button>`;

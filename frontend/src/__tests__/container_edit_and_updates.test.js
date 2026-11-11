@@ -225,7 +225,7 @@ describe('Container Edit & Docker Update System', () => {
     const updateBadgeBtn = tbody.querySelector('.btn-docker-update-badge');
     expect(updateBadgeBtn).not.toBeNull();
     expect(updateBadgeBtn.tagName).toBe('BUTTON');
-    expect(updateBadgeBtn.textContent).toContain('UPDATE');
+    expect(updateBadgeBtn.textContent).toContain('Update');
     expect(updateBadgeBtn.dataset.action).toBe('update-single');
 
     // Click the UPDATE badge

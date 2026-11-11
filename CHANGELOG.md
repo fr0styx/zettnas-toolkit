@@ -227,6 +227,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - A stack's Start, Stop and Restart answer in sentences ("The apps of this stack are stopped.")
   instead of 'Stack action 'stop' completed!'.
 
+#### Fixes
+
+- **Words in the app list and the catalog that were English in every language are translated**:
+  "Standalone", the "UPDATE" badge, "Built-in", and the catalog's ratings "Safe", "Review" and
+  "Elevated" (now "Safe", "Read first" and "Wide access", with a sentence that says what "Safe"
+  means). "Network Map" was a network adapter in German and French; the Spanish column title
+  "Estado y Tiempo" is "Estado y tiempo en marcha".
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

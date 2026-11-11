@@ -643,7 +643,7 @@ async function loadContainerDetails(cid) {
     // Stack pill HTML
     const stackHtml = details.stack
       ? `<span class="docker-stack-pill clickable-stack-pill ci-x-2" data-stack="${escapeHtml(details.stack)}" title="${escapeHtml(t('ci.open_stack', 'Open and edit the stack {name}', { name: details.stack }))}">${ico('📁')} ${escapeHtml(details.stack)} <span class="ci-xs-4">${t('ci.edit_stack', '(edit stack)')}</span></span>`
-      : `<span class="docker-origin-pill">${escapeHtml(details.managed_by === 'unraid' ? 'Unraid' : 'Standalone')}</span>`;
+      : `<span class="docker-origin-pill">${escapeHtml(details.managed_by === 'unraid' ? 'Unraid' : t('mgmt.docker_filter_standalone', 'Standalone'))}</span>`;
 
     const memMb = res.memory_limit ? Math.round(res.memory_limit / (1024 * 1024)) : 0;
     const cpuCores = res.nano_cpus ? (res.nano_cpus / 1e9).toFixed(1) : 0;

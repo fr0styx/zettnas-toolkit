@@ -93,12 +93,12 @@ export function catalogCardHtml(app, { installed = false } = {}) {
   const badges = [badge('cat-badge-category', categoryLabel(app.category))];
   if (app.type === 'stack') badges.push(badge('cat-badge-stack', t('catalog.stack', 'Stack'), t('catalog.stack_hint', 'Installs several containers that work together')));
   if (builtin) {
-    badges.push(badge('cat-badge-builtin', 'Built-in', t('catalog.builtin_hint', 'Tested Kiboto template')));
+    badges.push(badge('cat-badge-builtin', t('catalog.builtin', 'Built-in'), t('catalog.builtin_hint', 'Tested Kiboto template')));
   } else {
     badges.push(badge('cat-badge-source', app.source_name));
-    if (app.security_rating === 'verified') badges.push(badge('cat-badge-ok', '🛡️ Safe', 'Verified Safe Sandbox'));
-    else if (app.security_rating === 'review_required') badges.push(badge('cat-badge-warn', '⚠️ Review', (app.security_flags || []).join('; ')));
-    else if (app.security_rating === 'elevated') badges.push(badge('cat-badge-crit', '🚨 Elevated', (app.security_flags || []).join('; ')));
+    if (app.security_rating === 'verified') badges.push(badge('cat-badge-ok', `🛡️ ${t('catalog.rate_safe', 'Safe')}`, t('catalog.rate_safe_hint', 'Checked: it asks for nothing beyond its own folders')));
+    else if (app.security_rating === 'review_required') badges.push(badge('cat-badge-warn', `⚠️ ${t('catalog.rate_review', 'Read first')}`, (app.security_flags || []).join('; ')));
+    else if (app.security_rating === 'elevated') badges.push(badge('cat-badge-crit', `🚨 ${t('catalog.rate_elevated', 'Wide access')}`, (app.security_flags || []).join('; ')));
   }
   if (installed) badges.push(badge('cat-badge-installed', `✓ ${t('catalog.installed', 'Installed')}`));
   const image = app.image || (app.repository ? 'compose-stack' : 'container');

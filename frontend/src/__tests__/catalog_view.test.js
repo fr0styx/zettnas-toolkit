@@ -47,7 +47,7 @@ describe('catalog view', () => {
     expect(immich.textContent).toContain('Stack');
     expect(immich.textContent).toContain('Built-in');
     expect(community.textContent).toContain('Community');
-    expect(community.textContent).toContain('Review');
+    expect(community.textContent).toContain('Read first'); // "Review", in English in every language (SET-14)
     expect(community.textContent).not.toContain('Built-in');
   });
 });
