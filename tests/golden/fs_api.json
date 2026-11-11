@@ -1730,6 +1730,7 @@
       "deleted_at": "<int>",
       "id": "<wf>::<ts>_a.txt",
       "is_dir": false,
+      "leaves_at": "<ts>",
       "name": "a.txt",
       "original_path": "<work>/sub/a.txt",
       "path": "<work>/.RecycleBin/files/<ts>_a.txt",
@@ -1740,6 +1741,7 @@
       "deleted_at": "<int>",
       "id": "<wf>::<ts>_a.txt",
       "is_dir": false,
+      "leaves_at": "<ts>",
       "name": "a.txt",
       "original_path": "<work>/sub/a.txt",
       "path": "<work>/.RecycleBin/files/<ts>_a.txt",
@@ -1750,6 +1752,7 @@
       "deleted_at": "<int>",
       "id": "<wf>::<ts>_up.txt",
       "is_dir": false,
+      "leaves_at": "<ts>",
       "name": "up.txt",
       "original_path": "<work>/up.txt",
       "path": "<work>/.RecycleBin/files/<ts>_up.txt",
@@ -1757,6 +1760,13 @@
       "size": 8
      }
     ],
+    "leaving_soon": 0,
+    "rules": {
+     "keep_days": 30,
+     "max_percent_of_disk": 10,
+     "min_days": 1,
+     "soon_days": 7
+    },
     "total": "<int>"
    },
    "label": "trash",
@@ -2179,6 +2189,7 @@
   },
   "DeleteRequest": {
    "class": [
+    "large_ok",
     "path"
    ]
   },

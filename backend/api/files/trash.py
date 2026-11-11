@@ -37,7 +37,9 @@ def _listing(principal: AuthenticatedPrincipal) -> dict:
         except Exception:
             logger.debug(f"[FS] auto-empty of {b} skipped", exc_info=True)
         root = os.path.dirname(b)
-        for item in recycle_bin.items(b):
+        held = recycle_bin.items(b)
+        goes = recycle_bin.leaving(b, held)
+        for item in held:
             orig = recycle_bin.original_path(b, item["name"])
             if not user_can_access_path(orig or item["path"], principal):
                 continue
@@ -55,11 +57,25 @@ def _listing(principal: AuthenticatedPrincipal) -> dict:
                     "is_dir": is_dir,
                     "size": 0 if is_dir else item["size"],
                     "deleted_at": int(item["deleted_at"]),
+                    "leaves_at": int(goes.get(item["name"], 0)),  # when it goes for good, as far as known now
                     "root_path": root,
                 }
             )
     out.sort(key=lambda x: x["deleted_at"], reverse=True)
-    return {"items": out, "total": len(out), "asleep": sleeping}
+    soon = time.time() + recycle_bin.SOON_DAYS * 86400
+    return {
+        "items": out,
+        "total": len(out),
+        "asleep": sleeping,
+        # the two rules, and how many items go within a week: "30 days" alone was too broad
+        "leaving_soon": sum(1 for i in out if 0 < i["leaves_at"] <= soon),
+        "rules": {
+            "keep_days": recycle_bin.KEEP_DAYS,
+            "max_percent_of_disk": int(recycle_bin.MAX_SHARE_OF_DISK * 100),
+            "min_days": recycle_bin.MIN_KEEP_SECS // 86400,
+            "soon_days": recycle_bin.SOON_DAYS,
+        },
+    }
 
 
 def bin_listing(principal: AuthenticatedPrincipal) -> dict:

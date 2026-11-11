@@ -537,6 +537,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **The File Explorer has an Upload button on a computer**: the file picker was reachable only
   from the phone's "+".
 
+#### Fixes
+
+- **The Recycle Bin no longer removes what was just deleted**: a bin that holds more than a tenth
+  of its drive lets its oldest items go. A deleted folder larger than that was removed for good
+  at the bin's next check, which could be the delete itself or the moment the bin was opened to
+  restore it, while the screen said "Moved to the Recycle Bin · Undo". The size rule now never
+  takes an item that was deleted within the last day, and deleting something larger than the bin
+  keeps asks first.
+- **"Replace current" in Previous versions keeps the file as it was**: it goes to the Recycle Bin
+  before the earlier version takes its place. It was overwritten with no copy.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

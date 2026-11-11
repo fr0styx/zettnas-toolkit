@@ -99,6 +99,7 @@ def _bin_view(real: str, principal: AuthenticatedPrincipal | None) -> dict[str, 
                 "ext": "" if item["is_dir"] else os.path.splitext(item["name"])[1].lower(),
                 "trash_id": item["id"],
                 "original_path": item["original_path"] or "",
+                "leaves_at": item.get("leaves_at", 0),
             }
         )
     return {
@@ -107,6 +108,8 @@ def _bin_view(real: str, principal: AuthenticatedPrincipal | None) -> dict[str, 
         "dirs": out,
         "recycle_bin": True,
         "bins_asleep": len(listing.get("asleep") or []),
+        "leaving_soon": listing.get("leaving_soon", 0),
+        "bin_rules": listing.get("rules") or {},
     }
 
 

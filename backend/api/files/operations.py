@@ -30,6 +30,8 @@ class RenameRequest(BaseModel):
 
 class DeleteRequest(BaseModel):
     path: str
+    # the person was told the item is larger than the Recycle Bin keeps, and said yes (SET-05)
+    large_ok: bool = False
 
 
 class FsConflictCheckRequest(BaseModel):
@@ -116,6 +118,13 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
 
         # its share's bin, or the root's for an item at the top (REL-15)
         recycle_dir = recycle_bin.bin_for(target_unresolved) or os.path.join(real_root, recycle_bin.BIN)
+        if not req.large_ok and await asyncio.to_thread(recycle_bin.too_large_for_bin, target_unresolved, recycle_dir):
+            exc = HTTPException(
+                status_code=409,
+                detail="This is larger than the Recycle Bin keeps. It would stay there for a day and then go for good.",
+            )
+            exc.error = "too_large_for_bin"  # type: ignore[attr-defined]  # read by the error handler
+            raise exc
         base_name = os.path.basename(target_unresolved)
         # a rename, never a copy: deleting a big folder must not first copy it to another disk (NREL-13)
         dest_name = await asyncio.to_thread(

@@ -62,11 +62,13 @@ def download_version(path: str, version: str, principal: AuthenticatedPrincipal 
 def restore_version(req: RestoreVersionIn, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     target = _inside(req.path)
     check_user_path_access(target, principal, write=True)
+    binned: list[str] = []
     try:
-        dest = file_versions.restore_version(target, req.version, overwrite=req.overwrite)
+        dest = file_versions.restore_version(target, req.version, overwrite=req.overwrite, binned=binned)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from None
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e)) from None
-    record_activity("restore", target, principal, detail="an earlier version")
-    return {"status": "ok", "path": dest, "overwrote": req.overwrite}
+    detail = "an earlier version" + ("; the file as it was is in the Recycle Bin" if binned else "")
+    record_activity("restore", target, principal, detail=detail)
+    return {"status": "ok", "path": dest, "overwrote": req.overwrite, "old_in_bin": bool(binned)}

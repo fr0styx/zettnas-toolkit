@@ -121,8 +121,11 @@ def version_path(path: str, version_id: str) -> str:
     raise FileNotFoundError("That version isn't there any more.")
 
 
-def restore_version(path: str, version_id: str, overwrite: bool = False) -> str:
-    """Copies a version back: beside the file as "<name> (version YYYY-MM-DD HHMM)", or over it."""
+def restore_version(path: str, version_id: str, overwrite: bool = False, binned: list[str] | None = None) -> str:
+    """Copies a version back: beside the file as "<name> (version YYYY-MM-DD HHMM)", or over it.
+    Over it, the file as it is now goes to the Recycle Bin first, where its disk has one, and its
+    name there is added to `binned` (SET-05: "Replace current" overwrote it with no copy)."""
+    from backend.services import recycle_bin
     from backend.services.path_access import ALLOWED_BROWSE_ROOTS
 
     src = version_path(path, version_id)
@@ -136,6 +139,11 @@ def restore_version(path: str, version_id: str, overwrite: bool = False) -> str:
         os.close(fd)
         try:
             shutil.copy2(src, tmp)
+            recycle_dir = recycle_bin.bin_for(real) or recycle_bin.same_disk_bin(real)
+            if recycle_dir and os.path.lexists(real) and not os.path.islink(real):
+                kept = recycle_bin.move_to_bin(real, recycle_dir, real, True)
+                if kept and binned is not None:
+                    binned.append(kept)
             os.replace(tmp, real)  # one step: the file is never half-written
         except BaseException:
             if os.path.exists(tmp):

@@ -28,6 +28,8 @@ from backend.fsutil import atomic_write_json, read_json, root_for
 BIN = ".RecycleBin"
 KEEP_DAYS = 30
 MAX_SHARE_OF_DISK = 0.10
+MIN_KEEP_SECS = 86400  # the size rule never takes what was deleted within the last day (SET-05)
+SOON_DAYS = 7  # the bin says which items go within this many days
 CHECK_EVERY_SECS = 3600
 _LOCK = threading.Lock()
 
@@ -206,6 +208,51 @@ def _remove(recycle_dir: str, item: dict[str, Any]) -> None:
         os.unlink(info)
 
 
+def leaving(recycle_dir: str, held: list[dict[str, Any]], now: float | None = None) -> dict[str, float]:
+    """When each item of a bin goes for good, as far as it can be known now: 30 days after it was
+    deleted, or sooner where the bin is over its share of the disk (the oldest first, and never
+    before an item is a day old). The same two rules auto_empty() applies."""
+    now = now or time.time()
+    start, keep = grace_start(now), KEEP_DAYS * 86400
+    out = {i["name"]: max(i["deleted_at"], start) + keep for i in held}
+    total, cap = sum(i["size"] for i in held), int(_disk_bytes(recycle_dir) * MAX_SHARE_OF_DISK)
+    in_grace = now - start <= keep
+    for i in sorted(held, key=lambda x: x["deleted_at"]):
+        if not cap or total <= cap:
+            break
+        if in_grace and i["deleted_at"] < start:
+            continue
+        out[i["name"]] = min(out[i["name"]], max(now, i["deleted_at"] + MIN_KEEP_SECS))
+        total -= i["size"]
+    return out
+
+
+def too_large_for_bin(path: str, recycle_dir: str, budget_secs: float = 3.0) -> bool:
+    """True when `path` alone is more than the bin may hold: it would stay a day and then go at
+    the next check. A folder is measured only as far as needed and for at most `budget_secs`;
+    when that is not enough to know, the answer is no and the delete goes ahead as before."""
+    cap = int(_disk_bytes(recycle_dir) * MAX_SHARE_OF_DISK)
+    if not cap:
+        return False
+    if not os.path.isdir(path) or os.path.islink(path):
+        try:
+            return os.lstat(path).st_size > cap
+        except OSError:
+            return False
+    total, deadline = 0, time.monotonic() + budget_secs
+    for dirpath, _dirs, files in os.walk(path):
+        for f in files:
+            try:
+                total += os.lstat(os.path.join(dirpath, f)).st_size
+            except OSError:
+                continue
+            if total > cap:
+                return True
+        if time.monotonic() > deadline:
+            return False
+    return False
+
+
 def _disk_bytes(recycle_dir: str) -> int:
     try:
         st = os.statvfs(recycle_dir)
@@ -248,6 +295,10 @@ def auto_empty(recycle_dir: str, now: float | None = None, force: bool = False) 
             break
         if in_grace and i["deleted_at"] < start:
             continue  # D9: what was there at the upgrade stays its 30 days
+        if now - i["deleted_at"] < MIN_KEEP_SECS:
+            # A folder larger than the bin's share used to go at the bin's next check, which could
+            # be the delete itself or the moment the bin was opened to restore it. It stays a day.
+            continue
         try:
             _remove(recycle_dir, i)
             removed += 1

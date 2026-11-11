@@ -5600,6 +5600,11 @@
    },
    "DeleteRequest": {
     "properties": {
+     "large_ok": {
+      "default": false,
+      "title": "Large Ok",
+      "type": "boolean"
+     },
      "path": {
       "title": "Path",
       "type": "string"
