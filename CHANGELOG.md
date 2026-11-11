@@ -457,6 +457,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   browser. It now starts off, and goes off again with a new chat, another chat, a cleared chat
   and at sign-out. Signing out also clears the chat from the window.
 
+#### Fixes
+
+- **Kib's Configuration tab is shown only to people who can change it**: a family member who
+  opened the Kib page from search or from "Ask Kib about this" saw every setting, live, and each
+  change answered with an error. They now see Ask Kib and AI search. **"Connect my Immich" moved
+  to the AI search tab**, where everyone finds it: each person connects their own Immich.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

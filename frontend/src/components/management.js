@@ -1,5 +1,6 @@
 import { syncWidgetSettingsUI } from './widgets.js';
 import { loadSecurityPane, loadNotificationsPane } from './management/admin-panes.js';
+import { kibPaneFor, loadKibExtras } from './management/kib-access.js';
 import { setIconLabel } from '../ui/primitives.js';
 import { syncDesktopThemeUI, openDrawer, restoreHardwareTabsToManagement } from './settings.js';
 import { ZettEventBus } from '../event-bus.js';
@@ -829,18 +830,12 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-hardware-ups') {
       if (typeof fetchAndRenderUpsTelemetry === 'function') fetchAndRenderUpsTelemetry();
     } else if (paneId === 'mgmt-pane-ai-rag' || paneId === 'mgmt-pane-ai-chat' || paneId === 'mgmt-pane-ai-visual' || paneId === 'mgmt-pane-ai-index') {
-      fetchAndRenderAiStatus();
-      if (paneId === 'mgmt-pane-ai-index') {
-        Promise.all([import('./immich-settings.js'), import('./session.js'), import('./ai-apps-settings.js'), import('./ai-pack-settings.js')])
-          .then(([m, u, apps, pack]) => {
-            const scopes = (u.getCurrentUser() || {}).scopes || [];
-            const isAdmin = scopes.includes('*') || scopes.includes('system:config');
-            m.renderImmichSettings(document.getElementById('immich-settings-mount'), isAdmin);
-            apps.renderAiApps(document.getElementById('ai-apps-mount'), isAdmin); // COMP-07
-            pack.renderAiPack(document.getElementById('ai-pack-mount'), isAdmin); // AI-40
-          })
-          .catch(() => {});
+      if (kibPaneFor(paneId) !== paneId) { // Configuration is for people who manage Kib (SET-04)
+        document.getElementById('mgmt-tab-ai-chat')?.click();
+        return;
       }
+      fetchAndRenderAiStatus();
+      loadKibExtras(paneId);
       if (paneId === 'mgmt-pane-ai-rag' || paneId === 'mgmt-pane-ai-visual') {
         const q = _getActiveAiSearchQuery();
         if (q || _aiSelectedColor || _aiSelectedScene) {

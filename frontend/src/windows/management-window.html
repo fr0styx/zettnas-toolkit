@@ -4314,6 +4314,12 @@
                   <div id="ai-preview-inspector-pane" style="display:none; background:var(--lt-b-0e1c1ebf, rgba(14,28,30,0.75)); border:1px solid rgba(79,216,196,0.35); border-radius:10px; padding:14px; position:sticky; top:12px;"></div>
                 </div>
               </div>
+              <!-- each person connects their own Immich; it sits with the search that uses it,
+                   not under Configuration, which only people who manage Kib see (SET-04) -->
+              <section class="immich-card" aria-labelledby="immich-title">
+                <h4 id="immich-title" class="immich-title">Immich</h4>
+                <div id="immich-settings-mount"></div>
+              </section>
             </div>
 
             <!-- Tab 3: Dedicated Configuration (Service Switch, Scope/Schedule/Standby Rules, Watched Shares & NPU/GPU Models) -->
@@ -4773,10 +4779,6 @@
                   </div>
                 </div>
               </div>
-              <section class="immich-card" aria-labelledby="immich-title">
-                <h4 id="immich-title" class="immich-title">Immich</h4>
-                <div id="immich-settings-mount"></div>
-              </section>
               <section class="immich-card" aria-labelledby="ai-pack-title" hidden>
                 <h4 id="ai-pack-title" class="immich-title" data-i18n="aipack.title">Private AI pack</h4>
                 <div id="ai-pack-mount"></div>
