@@ -4828,6 +4828,7 @@ export default {
   "share.confirm_nfs_all": "任何能访问此 NAS 的电脑都可以通过 NFS 挂载它。",
   "mgmt.advanced": "高级",
   "mgmt.advanced_desc": "虚拟机、网络、硬件、电源、活动",
+  "mgmt.advanced_not_saved": "这个选择未能保存到你的账户，目前只在此浏览器中有效。",
   "overview.drive_failing": "硬盘 {subject} 正在损坏。请将其中数据复制到别处并更换硬盘。",
   "overview.drive_attention": "硬盘 {subject} 需要处理：{detail}。",
   "overview.drive_warning": "硬盘 {subject} 出现早期警告迹象。",

@@ -18,6 +18,7 @@ import { trapFocus, escapeHtml, copyTextToClipboard } from '../utils.js';
 import { t, getLanguage } from '../i18n.js';
 import '../styles/management-lazy.css'; // Mission Control's own sheet loads with this code (ARC-12)
 import { wireTablists, markCurrent } from './tab-a11y.js';
+import { highlightEntry, mayNotOpen } from './management/sidebar-current.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
 import { fetchAndRenderAppCatalog, fetchAndRenderDockerContainers, presetCatalogSearch, refreshCatalogCountBadges, startDockerAutoRefresh, stopDockerAutoRefresh } from './management/docker.js';
 import { fetchAndRenderUpsTelemetry, initUpsDrawerControls, loadUpsConfigToDrawer, renderUpsTelemetry } from './management/ups.js';
@@ -1064,7 +1065,13 @@ export function initManagement() {
     if (targetId === 'mgmt-sec-docker' && typeof window.openContainersManager === 'function') {
       // Apps live in one place, the Apps window (UX-4)
       window.openContainersManager({ view: desiredSubPane === 'mgmt-pane-docker-catalog' ? 'catalog' : 'installed' });
-      return;
+      return false; // nothing changed here: the caller leaves Settings as it was
+    }
+    if (mayNotOpen(targetId, desiredSubPane)) {
+      // this person's rights hide the page; a link, an alert or the page remembered from before
+      // a reload opened it all the same (SET-12)
+      showHub();
+      return true;
     }
     if (desiredSubPane === 'mgmt-pane-ai-visual') {
       desiredSubPane = 'mgmt-pane-ai-rag';
@@ -1105,17 +1112,10 @@ export function initManagement() {
     document.querySelectorAll('.mgmt-category-tab').forEach((t) => t.classList.remove('active'));
     if (targetTab) targetTab.classList.add('active');
 
-    const sidebarItems = document.querySelectorAll('.mgmt-sidebar-item');
-    const paneItem = desiredSubPane && Array.from(sidebarItems).find((b) => b.dataset.mgmtPane === desiredSubPane);
-    const isCurrentItem = (b) => (paneItem ? b === paneItem : b.dataset.mgmtTarget === targetId && !b.dataset.mgmtPane);
-    markCurrent(sidebarItems, isCurrentItem);
-    document.querySelectorAll('.mgmt-sidebar-item').forEach((b) => {
-      const isActive = isCurrentItem(b);
-      b.classList.toggle('active', isActive);
-      if (isActive && typeof b.scrollIntoView === 'function') {
-        try { b.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
-      }
-    });
+    const currentEntry = highlightEntry(targetId, desiredSubPane);
+    if (currentEntry && typeof currentEntry.scrollIntoView === 'function') {
+      try { currentEntry.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+    }
 
     let sectionName = t('mgmt.title', 'Settings');
     if (targetId === 'mgmt-sec-wallpaper') {
@@ -1243,6 +1243,7 @@ export function initManagement() {
       }
 
       triggerSubTabLoad(targetPaneId);
+      highlightEntry(parentCard.id, targetPaneId); // "Users" and "Backup" are entries of their own (SET-12)
       saveOpenWindowsState();
     });
   });
@@ -1283,6 +1284,7 @@ export function initManagement() {
     card.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
+        e.stopPropagation(); // the page-wide key handler clicks a role="button" too: the page opened twice
         const targetId = card.dataset.mgmtTarget;
         if (targetId) {
           showSection(targetId);
@@ -1314,7 +1316,9 @@ export function initManagement() {
   // Global helper to open / focus Management window
   window.openManagementWindow = (sectionId = null, paneId = null, subTabId = null) => {
     if (sectionId) {
-      showSection(sectionId, paneId, subTabId);
+      // Apps live in their own window: a link to the old Apps section opened that window and
+      // Settings together (SET-12)
+      if (showSection(sectionId, paneId, subTabId) === false) return;
     } else {
       showHub();
     }

@@ -50,6 +50,29 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **The status is read again once a minute while the Overview is open**, and the page no longer
   jumps when the answer arrives.
 
+#### Fixes
+
+- **Switching "Advanced" on no longer shows a family member the pages their role hides.** The
+  switch and the role filter wrote over each other. The Overview's cards now follow the role as
+  the sidebar does, a heading with nothing under it is hidden, and a page a person may not open
+  is not opened by a link, an alert or the page remembered from before a reload either.
+- **Escape closes the window on top again.** Spotlight's hidden dialog counted as an open
+  question from the first page load on, so Escape closed no window at all. On a phone, the
+  browser's Back closes Settings; it did nothing there.
+- **The Advanced switch stays in reach.** With it on, the switch itself was below the fold. It now
+  sticks to the bottom of the sidebar, and in a narrow sidebar it is an icon like the entries
+  above it instead of a bare checkbox. Switching it off while on one of its pages goes back to
+  the Overview, and a choice that could not be saved to the account is said.
+- **Between phone and desktop width, Settings shows its pages again.** Every entry of the strip
+  kept the desktop's full width, so only "Overview" was visible.
+- **Signing out closes every window**, and the windows that reopen after a reload are remembered
+  per person. The next person to sign in on a shared computer got the last person's pages.
+- **Smaller repairs in Settings.** A link to the old Apps section opened the Apps window and
+  Settings together; Enter on an Overview card opened its page twice; clicking the Users or
+  Backup tab left "Settings" highlighted; the Virtual Machines desktop icon ignored the
+  Advanced switch and the role; and after a change of language the Advanced caption, the phone's
+  tiles and Spotlight stayed in the old one.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

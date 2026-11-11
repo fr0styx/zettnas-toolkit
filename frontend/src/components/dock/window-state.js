@@ -8,6 +8,8 @@ import { DockManager } from './dock-manager.js';
 import { getSnapGeometry } from './snap.js';
 import { bringToFront } from './window-drag.js';
 import { isCompact } from '../../device.js';
+import { ZettEventBus } from '../../event-bus.js';
+import { forgetWindows, isMine, ownerName } from './whose-windows.js';
 
 const WIN_BOUNDS_KEY = 'kiboto_window_bounds_v2'; // gitleaks:allow (a storage key name)
 export const OPEN_WINDOWS_KEY = 'kiboto_open_windows_v1'; // gitleaks:allow (a storage key name)
@@ -168,6 +170,7 @@ export function saveOpenWindowsState() {
   try {
     const stateObj = {
       activeId: DockManager.activeId,
+      who: ownerName(), // SET-12: the list is one person's, not the browser's
       windows: {}
     };
 
@@ -247,6 +250,10 @@ export function restoreOpenWindowsState() {
     if (!raw) return;
     const stateObj = JSON.parse(raw);
     if (!stateObj || !stateObj.windows) return;
+    if (!isMine(stateObj)) {
+      localStorage.removeItem(OPEN_WINDOWS_KEY); // another person's windows
+      return;
+    }
 
     const windowIds = Object.keys(stateObj.windows);
     if (windowIds.length === 0) return;
@@ -358,3 +365,19 @@ export function restoreOpenWindowsState() {
     }, 200);
   }
 }
+
+/** The list as it was last stored, or null. */
+function storedWindows() {
+  try {
+    return JSON.parse(localStorage.getItem(OPEN_WINDOWS_KEY) || 'null');
+  } catch {
+    return null;
+  }
+}
+
+// SET-12: signing out closes every window; a session that ran out leaves them open behind the
+// sign-in page, so the next person's sign-in closes what is not theirs
+ZettEventBus.on?.('auth:logout', () => forgetWindows(DockManager, OPEN_WINDOWS_KEY));
+ZettEventBus.on?.('session:user', (user) => {
+  if (user && !isMine(storedWindows())) forgetWindows(DockManager, OPEN_WINDOWS_KEY);
+});

@@ -732,6 +732,92 @@ def test_hidden_controls_stay_hidden_on_a_phone():
     assert not found, "hidden controls are shown at 390 px:\n" + json.dumps(found, indent=1)
 
 
+# SET-12: Settings' own navigation, measured at the widths where it broke
+SWITCH_IN_REACH = """() => {
+  const side = document.querySelector('#management-window .mgmt-sidebar').getBoundingClientRect();
+  const row = document.querySelector('.mgmt-advanced-row').getBoundingClientRect();
+  const icon = document.querySelector('.mgmt-advanced-icon');
+  return { inside: row.top >= side.top - 1 && row.bottom <= side.bottom + 1 && row.left >= side.left - 1 && row.right <= side.right + 1,
+           width: Math.round(row.width), height: Math.round(row.height), icon: getComputedStyle(icon).display !== 'none',
+           entries: document.querySelectorAll('#management-window .mgmt-sidebar-item:not([hidden])').length };
+}"""
+STRIP = """() => {
+  const nav = document.querySelector('#management-window .mgmt-sidebar-nav');
+  const seen = Array.from(nav.querySelectorAll('.mgmt-sidebar-item:not([hidden])'))
+    .filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.right <= window.innerWidth + 1; });
+  return { length: nav.scrollWidth, seen: seen.length, widest: Math.max(...seen.map((el) => Math.round(el.getBoundingClientRect().width))) };
+}"""
+SETTINGS_OPEN = """() => { const o = document.getElementById('management-modal-overlay');
+  return !!o && o.classList.contains('open') && getComputedStyle(o).display !== 'none'; }"""
+
+
+def _open_settings(page, advanced=True):
+    page.evaluate("() => window.openManagementWindow()")
+    page.wait_for_selector("#mgmt-advanced-switch", state="attached", timeout=8000)
+    page.evaluate(
+        "(on) => { const s = document.getElementById('mgmt-advanced-switch'); if (s.checked !== on) s.click(); }",
+        advanced,
+    )
+    page.wait_for_timeout(500)
+
+
+def test_settings_navigation_at_every_width():
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as p:
+        browser = _browser(p)
+        # a desktop: with Advanced on, the switch itself had scrolled out of the sidebar
+        page = browser.new_context(viewport={"width": 1440, "height": 760}).new_page()
+        _sign_in(page)
+        _close_wizard(page)
+        _open_settings(page)
+        wide = page.evaluate(SWITCH_IN_REACH)
+        assert wide["inside"] and wide["entries"] >= 12, f"the Advanced switch is out of reach on a desktop: {wide}"
+        assert not wide["icon"], "the full sidebar shows the switch with its name, not the icon"
+        page.context.close()
+
+        # the icon rail: the switch was a bare 13 px checkbox
+        page = browser.new_context(viewport={"width": 900, "height": 760}).new_page()
+        _sign_in(page)
+        _close_wizard(page)
+        _open_settings(page)
+        rail = page.evaluate(SWITCH_IN_REACH)
+        assert rail["inside"] and rail["icon"] and rail["width"] >= 40 and rail["height"] >= 40, (
+            f"on the icon rail the Advanced switch is not a button of its own: {rail}"
+        )
+        page.context.close()
+
+        # the strip: every entry kept the desktop's full width, so only "Overview" showed
+        page = browser.new_context(viewport={"width": 700, "height": 800}).new_page()
+        _sign_in(page)
+        _close_wizard(page)
+        _open_settings(page)
+        strip = page.evaluate(STRIP)
+        assert strip["seen"] >= 4 and strip["widest"] < 260 and strip["length"] < 2600, (
+            f"the navigation strip at 700 px shows too little: {strip}"
+        )
+        page.context.close()
+
+        # a phone: the browser's Back, then Escape, close Settings
+        page = browser.new_context(viewport={"width": 390, "height": 844}).new_page()
+        _sign_in(page)
+        _close_wizard(page)
+        page.evaluate("() => window.openManagementWindow()")
+        page.wait_for_function(SETTINGS_OPEN, timeout=8000)
+        page.wait_for_timeout(600)  # the shell adds its history entry once the page is open
+        page.go_back()
+        page.wait_for_timeout(900)
+        assert not page.evaluate(SETTINGS_OPEN), "the phone's Back left Settings open"
+        page.evaluate("() => window.openManagementWindow()")
+        page.wait_for_function(SETTINGS_OPEN, timeout=8000)
+        page.wait_for_timeout(600)
+        page.evaluate("() => document.activeElement && document.activeElement.blur()")
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(900)
+        assert not page.evaluate(SETTINGS_OPEN), "Escape left Settings open on a phone"
+        browser.close()
+
+
 # NPERF-5: what a fresh browser downloads, as the bytes on the wire (compressed, headers too). A
 # fresh install measured 382 kB for the sign-in page and 337 kB in the 10 s after signing in
 # (3 Nov 2026, after the icon sprite was answered with 304 and the chassis photos were resized).

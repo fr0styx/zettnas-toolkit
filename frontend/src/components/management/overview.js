@@ -12,14 +12,26 @@ import { ADVANCED_SECTIONS, advancedOn, saveAdvanced } from '../../advanced.js';
 import { ZettEventBus } from '../../event-bus.js';
 import { announceChange } from '../../a11y.js';
 import { currentUser } from '../../route-access.js';
+import { ADVANCED_OFF, leavePage, mark, tidyHeadings } from '../../hide-marks.js';
+import { showToast } from '../../toast.js';
 import { statusBoxHtml, statusSaid, statusState } from './status-box.js';
 
 export { ADVANCED_SECTIONS, advancedOn };
 
 /** The switch in Mission Control: saved to the person's account (UX-23). */
-export function setAdvanced(on) {
+export async function setAdvanced(on) {
   applyAdvanced(on);
-  return saveAdvanced(on, api);
+  if (!on) leaveAdvancedPage();
+  const saved = await saveAdvanced(on, api);
+  // a failed save was silent, so the choice came back at the next sign-in
+  if (saved === false) showToast(t('mgmt.advanced_not_saved', 'That choice could not be saved to your account. It holds in this browser for now.'), 'error');
+  return saved;
+}
+
+/** Switching Advanced off while on one of its pages goes back to the Overview: the page stayed
+ *  open with nothing highlighted in the sidebar. */
+export function leaveAdvancedPage(root = document) {
+  return leavePage(ADVANCED_OFF, root);
 }
 
 ZettEventBus.on?.('advanced:changed', ({ on } = {}) => applyAdvanced(on));
@@ -27,8 +39,10 @@ ZettEventBus.on?.('advanced:changed', ({ on } = {}) => applyAdvanced(on));
 /** Shows or hides the advanced places in the sidebar and on the Overview. */
 export function applyAdvanced(on = advancedOn(), root = document) {
   root.querySelectorAll('.mgmt-sidebar-item, .mgmt-app-card').forEach((el) => {
-    if (ADVANCED_SECTIONS.includes(el.dataset.mgmtTarget)) el.hidden = !on;
+    // one reason among others: it wrote `hidden` itself and so showed what the person's rights hide
+    if (ADVANCED_SECTIONS.includes(el.dataset.mgmtTarget)) mark(el, ADVANCED_OFF, !on);
   });
+  tidyHeadings(root);
   const sw = root.getElementById ? root.getElementById('mgmt-advanced-switch') : null;
   if (sw) sw.checked = on;
 }
@@ -38,9 +52,14 @@ export function installAdvancedSwitch(root = document) {
   if (!nav || root.getElementById('mgmt-advanced-switch')) return applyAdvanced();
   const row = document.createElement('label');
   row.className = 'mgmt-advanced-row';
+  // the texts carry their keys, so a change of language reaches them; the icon is what a narrow
+  // sidebar shows, where the switch was a bare checkbox with no name (SET-12)
+  row.title = t('mgmt.advanced', 'Advanced');
+  row.setAttribute('data-i18n-title', 'mgmt.advanced');
   row.innerHTML = `<input type="checkbox" id="mgmt-advanced-switch" role="switch">
-    <span><strong>${escapeHtml(t('mgmt.advanced', 'Advanced'))}</strong>
-    <small>${escapeHtml(t('mgmt.advanced_desc', 'Virtual machines, network, hardware, power, activity'))}</small></span>`;
+    <svg class="mgmt-sidebar-svg mgmt-advanced-icon" aria-hidden="true"><use href="#i-sliders"/></svg>
+    <span><strong data-i18n="mgmt.advanced">${escapeHtml(t('mgmt.advanced', 'Advanced'))}</strong>
+    <small data-i18n="mgmt.advanced_desc">${escapeHtml(t('mgmt.advanced_desc', 'Virtual machines, network, hardware, power, activity'))}</small></span>`;
   nav.appendChild(row);
   row.querySelector('input').addEventListener('change', (e) => setAdvanced(e.target.checked));
   applyAdvanced();

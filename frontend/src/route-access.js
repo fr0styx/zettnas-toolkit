@@ -2,6 +2,7 @@
 // kids, guests and family accounts aren't shown places that only answer "no permission".
 import { ZettEventBus } from './event-bus.js';
 import { onManagementDom } from './management-dom.js';
+import { NO_ACCESS, leavePage, mark, tidyHeadings } from './hide-marks.js';
 
 // place -> any of these scopes opens it; a place not listed is open to everyone
 let _user = null;
@@ -67,22 +68,35 @@ export function canOpen(route, user) {
  *  with a place (data-route) this account can't use. */
 export function hideUnusable(root, user) {
   if (!root) return;
-  for (const el of root.querySelectorAll('[data-phone-open], [data-phone-tab], [data-route]')) {
-    const route = el.getAttribute('data-phone-open') || el.getAttribute('data-phone-tab') || el.getAttribute('data-route');
-    if (!canOpen(route, user)) {
-      if (!el.hidden) {
-        el.hidden = true;
-        el.setAttribute('data-no-access', ''); // remembered: only what this hid comes back
-      }
-    } else if (el.hasAttribute('data-no-access')) {
-      el.hidden = false;
-      el.removeAttribute('data-no-access');
-    }
+  // the Overview's cards too: they carried no place, so a family member saw cards that lead to
+  // pages the sidebar hides from them (SET-12)
+  for (const el of root.querySelectorAll('[data-phone-open], [data-phone-tab], [data-route], .mgmt-app-card[data-mgmt-target]')) {
+    const route = routeOf(el);
+    if (route) mark(el, NO_ACCESS, !canOpen(route, user)); // one reason among others: see hide-marks.js
   }
+  tidyHeadings(root);
+}
+
+// the Overview's cards by the place they open
+export const CARD_ROUTES = {
+  'mgmt-sec-storage': 'storage',
+  'mgmt-sec-docker': 'apps',
+  'mgmt-sec-ai': 'ai',
+  'mgmt-sec-vms': 'vms',
+  'mgmt-sec-network': 'network',
+  'mgmt-sec-ups': 'power',
+  'mgmt-sec-hardware': 'hardware',
+  'mgmt-sec-activity': 'activity',
+};
+
+/** The place an element opens, or ''. */
+export function routeOf(el) {
+  return el.getAttribute('data-phone-open') || el.getAttribute('data-phone-tab') || el.getAttribute('data-route') || CARD_ROUTES[el.getAttribute('data-mgmt-target')] || '';
 }
 
 ZettEventBus.on?.('session:user', (user) => {
   _user = user;
   hideUnusable(document, user);
+  leavePage(NO_ACCESS); // the page that was open may be one this account cannot use
 });
 onManagementDom(() => hideUnusable(document, _user)); // Mission Control arrives later

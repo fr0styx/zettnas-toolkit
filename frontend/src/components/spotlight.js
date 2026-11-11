@@ -54,19 +54,19 @@ export function initSpotlight() {
 
   const overlayHtml = `
     <div id="spotlight-palette-overlay" style="display:none;">
-      <div id="spotlight-palette-window" role="dialog" aria-modal="true" aria-label="${t('ui.command_palette', 'Command Palette')}">
+      <div id="spotlight-palette-window" role="dialog" aria-modal="true" data-i18n-aria-label="ui.command_palette" aria-label="${t('ui.command_palette', 'Command Palette')}">
         <div class="spotlight-search-bar">
           <span class="spotlight-search-icon" aria-hidden="true">🔍</span>
-          <input type="text" id="spotlight-input" role="combobox" aria-expanded="false" aria-controls="spotlight-results" aria-autocomplete="list" aria-label="${t('spotlight.label', 'Search apps, folders and actions')}" placeholder="${t('spotlight.label', 'Search apps, folders and actions')}" autocomplete="off" spellcheck="false">
+          <input type="text" id="spotlight-input" role="combobox" aria-expanded="false" aria-controls="spotlight-results" aria-autocomplete="list" aria-label="${t('spotlight.label', 'Search apps, folders and actions')}" data-i18n-aria-label="spotlight.label" data-i18n-placeholder="spotlight.label" placeholder="${t('spotlight.label', 'Search apps, folders and actions')}" autocomplete="off" spellcheck="false">
           <span class="spotlight-kbd-badge">ESC</span>
         </div>
-        <div id="spotlight-results" role="listbox" aria-label="${t('spotlight.results', 'Results')}"></div>
+        <div id="spotlight-results" role="listbox" data-i18n-aria-label="spotlight.results" aria-label="${t('spotlight.results', 'Results')}"></div>
         <div class="spotlight-footer">
           <div style="display:flex; gap:10px;">
-            <span><kbd class="spotlight-kbd-badge">↑</kbd> <kbd class="spotlight-kbd-badge">↓</kbd> ${t('sp.nav', 'Navigate')}</span>
-            <span><kbd class="spotlight-kbd-badge">↵</kbd> ${t('sp.select', 'Select')}</span>
+            <span><kbd class="spotlight-kbd-badge">↑</kbd> <kbd class="spotlight-kbd-badge">↓</kbd> <span data-i18n="sp.nav">${t('sp.nav', 'Navigate')}</span></span>
+            <span><kbd class="spotlight-kbd-badge">↵</kbd> <span data-i18n="sp.select">${t('sp.select', 'Select')}</span></span>
           </div>
-          <span>${t('sp.brand', 'Kiboto Spotlight')}</span>
+          <span data-i18n="sp.brand">${t('sp.brand', 'Kiboto Spotlight')}</span>
         </div>
       </div>
     </div>
@@ -113,6 +113,18 @@ export function initSpotlight() {
   });
 
   _buildDefaultSpotlightItems();
+  window.addEventListener('kiboto:lang-changed', relabelSpotlight);
+}
+
+/** The entries are built with their texts, so a change of language builds them again; what
+ *  other code registered stays (SET-12: Spotlight kept the old language until a reload). */
+export function relabelSpotlight() {
+  const before = _spotlightItems;
+  _buildDefaultSpotlightItems();
+  const own = new Set(_spotlightItems.map((i) => i.id));
+  before.forEach((i) => {
+    if (!own.has(i.id)) _spotlightItems.push(i);
+  });
 }
 
 // The typed commands, the same in every language

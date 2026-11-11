@@ -4828,6 +4828,7 @@ export default {
   "share.confirm_nfs_all": "Any computer that can reach this NAS can mount it over NFS.",
   "mgmt.advanced": "Advanced",
   "mgmt.advanced_desc": "Virtual machines, network, hardware, power, activity",
+  "mgmt.advanced_not_saved": "That choice could not be saved to your account. It holds in this browser for now.",
   "overview.drive_failing": "Drive {subject} is failing. Copy what is on it elsewhere and replace it.",
   "overview.drive_attention": "Drive {subject} needs attention: {detail}.",
   "overview.drive_warning": "Drive {subject} shows early warning signs.",

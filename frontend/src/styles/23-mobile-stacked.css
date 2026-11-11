@@ -1111,7 +1111,10 @@
     white-space: nowrap !important;
   }
 
+  /* SET-12: each entry is as wide as its name. They kept the desktop's full width, so the strip
+     was thousands of pixels long and showed "Overview" alone. */
   #management-modal-overlay .mgmt-sidebar-item {
+    width: auto !important;
     padding: 6px 10px !important;
     font-size: var(--zn-fs-xs) !important;
     border-radius: 6px !important;
@@ -1122,6 +1125,23 @@
 
   #management-modal-overlay .mgmt-sidebar-item.active::before {
     display: none !important;
+  }
+
+  #management-modal-overlay .mgmt-sidebar-category {
+    display: none !important;
+  }
+  #management-modal-overlay .mgmt-advanced-row {
+    position: static;
+    flex-shrink: 0;
+    align-items: center;
+    margin: 0 0 0 6px;
+    padding: 0 8px;
+    border-top: none;
+    border-left: 1px solid var(--track);
+    background: none;
+  }
+  #management-modal-overlay .mgmt-advanced-row small {
+    display: none;
   }
 
   #management-modal-overlay .mgmt-sidebar-svg {

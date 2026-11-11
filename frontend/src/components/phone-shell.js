@@ -18,7 +18,9 @@ import { ZettEventBus } from '../event-bus.js';
 import { watchDom } from '../dom-watch.js';
 import { COMPACT_QUERY, PHONE_QUERY } from '../device.js';
 import { api } from '../api.js';
-import { statusHtml as healthHtml } from './management/overview.js';
+// the status box is drawn by the Overview's own code, loaded when a box is drawn: it was part of
+// every first page load, on a desktop too (SET-12)
+const overview = () => import('./management/overview.js');
 import { advancedOn, isAdvancedRoute } from '../advanced.js';
 import { announceChange } from '../a11y.js';
 import { hideUnusable } from '../route-access.js';
@@ -29,26 +31,26 @@ const PAGE_SELECTOR = '.os-window, .file-manager-window, #management-window, #no
 const CLOSING = /\b(window-closing|closing|window-minimized|is-closing|minimized)\b/;
 
 export const TILES = () => [
-  ['files', t('mgmt.sidebar_files', 'Files'), '#i-storage'],
-  ['apps', t('dock.containers', 'Apps'), '#i-chip'],
-  ['storage', t('mgmt.sidebar_storage', 'Storage'), '#i-disk'],
-  ['shares', t('mgmt.sidebar_shares', 'Shares'), '#i-net'],
-  ['backup', t('mgmt.sidebar_backup', 'Backup'), '#i-save'],
-  ['users', t('mgmt.sidebar_users', 'Users'), '#i-users'],
-  ['ai', t('mgmt.sidebar_ai', 'AI'), '#i-search'],
-  ['power', t('mgmt.sidebar_ups', 'Power'), '#i-bolt'],
-  ['network', t('mgmt.sidebar_network', 'Network'), '#i-globe'],
-  ['vms', t('mgmt.sidebar_vms', 'Virtual machines'), '#i-vm'],
-  ['activity', t('mgmt.sidebar_activity', 'Activity'), '#i-clock'],
-  ['settings', t('mgmt.sidebar_system', 'Settings'), '#i-shield'],
+  ['files', t('mgmt.sidebar_files', 'Files'), '#i-storage', 'mgmt.sidebar_files'],
+  ['apps', t('dock.containers', 'Apps'), '#i-chip', 'dock.containers'],
+  ['storage', t('mgmt.sidebar_storage', 'Storage'), '#i-disk', 'mgmt.sidebar_storage'],
+  ['shares', t('mgmt.sidebar_shares', 'Shares'), '#i-net', 'mgmt.sidebar_shares'],
+  ['backup', t('mgmt.sidebar_backup', 'Backup'), '#i-save', 'mgmt.sidebar_backup'],
+  ['users', t('mgmt.sidebar_users', 'Users'), '#i-users', 'mgmt.sidebar_users'],
+  ['ai', t('mgmt.sidebar_ai', 'AI'), '#i-search', 'mgmt.sidebar_ai'],
+  ['power', t('mgmt.sidebar_ups', 'Power'), '#i-bolt', 'mgmt.sidebar_ups'],
+  ['network', t('mgmt.sidebar_network', 'Network'), '#i-globe', 'mgmt.sidebar_network'],
+  ['vms', t('mgmt.sidebar_vms', 'Virtual machines'), '#i-vm', 'mgmt.sidebar_vms'],
+  ['activity', t('mgmt.sidebar_activity', 'Activity'), '#i-clock', 'mgmt.sidebar_activity'],
+  ['settings', t('mgmt.sidebar_system', 'Settings'), '#i-shield', 'mgmt.sidebar_system'],
 ];
 
 const TABS = () => [
-  ['home', t('phone.home', 'Home'), '#i-grid'],
-  ['files', t('mgmt.sidebar_files', 'Files'), '#i-storage'],
-  ['apps', t('dock.containers', 'Apps'), '#i-chip'],
-  ['alerts', t('phone.alerts', 'Alerts'), '#i-bell'],
-  ['settings', t('mgmt.sidebar_system', 'Settings'), '#i-shield'],
+  ['home', t('phone.home', 'Home'), '#i-grid', 'phone.home'],
+  ['files', t('mgmt.sidebar_files', 'Files'), '#i-storage', 'mgmt.sidebar_files'],
+  ['apps', t('dock.containers', 'Apps'), '#i-chip', 'dock.containers'],
+  ['alerts', t('phone.alerts', 'Alerts'), '#i-bell', 'phone.alerts'],
+  ['settings', t('mgmt.sidebar_system', 'Settings'), '#i-shield', 'mgmt.sidebar_system'],
 ];
 
 // What each tab opens (alerts: what needs attention, with the full activity log one tap away)
@@ -67,10 +69,10 @@ export function statusHtml() {
 
 export function launcherHtml() {
   const health = `<section class="phone-health" aria-label="${escapeHtml(t('overview.status_label', 'Status'))}" hidden></section>`;
-  return `${health}${statusHtml()}<nav class="phone-launcher-grid" aria-label="${escapeHtml(t('phone.home', 'Home'))}">${TILES()
+  return `${health}${statusHtml()}<nav class="phone-launcher-grid" data-i18n-aria-label="phone.home" aria-label="${escapeHtml(t('phone.home', 'Home'))}">${TILES()
     .map(
-      ([route, name, icon]) =>
-        `<button type="button" class="phone-tile" data-phone-open="${route}"${isAdvancedRoute(route) && !advancedOn() ? ' hidden' : ''}><svg class="ic" aria-hidden="true"><use href="${icon}"/></svg><span>${escapeHtml(name)}</span></button>`,
+      ([route, name, icon, key]) =>
+        `<button type="button" class="phone-tile" data-phone-open="${route}"${isAdvancedRoute(route) && !advancedOn() ? ' hidden data-advanced-off' : ''}><svg class="ic" aria-hidden="true"><use href="${icon}"/></svg><span data-i18n="${key}">${escapeHtml(name)}</span></button>`,
     )
     .join('')}</nav>`;
 }
@@ -78,8 +80,8 @@ export function launcherHtml() {
 export function tabsHtml() {
   return TABS()
     .map(
-      ([id, name, icon]) =>
-        `<button type="button" class="phone-tab" data-phone-tab="${id}"><svg class="ic" aria-hidden="true"><use href="${icon}"/></svg><span>${escapeHtml(name)}</span></button>`,
+      ([id, name, icon, key]) =>
+        `<button type="button" class="phone-tab" data-phone-tab="${id}"><svg class="ic" aria-hidden="true"><use href="${icon}"/></svg><span data-i18n="${key}">${escapeHtml(name)}</span></button>`,
     )
     .join('');
 }
@@ -173,7 +175,8 @@ export async function openAlertsPage() {
   page.hidden = false;
   const body = page.querySelector('.phone-alerts-body');
   try {
-    body.innerHTML = healthHtml(await api.get('/api/system/status-summary'));
+    const [ov, summary] = await Promise.all([overview(), api.get('/api/system/status-summary')]);
+    body.innerHTML = ov.statusHtml(summary);
   } catch {
     body.textContent = t('phone.attention_unreadable', "The status couldn't be read just now.");
   }
@@ -193,11 +196,14 @@ let ignorePop = false;
 
 function dialogOpen() {
   // checkVisibility also sees a hidden ancestor (a dialog inside a closed overlay)
-  return Array.from(document.querySelectorAll(DIALOGS)).some((el) =>
-    typeof el.checkVisibility === 'function'
+  return Array.from(document.querySelectorAll(DIALOGS)).some((el) => {
+    // a page that calls itself a dialog (Settings does) is the page, not a question on top of
+    // it: Back sent it Escape, which closes nothing, so Back did not close Settings (SET-12)
+    if (el.matches(PAGE_SELECTOR) || el.querySelector(PAGE_SELECTOR)) return false;
+    return typeof el.checkVisibility === 'function'
       ? el.checkVisibility({ opacityProperty: true, visibilityProperty: true }) && isOpen(el)
-      : isOpen(el),
-  );
+      : isOpen(el);
+  });
 }
 
 function followBackEntry(page) {
@@ -290,10 +296,10 @@ export async function refreshHealth(force = false, root = document) {
   if (!box || (!force && Date.now() - healthAt < HEALTH_EVERY_MS)) return null;
   healthAt = Date.now();
   try {
-    const summary = await api.get('/api/system/status-summary');
-    box.innerHTML = healthHtml(summary);
+    const [ov, summary] = await Promise.all([overview(), api.get('/api/system/status-summary')]);
+    box.innerHTML = ov.statusHtml(summary);
     box.hidden = false;
-    import('./management/overview.js').then((m) => announceChange('phone-health', m.statusSentence(summary)), () => {});
+    announceChange('phone-health', ov.statusSentence(summary));
     return summary;
   } catch {
     box.hidden = true; // not allowed or not reachable: the launcher still works
@@ -343,9 +349,9 @@ export function enablePhoneShell(on) {
   window.addEventListener('popstate', onPhoneBack);
   shell = document.createElement('div');
   shell.id = 'phone-shell';
-  shell.innerHTML = `<button type="button" id="phone-back" class="phone-back" hidden>‹ ${escapeHtml(t('setup.back', 'Back'))}</button>
+  shell.innerHTML = `<button type="button" id="phone-back" class="phone-back" hidden>‹ <span data-i18n="setup.back">${escapeHtml(t('setup.back', 'Back'))}</span></button>
     <div id="phone-launcher" class="phone-launcher">${launcherHtml()}</div>
-    <nav id="phone-tabs" class="phone-tabs" aria-label="${escapeHtml(t('phone.tabs', 'Main sections'))}">${tabsHtml()}</nav>`;
+    <nav id="phone-tabs" class="phone-tabs" data-i18n-aria-label="phone.tabs" aria-label="${escapeHtml(t('phone.tabs', 'Main sections'))}">${tabsHtml()}</nav>`;
   document.body.appendChild(shell);
   import('./session.js') // the account may be known already
     .then((m) => hideUnusable(shell, m.getCurrentUser()))

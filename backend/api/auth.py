@@ -382,7 +382,7 @@ def _outside_signin_hours(user: dict[str, Any]) -> JSONResponse | None:
     from backend.signin_hours import allowed, describe, from_json
 
     hours = from_json(user.get("signin_hours_json"))
-    if allowed(hours):
+    if hours is None or allowed(hours):
         return None
     log_security_event(
         "auth.login.outside_hours", "failure", actor_id=user.get("id"), actor_username=user.get("username")

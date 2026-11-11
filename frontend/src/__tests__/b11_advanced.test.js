@@ -14,12 +14,12 @@ describe('B11 (UX-23): Advanced follows the person everywhere', () => {
   it('the server setting hides the advanced icons and tiles, and only those', () => {
     setServerAdvanced(false);
     expect(advancedOn()).toBe(false);
-    expect(document.getElementById('net-icon').style.display).toBe('none');
-    expect(document.getElementById('storage-icon').style.display).toBe('');
+    expect(document.getElementById('net-icon').hidden).toBe(true);
+    expect(document.getElementById('storage-icon').hidden).toBe(false);
     expect(document.getElementById('vms-tile').hidden).toBe(true);
     expect(document.getElementById('files-tile').hidden).toBe(false);
     setServerAdvanced(true);
-    expect(document.getElementById('net-icon').style.display).toBe('');
+    expect(document.getElementById('net-icon').hidden).toBe(false);
     expect(document.getElementById('vms-tile').hidden).toBe(false);
   });
 

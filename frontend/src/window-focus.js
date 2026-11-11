@@ -19,6 +19,9 @@ const _openers = new WeakMap();
 function visible(el) {
   if (!el || !el.isConnected) return false;
   if (el.classList.contains('window-minimized')) return false;
+  // inside something hidden: Spotlight's dialog sits in a hidden overlay from the first page load
+  // on, and counted as an open question, so Escape closed no window at all (SET-12)
+  if (typeof el.checkVisibility === 'function' && !el.checkVisibility({ visibilityProperty: true })) return false;
   const st = typeof getComputedStyle === 'function' ? getComputedStyle(el) : null;
   return !(st && (st.display === 'none' || st.visibility === 'hidden'));
 }
@@ -156,7 +159,10 @@ export function installWindowFocus(dock) {
     const t = e.target instanceof Element ? e.target : null;
     if (e.key === 'Escape') {
       if (t && (t.matches('input, textarea, select, [contenteditable="true"]') || t.closest(KEEP_ESCAPE))) return;
-      if (Array.from(document.querySelectorAll(DIALOGS)).some(visible)) return;
+      // a window that calls itself a dialog (Settings does) is a window: while it was open,
+      // Escape closed nothing, Settings included (SET-12)
+      const frames = new Set(Object.values(dock.windows || {}).map((w) => w && w.el));
+      if (Array.from(document.querySelectorAll(DIALOGS)).some((el) => visible(el) && !frames.has(el))) return;
       const id = topWindowId(dock);
       if (!id || id !== escTop) return;
       e.preventDefault();

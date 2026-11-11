@@ -140,7 +140,12 @@ body.phone-shell .ai-chat-composer-row #ai-chat-input { flex: 1 0 100%; min-widt
 .ov-status ul { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .ov-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 10px; border-radius: 8px; background: var(--card-hi); border-left: 3px solid var(--warn); }
 .ov-item.ov-crit { border-left-color: var(--crit); }
-.mgmt-advanced-row { display: flex; align-items: flex-start; gap: 8px; margin: 12px 8px 4px; padding-top: 10px; border-top: 1px solid var(--track); cursor: pointer; font-size: var(--zn-fs-xs); color: var(--fg); }
+/* SET-12: the switch sticks to the bottom of the sidebar. It sat at the end of the list, below
+   the fold once it was on. */
+.mgmt-advanced-row { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0 0; padding: 10px 8px 8px; border-top: 1px solid var(--track); cursor: pointer; font-size: var(--zn-fs-xs); color: var(--fg); position: sticky; bottom: -12px; z-index: 1; background: var(--lt-b-0b1517fa, rgba(11, 21, 23, 0.98)); }
+.mgmt-advanced-row:has(input:focus-visible) { outline: 2px solid var(--ok2); outline-offset: -2px; }
+.mgmt-advanced-icon { display: none; flex-shrink: 0; }
+.mgmt-advanced-row:has(input:checked) .mgmt-advanced-icon { color: var(--ok2); }
 .mgmt-advanced-row small { display: block; color: var(--muted); font-size: var(--zn-fs-xs); line-height: 1.35; margin-top: 2px; }
 .mgmt-sidebar-item[hidden], .mgmt-app-card[hidden] { display: none; }
 

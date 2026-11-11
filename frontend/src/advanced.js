@@ -5,9 +5,10 @@
  * Off for family roles and new accounts; on for accounts that had everything before.
  */
 import { ZettEventBus } from './event-bus.js';
+import { ADVANCED_OFF, mark } from './hide-marks.js';
 
 export const ADVANCED_SECTIONS = ['mgmt-sec-vms', 'mgmt-sec-network', 'mgmt-sec-hardware', 'mgmt-sec-ups', 'mgmt-sec-activity'];
-export const ADVANCED_ROUTES = ['network', 'power', 'vms', 'activity'];
+export const ADVANCED_ROUTES = ['network', 'power', 'vms', 'activity', 'hardware'];
 export const ADVANCED_DOCK_APPS = ['vm'];
 export const ADVANCED_SPOTLIGHT = ['act-quiet-fans', 'act-perf-fans', 'act-fan-pct', 'act-spindown', 'act-locate-drive', 'act-isolate-container'];
 const PREF = 'kiboto_advanced';
@@ -44,11 +45,12 @@ export async function saveAdvanced(on, api) {
   _server = Boolean(on);
   remember(_server);
   applyAdvancedEverywhere(_server);
-  if (typeof api?.put !== 'function') return;
+  if (typeof api?.put !== 'function') return true;
   try {
     await api.put('/api/auth/me/preferences', { advanced: _server });
+    return true;
   } catch {
-    /* offline: the choice still applies here */
+    return false; // the choice applies here; the caller says that it was not saved
   }
 }
 
@@ -58,10 +60,10 @@ export const isAdvancedRoute = (r) => ADVANCED_ROUTES.includes(r);
 /** Hides or shows the advanced places that are already on screen, and tells the rest. */
 export function applyAdvancedEverywhere(on = advancedOn(), root = document) {
   root.querySelectorAll('[data-advanced-section]').forEach((el) => {
-    if (isAdvancedSection(el.dataset.advancedSection)) el.style.display = on ? '' : 'none';
+    if (isAdvancedSection(el.dataset.advancedSection)) mark(el, ADVANCED_OFF, !on);
   });
   root.querySelectorAll('[data-phone-open]').forEach((el) => {
-    if (isAdvancedRoute(el.dataset.phoneOpen)) el.hidden = !on;
+    if (isAdvancedRoute(el.dataset.phoneOpen)) mark(el, ADVANCED_OFF, !on); // never over the person's rights
   });
   ZettEventBus.emit('advanced:changed', { on });
 }

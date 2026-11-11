@@ -42,6 +42,7 @@
   }
 
   #management-modal-overlay .mgmt-sidebar-badge,
+  #management-modal-overlay .mgmt-advanced-row > input,
   #management-modal-overlay .mgmt-advanced-row > span {
     position: absolute;
     width: 1px;
@@ -54,8 +55,21 @@
     border: 0;
   }
 
+  /* on the rail the switch is an icon like the entries above it (it was a bare checkbox) */
   #management-modal-overlay .mgmt-advanced-row {
     justify-content: center;
+    align-items: center;
+    width: 48px;
+    height: 44px;
+    margin: 8px 0 0;
+    padding: 0;
+    border-radius: 6px;
+  }
+  #management-modal-overlay .mgmt-advanced-row:has(input:checked) {
+    background: var(--zn-glaze-5);
+  }
+  #management-modal-overlay .mgmt-advanced-icon {
+    display: block;
   }
 
   #management-modal-overlay .mgmt-sidebar-svg {
@@ -1206,6 +1220,7 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
   }
 
   body.mobile-mode #management-modal-overlay .mgmt-sidebar-item {
+    width: auto !important;
     padding: 6px 10px !important;
     font-size: var(--zn-fs-xs) !important;
     border-radius: 6px !important;

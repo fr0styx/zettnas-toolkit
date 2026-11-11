@@ -4828,6 +4828,7 @@ export default {
   "share.confirm_nfs_all": "Tout ordinateur qui atteint ce NAS pourra le monter en NFS.",
   "mgmt.advanced": "Avancé",
   "mgmt.advanced_desc": "Machines virtuelles, réseau, matériel, alimentation, activité",
+  "mgmt.advanced_not_saved": "Ce choix n’a pas pu être enregistré dans votre compte. Il vaut pour ce navigateur pour l’instant.",
   "overview.drive_failing": "Le disque {subject} est en train de lâcher. Copiez son contenu ailleurs et remplacez-le.",
   "overview.drive_attention": "Le disque {subject} demande votre attention : {detail}.",
   "overview.drive_warning": "Le disque {subject} montre des signes d'alerte.",

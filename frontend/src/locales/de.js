@@ -4828,6 +4828,7 @@ export default {
   "share.confirm_nfs_all": "Jeder Computer, der dieses NAS erreicht, kann ihn per NFS einbinden.",
   "mgmt.advanced": "Erweitert",
   "mgmt.advanced_desc": "Virtuelle Maschinen, Netzwerk, Hardware, Strom, Aktivität",
+  "mgmt.advanced_not_saved": "Diese Wahl konnte nicht in Ihrem Konto gespeichert werden. Sie gilt vorerst in diesem Browser.",
   "overview.drive_failing": "Laufwerk {subject} fällt aus. Kopieren Sie die Daten woandershin und ersetzen Sie es.",
   "overview.drive_attention": "Laufwerk {subject} braucht Aufmerksamkeit: {detail}.",
   "overview.drive_warning": "Laufwerk {subject} zeigt erste Warnzeichen.",

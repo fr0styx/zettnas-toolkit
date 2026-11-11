@@ -4828,6 +4828,7 @@ export default {
   "share.confirm_nfs_all": "Cualquier equipo que llegue a este NAS podrá montarla por NFS.",
   "mgmt.advanced": "Avanzado",
   "mgmt.advanced_desc": "Máquinas virtuales, red, hardware, energía, actividad",
+  "mgmt.advanced_not_saved": "Esta elección no se ha podido guardar en tu cuenta. Por ahora vale en este navegador.",
   "overview.drive_failing": "El disco {subject} está fallando. Copie su contenido a otro sitio y reemplácelo.",
   "overview.drive_attention": "El disco {subject} necesita atención: {detail}.",
   "overview.drive_warning": "El disco {subject} muestra señales de advertencia.",
