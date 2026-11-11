@@ -123,9 +123,14 @@ def snapshot_root(data_dir: str) -> str:
 
 
 def _skip_special_files(directory: str, names: list[str]) -> list[str]:
-    """Sockets, FIFOs and device nodes can't be copied (e.g. Samba's msg.sock); they hold no data."""
+    """Sockets, FIFOs and device nodes can't be copied (e.g. Samba's msg.sock); they hold no data.
+    Half-written files of an atomic save (.tmp-*, *.tmp) are skipped too: they vanish when the save
+    renames them, which failed the first snapshot at start-up (CI smoke test, 11 Nov 2026)."""
     skip = []
     for n in names:
+        if n.startswith(".tmp-") or n.endswith(".tmp"):
+            skip.append(n)
+            continue
         try:
             mode = os.lstat(os.path.join(directory, n)).st_mode
         except OSError:
@@ -133,6 +138,18 @@ def _skip_special_files(directory: str, names: list[str]) -> list[str]:
         if stat.S_ISSOCK(mode) or stat.S_ISFIFO(mode) or stat.S_ISCHR(mode) or stat.S_ISBLK(mode):
             skip.append(n)
     return skip
+
+
+def _copytree_settled(src: str, dst: str) -> None:
+    """copytree that forgives a file which disappeared between listing and copying (it was replaced
+    by an atomic save); any other error still fails the snapshot."""
+    try:
+        shutil.copytree(src, dst, symlinks=True, ignore=_skip_special_files)
+    except shutil.Error as e:
+        real = [err for err in e.args[0] if os.path.exists(err[0])]
+        if real:
+            raise shutil.Error(real) from e
+        logger.info("[Snapshot] %s file(s) changed while being copied and were left out", len(e.args[0]))
 
 
 def take_snapshot(
@@ -160,12 +177,15 @@ def take_snapshot(
         if name.endswith(".db"):
             _copy_db(src, dst)
         else:
-            shutil.copy2(src, dst)
+            try:
+                shutil.copy2(src, dst)
+            except FileNotFoundError:
+                continue  # replaced by an atomic save between listing and copying
         files.append(name)
     for name in INCLUDE_DIRS:
         src = os.path.join(data_dir, name)
         if os.path.isdir(src) and not os.path.islink(src):
-            shutil.copytree(src, os.path.join(dest, name), symlinks=True, ignore=_skip_special_files)
+            _copytree_settled(src, os.path.join(dest, name))
             files.append(name + "/")
 
     manifest = {"created_at": time.time(), "label": label, "files": files, **(extra or {})}
