@@ -7135,6 +7135,8 @@ export default {
   "upx.mains_off": "Secteur coupé",
   "upx.hz": "{hz} Hz nominal",
   "upx.nominal": "120 V / 60 Hz nominal",
+  "upx.no_ups_short": "Pas d’onduleur",
+  "upx.pill_mains": "Sur secteur",
   "upx.say_none": "Pas de batterie de secours. En cas de coupure, le NAS s’éteint aussitôt.",
   "upx.say_unreadable": "Un onduleur a été trouvé, mais Kiboto ne peut pas le lire.",
   "upx.say_cut_min": "Coupure de courant : le NAS fonctionne sur batterie, encore environ {min} min.",

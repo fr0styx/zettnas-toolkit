@@ -7135,6 +7135,8 @@ export default {
   "upx.mains_off": "Stromnetz getrennt",
   "upx.hz": "{hz} Hz Nennwert",
   "upx.nominal": "120 V / 60 Hz Nennwert",
+  "upx.no_ups_short": "Keine USV",
+  "upx.pill_mains": "Am Stromnetz",
   "upx.say_none": "Keine Batteriesicherung. Fällt der Strom aus, geht das NAS sofort aus.",
   "upx.say_unreadable": "Eine USV wurde gefunden, aber Kiboto kann sie nicht lesen.",
   "upx.say_cut_min": "Stromausfall: Das NAS läuft auf Batterie, noch etwa {min} Min.",

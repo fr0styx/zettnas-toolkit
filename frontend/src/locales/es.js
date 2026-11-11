@@ -7135,6 +7135,8 @@ export default {
   "upx.mains_off": "Red eléctrica desconectada",
   "upx.hz": "{hz} Hz nominal",
   "upx.nominal": "120 V / 60 Hz nominal",
+  "upx.no_ups_short": "Sin SAI",
+  "upx.pill_mains": "Con corriente de red",
   "upx.say_none": "Sin batería de respaldo. Si se va la luz, el NAS se apaga al instante.",
   "upx.say_unreadable": "Se encontró un SAI, pero Kiboto no puede leerlo.",
   "upx.say_cut_min": "Corte de luz: el NAS funciona con batería, quedan unos {min} min.",

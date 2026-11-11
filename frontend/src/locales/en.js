@@ -7135,6 +7135,8 @@ export default {
   "upx.mains_off": "AC Mains Disconnected",
   "upx.hz": "{hz} Hz Nominal",
   "upx.nominal": "120V / 60Hz Nominal",
+  "upx.no_ups_short": "No UPS",
+  "upx.pill_mains": "On mains power",
   "upx.say_none": "No battery backup. If the power goes out, the NAS goes off at once.",
   "upx.say_unreadable": "A UPS was found, but Kiboto cannot read it.",
   "upx.say_cut_min": "Power cut: the NAS runs on its battery, about {min} min left.",

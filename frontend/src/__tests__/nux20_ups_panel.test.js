@@ -44,7 +44,7 @@ describe('UPS panel words (NUX-20)', () => {
     expect(byId('ups-emergency-countdown').textContent).toBe('~12m remaining');
 
     renderUpsTelemetry({ available: false, on_battery: true });
-    expect(byId('mgmt-hub-ups-pill').textContent).toBe('Offline');
+    expect(byId('mgmt-hub-ups-pill').textContent).toBe('No UPS');
     expect(byId('mgmt-ups-status').textContent).toBe('Offline');
     expect(byId('ups-emergency-countdown').textContent).toBe('ON BATTERY');
 

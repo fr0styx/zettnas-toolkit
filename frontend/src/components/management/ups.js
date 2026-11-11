@@ -13,11 +13,18 @@ import { setIconLabel } from '../../ui/primitives.js';
 export function renderUpsTelemetry(ups) {
   if (!ups) return;
   const isPermErr = Boolean(ups.permission_error);
+  // an icon for the state beside the figure, and the state in words for a screen reader and on
+  // hover: "on battery" was a colour only (SET-15, Power B10)
+  const state = upsState(ups);
+  const icon = { cut: '⚡ ', look: '⚠ ', unreadable: '! ' }[state] || '';
   const upsVal = isPermErr
     ? t('upx.perm_short', 'Perm Req')
-    : (ups.battery_charge_pct != null ? `${ups.battery_charge_pct}%` : (ups.available ? t('upx.active', 'Active') : t('upx.offline', 'Offline')));
+    : (ups.battery_charge_pct != null ? `${icon}${ups.battery_charge_pct}%` : (ups.available ? t('upx.active', 'Active') : t('upx.no_ups_short', 'No UPS')));
+  const upsWords = upsSentence(ups);
   const upsPill = document.getElementById('mgmt-hub-ups-pill');
   if (upsPill) {
+    upsPill.title = upsWords;
+    upsPill.setAttribute('aria-label', upsWords);
     upsPill.textContent = upsVal;
     if (isPermErr) {
       upsPill.style.background = 'rgba(235,87,87,0.15)';
@@ -33,6 +40,8 @@ export function renderUpsTelemetry(ups) {
   const sideUpsBadge = document.getElementById('mgmt-sidebar-ups-badge');
   if (sideUpsBadge) {
     sideUpsBadge.textContent = upsVal;
+    sideUpsBadge.title = upsWords;
+    sideUpsBadge.setAttribute('aria-label', upsWords);
     sideUpsBadge.style.display = (ups.available || isPermErr) ? 'inline-block' : 'none';
     // the colour follows the state each time: it stayed red after a USB access error had gone (SET-15, Power B9)
     sideUpsBadge.style.background = isPermErr ? 'rgba(235,87,87,0.2)' : '';

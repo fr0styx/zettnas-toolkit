@@ -7135,6 +7135,8 @@ export default {
   "upx.mains_off": "市电已断开",
   "upx.hz": "额定 {hz} Hz",
   "upx.nominal": "额定 120V / 60Hz",
+  "upx.no_ups_short": "无 UPS",
+  "upx.pill_mains": "使用市电",
   "upx.say_none": "没有备用电池。一旦停电，NAS 会立即关机。",
   "upx.say_unreadable": "已找到 UPS，但 Kiboto 无法读取它。",
   "upx.say_cut_min": "停电：NAS 正在使用电池运行，大约还剩 {min} 分钟。",

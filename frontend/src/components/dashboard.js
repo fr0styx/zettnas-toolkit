@@ -1253,7 +1253,12 @@ export function updateHardwareTelemetry(s) {
     if (hasUps) {
       upsPill.classList.remove('hidden');
       const charge = ups.battery_charge_pct ?? ups.battery_charge ?? ups.charge ?? null; // unknown is not 100 % (SET-15)
-      if (upsText) upsText.textContent = charge != null ? `${charge}%` : t('upx.short', 'UPS');
+      const cut = Boolean(ups.on_battery || (ups.status && (ups.status.includes('OB') || ups.status.includes('BATT'))));
+      // an icon and words, not a dot's colour alone (SET-15, Power B10)
+      if (upsText) upsText.textContent = charge != null ? `${cut ? '⚡ ' : ''}${charge}%` : t('upx.short', 'UPS');
+      const said = cut ? t('upx.say_cut', 'Power cut: the NAS runs on its battery.') : t('upx.pill_mains', 'On mains power');
+      upsPill.title = charge != null ? `${said} (${charge}%)` : said;
+      upsPill.setAttribute('aria-label', upsPill.title);
       if (upsDot) {
         const onBatt = Boolean(ups.on_battery || (ups.status && (ups.status.includes('OB') || ups.status.includes('BATT'))));
         if (onBatt) {

@@ -475,6 +475,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   cut. It now appears in Settings, on the phone and on the desktop whenever a UPS is found or the
   power is out.
 
+#### Fixes
+
+- **A power cut is said, not only coloured.** The top bar, the Power badge in Settings and the
+  Overview card showed "64 %" with an amber dot. They now show a lightning sign and say "Power cut"
+  to screen readers and on hover; a home without a UPS reads "No UPS" instead of "Offline".
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
