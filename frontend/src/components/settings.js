@@ -733,7 +733,7 @@ export function initSettings() {
   if (disableAdminBtn && !disableAdminBtn.dataset.bound) {
     disableAdminBtn.dataset.bound = 'true';
     disableAdminBtn.addEventListener('click', () => {
-      const confirmMsg = t('sec.disable_admin_confirm', "Turn off the default 'admin' account? Another administrator account then manages this server.");
+      const confirmMsg = t('sec.disable_admin_confirm', "Turn off the default 'admin' account? Another administrator account then manages this server. If you are signed in as 'admin', you are signed out.");
       showConfirmToast(t('common.confirm', 'Confirm Action'), confirmMsg, async () => {
         try {
           const res = await api.post('/api/users/admin/disable', {});

@@ -402,6 +402,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   subvolume with quotas on, its card now shows a real usage bar (against its quota when it has one),
   read from the filesystem's own figures without opening any files, so sleeping drives stay asleep.
 
+#### Fixes
+
+- **Turning protection off asks first.** Switching off the ransomware guard, its guard files or the
+  malware scan now asks, and requiring two-step sign-in for a role says first how many people in it
+  will only be able to set it up. "Lift the freeze" uses Kiboto's own dialog, "Unblock" says whether
+  it worked, and "Turn off admin" says that it signs you out when you are "admin".
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

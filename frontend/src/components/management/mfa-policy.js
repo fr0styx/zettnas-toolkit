@@ -3,7 +3,7 @@
  * People in a ticked role who haven't turned it on can sign in only to set it up.
  */
 import { api } from '../../api.js';
-import { showToast } from '../../toast.js';
+import { showToast, showConfirmToast } from '../../toast.js';
 import { escapeHtml } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { formatRole } from '../role-names.js';
@@ -46,9 +46,7 @@ export async function renderMfaPolicy() {
   }
   box.hidden = false;
   box.innerHTML = mfaPolicyHtml(view);
-  box.onchange = async (e) => {
-    const changed = /** @type {HTMLInputElement | null} */ (/** @type {Element} */ (e.target).closest('input[data-mfa-role]'));
-    if (!changed) return;
+  const saveNow = async (changed) => {
     try {
       const next = await api.put('/api/security/mfa-policy', { required_roles: selectedRoles(box) });
       box.innerHTML = mfaPolicyHtml(next);
@@ -57,5 +55,18 @@ export async function renderMfaPolicy() {
       changed.checked = !changed.checked;
       showToast(err?.message || t('sec.mfa_policy_failed', "That didn't save."), 'error');
     }
+  };
+  box.onchange = (e) => {
+    const changed = /** @type {HTMLInputElement | null} */ (/** @type {Element} */ (e.target).closest('input[data-mfa-role]'));
+    if (!changed) return;
+    const count = (view?.without_two_step || {})[changed.dataset.mfaRole || ''] || 0;
+    if (!changed.checked || !count) return saveNow(changed);
+    // people in this role can then sign in only to set it up: say so first (SET-14, Settings finding 23)
+    showConfirmToast(
+      t('sec.mfa_policy_q_title', 'Require two-step sign-in?'),
+      t('sec.mfa_policy_q', '{count, plural, one {# person} other {# people}} in {role} have not set it up. Until they do, they can sign in only to set it up.', { count, role: formatRole(changed.dataset.mfaRole || '') }),
+      () => saveNow(changed),
+      () => { changed.checked = false; }
+    );
   };
 }

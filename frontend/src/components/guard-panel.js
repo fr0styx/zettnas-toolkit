@@ -3,7 +3,7 @@
  */
 import { api } from '../api.js';
 import { t } from '../i18n.js';
-import { showToast } from '../toast.js';
+import { showToast, showDangerConfirm } from '../toast.js';
 import { formatDateTime } from '../format.js';
 import { setIconLabel } from '../ui/primitives.js';
 
@@ -24,6 +24,12 @@ function toggle(label, checked, onChange) {
   input.checked = Boolean(checked);
   input.addEventListener('change', () => onChange(input.checked));
   return el('label', { class: 'kb-toggle' }, input, el('span', { text: label }));
+}
+
+/** Turning a protection off asks first; turning it on does not (SET-14, Settings finding 23). */
+function saveOrAsk(changes, turningOff, title, question) {
+  if (!turningOff) return save(changes);
+  showDangerConfirm(title, question, () => save(changes), () => renderGuardPanel());
 }
 
 async function save(changes) {
@@ -64,11 +70,17 @@ export async function renderGuardPanel() {
         el('button', {
           class: 'btn-pill-toggle kb-push-end',
           text: t('guard.unfreeze', 'Lift the freeze'),
-          onclick: async () => {
-            if (!window.confirm(t('guard.unfreeze_confirm', 'Only lift the freeze after the computer that made the changes is cleaned up. Continue?'))) return;
-            await api.post('/api/security/ransomware/unfreeze', {});
-            showToast(t('guard.unfrozen', 'Writes are allowed again'), 'success');
-            renderGuardPanel();
+          onclick: () => {
+            // the app's own dialog, not the browser's (SET-14)
+            showDangerConfirm(t('guard.unfreeze', 'Lift the freeze'), t('guard.unfreeze_confirm', 'Only lift the freeze after the computer that made the changes is cleaned up. Continue?'), async () => {
+              try {
+                await api.post('/api/security/ransomware/unfreeze', {});
+                showToast(t('guard.unfrozen', 'Writes are allowed again'), 'success');
+              } catch (err) {
+                showToast(t('guard.unfreeze_failed', 'The freeze was not lifted: {error}', { error: err.message }), 'error');
+              }
+              renderGuardPanel();
+            });
           },
         })
       )
@@ -76,11 +88,14 @@ export async function renderGuardPanel() {
   }
   parts.push(
     el('div', { class: 'kb-muted', text: t('guard.desc', 'Stops all writes, snapshots pools that support it, blocks the address and alerts you when files are renamed or deleted en masse, renamed to ransomware extensions, or a guard file changes.') }),
-    toggle(t('guard.enabled', 'Watch for ransomware'), st.enabled, (v) => save({ enabled: v })),
+    toggle(t('guard.enabled', 'Watch for ransomware'), st.enabled, (v) =>
+      saveOrAsk({ enabled: v }, !v, t('guard.off_title', 'Turn off the ransomware guard?'),
+        t('guard.off_q', 'Kiboto stops watching for mass renames and deletes, and nothing freezes writes during an attack.'))),
     toggle(
       t('guard.canaries', 'Place guard files in shares ({count} placed). Catches attacks over SMB and NFS too.', { count: st.canary_count || 0 }),
       st.canaries,
-      (v) => save({ canaries: v })
+      (v) => saveOrAsk({ canaries: v }, !v, t('guard.canaries_off_title', 'Remove the guard files?'),
+        t('guard.canaries_off_q', 'Attacks over SMB and NFS are then no longer noticed by the guard.'))
     ),
     el('div', { class: 'kb-title kb-title--sub', text: t('guard.blocked_title', 'Blocked addresses') })
   );
@@ -98,7 +113,12 @@ export async function renderGuardPanel() {
             text: t('guard.unblock', 'Unblock'),
             'aria-label': t('guard.unblock_ip', 'Unblock {ip}', { ip: b.ip }),
             onclick: async () => {
-              await api.delete(`/api/security/ip-blocks/${encodeURIComponent(b.ip)}`);
+              try {
+                await api.delete(`/api/security/ip-blocks/${encodeURIComponent(b.ip)}`);
+                showToast(t('guard.unblocked', '{ip} can sign in again', { ip: b.ip }), 'success');
+              } catch (err) {
+                showToast(t('guard.unblock_failed', '{ip} is still blocked: {error}', { ip: b.ip, error: err.message }), 'error');
+              }
               renderGuardPanel();
             },
           })
