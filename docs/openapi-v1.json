@@ -20588,6 +20588,17 @@
       ],
       "title": "Battery Charge Pct"
      },
+     "battery_low": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Battery Low"
+     },
      "battery_temp_c": {
       "anyOf": [
        {
@@ -20769,6 +20780,17 @@
       ],
       "title": "Policy Threshold Timer"
      },
+     "power_state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Power State"
+     },
      "power_watts": {
       "anyOf": [
        {
@@ -20812,6 +20834,17 @@
        }
       ],
       "title": "Time Left Min"
+     },
+     "unreadable": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unreadable"
      }
     },
     "title": "GetUpsTelemetryResponse",

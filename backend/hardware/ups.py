@@ -16,6 +16,7 @@ import time
 from typing import Any, Optional
 
 from backend import settings as _settings
+from backend.hardware import ups_state
 from backend.ignored_errors import ignored
 
 try:
@@ -540,7 +541,7 @@ def _query_nut_socket(
                             out["LINEFREQ"] = v_clean
                 line = read_line()
 
-            if target_ups and "MODEL" not in out:
+            if out and target_ups and "MODEL" not in out:  # an error reply leaves nothing, not a name
                 out["UPSNAME"] = target_ups
 
             try:
@@ -1265,6 +1266,13 @@ def test_ups_connection(
         if not raw and clean_port == 3551:
             raw = _query_apcaccess_cli()
 
+    if raw and not ups_state.is_reading(raw):
+        return {
+            "success": False,
+            "connected": False,
+            "error": f"The UPS service at {clean_host}:{clean_port} answered, but gave no status for this UPS. "
+            "Check the UPS name and the sign-in.",
+        }
     if raw:
         bcharge_str = raw.get("BCHARGE", "")
         m = re.search(r"([0-9]+(?:\.[0-9]+)?)", bcharge_str)
@@ -1369,6 +1377,28 @@ def run_ups_self_test() -> dict[str, Any]:
         "message": result_msg,
         "battery_charge_pct": curr_charge,
         "status": current_status.get("status", "ONLINE"),
+    }
+
+
+def _no_reading(cfg: dict[str, Any], ups_mode: str, unreadable: bool) -> dict[str, Any]:
+    """The status when no UPS gave a reading: none found, or one that answered without a status."""
+    return {
+        "available": False,
+        "unreadable": unreadable,
+        "status": "Not readable" if unreadable else "Not Configured / Offline",
+        "model": "N/A",
+        "battery_charge_pct": None,
+        "time_left_min": None,
+        "load_pct": None,
+        "line_volts": None,
+        "battery_volts": None,
+        "power_watts": None,
+        "battery_temp_c": None,
+        "line_freq_hz": None,
+        "protocol": "offline",
+        "mode": ups_mode,
+        "active_policy": cfg.get("shutdown_policy", "runtime_left"),
+        "failsafe_active": False,
     }
 
 
@@ -1502,24 +1532,14 @@ def read_ups_status(force: bool = False, reprobe: bool = False) -> dict[str, Any
             if raw:
                 protocol = "upsc_cli"
 
+    # what came back without a status is not a reading (SET-08): it was shown as "online, 100 %"
+    unreadable = bool(raw) and not ups_state.is_reading(raw)
+    if unreadable:
+        logger.debug("[UPS] the UPS connection answered without a status: no reading")
+        raw = {}
+
     if not raw:
-        status_obj = {
-            "available": False,
-            "status": "Not Configured / Offline",
-            "model": "N/A",
-            "battery_charge_pct": None,
-            "time_left_min": None,
-            "load_pct": None,
-            "line_volts": None,
-            "battery_volts": None,
-            "power_watts": None,
-            "battery_temp_c": None,
-            "line_freq_hz": None,
-            "protocol": "offline",
-            "mode": ups_mode,
-            "active_policy": cfg.get("shutdown_policy", "runtime_left"),
-            "failsafe_active": False,
-        }
+        status_obj = _no_reading(cfg, ups_mode, unreadable)
         _CACHED_UPS = status_obj
         _LAST_UPS_POLL = now
         if _ups_set_up():
@@ -1609,8 +1629,8 @@ def read_ups_status(force: bool = False, reprobe: bool = False) -> dict[str, Any
     elif load_pct is not None:
         load_pct = round(max(0.0, min(150.0, load_pct)), 1)
 
-    status_str = str(raw.get("STATUS", "ONLINE")).strip().upper()
-    is_on_batt = any(k in status_str for k in ("OB", "ONBATT", "ON BATT", "LB", "LOWBATT"))
+    status_str = str(raw.get("STATUS") or "").strip().upper()
+    is_on_batt = ups_state.power_state(status_str) == ups_state.ON_BATTERY
 
     cable_str = str(raw.get("CABLE", "")).lower()
     driver_str = str(raw.get("DRIVER", "")).lower()
@@ -1645,6 +1665,8 @@ def read_ups_status(force: bool = False, reprobe: bool = False) -> dict[str, Any
         "driver": raw.get("DRIVER"),
         "mode": ups_mode,
         "on_battery": is_on_batt,
+        "power_state": ups_state.power_state(status_str),
+        "battery_low": ups_state.battery_low(status_str),
         "active_policy": cfg.get("shutdown_policy", "runtime_left"),
         "policy_threshold_batt": cfg.get("battery_threshold_pct", 20),
         "policy_threshold_runtime": cfg.get("runtime_threshold_min", 5),

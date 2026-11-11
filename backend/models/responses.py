@@ -2179,6 +2179,9 @@ class GetUpsTelemetryResponse(_Doc):
     model: str | None = None
     nominal_power_watts: float | None = None
     on_battery: bool | None = None
+    power_state: str | None = None
+    battery_low: bool | None = None
+    unreadable: bool | None = None
     output_amps: Any | None = None
     output_volts: float | None = None
     policy_threshold_batt: float | None = None

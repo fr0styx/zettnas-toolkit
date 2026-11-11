@@ -744,6 +744,29 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   machine from starting; a disk saved with one is shown as needing a change. No `ssh` command
   through a port of the NAS is shown any more.
 
+#### Fixes
+
+- **A UPS that answers with an error is "not readable", never "online".** A network UPS that was
+  mis-set, or fell silent, was shown as online at 100 %. During a power cut Kiboto then recorded
+  "power restored", sent an all-clear and started the apps again while the power was still out.
+  The connection test now fails for such a UPS and says to check its name and sign-in. If a UPS
+  stops answering during a power cut, an alert says so.
+- **The safe shutdown has one rule: the first limit reached wins.** The limits are the UPS's own
+  low-battery signal, the minutes of runtime left and the charge. Until now only the one you had
+  chosen counted, and a UPS that reports neither runtime nor charge could never reach it: for
+  such a UPS the shutdown now starts after the set time on battery (five minutes unless changed).
+- **A low battery alone no longer starts the shutdown while the NAS is on mains.** After a long
+  power cut a UPS reports "on mains, charging, battery low"; where Kiboto switches the NAS off, it
+  did so again five seconds after every start until the battery had recharged. A UPS whose
+  battery is unplugged is no longer taken for "on battery" either.
+- **No single step can cancel the safe shutdown.** An error while warning the other computers,
+  pausing a copy or stopping the apps ended the whole sequence without switching the NAS off.
+  Each step is now guarded, and a failure is logged as an error. Virtual machines are asked to
+  shut down as part of the sequence. When mains returns after the NAS has begun to switch off,
+  the apps are no longer started again into the shutdown.
+- **Every shutdown says that it starts.** With "after a set time on battery" nobody was told.
+- **Overview reports a power cut on every kind of UPS connection**, not on one spelling only.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

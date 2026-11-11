@@ -137,8 +137,10 @@ def evaluate_system_alerts(unraid_data, ups_data):
             batt_thresh = SETTINGS.ups_failsafe_battery_min
             time_thresh = SETTINGS.ups_failsafe_runtime_min
 
-        is_on_batt = any(k in status for k in ("OB", "ONBATT", "ON BATT", "LB", "LOWBATT"))
-        is_online = any(k in status for k in ("OL", "ONLINE")) and not is_on_batt
+        from backend.hardware import ups_state
+
+        is_on_batt = ups_state.power_state(status) == ups_state.ON_BATTERY
+        is_online = ups_state.power_state(status) == ups_state.ONLINE
 
         if is_on_batt:
             # Standard on-battery warning alert
@@ -153,8 +155,7 @@ def evaluate_system_alerts(unraid_data, ups_data):
 
             # The low-battery failsafe itself is ups_watchdog's (one UPS engine, REL-10)
             if (
-                "LB" in status
-                or "LOWBATT" in status
+                ups_state.battery_low(status)
                 or (charge is not None and charge <= batt_thresh)
                 or (runtime is not None and runtime <= time_thresh)
             ):

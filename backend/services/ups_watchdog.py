@@ -21,6 +21,7 @@ from typing import Any, Optional
 
 from backend.config import logger
 from backend.db import log_ups_event
+from backend.hardware import ups_state
 from backend.hardware.ups import load_ups_config, read_ups_status
 from backend.services.nut_server import forced_shutdown as nut_forced_shutdown
 from backend.settings import test_mode
@@ -30,6 +31,8 @@ _outage_start_ts: float | None = None
 _outage_start_charge: float | None = None
 _outage_start_volts: float | None = None
 _failsafe_engaged = False
+_host_shutdown_started = False
+_silent_alerted = False
 _simulation_active = False
 _simulation_end_ts = 0.0
 _copy_paused_by_failsafe = False
@@ -347,7 +350,8 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
         return
     _failsafe_engaged = True
 
-    cfg = load_ups_config()
+    global _host_shutdown_started
+    cfg = _step("read the settings", load_ups_config) or {}
     logger.critical(
         "[UPS FAILSAFE] ENGAGING ATOMIC SAFE SHUTDOWN: %s (charge=%s%%, runtime=%sm)", reason, charge, runtime
     )
@@ -359,37 +363,30 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
         event_text("ups_shutdown", reason=reason),
     )
 
-    log_ups_event(
-        event_type="FAILSAFE_SHUTDOWN",
-        status="EXECUTING",
-        duration_sec=0.0,
-        start_battery_pct=_outage_start_charge,
-        end_battery_pct=charge,
-        action_taken="Atomic safe shutdown sequence initiated.",
-        details=f"Reason: {reason}",
+    _step(
+        "record the event",
+        lambda: log_ups_event(
+            event_type="FAILSAFE_SHUTDOWN",
+            status="EXECUTING",
+            duration_sec=0.0,
+            start_battery_pct=_outage_start_charge,
+            end_battery_pct=charge,
+            action_taken="Atomic safe shutdown sequence initiated.",
+            details=f"Reason: {reason}",
+        ),
     )
-
+    # every step is guarded: one that fails is logged and the next one runs (SET-08)
+    _step("say that the shutdown starts", _say_shutdown_starts, reason, charge, runtime)
     # Step 0: the PCs watching this UPS over NUT get the forced-shutdown flag and go first (FEAT-11)
-    nut_forced_shutdown()
-
+    _step("warn the PCs that share this UPS", nut_forced_shutdown)
     # Step 1: Disarm I/O
-    global _copy_paused_by_failsafe
-    if getattr(Z_STATE, "copy_active", False) and not getattr(Z_STATE, "copy_paused", False):
-        Z_STATE.copy_paused = True
-        _copy_paused_by_failsafe = True
-        Z_STATE.ui_wake.set()
-        logger.warning("[UPS FAILSAFE] Paused active copy engine job.")
-
-    # Step 2: Gracefully stop Docker containers
+    _step("pause the copy", _pause_copy)
+    # Step 2: virtual machines and apps are asked to stop
+    _step("shut the virtual machines down", _machines_first)
     container_timeout = int(cfg.get("container_shutdown_timeout_sec", 30))
-    graceful_docker_teardown(timeout_sec=container_timeout)
-
+    _step("stop the apps", graceful_docker_teardown, container_timeout)
     # Step 3: Flush filesystem buffers to physical disks
-    try:
-        os.sync()
-        logger.info("[UPS FAILSAFE] Flushed all OS buffers via os.sync().")
-    except Exception as e:
-        logger.error(f"[UPS FAILSAFE] os.sync failed: {e}")
+    _step("flush the disks", os.sync)
 
     # Step 4a: on Unraid and TrueNAS the host's own UPS service shuts the server down (D10)
     owner = shutdown_owner()
@@ -415,8 +412,9 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
     # Step 4b: shut the host down; only then may the UPS be told to cut its outlets (REL-10)
     logger.critical("[UPS FAILSAFE] Initiating host powerdown.")
     if signal_host_powerdown():
+        _host_shutdown_started = True  # from here on nothing is started again, also if mains returns
         if cfg.get("poweroff_ups"):
-            send_ups_cut_power()
+            _step("switch the UPS sockets off", send_ups_cut_power)
         return
     msg = (
         "Kiboto could not shut down this server on its own (no working host shutdown command). "
@@ -437,29 +435,97 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
         logger.debug("ups_watchdog: notification failed", exc_info=True)
 
 
+def _step(name: str, fn, *args) -> Any:
+    """One step of the safe shutdown. A step that fails is logged as an error and the sequence
+    goes on: an error while warning the PCs or stopping the apps used to end the whole sequence,
+    with no power-off and no second try (SET-08)."""
+    try:
+        return fn(*args)
+    except Exception as e:
+        logger.error("[UPS FAILSAFE] step '%s' failed, going on: %s", name, e)
+        return None
+
+
+def _pause_copy() -> None:
+    global _copy_paused_by_failsafe
+    if getattr(Z_STATE, "copy_active", False) and not getattr(Z_STATE, "copy_paused", False):
+        Z_STATE.copy_paused = True
+        _copy_paused_by_failsafe = True
+        Z_STATE.ui_wake.set()
+        logger.warning("[UPS FAILSAFE] Paused active copy engine job.")
+
+
+def _machines_first() -> None:
+    from backend.services import vm_qemu
+
+    vm_qemu.shut_down_all(wait_secs=45, come_back=False)  # they were not in the sequence at all
+
+
+def _say_shutdown_starts(reason: str, charge: float | None, runtime: float | None) -> None:
+    """One message that the safe shutdown starts, whatever limit was reached. With the "time on
+    battery" limit nobody was told: only the two battery limits pushed a message."""
+    from backend.services.notifications import alert_text, send_notification
+
+    send_notification(
+        title="UPS: the safe shutdown starts",
+        message=f"The NAS is on battery and a limit was reached ({reason}). Apps are stopped and the NAS shuts down now.",
+        level="critical",
+        event_type="ups",
+        text=alert_text(
+            "ups_shutdown_now", charge="?" if charge is None else charge, runtime="?" if runtime is None else runtime
+        ),
+    )
+
+
+def _ups_fell_silent(now: float) -> None:
+    """The UPS gives no reading. During a power cut that is said once, loudly: the watchdog used to
+    stop looking, and a network UPS that answered with an error was taken for "online", which
+    recorded "power restored" and started the apps again while the power was still out."""
+    global _silent_alerted
+    if _outage_start_ts is None or _silent_alerted or _failsafe_engaged:
+        return
+    _silent_alerted = True
+    from backend.services.notifications import alert_text, send_notification
+
+    secs = int(now - _outage_start_ts)
+    msg = (
+        f"The UPS stopped answering {secs} seconds into a power cut. Kiboto can no longer see the battery, "
+        "so it cannot shut the NAS down in time by itself. Check the UPS connection, or shut the NAS down by hand."
+    )
+    logger.critical("[UPS] %s", msg)
+    text = alert_text("ups_silent", secs=secs)
+    add_event("critical", "UPS stopped answering during a power cut", msg, details=text)
+    _step(
+        "tell the household",
+        lambda: send_notification(
+            title="UPS stopped answering during a power cut", message=msg, level="critical", event_type="ups", text=text
+        ),
+    )
+
+
 def check_ups_power_watchdog(ups_data: dict[str, Any], now: float):
     """Called every stats collection tick to evaluate UPS state, log events, and enforce policies."""
-    global _outage_start_ts, _outage_start_charge, _outage_start_volts, _failsafe_engaged
+    global _outage_start_ts, _outage_start_charge, _outage_start_volts, _failsafe_engaged, _silent_alerted
 
     if not ups_data or not ups_data.get("available"):
+        _ups_fell_silent(now)
         return
 
-    status = (ups_data.get("status") or "").upper()
+    status = ups_data.get("status")
     charge = ups_data.get("battery_charge_pct")
     runtime = ups_data.get("time_left_min")
     line_v = ups_data.get("line_volts")
     load_pct = ups_data.get("load_pct")
 
-    is_on_batt = any(k in status for k in ("OB", "ONBATT", "ON BATT", "LB", "LOWBATT")) or is_simulation_active()
-    is_online = any(k in status for k in ("OL", "ONLINE")) and not is_on_batt
-
-    cfg = load_ups_config()
-    policy = cfg.get("shutdown_policy", "runtime_left")
-    batt_thresh = float(cfg.get("battery_threshold_pct", 20.0))
-    time_thresh = float(cfg.get("runtime_threshold_min", 5.0))
-    timer_thresh = float(cfg.get("shutdown_timer_sec", 300.0))
+    # one reader of the status (hardware/ups_state): "on mains with a low battery" and "battery
+    # unplugged" are not "on battery"
+    state = ups_state.power_state(status)
+    drill = is_simulation_active()
+    is_on_batt = state == ups_state.ON_BATTERY or drill
+    is_online = state == ups_state.ONLINE and not drill
 
     if is_on_batt:
+        _silent_alerted = False
         if _outage_start_ts is None:
             _outage_start_ts = now
             _outage_start_charge = charge
@@ -468,26 +534,13 @@ def check_ups_power_watchdog(ups_data: dict[str, Any], now: float):
         elapsed = now - _outage_start_ts
 
         # Debounce filter: only evaluate after 5 seconds to ignore momentary grid blips (immediate for drills)
-        if (elapsed >= 5.0 or is_simulation_active()) and not _failsafe_engaged:
-            # Policy evaluation
-            policy_tripped = False
-            trip_reason = ""
+        if (elapsed >= 5.0 or drill) and not _failsafe_engaged:
+            # a practice run plays "on battery" over whatever the UPS says
+            seen = status if state == ups_state.ON_BATTERY else "OB"
+            trip_reason = ups_state.shutdown_reason(seen, charge, runtime, elapsed, load_ups_config())
 
-            if "LB" in status or "LOWBATT" in status:
-                policy_tripped = True
-                trip_reason = "Hardware Low-Battery Flag (LB)"
-            elif policy == "runtime_left" and runtime is not None and runtime <= time_thresh:
-                policy_tripped = True
-                trip_reason = f"Runtime remaining below threshold ({runtime}m <= {time_thresh}m)"
-            elif policy == "battery_pct" and charge is not None and charge <= batt_thresh:
-                policy_tripped = True
-                trip_reason = f"Battery charge below threshold ({charge}% <= {batt_thresh}%)"
-            elif policy == "timer" and elapsed >= timer_thresh:
-                policy_tripped = True
-                trip_reason = f"Time on battery exceeded threshold ({int(elapsed)}s >= {int(timer_thresh)}s)"
-
-            if policy_tripped:
-                if is_simulation_active():
+            if trip_reason:
+                if drill:
                     end_simulation_drill()
                     logger.warning(
                         "[UPS SIMULATION DRILL] Safe shutdown policy tripped (%s). Simulation drill completed successfully — host shutdown skipped.",
@@ -530,6 +583,12 @@ def check_ups_power_watchdog(ups_data: dict[str, Any], now: float):
             _outage_start_ts = None
             _outage_start_charge = None
             _outage_start_volts = None
+            _silent_alerted = False
+            if _host_shutdown_started:
+                # the NAS is going down: starting the apps again would start them into a shutdown
+                # and delete the list of what to start after the next boot
+                logger.warning("[UPS] mains is back, but the host shutdown has started: nothing is restarted")
+                return
             _failsafe_engaged = False
             restart_stopped_apps()
         resume_copy_after_outage()
