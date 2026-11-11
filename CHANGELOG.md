@@ -391,6 +391,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   copied in pieces and put in place only when complete, a running or paused machine is refused
   with "shut it down first", and the server asks for confirmation.
 
+#### Fixes
+
+- **Apprise can be switched off.** Its dialog's "Enable this channel" was ignored, and the addresses
+  always sent. The switch is now kept and obeyed; addresses saved before stay on.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

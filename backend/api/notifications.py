@@ -48,7 +48,8 @@ class NotificationConfigModel(BaseModel):
     webhook_enabled: bool = False
     webhook_url: str = Field(default="", max_length=512)
 
-    # Raw Apprise URLs
+    # Raw Apprise URLs; on unless switched off, so addresses saved before the switch keep sending (SET-14)
+    apprise_enabled: bool = True
     apprise_urls: list[str] = Field(default_factory=list)
     # older setup wizards sent the address as "urls"; it is folded into apprise_urls (REL-6)
     urls: list[str] = Field(default_factory=list, exclude=True)

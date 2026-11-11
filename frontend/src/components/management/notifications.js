@@ -76,7 +76,7 @@ export function renderNotificationConfigUI() {
   updateBadge('notif-badge-webhook', !!(cfg.webhook_enabled && cfg.webhook_url));
 
   const rawCount = Array.isArray(cfg.apprise_urls) ? cfg.apprise_urls.length : 0;
-  updateBadge('notif-badge-apprise', rawCount > 0, t('ntf.url_count', '{count, plural, one {# URL} other {# URLs}}', { count: rawCount }));
+  updateBadge('notif-badge-apprise', rawCount > 0 && cfg.apprise_enabled !== false, t('ntf.url_count', '{count, plural, one {# URL} other {# URLs}}', { count: rawCount }));
 
   // Event trigger checkboxes
   const setChk = (id, val) => {
@@ -322,6 +322,7 @@ export function openChannelConfigModal(channel) {
       </div>
     `;
   } else if (channel === 'apprise_raw') {
+    if (enableChk) enableChk.checked = cfg.apprise_enabled !== false;
     const rawVal = Array.isArray(cfg.apprise_urls) ? cfg.apprise_urls.join('\n') : '';
     formHtml = `
       <div class="ntf-x">
@@ -373,6 +374,7 @@ export function saveCurrentChannelModal() {
     cfg.webhook_enabled = enabled;
     cfg.webhook_url = document.getElementById('cfg-webhook-url')?.value.trim() || '';
   } else if (channel === 'apprise_raw') {
+    cfg.apprise_enabled = enabled;
     const rawLines = document.getElementById('cfg-apprise-raw')?.value.split('\n') || [];
     cfg.apprise_urls = rawLines.map(l => l.trim()).filter(Boolean);
   }

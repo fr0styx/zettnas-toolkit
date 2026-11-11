@@ -71,6 +71,7 @@ DEFAULT_NOTIFICATION_CONFIG: dict[str, Any] = {
     "webhook_enabled": False,
     "webhook_url": "",
     # Apprise Raw URLs
+    "apprise_enabled": True,
     "apprise_urls": [],
     # Event triggers
     "notify_on_smart": True,
@@ -250,8 +251,8 @@ def build_apprise_urls(cfg: dict[str, Any]) -> list[str]:
         if wb:
             urls.append(wb)
 
-    # 6. Raw Apprise URLs
-    raw_urls = cfg.get("apprise_urls", [])
+    # 6. Raw Apprise URLs: the dialog's "Enable this channel" was ignored and they always sent (SET-14)
+    raw_urls = cfg.get("apprise_urls", []) if cfg.get("apprise_enabled", True) else []
     if isinstance(raw_urls, str):
         raw_urls = [raw_urls]
     for r in raw_urls:

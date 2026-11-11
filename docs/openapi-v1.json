@@ -28609,6 +28609,11 @@
    },
    "NotificationConfigModel": {
     "properties": {
+     "apprise_enabled": {
+      "default": true,
+      "title": "Apprise Enabled",
+      "type": "boolean"
+     },
      "apprise_urls": {
       "items": {
        "type": "string"
