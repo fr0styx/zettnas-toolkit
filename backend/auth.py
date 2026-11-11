@@ -558,6 +558,25 @@ def _refuse_proxy_local_account(user: dict[str, Any]) -> None:
         logger.debug("[Auth] could not log the proxy SSO refusal", exc_info=True)
 
 
+APP_KEY_SCOPE = "ai:apps"  # the same word as backend.services.ai_apps.SCOPE; a test holds the two together
+_APP_ADDRESS = ("/api/ai/openai/", "/api/v1/ai/openai/")
+
+
+def app_key_off_its_address(sess: dict[str, Any] | None, path: str) -> bool:
+    """A key made for an app ("AI for apps") is an API token with that one scope. It works on the
+    address for apps and nowhere else (SET-04): every route that only asks for a sign-in used to
+    take it, among them its owner's data export, MCP and their Immich connection."""
+    return bool(
+        sess
+        and sess.get("is_api_token")
+        and list(sess.get("scopes") or []) == [APP_KEY_SCOPE]
+        and not path.startswith(_APP_ADDRESS)
+    )
+
+
+_APP_KEY_ONLY = "This key is for apps: it works on the address for apps only."
+
+
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
 
@@ -657,6 +676,8 @@ async def auth_middleware(request: Request, call_next):
             else:
                 logger.warning("Auth failed for client %s accessing %s", client_host, path)
             return error_response(401, "Unauthorized. Please log in.")
+        if app_key_off_its_address(sess, path):
+            return error_response(403, _APP_KEY_ONLY, error="app_key_only")
 
         if (
             getattr(config, "ENFORCE_PASSWORD_CHANGE", True)
@@ -782,6 +803,8 @@ def get_current_principal(request: Request) -> AuthenticatedPrincipal:
         sess = get_current_session(token)
         if not sess:
             raise HTTPException(status_code=401, detail="Invalid or expired session.")
+    if app_key_off_its_address(sess, request.url.path):  # also where the middleware did not run
+        raise HTTPException(status_code=403, detail=_APP_KEY_ONLY)
 
     return AuthenticatedPrincipal(sess)
 

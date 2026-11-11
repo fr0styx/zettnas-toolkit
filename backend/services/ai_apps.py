@@ -9,7 +9,8 @@ chat model and the embedder this server already runs, through one address and a 
 - Embeddings come from the configured embedder (embedding_model on embedding_host).
 - Each request takes its turn on the GPU after the family's chats and searches (gpu_queue.APPS),
   and one key runs one request at a time (NAI-13): a bulk import can't crowd out a person.
-- A key is an API token limited to the "ai:apps" scope. It can do nothing else, and its owner's
+- A key is an API token limited to the "ai:apps" scope. It works on this address only: the sign-in
+  check refuses it everywhere else (auth.app_key_off_its_address). Its owner's
   role switches still apply (ai_access).
 """
 

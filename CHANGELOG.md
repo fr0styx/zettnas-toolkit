@@ -435,6 +435,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   single reading. Photo captions and the reading of scanned PDFs never wake a drive, whatever the
   setting says. A switch the server refused goes back to where it was.
 
+#### Security
+
+- **A key made for an app works for that and nothing else**: "AI for apps" says a key "can do
+  nothing else", but the routes that only ask for a sign-in accepted it. Such a key is now refused
+  everywhere except the address for apps. If you use one of these keys for anything else, make an
+  API token with the rights it needs instead.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

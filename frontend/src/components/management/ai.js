@@ -1034,6 +1034,15 @@ export async function removeAiWatchedFolder(folderPath) {
   }
 }
 
+/**
+ * Puts a checkbox back to a state.
+ * @param {HTMLElement} box
+ * @param {boolean} on
+ */
+function _setTick(box, on) {
+  /** @type {HTMLInputElement} */ (box).checked = on;
+}
+
 /** No folder is chosen: say so and read nothing. The page used to send the whole pool here. */
 function _noFolderChosen(feedbackEl) {
   const msg = t('ai.no_folder_chosen', 'Kib has no folder to read. Choose a folder first.');
@@ -1589,7 +1598,7 @@ export function initAiKnowledgeEngine() {
       });
       // not saved (refused, or the question was answered with No): the box goes back, so that
       // "Sync", which reads it, cannot run with a setting the server never took (SET-04)
-      if (!saved) { respectStandbyCb.checked = !enabled; return; }
+      if (!saved) { _setTick(respectStandbyCb, !enabled); return; }
       showToast(
         enabled
           ? t('ai.auto_learn_spinup_on', '⚡ Standby-Safe Auto-Learn enabled — sleeping drives are protected and automatically sync when they spin up.')
@@ -1607,7 +1616,7 @@ export function initAiKnowledgeEngine() {
         respect_standby: auto_learn_on_spinup,
         auto_learn_on_spinup,
       });
-      if (!saved) autoLearnSpinupCb.checked = !auto_learn_on_spinup;
+      if (!saved) _setTick(autoLearnSpinupCb, !auto_learn_on_spinup);
     });
   }
 
