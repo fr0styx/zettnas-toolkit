@@ -426,6 +426,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   folders, downloading the image, ports in use, done) were English in every language. Lines that
   pass on Docker's own message stay as Docker wrote them.
 
+#### Fixes
+
+- **A failed virtual machine action says what failed.** Backups, restores, uploads, deleting an
+  image, resizing a disk and the screen picture answered one generic sentence. They now say what
+  failed and, when the reason is a plain one (no space left, permission denied, read-only), why.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

@@ -209,7 +209,7 @@
   "backend.api.stats": 1,
   "backend.api.storage": 5,
   "backend.api.system": 9,
-  "backend.api.vms": 7,
+  "backend.api.vms": 2,
   "backend.api.wallpapers": 6,
   "backend.api.webdav": 3,
   "backend.api_tokens": 1,
