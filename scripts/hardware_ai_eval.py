@@ -5,8 +5,8 @@ actually uses (the embedder and the chat server, read-only: nothing is installed
 changed on them) and compares with the last recorded result of this machine.
 
     /opt/kb-eval/bin/python scripts/hardware_ai_eval.py \\
-        --embedder http://zettnas-eg2:11434 --embedding-model embeddinggemma-2-ov --dim 768 \\
-        --chat http://zettnas-ovms:8000/v1 --chat-model Qwen3-4B
+        --embedder http://kiboto-eg2:11434 --embedding-model embeddinggemma-2-ov --dim 768 \\
+        --chat http://kiboto-ovms:8000/v1 --chat-model Qwen3-4B
 
 The public log says only PASS, FAIL or SKIP per set (the repository's Actions logs are public
 and must not carry numbers from a private server). Results and baselines are written to
@@ -85,10 +85,10 @@ def verdict(now: dict, base: dict | None, chat_model: str, tolerance: float) -> 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--embedder", default="http://zettnas-eg2:11434")
+    ap.add_argument("--embedder", default="http://kiboto-eg2:11434")
     ap.add_argument("--embedding-model", default="embeddinggemma-2-ov")
     ap.add_argument("--dim", type=int, default=768)
-    ap.add_argument("--chat", default="http://zettnas-ovms:8000/v1")
+    ap.add_argument("--chat", default="http://kiboto-ovms:8000/v1")
     ap.add_argument("--chat-model", default="Qwen3-4B")
     ap.add_argument("--results", default=os.environ.get("HW_RESULTS_DIR", "/results"))
     ap.add_argument("--tolerance", type=float, default=0.03)
