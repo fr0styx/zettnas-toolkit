@@ -7135,6 +7135,7 @@ export default {
   "upx.mains_off": "Stromnetz getrennt",
   "upx.hz": "{hz} Hz Nennwert",
   "upx.nominal": "120 V / 60 Hz Nennwert",
+  "upx.refresh_failed": "Die USV-Werte wurden nicht aktualisiert: {error}",
   "upx.selftest_accepted": "Die USV hat den Batterietest angenommen. Das Ergebnis zeigt die USV selbst an.",
   "upx.mains_on": "Am Stromnetz",
   "upx.no_reading": "Kein Messwert",

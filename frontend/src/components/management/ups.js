@@ -24,16 +24,18 @@ export function renderUpsTelemetry(ups) {
     } else if (ups.available && ups.battery_charge_pct != null) {
       upsPill.style.background = ups.battery_charge_pct <= 20 ? 'rgba(235,87,87,0.15)' : 'rgba(51,205,184,0.15)';
       upsPill.style.color = ups.battery_charge_pct <= 20 ? 'var(--err, #eb5757)' : 'var(--ok2, #33cdb8)';
+    } else {
+      upsPill.style.background = '';
+      upsPill.style.color = '';
     }
   }
   const sideUpsBadge = document.getElementById('mgmt-sidebar-ups-badge');
   if (sideUpsBadge) {
     sideUpsBadge.textContent = upsVal;
     sideUpsBadge.style.display = (ups.available || isPermErr) ? 'inline-block' : 'none';
-    if (isPermErr) {
-      sideUpsBadge.style.background = 'rgba(235,87,87,0.2)';
-      sideUpsBadge.style.color = 'var(--err, #eb5757)';
-    }
+    // the colour follows the state each time: it stayed red after a USB access error had gone (SET-15, Power B9)
+    sideUpsBadge.style.background = isPermErr ? 'rgba(235,87,87,0.2)' : '';
+    sideUpsBadge.style.color = isPermErr ? 'var(--err, #eb5757)' : '';
   }
 
   const statusEl = document.getElementById('mgmt-ups-status');
@@ -507,9 +509,9 @@ export function initUpsDrawerControls() {
       btnRefresh.textContent = t('ui.refreshing', 'Refreshing...');
       await fetchAndRenderUpsTelemetry();
       await loadUpsConfigToDrawer();
-      showToast(t('toast.ups_telemetry_parameters_updated', 'UPS settings saved'), 'info');
+      showToast(t('toast.ups_telemetry_refreshed', 'UPS readings refreshed.'), 'info'); // nothing was saved (SET-15, Power B8)
     } catch (err) {
-      console.debug('Failed to refresh UPS telemetry:', err);
+      showToast(t('upx.refresh_failed', 'The UPS readings were not refreshed: {error}', { error: err?.message || '' }), 'error');
     } finally {
       btnRefresh.disabled = false;
       setIconLabel(btnRefresh, '🔄', t('mgmt.refresh', 'Refresh'));

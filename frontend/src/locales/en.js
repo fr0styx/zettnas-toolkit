@@ -7135,6 +7135,7 @@ export default {
   "upx.mains_off": "AC Mains Disconnected",
   "upx.hz": "{hz} Hz Nominal",
   "upx.nominal": "120V / 60Hz Nominal",
+  "upx.refresh_failed": "The UPS readings were not refreshed: {error}",
   "upx.selftest_accepted": "The UPS accepted the battery test. Its result shows on the UPS itself.",
   "upx.mains_on": "On mains power",
   "upx.no_reading": "No reading",

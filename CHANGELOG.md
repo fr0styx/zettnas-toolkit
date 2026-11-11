@@ -456,6 +456,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   history said "Mains power restored" for a cut that never happened. A real cut during a practice
   run is still recorded.
 
+#### Fixes
+
+- **Refresh on the Power page says one true thing.** It showed two messages, one of them "UPS
+  settings saved" though nothing was saved; a failed refresh said nothing. And the sidebar badge no
+  longer stays red after a USB access problem has gone.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

@@ -1473,13 +1473,7 @@ export function initManagement() {
   }
 
   // UPS telemetry refresh button & drawer controls
-  const refreshUpsBtn = document.getElementById('btn-refresh-ups');
-  if (refreshUpsBtn) {
-    refreshUpsBtn.addEventListener('click', () => {
-      fetchAndRenderUpsTelemetry();
-      showToast(t('toast.ups_telemetry_refreshed', 'UPS readings refreshed.'), 'info');
-    });
-  }
+  // Refresh is wired once, by initUpsDrawerControls (two handlers gave two messages, SET-15)
   initUpsDrawerControls();
 
   // Virtual Machines refresh, launch window & create wizard buttons

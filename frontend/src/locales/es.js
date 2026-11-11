@@ -7135,6 +7135,7 @@ export default {
   "upx.mains_off": "Red eléctrica desconectada",
   "upx.hz": "{hz} Hz nominal",
   "upx.nominal": "120 V / 60 Hz nominal",
+  "upx.refresh_failed": "No se actualizaron las lecturas del SAI: {error}",
   "upx.selftest_accepted": "El SAI aceptó la prueba de batería. El resultado se muestra en el propio SAI.",
   "upx.mains_on": "Con corriente de red",
   "upx.no_reading": "Sin lectura",

@@ -7135,6 +7135,7 @@ export default {
   "upx.mains_off": "市电已断开",
   "upx.hz": "额定 {hz} Hz",
   "upx.nominal": "额定 120V / 60Hz",
+  "upx.refresh_failed": "UPS 读数未刷新：{error}",
   "upx.selftest_accepted": "UPS 已接受电池测试。结果显示在 UPS 本身上。",
   "upx.mains_on": "使用市电",
   "upx.no_reading": "无读数",
