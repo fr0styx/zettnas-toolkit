@@ -120,8 +120,9 @@ body, body.studio-workbench:not(.lcd-direct) {
 body.theme-light:not(.lcd-direct) {
   --c-bg: #f3f6f6; --c-raised: #e8eeee;
   --c-text: #0e1c1e; --c-muted: #4a5c60;
-  --c-primary: #0a7a70; --c-primary-rgb: 10, 122, 112;
-  --c-primary-text: #08695f; --c-primary-text-rgb: 8, 105, 95;
+  --c-primary: #0a7a70; --c-primary-text: #08695f;
+  /* the --c-primary(-text)-rgb washes keep Lagoon's bright teal: a pale wash of the dark teal turned
+     selected rows grey on white (seen at the APP-A gate); stage B tunes washes per theme */
   --c-success: #1d7a3e; --c-info-text: #2152ad; --c-accent: #f2a93b;
   --c-neutral: #4a5c60; --c-neutral-soft: #e8eeee;
 }
