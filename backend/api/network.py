@@ -10,7 +10,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from backend.auth import require_scope
+from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.hardware.network import (
     apply_host_ip_config_canary,
     confirm_host_ip_config,
@@ -295,12 +295,19 @@ def _remote(fn, *args):
         raise HTTPException(status_code=409, detail=str(e)) from None
 
 
+def _may_change(principal: AuthenticatedPrincipal) -> bool:
+    return principal.has_scope("system:config")
+
+
 @router.get("/network/remote-access", dependencies=[Depends(require_scope("system:view"))])
-async def get_remote_access():
-    """Use from anywhere (COMP-01): tailnet state, sign-in link, and the addresses to open."""
+async def get_remote_access(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Use from anywhere (COMP-01): tailnet state, sign-in link, and the addresses to open.
+    The sign-in link only for someone who may change settings: opened with another account, it
+    joins the NAS to that account's network (SET-02)."""
     from backend.services import remote_access
 
-    return await asyncio.to_thread(remote_access.status)
+    st = await asyncio.to_thread(remote_access.status)
+    return st if _may_change(principal) else {**st, "auth_url": ""}
 
 
 @router.post("/network/remote-access/connect", dependencies=[Depends(require_scope("system:config"))])
@@ -327,11 +334,19 @@ async def post_remote_access_disconnect():
 
 
 @router.get("/network/mesh-vpn", dependencies=[Depends(require_scope("system:view"))])
-async def get_mesh_vpn_endpoint():
-    """Retrieves Zero-Trust Mesh VPN telemetry and status for Tailscale and WireGuard."""
+async def get_mesh_vpn_endpoint(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Retrieves Zero-Trust Mesh VPN telemetry and status for Tailscale and WireGuard. The sign-in
+    link, the devices with the addresses they connect from and the names of received files only
+    for someone who may change settings; others get the counts (SET-02)."""
     from backend.hardware.network import get_mesh_vpn_status
 
-    return await asyncio.to_thread(get_mesh_vpn_status)
+    doc = await asyncio.to_thread(get_mesh_vpn_status)
+    if _may_change(principal) or not isinstance(doc, dict):
+        return doc
+    ts = doc.get("tailscale")
+    if isinstance(ts, dict):
+        doc = {**doc, "tailscale": {**ts, "auth_url": "", "peers": [], "taildrop_files": []}}
+    return doc
 
 
 @router.post("/network/mesh-vpn/tailscale/up", dependencies=[Depends(require_scope("system:config"))])

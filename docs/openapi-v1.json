@@ -59787,7 +59787,7 @@
      "Network"
     ],
     "x-required-scopes": [
-     "system:view"
+     "system:config"
     ]
    }
   },
@@ -60144,7 +60144,7 @@
   },
   "/api/v1/network/mesh-vpn": {
    "get": {
-    "description": "Retrieves Zero-Trust Mesh VPN telemetry and status for Tailscale and WireGuard.",
+    "description": "Retrieves Zero-Trust Mesh VPN telemetry and status for Tailscale and WireGuard. The sign-in\nlink, the devices with the addresses they connect from and the names of received files only\nfor someone who may change settings; others get the counts (SET-02).",
     "operationId": "get_mesh_vpn_endpoint_api_v1_network_mesh_vpn_get",
     "responses": {
      "200": {
@@ -61191,7 +61191,7 @@
   },
   "/api/v1/network/remote-access": {
    "get": {
-    "description": "Use from anywhere (COMP-01): tailnet state, sign-in link, and the addresses to open.",
+    "description": "Use from anywhere (COMP-01): tailnet state, sign-in link, and the addresses to open.\nThe sign-in link only for someone who may change settings: opened with another account, it\njoins the NAS to that account's network (SET-02).",
     "operationId": "get_remote_access_api_v1_network_remote_access_get",
     "responses": {
      "200": {

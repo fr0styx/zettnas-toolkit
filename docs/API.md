@@ -425,7 +425,7 @@ request and response schemas.
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/fs/shared/join/{token}` | public ⏱ | The invite page a family member opens: get the Tailscale app, sign in, accept (public; the token is the credential) |
 | `GET` | `/api/v1/fs/shared/join/{token}/state` | public ⏱ | Whether the invite was accepted yet (the page asks every few seconds) |
-| `GET` | `/api/v1/network/family-access` | `system:view` | Who was invited, who joined and who is online; whether a Tailscale API key is kept and how long it lasts |
+| `GET` | `/api/v1/network/family-access` | `system:config` | Who was invited, who joined and who is online; whether a Tailscale API key is kept and how long it lasts |
 | `POST` | `/api/v1/network/family-access/invites` | `system:config` | A single-use invite to reach this NAS (and nothing else) from anywhere (confirmed first: 428 until then) |
 | `DELETE` | `/api/v1/network/family-access/invites/{user_id}` | `system:config` | Withdraws the person's invite; for one already accepted, says where to remove the share in Tailscale |
 | `DELETE` | `/api/v1/network/family-access/key` | `system:config` | Forgets the Tailscale API key; invites already made keep working |

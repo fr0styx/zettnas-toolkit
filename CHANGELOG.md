@@ -329,6 +329,15 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   family signs in to with one account must be connected again in Users. Until someone turns share
   links on, nothing changes.
 
+#### Security
+
+- **Tailscale sign-in links, family invite links and device addresses are for administrators**:
+  everyone who may look at the system, family members included, could read the pending Tailscale
+  sign-in link (opened with another account, it joins the NAS to that account's network), the open
+  family invite links, every device with the address it connects from, and the names of files
+  received over Tailscale. They now get the counts only; the links, addresses and names are for
+  people who may change settings.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

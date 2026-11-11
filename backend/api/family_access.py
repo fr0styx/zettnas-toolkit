@@ -25,7 +25,8 @@ def _actor(principal: AuthenticatedPrincipal) -> str:
     return getattr(principal, "username", "") or ""
 
 
-@router.get("/network/family-access", dependencies=[Depends(require_scope("system:view"))])
+# the invite links and people's Tailscale sign-in names: for someone who may change settings (SET-02)
+@router.get("/network/family-access", dependencies=[Depends(require_scope("system:config"))])
 async def get_family_access() -> dict[str, Any]:
     """Who was invited, who joined and who is online; whether a Tailscale API key is kept and how long it lasts."""
     await asyncio.to_thread(family_access.refresh)
