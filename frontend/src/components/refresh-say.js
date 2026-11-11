@@ -3,7 +3,6 @@
 // by the number of drives, the system drive labelled as parity, everything green), and its
 // Refresh buttons said "refreshed" at once, whatever came back.
 
-import { escapeHtml } from '../utils.js';
 import { showToast } from '../toast.js';
 import { t } from '../i18n.js';
 
@@ -14,13 +13,19 @@ import { t } from '../i18n.js';
  * @param {() => unknown} retry
  */
 export function showReadError(container, text, retry) {
-  container.innerHTML = `
-    <div class="cv-muted-center read-error" role="alert">
-      <p>${escapeHtml(text)}</p>
-      <button type="button" class="btn-pill-toggle" data-try-again>${escapeHtml(t('common.try_again', 'Try again'))}</button>
-    </div>`;
-  const btn = container.querySelector('[data-try-again]');
-  if (btn) btn.addEventListener('click', () => retry());
+  const box = document.createElement('div');
+  box.className = 'cv-muted-center read-error';
+  box.setAttribute('role', 'alert');
+  const said = document.createElement('p');
+  said.textContent = text;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn-pill-toggle';
+  btn.setAttribute('data-try-again', '');
+  btn.textContent = t('common.try_again', 'Try again');
+  btn.addEventListener('click', () => retry());
+  box.append(said, btn);
+  container.replaceChildren(box);
 }
 
 /**

@@ -926,14 +926,24 @@ export async function fetchAndRenderStorageTopology(container) {
     }
 
     if (!data || !Array.isArray(data.pools) || data.pools.length === 0) {
-      container.innerHTML = `<div class="cv-muted-center">${escapeHtml(t('chassis.no_pools', 'No storage pool was found here.'))}</div>`;
+      const none = document.createElement('div');
+      none.className = 'cv-muted-center';
+      none.textContent = t('chassis.no_pools', 'No storage pool was found here.');
+      container.replaceChildren(none);
     } else {
       renderStructuredPoolsTopology(container, data);
     }
     if (platformData?.can_look_for_pools) {
-      container.insertAdjacentHTML('beforeend', `<p class="cv-look-for-pools"><button type="button" class="btn-pill-toggle" data-look-for-pools>${escapeHtml(t('chassis.look_for_pools', 'Look for pools on other drives'))}</button></p>`);
-      const look = container.querySelector('[data-look-for-pools]');
-      if (look) look.addEventListener('click', () => lookForPools(container, /** @type {HTMLButtonElement} */ (look)));
+      const row = document.createElement('p');
+      row.className = 'cv-look-for-pools';
+      const look = document.createElement('button');
+      look.type = 'button';
+      look.className = 'btn-pill-toggle';
+      look.setAttribute('data-look-for-pools', '');
+      look.textContent = t('chassis.look_for_pools', 'Look for pools on other drives');
+      look.addEventListener('click', () => lookForPools(container, look));
+      row.append(look);
+      container.append(row);
     }
     return true;
   } catch (err) {
