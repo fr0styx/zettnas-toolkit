@@ -242,6 +242,19 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   shown to people who manage shares. If you have deleted an SFTP user in the past, set new SFTP
   passwords.
 
+#### Security
+
+- **Shared folders over the network follow the people as they are now**: on an install upgraded from
+  an earlier version, a newly added kid or guest could open every shared folder from a computer
+  although the access table said "none", until some other change rewrote the settings. They are now
+  rewritten when a person is added or removed, after the Security Advisor's fix "Give kids and guests
+  only the folders I choose", and each time Kiboto starts.
+- **A newly shared folder is no longer off for its owner**: on a new install a folder shared from
+  Kiboto was switched off over the network for everyone, administrators included. Administrators and
+  storage administrators now open every shared folder from a computer, as they do in Files. To keep
+  one folder off the network for an administrator, set that person to "none" for it in
+  Users → Shared folders.
+
 ## v2.0.0 (2026-11-10)
 ### 🏷️ ZettNAS is now Kiboto: Kib, answers that name their page, share links from anywhere, and safer sign-in
 

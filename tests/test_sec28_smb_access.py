@@ -39,11 +39,14 @@ def test_people_kept_out_or_read_only_are_left_out_or_listed(people):
     assert _lines(read_only=True) == lines[:1]  # read-only for everyone already
 
 
-def test_a_new_install_default_lets_nobody_in_and_the_share_is_off(people):
+def test_a_new_install_default_lets_in_the_administrators_only(people):
+    # SET-01: the share used to be switched off for everyone, its owner included
     share_access.save_config({"default_level": "none", "shares": {}})
-    assert _lines() == ["   available = no"]
+    valid = _lines()[0].split("=", 1)[1].split()
+    assert "admin" in valid and "smb_sam" not in valid and "smb_kim" not in valid
     share_access.save_config({"default_level": "none", "shares": {"media": {"users": {"smb_sam": "write"}}}})
-    assert _lines() == ["   valid users = smb_sam"]
+    valid = _lines()[0].split("=", 1)[1].split()
+    assert "admin" in valid and "smb_sam" in valid and "smb_kim" not in valid
 
 
 def test_lists_set_on_the_share_and_guest_shares_are_kept(people):

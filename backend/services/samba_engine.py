@@ -709,11 +709,20 @@ def access_lines(share: "SambaShareConfig") -> list[str]:
     from backend.users_db import list_users
 
     cfg = load_config()
-    levels = {
-        u["username"]: share_level(cfg, share.name, u["username"], u.get("role_id") or "")
-        for u in list_users()
-        if u.get("status") == "active" and SMB_NAME.match(str(u.get("username") or ""))
-    }
+    own = cfg["shares"].get(share.name, {}).get("users") or {}
+    admins = _files_admin_roles()
+    levels = {}
+    for u in list_users():
+        name = str(u.get("username") or "")
+        if u.get("status") != "active" or not SMB_NAME.match(name):
+            continue
+        role = u.get("role_id") or ""
+        if role in admins:
+            # an administrator opens every shared folder, as in Files, unless this folder's own
+            # list says otherwise (SET-01: a new folder used to be off for its owner too)
+            levels[name] = own.get(name.lower()) or "write"
+        else:
+            levels[name] = share_level(cfg, share.name, name, role)
     if levels and all(v == "write" for v in levels.values()):
         return []  # everyone may write: Samba's default
     allowed = sorted(u for u, v in levels.items() if v in ("read", "write"))
@@ -724,6 +733,26 @@ def access_lines(share: "SambaShareConfig") -> list[str]:
     if readers and not share.read_only:
         lines.append(f"   read list = {' '.join(readers)}")
     return lines
+
+
+def _files_admin_roles() -> set[str]:
+    """The roles that manage every folder in Files (path_access._is_files_admin)."""
+    import json
+
+    from backend.auth import has_scope
+    from backend.users_db import users_db_session
+
+    with users_db_session(None, readonly=True) as conn:
+        rows = conn.execute("SELECT id, scopes_json FROM roles").fetchall()
+    out = set()
+    for row in rows:
+        try:
+            scopes = json.loads(row["scopes_json"] or "[]")
+        except ValueError:
+            continue
+        if "superadmin" in scopes or has_scope(scopes, "storage:admin") or has_scope(scopes, "shares:manage"):
+            out.add(row["id"])
+    return out
 
 
 def refresh_access() -> None:

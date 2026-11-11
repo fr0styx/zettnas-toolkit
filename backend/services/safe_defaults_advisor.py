@@ -59,6 +59,9 @@ def _fix_share_access_family() -> str:
         cfg = share_access.load_config()
         cfg["role_defaults"] = {**cfg["role_defaults"], **{r: "none" for r in FAMILY_ROLES}}
         share_access.save_config(cfg)
+    from backend.services.samba_engine import refresh_access
+
+    refresh_access()  # over the network too, not only in Files (SET-01)
     return "Kids and guests now open only the folders you share with them."
 
 

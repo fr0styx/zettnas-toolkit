@@ -605,6 +605,9 @@ def create_user(
             get_samba_engine().sync_samba_user(username=username_clean, password=password)
         except Exception:
             ignored("backend.users_db.create_user")
+        from backend.services.samba_engine import refresh_access
+
+        refresh_access()  # a new person is in, or out of, each share's network list at once (SET-01)
     return ret
 
 
@@ -798,6 +801,9 @@ def delete_user(user_id: str, db_path: str | None = None) -> bool:
             except Exception:
                 ignored("backend.users_db.delete_user")
     _evict_user_caches(user_id)
+    from backend.services.samba_engine import refresh_access
+
+    refresh_access()  # the network lists no longer name them (SET-01)
     return True
 
 
