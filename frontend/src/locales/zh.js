@@ -400,6 +400,8 @@ export default {
   "gs.backup_desc": "定期把文件和 Kiboto 设置复制到别处。",
   "gs.alerts": "接收通知",
   "gs.alerts_desc": "硬盘故障或停电时，通过手机或邮件收到提醒。",
+  "gs.away": "在外使用 Kiboto",
+  "gs.away_desc": "无需在路由器上开放端口，随时随地用手机访问你的文件和照片。",
   "gs.ai_folder": "让 AI 学习一个文件夹",
   "gs.ai_folder_desc": "私密地搜索和询问你自己的文档。",
   "mgmt.shares_none_observer": "这里的共享由主机系统管理，它创建的共享会显示在此列表中。",

@@ -104,6 +104,21 @@ def _invited_someone() -> bool:
     return people > 1 or bool(list_invites())
 
 
+def _reachable_away() -> bool:
+    """Tailscale or NetBird connects this NAS for use away from home (SET-24). The Tailscale read
+    is the cached one the Network page uses, so the desktop's checklist adds no extra command."""
+    from backend.hardware.net import mesh
+
+    if (mesh.cached_mesh_vpn_status().get("tailscale") or {}).get("backend_state") == "Running":
+        return True
+    from backend.services import netbird
+
+    try:
+        return netbird.status().get("state") == "Connected"
+    except netbird.NetbirdError:
+        return False
+
+
 def _phone_backs_up(username: str) -> bool:
     from backend.services.immich_photos import phone_done
 
@@ -121,6 +136,7 @@ NEEDS: dict[str, tuple[str, ...] | None] = {
     "app": ("containers:manage",),
     "backup": ("backup:write",),
     "alerts": ("system:config",),
+    "away": ("system:config",),
     "ai_folder": ("system:config", "ai:manage"),
     "phone_backup": None,
 }
@@ -142,6 +158,7 @@ def checklist(username: str, is_admin: bool = False, scopes: list[str] | None = 
         ("app", "catalog", _safe(_has_app), True),
         ("backup", "mgmt-pane-backups", _safe(_has_backup), True),
         ("alerts", "mgmt-pane-notifications", _safe(_alerts_set_up), True),
+        ("away", "mgmt-pane-network-wireguard", _safe(_reachable_away), True),
         ("ai_folder", "ai", _safe(_ai_has_files), True),
         ("phone_backup", "mgmt-pane-backups", _safe(lambda: _phone_backs_up(username)), False),
     ]

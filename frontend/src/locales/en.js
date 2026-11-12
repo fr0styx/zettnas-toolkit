@@ -372,6 +372,8 @@ export default {
   "gs.backup_desc": "Copy your files, and Kiboto settings, somewhere else on a schedule.",
   "gs.alerts": "Get alerts",
   "gs.alerts_desc": "Hear about failing disks and power cuts on your phone or by email.",
+  "gs.away": "Use Kiboto away from home",
+  "gs.away_desc": "Reach your files and photos from your phone anywhere, without opening your router.",
   "gs.ai_folder": "Let AI learn a folder",
   "gs.ai_folder_desc": "Search and ask questions about your own documents, privately.",
   "mgmt.shares_none_observer": "Shares are managed by the host system here; any it creates appear in this list.",

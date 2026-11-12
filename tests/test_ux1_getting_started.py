@@ -17,13 +17,15 @@ def test_items_follow_the_system_state():
         patch.object(gs, "_host_managed", return_value=""),
         patch.object(gs, "_phone_backs_up", return_value=False),
         patch.object(gs, "_invited_someone", return_value=False),
+        patch.object(gs, "_reachable_away", return_value=True),
     ):
         data = gs.checklist("admin", is_admin=True)
     by_id = {i["id"]: i for i in data["items"]}
     assert by_id["password"]["done"] and by_id["app"]["done"]
     assert not by_id["share"]["done"] and by_id["share"]["open"] == "mgmt-pane-storage-shares"
     assert by_id["alerts"]["done"] is False  # a failing check counts as not done
-    assert data["total"] == 9 and data["done"] == 2 and not data["complete"]  # invite since B11
+    assert by_id["away"]["done"] and by_id["away"]["open"] == "mgmt-pane-network-wireguard"
+    assert data["total"] == 10 and data["done"] == 3 and not data["complete"]  # invite since B11, away since SET-24
 
 
 def test_non_admins_only_see_their_own_items():
@@ -63,3 +65,22 @@ def test_host_shares_count(monkeypatch):
     )
     monkeypatch.setattr(pal_storage, "get_storage_platform", lambda: adapter)
     assert gs._has_share() is True and gs._host_managed() == "truenas"
+
+
+def test_away_is_done_with_tailscale_or_netbird(monkeypatch):
+    from backend.hardware.net import mesh
+    from backend.services import netbird
+
+    monkeypatch.setattr(mesh, "cached_mesh_vpn_status", lambda: {"tailscale": {"backend_state": "Running"}})
+    assert gs._reachable_away() is True
+    monkeypatch.setattr(mesh, "cached_mesh_vpn_status", lambda: {"tailscale": {"backend_state": "Stopped"}})
+    monkeypatch.setattr(netbird, "status", lambda: {"state": "Connected", "ip": "100.92.0.1"})
+    assert gs._reachable_away() is True
+    monkeypatch.setattr(netbird, "status", lambda: {"state": "NotInstalled"})
+    assert gs._reachable_away() is False
+
+    def no_docker():
+        raise netbird.NetbirdError("no docker")
+
+    monkeypatch.setattr(netbird, "status", no_docker)
+    assert gs._reachable_away() is False

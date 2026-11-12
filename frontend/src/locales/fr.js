@@ -410,6 +410,8 @@ export default {
   "gs.backup_desc": "Copier vos fichiers et les réglages de Kiboto ailleurs, régulièrement.",
   "gs.alerts": "Recevoir des alertes",
   "gs.alerts_desc": "Être prévenu des disques défaillants et des coupures de courant par téléphone ou e-mail.",
+  "gs.away": "Utiliser Kiboto hors de chez vous",
+  "gs.away_desc": "Accédez à vos fichiers et photos depuis votre téléphone, partout, sans ouvrir votre routeur.",
   "gs.ai_folder": "Faire apprendre un dossier à l'IA",
   "gs.ai_folder_desc": "Rechercher et interroger vos documents, en privé.",
   "mgmt.shares_none_observer": "Les partages sont gérés ici par le système hôte ; ceux qu'il crée apparaissent dans cette liste.",

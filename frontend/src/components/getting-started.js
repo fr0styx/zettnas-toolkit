@@ -17,6 +17,7 @@ const ITEMS = {
   app: ['gs.app', 'Install an app', 'gs.app_desc', 'Photos, media, home automation and more from the app catalog.'],
   backup: ['gs.backup', 'Set up a backup', 'gs.backup_desc', 'Copy your files, and Kiboto settings, somewhere else on a schedule.'],
   alerts: ['gs.alerts', 'Get alerts', 'gs.alerts_desc', 'Hear about failing disks and power cuts on your phone or by email.'],
+  away: ['gs.away', 'Use Kiboto away from home', 'gs.away_desc', 'Reach your files and photos from your phone anywhere, without opening your router.'],
   ai_folder: ['gs.ai_folder', 'Let AI learn a folder', 'gs.ai_folder_desc', 'Search and ask questions about your own documents, privately.'],
   phone_backup: ['gs.phone_backup', 'Back up your phone', 'gs.phone_backup_desc', 'Photos from your phone copied here automatically, with Immich.'],
 };

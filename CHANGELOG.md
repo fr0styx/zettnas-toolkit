@@ -730,6 +730,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **A share link that works only at home says how to change that.** The share dialog in Files now
   has "Make links work away from home", which opens the share-links settings.
 
+#### Changes
+
+- **Getting started has a step for using Kiboto away from home.** It is ticked once Tailscale or
+  NetBird connects this NAS, and Open goes to Away from home.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

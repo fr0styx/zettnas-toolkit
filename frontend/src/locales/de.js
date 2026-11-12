@@ -400,6 +400,8 @@ export default {
   "gs.backup_desc": "Dateien und Kiboto-Einstellungen regelmäßig woanders sichern.",
   "gs.alerts": "Benachrichtigungen erhalten",
   "gs.alerts_desc": "Bei defekten Festplatten und Stromausfällen per Handy oder E-Mail informiert werden.",
+  "gs.away": "Kiboto unterwegs nutzen",
+  "gs.away_desc": "Von überall mit dem Handy auf Ihre Dateien und Fotos zugreifen, ohne den Router zu öffnen.",
   "gs.ai_folder": "KI einen Ordner lernen lassen",
   "gs.ai_folder_desc": "Die eigenen Dokumente privat durchsuchen und befragen.",
   "mgmt.shares_none_observer": "Freigaben verwaltet hier das Hostsystem; neue erscheinen in dieser Liste.",
