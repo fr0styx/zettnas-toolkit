@@ -17,6 +17,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Fans, "dropbox" opens Remote & Cloud Storage, and so on for the Event Log, drive bays, replication,
   the desktop, Ask Kib and the sharing services.
 
+#### Fixes
+
+- **Ports & Listeners shows the NAS's ports.** In the usual install it listed only the ports inside
+  Kiboto's own container; it now reads the NAS's own list.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

@@ -261,6 +261,8 @@ def _build_host(root):
         ("udp6", "  sl  local_address\n"),
     ):
         _write(os.path.join(proc, "net", name), text)
+        if name in ("tcp", "tcp6", "udp", "udp6"):  # the host's own sockets (process 1's network)
+            _write(os.path.join(proc, "1", "net", name), text)
     _write(os.path.join(proc, "sys", "net", "ipv4", "ip_forward"), "1\n")
     _write(os.path.join(root, "boot", "network.cfg"), UNRAID_CFG)
     _write(os.path.join(root, "etc", "resolv.conf"), RESOLV)

@@ -10,6 +10,14 @@ from backend.hardware.net import common
 from backend.ignored_errors import ignored
 
 
+def socket_tables(filename: str) -> list[str]:
+    """The NAS's own socket table when the host's /proc is mounted (process 1's network), else this
+    container's. HOST_PROC/net links to the reader's own network, so in a bridge install the page
+    listed Kiboto's container sockets as the NAS's (network report B8)."""
+    host = os.path.join(common.HOST_PROC, "1", "net", filename)
+    return [host] if os.path.exists(host) else [os.path.join("/proc", "net", filename)]
+
+
 def get_active_listening_ports() -> list[dict[str, Any]]:
     """
     Inspects active listening TCP and UDP ports on the host system.
@@ -73,7 +81,6 @@ def get_active_listening_ports() -> list[dict[str, Any]]:
     except Exception:
         ignored("backend.hardware.network.get_active_listening_ports")
 
-    proc_bases = [common.HOST_PROC, "/proc"]
     results = []
     seen = set()
 
@@ -87,8 +94,7 @@ def get_active_listening_ports() -> list[dict[str, Any]]:
         is_ipv6 = "6" in proto
         target_state = "07" if is_udp else "0A"
 
-        for base in proc_bases:
-            p_file = os.path.join(base, "net", filename)
+        for p_file in socket_tables(filename):
             if os.path.exists(p_file):
                 try:
                     with open(p_file) as f:
