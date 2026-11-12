@@ -196,3 +196,16 @@ def test_state_dir_follows_the_host(monkeypatch, tmp_path):
     assert netbird._state_dir() == "/mnt/user/appdata/netbird"
     monkeypatch.setattr(netbird.os.path, "isdir", lambda p: False if p == "/mnt/user/appdata" else real_isdir(p))
     assert netbird._state_dir() == str(tmp_path / "netbird")
+
+
+def test_without_docker_the_status_says_not_installed_and_connect_says_why(monkeypatch):
+    from backend.services import container_mutator
+
+    def no_socket(*a, **k):
+        raise RuntimeError("Docker socket not reachable")
+
+    monkeypatch.setattr(container_mutator, "_docker_request", no_socket)
+    assert netbird.container() == {"exists": False, "running": False}
+    assert netbird.status()["state"] == "NotInstalled"
+    with pytest.raises(netbird.NetbirdError, match="Docker can't be reached"):
+        netbird._docker("GET", "/version")

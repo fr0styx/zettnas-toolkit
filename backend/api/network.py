@@ -350,9 +350,9 @@ async def get_mesh_vpn_endpoint(principal: AuthenticatedPrincipal = Depends(get_
     """Retrieves Zero-Trust Mesh VPN telemetry and status for Tailscale and WireGuard. The sign-in
     link, the devices with the addresses they connect from and the names of received files only
     for someone who may change settings; others get the counts (SET-02)."""
-    from backend.hardware.network import get_mesh_vpn_status
+    from backend.hardware.network import cached_mesh_vpn_status
 
-    doc = await asyncio.to_thread(get_mesh_vpn_status)
+    doc = await asyncio.to_thread(cached_mesh_vpn_status)
     if _may_change(principal) or not isinstance(doc, dict):
         return doc
     ts = doc.get("tailscale")

@@ -33,7 +33,7 @@ def test_the_sign_in_link_is_not_for_readers(client, auth_headers, reader, monke
 
 def test_devices_addresses_and_file_names_are_not_for_readers(client, auth_headers, reader, monkeypatch):
     monkeypatch.setattr(
-        "backend.hardware.network.get_mesh_vpn_status", lambda: {"tailscale": dict(TAILSCALE), "wireguard": {}}
+        "backend.hardware.network.cached_mesh_vpn_status", lambda: {"tailscale": dict(TAILSCALE), "wireguard": {}}
     )
     seen = client.get("/api/network/mesh-vpn", headers=reader).json()["tailscale"]
     assert seen["auth_url"] == "" and seen["peers"] == [] and seen["taildrop_files"] == []

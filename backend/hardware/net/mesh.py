@@ -2,6 +2,9 @@
 
 Part of backend/hardware/network.py, split out by ARC-5."""
 
+import copy
+import threading
+import time
 from datetime import UTC
 from typing import Any
 
@@ -117,10 +120,8 @@ def get_mesh_vpn_status() -> dict[str, Any]:
             ts_info["advertised_routes"] = lan_routes
             ts_info["is_subnet_router"] = len(lan_routes) > 0
             ts_info["detected_subnets"] = tailscale.detect_local_subnets()
-            # a route over the NAS's own network is never accepted: it would drop off its network
-            ts_info["route_conflicts"] = tailscale.guard_lan_routes(doc, ts_info.get("accept_routes", False))
-            if ts_info["route_conflicts"]:
-                ts_info["accept_routes"] = False
+            # routes over the NAS's own network; the scheduler turns accepting them off (guard_routes_now)
+            ts_info["route_conflicts"] = tailscale.lan_route_conflicts(doc)
 
             # Parse Peers
             peers_dict = doc.get("Peer", {})
@@ -169,3 +170,28 @@ def get_mesh_vpn_status() -> dict[str, Any]:
         ts_info["installed"] = False
 
     return {"tailscale": ts_info}
+
+
+CACHE_S = 5.0  # the page asks twice when it opens and again on every Refresh (network report C1)
+_cache: dict[str, Any] = {"at": 0.0, "changes": -1, "doc": None}
+_cache_lock = threading.Lock()
+
+
+def cached_mesh_vpn_status() -> dict[str, Any]:
+    """get_mesh_vpn_status at most once every few seconds, read again at once after anything that
+    may have changed Tailscale (tailscale.changed). Each caller gets its own copy."""
+    now = time.monotonic()
+    with _cache_lock:
+        fresh = _cache["changes"] == tailscale.changes() and now - _cache["at"] < CACHE_S
+        if fresh and _cache["doc"] is not None:
+            return copy.deepcopy(_cache["doc"])
+        seen = tailscale.changes()
+    doc = get_mesh_vpn_status()
+    with _cache_lock:
+        _cache.update(at=time.monotonic(), changes=seen, doc=doc)
+    return copy.deepcopy(doc)
+
+
+def forget_cached_status() -> None:
+    with _cache_lock:
+        _cache.update(at=0.0, changes=-1, doc=None)

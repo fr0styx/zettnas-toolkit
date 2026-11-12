@@ -36,7 +36,10 @@ def settings() -> dict[str, Any]:
 def _docker(method: str, path: str, body: Any = None, headers: dict | None = None) -> tuple[int, Any]:
     from backend.services.container_mutator import _docker_request
 
-    return _docker_request(method, path, body=body, headers=headers)
+    try:
+        return _docker_request(method, path, body=body, headers=headers)
+    except RuntimeError as e:  # no Docker socket: said as a NetBird failure, never a 500
+        raise NetbirdError(f"Docker can't be reached: {e}") from None
 
 
 def _pull() -> None:
@@ -61,7 +64,10 @@ def _pull() -> None:
 
 def container() -> dict[str, Any]:
     """{exists, running} of the NetBird container."""
-    st, info = _docker("GET", f"/containers/{CONTAINER}/json")
+    try:
+        st, info = _docker("GET", f"/containers/{CONTAINER}/json")
+    except NetbirdError:
+        return {"exists": False, "running": False}
     if st != 200 or not isinstance(info, dict):
         return {"exists": False, "running": False}
     return {"exists": True, "running": bool((info.get("State") or {}).get("Running"))}

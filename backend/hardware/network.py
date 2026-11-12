@@ -61,6 +61,7 @@ from backend.hardware.net.listening_ports import (
     get_active_listening_ports,
 )
 from backend.hardware.net.mesh import (
+    cached_mesh_vpn_status,
     get_mesh_vpn_status,
 )
 from backend.hardware.net.ports import (
@@ -144,6 +145,7 @@ __all__ = [
     "get_bond_config",
     "get_bridge_config",
     "get_host_ip_config",
+    "cached_mesh_vpn_status",
     "get_mesh_vpn_status",
     "get_network_topology",
     "get_port_config",

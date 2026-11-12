@@ -222,6 +222,28 @@ def _run_upload_sweep(now: float) -> None:
         logger.warning("[Scheduler] Upload clean-up failed: %s", e)
 
 
+_LAST_ROUTE_CHECK = {"at": 0.0}
+ROUTE_CHECK_S = 600
+
+
+def _check_tailscale_routes() -> None:
+    try:
+        from backend.hardware.net import tailscale
+
+        tailscale.guard_routes_now()
+    except (OSError, ValueError, RuntimeError) as e:
+        logger.warning("[Scheduler] Tailscale route check failed: %s", e)
+
+
+def _run_route_check(now: float) -> None:
+    """Every 10 minutes: a route another device offers over the NAS's own network is not accepted
+    (it would cut the NAS off). It used to run inside every status read (SET-16 stage 2)."""
+    if now - _LAST_ROUTE_CHECK["at"] < ROUTE_CHECK_S:
+        return
+    _LAST_ROUTE_CHECK["at"] = now
+    on_its_own("Tailscale routes", _check_tailscale_routes)
+
+
 def _run_scheduled_tasks():
     logger.info("[Scheduler] System background scheduler started.")
     from backend.services.supervisor import beat
@@ -254,6 +276,7 @@ def _run_scheduled_tasks():
         _run_replication(now)
         _run_usb_disks()
         _run_upload_sweep(now)
+        _run_route_check(now)
         cfg = get_smart_schedule()
 
         if not cfg.get("enabled", True):

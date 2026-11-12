@@ -257,6 +257,7 @@ def deploy_tailscale_container(
         return {"status": "error", "message": f"Failed to create Tailscale container: {err_msg}"}
 
     cid = str(res_create.get("Id", ""))
+    tailscale.changed()
 
     # 7. Start container
     st_start, res_start = _docker_request("POST", f"/containers/{cid}/start")

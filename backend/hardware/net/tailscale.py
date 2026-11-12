@@ -118,6 +118,18 @@ def _as_text(value: str | bytes | None) -> str:
 
 
 EXEC_WAIT_CAP = 8  # seconds a waiting serve/funnel command gets inside the container
+# commands that only read: anything else may change what the status read shows
+READ_ONLY = frozenset({"status", "debug", "version", "ip", "netcheck", "whois"})
+_CHANGES = [0]
+
+
+def changed() -> None:
+    """Something may have changed Tailscale: the next status read asks it again."""
+    _CHANGES[0] += 1
+
+
+def changes() -> int:
+    return _CHANGES[0]
 
 
 def _run_tailscale_cmd(args: list[str], timeout: float = 10.0) -> tuple[int, str]:
@@ -126,6 +138,8 @@ def _run_tailscale_cmd(args: list[str], timeout: float = 10.0) -> tuple[int, str
     or falls back to native host binary if present and daemon is accessible.
     Returns (returncode, output_text).
     """
+    if args and args[0] not in READ_ONLY and args[1:2] != ["status"]:
+        changed()
     c_info = _get_tailscale_container_info()
     use_container = bool(c_info.get("exists") and c_info.get("running"))
 
@@ -260,6 +274,17 @@ def guard_lan_routes(doc: dict[str, Any] | None = None, route_all: bool | None =
         except (ImportError, OSError, ValueError, RuntimeError) as e:
             logger.debug("[Tailscale] the routes event was not recorded: %s", e)
     return conflicts
+
+
+def guard_routes_now() -> list[dict[str, str]]:
+    """The route check, from the scheduler every 10 minutes: the status read the page makes changes
+    nothing (SET-16 stage 2). Without Tailscale running it asks nothing at all."""
+    info = _get_tailscale_container_info()
+    if info.get("exists") and not info.get("running"):
+        return []
+    if not info.get("exists") and not _find_tailscale_bin():
+        return []
+    return guard_lan_routes()
 
 
 def execute_tailscale_set_routes(routes: str, enabled: bool = True) -> dict[str, Any]:

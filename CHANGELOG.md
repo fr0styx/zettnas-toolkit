@@ -701,6 +701,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Tailscale: paste a setup key (and your own NetBird server's address if you run one) and Kiboto
   installs and connects the NetBird container. Disconnect stops it; the setup key isn't kept.
 
+#### Fixes
+
+- **Opening the Network pages changes nothing and asks Tailscale less.** Reading Tailscale's status
+  could switch a route setting off; that check now runs on its own every 10 minutes. The status is
+  read at most once every few seconds, and at once after a change.
+- **The sign-in wait stops when you close the window**, instead of asking every 3 seconds for up to
+  five minutes.
+- **NetBird's status no longer fails without Docker**; it says NetBird isn't installed, and
+  Connect says Docker can't be reached.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { pollWhileOpen } from '../poll-while-open.js';
 
 const CARD_ID = 'remote-access-card';
 const POLL_MS = 3000;
@@ -231,7 +232,7 @@ export async function remoteBody(s, nb = null) {
   return connectForm();
 }
 
-export async function renderRemoteAccess(card, s = null, polls = 0) {
+export async function renderRemoteAccess(card, s = null) {
   let status = s;
   if (!status) {
     try {
@@ -284,18 +285,15 @@ export async function renderRemoteAccess(card, s = null, polls = 0) {
       }
     }),
   );
-  if (status.state === 'NeedsLogin' && polls < POLL_LIMIT) {
-    setTimeout(async () => {
-      if (!card.isConnected) return;
-      try {
-        const next = await api.get('/api/network/remote-access');
-        if (next.state !== 'NeedsLogin' || next.auth_url !== status.auth_url) await renderRemoteAccess(card, next);
-        else await renderRemoteAccess(card, status, polls + 1);
-      } catch {
-        // keep the sign-in view; the next open of the pane asks again
-      }
-    }, POLL_MS);
-  }
+  if (status.state === 'NeedsLogin') pollWhileOpen(card, () => signInDone(card, status), { ms: POLL_MS, limit: POLL_LIMIT });
+}
+
+/** One sign-in check: true (and the card drawn again) once Tailscale moved on. */
+export async function signInDone(card, status) {
+  const next = await api.get('/api/network/remote-access');
+  if (next.state === 'NeedsLogin' && next.auth_url === status.auth_url) return false;
+  await renderRemoteAccess(card, next);
+  return true;
 }
 
 /** Puts the card above the Tailscale details in Network → Tailscale & WireGuard. */

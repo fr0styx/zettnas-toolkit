@@ -272,7 +272,7 @@ def test_api_mesh_vpn_endpoints(client, token):
     """What stays (D5): the status, reaching things at home, home internet when away, signing in again."""
     headers = {"Authorization": f"Bearer {token}"}
     with patch(
-        "backend.hardware.network.get_mesh_vpn_status",
+        "backend.hardware.network.cached_mesh_vpn_status",
         return_value={"tailscale": {"installed": True, "active": True, "peers": []}},
     ):
         r = client.get("/api/network/mesh-vpn", headers=headers)
