@@ -127,14 +127,14 @@ export function relabelSpotlight() {
   before.forEach((i) => {
     if (!own.has(i.id)) _spotlightItems.push(i);
   });
-  if (_pages) _pages.pageItems().forEach(registerSpotlightItem); // the page names in the new language
+  if (_pages) [..._pages.pageItems(), ..._pages.tabItems()].forEach(registerSpotlightItem); // the page names in the new language
 }
 
 let _pages = null;
 /** The Settings pages as entries (SET-20), loaded the first time Spotlight opens. */
 export async function loadSpotlightPages() {
   if (!_pages) _pages = await import('./spotlight-pages.js');
-  _pages.pageItems().forEach(registerSpotlightItem);
+  [..._pages.pageItems(), ..._pages.tabItems()].forEach(registerSpotlightItem);
 }
 
 // The typed commands, the same in every language

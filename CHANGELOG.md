@@ -11,6 +11,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   "battery" finds Power, "kids" finds People, in your language and in English. Pages your account
   can't open are left out.
 
+#### Changes
+
+- **Search settings finds tabs too**: "time zone" opens Time, Language & Region, "fan curve" opens
+  Fans, "dropbox" opens Remote & Cloud Storage, and so on for the Event Log, drive bays, replication,
+  the desktop, Ask Kib and the sharing services.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

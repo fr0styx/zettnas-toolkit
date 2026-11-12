@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { setLanguage } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
 import { initSpotlight, openSpotlight, closeSpotlight, filterSpotlightResults, loadSpotlightPages, relabelSpotlight } from '../components/spotlight.js';
-import { PAGES, pageItems, words } from '../components/spotlight-pages.js';
+import { PAGES, TABS, pageItems, tabItems, words } from '../components/spotlight-pages.js';
 
 const titles = () => [...document.querySelectorAll('#spotlight-results .spotlight-result-item')].map((e) => e.textContent);
 
@@ -19,6 +19,9 @@ const ASKED = [
   ['update', 'General'],
   ['samba', 'Shared folders'],
   ['what happened', 'Activity'],
+  ['time zone', 'Time, Language & Region'],
+  ['fan curve', 'Fans'],
+  ['dropbox', 'Remote & Cloud Storage'],
 ];
 
 describe('Spotlight finds Settings pages (SET-20)', () => {
@@ -43,6 +46,12 @@ describe('Spotlight finds Settings pages (SET-20)', () => {
     delete window.openManagementSection;
     expect(words(' A, b ,, ')).toEqual(['a', 'b']);
     expect(words(undefined)).toEqual([]);
+    expect(tabItems()).toHaveLength(TABS.length);
+    window.openManagementSection = vi.fn();
+    tabItems().find((i) => i.id === 'tab-mgmt-pane-events').run();
+    expect(window.openManagementSection).toHaveBeenCalledWith('mgmt-pane-events');
+    delete window.openManagementSection;
+    expect(() => tabItems()[0].run()).not.toThrow();
   });
 
   it('hides a page this account cannot open', () => {

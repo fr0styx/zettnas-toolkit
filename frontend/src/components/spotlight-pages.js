@@ -28,6 +28,20 @@ export const PAGES = [
   ['vms', 'mgmt.sidebar_vms', 'Virtual machines', 'sp.kw_vms', 'vm, windows, linux, virtual machine'],
 ];
 
+// tabs inside a page: [the page whose rights it needs, pane, name key, name, words key, words]
+export const TABS = [
+  ['activity', 'mgmt-pane-events', 'mgmt.subtab_events', 'Event Log', 'sp.kw_t_events', 'log, audit, errors, warnings'],
+  ['general', 'mgmt-pane-language', 'mgmt.subtab_language', 'Time, Language & Region', 'sp.kw_t_language', 'language, time zone, clock, date format, region'],
+  ['hardware', 'mgmt-pane-hardware-fans', 'settings.tab_fans', 'Fans', 'sp.kw_t_fans', 'fan curve, noise, quiet, cooling, rpm'],
+  ['hardware', 'mgmt-pane-hardware-led', 'settings.tab_led', 'LED Strip bar', 'sp.kw_t_led', 'led, light bar, colours'],
+  ['storage', 'mgmt-pane-chassis-twin', 'mgmt.subtab_disks_chassis', 'Drives and bays', 'sp.kw_t_bays', 'bays, drive health, smart, failing disk, locate'],
+  ['storage', 'mgmt-pane-storage-replication', 'mgmt.subtab_replication', 'Replication', 'sp.kw_t_replication', 'replicate, second nas, mirror'],
+  ['storage', 'mgmt-pane-storage-remotes', 'mgmt.subtab_remotes', 'Remote & Cloud Storage', 'sp.kw_t_cloud', 'cloud, google drive, dropbox, s3, onedrive'],
+  ['appearance', 'mgmt-pane-dock', 'mgmt.subtab_desktop', 'Desktop', 'sp.kw_t_desktop', 'dock, widgets, screen saver'],
+  ['kib', 'mgmt-pane-ai-chat', 'ai.tab_chat', 'Ask Kib', 'sp.kw_t_ask', 'chat, question, ask'],
+  ['network', 'mgmt-pane-network-services', 'mgmt.subtab_network_services', 'File Sharing Services', 'sp.kw_t_sharing', 'share links, public, funnel, apps from anywhere, family access'],
+];
+
 /** "a, b , c" as ["a", "b", "c"], lower case. */
 export function words(list) {
   return String(list || '')
@@ -48,5 +62,19 @@ export function pageItems() {
     route,
     keywords: [...new Set([...words(t(wordsKey, english)), ...words(english)])],
     run: () => openRoute(`#/${route}`),
+  }));
+}
+
+/** Spotlight entries for tabs inside the pages; `route` carries the rights of their page. */
+export function tabItems() {
+  return TABS.map(([route, pane, nameKey, name, wordsKey, english]) => ({
+    id: `tab-${pane}`,
+    title: t(nameKey, name),
+    subtitle: t('sp.tab_sub', 'Settings tab'),
+    icon: '⚙️',
+    category: 'setting',
+    route,
+    keywords: [...new Set([...words(t(wordsKey, english)), ...words(english)])],
+    run: () => /** @type {any} */ (window).openManagementSection?.(pane),
   }));
 }
