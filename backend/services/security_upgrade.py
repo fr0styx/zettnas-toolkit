@@ -236,3 +236,41 @@ def run_1_12_once() -> int:
     if n:
         logger.warning("[SecurityUpgrade] 1.12: %s two-factor account(s) need a network share password", n)
     return n
+
+
+MARKER_2_0_2 = ".security-upgrade-2.0.2-family-shares"
+
+
+def run_2_0_2_once() -> list[str]:
+    """2.0.2 (decision B2): on an install upgraded from an earlier version, kids and guests who
+    could still open every shared folder get only the folders shared with them, as the security
+    check's fix does, and an alert names them. Runs once: a later choice to open folders to them
+    is kept. Returns the people it changed."""
+    marker = os.path.join(config.DATA_DIR, MARKER_2_0_2)
+    if os.path.exists(marker):
+        return []
+    from backend.services import safe_defaults_advisor
+
+    people: list[str] = []
+    try:
+        finding = safe_defaults_advisor.family_share_finding()
+        if finding:
+            people = sorted(p for p in str(finding["params"]["people"]).split(", ") if p)
+            safe_defaults_advisor.close_family_shares()
+            from backend.state import add_event
+
+            add_event(
+                "warning",
+                "Kids and guests: only the folders you share",
+                f"Kiboto 2.0.2 closed the default that let kids and guests open every shared folder. "
+                f"{', '.join(people)} now open only the folders shared with them; share a folder with "
+                f"them in Shared folders.",
+            )
+            logger.warning("[SecurityUpgrade] 2.0.2: kids and guests now open only shared folders: %s", people)
+    except (OSError, ValueError, KeyError, RuntimeError):
+        logger.warning(
+            "[SecurityUpgrade] 2.0.2: family share defaults not changed; trying at the next start", exc_info=True
+        )
+        return []
+    atomic_write_json(marker, {"at": time.time(), "people": people})
+    return people

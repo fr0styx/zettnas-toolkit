@@ -664,6 +664,15 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   #/general, #/connections, #/calendar); every older link still works. German uses "Sicherung" for
   backups.
 
+#### Changes
+
+- **Kids and guests open only the folders shared with them, on upgraded installs too.** At the first
+  start of 2.0.2, an install where kids and guests could still open every shared folder gets the
+  security check's fix applied once, and an alert names who changed.
+- **Immich's family sign-in follows Immich when it moves.** When share links move Immich to a port of
+  its own, Kiboto connects Immich's sign-in again at the new address by itself and leaves an alert
+  with the addresses to add in your sign-in provider.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

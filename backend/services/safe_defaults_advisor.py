@@ -52,6 +52,16 @@ def _share_access_finding() -> dict[str, Any] | None:
     }
 
 
+def family_share_finding() -> dict[str, Any] | None:
+    """Kids and guests who can open every shared folder, as the security check shows it (or None)."""
+    return _share_access_finding()
+
+
+def close_family_shares() -> str:
+    """The security check's fix: kids and guests open only the folders shared with them."""
+    return _fix_share_access_family()
+
+
 def _fix_share_access_family() -> str:
     from backend.fsutil import locked_json
     from backend.services import share_access

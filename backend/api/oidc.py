@@ -167,20 +167,9 @@ class ImmichConnect(BaseModel):
 
 
 def _immich_app_dir() -> str:
-    """The Immich app folder from its container's /data mount, or appdata/immich."""
-    import os
+    from backend.services import immich_sso
 
-    try:
-        from backend.services.container_mutator import _docker_request
-
-        st, info = _docker_request("GET", "/containers/immich/json")
-        if st == 200:
-            for m in info.get("Mounts") or []:
-                if m.get("Destination") == "/data" and m.get("Source"):
-                    return os.path.dirname(m["Source"].rstrip("/"))
-    except Exception:
-        logger.debug("oidc: immich container not found", exc_info=True)
-    return "/mnt/user/appdata/immich"
+    return immich_sso.app_dir()
 
 
 @router.post("/apps/immich", dependencies=[Depends(require_scope("users:write", "system:config"))])
@@ -201,7 +190,9 @@ def connect_immich(req: ImmichConnect, principal: AuthenticatedPrincipal = Depen
         )
         from backend.services import immich_photos
 
-        immich_photos.set_sso(True)  # the Back up my phone card says "Sign in with Kiboto"
+        # the Back up my phone card says "Sign in with Kiboto"; the address and email let a move of
+        # Immich connect it again by itself (B6)
+        immich_photos.set_sso(True, req.immich_url, me.get("email") or "")
         return res
     except immich_sso.ImmichSsoError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

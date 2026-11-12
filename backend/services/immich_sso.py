@@ -104,3 +104,49 @@ def connect(
         "steps": steps,
         "redirect_uris": ["app.immich:///oauth-callback", f"{base}/auth/login", f"{base}/user-settings"],
     }
+
+
+def app_dir() -> str:
+    """The Immich app folder from its container's /data mount, or appdata/immich."""
+    try:
+        from backend.services.container_mutator import _docker_request
+
+        st, info = _docker_request("GET", "/containers/immich/json")
+        if st == 200:
+            for m in info.get("Mounts") or []:
+                if m.get("Destination") == "/data" and m.get("Source"):
+                    return os.path.dirname(m["Source"].rstrip("/"))
+    except (OSError, ValueError, RuntimeError, KeyError):
+        logger.debug("immich_sso: immich container not found", exc_info=True)
+    return "/mnt/user/appdata/immich"
+
+
+def follow_move(new_url: str) -> dict[str, Any]:
+    """Immich moved to `new_url` (decision B6): connects its family sign-in again there, so Immich
+    itself knows its new address, and leaves an alert with the sign-in addresses to add in the
+    sign-in provider (Kiboto cannot change the provider). Never raises."""
+    from backend.services import immich_photos, oidc
+    from backend.state import add_event
+
+    conn = immich_photos.sso_connection()
+    if not conn:
+        return {"skipped": True}
+    try:
+        res = connect(new_url, conn["email"], app_dir(), oidc.load_config())
+    except (ImmichSsoError, httpx.HTTPError, OSError, ValueError) as e:
+        add_event(
+            "warning",
+            "Immich moved: connect its family sign-in again",
+            f"Immich now answers at {new_url}. Kiboto could not connect its family sign-in there ({e}); "
+            "connect Immich again in People.",
+        )
+        return {"ok": False, "error": str(e)}
+    immich_photos.set_sso(True, new_url, conn["email"])
+    uris = [u for u in res.get("redirect_uris", []) if u.startswith("http")]
+    add_event(
+        "info",
+        "Immich moved: add its new sign-in addresses",
+        f"Immich now answers at {new_url} and Kiboto connected its family sign-in there. "
+        f"Add these addresses to Immich in your sign-in provider: {', '.join(uris)}.",
+    )
+    return {"ok": True, "redirect_uris": res.get("redirect_uris", [])}

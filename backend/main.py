@@ -175,6 +175,7 @@ def _startup_databases(_data_key_problem: Any) -> Any:
         security_upgrade.run_once()  # v1.9.2: revoke old credentials, disable unsafe WebDAV
         security_upgrade.run_1_10_2_once()  # v1.10.2: token, role, backup and WebDAV cleanup
         security_upgrade.run_1_12_once()  # 1.12: two-factor accounts get their own SMB password
+        security_upgrade.run_2_0_2_once()  # 2.0.2 (B2): kids and guests open only shared folders
     except Exception as e:
         logger.error(f"[Main] Security upgrade step failed: {e}")
     try:

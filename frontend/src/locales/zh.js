@@ -3412,7 +3412,7 @@ export default {
   "confirm.network_public_links.title": "公开分享链接",
   "confirm.network_public_links.msg": "允许任何拿到分享链接的人通过 Tailscale Funnel（端口 {target}）从互联网打开它？只有分享链接可以这样访问，NAS 的其他部分保持私密。",
   "confirm.network_public_links_move_immich.title": "发布并迁移 Immich",
-  "confirm.network_public_links_move_immich.msg": "发布分享链接并将 Immich 迁移到 {target}？分享链接需要使用 Immich 安全地址目前占用的端口，而暴露在互联网上的端口不能再提供其他内容。通过旧地址打开 Immich 的手机和浏览器需要改用新地址。如果家人使用同一账户登录 Immich，请在“用户”中重新连接 Immich。",
+  "confirm.network_public_links_move_immich.msg": "发布分享链接并将 Immich 迁移到 {target}？分享链接需要使用 Immich 安全地址目前占用的端口，而暴露在互联网上的端口不能再提供其他内容。通过旧地址打开 Immich 的手机和浏览器需要改用新地址。如果家人使用同一账户登录 Immich，Kiboto 会在新地址重新连接它，并显示需要在你的登录服务中添加的地址。",
   "confirm.network_tailscale_install.title": "启动 Tailscale",
   "confirm.network_tailscale_install.msg": "在 {target} 中启动 Tailscale？这是一个位于此 NAS 自身网络上、可以更改其网络设置的容器。Tailscale 需要它来连接你的设备。路由器上不会开放任何端口。",
   "offsite.plain_http": "此地址在你的网络之外，且使用未加密的 http：备份密码会以明文传输。请通过 Tailscale 访问，或使用 rest:https://。",

@@ -238,10 +238,14 @@ def enable(web_port: int, move_immich: bool = False) -> dict[str, Any]:
         from backend.services import remote_access
 
         try:
-            remote_access.move_immich()
+            new_port = remote_access.move_immich()
         except remote_access.RemoteAccessError as e:
             atomic_write_json(STATE_FILE, {"enabled": False, "error": f"Immich could not be moved: {e}"})
             return status()
+        if new_port:
+            from backend.services import immich_sso
+
+            immich_sso.follow_move(f"https://{dns}:{new_port}")  # its family sign-in follows (B6)
         handlers, _public, _read = _port_state(dns)
     if _others(handlers):
         atomic_write_json(STATE_FILE, {"enabled": False, "error": OTHERS_ON_PORT})

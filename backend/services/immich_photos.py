@@ -66,11 +66,25 @@ def phone_done(username: str) -> bool:
     return username in (_cfg().get("phone_done") or [])
 
 
-def set_sso(on: bool) -> None:
+def set_sso(on: bool, url: str = "", email: str = "") -> None:
+    """Whether the family signs in to Immich with Kiboto's provider; the address and admin email it
+    was connected with are kept, so a move of Immich can connect it again (decision B6)."""
     with _lock:
         c = _cfg()
         c["sso"] = bool(on)
+        if url:
+            c["sso_url"] = url
+        if email:
+            c["sso_email"] = email
         _save(c)
+
+
+def sso_connection() -> dict[str, str]:
+    """The address and admin email Immich's family sign-in was connected with ({} when it is not on)."""
+    c = _cfg()
+    if not c.get("sso") or not c.get("sso_email"):
+        return {}
+    return {"url": str(c.get("sso_url") or ""), "email": str(c["sso_email"])}
 
 
 def set_url(url: str) -> str:
