@@ -78,6 +78,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **On a phone, Appearance, Calendar and Hardware have tiles**, so every Settings page is within two
   taps. Hardware shows with "Show advanced tools", like Power and Network.
 
+#### Changes
+
+- **A shorter Overview.** Settings opens on the status, then three tiles (Storage, Apps, Backup),
+  each with one line in words ("73 GB of 97 GB used · 5 drives, all healthy", "4 apps, 4 running",
+  "Newest copy outside: yesterday"), then Getting started while steps are open. The ten cards of
+  links are gone; every page is in the sidebar. The Storage tile never says "healthy" while the
+  status shows a drive warning.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

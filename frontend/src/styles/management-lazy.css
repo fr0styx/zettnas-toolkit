@@ -274,3 +274,13 @@
     display: none;
   }
 }
+
+/* SET-20 (Overview 5): the Overview's heading, three tiles and Getting started */
+.mgmt-hub-heading { grid-column: 1 / -1; margin: 0 0 4px; font-size: var(--kb-fs-lg, 18px); color: var(--c-text); }
+.mgmt-hub-tiles { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.mgmt-hub-tile { display: flex; flex-direction: column; gap: 4px; min-height: 88px; padding: 12px 14px; cursor: pointer; }
+.mgmt-hub-tile .mgmt-app-svg { width: 20px; height: 20px; color: var(--kb-text-accent); }
+.mgmt-hub-tile-title { font-weight: 700; color: var(--c-text); }
+.mgmt-hub-tile-line { font-size: var(--kb-fs-xs); color: var(--muted); min-height: 1.2em; }
+.mgmt-hub-gs { grid-column: 1 / -1; position: static; width: auto; max-width: none; margin-top: 4px; }
+

@@ -148,6 +148,9 @@ function keepStatusCurrent(root) {
   }, STATUS_EVERY_MS);
 }
 
+// the tiles and Getting started load with the Overview, not with every page (first-load budget)
+const hubTiles = () => import('./overview-tiles.js');
+
 export async function renderStatusSummary(root = document) {
   const hub = root.getElementById('management-hub-view');
   if (!hub) return null;
@@ -157,7 +160,9 @@ export async function renderStatusSummary(root = document) {
     box.id = 'mgmt-status-summary';
     box.className = 'mgmt-status-summary';
     box.setAttribute('aria-label', t('overview.status_label', 'Status'));
-    hub.insertBefore(box, hub.firstChild);
+    const head = hub.querySelector('.mgmt-hub-heading'); // the page's heading stays first (Overview 5)
+    hub.insertBefore(box, head ? head.nextSibling : hub.firstChild);
+    hubTiles().then((m) => m.installHubTiles(root)).catch(() => {});
     box.addEventListener('click', (e) => {
       if (e.target.closest('[data-ov-protect]')) {
         import('../protect-nas.js').then((m) => m.openProtectGuide()).catch(() => {});
@@ -194,6 +199,7 @@ export async function renderStatusSummary(root = document) {
   }
   box.dataset.read = '1';
   box.innerHTML = statusHtml(summary, protection) + protectionHtml(protection);
+  hubTiles().then((m) => m.renderHubExtras(root, protection, summary)).catch(() => {});
   announceChange('status-summary', statusSentence(summary, protection)); // UX-28: only when it changes
   return summary;
 }

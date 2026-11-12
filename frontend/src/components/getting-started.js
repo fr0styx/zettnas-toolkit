@@ -97,6 +97,7 @@ export async function showGettingStarted({ force = false } = {}) {
 }
 
 export function initGettingStarted() {
+  /** @type {any} */ (window).gettingStartedHtml = checklistHtml; // the Overview draws the same list (SET-20)
   window.openGettingStarted = () => {
     setHidden(false);
     return showGettingStarted({ force: true });
