@@ -711,6 +711,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **NetBird's status no longer fails without Docker**; it says NetBird isn't installed, and
   Connect says Docker can't be reached.
 
+#### Changes
+
+- **One place decides which Tailscale port belongs to what** (Kiboto, share links, a public app,
+  each app in your tailnet), and one function lists what Funnel puts on the internet. Nothing
+  changes for you today; the coming "Away from home" page uses it to say what is public.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

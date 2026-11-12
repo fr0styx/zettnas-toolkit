@@ -25,9 +25,9 @@ from typing import Any
 from backend import legacy_names
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, locked_json, read_json
-from backend.services import public_links
+from backend.services import public_links, tailnet_ports
 
-APP_PORTS = (10000, 443)  # 8443 is the share links'; 443 is free only when remote access doesn't serve Kiboto there
+APP_PORTS = tailnet_ports.PUBLIC_APP_PORTS  # who owns which port: tailnet_ports
 STATE_FILE = os.path.join(DATA_DIR, "public_apps.json")
 PENDING_FILE = os.path.join(DATA_DIR, "public_apps_pending.json")  # one request waiting for the owner's steps
 _CONTROL = re.compile(
@@ -103,13 +103,8 @@ def _state() -> dict[str, Any]:
 def _serve_config() -> tuple[dict[str, Any], dict[str, Any]]:
     """Every host:port Tailscale serves (tailnet or public) and which of them Funnel opens."""
     code, out = public_links._ts(["funnel", "status", "--json"], timeout=4.0)
-    if code != 0:
-        return {}, {}
-    try:
-        doc = json.loads(out) or {}
-    except ValueError:
-        return {}, {}
-    if not isinstance(doc, dict):
+    doc = tailnet_ports.parse_funnel_status(out) if code == 0 else None
+    if doc is None:
         return {}, {}
     return doc.get("Web") or {}, doc.get("AllowFunnel") or {}
 

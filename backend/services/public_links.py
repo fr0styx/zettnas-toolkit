@@ -22,9 +22,10 @@ from urllib.parse import quote
 
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
+from backend.services import tailnet_ports
 
-FUNNEL_PORT = 8443
-PATH = "/api/fs/shared"
+FUNNEL_PORT = tailnet_ports.SHARE_LINKS
+PATH = tailnet_ports.SHARE_PATH
 STATE_FILE = os.path.join(DATA_DIR, "public_links.json")
 DNS_URL = "https://login.tailscale.com/admin/dns"  # where the owner turns on HTTPS certificates
 PENDING_SECONDS = 3600  # a request made before Funnel was allowed is finished within this time
@@ -109,13 +110,8 @@ def _port_state(dns: str) -> tuple[dict[str, Any], bool, bool]:
     and whether the answer could be read at all. Funnel opens a whole port, never one path
     (SET-02): everything served on a published port is on the internet."""
     code, out = _ts(["funnel", "status", "--json"], timeout=4.0)
-    if code != 0 or not dns:
-        return {}, False, False
-    try:
-        doc = json.loads(out) or {}
-    except ValueError:
-        return {}, False, False
-    if not isinstance(doc, dict):
+    doc = tailnet_ports.parse_funnel_status(out) if code == 0 and dns else None
+    if doc is None:
         return {}, False, False
     host = f"{dns}:{FUNNEL_PORT}"
     handlers = ((doc.get("Web") or {}).get(host) or {}).get("Handlers") or {}
@@ -134,13 +130,8 @@ def own_page_ports(dns: str) -> list[int]:
     from urllib.parse import urlsplit
 
     code, out = _ts(["funnel", "status", "--json"], timeout=4.0)
-    if code != 0 or not dns:
-        return []
-    try:
-        doc = json.loads(out) or {}
-    except ValueError:
-        return []
-    if not isinstance(doc, dict):
+    doc = tailnet_ports.parse_funnel_status(out) if code == 0 and dns else None
+    if doc is None:
         return []
     own = _own_port()
     ports = []

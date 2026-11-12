@@ -20,10 +20,11 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from backend.hardware.net import tailscale, tailscale_setup
+from backend.services import tailnet_ports
 
-IMMICH_HTTPS_PORT = 8443
+IMMICH_HTTPS_PORT = tailnet_ports.IMMICH_BEFORE_MOVE
 DEFAULT_APP_PORT = 8082
-APP_HTTPS_OFFSET = 10000  # an app on host port 8096 is served at https://<name>:18096/
+APP_HTTPS_OFFSET = tailnet_ports.APP_OFFSET
 
 
 class RemoteAccessError(RuntimeError):
@@ -221,12 +222,7 @@ def _is_local_port(port: int) -> bool:
 def _public_ports() -> set[int]:
     """The ports Funnel publishes to the internet right now."""
     _code, doc = _json(["funnel", "status", "--json"])
-    ports = set()
-    for host, on in (doc.get("AllowFunnel") or {}).items():
-        port = str(host).rsplit(":", 1)[-1]
-        if on and port.isdigit():
-            ports.add(int(port))
-    return ports
+    return {row["port"] for row in tailnet_ports.published(doc)}
 
 
 def _drop_gone_apps(wanted: set[int]) -> None:

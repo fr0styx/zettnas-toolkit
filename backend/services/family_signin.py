@@ -30,12 +30,13 @@ from typing import Any
 from backend import product, secret_box
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
+from backend.services import tailnet_ports
 
 CONTAINER = "kiboto-id"
 IMAGE = "ghcr.io/pocket-id/pocket-id:v2-distroless"  # runs as uid 1000, needs no capability
 RUNS_AS = 1000
 PORT = 1411
-HTTPS_PORT = PORT + 10000  # remote_access.APP_HTTPS_OFFSET
+HTTPS_PORT = PORT + tailnet_ports.APP_OFFSET
 CONFIG_FILE = os.path.join(DATA_DIR, "family_signin.json")
 GROUP = "kiboto-family"
 LINK_SECONDS = 24 * 3600
