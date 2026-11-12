@@ -447,6 +447,83 @@ export function initWallpaperReadabilityControls() {
   }
 }
 
+/** Effects' three window looks (APP-C). Solid is Eco mode: no blur, so its blur and opacity stay as they are. */
+export const WINDOW_STYLES = {
+  glass: { blur: 24, opacity: 72, eco: false },
+  soft: { blur: 12, opacity: 88, eco: false },
+  solid: { blur: 24, opacity: 72, eco: true },
+};
+
+/** Which look these settings are, or '' for a mix of the person's own. */
+export function windowStyleOf({ blur, opacity, eco }) {
+  if (eco) return 'solid';
+  const hit = Object.entries(WINDOW_STYLES).find(([, s]) => !s.eco && s.blur === blur && s.opacity === opacity);
+  return hit ? hit[0] : '';
+}
+
+function _sliderValue(id, fallback) {
+  const el = /** @type {HTMLInputElement | null} */ (document.getElementById(id));
+  const v = el ? parseInt(el.value, 10) : NaN;
+  return Number.isFinite(v) ? v : fallback;
+}
+
+function _isEco() {
+  return document.body.getAttribute('data-performance-mode') === 'eco';
+}
+
+/** Marks the chosen look, and says so when the sliders hold a mix of the person's own. */
+export function syncWindowStyleUI() {
+  const cur = windowStyleOf({ blur: _sliderValue('glass-blur-slider', 24), opacity: _sliderValue('glass-opacity-slider', 72), eco: _isEco() });
+  const btns = Array.from(document.querySelectorAll('[data-window-style]'));
+  btns.forEach((b, i) => {
+    const on = /** @type {HTMLElement} */ (b).dataset.windowStyle === cur;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-checked', on ? 'true' : 'false');
+    // one stop for Tab: the chosen look, or the first when none is
+    b.setAttribute('tabindex', on || (!cur && i === 0) ? '0' : '-1');
+  });
+  const note = document.getElementById('effects-custom-note');
+  if (note) note.hidden = cur !== '';
+}
+
+/** Eco mode on or off: windows drawn solid, without the blur. */
+export function setEcoMode(on) {
+  if (on) document.body.setAttribute('data-performance-mode', 'eco');
+  else document.body.removeAttribute('data-performance-mode');
+  try {
+    localStorage.setItem('kiboto_eco_mode', on ? 'true' : 'false');
+  } catch {}
+}
+
+export function chooseWindowStyle(name) {
+  const s = WINDOW_STYLES[name];
+  if (!s) return;
+  setEcoMode(s.eco);
+  if (!s.eco) {
+    const glow = /** @type {HTMLInputElement | null} */ (document.getElementById('window-glow-toggle'))?.checked || false;
+    const radius = /** @type {HTMLElement | null} */ (document.querySelector('.window-radius-btn.active'))?.dataset.radius || '12px';
+    applyGlassSettings(s.blur, s.opacity, radius, glow, true);
+  }
+  syncWindowStyleUI();
+}
+
+/** Arrow keys move through the looks, as in any group of radio buttons. */
+export function onWindowStyleKey(e) {
+  const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+  if (!step) return;
+  const btns = /** @type {HTMLElement[]} */ (Array.from(document.querySelectorAll('[data-window-style]')));
+  const i = btns.indexOf(/** @type {HTMLElement} */ (e.currentTarget));
+  const next = btns[(i + step + btns.length) % btns.length];
+  e.preventDefault();
+  chooseWindowStyle(next.dataset.windowStyle);
+  next.focus();
+}
+
+/** Moving a Fine-tune slider means glass: Solid (Eco) lets go so the change shows. */
+function _leaveSolid() {
+  if (_isEco()) setEcoMode(false);
+}
+
 export function initGlassControls() {
   const blurSlider = document.getElementById('glass-blur-slider');
   const opacitySlider = document.getElementById('glass-opacity-slider');
@@ -475,6 +552,7 @@ export function initGlassControls() {
 
   if (blurSlider) {
     blurSlider.addEventListener('input', (e) => {
+      _leaveSolid();
       const curOpacity = opacitySlider ? parseInt(opacitySlider.value, 10) : 72;
       const curGlow = glowToggle ? glowToggle.checked : false;
       const curActiveRadiusBtn = document.querySelector('.window-radius-btn.active');
@@ -492,6 +570,7 @@ export function initGlassControls() {
 
   if (opacitySlider) {
     opacitySlider.addEventListener('input', (e) => {
+      _leaveSolid();
       const curBlur = blurSlider ? parseInt(blurSlider.value, 10) : 24;
       const curGlow = glowToggle ? glowToggle.checked : false;
       const curActiveRadiusBtn = document.querySelector('.window-radius-btn.active');
@@ -527,42 +606,29 @@ export function initGlassControls() {
     });
   }
 
-  const ecoToggle = document.getElementById('eco-mode-toggle');
   let savedEco = false;
   try {
-    const e = localStorage.getItem('kiboto_eco_mode');
-    if (e !== null) savedEco = (e === 'true');
-  } catch (err) {}
+    savedEco = localStorage.getItem('kiboto_eco_mode') === 'true';
+  } catch {}
+  if (savedEco) document.body.setAttribute('data-performance-mode', 'eco');
 
-  if (savedEco) {
-    document.body.setAttribute('data-performance-mode', 'eco');
-    if (ecoToggle) ecoToggle.checked = true;
-  }
-
-  if (ecoToggle) {
-    ecoToggle.checked = savedEco;
-    ecoToggle.addEventListener('change', (e) => {
-      const isEco = e.target.checked;
-      if (isEco) {
-        document.body.setAttribute('data-performance-mode', 'eco');
-      } else {
-        document.body.removeAttribute('data-performance-mode');
-      }
-      try {
-        localStorage.setItem('kiboto_eco_mode', isEco ? 'true' : 'false');
-      } catch (err) {}
-      showToast(isEco ? 'Eco Mode enabled: GPU blur disabled' : 'Eco Mode disabled: Glass blur restored', 'info');
-    });
-  }
+  document.querySelectorAll('[data-window-style]').forEach((b) => {
+    const btn = /** @type {HTMLElement} */ (b);
+    btn.addEventListener('click', () => chooseWindowStyle(btn.dataset.windowStyle));
+    btn.addEventListener('keydown', onWindowStyleKey);
+  });
+  // applyGlassSettings and a look import call this once the pane is loaded
+  /** @type {any} */ (window).syncWindowStyleUI = syncWindowStyleUI;
+  syncWindowStyleUI();
 
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-      applyGlassSettings(24, 72, '12px', false, true);
-      if (ecoToggle) ecoToggle.checked = false;
       document.body.removeAttribute('data-performance-mode');
       try {
         localStorage.removeItem('kiboto_eco_mode');
       } catch (e) {}
+      applyGlassSettings(24, 72, '12px', false, true);
+      syncWindowStyleUI();
       showToast(t('toast.glass_and_visual_effects_reset_to', 'Glass and visual effects reset to defaults'), 'info');
     });
   }

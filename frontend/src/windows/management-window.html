@@ -571,16 +571,49 @@
             <div class="mgmt-detail-body">
               <div class="gls-col">
                 
-                <!-- Card 1: Acrylic Material & Blur -->
+                <!-- Effects (APP-C): how the windows look, their corners, and the fine controls folded away -->
                 <div class="drawer-card gls-box">
                   <div class="gls-row">
-                    <div>
-                      <div class="gls-fs135-bold-strong" data-i18n="mgmt.acrylic_material_title">Acrylic Glass Material</div>
-                      <div class="gls-xs-muted" data-i18n="mgmt.acrylic_material_desc">Controls window and drawer backdrop-filter blur and surface translucency.</div>
-                    </div>
-                    <button id="glass-reset-btn" class="btn-pill-toggle is-small" title="Reset glass settings to defaults" data-i18n-title="ui.reset_glass_settings_to_defaults" data-i18n="mgmt.reset_glass">↺ Reset Glass Defaults</button>
+                    <div class="gls-fs135-bold-strong" id="effects-windows-label" data-i18n="effects.windows">Windows</div>
+                    <button id="glass-reset-btn" class="btn-pill-toggle is-small" data-i18n="effects.reset">↺ Reset effects</button>
                   </div>
+                  <div class="effects-styles" role="radiogroup" aria-labelledby="effects-windows-label">
+                    <button type="button" class="effects-style active" data-window-style="glass" role="radio" aria-checked="true" tabindex="0">
+                      <span class="effects-style-swatch is-glass" aria-hidden="true"></span>
+                      <span class="effects-style-text">
+                        <span class="effects-style-name" data-i18n="effects.glass">Glass</span>
+                        <span class="effects-style-desc" data-i18n="effects.glass_desc">See-through, with the wallpaper blurred behind</span>
+                      </span>
+                    </button>
+                    <button type="button" class="effects-style" data-window-style="soft" role="radio" aria-checked="false" tabindex="-1">
+                      <span class="effects-style-swatch is-soft" aria-hidden="true"></span>
+                      <span class="effects-style-text">
+                        <span class="effects-style-name" data-i18n="effects.soft">Soft</span>
+                        <span class="effects-style-desc" data-i18n="effects.soft_desc">Mostly solid, with a little blur</span>
+                      </span>
+                    </button>
+                    <button type="button" class="effects-style" data-window-style="solid" role="radio" aria-checked="false" tabindex="-1">
+                      <span class="effects-style-swatch is-solid" aria-hidden="true"></span>
+                      <span class="effects-style-text">
+                        <span class="effects-style-name" data-i18n="effects.solid">Solid</span>
+                        <span class="effects-style-desc" data-i18n="effects.solid_desc">Not see-through: the smoothest on a slow computer</span>
+                      </span>
+                    </button>
+                  </div>
+                  <div class="gls-xs-muted effects-custom-note" id="effects-custom-note" hidden data-i18n="effects.custom_note">Your own mix, set under Fine-tune.</div>
+                </div>
 
+                <div class="drawer-card gls-box">
+                  <div class="gls-xs-bold-muted-2" id="effects-corners-label" data-i18n="effects.corners">Corners</div>
+                  <div class="window-radius-selector gls-row-3" role="radiogroup" aria-labelledby="effects-corners-label">
+                    <button type="button" class="btn-pill-toggle window-radius-btn gls-grow" data-radius="6px" role="radio" aria-checked="false" data-i18n="effects.square">Square</button>
+                    <button type="button" class="btn-pill-toggle window-radius-btn active gls-grow" data-radius="12px" role="radio" aria-checked="true" data-i18n="effects.rounded">Rounded</button>
+                    <button type="button" class="btn-pill-toggle window-radius-btn gls-grow" data-radius="20px" role="radio" aria-checked="false" data-i18n="effects.extra_round">Extra round</button>
+                  </div>
+                </div>
+
+                <details class="drawer-card gls-box effects-fine">
+                  <summary data-i18n="effects.fine_tune">Fine-tune</summary>
                   <div class="gls-grid-box">
                     <!-- Acrylic Blur Radius -->
                     <div>
@@ -610,25 +643,7 @@
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <!-- Card 2: Window Geometry & Specular Lighting -->
-                <div class="drawer-card gls-box">
-                  <div class="gls-fs135-bold-strong-2" data-i18n="mgmt.window_geometry_title">Window Geometry & Lighting</div>
-
-                  <div class="gls-grid">
-                    <!-- Window Corner Curvature -->
-                    <div>
-                      <label class="gls-xs-bold-muted-2" data-i18n="mgmt.window_radius_label">Window corners</label>
-                      <div class="window-radius-selector gls-row-3" role="radiogroup" aria-label="Window Corner Curvature" data-i18n-aria-label="ui.window_corner_curvature">
-                        <button type="button" class="btn-pill-toggle window-radius-btn gls-grow" data-radius="6px" role="radio" aria-checked="false" data-i18n="mw.sharp_6px">Sharp (6px)</button>
-                        <button type="button" class="btn-pill-toggle window-radius-btn active gls-grow" data-radius="12px" role="radio" aria-checked="true" data-i18n="mw.modern_12px">Modern (12px)</button>
-                        <button type="button" class="btn-pill-toggle window-radius-btn gls-grow" data-radius="20px" role="radio" aria-checked="false" data-i18n="mw.rounded_20px">Rounded (20px)</button>
-                      </div>
-                    </div>
-
-                    <!-- Specular Border Glow -->
-                    <div>
+                  <div>
                       <div class="gls-row-2">
                         <label class="gls-xs-bold-muted" for="window-glow-toggle" data-i18n="mgmt.window_glow_label">Window edge glow</label>
                         <label class="switch-toggle gls-size-2">
@@ -636,31 +651,9 @@
                           <span class="slider-round" style="position:absolute; inset:0; background:var(--kb-glaze-15); border-radius:20px; transition:0.3s;"></span>
                         </label>
                       </div>
-                      <div class="gls-xs-muted-2" data-i18n="mgmt.window_glow_desc">
-                        Renders an active specular accent rim around the active foreground window, docking bar, and modal sheets.
-                      </div>
+                      <div class="gls-xs-muted-2" data-i18n="effects.glow_desc">A thin line in your accent colour around the window in front.</div>
                     </div>
-                  </div>
-                </div>
-
-                <!-- Card 3: Performance & Hardware Efficiency Mode -->
-                <div class="drawer-card gls-box">
-                  <div class="gls-row-4">
-                    <div>
-                      <div class="gls-row-fs135-bold-strong">
-                        <svg class="ic" style="width:14px; height:14px; color:var(--lt-ink-brand, var(--brand, #33cdb8));"><use href="#i-zap"/></svg>
-                        <span data-i18n="mgmt.eco_mode_title">Eco & Performance Mode</span>
-                      </div>
-                      <div class="gls-xs-muted" data-i18n="mgmt.eco_mode_desc">
-                        Disables GPU-heavy backdrop blur filters for smoother 60 FPS performance on low-power homelab CPUs.
-                      </div>
-                    </div>
-                    <label class="switch-toggle gls-size-2">
-                      <input class="gls-size-3" type="checkbox" id="eco-mode-toggle" aria-label="Toggle Eco & Performance Mode" data-i18n-aria-label="ui.toggle_eco_performance_mode">
-                      <span class="slider-round" style="position:absolute; inset:0; background:var(--kb-glaze-15); border-radius:20px; transition:0.3s;"></span>
-                    </label>
-                  </div>
-                </div>
+                </details>
 
               </div>
             </div>

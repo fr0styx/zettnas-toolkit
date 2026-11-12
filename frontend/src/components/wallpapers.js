@@ -196,6 +196,7 @@ export function applyGlassSettings(blurPx, opacityPercent, radiusPx, glowEnabled
       btn.setAttribute('aria-checked', isMatch ? 'true' : 'false');
     });
 
+    if (typeof window !== 'undefined') /** @type {any} */ (window).syncWindowStyleUI?.();
     if (typeof window !== 'undefined' && typeof window.syncDesktopTwinPreview === 'function') {
       window.syncDesktopTwinPreview({
         glassBlur: blurPx,

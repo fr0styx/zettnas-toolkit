@@ -1,9 +1,9 @@
 {
   "important": 3345,
   "buttonClasses": 75,
-  "inlineStyles": 1381,
+  "inlineStyles": 1379,
   "emojiIcons": 2,
-  "colours": 3951,
+  "colours": 3950,
   "primitiveUses": 4,
   "importantPerFile": {
     "frontend/index.html": 64,
@@ -160,6 +160,6 @@
     "frontend/src/utils.js": 1,
     "frontend/src/vm-console-direct.css": 2,
     "frontend/src/windows/drawer.html": 116,
-    "frontend/src/windows/management-window.html": 508
+    "frontend/src/windows/management-window.html": 507
   }
 }

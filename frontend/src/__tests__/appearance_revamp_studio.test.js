@@ -66,8 +66,8 @@ describe('Appearance Studio & Desktop Personalization Revamp Suite', () => {
     expect(html).toContain('id="extract-palette-btn"');
     expect(html).toContain('id="wallpaper-extracted-chips"');
 
-    // 4. Eco Mode Toggle
-    expect(html).toContain('id="eco-mode-toggle"');
+    // 4. Eco mode is the Solid window look (APP-C)
+    expect(html).toContain('data-window-style="solid"');
 
     // 5. Theme Bundle Export / Import / Restore
     expect(html).toContain('id="theme-export-btn"');
@@ -170,34 +170,25 @@ describe('Appearance Studio & Desktop Personalization Revamp Suite', () => {
     expect(chips.length).toBeGreaterThanOrEqual(5);
   });
 
-  it('initGlassControls toggles Eco Mode and sets body[data-performance-mode="eco"]', () => {
+  it('initGlassControls: the Solid look turns Eco mode on, Glass turns it off', () => {
     document.body.innerHTML = `
       <span id="glass-blur-val"></span>
       <input type="range" id="glass-blur-slider" value="24">
       <span id="glass-opacity-val"></span>
       <input type="range" id="glass-opacity-slider" value="72">
       <input type="checkbox" id="window-glow-toggle">
-      <input type="checkbox" id="eco-mode-toggle">
+      <button data-window-style="glass"></button><button data-window-style="solid"></button>
       <button class="window-radius-btn" data-radius="12px"></button>
       <button id="glass-reset-btn"></button>
     `;
 
     initGlassControls();
 
-    const ecoToggle = document.getElementById('eco-mode-toggle');
-    expect(ecoToggle).not.toBeNull();
-
-    // Enable eco mode
-    ecoToggle.checked = true;
-    ecoToggle.dispatchEvent(new Event('change'));
-
+    document.querySelector('[data-window-style="solid"]').click();
     expect(document.body.getAttribute('data-performance-mode')).toBe('eco');
     expect(localStorage.getItem('kiboto_eco_mode')).toBe('true');
 
-    // Disable eco mode
-    ecoToggle.checked = false;
-    ecoToggle.dispatchEvent(new Event('change'));
-
+    document.querySelector('[data-window-style="glass"]').click();
     expect(document.body.hasAttribute('data-performance-mode')).toBe(false);
     expect(localStorage.getItem('kiboto_eco_mode')).toBe('false');
   });
@@ -328,8 +319,8 @@ describe('Appearance Studio & Desktop Personalization Revamp Suite', () => {
       'mgmt.cat_scenic',
       'mgmt.cat_cyber',
       'mgmt.cat_oled',
-      'mgmt.eco_mode_title',
-      'mgmt.eco_mode_desc',
+      'effects.solid',
+      'effects.solid_desc',
       'settings.wallpaper_harmony_label',
       'settings.wallpaper_harmony_desc',
       'settings.extract_palette_btn',

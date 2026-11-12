@@ -599,6 +599,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   buttons, named for the widget, so the order can be changed with a keyboard, a screen reader or a
   phone, where dragging did not work.
 
+#### Changes
+
+- **Effects in three choices.** Windows are Glass, Soft or Solid, each with a small picture in your
+  theme's colours; Solid is the old Eco mode (no blur, smoothest on a slow computer). Corners are
+  Square, Rounded or Extra round. The blur and opacity sliders and the edge glow are folded under
+  Fine-tune, and moving them shows "Your own mix".
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

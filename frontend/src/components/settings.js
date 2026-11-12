@@ -1304,8 +1304,7 @@ export function importThemeBundle(file) {
         if (isEco) document.body.setAttribute('data-performance-mode', 'eco');
         else document.body.removeAttribute('data-performance-mode');
         try { localStorage.setItem('kiboto_eco_mode', isEco ? 'true' : 'false'); } catch (err) {}
-        const ecoToggle = document.getElementById('eco-mode-toggle');
-        if (ecoToggle) ecoToggle.checked = isEco;
+        /** @type {any} */ (window).syncWindowStyleUI?.();
       }
 
       syncDesktopThemeUI();
@@ -1374,8 +1373,7 @@ export function restoreAppearanceDefaultsWithUndo() {
   // 5. Reset eco mode
   document.body.removeAttribute('data-performance-mode');
   try { localStorage.removeItem('kiboto_eco_mode'); } catch (err) {}
-  const ecoToggle = document.getElementById('eco-mode-toggle');
-  if (ecoToggle) ecoToggle.checked = false;
+  /** @type {any} */ (window).syncWindowStyleUI?.();
 
   syncDesktopThemeUI();
   if (typeof window.syncDesktopTwinPreview === 'function') {
@@ -1409,7 +1407,7 @@ export function restoreAppearanceDefaultsWithUndo() {
     if (snap.ecoMode === 'true') {
       document.body.setAttribute('data-performance-mode', 'eco');
       try { localStorage.setItem('kiboto_eco_mode', 'true'); } catch (e) {}
-      if (ecoToggle) ecoToggle.checked = true;
+      /** @type {any} */ (window).syncWindowStyleUI?.();
     }
     syncDesktopThemeUI();
     showToast(t('settings.theme_restored', 'Appearance settings restored!'), 'success');
