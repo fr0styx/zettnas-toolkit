@@ -361,6 +361,43 @@ def test_rename_sort_and_the_menu_on_empty_space(journey_folder):
         browser.close()
 
 
+def test_escape_closes_a_menu_first_then_the_window_on_top(journey_folder):
+    """Escape is used by the thing on top: a menu closes and its File Explorer stays; once nothing
+    else needs the key, Escape closes the window on top (it closed nothing at all before)."""
+    from playwright.sync_api import sync_playwright
+
+    shown = (
+        "() => [...document.querySelectorAll('.file-manager-window')].filter((w) => w.isConnected"
+        " && getComputedStyle(w).display !== 'none' && !w.classList.contains('window-minimized')).length"
+    )
+    with sync_playwright() as p:
+        browser = _browser(p)
+        page = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+        _sign_in_with_keyboard(page)
+        _close_wizard(page)
+        _open_files_at(page, journey_folder, "restore-me.txt")
+        before = page.evaluate(shown)
+        assert before >= 1
+
+        box = page.locator(".file-manager-window .fm-viewport").last.bounding_box()
+        page.mouse.click(box["x"] + box["width"] - 40, box["y"] + box["height"] - 30, button="right")
+        page.wait_for_selector("#fm-context-menu [data-act=paste]", state="visible", timeout=4000)
+        page.keyboard.press("Escape")
+        page.wait_for_selector("#fm-context-menu [data-act=paste]", state="hidden", timeout=4000)
+        page.wait_for_timeout(300)
+        assert page.evaluate(shown) == before, "Escape on the menu closed the File Explorer too"
+
+        # the first Escape may clear a selection; with nothing left to use it, Escape closes the window
+        _focus_list(page)
+        for _ in range(2):
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(400)
+            if page.evaluate(shown) < before:
+                break
+        assert page.evaluate(shown) == before - 1, "Escape did not close the window on top"
+        browser.close()
+
+
 def test_an_upload_onto_a_taken_name_asks(journey_folder, tmp_path):
     """SET-05, the owner's decision S16: the same name twice asks Replace, Keep both or Skip.
     It used to replace the file with no question and no copy in the Recycle Bin."""

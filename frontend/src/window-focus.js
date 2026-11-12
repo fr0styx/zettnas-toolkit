@@ -5,7 +5,8 @@ import { isCompact } from './device.js';
  * - Opening or restoring a window moves focus into it; minimizing or closing it returns
  *   focus to whatever had it before (or the dock).
  * - Esc closes the top window, unless focus is in a text field, a terminal or a VM
- *   console (those need Esc themselves) or a dialog is open.
+ *   console (those need Esc themselves), a dialog is open, or something else on the page
+ *   used the key (a menu or picker closed, focus moved).
  * - Alt+` cycles through open windows.
  */
 const FOCUSABLE =
@@ -21,6 +22,30 @@ function visible(el) {
   if (el.classList.contains('window-minimized')) return false;
   const st = typeof getComputedStyle === 'function' ? getComputedStyle(el) : null;
   return !(st && (st.display === 'none' || st.visibility === 'hidden'));
+}
+
+/**
+ * Whether a dialog is on screen: also false when an ancestor hides it (Spotlight keeps its dialog
+ * inside a hidden overlay, and that hidden dialog used to switch Escape off for the whole page).
+ */
+function shown(el) {
+  if (!visible(el)) return false;
+  if (typeof el.checkVisibility === 'function') return el.checkVisibility({ visibilityProperty: true });
+  for (let up = el.parentElement; up; up = up.parentElement) {
+    const st = getComputedStyle(up);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+  }
+  return true;
+}
+
+/** Changes that mean a handler used the Escape key: something opened, closed, hid or showed. */
+const ESC_WATCH = ['class', 'style', 'hidden', 'open', 'aria-hidden', 'aria-expanded'];
+
+/** Whether anything on the page reacted to this Escape: a change in the page or focus moved. */
+export function escapeUsed(watch, focusBefore) {
+  const changes = watch ? watch.takeRecords() : [];
+  if (watch) watch.disconnect();
+  return changes.length > 0 || document.activeElement !== focusBefore;
 }
 
 function winOf(entry) {
@@ -141,31 +166,45 @@ export function installWindowFocus(dock) {
   wrap('minimize', (d, id, before) => returnFocus(before, d));
   wrap('unregister', (d, id, before) => returnFocus(before, d));
 
-  // Remember which window was on top when Esc went down; if another handler closes
-  // something for this key press, we don't also close the window underneath.
+  // When Esc goes down: remember the top window and start watching the page. About 40 places
+  // handle Escape themselves (menus, dialogs, pickers) and few mark the key as handled, so the
+  // closer below asks the page instead: if anything reacted to this key, the key was theirs.
   let escTop = null;
+  let escFocus = null;
+  let escWatch = null;
   document.addEventListener(
     'keydown',
     (e) => {
-      if (e.key === 'Escape') escTop = topWindowId(dock);
+      if (e.key !== 'Escape') return;
+      escTop = topWindowId(dock);
+      escFocus = document.activeElement;
+      if (escWatch) escWatch.disconnect();
+      escWatch = typeof MutationObserver === 'function' ? new MutationObserver(() => {}) : null;
+      if (escWatch) escWatch.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ESC_WATCH });
     },
     true
   );
-  document.addEventListener('keydown', (e) => {
-    if (e.defaultPrevented) return;
+  // Last of all (on window, after every element's and the document's own handlers): an Esc that
+  // nothing used closes the window on top
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const used = escapeUsed(escWatch, escFocus);
+    escWatch = null;
+    if (e.defaultPrevented || used) return;
     const t = e.target instanceof Element ? e.target : null;
-    if (e.key === 'Escape') {
-      if (t && (t.matches('input, textarea, select, [contenteditable="true"]') || t.closest(KEEP_ESCAPE))) return;
-      // a window that calls itself a dialog (Settings does) is a window: while it was open,
-      // Escape closed nothing, Settings included (SET-12)
-      const frames = new Set(Object.values(dock.windows || {}).map((w) => w && w.el));
-      if (Array.from(document.querySelectorAll(DIALOGS)).some((el) => visible(el) && !frames.has(el))) return;
-      const id = topWindowId(dock);
-      if (!id || id !== escTop) return;
-      e.preventDefault();
-      if (typeof dock.closeWindow === 'function') dock.closeWindow(id);
-      else dock.minimize(id);
-    } else if (e.key === '`' && e.altKey) {
+    if (t && (t.matches('input, textarea, select, [contenteditable="true"]') || t.closest(KEEP_ESCAPE))) return;
+    // a window that calls itself a dialog (Settings does) is a window: while it was open,
+    // Escape closed nothing, Settings included (SET-12)
+    const frames = new Set(Object.values(dock.windows || {}).map((w) => w && w.el));
+    if (Array.from(document.querySelectorAll(DIALOGS)).some((el) => shown(el) && !frames.has(el))) return;
+    const id = topWindowId(dock);
+    if (!id || id !== escTop) return;
+    e.preventDefault();
+    if (typeof dock.closeWindow === 'function') dock.closeWindow(id);
+    else dock.minimize(id);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '`' && e.altKey) {
       const open = Object.entries(dock.windows || {}).filter(([, w]) => !w.minimized && !w.closed && visible(winOf(w)));
       if (open.length < 2) return;
       e.preventDefault();

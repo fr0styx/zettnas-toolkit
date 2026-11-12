@@ -606,6 +606,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Square, Rounded or Extra round. The blur and opacity sliders and the edge glow are folded under
   Fine-tune, and moving them shows "Your own mix".
 
+#### Fixes
+
+- **Escape closes the window on top again, and only when nothing else needs the key.** A menu, a
+  picker or a question closes first and leaves its window open; the next Escape closes the window.
+  Escape had stopped closing windows at all.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
