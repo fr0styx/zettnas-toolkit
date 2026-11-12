@@ -4,12 +4,10 @@ Part of backend/hardware/network.py, split out by ARC-5."""
 
 import os
 import re
-import time
 from typing import Any
 
-from backend.config import logger
-from backend.hardware.net import canary, common, topology
-from backend.ignored_errors import ignored
+from backend.hardware.net import common, topology
+from backend.hardware.net import unraid_cfg as unraid_file
 
 
 def get_bond_config(bond_name: str) -> dict[str, Any]:
@@ -31,7 +29,7 @@ def get_bond_config(bond_name: str) -> dict[str, Any]:
         miimon = 100
 
     # Check Unraid config
-    unraid_cfg = canary._parse_unraid_network_cfg()
+    unraid_cfg = unraid_file._parse_unraid_network_cfg()
     idx = "0"
     m = re.search(r"\d+", bond_name)
     if m:
@@ -109,108 +107,6 @@ def get_bond_config(bond_name: str) -> dict[str, Any]:
     }
 
 
-def update_bond_config(bond_name: str, updates: dict[str, Any]) -> dict[str, Any]:
-    """Update bonding mode, enslaved interfaces, and MII monitoring."""
-    bond_name = (bond_name or "").strip()
-    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", bond_name):
-        return {"status": "error", "message": "Invalid bond interface name"}
-
-    mode = str(updates.get("mode", "1")).strip().lower()
-    mode_map = {
-        "balance-rr": "0",
-        "0": "0",
-        "active-backup": "1",
-        "1": "1",
-        "balance-xor": "2",
-        "2": "2",
-        "802.3ad": "4",
-        "4": "4",
-        "balance-alb": "6",
-        "6": "6",
-    }
-    if mode not in mode_map:
-        return {
-            "status": "error",
-            "message": "Invalid bonding mode. Supported modes: 0 (balance-rr), 1 (active-backup), 2 (balance-xor), 4 (802.3ad), 6 (balance-alb)",
-        }
-    mode_code = mode_map[mode]
-
-    slaves = updates.get("slaves", [])
-    if not isinstance(slaves, list) or len(slaves) == 0:
-        return {
-            "status": "error",
-            "message": "At least one member interface must be selected for the bond",
-        }
-    for s in slaves:
-        if not isinstance(s, str) or not re.match(r"^[a-zA-Z0-9_\-\.]+$", s):
-            return {"status": "error", "message": f"Invalid slave interface: {s}"}
-
-    try:
-        miimon = int(updates.get("miimon", 100))
-        if not (10 <= miimon <= 1000):
-            miimon = 100
-    except (ValueError, TypeError):
-        miimon = 100
-
-    # Persist to network_config.json
-    cfg = common.load_network_config()
-    bonds = cfg.setdefault("bonds", {})
-    bonds[bond_name] = {
-        "mode": mode_code,
-        "slaves": slaves,
-        "miimon": miimon,
-        "updated_at": time.time(),
-    }
-    common.save_network_config(cfg)
-
-    # Persist to Unraid /boot/config/network.cfg if present
-    idx = "0"
-    m = re.search(r"\d+", bond_name)
-    if m:
-        idx = m.group(0)
-
-    unraid_updates = {
-        f"BONDING_MODE[{idx}]": mode_code,
-        f"BONDNICS[{idx}]": " ".join(slaves),
-        f"BONDING_MIIMON[{idx}]": str(miimon),
-    }
-    canary._write_unraid_network_cfg(unraid_updates)
-
-    # Runtime sysfs tuning for miimon
-    sys_net_dir = common._find_sys_net_dir()
-    if sys_net_dir:
-        miimon_path = os.path.join(sys_net_dir, bond_name, "bonding/miimon")
-        if os.path.isfile(miimon_path):
-            try:
-                with open(miimon_path, "w") as f:
-                    f.write(str(miimon))
-            except Exception:
-                ignored("backend.hardware.network.update_bond_config")
-
-    mode_info = common.BONDING_MODES.get(mode_code, common.BONDING_MODES["1"])
-    try:
-        from backend.state import add_event, event_text
-
-        add_event(
-            "info",
-            "Bonding Mode Updated",
-            f"Bond {bond_name} updated to {mode_info['title']} with slaves: {', '.join(slaves)} (miimon: {miimon}ms).",
-            event_text("bond_set", name=bond_name, members=", ".join(slaves)),
-        )
-    except Exception:
-        ignored("backend.hardware.network.update_bond_config")
-
-    return {
-        "status": "ok",
-        "bond_name": bond_name,
-        "mode": mode_code,
-        "mode_title": mode_info.get("title"),
-        "slaves": slaves,
-        "miimon": miimon,
-        "message": f"Bonding configuration for '{bond_name}' saved successfully. Settings persisted to system config.",
-    }
-
-
 def get_bridge_config(br_name: str) -> dict[str, Any]:
     """Retrieve configuration, STP state, forward delay, and members for a virtual bridge."""
     br_name = (br_name or "").strip()
@@ -236,7 +132,7 @@ def get_bridge_config(br_name: str) -> dict[str, Any]:
         members = os.listdir(brif_dir)
 
     # Check Unraid config
-    unraid_cfg = canary._parse_unraid_network_cfg()
+    unraid_cfg = unraid_file._parse_unraid_network_cfg()
     idx = "0"
     m = re.search(r"\d+", br_name)
     if m:
@@ -297,90 +193,4 @@ def get_bridge_config(br_name: str) -> dict[str, Any]:
         "forward_delay": forward_delay,
         "members": sorted(members),
         "candidate_members": candidate_members,
-    }
-
-
-def update_bridge_config(br_name: str, updates: dict[str, Any]) -> dict[str, Any]:
-    """Update virtual bridge parameters: STP toggle, forward delay, and member interfaces."""
-    br_name = (br_name or "").strip()
-    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", br_name):
-        return {"status": "error", "message": "Invalid bridge interface name"}
-
-    stp = bool(updates.get("stp", False))
-    try:
-        forward_delay = int(updates.get("forward_delay", 0))
-        if not (0 <= forward_delay <= 30):
-            forward_delay = 0
-    except (ValueError, TypeError):
-        forward_delay = 0
-
-    members = updates.get("members", [])
-    if not isinstance(members, list):
-        members = []
-    for m in members:
-        if not isinstance(m, str) or not re.match(r"^[a-zA-Z0-9_\-\.]+$", m):
-            return {"status": "error", "message": f"Invalid member interface: {m}"}
-
-    # Persist to network_config.json
-    cfg = common.load_network_config()
-    bridges = cfg.setdefault("bridges", {})
-    bridges[br_name] = {
-        "stp": stp,
-        "forward_delay": forward_delay,
-        "members": members,
-        "updated_at": time.time(),
-    }
-    common.save_network_config(cfg)
-
-    # Persist to Unraid /boot/config/network.cfg if present
-    idx = "0"
-    m_idx = re.search(r"\d+", br_name)
-    if m_idx:
-        idx = m_idx.group(0)
-
-    unraid_updates = {
-        f"BRSTP[{idx}]": "yes" if stp else "no",
-        f"BRFD[{idx}]": str(forward_delay),
-    }
-    if members:
-        unraid_updates[f"BRNICS[{idx}]"] = " ".join(members)
-    canary._write_unraid_network_cfg(unraid_updates)
-
-    # Runtime sysfs apply
-    sys_net_dir = common._find_sys_net_dir()
-    if sys_net_dir:
-        stp_path = os.path.join(sys_net_dir, br_name, "bridge/stp_state")
-        if os.path.isfile(stp_path):
-            try:
-                with open(stp_path, "w") as f:
-                    f.write("1" if stp else "0")
-            except Exception:
-                ignored("backend.hardware.network.update_bridge_config")
-        fd_path = os.path.join(sys_net_dir, br_name, "bridge/forward_delay")
-        if os.path.isfile(fd_path):
-            try:
-                with open(fd_path, "w") as f:
-                    f.write(str(forward_delay * 100))
-            except Exception:
-                ignored("backend.hardware.network.update_bridge_config")
-
-    try:
-        from backend.state import add_event, event_text
-
-        add_event(
-            "info",
-            "Bridge Configured",
-            f"Bridge {br_name} updated: STP {'Enabled' if stp else 'Disabled'}, Forward Delay {forward_delay}s, Members: {', '.join(members) or 'None'}.",
-            event_text("bridge_set", name=br_name, members=", ".join(members) or "-"),
-        )
-    except Exception:
-        ignored("backend.hardware.network.update_bridge_config")
-
-    return {
-        "status": "ok",
-        "bridge_name": br_name,
-        "stp": stp,
-        "forward_delay": forward_delay,
-        "members": members,
-        "message": f"Bridge configuration for '{br_name}' saved successfully. Settings persisted to system config.",
     }

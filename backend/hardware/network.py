@@ -13,7 +13,6 @@ from backend.config import logger
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.net import (  # noqa: F401  (the areas, for patching a name where it is defined)
     bonds_bridges,
-    canary,
     common,
     host_ip,
     listening_ports,
@@ -22,22 +21,13 @@ from backend.hardware.net import (  # noqa: F401  (the areas, for patching a nam
     tailscale,
     tailscale_setup,
     topology,
+    unraid_cfg,
     vlans,
     wireguard,
 )
 from backend.hardware.net.bonds_bridges import (
     get_bond_config,
     get_bridge_config,
-    update_bond_config,
-    update_bridge_config,
-)
-from backend.hardware.net.canary import (
-    _CANARY_WATCHDOG,
-    CanaryWatchdog,
-    _execute_revert,
-    _parse_unraid_network_cfg,
-    _write_unraid_network_cfg,
-    get_canary_watchdog,
 )
 from backend.hardware.net.common import (
     BONDING_MODES,
@@ -66,10 +56,7 @@ from backend.hardware.net.common import (
 from backend.hardware.net.host_ip import (
     _validate_ipv4,
     _validate_netmask,
-    apply_host_ip_config_canary,
-    confirm_host_ip_config,
     get_host_ip_config,
-    revert_host_ip_config,
 )
 from backend.hardware.net.listening_ports import (
     get_active_listening_ports,
@@ -78,14 +65,11 @@ from backend.hardware.net.mesh import (
     get_mesh_vpn_status,
 )
 from backend.hardware.net.ports import (
-    _apply_mtu,
-    _apply_negotiation,
-    _apply_wol,
     _query_ethtool,
     create_docker_network,
     delete_docker_network,
     get_port_config,
-    update_port_config,
+    save_port_alias,
 )
 from backend.hardware.net.tailscale import (
     _find_tailscale_bin,
@@ -113,12 +97,10 @@ from backend.hardware.net.topology import (
     read_ip,
     read_network_rates,
 )
+from backend.hardware.net.unraid_cfg import _parse_unraid_network_cfg
 from backend.hardware.net.vlans import (
     _IFNAME,
-    _ip_link_delete,
     _parse_proc_net_vlan,
-    create_vlan,
-    delete_vlan,
     get_vlans,
 )
 from backend.hardware.net.wireguard import (
@@ -133,7 +115,6 @@ from backend.state import Z_STATE
 
 __all__ = [
     "BONDING_MODES",
-    "CanaryWatchdog",
     "DNS_SOURCES",
     "HOST_IP_SOURCES",
     "HOST_PROC",
@@ -142,13 +123,8 @@ __all__ = [
     "NETWORK_CONFIG_FILE",
     "UNRAID_NETWORK_CFG",
     "Z_STATE",
-    "_CANARY_WATCHDOG",
     "_IFNAME",
-    "_apply_mtu",
-    "_apply_negotiation",
-    "_apply_wol",
     "_docker_sock_path",
-    "_execute_revert",
     "_find_proc_net_path",
     "_find_sys_net_dir",
     "_find_tailscale_bin",
@@ -159,7 +135,6 @@ __all__ = [
     "_get_unraid_descriptions",
     "_get_wireguard_status",
     "_hex_to_ip",
-    "_ip_link_delete",
     "_mask_to_cidr",
     "_parse_proc_net_vlan",
     "_parse_routes",
@@ -170,14 +145,9 @@ __all__ = [
     "_run_tailscale_cmd",
     "_validate_ipv4",
     "_validate_netmask",
-    "_write_unraid_network_cfg",
-    "apply_host_ip_config_canary",
     "atomic_write_json",
-    "confirm_host_ip_config",
     "create_docker_network",
-    "create_vlan",
     "delete_docker_network",
-    "delete_vlan",
     "deploy_tailscale_container",
     "detect_local_subnets",
     "docker_sock",
@@ -195,12 +165,12 @@ __all__ = [
     "get_active_listening_ports",
     "get_bond_config",
     "get_bridge_config",
-    "get_canary_watchdog",
     "get_host_ip_config",
     "get_ip_forwarding_status",
     "get_mesh_vpn_status",
     "get_network_topology",
     "get_port_config",
+    "save_port_alias",
     "get_taildrop_dir",
     "get_taildrop_inbox_files",
     "get_vlans",
@@ -209,11 +179,7 @@ __all__ = [
     "read_ip",
     "read_json",
     "read_network_rates",
-    "revert_host_ip_config",
     "save_network_config",
     "set_ip_forwarding",
     "toggle_wireguard_subnet_nat",
-    "update_bond_config",
-    "update_bridge_config",
-    "update_port_config",
 ]

@@ -612,6 +612,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   picker or a question closes first and leaves its window open; the next Escape closes the window.
   Escape had stopped closing windows at all.
 
+#### Changes
+
+- **Network changes Kiboto could not make are refused with where to make them.** Changing the
+  address, a bond, a bridge, a VLAN, a port's packet size, speed or Wake-on-LAN never took effect
+  on Unraid (Unraid's own settings own the wiring) but reported success. Kiboto now says where to
+  change it ("Unraid: Settings, Network Settings"). Port nicknames are still saved. The same
+  routes will make the changes on Kiboto's own OS images.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

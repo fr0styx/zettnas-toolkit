@@ -1457,14 +1457,9 @@ class GetBridgeConfigEndpointResponse(_Doc):
     stp: bool | None = None
 
 
-class GetHostIpConfigEndpointResponseCanary(_Doc):
-    is_active: bool | None = None
-
-
 class GetHostIpConfigEndpointResponse(_Doc):
     """GET /network/host/config"""
 
-    canary: GetHostIpConfigEndpointResponseCanary | None = None
     gateway: str | None = None
     interface: str | None = None
     ip_address: str | None = None

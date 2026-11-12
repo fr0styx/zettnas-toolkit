@@ -228,12 +228,6 @@
      "eth1",
      "eth2"
     ],
-    "canary": {
-     "canary_id": null,
-     "expires_in": 0,
-     "is_active": false,
-     "target_ip": null
-    },
     "cidr": 24,
     "dns1": "192.168.1.1",
     "dns2": "1.1.1.1",
@@ -247,173 +241,6 @@
     "mode": "static",
     "netmask": "255.255.255.0",
     "status": "ok"
-   }
-  },
-  {
-   "call": "apply_host_ip_config_canary {'mode': 'static', 'ip_address': '999.1.1.1'}",
-   "commands": [],
-   "result": {
-    "message": "Invalid IPv4 address for IPv4 Address: 999.1.1.1",
-    "raised": "ValueError"
-   }
-  },
-  {
-   "call": "apply_host_ip_config_canary {'mode': 'static', 'ip_address': '192.168.1.20', 'netmask': '255.0.255.0'}",
-   "commands": [],
-   "result": {
-    "message": "Invalid netmask: 255.0.255.0",
-    "raised": "ValueError"
-   }
-  },
-  {
-   "call": "apply_host_ip_config_canary {'mode': 'weird'}",
-   "commands": [],
-   "result": {
-    "message": "Mode must be 'dhcp' or 'static'",
-    "raised": "ValueError"
-   }
-  },
-  {
-   "call": "apply_host_ip_config_canary {'mode': 'dhcp', 'interface': 'br0;x'}",
-   "commands": [],
-   "result": {
-    "message": "Invalid interface name",
-    "raised": "ValueError"
-   }
-  },
-  {
-   "call": "apply_host_ip_config_canary {'mode': 'static', 'ip_address': '192.168.1.20', 'dns1': 'x'}",
-   "commands": [],
-   "result": {
-    "message": "Invalid IPv4 address for Primary DNS: x",
-    "raised": "ValueError"
-   }
-  },
-  {
-   "call": "apply_host_ip_config_canary static",
-   "commands": [
-    [
-     "http",
-     "GET",
-     "/networks"
-    ],
-    [
-     "http",
-     "GET",
-     "/containers/json"
-    ]
-   ],
-   "result": {
-    "canary_id": "<id>",
-    "expires_in": "<seconds left>",
-    "message": "Network Canary armed. Please confirm within 30s to keep settings permanently.",
-    "original_ip": "192.168.1.10",
-    "status": "testing",
-    "target_ip": "192.168.1.20",
-    "target_url": "http://192.168.1.20:8082"
-   }
-  },
-  {
-   "call": "canary status",
-   "commands": [],
-   "result": {
-    "canary_id": "<id>",
-    "expires_in": "<seconds left>",
-    "is_active": true,
-    "target_ip": "192.168.1.20"
-   }
-  },
-  {
-   "call": "network.cfg after apply",
-   "commands": [],
-   "result": "# Generated settings:\nIFNAME[0]=\"br0\"\nBONDNAME[0]=\"bond0\"\nBONDING_MODE[0]=\"4\"\nBRNAME[0]=\"br0\"\nBRSTP[0]=\"no\"\nDESCRIPTION[0]=\"Main LAN\"\nUSE_DHCP[0]=\"no\"\nIPADDR[0]=\"192.168.1.20\"\nNETMASK[0]=\"255.255.255.0\"\nGATEWAY=\"192.168.1.1\"\nDNS_SERVER1=\"1.1.1.1\"\nDNS_SERVER2=\"9.9.9.9\"\nDHCP_KEEPRESOLV=\"yes\"\nMTU[0]=\"1500\"\nDESCRIPTION[1]=\"Backup NIC\"\nSYSNICS=\"2\"\nGATEWAY[0]=\"192.168.1.1\"\n"
-  },
-  {
-   "call": "confirm wrong id",
-   "commands": [],
-   "result": {
-    "message": "Invalid or expired canary ID",
-    "status": "error"
-   }
-  },
-  {
-   "call": "confirm",
-   "commands": [],
-   "result": {
-    "config": {
-     "cidr": 24,
-     "dns1": "1.1.1.1",
-     "dns2": "9.9.9.9",
-     "gateway": "192.168.1.1",
-     "interface": "br0",
-     "ip_address": "192.168.1.20",
-     "mode": "static",
-     "netmask": "255.255.255.0",
-     "updated_at": "<ts>"
-    },
-    "message": "Host network configuration successfully committed.",
-    "status": "confirmed"
-   }
-  },
-  {
-   "call": "revert after confirm",
-   "commands": [],
-   "result": {
-    "message": "No active canary test to revert",
-    "status": "error"
-   }
-  },
-  {
-   "call": "apply again (dhcp)",
-   "commands": [
-    [
-     "http",
-     "GET",
-     "/networks"
-    ],
-    [
-     "http",
-     "GET",
-     "/containers/json"
-    ]
-   ],
-   "result": {
-    "canary_id": "<id>",
-    "expires_in": "<seconds left>",
-    "message": "Network Canary armed. Please confirm within 30s to keep settings permanently.",
-    "original_ip": "192.168.1.20",
-    "status": "testing",
-    "target_ip": "192.168.1.20",
-    "target_url": "http://192.168.1.20:8082"
-   }
-  },
-  {
-   "call": "revert",
-   "commands": [],
-   "result": {
-    "message": "Host network configuration reverted to previous state.",
-    "restored_ip": "192.168.1.20",
-    "status": "reverted"
-   }
-  },
-  {
-   "call": "network.cfg after revert",
-   "commands": [],
-   "result": "# Generated settings:\nIFNAME[0]=\"br0\"\nBONDNAME[0]=\"bond0\"\nBONDING_MODE[0]=\"4\"\nBRNAME[0]=\"br0\"\nBRSTP[0]=\"no\"\nDESCRIPTION[0]=\"Main LAN\"\nUSE_DHCP[0]=\"no\"\nIPADDR[0]=\"192.168.1.20\"\nNETMASK[0]=\"255.255.255.0\"\nGATEWAY=\"192.168.1.1\"\nDNS_SERVER1=\"1.1.1.1\"\nDNS_SERVER2=\"9.9.9.9\"\nDHCP_KEEPRESOLV=\"yes\"\nMTU[0]=\"1500\"\nDESCRIPTION[1]=\"Backup NIC\"\nSYSNICS=\"2\"\nGATEWAY[0]=\"192.168.1.1\"\n"
-  },
-  {
-   "call": "watchdog arm",
-   "commands": [],
-   "result": "<id>"
-  },
-  {
-   "call": "watchdog timeout",
-   "commands": [],
-   "result": {
-    "canary_id": null,
-    "expires_in": 0,
-    "is_active": false,
-    "target_ip": null
    }
   },
   {
@@ -679,136 +506,9 @@
    }
   },
   {
-   "call": "update_port_config eth2 {'mtu': 9000}",
-   "commands": [
-    [
-     "run",
-     "ip",
-     "link",
-     "set",
-     "dev",
-     "eth2",
-     "mtu",
-     "9000"
-    ]
-   ],
-   "result": {
-    "config": {
-     "mtu": 9000
-    },
-    "message": "Port configuration saved for eth2",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "update_port_config eth2 {'mtu': 100}",
-   "commands": [
-    [
-     "run",
-     "ip",
-     "link",
-     "set",
-     "dev",
-     "eth2",
-     "mtu",
-     "100"
-    ]
-   ],
-   "result": {
-    "config": {
-     "mtu": 100
-    },
-    "message": "Port configuration saved for eth2",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "update_port_config eth2 {'wol': True}",
+   "call": "save_port_alias",
    "commands": [],
-   "result": {
-    "config": {
-     "mtu": 100
-    },
-    "message": "Port configuration saved for eth2",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "update_port_config eth2 {'autoneg': False, 'speed': 1000, 'duplex': 'full'}",
-   "commands": [
-    [
-     "run",
-     "ethtool",
-     "-s",
-     "eth2",
-     "speed",
-     "1000",
-     "duplex",
-     "full",
-     "autoneg",
-     "off"
-    ]
-   ],
-   "result": {
-    "config": {
-     "autoneg": false,
-     "duplex": "full",
-     "mtu": 100,
-     "speed": 1000
-    },
-    "message": "Port configuration saved for eth2",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "update_port_config eth2 {'description': 'Uplink'}",
-   "commands": [],
-   "result": {
-    "config": {
-     "autoneg": false,
-     "duplex": "full",
-     "mtu": 100,
-     "speed": 1000
-    },
-    "message": "Port configuration saved for eth2",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "update_port_config eth2 {}",
-   "commands": [],
-   "result": {
-    "config": {
-     "autoneg": false,
-     "duplex": "full",
-     "mtu": 100,
-     "speed": 1000
-    },
-    "message": "Port configuration saved for eth2",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "update_port_config missing",
-   "commands": [
-    [
-     "run",
-     "ip",
-     "link",
-     "set",
-     "dev",
-     "nope0",
-     "mtu",
-     "1500"
-    ]
-   ],
-   "result": {
-    "config": {
-     "mtu": 1500
-    },
-    "message": "Port configuration saved for nope0",
-    "status": "ok"
-   }
+   "result": "Uplink"
   },
   {
    "call": "create_docker_network",
@@ -893,167 +593,6 @@
    ]
   },
   {
-   "call": "create_vlan ('eth2', 30, 'Cameras')",
-   "commands": [
-    [
-     "run",
-     "ip",
-     "link",
-     "add",
-     "link",
-     "eth2",
-     "name",
-     "eth2.30",
-     "type",
-     "vlan",
-     "id",
-     "30"
-    ],
-    [
-     "run",
-     "ip",
-     "link",
-     "set",
-     "dev",
-     "eth2.30",
-     "up"
-    ]
-   ],
-   "result": {
-    "alias": "Cameras",
-    "applied_runtime": true,
-    "message": "VLAN sub-interface 'eth2.30' created successfully",
-    "name": "eth2.30",
-    "parent": "eth2",
-    "status": "ok",
-    "vlan_id": 30
-   }
-  },
-  {
-   "call": "create_vlan ('eth2', 5000, '')",
-   "commands": [],
-   "result": {
-    "message": "VLAN ID must be an integer between 1 and 4094",
-    "status": "error"
-   }
-  },
-  {
-   "call": "create_vlan ('nope0', 30, '')",
-   "commands": [
-    [
-     "run",
-     "ip",
-     "link",
-     "add",
-     "link",
-     "nope0",
-     "name",
-     "nope0.30",
-     "type",
-     "vlan",
-     "id",
-     "30"
-    ],
-    [
-     "run",
-     "ip",
-     "link",
-     "set",
-     "dev",
-     "nope0.30",
-     "up"
-    ]
-   ],
-   "result": {
-    "alias": "",
-    "applied_runtime": true,
-    "message": "VLAN sub-interface 'nope0.30' created successfully",
-    "name": "nope0.30",
-    "parent": "nope0",
-    "status": "ok",
-    "vlan_id": 30
-   }
-  },
-  {
-   "call": "create_vlan ('eth2', 999, '')",
-   "commands": [
-    [
-     "run",
-     "ip",
-     "link",
-     "add",
-     "link",
-     "eth2",
-     "name",
-     "eth2.999",
-     "type",
-     "vlan",
-     "id",
-     "999"
-    ]
-   ],
-   "result": {
-    "alias": "",
-    "applied_runtime": false,
-    "message": "VLAN 'eth2.999' configuration saved. Will apply on network restart.",
-    "name": "eth2.999",
-    "parent": "eth2",
-    "status": "ok",
-    "vlan_id": 999
-   }
-  },
-  {
-   "call": "create_vlan ('eth2;rm', 30, '')",
-   "commands": [],
-   "result": {
-    "message": "Invalid parent interface name",
-    "status": "error"
-   }
-  },
-  {
-   "call": "delete_vlan eth2.30",
-   "commands": [],
-   "result": {
-    "message": "VLAN sub-interface 'eth2.30' removed successfully.",
-    "name": "eth2.30",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "delete_vlan br0.20",
-   "commands": [
-    [
-     "run",
-     "ip",
-     "link",
-     "del",
-     "dev",
-     "br0.20"
-    ]
-   ],
-   "result": {
-    "message": "VLAN sub-interface 'br0.20' removed successfully.",
-    "name": "br0.20",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "delete_vlan eth0",
-   "commands": [],
-   "result": {
-    "message": "Invalid VLAN interface name",
-    "status": "error"
-   }
-  },
-  {
-   "call": "delete_vlan nope.1",
-   "commands": [],
-   "result": {
-    "message": "'nope.1' is not a VLAN; only VLAN sub-interfaces can be removed here.",
-    "status": "error"
-   }
-  },
-  {
    "call": "get_bond_config bond0",
    "commands": [
     [
@@ -1122,7 +661,7 @@
       "speed_human": "2.5 Gbps"
      },
      {
-      "alias": "",
+      "alias": "Uplink",
       "is_slave": false,
       "is_up": false,
       "mac": "aa:bb:cc:00:00:03",
@@ -1211,7 +750,7 @@
       "speed_human": "2.5 Gbps"
      },
      {
-      "alias": "",
+      "alias": "Uplink",
       "is_slave": false,
       "is_up": false,
       "mac": "aa:bb:cc:00:00:03",
@@ -1225,46 +764,6 @@
     "mode_name": "active-backup",
     "mode_title": "Active-Backup (Failover)",
     "slaves": [],
-    "status": "ok"
-   }
-  },
-  {
-   "call": "update_bond_config {'mode': 'active-backup'}",
-   "commands": [],
-   "result": {
-    "message": "At least one member interface must be selected for the bond",
-    "status": "error"
-   }
-  },
-  {
-   "call": "update_bond_config {'mode': 'nonsense'}",
-   "commands": [],
-   "result": {
-    "message": "Invalid bonding mode. Supported modes: 0 (balance-rr), 1 (active-backup), 2 (balance-xor), 4 (802.3ad), 6 (balance-alb)",
-    "status": "error"
-   }
-  },
-  {
-   "call": "update_bond_config {'miimon': 200}",
-   "commands": [],
-   "result": {
-    "message": "At least one member interface must be selected for the bond",
-    "status": "error"
-   }
-  },
-  {
-   "call": "update_bond_config {'slaves': ['eth0', 'eth2']}",
-   "commands": [],
-   "result": {
-    "bond_name": "bond0",
-    "message": "Bonding configuration for 'bond0' saved successfully. Settings persisted to system config.",
-    "miimon": 100,
-    "mode": "1",
-    "mode_title": "Active-Backup (Failover)",
-    "slaves": [
-     "eth0",
-     "eth2"
-    ],
     "status": "ok"
    }
   },
@@ -1310,7 +809,7 @@
       "type": "physical"
      },
      {
-      "alias": "",
+      "alias": "Uplink",
       "is_member": false,
       "is_up": false,
       "name": "eth2",
@@ -1369,7 +868,7 @@
       "type": "physical"
      },
      {
-      "alias": "",
+      "alias": "Uplink",
       "is_member": false,
       "is_up": false,
       "name": "eth2",
@@ -1381,57 +880,6 @@
     "members": [],
     "status": "ok",
     "stp": false
-   }
-  },
-  {
-   "call": "update_bridge_config {'stp': True}",
-   "commands": [],
-   "result": {
-    "bridge_name": "br0",
-    "forward_delay": 0,
-    "members": [],
-    "message": "Bridge configuration for 'br0' saved successfully. Settings persisted to system config.",
-    "status": "ok",
-    "stp": true
-   }
-  },
-  {
-   "call": "update_bridge_config {'forward_delay': 4}",
-   "commands": [],
-   "result": {
-    "bridge_name": "br0",
-    "forward_delay": 4,
-    "members": [],
-    "message": "Bridge configuration for 'br0' saved successfully. Settings persisted to system config.",
-    "status": "ok",
-    "stp": false
-   }
-  },
-  {
-   "call": "update_bridge_config {'members': ['bond0', 'eth2']}",
-   "commands": [],
-   "result": {
-    "bridge_name": "br0",
-    "forward_delay": 0,
-    "members": [
-     "bond0",
-     "eth2"
-    ],
-    "message": "Bridge configuration for 'br0' saved successfully. Settings persisted to system config.",
-    "status": "ok",
-    "stp": false
-   }
-  },
-  {
-   "call": "update_bridge_config {'stp': 'maybe'}",
-   "commands": [],
-   "result": {
-    "bridge_name": "br0",
-    "forward_delay": 0,
-    "members": [],
-    "message": "Bridge configuration for 'br0' saved successfully. Settings persisted to system config.",
-    "status": "ok",
-    "stp": true
    }
   },
   {
@@ -1532,7 +980,7 @@
      {
       "alias": "Main LAN",
       "carrier": 1,
-      "forward_delay": 0,
+      "forward_delay": 15,
       "interfaces": [
        "bond0",
        "vnet0"
@@ -1543,7 +991,7 @@
       "mtu": 1500,
       "name": "br0",
       "rx_bytes": 123456789,
-      "stp": true,
+      "stp": false,
       "tx_bytes": 987654321
      }
     ],
@@ -1684,7 +1132,7 @@
       "tx_packets": 2000
      },
      {
-      "alias": "",
+      "alias": "Uplink",
       "carrier": 0,
       "driver": "r8169",
       "duplex": "unknown",
@@ -1743,16 +1191,10 @@
     "status": "ok",
     "summary": {
      "active_physical": 2,
-     "canary": {
-      "canary_id": null,
-      "expires_in": 0,
-      "is_active": false,
-      "target_ip": null
-     },
      "default_gateway": "192.168.1.1",
      "dns_servers": [
-      "1.1.1.1",
-      "9.9.9.9"
+      "192.168.1.1",
+      "1.1.1.1"
      ],
      "docker_containers_count": 0,
      "docker_networks_count": 3,
@@ -1760,7 +1202,7 @@
      "primary_interface": "br0",
      "primary_ip": "192.168.1.10",
      "total_physical": 3,
-     "vlan_count": 3
+     "vlan_count": 1
     },
     "vlans": [
      {
@@ -1776,34 +1218,6 @@
       "speed_human": "Unknown",
       "tx_bytes": 987654321,
       "vlan_id": 20
-     },
-     {
-      "alias": "",
-      "carrier": 0,
-      "ip_address": "",
-      "is_up": false,
-      "mac": "",
-      "mtu": 1500,
-      "name": "eth2.999",
-      "parent": "eth2",
-      "rx_bytes": 0,
-      "speed_human": "Disconnected",
-      "tx_bytes": 0,
-      "vlan_id": 999
-     },
-     {
-      "alias": "",
-      "carrier": 0,
-      "ip_address": "",
-      "is_up": false,
-      "mac": "",
-      "mtu": 1500,
-      "name": "nope0.30",
-      "parent": "nope0",
-      "rx_bytes": 0,
-      "speed_human": "Disconnected",
-      "tx_bytes": 0,
-      "vlan_id": 30
      }
     ]
    }
@@ -4009,20 +3423,7 @@
   {
    "call": "timers",
    "commands": [],
-   "result": [
-    [
-     30.0,
-     "_on_timeout"
-    ],
-    [
-     30.0,
-     "_on_timeout"
-    ],
-    [
-     5.0,
-     "_on_timeout"
-    ]
-   ]
+   "result": []
   }
  ],
  "surface": {
@@ -4060,16 +3461,6 @@
     }
    }
   },
-  "CanaryWatchdog": {
-   "class": {
-    "__init__": "(self)",
-    "_on_timeout": "(self, canary_id: str)",
-    "arm": "(self, target_config: dict[str, typing.Any], original_config: dict[str, typing.Any], timeout_sec: int = 60) -> str",
-    "confirm": "(self, canary_id: str | None = None) -> bool",
-    "get_status": "(self) -> dict[str, typing.Any]",
-    "revert": "(self, canary_id: str | None = None) -> dict[str, typing.Any] | None"
-   }
-  },
   "DNS_SOURCES": {
    "value": [
     "<root>/boot/network.cfg",
@@ -4101,18 +3492,6 @@
     "<root>/boot/network.cfg"
    ]
   },
-  "_apply_mtu": {
-   "function": "(iface: str, mtu_val: int) -> bool"
-  },
-  "_apply_negotiation": {
-   "function": "(iface: str, autoneg: bool, speed: int | None = None, duplex: str = 'full') -> bool"
-  },
-  "_apply_wol": {
-   "function": "(iface: str, enabled: bool) -> bool"
-  },
-  "_execute_revert": {
-   "function": "(orig: dict[str, typing.Any]) -> None"
-  },
   "_find_tailscale_bin": {
    "function": "() -> str | None"
   },
@@ -4136,9 +3515,6 @@
   },
   "_hex_to_ip": {
    "function": "(hex_str: str) -> str"
-  },
-  "_ip_link_delete": {
-   "function": "(name: str) -> tuple[bool, str]"
   },
   "_mask_to_cidr": {
    "function": "(mask_ip: str) -> int"
@@ -4170,26 +3546,11 @@
   "_validate_netmask": {
    "function": "(val: str) -> str"
   },
-  "_write_unraid_network_cfg": {
-   "function": "(updates: dict[str, str]) -> bool"
-  },
-  "apply_host_ip_config_canary": {
-   "function": "(updates: dict[str, typing.Any], timeout_sec: int = 60) -> dict[str, typing.Any]"
-  },
-  "confirm_host_ip_config": {
-   "function": "(canary_id: str | None = None) -> dict[str, typing.Any]"
-  },
   "create_docker_network": {
    "function": "(name: str, driver: str = 'bridge', subnet: str = '', gateway: str = '') -> dict[str, typing.Any]"
   },
-  "create_vlan": {
-   "function": "(parent: str, vlan_id: int, alias: str = '') -> dict[str, typing.Any]"
-  },
   "delete_docker_network": {
    "function": "(net_id_or_name: str) -> dict[str, typing.Any]"
-  },
-  "delete_vlan": {
-   "function": "(vlan_name: str) -> dict[str, typing.Any]"
   },
   "deploy_tailscale_container": {
    "function": "(auth_key: str | None = None, hostname: str | None = None, accept_routes: bool = False, state_dir: str | None = None) -> dict[str, typing.Any]"
@@ -4239,9 +3600,6 @@
   "get_bridge_config": {
    "function": "(br_name: str) -> dict[str, typing.Any]"
   },
-  "get_canary_watchdog": {
-   "function": "() -> CanaryWatchdog"
-  },
   "get_host_ip_config": {
    "function": "() -> dict[str, typing.Any]"
   },
@@ -4275,26 +3633,17 @@
   "read_network_rates": {
    "function": "()"
   },
-  "revert_host_ip_config": {
-   "function": "(canary_id: str | None = None) -> dict[str, typing.Any]"
-  },
   "save_network_config": {
    "function": "(cfg: dict[str, typing.Any]) -> None"
+  },
+  "save_port_alias": {
+   "function": "(iface_name: str, alias: str) -> str"
   },
   "set_ip_forwarding": {
    "function": "(enable: bool) -> bool"
   },
   "toggle_wireguard_subnet_nat": {
    "function": "(enable: bool, iface: str = 'wg0', out_iface: str = 'eth0') -> dict[str, typing.Any]"
-  },
-  "update_bond_config": {
-   "function": "(bond_name: str, updates: dict[str, typing.Any]) -> dict[str, typing.Any]"
-  },
-  "update_bridge_config": {
-   "function": "(br_name: str, updates: dict[str, typing.Any]) -> dict[str, typing.Any]"
-  },
-  "update_port_config": {
-   "function": "(iface_name: str, updates: dict[str, typing.Any]) -> dict[str, typing.Any]"
   }
  }
 }

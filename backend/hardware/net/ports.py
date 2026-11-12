@@ -9,7 +9,6 @@ from typing import Any
 
 import httpx
 
-from backend.config import logger
 from backend.hardware.net import common, topology
 from backend.ignored_errors import ignored
 
@@ -39,102 +38,6 @@ def _query_ethtool(iface: str) -> str:
             ignored("backend.hardware.network._query_ethtool")
 
     return ""
-
-
-def _apply_mtu(iface: str, mtu_val: int) -> bool:
-    """Apply MTU via ip link directly or in host netns."""
-    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", iface):
-        return False
-    try:
-        res = subprocess.run(
-            ["ip", "link", "set", "dev", iface, "mtu", str(mtu_val)],
-            capture_output=True,
-            timeout=3,
-        )
-        if res.returncode == 0:
-            return True
-    except Exception:
-        ignored("backend.hardware.network._apply_mtu")
-
-    if os.path.exists("/host/proc/1/ns/net"):
-        try:
-            res = subprocess.run(
-                ["nsenter", "--net=/host/proc/1/ns/net", "ip", "link", "set", "dev", iface, "mtu", str(mtu_val)],
-                capture_output=True,
-                timeout=3,
-            )
-            if res.returncode == 0:
-                return True
-        except Exception:
-            ignored("backend.hardware.network._apply_mtu")
-
-    for sys_base in [common.HOST_SYS, "/host/sys", "/sys"]:
-        mtu_path = os.path.join(sys_base, "class/net", iface, "mtu")
-        if os.path.isfile(mtu_path):
-            try:
-                with open(mtu_path, "w") as f:
-                    f.write(str(mtu_val))
-                return True
-            except Exception:
-                ignored("backend.hardware.network._apply_mtu")
-    return False
-
-
-def _apply_wol(iface: str, enabled: bool) -> bool:
-    """Apply Wake-on-LAN mode via ethtool."""
-    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", iface):
-        return False
-    wol_arg = "g" if enabled else "d"
-    try:
-        res = subprocess.run(["ethtool", "-s", iface, "wol", wol_arg], capture_output=True, timeout=3)
-        if res.returncode == 0:
-            return True
-    except Exception:
-        ignored("backend.hardware.network._apply_wol")
-
-    if os.path.exists("/host/proc/1/ns/net"):
-        try:
-            res = subprocess.run(
-                ["nsenter", "--net=/host/proc/1/ns/net", "ethtool", "-s", iface, "wol", wol_arg],
-                capture_output=True,
-                timeout=3,
-            )
-            if res.returncode == 0:
-                return True
-        except Exception:
-            ignored("backend.hardware.network._apply_wol")
-    return False
-
-
-def _apply_negotiation(iface: str, autoneg: bool, speed: int | None = None, duplex: str = "full") -> bool:
-    """Apply speed/duplex negotiation via ethtool."""
-    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", iface):
-        return False
-    cmd_args = ["-s", iface]
-    if autoneg or speed is None:
-        cmd_args.extend(["autoneg", "on"])
-    else:
-        cmd_args.extend(["speed", str(speed), "duplex", duplex, "autoneg", "off"])
-
-    try:
-        res = subprocess.run(["ethtool"] + cmd_args, capture_output=True, timeout=3)
-        if res.returncode == 0:
-            return True
-    except Exception:
-        ignored("backend.hardware.network._apply_negotiation")
-
-    if os.path.exists("/host/proc/1/ns/net"):
-        try:
-            res = subprocess.run(
-                ["nsenter", "--net=/host/proc/1/ns/net", "ethtool"] + cmd_args,
-                capture_output=True,
-                timeout=3,
-            )
-            if res.returncode == 0:
-                return True
-        except Exception:
-            ignored("backend.hardware.network._apply_negotiation")
-    return False
 
 
 def get_port_config(iface_name: str) -> dict[str, Any]:
@@ -183,52 +86,6 @@ def get_port_config(iface_name: str) -> dict[str, Any]:
         "autoneg": autoneg,
         "supported_speeds": supported_speeds,
     }
-
-
-def update_port_config(iface_name: str, updates: dict[str, Any]) -> dict[str, Any]:
-    """Update port configuration: friendly alias, MTU, WOL, speed/duplex."""
-    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", iface_name):
-        return {"status": "error", "message": "Invalid interface name"}
-
-    cfg = common.load_network_config()
-    aliases = cfg.setdefault("aliases", {})
-    ports = cfg.setdefault("ports", {})
-    port_meta = ports.setdefault(iface_name, {})
-
-    # 1. Alias update
-    if "alias" in updates:
-        alias = str(updates["alias"]).strip()
-        aliases[iface_name] = alias
-        port_meta["alias"] = alias
-
-    # 2. MTU update
-    if "mtu" in updates and updates["mtu"] is not None:
-        try:
-            mtu_val = int(updates["mtu"])
-            if 68 <= mtu_val <= 9216:
-                port_meta["mtu"] = mtu_val
-                _apply_mtu(iface_name, mtu_val)
-        except (ValueError, TypeError):
-            pass
-
-    # 3. Wake-on-LAN update
-    if "wol_enabled" in updates:
-        wol_en = bool(updates["wol_enabled"])
-        port_meta["wol_enabled"] = wol_en
-        _apply_wol(iface_name, wol_en)
-
-    # 4. Link Negotiation update
-    if "autoneg" in updates or "speed" in updates:
-        autoneg = bool(updates.get("autoneg", True))
-        speed = updates.get("speed")
-        duplex = updates.get("duplex", "full")
-        port_meta["autoneg"] = autoneg
-        port_meta["speed"] = speed
-        port_meta["duplex"] = duplex
-        _apply_negotiation(iface_name, autoneg, speed, duplex)
-
-    common.save_network_config(cfg)
-    return {"status": "ok", "message": f"Port configuration saved for {iface_name}", "config": port_meta}
 
 
 def create_docker_network(name: str, driver: str = "bridge", subnet: str = "", gateway: str = "") -> dict[str, Any]:
@@ -294,3 +151,16 @@ def delete_docker_network(net_id_or_name: str) -> dict[str, Any]:
                 return {"status": "error", "message": err_detail or f"Docker API returned {res.status_code}"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+
+def save_port_alias(iface_name: str, alias: str) -> str:
+    """Saves Kiboto's own nickname for a port ("" removes it). The host's wiring is not touched."""
+    name = (alias or "").strip()[:64]
+    cfg = common.load_network_config()
+    aliases = cfg.setdefault("aliases", {})
+    if name:
+        aliases[iface_name] = name
+    else:
+        aliases.pop(iface_name, None)
+    common.save_network_config(cfg)
+    return name

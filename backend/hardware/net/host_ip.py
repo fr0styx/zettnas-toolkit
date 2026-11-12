@@ -3,13 +3,10 @@
 Part of backend/hardware/network.py, split out by ARC-5."""
 
 import ipaddress
-import re
-import time
 from typing import Any
 
-from backend.config import logger
-from backend.hardware.net import canary, common, topology
-from backend.ignored_errors import ignored
+from backend.hardware.net import common, topology
+from backend.hardware.net import unraid_cfg as unraid_file
 
 
 def _validate_ipv4(val: str, field_name: str) -> str:
@@ -61,7 +58,7 @@ def get_host_ip_config() -> dict[str, Any]:
     available_ifaces = list(dict.fromkeys(br_names + bond_names + phys_names)) or ["eth0"]
 
     primary_iface = summary.get("primary_interface") or available_ifaces[0]
-    unraid_cfg = canary._parse_unraid_network_cfg()
+    unraid_cfg = unraid_file._parse_unraid_network_cfg()
     saved_cfg = common.load_network_config()
     persisted_host = saved_cfg.get("host_ip_config", {})
 
@@ -107,8 +104,6 @@ def get_host_ip_config() -> dict[str, Any]:
     dns1 = persisted_host.get("dns1") or (dns_servers[0] if len(dns_servers) > 0 else "")
     dns2 = persisted_host.get("dns2") or (dns_servers[1] if len(dns_servers) > 1 else "")
 
-    canary_status = canary.get_canary_watchdog().get_status()
-
     return {
         "status": "ok",
         "mode": mode,
@@ -121,195 +116,4 @@ def get_host_ip_config() -> dict[str, Any]:
         "dns1": dns1,
         "dns2": dns2,
         "dns_servers": dns_servers,
-        "canary": canary_status,
-    }
-
-
-def apply_host_ip_config_canary(updates: dict[str, Any], timeout_sec: int = 60) -> dict[str, Any]:
-    """
-    Arm 60-second Canary watchdog, snapshot existing network state,
-    and stage / apply new Host IP and DNS configuration.
-    """
-    mode = str(updates.get("mode", "static")).lower().strip()
-    if mode not in ("dhcp", "static"):
-        raise ValueError("Mode must be 'dhcp' or 'static'")
-
-    interface = str(updates.get("interface", "br0")).strip()
-    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", interface):
-        raise ValueError("Invalid interface name")
-
-    target_cfg: dict[str, Any] = {
-        "mode": mode,
-        "interface": interface,
-        "updated_at": time.time(),
-    }
-
-    if mode == "static":
-        ip_addr = _validate_ipv4(updates.get("ip_address", ""), "IPv4 Address")
-        netmask = _validate_netmask(updates.get("netmask", "255.255.255.0"))
-        gateway = updates.get("gateway", "").strip()
-        if gateway:
-            gateway = _validate_ipv4(gateway, "Default Gateway")
-        dns1 = updates.get("dns1", "").strip()
-        if dns1:
-            dns1 = _validate_ipv4(dns1, "Primary DNS")
-        dns2 = updates.get("dns2", "").strip()
-        if dns2:
-            dns2 = _validate_ipv4(dns2, "Secondary DNS")
-
-        target_cfg.update(
-            {
-                "ip_address": ip_addr,
-                "netmask": netmask,
-                "cidr": common._mask_to_cidr(netmask),
-                "gateway": gateway,
-                "dns1": dns1,
-                "dns2": dns2,
-            }
-        )
-    else:
-        # DHCP
-        dns1 = updates.get("dns1", "").strip()
-        if dns1:
-            dns1 = _validate_ipv4(dns1, "Primary DNS")
-        dns2 = updates.get("dns2", "").strip()
-        if dns2:
-            dns2 = _validate_ipv4(dns2, "Secondary DNS")
-        target_cfg.update(
-            {
-                "ip_address": "",
-                "netmask": "",
-                "cidr": 0,
-                "gateway": "",
-                "dns1": dns1,
-                "dns2": dns2,
-            }
-        )
-
-    # Snapshot current state
-    original_cfg = get_host_ip_config()
-
-    # Arm watchdog timer
-    timeout_sec = max(10, min(300, int(timeout_sec)))
-    canary_id = canary.get_canary_watchdog().arm(target_cfg, original_cfg, timeout_sec=timeout_sec)
-
-    # Stage in network_config.json
-    cfg = common.load_network_config()
-    cfg["host_ip_staged"] = {
-        "canary_id": canary_id,
-        "target": target_cfg,
-        "original": original_cfg,
-        "deadline": time.time() + timeout_sec,
-    }
-    common.save_network_config(cfg)
-
-    # Write Unraid network.cfg if present
-    unraid_updates = {}
-    if mode == "dhcp":
-        unraid_updates["USE_DHCP[0]"] = "yes"
-    else:
-        unraid_updates["USE_DHCP[0]"] = "no"
-        unraid_updates["IPADDR[0]"] = target_cfg["ip_address"]
-        unraid_updates["NETMASK[0]"] = target_cfg["netmask"]
-        if target_cfg["gateway"]:
-            unraid_updates["GATEWAY[0]"] = target_cfg["gateway"]
-    if target_cfg.get("dns1"):
-        unraid_updates["DNS_SERVER1"] = target_cfg["dns1"]
-    if target_cfg.get("dns2"):
-        unraid_updates["DNS_SERVER2"] = target_cfg["dns2"]
-
-    if unraid_updates:
-        canary._write_unraid_network_cfg(unraid_updates)
-
-    # Add audit log
-    try:
-        from backend.state import add_event, event_text
-
-        target_display = target_cfg.get("ip_address") or "DHCP Auto"
-        add_event(
-            "warning",
-            "Network Canary Armed",
-            f"Testing new host network settings ({target_display}). Rollback watchdog active for {timeout_sec}s.",
-            event_text("net_trial", target=target_display, secs=timeout_sec),
-        )
-    except Exception:
-        ignored("backend.hardware.network.apply_host_ip_config_canary")
-
-    target_ip = target_cfg.get("ip_address") or original_cfg.get("ip_address") or ""
-    return {
-        "status": "testing",
-        "canary_id": canary_id,
-        "expires_in": timeout_sec,
-        "target_ip": target_ip,
-        "target_url": f"http://{target_ip}:8082" if target_ip else None,
-        "original_ip": original_cfg.get("ip_address"),
-        "message": f"Network Canary armed. Please confirm within {timeout_sec}s to keep settings permanently.",
-    }
-
-
-def confirm_host_ip_config(canary_id: str | None = None) -> dict[str, Any]:
-    """Confirms current canary test and commits host IP settings permanently."""
-    watchdog = canary.get_canary_watchdog()
-    if not watchdog.is_active:
-        return {"status": "ok", "message": "No active canary test to confirm"}
-
-    target_cfg = dict(watchdog.target_config)
-    success = watchdog.confirm(canary_id=canary_id)
-    if not success:
-        return {"status": "error", "message": "Invalid or expired canary ID"}
-
-    # Commit permanently in network_config.json
-    cfg = common.load_network_config()
-    cfg["host_ip_config"] = target_cfg
-    cfg.pop("host_ip_staged", None)
-    common.save_network_config(cfg)
-
-    # Add audit log
-    try:
-        from backend.state import add_event, event_text
-
-        add_event(
-            "success",
-            "Network Confirmed",
-            f"Host network settings confirmed permanently: {target_cfg.get('mode', 'static').upper()} {target_cfg.get('ip_address', '')}",
-            event_text("net_kept", ip=target_cfg.get("ip_address", "")),
-        )
-    except Exception:
-        ignored("backend.hardware.network.confirm_host_ip_config")
-
-    return {
-        "status": "confirmed",
-        "config": target_cfg,
-        "message": "Host network configuration successfully committed.",
-    }
-
-
-def revert_host_ip_config(canary_id: str | None = None) -> dict[str, Any]:
-    """Manually aborts canary test and immediately restores original network settings."""
-    watchdog = canary.get_canary_watchdog()
-    if not watchdog.is_active:
-        return {"status": "error", "message": "No active canary test to revert"}
-
-    orig = watchdog.revert(canary_id=canary_id)
-    if not orig:
-        return {"status": "error", "message": "Invalid or expired canary ID"}
-
-    canary._execute_revert(orig)
-
-    try:
-        from backend.state import add_event, event_text
-
-        add_event(
-            "warning",
-            "Network Reverted",
-            f"Host network configuration manually reverted to {orig.get('ip_address', 'original')}.",
-            event_text("net_reverted", ip=orig.get("ip_address", "")),
-        )
-    except Exception:
-        ignored("backend.hardware.network.revert_host_ip_config")
-
-    return {
-        "status": "reverted",
-        "restored_ip": orig.get("ip_address"),
-        "message": "Host network configuration reverted to previous state.",
     }

@@ -8,25 +8,16 @@ from backend.hardware.network import (
     _format_speed,
     _hex_to_ip,
     _mask_to_cidr,
-    apply_host_ip_config_canary,
-    confirm_host_ip_config,
     create_docker_network,
-    create_vlan,
     delete_docker_network,
-    delete_vlan,
     get_bond_config,
     get_bridge_config,
-    get_canary_watchdog,
     get_host_ip_config,
     get_network_topology,
     get_port_config,
     get_vlans,
     load_network_config,
-    revert_host_ip_config,
     save_network_config,
-    update_bond_config,
-    update_bridge_config,
-    update_port_config,
 )
 from backend.main import app
 
@@ -225,104 +216,6 @@ def test_network_config_persistence(tmp_path):
         assert reloaded["ports"]["eth0"]["wol_enabled"] is True
 
 
-def test_get_and_update_port_config(tmp_path):
-    cfg_file = tmp_path / "network_config.json"
-    mock_topo = {
-        "status": "ok",
-        "physical_interfaces": [{"name": "eth0", "mtu": 1500, "is_up": True}],
-        "bonds": [],
-        "bridges": [],
-    }
-
-    with (
-        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
-        patch("backend.hardware.net.topology.get_network_topology", return_value=mock_topo),
-        patch(
-            "backend.hardware.net.ports._query_ethtool",
-            return_value="Supports Wake-on: pumbg\nWake-on: d\nAuto-negotiation: on",
-        ),
-        patch("backend.hardware.net.ports._apply_mtu", return_value=True) as mock_mtu,
-        patch("backend.hardware.net.ports._apply_wol", return_value=True) as mock_wol,
-        patch("backend.hardware.net.ports._apply_negotiation", return_value=True) as mock_neg,
-    ):
-        # 1. Query port configuration
-        cfg = get_port_config("eth0")
-        assert cfg["status"] == "ok"
-        assert cfg["interface"]["name"] == "eth0"
-        assert cfg["wol_supported"] is True
-        assert cfg["wol_enabled"] is False
-        assert cfg["autoneg"] is True
-
-        # 2. Update port configuration
-        res = update_port_config(
-            "eth0",
-            {
-                "alias": "Direct 10G Workstation",
-                "mtu": 9000,
-                "wol_enabled": True,
-                "autoneg": False,
-                "speed": 10000,
-                "duplex": "full",
-            },
-        )
-        assert res["status"] == "ok"
-        assert res["config"]["alias"] == "Direct 10G Workstation"
-        assert res["config"]["mtu"] == 9000
-        assert res["config"]["wol_enabled"] is True
-        mock_mtu.assert_called_once_with("eth0", 9000)
-        mock_wol.assert_called_once_with("eth0", True)
-        mock_neg.assert_called_once_with("eth0", False, 10000, "full")
-
-
-def test_network_api_port_and_docker_endpoints(client, token):
-    mock_port_data = {
-        "status": "ok",
-        "interface": {"name": "eth0", "mtu": 1500},
-        "alias": "Workstation Link",
-        "mtu": 1500,
-        "wol_supported": True,
-        "wol_enabled": False,
-        "autoneg": True,
-        "supported_speeds": [10000, 2500, 1000],
-    }
-
-    with (
-        patch("backend.api.network.get_port_config", return_value=mock_port_data),
-        patch("backend.api.network.update_port_config", return_value={"status": "ok", "message": "Updated"}),
-        patch("backend.api.network.create_docker_network", return_value={"status": "ok", "id": "net789"}),
-        patch("backend.api.network.delete_docker_network", return_value={"status": "ok", "message": "Deleted"}),
-    ):
-        headers = {"Authorization": f"Bearer {token}"}
-
-        # 1. GET /api/network/port/eth0
-        res = client.get("/api/network/port/eth0", headers=headers)
-        assert res.status_code == 200
-        assert res.json()["alias"] == "Workstation Link"
-
-        # 2. POST /api/network/port/eth0
-        res = client.post(
-            "/api/network/port/eth0",
-            json={"alias": "Uplink", "mtu": 9000, "wol_enabled": True},
-            headers=headers,
-        )
-        assert res.status_code == 200
-        assert res.json()["status"] == "ok"
-
-        # 3. POST /api/network/docker/create
-        res = client.post(
-            "/api/network/docker/create",
-            json={"name": "test_net", "driver": "bridge", "subnet": "172.28.0.0/16"},
-            headers=headers,
-        )
-        assert res.status_code == 200
-        assert res.json()["id"] == "net789"
-
-        # 4. DELETE /api/network/docker/net789
-        res = client.delete("/api/network/docker/net789", headers=headers)
-        assert res.status_code == 200
-        assert res.json()["status"] == "ok"
-
-
 def test_get_host_ip_config(tmp_path):
     cfg_file = tmp_path / "network_config.json"
     mock_topo = {
@@ -342,7 +235,7 @@ def test_get_host_ip_config(tmp_path):
     with (
         patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
         patch("backend.hardware.net.topology.get_network_topology", return_value=mock_topo),
-        patch("backend.hardware.net.canary._parse_unraid_network_cfg", return_value={}),
+        patch("backend.hardware.net.unraid_cfg._parse_unraid_network_cfg", return_value={}),
     ):
         res = get_host_ip_config()
         assert res["status"] == "ok"
@@ -354,369 +247,6 @@ def test_get_host_ip_config(tmp_path):
         assert res["cidr"] == 24
         assert res["gateway"] == "192.168.1.1"
         assert res["dns1"] == "192.168.1.1"
-        assert res["canary"]["is_active"] is False
-
-
-def test_apply_host_ip_config_canary_and_confirm(tmp_path):
-    cfg_file = tmp_path / "network_config.json"
-    mock_topo = {
-        "status": "ok",
-        "summary": {"primary_ip": "192.168.1.50", "default_gateway": "192.168.1.1", "primary_interface": "br0"},
-        "physical_interfaces": [{"name": "eth0"}],
-        "bridges": [{"name": "br0"}],
-        "bonds": [],
-        "routes": [],
-    }
-
-    watchdog = get_canary_watchdog()
-    watchdog.confirm()  # Ensure reset
-
-    with (
-        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
-        patch("backend.hardware.net.topology.get_network_topology", return_value=mock_topo),
-        patch("backend.hardware.net.canary._write_unraid_network_cfg", return_value=True) as mock_write_unraid,
-        patch("backend.state.add_event") as mock_event,
-    ):
-        # 1. Apply new IP config with 60s Canary
-        res = apply_host_ip_config_canary(
-            {
-                "mode": "static",
-                "interface": "br0",
-                "ip_address": "192.168.1.51",
-                "netmask": "255.255.255.0",
-                "gateway": "192.168.1.1",
-                "dns1": "1.1.1.1",
-                "dns2": "8.8.8.8",
-            },
-            timeout_sec=60,
-        )
-
-        assert res["status"] == "testing"
-        assert res["target_ip"] == "192.168.1.51"
-        assert res["target_url"] == "http://192.168.1.51:8082"
-        assert res["expires_in"] == 60
-        canary_id = res["canary_id"]
-        assert canary_id
-
-        # Verify staged config in JSON
-        saved = load_network_config()
-        assert "host_ip_staged" in saved
-        assert saved["host_ip_staged"]["canary_id"] == canary_id
-        assert saved["host_ip_staged"]["target"]["ip_address"] == "192.168.1.51"
-
-        # Verify Unraid update called
-        mock_write_unraid.assert_called()
-        mock_event.assert_called()
-
-        # 2. Confirm Canary
-        confirm_res = confirm_host_ip_config(canary_id=canary_id)
-        assert confirm_res["status"] == "confirmed"
-
-        # Verify persisted permanently
-        saved_final = load_network_config()
-        assert "host_ip_staged" not in saved_final
-        assert saved_final["host_ip_config"]["ip_address"] == "192.168.1.51"
-        assert watchdog.is_active is False
-
-
-def test_apply_host_ip_config_canary_revert(tmp_path):
-    cfg_file = tmp_path / "network_config.json"
-    mock_topo = {
-        "status": "ok",
-        "summary": {"primary_ip": "192.168.1.50", "default_gateway": "192.168.1.1", "primary_interface": "br0"},
-        "physical_interfaces": [{"name": "eth0"}],
-        "bridges": [{"name": "br0"}],
-        "bonds": [],
-        "routes": [],
-    }
-
-    watchdog = get_canary_watchdog()
-    watchdog.confirm()  # Ensure reset
-
-    with (
-        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
-        patch("backend.hardware.net.topology.get_network_topology", return_value=mock_topo),
-        patch("backend.hardware.net.canary._write_unraid_network_cfg", return_value=True),
-        patch("backend.state.add_event"),
-    ):
-        apply_res = apply_host_ip_config_canary(
-            {
-                "mode": "static",
-                "interface": "br0",
-                "ip_address": "192.168.1.52",
-                "netmask": "255.255.255.0",
-                "gateway": "192.168.1.1",
-            },
-            timeout_sec=60,
-        )
-        assert apply_res["status"] == "testing"
-        canary_id = apply_res["canary_id"]
-
-        revert_res = revert_host_ip_config(canary_id=canary_id)
-        assert revert_res["status"] == "reverted"
-        assert revert_res["restored_ip"] == "192.168.1.50"
-
-        saved = load_network_config()
-        assert "host_ip_staged" not in saved
-        assert watchdog.is_active is False
-
-
-def test_canary_watchdog_auto_rollback_on_timeout():
-    watchdog = get_canary_watchdog()
-    watchdog.confirm()  # Reset
-
-    target = {"ip_address": "192.168.1.53"}
-    original = {"ip_address": "192.168.1.50"}
-
-    with (
-        patch("backend.hardware.net.canary._execute_revert") as mock_revert,
-        patch("backend.state.add_event") as mock_event,
-    ):
-        canary_id = watchdog.arm(target, original, timeout_sec=60)
-        assert watchdog.is_active is True
-
-        # Directly trigger timeout callback
-        watchdog._on_timeout(canary_id)
-        assert watchdog.is_active is False
-        mock_revert.assert_called_once_with(original)
-        mock_event.assert_called()
-
-
-def test_host_ip_api_endpoints(client, token):
-    headers = {"Authorization": f"Bearer {token}"}
-    mock_config = {
-        "status": "ok",
-        "mode": "static",
-        "interface": "br0",
-        "ip_address": "192.168.1.50",
-        "netmask": "255.255.255.0",
-        "gateway": "192.168.1.1",
-        "canary": {"is_active": False},
-    }
-
-    with (
-        patch("backend.api.network.get_host_ip_config", return_value=mock_config),
-        patch(
-            "backend.api.network.apply_host_ip_config_canary",
-            return_value={"status": "testing", "canary_id": "c123", "expires_in": 60},
-        ),
-        patch("backend.api.network.confirm_host_ip_config", return_value={"status": "confirmed"}),
-        patch("backend.api.network.revert_host_ip_config", return_value={"status": "reverted"}),
-    ):
-        # 1. GET /api/network/host/config
-        r1 = client.get("/api/network/host/config", headers=headers)
-        assert r1.status_code == 200
-        assert r1.json()["ip_address"] == "192.168.1.50"
-
-        # 2. POST /api/network/host/apply
-        r2 = client.post(
-            "/api/network/host/apply",
-            json={"mode": "static", "interface": "br0", "ip_address": "192.168.1.51"},
-            headers=headers,
-        )
-        assert r2.status_code == 200
-        assert r2.json()["status"] == "testing"
-
-        # 3. POST /api/network/host/confirm
-        r3 = client.post("/api/network/host/confirm", json={"canary_id": "c123"}, headers=headers)
-        assert r3.status_code == 200
-        assert r3.json()["status"] == "confirmed"
-
-        # 4. POST /api/network/host/revert
-        r4 = client.post("/api/network/host/revert", json={"canary_id": "c123"}, headers=headers)
-        assert r4.status_code == 200
-        assert r4.json()["status"] == "reverted"
-
-
-def test_get_and_update_bond_config(tmp_path):
-    sys_net = tmp_path / "sys_net"
-    sys_net.mkdir()
-    bond0 = sys_net / "bond0"
-    bond0.mkdir()
-    bonding = bond0 / "bonding"
-    bonding.mkdir()
-    (bonding / "mode").write_text("active-backup 1\n")
-    (bonding / "slaves").write_text("eth0 eth1\n")
-    (bonding / "active_slave").write_text("eth0\n")
-    (bonding / "miimon").write_text("100\n")
-
-    unraid_cfg = tmp_path / "network.cfg"
-    unraid_cfg.write_text('BONDING_MODE[0]="1"\nBONDNICS[0]="eth0 eth1"\nBONDING_MIIMON[0]="100"\n')
-
-    cfg_file = tmp_path / "network_config.json"
-
-    with (
-        patch("backend.hardware.net.common._find_sys_net_dir", return_value=str(sys_net)),
-        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
-        patch(
-            "backend.hardware.network.get_network_topology",
-            return_value={"physical_interfaces": [{"name": "eth0"}, {"name": "eth1"}]},
-        ),
-        patch("os.path.isfile", side_effect=lambda p: str(p) == str(unraid_cfg) or os.path.exists(p)),
-        patch(
-            "backend.hardware.net.canary._parse_unraid_network_cfg",
-            return_value={"BONDING_MODE[0]": "1", "BONDNICS[0]": "eth0 eth1", "BONDING_MIIMON[0]": "100"},
-        ),
-        patch("backend.hardware.net.canary._write_unraid_network_cfg", return_value=True),
-    ):
-        # 1. Get bond config
-        cfg = get_bond_config("bond0")
-        assert cfg["status"] == "ok"
-        assert cfg["mode"] == "1"
-        assert cfg["mode_name"] == "active-backup"
-        assert "eth0" in cfg["slaves"]
-        assert len(cfg["available_modes"]) >= 5
-
-        # 2. Update bond config to 802.3ad LACP
-        up_res = update_bond_config("bond0", {"mode": "4", "slaves": ["eth0", "eth1"], "miimon": 100})
-        assert up_res["status"] == "ok"
-        assert up_res["mode"] == "4"
-
-        # 3. Invalid mode validation
-        err_res = update_bond_config("bond0", {"mode": "invalid_mode", "slaves": ["eth0"]})
-        assert err_res["status"] == "error"
-
-        # 4. Empty slaves validation
-        err_res2 = update_bond_config("bond0", {"mode": "1", "slaves": []})
-        assert err_res2["status"] == "error"
-
-
-def test_get_and_update_bridge_config(tmp_path):
-    sys_net = tmp_path / "sys_net"
-    sys_net.mkdir()
-    br0 = sys_net / "br0"
-    br0.mkdir()
-    bridge_dir = br0 / "bridge"
-    bridge_dir.mkdir()
-    (bridge_dir / "stp_state").write_text("0\n")
-    (bridge_dir / "forward_delay").write_text("0\n")
-    brif = br0 / "brif"
-    brif.mkdir()
-    (brif / "bond0").touch()
-
-    cfg_file = tmp_path / "network_config.json"
-
-    with (
-        patch("backend.hardware.net.common._find_sys_net_dir", return_value=str(sys_net)),
-        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
-        patch(
-            "backend.hardware.network.get_network_topology",
-            return_value={"physical_interfaces": [{"name": "eth0"}], "bonds": [{"name": "bond0"}]},
-        ),
-        patch("backend.hardware.net.canary._write_unraid_network_cfg", return_value=True),
-    ):
-        # 1. Get bridge config
-        cfg = get_bridge_config("br0")
-        assert cfg["status"] == "ok"
-        assert cfg["stp"] is False
-        assert cfg["forward_delay"] == 0
-        assert "bond0" in cfg["members"]
-
-        # 2. Update bridge config with STP enabled and 15s forward delay
-        up_res = update_bridge_config("br0", {"stp": True, "forward_delay": 15, "members": ["bond0"]})
-        assert up_res["status"] == "ok"
-        assert up_res["stp"] is True
-        assert up_res["forward_delay"] == 15
-
-        # 3. Invalid forward delay clamped
-        up_res2 = update_bridge_config("br0", {"stp": False, "forward_delay": 999, "members": ["bond0"]})
-        assert up_res2["forward_delay"] == 0
-
-
-def test_vlan_lifecycle(tmp_path):
-    cfg_file = tmp_path / "network_config.json"
-
-    with (
-        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
-        patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="", stderr="")),
-        patch("os.path.exists", return_value=False),
-    ):
-        # 1. Create VLAN eth0.10
-        create_res = create_vlan("eth0", 10, "IoT Network")
-        assert create_res["status"] == "ok"
-        assert create_res["name"] == "eth0.10"
-        assert create_res["vlan_id"] == 10
-
-        # 2. List VLANs
-        vlans = get_vlans()
-        assert len(vlans) >= 1
-        v = next((x for x in vlans if x["name"] == "eth0.10"), None)
-        assert v is not None
-        assert v["alias"] == "IoT Network"
-
-        # 3. Invalid VLAN ID
-        err1 = create_vlan("eth0", 9999)
-        assert err1["status"] == "error"
-
-        # 4. Invalid parent
-        err2 = create_vlan("", 10)
-        assert err2["status"] == "error"
-
-        # 5. Delete VLAN
-        del_res = delete_vlan("eth0.10")
-        assert del_res["status"] == "ok"
-        vlans_after = get_vlans()
-        assert not any(x["name"] == "eth0.10" for x in vlans_after)
-
-
-def test_tier3_api_endpoints(client, token):
-    headers = {"Authorization": f"Bearer {token}"}
-
-    mock_bond = {"status": "ok", "bond_name": "bond0", "mode": "1", "slaves": ["eth0", "eth1"]}
-    mock_bridge = {"status": "ok", "bridge_name": "br0", "stp": False, "members": ["bond0"]}
-    mock_vlans = [{"name": "eth0.10", "parent": "eth0", "vlan_id": 10}]
-
-    with (
-        patch("backend.api.network.get_bond_config", return_value=mock_bond),
-        patch(
-            "backend.api.network.update_bond_config", return_value={"status": "ok", "bond_name": "bond0", "mode": "4"}
-        ),
-        patch("backend.api.network.get_bridge_config", return_value=mock_bridge),
-        patch(
-            "backend.api.network.update_bridge_config", return_value={"status": "ok", "bridge_name": "br0", "stp": True}
-        ),
-        patch("backend.api.network.get_vlans", return_value=mock_vlans),
-        patch("backend.api.network.create_vlan", return_value={"status": "ok", "name": "eth0.20", "vlan_id": 20}),
-        patch("backend.api.network.delete_vlan", return_value={"status": "ok", "message": "deleted"}),
-    ):
-        # 1. GET /api/network/bond/bond0
-        r_b1 = client.get("/api/network/bond/bond0", headers=headers)
-        assert r_b1.status_code == 200
-        assert r_b1.json()["mode"] == "1"
-
-        # 2. POST /api/network/bond/bond0
-        r_b2 = client.post("/api/network/bond/bond0", json={"mode": "4", "slaves": ["eth0", "eth1"]}, headers=headers)
-        assert r_b2.status_code == 200
-        assert r_b2.json()["status"] == "ok"
-
-        # 3. GET /api/network/bridge/br0
-        r_br1 = client.get("/api/network/bridge/br0", headers=headers)
-        assert r_br1.status_code == 200
-        assert r_br1.json()["bridge_name"] == "br0"
-
-        # 4. POST /api/network/bridge/br0
-        r_br2 = client.post(
-            "/api/network/bridge/br0", json={"stp": True, "forward_delay": 0, "members": ["bond0"]}, headers=headers
-        )
-        assert r_br2.status_code == 200
-        assert r_br2.json()["status"] == "ok"
-
-        # 5. GET /api/network/vlans
-        r_v1 = client.get("/api/network/vlans", headers=headers)
-        assert r_v1.status_code == 200
-        assert len(r_v1.json()["vlans"]) == 1
-
-        # 6. POST /api/network/vlan/create
-        r_v2 = client.post(
-            "/api/network/vlan/create", json={"parent": "eth0", "vlan_id": 20, "alias": "Guest"}, headers=headers
-        )
-        assert r_v2.status_code == 200
-        assert r_v2.json()["name"] == "eth0.20"
-
-        # 7. DELETE /api/network/vlan/eth0.20
-        r_v3 = client.delete("/api/network/vlan/eth0.20", headers=headers)
-        assert r_v3.status_code == 200
-        assert r_v3.json()["status"] == "ok"
 
 
 def test_read_network_rates_combined_and_interfaces(tmp_path):
@@ -769,3 +299,177 @@ def test_read_network_rates_combined_and_interfaces(tmp_path):
         assert res2["interfaces"]["eth1"]["rx_bytes"] == 7097152
         assert res2["interfaces"]["eth0"]["is_physical"] is True
         assert res2["interfaces"]["eth1"]["is_physical"] is True
+
+
+# ---- SET-16, decision D2: the host's own settings own the wiring; Kiboto reads it and says where to change it
+
+
+def test_get_port_config_reads_the_port(tmp_path):
+    with (
+        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(tmp_path / "network_config.json")),
+        patch(
+            "backend.hardware.net.topology.get_network_topology",
+            return_value={
+                "status": "ok",
+                "physical_interfaces": [{"name": "eth0", "mtu": 1500, "is_up": True}],
+                "bonds": [],
+                "bridges": [],
+            },
+        ),
+        patch(
+            "backend.hardware.net.ports._query_ethtool",
+            return_value="Supports Wake-on: pumbg\nWake-on: d\nAuto-negotiation: on",
+        ),
+    ):
+        cfg = get_port_config("eth0")
+    assert cfg["status"] == "ok" and cfg["interface"]["name"] == "eth0"
+    assert cfg["wol_supported"] is True and cfg["wol_enabled"] is False and cfg["autoneg"] is True
+
+
+def test_bond_and_bridge_are_read_from_the_host(tmp_path):
+    sys_net = tmp_path / "sys_net"
+    bonding = sys_net / "bond0" / "bonding"
+    bonding.mkdir(parents=True)
+    (bonding / "mode").write_text("active-backup 1\n")
+    (bonding / "slaves").write_text("eth0 eth1\n")
+    (bonding / "active_slave").write_text("eth0\n")
+    (bonding / "miimon").write_text("100\n")
+    bridge_dir = sys_net / "br0" / "bridge"
+    bridge_dir.mkdir(parents=True)
+    (bridge_dir / "stp_state").write_text("0\n")
+    (bridge_dir / "forward_delay").write_text("0\n")
+    (sys_net / "br0" / "brif").mkdir()
+    (sys_net / "br0" / "brif" / "bond0").touch()
+    with (
+        patch("backend.hardware.net.common._find_sys_net_dir", return_value=str(sys_net)),
+        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(tmp_path / "network_config.json")),
+        patch(
+            "backend.hardware.network.get_network_topology",
+            return_value={"physical_interfaces": [{"name": "eth0"}, {"name": "eth1"}], "bonds": [{"name": "bond0"}]},
+        ),
+        patch(
+            "backend.hardware.net.unraid_cfg._parse_unraid_network_cfg",
+            return_value={"BONDING_MODE[0]": "1", "BONDNICS[0]": "eth0 eth1", "BONDING_MIIMON[0]": "100"},
+        ),
+    ):
+        bond = get_bond_config("bond0")
+        bridge = get_bridge_config("br0")
+    assert bond["status"] == "ok" and bond["mode"] == "1" and bond["mode_name"] == "active-backup"
+    assert "eth0" in bond["slaves"] and len(bond["available_modes"]) >= 5
+    assert bridge["status"] == "ok" and bridge["stp"] is False and "bond0" in bridge["members"]
+
+
+def test_a_host_kiboto_does_not_manage_changes_nothing():
+    from backend.hardware.net.host import HostNetwork, NotOnThisHost
+    from backend.hardware.pal.base import PlatformType
+
+    host = HostNetwork(PlatformType.UNRAID)
+    caps = host.capabilities()
+    assert caps["managed"] is False and caps["where"] == "unraid"
+    assert set(caps["can_change"]) == {"address", "mtu", "speed", "wake_on_lan", "bond", "bridge", "vlan"}
+    assert not any(caps["can_change"].values())
+    with pytest.raises(NotOnThisHost) as e:
+        host.apply("bond", "bond0", {"mode": "4"})
+    assert "Unraid" in str(e.value) and e.value.setting == "bond"
+    assert HostNetwork("something-else").where() == "system"
+
+
+def test_a_managed_host_only_has_to_add_the_writes():
+    """What Kiboto's own OS images will do: say managed, implement apply()."""
+    from backend.hardware.net.host import HostNetwork
+
+    class Managed(HostNetwork):
+        managed = True
+
+        def apply(self, setting, target, changes):
+            return {"status": "ok", "setting": setting, "target": target, **changes}
+
+    assert all(Managed().capabilities()["can_change"].values())
+    assert Managed().apply("mtu", "eth0", {"mtu": 9000})["mtu"] == 9000
+
+
+WRITES = [
+    ("post", "/api/network/host/apply", {"mode": "static", "interface": "br0", "ip_address": "192.168.1.51"}),
+    ("post", "/api/network/host/confirm", {"canary_id": "c1"}),
+    ("post", "/api/network/host/revert", {"canary_id": "c1"}),
+    ("post", "/api/network/bond/bond0", {"mode": "4", "slaves": ["eth0", "eth1"]}),
+    ("post", "/api/network/bridge/br0", {"stp": True, "forward_delay": 0, "members": ["bond0"]}),
+    ("post", "/api/network/vlan/create", {"parent": "eth0", "vlan_id": 20, "alias": "Guest"}),
+    ("delete", "/api/network/vlan/eth0.20", None),
+    ("post", "/api/network/port/eth0", {"mtu": 9000}),
+]
+
+
+@pytest.mark.parametrize("method, path, body", WRITES)
+def test_every_wiring_change_answers_not_on_this_host(client, token, method, path, body):
+    headers = {"Authorization": f"Bearer {token}"}
+    with patch("backend.hardware.net.host.current_host") as host_of:
+        from backend.hardware.net.host import HostNetwork
+        from backend.hardware.pal.base import PlatformType
+
+        host_of.return_value = HostNetwork(PlatformType.UNRAID)
+        with patch("backend.api.network.current_host", host_of):
+            kw = {"headers": headers} | ({"json": body} if body is not None else {})
+            r = getattr(client, method)(path, **kw)
+    assert r.status_code == 409, r.text
+    assert r.json()["error"] == "not_on_this_host" and "Unraid" in r.json()["detail"]
+
+
+@pytest.mark.parametrize("method, path, body", WRITES)
+def test_a_managed_host_receives_the_change(client, token, method, path, body):
+    from backend.hardware.net.host import HostNetwork
+
+    seen = []
+
+    class Managed(HostNetwork):
+        managed = True
+
+        def apply(self, setting, target, changes):
+            seen.append((setting, target))
+            return {"status": "ok"}
+
+    with patch("backend.api.network.current_host", return_value=Managed()):
+        kw = {"headers": {"Authorization": f"Bearer {token}"}} | ({"json": body} if body is not None else {})
+        r = getattr(client, method)(path, **kw)
+    assert r.status_code == 200 and r.json()["status"] == "ok" and len(seen) == 1
+
+
+def test_capabilities_and_reads_answer(client, token):
+    headers = {"Authorization": f"Bearer {token}"}
+    with (
+        patch("backend.api.network.get_host_ip_config", return_value={"status": "ok", "ip_address": "192.168.1.50"}),
+        patch("backend.api.network.get_bond_config", return_value={"status": "ok", "bond_name": "bond0", "mode": "1"}),
+        patch("backend.api.network.get_bridge_config", return_value={"status": "ok", "bridge_name": "br0"}),
+        patch("backend.api.network.get_vlans", return_value=[{"name": "eth0.10", "parent": "eth0", "vlan_id": 10}]),
+    ):
+        caps = client.get("/api/network/capabilities", headers=headers)
+        assert caps.status_code == 200 and caps.json()["managed"] is False and "where" in caps.json()
+        assert client.get("/api/network/host/config", headers=headers).json()["ip_address"] == "192.168.1.50"
+        assert client.get("/api/network/bond/bond0", headers=headers).json()["mode"] == "1"
+        assert client.get("/api/network/bridge/br0", headers=headers).json()["bridge_name"] == "br0"
+        assert len(client.get("/api/network/vlans", headers=headers).json()["vlans"]) == 1
+
+
+def test_a_port_nickname_is_kiboto_s_own_and_is_saved(client, token, tmp_path):
+    headers = {"Authorization": f"Bearer {token}"}
+    with patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(tmp_path / "network_config.json")):
+        r = client.post("/api/network/port/eth0", json={"alias": "  Uplink  "}, headers=headers)
+        assert r.status_code == 200 and r.json()["alias"] == "Uplink"
+        assert load_network_config()["aliases"]["eth0"] == "Uplink"
+        # a nickname with a wiring change: refused whole, the nickname is not half-saved
+        r = client.post("/api/network/port/eth0", json={"alias": "Other", "mtu": 9000}, headers=headers)
+        assert r.status_code == 409
+        assert load_network_config()["aliases"]["eth0"] == "Uplink"
+        client.post("/api/network/port/eth0", json={"alias": ""}, headers=headers)
+        assert "eth0" not in load_network_config()["aliases"]
+
+
+def test_docker_network_routes_still_answer(client, token):
+    headers = {"Authorization": f"Bearer {token}"}
+    with (
+        patch("backend.api.network.create_docker_network", return_value={"status": "ok", "id": "net789"}),
+        patch("backend.api.network.delete_docker_network", return_value={"status": "ok", "message": "Deleted"}),
+    ):
+        r = client.post("/api/network/docker/create", json={"name": "test_net", "driver": "bridge"}, headers=headers)
+        assert r.status_code == 200 and r.json()["id"] == "net789"
+        assert client.delete("/api/network/docker/net789", headers=headers).json()["status"] == "ok"

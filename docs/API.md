@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-720 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+721 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -446,15 +446,16 @@ request and response schemas.
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/network/bond/{bond_name}` | any of `system:view`, `system:config` | Retrieve configuration, operational mode, active slave, and candidates for a bonding group |
-| `POST` | `/api/v1/network/bond/{bond_name}` | `system:config` | Update bonding group mode (802.3ad / active-backup / balance-alb), slave member interfaces, and miimon |
+| `POST` | `/api/v1/network/bond/{bond_name}` | `system:config` | Change a bond: only on a host Kiboto manages (409 not_on_this_host elsewhere) |
 | `GET` | `/api/v1/network/bridge/{br_name}` | any of `system:view`, `system:config` | Retrieve configuration, STP state, forward delay, and members for a virtual bridge |
-| `POST` | `/api/v1/network/bridge/{br_name}` | `system:config` | Update virtual bridge parameters (STP enable/disable, forward delay, member interfaces) |
+| `POST` | `/api/v1/network/bridge/{br_name}` | `system:config` | Change a bridge: only on a host Kiboto manages (409 not_on_this_host elsewhere) |
+| `GET` | `/api/v1/network/capabilities` | any of `system:view`, `system:config` | What Kiboto may change on this host's network, and where the host's own settings are |
 | `POST` | `/api/v1/network/docker/create` | `containers:manage` | Create a new Docker bridge or custom network |
 | `DELETE` | `/api/v1/network/docker/{net_id_or_name}` | `containers:manage` | Delete a custom Docker network |
-| `POST` | `/api/v1/network/host/apply` | `system:config` | Arm 60-second Canary watchdog, snapshot configuration, and stage/apply new host IP settings |
+| `POST` | `/api/v1/network/host/apply` | `system:config` | Change the host's address: only on a host Kiboto manages (409 not_on_this_host elsewhere) |
 | `GET` | `/api/v1/network/host/config` | any of `system:view`, `system:config` | Retrieve host IP assignment mode, primary interface, netmask, gateway, and DNS servers |
-| `POST` | `/api/v1/network/host/confirm` | `system:config` | Confirm and seal host network configuration, cancelling the 60s rollback watchdog |
-| `POST` | `/api/v1/network/host/revert` | `system:config` | Manually abort Canary test and immediately restore previous host network configuration |
+| `POST` | `/api/v1/network/host/confirm` | `system:config` | Keep a trial address: only on a host Kiboto manages (409 not_on_this_host elsewhere) |
+| `POST` | `/api/v1/network/host/revert` | `system:config` | Go back from a trial address: only on a host Kiboto manages (409 not_on_this_host elsewhere) |
 | `GET` | `/api/v1/network/mesh-vpn` | `system:view` | Retrieves Zero-Trust Mesh VPN telemetry and status for Tailscale and WireGuard |
 | `POST` | `/api/v1/network/mesh-vpn/tailscale/deploy` | `system:config` | 1-Click turnkey provisioning of the official Tailscale Docker container |
 | `POST` | `/api/v1/network/mesh-vpn/tailscale/down` | `system:config` | Disconnects host from the Zero-Trust Tailscale mesh network |
@@ -471,15 +472,15 @@ request and response schemas.
 | `GET` | `/api/v1/network/mesh-vpn/wireguard/subnet-routing` | `system:config` | Gets current kernel IP packet forwarding state |
 | `POST` | `/api/v1/network/mesh-vpn/wireguard/subnet-routing` | `system:config` | Enables or disables kernel IP forwarding and NAT for WireGuard subnet routing |
 | `GET` | `/api/v1/network/port/{iface_name}` | any of `system:view`, `system:config` | Retrieve configuration, live capabilities, and alias for a specific interface |
-| `POST` | `/api/v1/network/port/{iface_name}` | `system:config` | Update interface configuration (alias, MTU, WOL, negotiation speed) |
+| `POST` | `/api/v1/network/port/{iface_name}` | `system:config` | A port's nickname (always), or its packet size, speed or Wake-on-LAN (only on a host Kiboto manages; 409 not_on_this_host elsewhere) |
 | `GET` | `/api/v1/network/ports/listening` | any of `system:config`, `system:read` | Returns active listening TCP and UDP ports and mapped container services |
 | `GET` | `/api/v1/network/remote-access` | `system:view` | Use from anywhere (COMP-01): tailnet state, sign-in link, and the addresses to open |
 | `POST` | `/api/v1/network/remote-access/connect` | `system:config` | Joins Tailscale, or a Headscale server; answers with the sign-in link when one is needed |
 | `POST` | `/api/v1/network/remote-access/disconnect` | `system:config` | Post Remote Access Disconnect |
 | `POST` | `/api/v1/network/remote-access/publish` | `system:config` | HTTPS addresses in the tailnet for Kiboto and Immich |
 | `GET` | `/api/v1/network/topology` | any of `system:view`, `system:config` | Retrieve full host network topology, physical NICs, bridges, bonds, and Docker networks |
-| `POST` | `/api/v1/network/vlan/create` | `system:config` | Create a new 802.1Q VLAN tagged sub-interface (e.g |
-| `DELETE` | `/api/v1/network/vlan/{vlan_iface}` | `system:config` | Delete an existing 802.1Q VLAN tagged sub-interface |
+| `POST` | `/api/v1/network/vlan/create` | `system:config` | Add a VLAN: only on a host Kiboto manages (409 not_on_this_host elsewhere) |
+| `DELETE` | `/api/v1/network/vlan/{vlan_iface}` | `system:config` | Remove a VLAN: only on a host Kiboto manages (409 not_on_this_host elsewhere) |
 | `GET` | `/api/v1/network/vlans` | any of `system:view`, `system:config` | list all active and configured 802.1Q VLAN sub-interfaces |
 
 ### Notifications & Alerts

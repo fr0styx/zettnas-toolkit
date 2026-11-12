@@ -16303,16 +16303,6 @@
     "additionalProperties": true,
     "description": "GET /network/host/config",
     "properties": {
-     "canary": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/GetHostIpConfigEndpointResponseCanary"
-       },
-       {
-        "type": "null"
-       }
-      ]
-     },
      "gateway": {
       "anyOf": [
        {
@@ -16381,24 +16371,6 @@
      }
     },
     "title": "GetHostIpConfigEndpointResponse",
-    "type": "object"
-   },
-   "GetHostIpConfigEndpointResponseCanary": {
-    "additionalProperties": true,
-    "properties": {
-     "is_active": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Is Active"
-     }
-    },
-    "title": "GetHostIpConfigEndpointResponseCanary",
     "type": "object"
    },
    "GetHostUsbDevicesResponseItem": {
@@ -59507,7 +59479,7 @@
     ]
    },
    "post": {
-    "description": "Update bonding group mode (802.3ad / active-backup / balance-alb), slave member interfaces, and miimon.",
+    "description": "Change a bond: only on a host Kiboto manages (409 not_on_this_host elsewhere).",
     "operationId": "update_bond_config_endpoint_api_v1_network_bond__bond_name__post",
     "parameters": [
      {
@@ -59612,7 +59584,7 @@
     ]
    },
    "post": {
-    "description": "Update virtual bridge parameters (STP enable/disable, forward delay, member interfaces).",
+    "description": "Change a bridge: only on a host Kiboto manages (409 not_on_this_host elsewhere).",
     "operationId": "update_bridge_config_endpoint_api_v1_network_bridge__br_name__post",
     "parameters": [
      {
@@ -59664,6 +59636,36 @@
      "Network & Switching"
     ],
     "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/network/capabilities": {
+   "get": {
+    "description": "What Kiboto may change on this host's network, and where the host's own settings are.",
+    "operationId": "get_network_capabilities_api_v1_network_capabilities_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Network Capabilities",
+    "tags": [
+     "Network & Switching"
+    ],
+    "x-required-scopes": [
+     "system:view",
      "system:config"
     ]
    }
@@ -59968,7 +59970,7 @@
   },
   "/api/v1/network/host/apply": {
    "post": {
-    "description": "Arm 60-second Canary watchdog, snapshot configuration, and stage/apply new host IP settings.\nAutomatically reverts within 60s unless confirmed.",
+    "description": "Change the host's address: only on a host Kiboto manages (409 not_on_this_host elsewhere).",
     "operationId": "apply_host_ip_config_endpoint_api_v1_network_host_apply_post",
     "requestBody": {
      "content": {
@@ -60044,7 +60046,7 @@
   },
   "/api/v1/network/host/confirm": {
    "post": {
-    "description": "Confirm and seal host network configuration, cancelling the 60s rollback watchdog.",
+    "description": "Keep a trial address: only on a host Kiboto manages (409 not_on_this_host elsewhere).",
     "operationId": "confirm_host_ip_config_endpoint_api_v1_network_host_confirm_post",
     "requestBody": {
      "content": {
@@ -60095,7 +60097,7 @@
   },
   "/api/v1/network/host/revert": {
    "post": {
-    "description": "Manually abort Canary test and immediately restore previous host network configuration.",
+    "description": "Go back from a trial address: only on a host Kiboto manages (409 not_on_this_host elsewhere).",
     "operationId": "revert_host_ip_config_endpoint_api_v1_network_host_revert_post",
     "requestBody": {
      "content": {
@@ -60846,7 +60848,7 @@
     ]
    },
    "post": {
-    "description": "Update interface configuration (alias, MTU, WOL, negotiation speed).",
+    "description": "A port's nickname (always), or its packet size, speed or Wake-on-LAN (only on a host Kiboto manages; 409 not_on_this_host elsewhere).",
     "operationId": "update_port_config_endpoint_api_v1_network_port__iface_name__post",
     "parameters": [
      {
@@ -61372,7 +61374,7 @@
   },
   "/api/v1/network/vlan/create": {
    "post": {
-    "description": "Create a new 802.1Q VLAN tagged sub-interface (e.g. eth0.10, br0.20).",
+    "description": "Add a VLAN: only on a host Kiboto manages (409 not_on_this_host elsewhere).",
     "operationId": "create_vlan_endpoint_api_v1_network_vlan_create_post",
     "requestBody": {
      "content": {
@@ -61416,7 +61418,7 @@
   },
   "/api/v1/network/vlan/{vlan_iface}": {
    "delete": {
-    "description": "Delete an existing 802.1Q VLAN tagged sub-interface.",
+    "description": "Remove a VLAN: only on a host Kiboto manages (409 not_on_this_host elsewhere).",
     "operationId": "delete_vlan_endpoint_api_v1_network_vlan__vlan_iface__delete",
     "parameters": [
      {

@@ -11,7 +11,7 @@ import httpx
 
 from backend import settings as _settings
 from backend.config import SETTINGS, logger
-from backend.hardware.net import canary, common
+from backend.hardware.net import common
 
 # get_network_topology has locals named listening_ports and vlans, hence the aliases
 from backend.hardware.net import listening_ports as listening_mod
@@ -361,7 +361,6 @@ def get_network_topology() -> dict[str, Any]:
         "vlan_count": len(vlans),
         "docker_networks_count": len(docker_networks),
         "docker_containers_count": total_containers,
-        "canary": canary.get_canary_watchdog().get_status(),
     }
 
     listening_ports = []

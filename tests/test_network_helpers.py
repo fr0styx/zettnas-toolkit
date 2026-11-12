@@ -52,41 +52,14 @@ class TestUnraidConfig:
         cfg = net._parse_unraid_network_cfg()
         assert cfg["IPADDR[0]"] == "192.168.7.20" and cfg["USE_DHCP[0]"] == "no"
 
-    def test_write_keeps_order_and_comments(self, unraid_cfg):
-        assert net._write_unraid_network_cfg({"IPADDR[0]": "192.168.7.30", "GATEWAY[0]": "192.168.7.1"})
-        text = unraid_cfg.read_text()
-        assert text.startswith("# generated\n") and 'IPADDR[0]="192.168.7.30"' in text
-        assert text.rstrip().endswith('GATEWAY[0]="192.168.7.1"')
-
     def test_missing_file(self, tmp_path, monkeypatch):
         monkeypatch.setattr(net.common, "UNRAID_NETWORK_CFG", (str(tmp_path / "nope.cfg"),))
         assert net._parse_unraid_network_cfg() == {}
-        assert net._write_unraid_network_cfg({"A": "b"}) is False
         assert net._get_unraid_descriptions() == {}
 
     def test_descriptions(self, unraid_cfg):
         d = net._get_unraid_descriptions()
         assert d["0"] == d["eth0"] == d["br0"] == "Main LAN" and d["1"] == "Backup link"
-
-    def test_revert_writes_the_old_settings(self, unraid_cfg, monkeypatch):
-        monkeypatch.setattr(net.common, "load_network_config", lambda: {"host_ip_staged": {}})
-        saved = []
-        monkeypatch.setattr(net.common, "save_network_config", lambda cfg: saved.append(cfg))
-        net._execute_revert(
-            {
-                "mode": "static",
-                "ip_address": "192.168.7.25",
-                "netmask": "255.255.255.0",
-                "gateway": "192.168.7.1",
-                "dns1": "1.1.1.1",
-                "dns2": "",
-            }
-        )
-        text = unraid_cfg.read_text()
-        assert 'IPADDR[0]="192.168.7.25"' in text and 'DNS_SERVER1="1.1.1.1"' in text
-        assert saved and "host_ip_staged" not in saved[0]
-        net._execute_revert({"mode": "dhcp"})
-        assert 'USE_DHCP[0]="yes"' in unraid_cfg.read_text()
 
 
 class TestDns:
@@ -128,9 +101,6 @@ class TestValidation:
 class TestLinkSettings:
     def test_bad_interface_names_run_nothing(self, run):
         assert net._query_ethtool("eth0; rm -rf /") == ""
-        assert net._apply_mtu("$(x)", 9000) is False
-        assert net._apply_wol("a b", True) is False
-        assert net._apply_negotiation("x|y", True) is False
         assert run.calls == []
 
     def test_ethtool_direct(self, run):
@@ -146,45 +116,6 @@ class TestLinkSettings:
         run.answers["ethtool"] = FileNotFoundError("ethtool")
         monkeypatch.setattr(net.os.path, "exists", lambda p: False)
         assert net._query_ethtool("eth0") == ""
-
-    def test_mtu_via_ip(self, run):
-        run.answers["ip link set dev eth0 mtu 9000"] = (0, "")
-        assert net._apply_mtu("eth0", 9000)
-
-    def test_mtu_via_sysfs(self, run, tmp_path, monkeypatch):
-        (tmp_path / "class/net/eth0").mkdir(parents=True)
-        (tmp_path / "class/net/eth0/mtu").write_text("1500")
-        monkeypatch.setattr(net.common, "HOST_SYS", str(tmp_path))
-        monkeypatch.setattr(net.os.path, "exists", lambda p: False)
-        assert net._apply_mtu("eth0", 9000)
-        assert (tmp_path / "class/net/eth0/mtu").read_text() == "9000"
-
-    def test_mtu_nowhere(self, run, tmp_path, monkeypatch):
-        monkeypatch.setattr(net.common, "HOST_SYS", str(tmp_path))
-        monkeypatch.setattr(net.os.path, "exists", lambda p: False)
-        monkeypatch.setattr(net.os.path, "isfile", lambda p: False)
-        assert net._apply_mtu("eth0", 9000) is False
-
-    @pytest.mark.parametrize("enabled, arg", [(True, "g"), (False, "d")])
-    def test_wol(self, run, enabled, arg):
-        run.answers[f"ethtool -s eth0 wol {arg}"] = (0, "")
-        assert net._apply_wol("eth0", enabled)
-
-    def test_wol_host_namespace(self, run, monkeypatch):
-        run.answers["nsenter"] = (0, "")
-        monkeypatch.setattr(net.os.path, "exists", lambda p: p == "/host/proc/1/ns/net")
-        assert net._apply_wol("eth0", True)
-
-    def test_negotiation(self, run):
-        run.answers["ethtool -s eth0 autoneg on"] = (0, "")
-        assert net._apply_negotiation("eth0", True)
-        run.answers["ethtool -s eth0 speed 1000 duplex full autoneg off"] = (0, "")
-        assert net._apply_negotiation("eth0", False, speed=1000)
-
-    def test_negotiation_fails(self, run, monkeypatch):
-        monkeypatch.setattr(net.os.path, "exists", lambda p: p == "/host/proc/1/ns/net")
-        assert net._apply_negotiation("eth0", False, speed=100, duplex="half") is False
-        assert run.calls[-1][0] == "nsenter"
 
 
 @pytest.fixture
@@ -319,10 +250,6 @@ class TestVlans:
         assert vlans["eth0.10"]["alias"] == "Cameras" and vlans["eth0.10"]["ip_address"] == "10.10.0.0/24"
         assert vlans["vlan20"]["parent"] == "eth1" and not vlans["vlan20"]["is_up"]
         assert vlans["eth2.30"]["speed_human"] == "Disconnected" and vlans["eth2.30"]["alias"] == "IoT"
-
-    @pytest.mark.parametrize("parent, vid", [("eth0;x", 10), ("eth0", 0), ("eth0", 5000), ("eth0", "ten")])
-    def test_create_rejects_bad_input(self, parent, vid):
-        assert net.create_vlan(parent, vid)["status"] == "error"
 
 
 class TestHostIp:

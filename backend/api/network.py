@@ -5,32 +5,40 @@ friendly interface aliases, and Docker network management.
 """
 
 import asyncio
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.errors import ApiError
+from backend.hardware.net.host import NotOnThisHost, current_host
 from backend.hardware.network import (
-    apply_host_ip_config_canary,
-    confirm_host_ip_config,
     create_docker_network,
-    create_vlan,
     delete_docker_network,
-    delete_vlan,
     get_bond_config,
     get_bridge_config,
     get_host_ip_config,
     get_network_topology,
     get_port_config,
     get_vlans,
-    revert_host_ip_config,
-    update_bond_config,
-    update_bridge_config,
-    update_port_config,
+    save_port_alias,
 )
 
 router = APIRouter(tags=["Network & Switching"])
+
+
+def _change(setting: str, target: str, changes: dict) -> dict:
+    """A change to the host's wiring: made only where Kiboto manages the host (SET-16, D2)."""
+    try:
+        return current_host().apply(setting, target, changes)
+    except NotOnThisHost as e:
+        raise ApiError(409, str(e), "not_on_this_host") from None
+
+
+@router.get("/network/capabilities", dependencies=[Depends(require_scope("system:view", "system:config"))])
+async def get_network_capabilities():
+    """What Kiboto may change on this host's network, and where the host's own settings are."""
+    return await asyncio.to_thread(lambda: current_host().capabilities())
 
 
 class HostIpConfigApplyRequest(BaseModel):
@@ -114,11 +122,14 @@ async def get_port_config_endpoint(iface_name: str):
 
 @router.post("/network/port/{iface_name}", dependencies=[Depends(require_scope("system:config"))])
 async def update_port_config_endpoint(iface_name: str, req: PortConfigUpdateRequest):
-    """Update interface configuration (alias, MTU, WOL, negotiation speed)."""
+    """A port's nickname (always), or its packet size, speed or Wake-on-LAN (only on a host Kiboto manages; 409 not_on_this_host elsewhere)."""
     updates = req.model_dump(exclude_unset=True)
-    res = await asyncio.to_thread(update_port_config, iface_name, updates)
-    if res.get("status") == "error":
-        raise HTTPException(status_code=400, detail=res.get("message", "Failed to update port configuration"))
+    alias = updates.pop("alias", None)
+    res: dict = {"status": "ok"}
+    if updates:  # packet size, speed, Wake-on-LAN: the host's wiring, refused whole where it is not Kiboto's
+        res = await asyncio.to_thread(_change, "port", iface_name, updates)
+    if alias is not None:  # the nickname is Kiboto's own label
+        res["alias"] = await asyncio.to_thread(save_port_alias, iface_name, alias)
     return res
 
 
@@ -154,39 +165,20 @@ async def get_host_ip_config_endpoint():
 
 @router.post("/network/host/apply", dependencies=[Depends(require_scope("system:config"))])
 async def apply_host_ip_config_endpoint(req: HostIpConfigApplyRequest):
-    """
-    Arm 60-second Canary watchdog, snapshot configuration, and stage/apply new host IP settings.
-    Automatically reverts within 60s unless confirmed.
-    """
-    try:
-        updates = req.model_dump(exclude_unset=True)
-        timeout_sec = updates.pop("timeout_sec", 60)
-        res = await asyncio.to_thread(apply_host_ip_config_canary, updates, timeout_sec=timeout_sec)
-        return res
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to apply host network configuration: {e}") from e
+    """Change the host's address: only on a host Kiboto manages (409 not_on_this_host elsewhere)."""
+    return await asyncio.to_thread(_change, "address", "", req.model_dump(exclude_unset=True))
 
 
 @router.post("/network/host/confirm", dependencies=[Depends(require_scope("system:config"))])
 async def confirm_host_ip_config_endpoint(req: HostIpConfirmRequest | None = None):
-    """Confirm and seal host network configuration, cancelling the 60s rollback watchdog."""
-    canary_id = req.canary_id if req else None
-    res = await asyncio.to_thread(confirm_host_ip_config, canary_id)
-    if res.get("status") == "error":
-        raise HTTPException(status_code=400, detail=res.get("message", "Confirmation failed"))
-    return res
+    """Keep a trial address: only on a host Kiboto manages (409 not_on_this_host elsewhere)."""
+    return await asyncio.to_thread(_change, "address", "", {"confirm": req.canary_id if req else None})
 
 
 @router.post("/network/host/revert", dependencies=[Depends(require_scope("system:config"))])
 async def revert_host_ip_config_endpoint(req: HostIpRevertRequest | None = None):
-    """Manually abort Canary test and immediately restore previous host network configuration."""
-    canary_id = req.canary_id if req else None
-    res = await asyncio.to_thread(revert_host_ip_config, canary_id)
-    if res.get("status") == "error":
-        raise HTTPException(status_code=400, detail=res.get("message", "Reversion failed"))
-    return res
+    """Go back from a trial address: only on a host Kiboto manages (409 not_on_this_host elsewhere)."""
+    return await asyncio.to_thread(_change, "address", "", {"revert": req.canary_id if req else None})
 
 
 @router.get("/network/bond/{bond_name}", dependencies=[Depends(require_scope("system:view", "system:config"))])
@@ -200,12 +192,8 @@ async def get_bond_config_endpoint(bond_name: str):
 
 @router.post("/network/bond/{bond_name}", dependencies=[Depends(require_scope("system:config"))])
 async def update_bond_config_endpoint(bond_name: str, req: BondConfigUpdateRequest):
-    """Update bonding group mode (802.3ad / active-backup / balance-alb), slave member interfaces, and miimon."""
-    updates = req.model_dump(exclude_unset=True)
-    res = await asyncio.to_thread(update_bond_config, bond_name, updates)
-    if res.get("status") == "error":
-        raise HTTPException(status_code=400, detail=res.get("message", "Failed to update bond configuration"))
-    return res
+    """Change a bond: only on a host Kiboto manages (409 not_on_this_host elsewhere)."""
+    return await asyncio.to_thread(_change, "bond", bond_name, req.model_dump(exclude_unset=True))
 
 
 @router.get("/network/bridge/{br_name}", dependencies=[Depends(require_scope("system:view", "system:config"))])
@@ -219,12 +207,8 @@ async def get_bridge_config_endpoint(br_name: str):
 
 @router.post("/network/bridge/{br_name}", dependencies=[Depends(require_scope("system:config"))])
 async def update_bridge_config_endpoint(br_name: str, req: BridgeConfigUpdateRequest):
-    """Update virtual bridge parameters (STP enable/disable, forward delay, member interfaces)."""
-    updates = req.model_dump(exclude_unset=True)
-    res = await asyncio.to_thread(update_bridge_config, br_name, updates)
-    if res.get("status") == "error":
-        raise HTTPException(status_code=400, detail=res.get("message", "Failed to update bridge configuration"))
-    return res
+    """Change a bridge: only on a host Kiboto manages (409 not_on_this_host elsewhere)."""
+    return await asyncio.to_thread(_change, "bridge", br_name, req.model_dump(exclude_unset=True))
 
 
 @router.get("/network/vlans", dependencies=[Depends(require_scope("system:view", "system:config"))])
@@ -235,25 +219,14 @@ async def get_vlans_endpoint():
 
 @router.post("/network/vlan/create", dependencies=[Depends(require_scope("system:config"))])
 async def create_vlan_endpoint(req: VlanCreateRequest):
-    """Create a new 802.1Q VLAN tagged sub-interface (e.g. eth0.10, br0.20)."""
-    res = await asyncio.to_thread(
-        create_vlan,
-        parent=req.parent,
-        vlan_id=req.vlan_id,
-        alias=req.alias or "",
-    )
-    if res.get("status") == "error":
-        raise HTTPException(status_code=400, detail=res.get("message", "Failed to create VLAN sub-interface"))
-    return res
+    """Add a VLAN: only on a host Kiboto manages (409 not_on_this_host elsewhere)."""
+    return await asyncio.to_thread(_change, "vlan", req.parent, req.model_dump(exclude_unset=True))
 
 
 @router.delete("/network/vlan/{vlan_iface}", dependencies=[Depends(require_scope("system:config"))])
 async def delete_vlan_endpoint(vlan_iface: str):
-    """Delete an existing 802.1Q VLAN tagged sub-interface."""
-    res = await asyncio.to_thread(delete_vlan, vlan_iface)
-    if res.get("status") == "error":
-        raise HTTPException(status_code=400, detail=res.get("message", "Could not remove the VLAN"))
-    return res
+    """Remove a VLAN: only on a host Kiboto manages (409 not_on_this_host elsewhere)."""
+    return await asyncio.to_thread(_change, "vlan", vlan_iface, {"delete": True})
 
 
 class TailscaleUpRequest(BaseModel):
