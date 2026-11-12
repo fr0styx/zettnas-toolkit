@@ -695,6 +695,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Disconnect no longer wipes the HTTPS addresses** of Kiboto, Immich and the apps; they are back
   when Tailscale reconnects.
 
+#### New
+
+- **NetBird as a second way in from away.** Settings → Away from home now offers NetBird next to
+  Tailscale: paste a setup key (and your own NetBird server's address if you run one) and Kiboto
+  installs and connects the NetBird container. Disconnect stops it; the setup key isn't kept.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

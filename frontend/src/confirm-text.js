@@ -49,6 +49,7 @@ const ACTIONS = {
   'network.publish_app': ['Put it on the internet', 'Put {target} on the internet through Tailscale Funnel? Anyone with its address reaches its own sign-in page; Kiboto\'s page stays private.', true],
   'network.public_links': ['Publish share links', 'Let anyone who has a share link open it from the internet, through Tailscale Funnel on port {target}? Only share links are reachable that way; the rest of the NAS stays private.', false],
   'network.public_links_move_immich': ['Publish and move Immich', 'Publish share links, and move Immich to {target}? Share links need the port Immich’s secure address uses now, and a port on the internet must carry nothing else. Phones and browsers that open Immich at the old address need the new one. If the family signs in to Immich with one account, Kiboto connects it again at the new address and shows the addresses to add in your sign-in provider.'],
+  'network.netbird_install': ['Start NetBird', 'Start NetBird in {target}, a container on this NAS’s own network that may change its network settings? NetBird needs that to connect your devices. Nothing is opened on your router.'],
   'network.tailscale_install': ['Start Tailscale', 'Start Tailscale in {target}, a container on this NAS’s own network that may change its network settings? Tailscale needs that to connect your devices. Nothing is opened on your router.'],
 };
 

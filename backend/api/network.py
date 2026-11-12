@@ -274,6 +274,48 @@ def _ask_before_installing_tailscale(request: Request, principal: AuthenticatedP
         confirm_or_raise(request, principal, "network.tailscale_install", "tailscale")
 
 
+class NetbirdConnectRequest(BaseModel):
+    setup_key: str = Field(..., max_length=128, description="A setup key from NetBird Cloud or your own NetBird server")
+    management_url: str = Field(
+        default="", max_length=255, description="Your own NetBird server; empty for NetBird Cloud"
+    )
+
+
+@router.get("/network/remote-access/netbird", dependencies=[Depends(require_scope("system:view"))])
+async def get_netbird(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """NetBird's state (SET-16N); the address and devices only for someone who may change settings."""
+    from backend.services import netbird
+
+    s = await asyncio.to_thread(netbird.status)
+    if _may_change(principal):
+        return s
+    return {"state": s.get("state")}
+
+
+@router.post("/network/remote-access/netbird/connect", dependencies=[Depends(require_scope("system:config"))])
+async def post_netbird_connect(
+    req: NetbirdConnectRequest, request: Request, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
+    """Joins NetBird with a setup key; asks first before its container is put on the host's network."""
+    from backend.confirmations import confirm_or_raise
+    from backend.services import netbird
+
+    if not (await asyncio.to_thread(netbird.container))["exists"]:
+        confirm_or_raise(request, principal, "network.netbird_install", "netbird")
+    try:
+        return await asyncio.to_thread(netbird.connect, req.setup_key, req.management_url)
+    except netbird.NetbirdError as e:
+        raise ApiError(400, str(e), "netbird_failed") from None
+
+
+@router.post("/network/remote-access/netbird/disconnect", dependencies=[Depends(require_scope("system:config"))])
+async def post_netbird_disconnect():
+    """Leaves NetBird; the container and its sign-in stay for next time."""
+    from backend.services import netbird
+
+    return await asyncio.to_thread(netbird.disconnect)
+
+
 @router.post("/network/remote-access/connect", dependencies=[Depends(require_scope("system:config"))])
 async def post_remote_access_connect(
     req: RemoteAccessConnectRequest,

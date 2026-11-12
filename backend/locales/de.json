@@ -44,6 +44,7 @@
  "alert.replication_ok.title": "Replikation abgeschlossen: {name}",
  "alert.security.admin_account_disabled": "Administratorkonto deaktiviert",
  "alert.security.api_token_created": "API-Token erstellt",
+ "alert.security.confirm_network_netbird_install": "NetBird gestartet",
  "alert.security.confirm_storage_pool_create": "Speicherpool angelegt (Festplatten gelöscht)",
  "alert.security.confirm_storage_pool_delete": "Speicherpool gelöscht",
  "alert.security.confirm_storage_pool_erase": "Speicherpool gelöscht und Laufwerke geleert",

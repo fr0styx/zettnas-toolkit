@@ -55,6 +55,13 @@ export function publishBody(loc = window.location) {
 
 function connectForm() {
   const own = el('input', { type: 'radio', name: 'remote-kind', value: 'headscale' });
+  const nb = el('input', { type: 'radio', name: 'remote-kind', value: 'netbird' });
+  const nbFields = el(
+    'div',
+    { class: 'remote-own', hidden: true },
+    el('label', {}, t('remote.netbird_key', 'Setup key'), el('input', { name: 'setup_key', type: 'password', autocomplete: 'off' })),
+    el('label', {}, t('remote.netbird_server', 'Your own NetBird server (optional)'), el('input', { name: 'management_url', type: 'url', placeholder: 'https://netbird.example.com', autocomplete: 'off' })),
+  );
   const server = el('input', { name: 'login_server', type: 'url', placeholder: 'https://headscale.example.com', autocomplete: 'off' });
   const key = el('input', { name: 'auth_key', type: 'password', autocomplete: 'off' });
   const ownFields = el(
@@ -73,14 +80,37 @@ function connectForm() {
       el('legend', { text: t('remote.how', 'How to connect') }),
       el('label', { class: 'remote-choice' }, el('input', { type: 'radio', name: 'remote-kind', value: 'tailscale', checked: true }), t('remote.tailscale', 'Tailscale (free account with Google, Apple, Microsoft or GitHub)')),
       el('label', { class: 'remote-choice' }, own, t('remote.headscale', 'My own Headscale server (no account anywhere)')),
+      el('label', { class: 'remote-choice' }, nb, t('remote.netbird', 'NetBird (free account, or your own NetBird server)')),
     ),
     ownFields,
+    nbFields,
     el('button', { type: 'submit', class: 'btn-pill-toggle is-primary', text: t('remote.connect', 'Connect') }),
   );
   form.addEventListener('change', () => {
     ownFields.hidden = !own.checked;
+    nbFields.hidden = !nb.checked;
   });
   return form;
+}
+
+/** What NetBird's connect sends, or null when another way was chosen (SET-16N). */
+export function netbirdBody(form) {
+  const f = new FormData(form);
+  if (f.get('remote-kind') !== 'netbird') return null;
+  return { setup_key: String(f.get('setup_key') || '').trim(), management_url: String(f.get('management_url') || '').trim() };
+}
+
+/** Connected through NetBird: the address as a QR code, its devices, and Disconnect. */
+export async function netbirdView(nb, loc = window.location) {
+  const url = `http://${nb.ip}:${appPort(loc)}`;
+  return el(
+    'div',
+    { class: 'remote-step' },
+    el('p', { text: t('remote.netbird_connected', 'Connected to NetBird as {name}. On a phone with the NetBird app signed in to the same network, scan the code to open Kiboto.', { name: nb.name || nb.ip }) }),
+    el('div', { class: 'kb-row' }, await qrBox(url, t('remote.addr_qr', 'Kiboto address as a QR code')), el('ul', { class: 'kb-list remote-addresses' }, el('li', {}, `${t('remote.addr_kiboto', 'Kiboto')}: `, link(url, url)), el('li', { text: t('remote.netbird_devices', '{n, plural, one {# device} other {# devices}} connected', { n: nb.peers_connected || 0 }) }))),
+    el('p', { class: 'kb-muted', text: t('remote.netbird_plain', 'NetBird gives no HTTPS addresses, so the address starts with http://. The connection is still encrypted end to end.') }),
+    el('div', { class: 'kb-row remote-actions' }, el('button', { type: 'button', class: 'btn-pill-toggle is-small', 'data-netbird': 'disconnect', text: t('remote.disconnect', 'Disconnect') })),
+  );
 }
 
 /** What the person sends: no login server for Tailscale, the Headscale address otherwise. */
@@ -194,8 +224,9 @@ async function connectedView(s) {
 }
 
 /** The card's body for a status from GET /api/network/remote-access. */
-export async function remoteBody(s) {
+export async function remoteBody(s, nb = null) {
   if (s.state === 'Running') return connectedView(s);
+  if (nb && nb.state === 'Connected' && nb.ip) return netbirdView(nb);
   if (s.state === 'NeedsLogin' && s.auth_url) return signInView(s);
   return connectForm();
 }
@@ -211,12 +242,28 @@ export async function renderRemoteAccess(card, s = null, polls = 0) {
     }
   }
   card.hidden = false;
-  card.replaceChildren(el('div', { class: 'kb-card kb-card--boxed' }, el('div', { class: 'kb-title', text: t('remote.title', 'Use from anywhere') }), await remoteBody(status)));
+  const nb = status.state === 'Running' ? null : await api.get('/api/network/remote-access/netbird').catch(() => null);
+  card.replaceChildren(el('div', { class: 'kb-card kb-card--boxed' }, el('div', { class: 'kb-title', text: t('remote.title', 'Use from anywhere') }), await remoteBody(status, nb)));
   card.querySelector('[data-remote-form]')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const form = /** @type {HTMLFormElement} */ (e.currentTarget);
     try {
-      const next = await api.post('/api/network/remote-access/connect', connectBody(/** @type {HTMLFormElement} */ (e.currentTarget)));
+      const viaNetbird = netbirdBody(form);
+      if (viaNetbird) {
+        await api.post('/api/network/remote-access/netbird/connect', viaNetbird);
+        await renderRemoteAccess(card);
+        return;
+      }
+      const next = await api.post('/api/network/remote-access/connect', connectBody(form));
       await renderRemoteAccess(card, next);
+    } catch (err) {
+      showToast(err.message || String(err), 'error');
+    }
+  });
+  card.querySelector('[data-netbird]')?.addEventListener('click', async () => {
+    try {
+      await api.post('/api/network/remote-access/netbird/disconnect', {});
+      await renderRemoteAccess(card);
     } catch (err) {
       showToast(err.message || String(err), 'error');
     }

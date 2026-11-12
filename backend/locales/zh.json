@@ -44,6 +44,7 @@
  "alert.replication_ok.title": "复制完成：{name}",
  "alert.security.admin_account_disabled": "管理员账户已停用",
  "alert.security.api_token_created": "已创建 API 令牌",
+ "alert.security.confirm_network_netbird_install": "已启动 NetBird",
  "alert.security.confirm_storage_pool_create": "已创建存储池（硬盘已清空）",
  "alert.security.confirm_storage_pool_delete": "已删除存储池",
  "alert.security.confirm_storage_pool_erase": "已删除存储池并清空硬盘",

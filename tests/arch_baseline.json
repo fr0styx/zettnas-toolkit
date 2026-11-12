@@ -426,6 +426,7 @@
   "backend.services.media_engine": 1,
   "backend.services.model_benchmark": 1,
   "backend.services.model_installer": 1,
+  "backend.services.netbird": 1,
   "backend.services.rag_cjk": 1,
   "backend.services.rag_documents": 2,
   "backend.services.rag_embeddings": 1,

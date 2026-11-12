@@ -115,6 +115,7 @@ NOT_CONTACTED = {
     "auth.example.com",
     "nextcloud.example.com",
     "headscale.example.com",  # the placeholder of the Headscale address (COMP-01)
+    "netbird.example.com",  # the placeholder of a self-hosted NetBird server (SET-16N)
     "rclone.org",
     "restic.net",
     "caddyserver.com",

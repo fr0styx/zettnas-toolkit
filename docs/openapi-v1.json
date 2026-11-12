@@ -28511,6 +28511,28 @@
     "title": "NasNameUpdate",
     "type": "object"
    },
+   "NetbirdConnectRequest": {
+    "properties": {
+     "management_url": {
+      "default": "",
+      "description": "Your own NetBird server; empty for NetBird Cloud",
+      "maxLength": 255,
+      "title": "Management Url",
+      "type": "string"
+     },
+     "setup_key": {
+      "description": "A setup key from NetBird Cloud or your own NetBird server",
+      "maxLength": 128,
+      "title": "Setup Key",
+      "type": "string"
+     }
+    },
+    "required": [
+     "setup_key"
+    ],
+    "title": "NetbirdConnectRequest",
+    "type": "object"
+   },
    "NewInviteResponse": {
     "additionalProperties": true,
     "description": "POST /invites",
@@ -60291,6 +60313,106 @@
      }
     },
     "summary": "Post Remote Access Disconnect",
+    "tags": [
+     "Network & Switching"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/network/remote-access/netbird": {
+   "get": {
+    "description": "NetBird's state (SET-16N); the address and devices only for someone who may change settings.",
+    "operationId": "get_netbird_api_v1_network_remote_access_netbird_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Netbird",
+    "tags": [
+     "Network & Switching"
+    ],
+    "x-required-scopes": [
+     "system:view"
+    ]
+   }
+  },
+  "/api/v1/network/remote-access/netbird/connect": {
+   "post": {
+    "description": "Joins NetBird with a setup key; asks first before its container is put on the host's network.",
+    "operationId": "post_netbird_connect_api_v1_network_remote_access_netbird_connect_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NetbirdConnectRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Netbird Connect",
+    "tags": [
+     "Network & Switching"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/network/remote-access/netbird/disconnect": {
+   "post": {
+    "description": "Leaves NetBird; the container and its sign-in stay for next time.",
+    "operationId": "post_netbird_disconnect_api_v1_network_remote_access_netbird_disconnect_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Post Netbird Disconnect",
     "tags": [
      "Network & Switching"
     ],

@@ -44,6 +44,7 @@
  "alert.replication_ok.title": "Réplication terminée : {name}",
  "alert.security.admin_account_disabled": "Compte administrateur désactivé",
  "alert.security.api_token_created": "Jeton d’API créé",
+ "alert.security.confirm_network_netbird_install": "NetBird démarré",
  "alert.security.confirm_storage_pool_create": "Pool de stockage créé (disques effacés)",
  "alert.security.confirm_storage_pool_delete": "Pool de stockage supprimé",
  "alert.security.confirm_storage_pool_erase": "Pool de stockage supprimé et disques effacés",
