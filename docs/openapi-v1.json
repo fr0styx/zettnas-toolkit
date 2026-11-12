@@ -59211,6 +59211,35 @@
     ]
    }
   },
+  "/api/v1/network/exposure": {
+   "get": {
+    "description": "What reaches this NAS from outside, read from the live settings: off, private (Tailscale or\nNetBird) or public (what Funnel publishes), with a tone and its reason (SET-24).",
+    "operationId": "get_exposure_api_v1_network_exposure_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Exposure",
+    "tags": [
+     "Network & Switching"
+    ],
+    "x-required-scopes": [
+     "system:view"
+    ]
+   }
+  },
   "/api/v1/network/family-access": {
    "get": {
     "description": "Who was invited, who joined and who is online; whether a Tailscale API key is kept and how long it lasts.",

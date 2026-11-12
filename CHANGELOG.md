@@ -717,6 +717,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   each app in your tailnet), and one function lists what Funnel puts on the internet. Nothing
   changes for you today; the coming "Away from home" page uses it to say what is public.
 
+#### New
+
+- **Away from home says what reaches this NAS from outside**, in one line at the top: "Closed",
+  "Private" (only devices in your Tailscale or NetBird network) or "Public" (share links, apps).
+  It is read from Tailscale's live settings. It turns amber when Tailscale needs a sign-in or its
+  sign-in runs out within 14 days, and red when something is on the internet that Kiboto didn't put
+  there. It also says what Kiboto can't see: ports opened on your router, a reverse proxy, IPv6.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

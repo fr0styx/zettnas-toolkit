@@ -100,6 +100,11 @@ def _state() -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def recorded_ports() -> set[int]:
+    """The Funnel ports Kiboto published an app on (its record)."""
+    return {int(p) for p in _state() if str(p).isdigit()}
+
+
 def _serve_config() -> tuple[dict[str, Any], dict[str, Any]]:
     """Every host:port Tailscale serves (tailnet or public) and which of them Funnel opens."""
     code, out = public_links._ts(["funnel", "status", "--json"], timeout=4.0)

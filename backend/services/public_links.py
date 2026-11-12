@@ -45,6 +45,11 @@ def _state() -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def recorded_on() -> bool:
+    """Whether Kiboto turned share links on (its record; the live state is read apart)."""
+    return bool(_state().get("enabled"))
+
+
 def _dns_name() -> str:
     code, out = _ts(["status", "--json"], timeout=4.0)
     if code != 0:

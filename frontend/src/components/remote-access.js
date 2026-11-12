@@ -7,6 +7,7 @@ import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { pollWhileOpen } from '../poll-while-open.js';
+import { installExposure, renderExposure, LINE_ID } from './exposure-line.js';
 
 const CARD_ID = 'remote-access-card';
 const POLL_MS = 3000;
@@ -285,7 +286,14 @@ export async function renderRemoteAccess(card, s = null) {
       }
     }),
   );
+  refreshExposure();
   if (status.state === 'NeedsLogin') pollWhileOpen(card, () => signInDone(card, status), { ms: POLL_MS, limit: POLL_LIMIT });
+}
+
+/** The line above the card says again what reaches the NAS, after the card changed. */
+export function refreshExposure() {
+  const line = document.getElementById(LINE_ID);
+  if (line) renderExposure(line);
 }
 
 /** One sign-in check: true (and the card drawn again) once Tailscale moved on. */
@@ -304,5 +312,6 @@ export async function installRemoteAccess(mount) {
     card = el('div', { id: CARD_ID });
     mount.append(card);
   }
+  installExposure(mount);
   await renderRemoteAccess(card);
 }

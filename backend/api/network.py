@@ -253,6 +253,15 @@ def _may_change(principal: AuthenticatedPrincipal) -> bool:
     return principal.has_scope("system:config")
 
 
+@router.get("/network/exposure", dependencies=[Depends(require_scope("system:view"))])
+async def get_exposure():
+    """What reaches this NAS from outside, read from the live settings: off, private (Tailscale or
+    NetBird) or public (what Funnel publishes), with a tone and its reason (SET-24)."""
+    from backend.services import exposure
+
+    return await asyncio.to_thread(exposure.summary)
+
+
 @router.get("/network/remote-access", dependencies=[Depends(require_scope("system:view"))])
 async def get_remote_access(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """Use from anywhere (COMP-01): tailnet state, sign-in link, and the addresses to open.

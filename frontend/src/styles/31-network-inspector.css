@@ -471,6 +471,14 @@
 .remote-form .remote-choice { flex-direction: row; align-items: center; gap: var(--kb-space-1); font-size: var(--kb-fs-sm); color: var(--fg); }
 .remote-own:not([hidden]) { display: flex; flex-wrap: wrap; gap: var(--kb-space-2); }
 .remote-own input { min-height: var(--kb-btn-h); min-width: 260px; padding: 0 var(--kb-space-2); border-radius: var(--kb-radius-sm); border: 1px solid var(--kb-line-strong); background: var(--kb-shade-30); color: var(--fg); }
+.remote-exposure { border: 1px solid var(--kb-surface-line); border-radius: var(--kb-radius); padding: 8px var(--kb-space-3); margin-bottom: 10px; }
+.remote-exposure p { margin: 0; }
+.remote-exposure-head { color: var(--c-text); }
+.remote-exposure-note { font-size: var(--kb-fs-xs); color: var(--muted); margin-top: 4px; }
+.remote-exposure--amber { border-color: var(--kb-text-warn); }
+.remote-exposure--amber .remote-exposure-head { color: var(--kb-text-warn); }
+.remote-exposure--red { border-color: var(--kb-text-crit); }
+.remote-exposure--red .remote-exposure-head { color: var(--kb-text-crit); }
 .remote-step { gap: var(--kb-space-3); align-items: center; flex-wrap: wrap; }
 .remote-qr { flex: none; width: 148px; height: 148px; border-radius: var(--kb-radius-sm); overflow: hidden; }
 .remote-qr svg { display: block; width: 100%; height: 100%; }
