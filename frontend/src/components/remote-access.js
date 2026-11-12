@@ -7,6 +7,7 @@ import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { pollWhileOpen } from '../poll-while-open.js';
+import { stateBlock } from './state-block.js';
 import { installExposure, renderExposure, LINE_ID } from './exposure-line.js';
 
 const CARD_ID = 'remote-access-card';
@@ -238,8 +239,8 @@ export async function renderRemoteAccess(card, s = null) {
   if (!status) {
     try {
       status = await api.get('/api/network/remote-access');
-    } catch {
-      card.hidden = true;
+    } catch (err) {
+      showLoadFailed(card, err);
       return;
     }
   }
@@ -288,6 +289,13 @@ export async function renderRemoteAccess(card, s = null) {
   );
   refreshExposure();
   if (status.state === 'NeedsLogin') pollWhileOpen(card, () => signInDone(card, status), { ms: POLL_MS, limit: POLL_LIMIT });
+}
+
+/** The card when its state can't be read: says so, with Try again (network report F1: it vanished). */
+export function showLoadFailed(card, err) {
+  card.hidden = false;
+  const text = t('remote.load_failed', "Kiboto couldn't read how this NAS is reached from away.");
+  card.replaceChildren(stateBlock('failed', { text, detail: String(err?.message || ''), retry: () => renderRemoteAccess(card) }));
 }
 
 /** The line above the card says again what reaches the NAS, after the card changed. */

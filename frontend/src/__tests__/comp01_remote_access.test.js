@@ -108,7 +108,7 @@ describe('COMP-01: use from anywhere', () => {
     expect(mount.querySelector('[data-remote="publish"]')).toBeNull();
   });
 
-  it('reports a failed connect and stays hidden without the API', async () => {
+  it('reports a failed connect, and says so when the state cannot be read', async () => {
     const mount = await mounted({ state: 'Stopped' });
     api.post.mockRejectedValue(new Error('Tailscale could not start.'));
     mount.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
@@ -121,9 +121,17 @@ describe('COMP-01: use from anywhere', () => {
     await vi.waitFor(() => expect(m2.querySelector('[data-remote-form]')).not.toBeNull());
     document.body.innerHTML = '';
     const card = document.createElement('div');
+    document.body.append(card);
     api.get.mockRejectedValue(new Error('403'));
     await ra.renderRemoteAccess(card);
-    expect(card.hidden).toBe(true);
+    expect(card.hidden).toBe(false);
+    expect(card.querySelector('.state-block.is-failed').textContent).toContain("Kiboto couldn't read how this NAS is reached from away.");
+    expect(card.textContent).toContain('403');
+    api.get.mockResolvedValue({ state: 'Stopped' });
+    /** @type {HTMLElement} */ (card.querySelector('[data-try-again]')).click();
+    await vi.waitFor(() => expect(card.querySelector('[data-remote-form]')).not.toBeNull());
+    ra.showLoadFailed(card, null);
+    expect(card.querySelector('.state-block-detail')).toBeNull();
   });
 
   it('knows the port of this page', () => {
