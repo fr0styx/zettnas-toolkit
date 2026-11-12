@@ -725,6 +725,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   sign-in runs out within 14 days, and red when something is on the internet that Kiboto didn't put
   there. It also says what Kiboto can't see: ports opened on your router, a reverse proxy, IPv6.
 
+#### Changes
+
+- **A share link that works only at home says how to change that.** The share dialog in Files now
+  has "Make links work away from home", which opens the share-links settings.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

@@ -2975,6 +2975,7 @@ export default {
   "fm.share_max_dl": "Höchstens {n, plural, one {# Download} other {# Downloads}}",
   "fm.share_anywhere": "Funktioniert überall",
   "fm.share_home_only": "Funktioniert zu Hause und im Tailnet",
+  "fm.share_make_away": "Links auch unterwegs nutzbar machen",
   "fm.share_upload": "Stattdessen Dateien in diesen Ordner senden lassen (der Inhalt bleibt unsichtbar)",
   "fm.share_upload_meta": "Andere können Dateien senden, sehen aber nicht, was im Ordner ist",
   "fm.ctx_icloud_photos": "Aus iCloud-Fotos herunterladen…",

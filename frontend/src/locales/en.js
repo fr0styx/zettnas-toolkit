@@ -2975,6 +2975,7 @@ export default {
   "fm.share_max_dl": "At most {n, plural, one {# download} other {# downloads}}",
   "fm.share_anywhere": "Works from anywhere",
   "fm.share_home_only": "Works at home and on your tailnet",
+  "fm.share_make_away": "Make links work away from home",
   "fm.share_upload": "Let people send files into this folder instead (they can't see what is in it)",
   "fm.share_upload_meta": "People can send files here but not see what is in the folder",
   "fm.ctx_icloud_photos": "Download from iCloud Photos…",

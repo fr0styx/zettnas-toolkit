@@ -4091,6 +4091,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
         </div>
         <div class="fmx-xs-muted-3" id="fm-share-meta-info"></div>
         <div class="fmx-row-14">
+          <button id="fm-share-away" class="btn-pill-toggle" hidden>${t('fm.share_make_away', 'Make links work away from home')}</button>
           <button id="fm-share-done" class="btn-pill-toggle">${t('btn.done', 'Done')}</button>
         </div>
       </div>
@@ -4186,6 +4187,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
 
         const doneBtn = modal.querySelector('#fm-share-done');
         if (doneBtn) doneBtn.onclick = closeModal;
+        showAwayButton(modal, res, closeModal);
       } catch (err) {
         showToast(t('toast.failed_to_create_share_link', 'Failed to create share link: {error}', { error: err.message }), 'error');
         submitBtn.disabled = false;
@@ -4204,6 +4206,23 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
   const pop = modal.querySelector('.fm-share-popover');
   if (pop) placePopover(pop, anchorRect);
   modal.querySelector('#fm-share-expires')?.focus();
+}
+
+/** Opens the card that turns share links on from anywhere (Network, Sharing tab; SET-24). */
+export function openShareLinksSettings() {
+  const open = /** @type {any} */ (window).openManagementWindow;
+  if (typeof open === 'function') open('mgmt-sec-network', 'mgmt-pane-network-services');
+}
+
+/** A link that works only at home gets a way to change that, which closes the dialog first. */
+export function showAwayButton(modal, res, close) {
+  const away = /** @type {HTMLElement | null} */ (modal.querySelector('#fm-share-away'));
+  if (!away) return;
+  away.hidden = Boolean(res.public_url);
+  away.onclick = () => {
+    close();
+    openShareLinksSettings();
+  };
 }
 
 if (typeof window !== 'undefined') {

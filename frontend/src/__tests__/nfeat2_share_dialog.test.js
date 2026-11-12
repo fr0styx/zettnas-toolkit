@@ -30,6 +30,7 @@ describe('share dialog (NFEAT-2)', () => {
     const meta = q('#fm-share-meta-info').textContent;
     expect(meta).toContain('People can send files here but not see what is in the folder');
     expect(meta).toContain('Works from anywhere');
+    expect(q('#fm-share-away').hidden).toBe(true);
   });
 
   it('a file is shared for download, at home when public links are off', async () => {
@@ -48,5 +49,17 @@ describe('share dialog (NFEAT-2)', () => {
     expect(meta).toContain('Password protected');
     expect(meta).toContain('At most 2 downloads');
     expect(meta).toContain('Works at home and on your tailnet');
+    const away = q('#fm-share-away');
+    expect(away.hidden).toBe(false);
+    window.openManagementWindow = vi.fn();
+    away.click();
+    expect(window.openManagementWindow).toHaveBeenCalledWith('mgmt-sec-network', 'mgmt-pane-network-services');
+    delete window.openManagementWindow;
+  });
+
+  it('the away button does nothing harmful without its parts', async () => {
+    const { showAwayButton, openShareLinksSettings } = await import('../components/file-manager.js');
+    expect(() => showAwayButton(document.createElement('div'), {}, () => {})).not.toThrow();
+    expect(() => openShareLinksSettings()).not.toThrow();
   });
 });
