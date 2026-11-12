@@ -16,12 +16,12 @@ def test_mcp_follows_the_role_switch_and_logs(monkeypatch):
         "search_nas_knowledge", {"query": "lease"}, SimpleNamespace(role_id="share_user"), "http://nas"
     )
     assert out["isError"] and "turned off" in out["content"][0]["text"]
-    assert logged[-1][1:5] == ("mcp", "search_nas_knowledge", False, "off_for_role")
+    assert logged[-1][1:5] == ("mcp", "search_nas_knowledge", False, "refused")  # a word the log knows (SET-15, AI 2)
     monkeypatch.setattr(
         "backend.services.ai_chat_agent.execute_nas_tool", lambda n, a, **k: {"status": "ok", "value": 1}
     )
     out = mcp._call_tool("get_system_status", {}, SimpleNamespace(role_id="share_user"), "http://nas")
-    assert not out["isError"] and logged[-1][1:5] == ("mcp", "get_system_status", False, "ok")
+    assert not out["isError"] and logged[-1][1:5] == ("mcp", "get_system_status", False, "answered")
 
 
 def test_app_requests_are_kept_small():

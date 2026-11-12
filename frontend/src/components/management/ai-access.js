@@ -1,5 +1,5 @@
 // "Who can use Kib": a switch per role, and the log of who asked (B8, backend/services/ai_access.py).
-// Kids and guests start off; the superadmin is always on. The log keeps who, when, the model, web
+// On a new install the Kid and Guest roles start off; the superadmin is always on. The log keeps who, when, the model, web
 // search and the outcome, never what was asked.
 import { api } from '../../api.js';
 import { t } from '../../i18n.js';
@@ -47,7 +47,7 @@ export function logHtml(rows) {
 }
 
 export function renderAiAccess(card, access, log) {
-  const body = html`<p class="kb-muted">${t('ai.access_desc_both', 'Choose which roles may ask Kib and use AI search. Kids and guests start switched off.')}</p>
+  const body = html`<p class="kb-muted">${t('ai.access_desc_both', 'Choose who may ask Kib and who may search by content. On a new install the Kid and Guest roles start off.')}</p>
     ${rolesHtml(access.roles || [])}
     <details class="ai-access-log"><summary>${t('ai.access_log', 'Who asked Kib')}</summary>
     <p class="kb-muted">${t('ai.access_log_desc', 'When, who, the model, web search and the result, for {days} days. What was asked is not kept here.', { days: access.log_days || 90 })}</p>

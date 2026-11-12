@@ -7,6 +7,7 @@ cached NVMe WebP thumbnails, and FileBot-style automated media organizing.
 
 import asyncio
 import ipaddress
+import json
 import logging
 import os
 import time
@@ -1450,7 +1451,6 @@ async def chat_with_kib_agent_stream(
             history = []
             logger.warning(f"[AI Chat Stream] Failed user message prep: {_stream_db_ex}")
 
-    ai_access.log_request(principal, "chat", req.model or "", bool(req.allow_web_search), "streamed")
     generator = stream_agentic_chat(
         message=req.message,
         history=history,
@@ -1462,7 +1462,7 @@ async def chat_with_kib_agent_stream(
         focus_path=focus,
     )
     return StreamingResponse(
-        generator,
+        _logged_stream(generator, principal, req, time.monotonic()),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -1470,6 +1470,35 @@ async def chat_with_kib_agent_stream(
             "X-Accel-Buffering": "no",
         },
     )
+
+
+def _stream_outcome(chunk: str, outcome: str, model: str) -> tuple[str, str]:
+    """How a streamed answer ended, read from its last events: "streamed" with the model that
+    answered, or "failed" when the stream reported an error."""
+    if chunk.startswith("event: done"):
+        try:
+            payload = json.loads(chunk.split("data: ", 1)[1])
+        except (IndexError, ValueError):
+            payload = {}
+        return "streamed", str(payload.get("active_model") or model)
+    if chunk.startswith("event: error"):
+        return "failed", model
+    return outcome, model
+
+
+async def _logged_stream(generator, principal, req, started: float):
+    """Writes the chat to "Who asked Kib" once the answer is done, with the model that answered and
+    how it ended. It was written before the answer, with an empty model and "streamed" even when
+    the answer failed (SET-15, AI 2)."""
+    outcome, model = "failed", str(req.model or "")
+    try:
+        async for chunk in generator:
+            outcome, model = _stream_outcome(str(chunk), outcome, model)
+            yield chunk
+    finally:
+        ai_access.log_request(
+            principal, "chat", model, bool(req.allow_web_search), outcome, int((time.monotonic() - started) * 1000)
+        )
 
 
 @router.get("/ai/actions/{action_id}")

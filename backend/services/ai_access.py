@@ -133,10 +133,38 @@ def log_request(
         logger.warning("[AI] Could not log an assistant request", exc_info=True)
 
 
+def tool_outcome(res: Any) -> str:
+    """A tool call's result as a log outcome. Every MCP call was written as "Failed": its status
+    ("ok", "confirmation_required") is not one of the log's words (SET-15, AI 2)."""
+    status = str((res or {}).get("status") or "ok").lower() if isinstance(res, dict) else "ok"
+    if status in ("error", "failed", "blocked", "timeout"):
+        return "failed"
+    if status in ("refused", "forbidden", "denied", "not_allowed"):
+        return "refused"
+    return "answered"
+
+
+def prune(now: float | None = None) -> None:
+    """Drops entries older than the log keeps. Also run when the log is read: it ran only when
+    someone used Kib, so the old entries stayed while nobody did (SET-15, AI 2)."""
+    from backend.db import history_session
+
+    ts = int(now or time.time())
+    try:
+        with history_session() as conn:
+            _ensure_table(conn)
+            conn.execute("DELETE FROM ai_requests WHERE ts < ?", (ts - LOG_DAYS * 86400,))
+            _PRUNED["at"] = ts
+    except sqlite3.Error:
+        logger.warning("[AI] Could not prune the request log", exc_info=True)
+
+
 def recent(limit: int = 100, username: str | None = None) -> list[dict[str, Any]]:
     from backend.db import history_session
 
     limit = max(1, min(500, int(limit)))
+    if time.time() - _PRUNED["at"] >= 3600:
+        prune()
     try:
         with history_session() as conn:
             _ensure_table(conn)

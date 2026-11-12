@@ -551,6 +551,16 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   (Immich, a reranker, speech to text, photo search, a separate model for reading files) and what
   each receives.
 
+#### Changes
+
+- **The AI page in German, French, Spanish and Chinese.** No more "RAG" tab or technical leftovers
+  (index file names, "Matryoshka truncation", "LLM", "NVMe-SQLite", "embedding model"); the
+  texts now say what English says. Spanish speaks to you as "tú" on this page throughout.
+- **"Who asked Kib" writes what happened.** A chat is written once the answer is done, with the
+  model that answered and whether it worked; calls from AI clients over MCP no longer all show as
+  "Failed"; old entries are removed on time also when nobody uses Kib. The page says that Kids and
+  Guests start switched off on a new install (not after an upgrade).
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
