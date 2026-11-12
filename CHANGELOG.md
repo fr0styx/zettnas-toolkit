@@ -576,6 +576,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   opens it.
 - A link into a section now starts at its top, or at the part it names.
 
+#### Changes
+
+- **Appearance in plain words and on the phone.** Its parts are called Theme, Wallpaper, Effects,
+  Dock, Widgets and Screen saver, each with one sentence on what it changes. On a phone the theme
+  cards stack, the mode buttons fill the width, the colour swatches are easy to tap and no row runs
+  off the screen.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

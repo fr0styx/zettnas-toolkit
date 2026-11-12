@@ -83,3 +83,12 @@
 
 /* a link to a pane further down a tab (APP-C) stops below the sticky tab bar, not under it */
 .mgmt-detail-card .mgmt-tab-pane { scroll-margin-top: 72px; }
+
+/* Appearance on a phone (APP-C): one column of theme cards, rows that wrap, 44 px targets */
+@media (max-width: 600px) {
+  #mgmt-sec-wallpaper .theme-palette-grid { grid-template-columns: 1fr; }
+  #mgmt-sec-wallpaper .look-mode { display: flex; }
+  #mgmt-sec-wallpaper .look-mode-btn { flex: 1; min-height: 44px; }
+  #mgmt-sec-wallpaper .color-chip-btn { width: 44px; height: 44px; }
+  #mgmt-pane-theme [class^="thm-row"], #mgmt-pane-theme .theme-backup-share-wrap { flex-wrap: wrap; gap: 8px; }
+}
