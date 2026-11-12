@@ -26,6 +26,7 @@ export const ROUTE_SCOPES = {
   folders: ['shares:manage', 'storage:admin'],
   kib: ['system:config'],
   away: ['system:config'],
+  sharing: ['system:config'],
   notifications: ['system:config'],
   security: ['system:config'],
   connections: ['system:config'],

@@ -740,6 +740,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Shared folders leads to Away from home**, for opening your folders from your phone or laptop
   anywhere without opening your router.
 
+#### Changes
+
+- **People leads to family access from anywhere**, and `#/sharing` opens the card for share links,
+  apps and family access from anywhere.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
