@@ -23,7 +23,6 @@ from backend.hardware.net import (  # noqa: F401  (the areas, for patching a nam
     topology,
     unraid_cfg,
     vlans,
-    wireguard,
 )
 from backend.hardware.net.bonds_bridges import (
     get_bond_config,
@@ -76,15 +75,9 @@ from backend.hardware.net.tailscale import (
     _get_tailscale_container_info,
     _run_tailscale_cmd,
     detect_local_subnets,
-    execute_tailscale_ping,
     execute_tailscale_reauth,
     execute_tailscale_set_exit_node,
     execute_tailscale_set_routes,
-    execute_tailscale_set_serve,
-    execute_tailscale_set_ssh,
-    execute_tailscale_taildrop_receive,
-    get_taildrop_dir,
-    get_taildrop_inbox_files,
 )
 from backend.hardware.net.tailscale_setup import (
     deploy_tailscale_container,
@@ -102,14 +95,6 @@ from backend.hardware.net.vlans import (
     _IFNAME,
     _parse_proc_net_vlan,
     get_vlans,
-)
-from backend.hardware.net.wireguard import (
-    _get_wireguard_status,
-    generate_wireguard_client_config,
-    generate_wireguard_keypair,
-    get_ip_forwarding_status,
-    set_ip_forwarding,
-    toggle_wireguard_subnet_nat,
 )
 from backend.state import Z_STATE
 
@@ -133,7 +118,6 @@ __all__ = [
     "_get_docker_topology",
     "_get_tailscale_container_info",
     "_get_unraid_descriptions",
-    "_get_wireguard_status",
     "_hex_to_ip",
     "_mask_to_cidr",
     "_parse_proc_net_vlan",
@@ -152,27 +136,18 @@ __all__ = [
     "detect_local_subnets",
     "docker_sock",
     "execute_tailscale_down",
-    "execute_tailscale_ping",
     "execute_tailscale_reauth",
     "execute_tailscale_set_exit_node",
     "execute_tailscale_set_routes",
-    "execute_tailscale_set_serve",
-    "execute_tailscale_set_ssh",
-    "execute_tailscale_taildrop_receive",
     "execute_tailscale_up",
-    "generate_wireguard_client_config",
-    "generate_wireguard_keypair",
     "get_active_listening_ports",
     "get_bond_config",
     "get_bridge_config",
     "get_host_ip_config",
-    "get_ip_forwarding_status",
     "get_mesh_vpn_status",
     "get_network_topology",
     "get_port_config",
     "save_port_alias",
-    "get_taildrop_dir",
-    "get_taildrop_inbox_files",
     "get_vlans",
     "load_network_config",
     "logger",
@@ -180,6 +155,4 @@ __all__ = [
     "read_json",
     "read_network_rates",
     "save_network_config",
-    "set_ip_forwarding",
-    "toggle_wireguard_subnet_nat",
 ]

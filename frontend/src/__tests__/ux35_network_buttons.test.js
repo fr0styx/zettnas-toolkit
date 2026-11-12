@@ -1,13 +1,13 @@
 /** UX-35: network panel labels keep their icon in the markup, out of the translated words. */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fetchAndRenderWireguard, fetchAndRenderReplication } from '../components/management/network.js';
+import { fetchAndRenderTailscaleDetails, fetchAndRenderReplication } from '../components/management/network.js';
 import { api } from '../api.js';
 import * as toast from '../toast.js';
 
 const byId = (id) => document.getElementById(id);
 const icon = (el) => el.querySelector('span[aria-hidden="true"]')?.textContent;
 const mesh = (tailscale) =>
-  vi.spyOn(api, 'get').mockImplementation(async (url) => (url === '/api/network/mesh-vpn' ? { tailscale, wireguard: {} } : {}));
+  vi.spyOn(api, 'get').mockImplementation(async (url) => (url === '/api/network/mesh-vpn' ? { tailscale } : {}));
 
 describe('network panel icons (UX-35)', () => {
   beforeEach(() => {
@@ -19,37 +19,11 @@ describe('network panel icons (UX-35)', () => {
   });
   afterEach(() => vi.restoreAllMocks());
 
-  it('an expired node key', async () => {
+  it('an expired node key says what to do, without an icon in the words', async () => {
     mesh({ installed: true, active: true, key_expiry_days: 0 });
-    await fetchAndRenderWireguard();
-    expect(byId('ts-key-expiry-display').textContent).toBe('❌ Key Expired');
-    expect(icon(byId('ts-key-expiry-display'))).toBe('❌');
-  });
-
-  it('Re-auth comes back with its icon', async () => {
-    mesh({ installed: true, active: true, key_expiry_days: 3 });
-    vi.spyOn(api, 'post').mockResolvedValue({});
-    await fetchAndRenderWireguard();
-    byId('btn-ts-reauth').click();
-    await vi.waitFor(() => expect(byId('btn-ts-reauth').disabled).toBe(false));
-    expect(byId('btn-ts-reauth').textContent).toBe('⚡ Re-auth');
-    expect(icon(byId('btn-ts-reauth'))).toBe('⚡');
-  });
-
-  it('a failed and an unreachable ping', async () => {
-    mesh({ installed: true, active: true });
-    const post = vi.spyOn(api, 'post').mockResolvedValueOnce({ status: 'error' });
-    await fetchAndRenderWireguard();
-    byId('ts-peers-table-body').innerHTML =
-      '<tr><td><button class="btn-ping-peer" data-peer-ip="100.1.1.1"></button><span id="latency-100_1_1_1"></span></td></tr>';
-    const btn = document.querySelector('.btn-ping-peer');
-    btn.click();
-    await vi.waitFor(() => expect(byId('latency-100_1_1_1').textContent).toBe('❌ Failed'));
-    await vi.waitFor(() => expect(btn.disabled).toBe(false));
-    post.mockRejectedValueOnce(new Error('down'));
-    btn.click();
-    await vi.waitFor(() => expect(byId('latency-100_1_1_1').textContent).toBe('❌ Error'));
-    expect(icon(byId('latency-100_1_1_1'))).toBe('❌');
+    await fetchAndRenderTailscaleDetails();
+    expect(byId('ts-key-expiry-display').textContent).toBe('Expired: sign in again');
+    expect(byId('ts-key-expiry-display').dataset.tone).toBe('crit');
   });
 
   it('a replication job: Running..., then Run again', async () => {

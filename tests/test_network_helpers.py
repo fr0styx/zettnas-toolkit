@@ -288,30 +288,6 @@ class TestHostIp:
         assert net.read_ip() == "?"
 
 
-class TestForwarding:
-    def test_read_and_write(self, tmp_path, monkeypatch):
-        f = tmp_path / "ip_forward"
-        f.write_text("0\n")
-        monkeypatch.setattr(net.common, "IP_FORWARD_PATHS", (str(f),))
-        assert net.get_ip_forwarding_status() is False
-        assert net.set_ip_forwarding(True)
-        assert net.get_ip_forwarding_status() is True
-
-    def test_falls_back_to_sysctl(self, run, monkeypatch):
-        monkeypatch.setattr(net.common, "IP_FORWARD_PATHS", ())
-        assert net.get_ip_forwarding_status() is False
-        assert net.set_ip_forwarding(False)
-        assert run.calls[-1] == ["sysctl", "-w", "net.ipv4.ip_forward=0"]
-
-    def test_wireguard_nat(self, run, monkeypatch):
-        monkeypatch.setattr(net.common, "IP_FORWARD_PATHS", ())
-        run.answers["iptables"] = (0, "")
-        r = net.toggle_wireguard_subnet_nat(True, out_iface="br0")
-        assert r["nat_rule"] and "enabled" in r["message"]
-        run.answers["iptables"] = OSError("no iptables")
-        assert net.toggle_wireguard_subnet_nat(False)["nat_rule"] is False
-
-
 def test_a_tailscale_timeout_reports_what_it_printed(monkeypatch):
     """TimeoutExpired carries bytes even with text=True; the reply is still text (ARC-5 type fix)."""
     import subprocess

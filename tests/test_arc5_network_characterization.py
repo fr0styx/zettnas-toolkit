@@ -523,21 +523,12 @@ def _scenario(host, root):
         call(f"{where} _get_tailscale_container_info", net._get_tailscale_container_info)
         call(f"{where} _run_tailscale_cmd", net._run_tailscale_cmd, ["status", "--json"])
         call(f"{where} detect_local_subnets", net.detect_local_subnets)
-        call(f"{where} get_taildrop_dir", net.get_taildrop_dir)
-        call(f"{where} get_taildrop_inbox_files", net.get_taildrop_inbox_files)
-        call(f"{where} taildrop receive", net.execute_tailscale_taildrop_receive)
-        call(f"{where} ping", net.execute_tailscale_ping, "laptop")
-        call(f"{where} ping bad", net.execute_tailscale_ping, "laptop; reboot")
         call(f"{where} set routes", net.execute_tailscale_set_routes, "192.168.1.0/24", True)
         call(f"{where} set routes bad", net.execute_tailscale_set_routes, "not-a-route", True)
         call(f"{where} exit node", net.execute_tailscale_set_exit_node, True)
-        call(f"{where} ssh", net.execute_tailscale_set_ssh, False)
-        call(f"{where} serve", net.execute_tailscale_set_serve, True, False, 8082)
-        call(f"{where} funnel", net.execute_tailscale_set_serve, True, True, 8082)
-        call(f"{where} serve off", net.execute_tailscale_set_serve, False)
         call(f"{where} reauth", net.execute_tailscale_reauth)
         call(f"{where} mesh status", net.get_mesh_vpn_status)
-        call(f"{where} up", net.execute_tailscale_up, "tskey-auth-example", "nas", True)
+        call(f"{where} up", net.execute_tailscale_up, "tskey-auth-example", "nas")
         call(f"{where} down", net.execute_tailscale_down)
     host.ts_status = json.dumps({"BackendState": "NeedsLogin", "AuthURL": "https://login.tailscale.com/a/abc"})
     call("mesh status needs login", net.get_mesh_vpn_status)
@@ -547,27 +538,10 @@ def _scenario(host, root):
         net.deploy_tailscale_container,
         "tskey-auth-example",
         "nas",
-        True,
         os.path.join(root, "ts-state"),
     )
     host.container = "exited"
-    call("deploy (exists, stopped)", net.deploy_tailscale_container, None, None, True, None)
-    call("_get_wireguard_status", net._get_wireguard_status)
-    call("generate_wireguard_keypair", net.generate_wireguard_keypair)
-    call(
-        "generate_wireguard_client_config",
-        net.generate_wireguard_client_config,
-        "phone",
-        "10.13.13.5/32",
-        "vpn.example.org:51820",
-        "SERVERPUB=",
-    )
-    call("generate_wireguard_client_config bad", net.generate_wireguard_client_config, "bad name\n", "nonsense")
-    call("get_ip_forwarding_status", net.get_ip_forwarding_status)
-    call("set_ip_forwarding off", net.set_ip_forwarding, False)
-    call("set_ip_forwarding on", net.set_ip_forwarding, True)
-    call("toggle_wireguard_subnet_nat", net.toggle_wireguard_subnet_nat, True, "wg0", "br0")
-    call("toggle_wireguard_subnet_nat bad", net.toggle_wireguard_subnet_nat, True, "wg0;x", "br0")
+    call("deploy (exists, stopped)", net.deploy_tailscale_container, None, None, None)
     call("get_active_listening_ports", net.get_active_listening_ports)
     call("timers", lambda: [[t.interval, getattr(t.fn, "__name__", "?")] for t in _Timer.made])
     return log
@@ -673,4 +647,4 @@ def test_network_api_and_behaviour_match_the_recording(fake_host):
     assert not changed, f"API changed: {changed[:5]}"
     for w, g in zip(want["behaviour"], got["behaviour"], strict=True):
         assert g == w, w["call"]
-    assert len(want["surface"]) >= 55 and len(want["behaviour"]) >= 90
+    assert len(want["surface"]) >= 45 and len(want["behaviour"]) >= 60

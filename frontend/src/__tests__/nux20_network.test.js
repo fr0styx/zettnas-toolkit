@@ -5,7 +5,6 @@ import {
   fetchAndRenderCopyHistory,
   fetchAndRenderReplication,
   renderTailscalePeersTable,
-  fetchAndRenderWireguard,
   fetchAndRenderNetworkTopology,
   openNetworkPortModal,
   openBondConfigModal,
@@ -38,7 +37,7 @@ describe('network settings states (NUX-20)', () => {
     expect(byId('replication-jobs-tbody').textContent).toMatch(/^Could not load the replication jobs: /);
   });
 
-  it('lists tailnet devices, with ping only for those with an address', () => {
+  it('lists tailnet devices, online and offline', () => {
     document.body.innerHTML = '<span id="ts-peer-count-pill"></span><table><tbody id="ts-peers-table-body"></tbody></table>';
     renderTailscalePeersTable([
       { hostname: 'phone', ip: '100.64.0.2', online: true, direct: true },
@@ -48,27 +47,8 @@ describe('network settings states (NUX-20)', () => {
     const rows = byId('ts-peers-table-body').querySelectorAll('tr');
     expect(rows[0].textContent).toContain('Online');
     expect(rows[1].textContent).toContain('Offline');
-    expect(rows[1].querySelector('.btn-ping-peer').disabled).toBe(true);
-    expect(rows[0].querySelector('.btn-ping-peer').textContent).toContain('Ping');
     renderTailscalePeersTable([{ hostname: 'phone', ip: '100.64.0.2' }], 'nothing-like-this');
     expect(byId('ts-peers-table-body').textContent).toBe('No devices match the search.');
-  });
-
-  it('shows a sign-in about to expire, and no switch for a public Funnel (SET-02)', async () => {
-    document.body.innerHTML = `
-      <span id="tailscale-status-badge"></span><span id="ts-connection-pill"></span>
-      <span id="ts-key-expiry-display"></span><button id="btn-ts-reauth"></button>
-      <span id="ts-ssh-pill"></span><span id="ts-serve-pill"></span>`;
-    const ts = { installed: true, active: true, backend_state: 'Running', ipv4: '100.64.0.1', key_expiry_days: 5, funnel_enabled: true, ssh_enabled: false, serve_enabled: false };
-    const get = vi.spyOn(api, 'get').mockImplementation(async (url) => (url === '/api/network/mesh-vpn' ? { tailscale: ts, wireguard: {} } : {}));
-    await fetchAndRenderWireguard();
-    expect(byId('ts-key-expiry-display').textContent).toBe('⚠️ Expires in 5 days');
-    expect(byId('ts-ssh-pill').textContent).toBe('Disabled');
-    get.mockImplementation(async (url) => (url === '/api/network/mesh-vpn' ? { tailscale: { ...ts, key_expiry_days: 1, funnel_enabled: false, ssh_enabled: true, serve_enabled: true }, wireguard: {} } : {}));
-    await fetchAndRenderWireguard();
-    expect(byId('ts-key-expiry-display').textContent).toBe('⚠️ Expires in 1 day');
-    expect(byId('ts-ssh-pill').textContent).toBe('Enabled');
-    expect(byId('ts-serve-pill').textContent).toBe('Active');
   });
 });
 

@@ -229,25 +229,6 @@ async def delete_vlan_endpoint(vlan_iface: str):
     return await asyncio.to_thread(_change, "vlan", vlan_iface, {"delete": True})
 
 
-class TailscaleUpRequest(BaseModel):
-    auth_key: str | None = Field(default=None, description="Pre-authenticated Tailscale ephemeral or reusable auth key")
-    hostname: str | None = Field(default=None, description="Custom node hostname on tailnet")
-    accept_routes: bool = Field(
-        default=False,
-        description="Accept subnet routes from other nodes (never one over the NAS's own network)",
-    )
-
-
-class TailscaleDeployRequest(BaseModel):
-    auth_key: str | None = Field(default=None, description="Pre-authenticated Tailscale ephemeral or reusable auth key")
-    hostname: str | None = Field(default=None, description="Custom node hostname on tailnet")
-    accept_routes: bool = Field(
-        default=False,
-        description="Accept subnet routes from other nodes (never one over the NAS's own network)",
-    )
-    state_dir: str | None = Field(default=None, description="Custom persistent state directory on host")
-
-
 class RemoteAccessConnectRequest(BaseModel):
     login_server: str = Field(default="", max_length=255, description="A Headscale server; empty for Tailscale")
     auth_key: str = Field(default="", max_length=512, description="A pre-auth key, to sign in without a browser")
@@ -338,58 +319,6 @@ async def get_mesh_vpn_endpoint(principal: AuthenticatedPrincipal = Depends(get_
     return doc
 
 
-@router.post("/network/mesh-vpn/tailscale/up", dependencies=[Depends(require_scope("system:config"))])
-async def post_tailscale_up(req: TailscaleUpRequest):
-    """Connects host to the Zero-Trust Tailscale mesh network."""
-    from backend.hardware.network import execute_tailscale_up
-
-    res = await asyncio.to_thread(
-        execute_tailscale_up,
-        auth_key=req.auth_key,
-        hostname=req.hostname,
-        accept_routes=req.accept_routes,
-    )
-    if res.get("status") == "error":
-        detail = res.get("output") or res.get("message") or "Tailscale connection failed"
-        raise HTTPException(status_code=400, detail=detail)
-    return res
-
-
-@router.post("/network/mesh-vpn/tailscale/down", dependencies=[Depends(require_scope("system:config"))])
-async def post_tailscale_down():
-    """Disconnects host from the Zero-Trust Tailscale mesh network."""
-    from backend.hardware.network import execute_tailscale_down
-
-    res = await asyncio.to_thread(execute_tailscale_down)
-    if res.get("status") == "error":
-        detail = res.get("output") or res.get("message") or "Tailscale disconnection failed"
-        raise HTTPException(status_code=400, detail=detail)
-    return res
-
-
-@router.post("/network/mesh-vpn/tailscale/deploy", dependencies=[Depends(require_scope("system:config"))])
-async def post_tailscale_deploy(
-    req: TailscaleDeployRequest,
-    request: Request,
-    principal: AuthenticatedPrincipal = Depends(get_current_principal),
-):
-    """1-Click turnkey provisioning of the official Tailscale Docker container."""
-    from backend.hardware.network import deploy_tailscale_container
-
-    _ask_before_installing_tailscale(request, principal)
-
-    res = await asyncio.to_thread(
-        deploy_tailscale_container,
-        auth_key=req.auth_key,
-        hostname=req.hostname,
-        accept_routes=req.accept_routes,
-        state_dir=req.state_dir,
-    )
-    if res.get("status") == "error":
-        raise HTTPException(status_code=400, detail=res.get("message", "Tailscale deployment failed"))
-    return res
-
-
 class TailscaleSetRoutesRequest(BaseModel):
     routes: str = Field(default="", max_length=512)
     enabled: bool = Field(default=True)
@@ -397,20 +326,6 @@ class TailscaleSetRoutesRequest(BaseModel):
 
 class TailscaleSetExitNodeRequest(BaseModel):
     enabled: bool = Field(default=True)
-
-
-class TailscaleSetSshRequest(BaseModel):
-    enabled: bool = Field(default=True)
-
-
-class TailscaleSetServeRequest(BaseModel):
-    serve: bool = Field(default=True)
-    funnel: bool = Field(default=False)
-    port: int = Field(default=8082, ge=1, le=65535)
-
-
-class TailscalePingRequest(BaseModel):
-    peer: str = Field(..., max_length=128)
 
 
 @router.post("/network/mesh-vpn/tailscale/set-routes", dependencies=[Depends(require_scope("system:config"))])
@@ -429,115 +344,12 @@ async def post_tailscale_set_exit_node(req: TailscaleSetExitNodeRequest):
     return await asyncio.to_thread(execute_tailscale_set_exit_node, enabled=req.enabled)
 
 
-@router.post("/network/mesh-vpn/tailscale/set-ssh", dependencies=[Depends(require_scope("system:config"))])
-async def post_tailscale_set_ssh(req: TailscaleSetSshRequest):
-    """Enables or disables Tailscale SSH."""
-    from backend.hardware.network import execute_tailscale_set_ssh
-
-    return await asyncio.to_thread(execute_tailscale_set_ssh, enabled=req.enabled)
-
-
-@router.post("/network/mesh-vpn/tailscale/set-serve", dependencies=[Depends(require_scope("system:config"))])
-async def post_tailscale_set_serve(req: TailscaleSetServeRequest):
-    """Configures Tailscale Serve (HTTPS on Tailnet) and optional Public Funnel."""
-    from backend.hardware.network import execute_tailscale_set_serve
-
-    if req.funnel:
-        raise HTTPException(
-            status_code=400,
-            detail="Kiboto's own page is never put on the internet. Share a file with a share link, "
-            'or an app with "Apps from anywhere".',
-        )
-    return await asyncio.to_thread(execute_tailscale_set_serve, serve=req.serve, funnel=False, port=req.port)
-
-
-@router.post("/network/mesh-vpn/tailscale/taildrop/receive", dependencies=[Depends(require_scope("storage:write"))])
-async def post_tailscale_taildrop_receive():
-    """Receives and ingests incoming files from the Taildrop file inbox."""
-    from backend.hardware.network import execute_tailscale_taildrop_receive
-
-    return await asyncio.to_thread(execute_tailscale_taildrop_receive)
-
-
-@router.get("/network/mesh-vpn/tailscale/taildrop/files", dependencies=[Depends(require_scope("storage:read"))])
-async def get_tailscale_taildrop_files():
-    """Lists files received via Taildrop."""
-    from backend.hardware.network import get_taildrop_inbox_files
-
-    files = await asyncio.to_thread(get_taildrop_inbox_files)
-    return {"files": files, "count": len(files)}
-
-
-@router.post("/network/mesh-vpn/tailscale/ping", dependencies=[Depends(require_scope("system:view"))])
-async def post_tailscale_ping(req: TailscalePingRequest):
-    """Performs real-time latency ping against a Tailscale mesh peer."""
-    from backend.hardware.network import execute_tailscale_ping
-
-    return await asyncio.to_thread(execute_tailscale_ping, peer=req.peer)
-
-
 @router.post("/network/mesh-vpn/tailscale/reauth", dependencies=[Depends(require_scope("system:config"))])
 async def post_tailscale_reauth():
     """Forces node re-authentication before node key expiration."""
     from backend.hardware.network import execute_tailscale_reauth
 
     return await asyncio.to_thread(execute_tailscale_reauth)
-
-
-class WireguardClientConfigRequest(BaseModel):
-    client_name: str = Field(default="mobile-client", max_length=64)
-    client_ip: str = Field(default="10.13.13.2/32")
-    server_endpoint: str | None = Field(default="")
-    server_pubkey: str | None = Field(default="")
-    dns: str = Field(default="1.1.1.1")
-    allowed_ips: str = Field(default="0.0.0.0/0, ::/0")
-    keepalive: int = Field(default=25, ge=0, le=3600)
-
-
-class WireguardSubnetRouteRequest(BaseModel):
-    enable: bool = Field(default=True)
-    iface: str = Field(default="wg0")
-    out_iface: str = Field(default="eth0")
-
-
-@router.post("/network/mesh-vpn/wireguard/client-config", dependencies=[Depends(require_scope("system:config"))])
-async def post_wireguard_client_config(req: WireguardClientConfigRequest):
-    """Generates a WireGuard client configuration file with keypair."""
-    from backend.hardware.network import generate_wireguard_client_config
-
-    return await asyncio.to_thread(
-        generate_wireguard_client_config,
-        client_name=req.client_name,
-        client_ip=req.client_ip,
-        server_endpoint=req.server_endpoint or "",
-        server_pubkey=req.server_pubkey or "",
-        dns=req.dns,
-        allowed_ips=req.allowed_ips,
-        keepalive=req.keepalive,
-    )
-
-
-@router.get("/network/mesh-vpn/wireguard/subnet-routing", dependencies=[Depends(require_scope("system:config"))])
-async def get_wireguard_subnet_routing():
-    """Gets current kernel IP packet forwarding state."""
-    from backend.hardware.network import get_ip_forwarding_status
-
-    status = await asyncio.to_thread(get_ip_forwarding_status)
-    return {"ip_forwarding": status}
-
-
-@router.post("/network/mesh-vpn/wireguard/subnet-routing", dependencies=[Depends(require_scope("system:config"))])
-async def post_wireguard_subnet_routing(req: WireguardSubnetRouteRequest):
-    """Enables or disables kernel IP forwarding and NAT for WireGuard subnet routing."""
-    from backend.hardware.network import toggle_wireguard_subnet_nat
-
-    res = await asyncio.to_thread(
-        toggle_wireguard_subnet_nat,
-        enable=req.enable,
-        iface=req.iface,
-        out_iface=req.out_iface,
-    )
-    return res
 
 
 @router.get("/network/ports/listening", dependencies=[Depends(require_scope("system:config", "system:read"))])
@@ -547,3 +359,48 @@ async def get_listening_ports():
 
     ports = await asyncio.to_thread(get_active_listening_ports)
     return {"ports": ports, "total": len(ports)}
+
+
+# Removed in SET-16 (decisions D3 and D5, and the old connect form the "Use from anywhere" card
+# replaced): for one release these answer 410 with what replaced them, so a script that still
+# calls them learns why instead of meeting a 404.
+_GONE = {
+    ("POST", "/network/mesh-vpn/tailscale/up"): "Use POST /api/network/remote-access/connect.",
+    ("POST", "/network/mesh-vpn/tailscale/down"): "Use POST /api/network/remote-access/disconnect.",
+    ("POST", "/network/mesh-vpn/tailscale/deploy"): "Use POST /api/network/remote-access/connect.",
+    (
+        "POST",
+        "/network/mesh-vpn/tailscale/set-ssh",
+    ): "Tailscale SSH was removed: it opened the Tailscale container, not the NAS.",
+    ("POST", "/network/mesh-vpn/tailscale/set-serve"): "Use POST /api/network/remote-access/publish.",
+    ("POST", "/network/mesh-vpn/tailscale/taildrop/receive"): "Taildrop was removed.",
+    ("GET", "/network/mesh-vpn/tailscale/taildrop/files"): "Taildrop was removed.",
+    ("POST", "/network/mesh-vpn/tailscale/ping"): "Ping was removed.",
+    (
+        "POST",
+        "/network/mesh-vpn/wireguard/client-config",
+    ): "WireGuard was removed: it never produced a working connection.",
+    (
+        "GET",
+        "/network/mesh-vpn/wireguard/subnet-routing",
+    ): "WireGuard was removed: it never produced a working connection.",
+    (
+        "POST",
+        "/network/mesh-vpn/wireguard/subnet-routing",
+    ): "WireGuard was removed: it never produced a working connection.",
+}
+
+
+def _gone_route(method: str, path: str, why: str) -> None:
+    async def gone():
+        raise ApiError(410, why, "removed")
+
+    gone.__doc__ = f"Removed (SET-16). {why}"
+    scope = "system:view" if method == "GET" else "system:config"
+    router.add_api_route(
+        path, gone, methods=[method], dependencies=[Depends(require_scope(scope))], include_in_schema=False
+    )
+
+
+for (_method, _path), _why in _GONE.items():
+    _gone_route(_method, _path, _why)

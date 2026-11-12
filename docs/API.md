@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-721 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+710 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -457,20 +457,9 @@ request and response schemas.
 | `POST` | `/api/v1/network/host/confirm` | `system:config` | Keep a trial address: only on a host Kiboto manages (409 not_on_this_host elsewhere) |
 | `POST` | `/api/v1/network/host/revert` | `system:config` | Go back from a trial address: only on a host Kiboto manages (409 not_on_this_host elsewhere) |
 | `GET` | `/api/v1/network/mesh-vpn` | `system:view` | Retrieves Zero-Trust Mesh VPN telemetry and status for Tailscale and WireGuard |
-| `POST` | `/api/v1/network/mesh-vpn/tailscale/deploy` | `system:config` | 1-Click turnkey provisioning of the official Tailscale Docker container |
-| `POST` | `/api/v1/network/mesh-vpn/tailscale/down` | `system:config` | Disconnects host from the Zero-Trust Tailscale mesh network |
-| `POST` | `/api/v1/network/mesh-vpn/tailscale/ping` | `system:view` | Performs real-time latency ping against a Tailscale mesh peer |
 | `POST` | `/api/v1/network/mesh-vpn/tailscale/reauth` | `system:config` | Forces node re-authentication before node key expiration |
 | `POST` | `/api/v1/network/mesh-vpn/tailscale/set-exit-node` | `system:config` | Enables or disables advertising this NAS as a Tailscale Exit Node |
 | `POST` | `/api/v1/network/mesh-vpn/tailscale/set-routes` | `system:config` | Advertises or withdraws subnet routes on the Tailscale network |
-| `POST` | `/api/v1/network/mesh-vpn/tailscale/set-serve` | `system:config` | Configures Tailscale Serve (HTTPS on Tailnet) and optional Public Funnel |
-| `POST` | `/api/v1/network/mesh-vpn/tailscale/set-ssh` | `system:config` | Enables or disables Tailscale SSH |
-| `GET` | `/api/v1/network/mesh-vpn/tailscale/taildrop/files` | `storage:read` | Lists files received via Taildrop |
-| `POST` | `/api/v1/network/mesh-vpn/tailscale/taildrop/receive` | `storage:write` | Receives and ingests incoming files from the Taildrop file inbox |
-| `POST` | `/api/v1/network/mesh-vpn/tailscale/up` | `system:config` | Connects host to the Zero-Trust Tailscale mesh network |
-| `POST` | `/api/v1/network/mesh-vpn/wireguard/client-config` | `system:config` | Generates a WireGuard client configuration file with keypair |
-| `GET` | `/api/v1/network/mesh-vpn/wireguard/subnet-routing` | `system:config` | Gets current kernel IP packet forwarding state |
-| `POST` | `/api/v1/network/mesh-vpn/wireguard/subnet-routing` | `system:config` | Enables or disables kernel IP forwarding and NAT for WireGuard subnet routing |
 | `GET` | `/api/v1/network/port/{iface_name}` | any of `system:view`, `system:config` | Retrieve configuration, live capabilities, and alias for a specific interface |
 | `POST` | `/api/v1/network/port/{iface_name}` | `system:config` | A port's nickname (always), or its packet size, speed or Wake-on-LAN (only on a host Kiboto manages; 409 not_on_this_host elsewhere) |
 | `GET` | `/api/v1/network/ports/listening` | any of `system:config`, `system:read` | Returns active listening TCP and UDP ports and mapped container services |

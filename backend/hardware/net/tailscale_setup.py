@@ -15,7 +15,6 @@ from backend.ignored_errors import ignored
 def execute_tailscale_up(
     auth_key: str | None = None,
     hostname: str | None = None,
-    accept_routes: bool = False,
 ) -> dict[str, Any]:
     """Connects host to the Zero-Trust Tailscale mesh network."""
     c_info = tailscale._get_tailscale_container_info()
@@ -33,8 +32,6 @@ def execute_tailscale_up(
         cmd.extend(["--authkey", auth_key])
     if hostname:
         cmd.extend(["--hostname", hostname])
-    if accept_routes:
-        cmd.append("--accept-routes")
     if not auth_key:
         cmd.append("--timeout=3s")
 
@@ -55,13 +52,6 @@ def execute_tailscale_up(
                 auth_url = tailscale.auth_url_in(str(s_doc.get("AuthURL") or "")) or None
         except Exception as e:
             logger.debug(f"[Network] Fallback status json check: {e}")
-
-    if accept_routes and not auth_url:
-        # never a route over this NAS's own network: it would drop off its network (see guard_lan_routes)
-        refused = tailscale.guard_lan_routes()
-        if refused:
-            out = f"{out}\n" if out else ""
-            out += "Accept Routes was turned off: " + ", ".join(f"{c['peer']} offers {c['route']}" for c in refused)
 
     if auth_url:
         return {
@@ -155,7 +145,6 @@ def _tailscale_devices(env_vars: Any, image_name: Any, state_dir: Any) -> Any:
 def deploy_tailscale_container(
     auth_key: str | None = None,
     hostname: str | None = None,
-    accept_routes: bool = False,
     state_dir: str | None = None,
 ) -> dict[str, Any]:
     """
@@ -182,7 +171,7 @@ def deploy_tailscale_container(
             time.sleep(2)
 
         if auth_key:
-            up_res = execute_tailscale_up(auth_key=auth_key, hostname=hostname, accept_routes=accept_routes)
+            up_res = execute_tailscale_up(auth_key=auth_key, hostname=hostname)
             return {
                 "status": "success",
                 "container_id": cid,
@@ -190,7 +179,7 @@ def deploy_tailscale_container(
                 "details": up_res,
             }
         else:
-            up_res = execute_tailscale_up(hostname=hostname, accept_routes=accept_routes)
+            up_res = execute_tailscale_up(hostname=hostname)
             auth_url = up_res.get("auth_url")
             return {
                 "status": "success",
@@ -279,10 +268,10 @@ def deploy_tailscale_container(
     # 8. Check auth requirement or trigger login
     auth_url = None
     if not auth_key:
-        up_res = execute_tailscale_up(hostname=hostname, accept_routes=accept_routes)
+        up_res = execute_tailscale_up(hostname=hostname)
         auth_url = up_res.get("auth_url")
     else:
-        execute_tailscale_up(auth_key=auth_key, hostname=hostname, accept_routes=accept_routes)
+        execute_tailscale_up(auth_key=auth_key, hostname=hostname)
 
     return {
         "status": "success",

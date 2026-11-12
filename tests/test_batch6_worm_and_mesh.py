@@ -132,9 +132,7 @@ def test_mesh_vpn_status_detection():
         assert status["tailscale"]["active"] is True
         assert status["tailscale"]["ipv4"] == "100.80.20.10"
         assert status["tailscale"]["peers_count"] == 2
-        assert status["wireguard"]["installed"] is True
-        assert status["wireguard"]["active"] is True
-        assert status["wireguard"]["interfaces"] == ["wg0", "wg1"]
+        assert "wireguard" not in status  # removed (decision D3)
 
 
 def test_tailscale_up_down_execution():

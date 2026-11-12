@@ -600,7 +600,6 @@ body.kb-theme-canyon.theme-oled:not(.theme-light):not(.lcd-direct) {
     --lt-t-cfdbdeff: oklch(0.8830 calc(0.0151 * var(--kb-tint, 1)) 70.9);
     --lt-t-e9fbf8ff: oklch(0.9747 calc(0.0192 * var(--kb-tint, 1)) 72.6);
     --lt-t-eaf1f8ff: oklch(0.9551 calc(0.0142 * var(--kb-tint, 1)) 74.4);
-    --lt-t-fef3c7ff: oklch(0.9619 calc(0.0580 * var(--kb-tint, 1)) 95.6);
     --muted: oklch(0.7183 calc(0.0254 * var(--kb-tint, 1)) 73.5);
     --track: oklch(0.2982 calc(0.0236 * var(--kb-tint, 1)) 77.7);
   }

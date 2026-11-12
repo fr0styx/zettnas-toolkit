@@ -66,7 +66,8 @@ describe('the share links card warns when the port carries more (SET-02)', () =>
     const read = (p) => readFileSync(resolve(__dirname, '..', p), 'utf8');
     expect(read('windows/management-window.html')).not.toContain('ts-funnel-toggle');
     expect(read('components/management/network.js')).not.toContain('ts-funnel-toggle');
-    expect(read('components/management/network.js')).toContain('funnel: false');
+    // the old Serve/Funnel pair is gone (SET-16)
+    expect(read('windows/management-window.html')).not.toContain('ts-serve-toggle');
   });
 
   it('does not warn about a port that is only served inside the tailnet', () => {

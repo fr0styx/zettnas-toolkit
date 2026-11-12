@@ -1315,102 +1315,6 @@
    ]
   },
   {
-   "call": "native get_taildrop_dir",
-   "commands": [],
-   "result": "<root>/data/taildrop"
-  },
-  {
-   "call": "native get_taildrop_inbox_files",
-   "commands": [],
-   "result": []
-  },
-  {
-   "call": "native taildrop receive",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "file",
-     "get",
-     "--conflict=rename",
-     "<root>/data/taildrop"
-    ]
-   ],
-   "result": {
-    "code": 0,
-    "count": 0,
-    "directory": "<root>/data/taildrop",
-    "files": [],
-    "output": "Success.",
-    "received_count": 0,
-    "status": "ok"
-   }
-  },
-  {
-   "call": "native ping",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "ping",
-     "--c=1",
-     "--timeout=2s",
-     "laptop"
-    ]
-   ],
-   "result": {
-    "is_direct": true,
-    "latency": "12.0 ms",
-    "latency_ms": 12.0,
-    "output": "pong from laptop (100.64.0.2) via 203.0.113.5:41641 in 12ms",
-    "peer": "laptop",
-    "route": "203.0.113.5:41641",
-    "status": "success"
-   }
-  },
-  {
-   "call": "native ping bad",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "ping",
-     "--c=1",
-     "--timeout=2s",
-     "laptop; reboot"
-    ]
-   ],
-   "result": {
-    "is_direct": true,
-    "latency": "12.0 ms",
-    "latency_ms": 12.0,
-    "output": "pong from laptop (100.64.0.2) via 203.0.113.5:41641 in 12ms",
-    "peer": "laptop; reboot",
-    "route": "203.0.113.5:41641",
-    "status": "success"
-   }
-  },
-  {
    "call": "native set routes",
    "commands": [
     [
@@ -1479,215 +1383,6 @@
    }
   },
   {
-   "call": "native ssh",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "set",
-     "--ssh=false"
-    ]
-   ],
-   "result": {
-    "code": 0,
-    "enabled": false,
-    "output": "Success.",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "native serve",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "serve",
-     "--bg",
-     "--yes",
-     "8082"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "status",
-     "--json"
-    ]
-   ],
-   "result": {
-    "approval_url": "",
-    "error": "",
-    "feature": "serve",
-    "funnel_enabled": false,
-    "port": 8082,
-    "serve_enabled": true,
-    "serve_url": "https://nas.tail1234.ts.net",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "native funnel",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "serve",
-     "--bg",
-     "--yes",
-     "8082"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "status",
-     "--json"
-    ]
-   ],
-   "result": {
-    "approval_url": "",
-    "error": "",
-    "feature": "serve",
-    "funnel_enabled": true,
-    "port": 8082,
-    "serve_enabled": true,
-    "serve_url": "https://nas.tail1234.ts.net",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "native serve off",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "serve",
-     "reset"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "status",
-     "--json"
-    ]
-   ],
-   "result": {
-    "approval_url": "",
-    "error": "",
-    "feature": "serve",
-    "funnel_enabled": false,
-    "port": 8082,
-    "serve_enabled": true,
-    "serve_url": "https://nas.tail1234.ts.net",
-    "status": "ok"
-   }
-  },
-  {
    "call": "native reauth",
    "commands": [
     [
@@ -1749,43 +1444,6 @@
      "/usr/bin/tailscale",
      "debug",
      "prefs"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "wg",
-     "show",
-     "interfaces"
-    ],
-    [
-     "run",
-     "wg",
-     "show",
-     "all",
-     "dump"
     ]
    ],
    "result": {
@@ -1803,7 +1461,6 @@
      ],
      "dns_name": "nas.tail1234.ts.net",
      "exit_node_approved": false,
-     "funnel_enabled": false,
      "hostname": "nas",
      "installed": true,
      "ipv4": "100.64.0.1",
@@ -1844,49 +1501,7 @@
      ],
      "peers_count": 2,
      "route_conflicts": [],
-     "serve_enabled": true,
-     "serve_url": "https://nas.tail1234.ts.net",
-     "ssh_enabled": false,
-     "taildrop_dir": "<root>/data/taildrop",
-     "taildrop_files": [],
-     "taildrop_files_count": 0,
      "tailnet": "tail1234.ts.net"
-    },
-    "wireguard": {
-     "active": true,
-     "installed": true,
-     "interfaces": [
-      "wg0"
-     ],
-     "peers": [
-      {
-       "active": false,
-       "allowed_ips": [
-        "10.13.13.2/32"
-       ],
-       "endpoint": "203.0.113.5:51820",
-       "interface": "wg0",
-       "latest_handshake": "<ts>",
-       "latest_handshake_age": "<age>",
-       "public_key": "PEERPUB1...",
-       "transfer_rx_bytes": 1024,
-       "transfer_tx_bytes": 2048
-      },
-      {
-       "active": false,
-       "allowed_ips": [
-        "10.13.13.3/32"
-       ],
-       "endpoint": "",
-       "interface": "wg0",
-       "latest_handshake": 0,
-       "latest_handshake_age": null,
-       "public_key": "PEERPUB2...",
-       "transfer_rx_bytes": 0,
-       "transfer_tx_bytes": 0
-      }
-     ],
-     "peers_count": 2
     }
    }
   },
@@ -1911,19 +1526,7 @@
      "--authkey",
      "tskey-auth-example",
      "--hostname",
-     "nas",
-     "--accept-routes"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "status",
-     "--json"
+     "nas"
     ]
    ],
    "result": {
@@ -2013,129 +1616,6 @@
    ]
   },
   {
-   "call": "container get_taildrop_dir",
-   "commands": [],
-   "result": "<root>/data/taildrop"
-  },
-  {
-   "call": "container get_taildrop_inbox_files",
-   "commands": [],
-   "result": []
-  },
-  {
-   "call": "container taildrop receive",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "file",
-     "get",
-     "--conflict=rename",
-     "/var/lib/tailscale/taildrop"
-    ],
-    [
-     "run",
-     "tailscale",
-     "file",
-     "get",
-     "--conflict=rename",
-     "/var/lib/tailscale/taildrop"
-    ]
-   ],
-   "result": {
-    "code": 0,
-    "count": 0,
-    "directory": "<root>/data/taildrop",
-    "files": [],
-    "output": "Success.",
-    "received_count": 0,
-    "status": "ok"
-   }
-  },
-  {
-   "call": "container ping",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "ping",
-     "--c=1",
-     "--timeout=2s",
-     "laptop"
-    ],
-    [
-     "run",
-     "tailscale",
-     "ping",
-     "--c=1",
-     "--timeout=2s",
-     "laptop"
-    ]
-   ],
-   "result": {
-    "is_direct": true,
-    "latency": "12.0 ms",
-    "latency_ms": 12.0,
-    "output": "pong from laptop (100.64.0.2) via 203.0.113.5:41641 in 12ms",
-    "peer": "laptop",
-    "route": "203.0.113.5:41641",
-    "status": "success"
-   }
-  },
-  {
-   "call": "container ping bad",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "ping",
-     "--c=1",
-     "--timeout=2s",
-     "laptop; reboot"
-    ],
-    [
-     "run",
-     "tailscale",
-     "ping",
-     "--c=1",
-     "--timeout=2s",
-     "laptop; reboot"
-    ]
-   ],
-   "result": {
-    "is_direct": true,
-    "latency": "12.0 ms",
-    "latency_ms": 12.0,
-    "output": "pong from laptop (100.64.0.2) via 203.0.113.5:41641 in 12ms",
-    "peer": "laptop; reboot",
-    "route": "203.0.113.5:41641",
-    "status": "success"
-   }
-  },
-  {
    "call": "container set routes",
    "commands": [
     [
@@ -2221,324 +1701,6 @@
     "code": 0,
     "enabled": true,
     "output": "Success.",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "container ssh",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "set",
-     "--ssh=false"
-    ],
-    [
-     "run",
-     "tailscale",
-     "set",
-     "--ssh=false"
-    ]
-   ],
-   "result": {
-    "code": 0,
-    "enabled": false,
-    "output": "Success.",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "container serve",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "timeout",
-     "3",
-     "tailscale",
-     "serve",
-     "--bg",
-     "--yes",
-     "8082"
-    ],
-    [
-     "run",
-     "timeout",
-     "3",
-     "tailscale",
-     "serve",
-     "--bg",
-     "--yes",
-     "8082"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "status",
-     "--json"
-    ]
-   ],
-   "result": {
-    "approval_url": "",
-    "error": "",
-    "feature": "serve",
-    "funnel_enabled": false,
-    "port": 8082,
-    "serve_enabled": true,
-    "serve_url": "https://nas.tail1234.ts.net",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "container funnel",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "timeout",
-     "3",
-     "tailscale",
-     "serve",
-     "--bg",
-     "--yes",
-     "8082"
-    ],
-    [
-     "run",
-     "timeout",
-     "3",
-     "tailscale",
-     "serve",
-     "--bg",
-     "--yes",
-     "8082"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "status",
-     "--json"
-    ]
-   ],
-   "result": {
-    "approval_url": "",
-    "error": "",
-    "feature": "serve",
-    "funnel_enabled": true,
-    "port": 8082,
-    "serve_enabled": true,
-    "serve_url": "https://nas.tail1234.ts.net",
-    "status": "ok"
-   }
-  },
-  {
-   "call": "container serve off",
-   "commands": [
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "serve",
-     "reset"
-    ],
-    [
-     "run",
-     "tailscale",
-     "serve",
-     "reset"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "status",
-     "--json"
-    ]
-   ],
-   "result": {
-    "approval_url": "",
-    "error": "",
-    "feature": "serve",
-    "funnel_enabled": false,
-    "port": 8082,
-    "serve_enabled": true,
-    "serve_url": "https://nas.tail1234.ts.net",
     "status": "ok"
    }
   },
@@ -2633,59 +1795,6 @@
      "tailscale",
      "debug",
      "prefs"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "wg",
-     "show",
-     "interfaces"
-    ],
-    [
-     "run",
-     "wg",
-     "show",
-     "all",
-     "dump"
     ]
    ],
    "result": {
@@ -2703,7 +1812,6 @@
      ],
      "dns_name": "nas.tail1234.ts.net",
      "exit_node_approved": false,
-     "funnel_enabled": false,
      "hostname": "nas",
      "installed": true,
      "ipv4": "100.64.0.1",
@@ -2744,49 +1852,7 @@
      ],
      "peers_count": 2,
      "route_conflicts": [],
-     "serve_enabled": true,
-     "serve_url": "https://nas.tail1234.ts.net",
-     "ssh_enabled": false,
-     "taildrop_dir": "<root>/data/taildrop",
-     "taildrop_files": [],
-     "taildrop_files_count": 0,
      "tailnet": "tail1234.ts.net"
-    },
-    "wireguard": {
-     "active": true,
-     "installed": true,
-     "interfaces": [
-      "wg0"
-     ],
-     "peers": [
-      {
-       "active": false,
-       "allowed_ips": [
-        "10.13.13.2/32"
-       ],
-       "endpoint": "203.0.113.5:51820",
-       "interface": "wg0",
-       "latest_handshake": "<ts>",
-       "latest_handshake_age": "<age>",
-       "public_key": "PEERPUB1...",
-       "transfer_rx_bytes": 1024,
-       "transfer_tx_bytes": 2048
-      },
-      {
-       "active": false,
-       "allowed_ips": [
-        "10.13.13.3/32"
-       ],
-       "endpoint": "",
-       "interface": "wg0",
-       "latest_handshake": 0,
-       "latest_handshake_age": null,
-       "public_key": "PEERPUB2...",
-       "transfer_rx_bytes": 0,
-       "transfer_tx_bytes": 0
-      }
-     ],
-     "peers_count": 2
     }
    }
   },
@@ -2812,8 +1878,7 @@
      "--authkey",
      "tskey-auth-example",
      "--hostname",
-     "nas",
-     "--accept-routes"
+     "nas"
     ],
     [
      "run",
@@ -2823,26 +1888,7 @@
      "--authkey",
      "tskey-auth-example",
      "--hostname",
-     "nas",
-     "--accept-routes"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "status",
-     "--json"
+     "nas"
     ]
    ],
    "result": {
@@ -2930,59 +1976,6 @@
      "tailscale",
      "debug",
      "prefs"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "serve",
-     "status",
-     "--json"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "exec",
-     "tailscale",
-     "tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "tailscale",
-     "funnel",
-     "status",
-     "--json"
-    ],
-    [
-     "run",
-     "wg",
-     "show",
-     "interfaces"
-    ],
-    [
-     "run",
-     "wg",
-     "show",
-     "all",
-     "dump"
     ]
    ],
    "result": {
@@ -3000,7 +1993,6 @@
      ],
      "dns_name": "",
      "exit_node_approved": false,
-     "funnel_enabled": false,
      "hostname": "",
      "installed": true,
      "ipv4": "",
@@ -3012,49 +2004,7 @@
      "peers": [],
      "peers_count": 0,
      "route_conflicts": [],
-     "serve_enabled": true,
-     "serve_url": "",
-     "ssh_enabled": false,
-     "taildrop_dir": "<root>/data/taildrop",
-     "taildrop_files": [],
-     "taildrop_files_count": 0,
      "tailnet": ""
-    },
-    "wireguard": {
-     "active": true,
-     "installed": true,
-     "interfaces": [
-      "wg0"
-     ],
-     "peers": [
-      {
-       "active": false,
-       "allowed_ips": [
-        "10.13.13.2/32"
-       ],
-       "endpoint": "203.0.113.5:51820",
-       "interface": "wg0",
-       "latest_handshake": "<ts>",
-       "latest_handshake_age": "<age>",
-       "public_key": "PEERPUB1...",
-       "transfer_rx_bytes": 1024,
-       "transfer_tx_bytes": 2048
-      },
-      {
-       "active": false,
-       "allowed_ips": [
-        "10.13.13.3/32"
-       ],
-       "endpoint": "",
-       "interface": "wg0",
-       "latest_handshake": 0,
-       "latest_handshake_age": null,
-       "public_key": "PEERPUB2...",
-       "transfer_rx_bytes": 0,
-       "transfer_tx_bytes": 0
-      }
-     ],
-     "peers_count": 2
     }
    }
   },
@@ -3100,19 +2050,7 @@
      "--authkey",
      "tskey-auth-example",
      "--hostname",
-     "nas",
-     "--accept-routes"
-    ],
-    [
-     "docker",
-     "GET",
-     "/containers/tailscale/json"
-    ],
-    [
-     "run",
-     "/usr/bin/tailscale",
-     "status",
-     "--json"
+     "nas"
     ]
    ],
    "result": {
@@ -3157,7 +2095,6 @@
      "/usr/bin/tailscale",
      "up",
      "--reset",
-     "--accept-routes",
      "--timeout=3s"
     ],
     [
@@ -3178,190 +2115,6 @@
     "container_id": "abcdef123456",
     "message": "Tailscale container running. Please authenticate in your browser to complete setup.",
     "status": "success"
-   }
-  },
-  {
-   "call": "_get_wireguard_status",
-   "commands": [
-    [
-     "run",
-     "wg",
-     "show",
-     "interfaces"
-    ],
-    [
-     "run",
-     "wg",
-     "show",
-     "all",
-     "dump"
-    ]
-   ],
-   "result": {
-    "active": true,
-    "installed": true,
-    "interfaces": [
-     "wg0"
-    ],
-    "peers": [
-     {
-      "active": false,
-      "allowed_ips": [
-       "10.13.13.2/32"
-      ],
-      "endpoint": "203.0.113.5:51820",
-      "interface": "wg0",
-      "latest_handshake": "<ts>",
-      "latest_handshake_age": "<age>",
-      "public_key": "PEERPUB1...",
-      "transfer_rx_bytes": 1024,
-      "transfer_tx_bytes": 2048
-     },
-     {
-      "active": false,
-      "allowed_ips": [
-       "10.13.13.3/32"
-      ],
-      "endpoint": "",
-      "interface": "wg0",
-      "latest_handshake": 0,
-      "latest_handshake_age": null,
-      "public_key": "PEERPUB2...",
-      "transfer_rx_bytes": 0,
-      "transfer_tx_bytes": 0
-     }
-    ],
-    "peers_count": 2
-   }
-  },
-  {
-   "call": "generate_wireguard_keypair",
-   "commands": [
-    [
-     "run",
-     "wg",
-     "genkey"
-    ],
-    [
-     "run",
-     "wg",
-     "pubkey"
-    ]
-   ],
-   "result": [
-    "cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=",
-    "cHVibGlja2V5cHVibGlja2V5cHVibGlja2V5MDAwMDA="
-   ]
-  },
-  {
-   "call": "generate_wireguard_client_config",
-   "commands": [
-    [
-     "run",
-     "wg",
-     "genkey"
-    ],
-    [
-     "run",
-     "wg",
-     "pubkey"
-    ]
-   ],
-   "result": {
-    "allowed_ips": "0.0.0.0/0, ::/0",
-    "client_ip": "10.13.13.5/32",
-    "client_name": "phone",
-    "config_content": "# WireGuard Client Profile: phone\n[Interface]\nPrivateKey = cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=\nAddress = 10.13.13.5/32\nDNS = 1.1.1.1\n\n[Peer]\nPublicKey = SERVERPUB=\nEndpoint = vpn.example.org:51820\nAllowedIPs = 0.0.0.0/0, ::/0\nPersistentKeepalive = 25\n",
-    "config_text": "# WireGuard Client Profile: phone\n[Interface]\nPrivateKey = cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=\nAddress = 10.13.13.5/32\nDNS = 1.1.1.1\n\n[Peer]\nPublicKey = SERVERPUB=\nEndpoint = vpn.example.org:51820\nAllowedIPs = 0.0.0.0/0, ::/0\nPersistentKeepalive = 25\n",
-    "endpoint": "vpn.example.org:51820",
-    "private_key": "cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=",
-    "public_key": "cHVibGlja2V5cHVibGlja2V5cHVibGlja2V5MDAwMDA="
-   }
-  },
-  {
-   "call": "generate_wireguard_client_config bad",
-   "commands": [
-    [
-     "run",
-     "wg",
-     "genkey"
-    ],
-    [
-     "run",
-     "wg",
-     "pubkey"
-    ]
-   ],
-   "result": {
-    "allowed_ips": "0.0.0.0/0, ::/0",
-    "client_ip": "nonsense",
-    "client_name": "bad name\n",
-    "config_content": "# WireGuard Client Profile: bad name\n\n[Interface]\nPrivateKey = cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=\nAddress = nonsense\nDNS = 1.1.1.1\n\n[Peer]\nPublicKey = SERVER_PUBLIC_KEY_PLACEHOLDER\nEndpoint = your-nas-domain.com:51820\nAllowedIPs = 0.0.0.0/0, ::/0\nPersistentKeepalive = 25\n",
-    "config_text": "# WireGuard Client Profile: bad name\n\n[Interface]\nPrivateKey = cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=\nAddress = nonsense\nDNS = 1.1.1.1\n\n[Peer]\nPublicKey = SERVER_PUBLIC_KEY_PLACEHOLDER\nEndpoint = your-nas-domain.com:51820\nAllowedIPs = 0.0.0.0/0, ::/0\nPersistentKeepalive = 25\n",
-    "endpoint": "",
-    "private_key": "cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=",
-    "public_key": "cHVibGlja2V5cHVibGlja2V5cHVibGlja2V5MDAwMDA="
-   }
-  },
-  {
-   "call": "get_ip_forwarding_status",
-   "commands": [],
-   "result": true
-  },
-  {
-   "call": "set_ip_forwarding off",
-   "commands": [],
-   "result": true
-  },
-  {
-   "call": "set_ip_forwarding on",
-   "commands": [],
-   "result": true
-  },
-  {
-   "call": "toggle_wireguard_subnet_nat",
-   "commands": [
-    [
-     "run",
-     "iptables",
-     "-t",
-     "nat",
-     "-A",
-     "POSTROUTING",
-     "-o",
-     "br0",
-     "-j",
-     "MASQUERADE"
-    ]
-   ],
-   "result": {
-    "enabled": true,
-    "ip_forwarding": true,
-    "message": "Subnet routing enabled (wg0 -> br0)",
-    "nat_rule": true
-   }
-  },
-  {
-   "call": "toggle_wireguard_subnet_nat bad",
-   "commands": [
-    [
-     "run",
-     "iptables",
-     "-t",
-     "nat",
-     "-A",
-     "POSTROUTING",
-     "-o",
-     "br0",
-     "-j",
-     "MASQUERADE"
-    ]
-   ],
-   "result": {
-    "enabled": true,
-    "ip_forwarding": true,
-    "message": "Subnet routing enabled (wg0;x -> br0)",
-    "nat_rule": true
    }
   },
   {
@@ -3510,9 +2263,6 @@
   "_get_unraid_descriptions": {
    "function": "() -> dict[str, str]"
   },
-  "_get_wireguard_status": {
-   "function": "() -> dict[str, typing.Any]"
-  },
   "_hex_to_ip": {
    "function": "(hex_str: str) -> str"
   },
@@ -3553,16 +2303,13 @@
    "function": "(net_id_or_name: str) -> dict[str, typing.Any]"
   },
   "deploy_tailscale_container": {
-   "function": "(auth_key: str | None = None, hostname: str | None = None, accept_routes: bool = False, state_dir: str | None = None) -> dict[str, typing.Any]"
+   "function": "(auth_key: str | None = None, hostname: str | None = None, state_dir: str | None = None) -> dict[str, typing.Any]"
   },
   "detect_local_subnets": {
    "function": "(fallback: bool = True) -> list[str]"
   },
   "execute_tailscale_down": {
    "function": "() -> dict[str, typing.Any]"
-  },
-  "execute_tailscale_ping": {
-   "function": "(peer: str) -> dict[str, typing.Any]"
   },
   "execute_tailscale_reauth": {
    "function": "() -> dict[str, typing.Any]"
@@ -3573,23 +2320,8 @@
   "execute_tailscale_set_routes": {
    "function": "(routes: str, enabled: bool = True) -> dict[str, typing.Any]"
   },
-  "execute_tailscale_set_serve": {
-   "function": "(serve: bool, funnel: bool = False, port: int = 8082) -> dict[str, typing.Any]"
-  },
-  "execute_tailscale_set_ssh": {
-   "function": "(enabled: bool) -> dict[str, typing.Any]"
-  },
-  "execute_tailscale_taildrop_receive": {
-   "function": "() -> dict[str, typing.Any]"
-  },
   "execute_tailscale_up": {
-   "function": "(auth_key: str | None = None, hostname: str | None = None, accept_routes: bool = False) -> dict[str, typing.Any]"
-  },
-  "generate_wireguard_client_config": {
-   "function": "(client_name: str, client_ip: str = '10.13.13.2/32', server_endpoint: str = '', server_pubkey: str = '', dns: str = '1.1.1.1', allowed_ips: str = '0.0.0.0/0, ::/0', keepalive: int = 25) -> dict[str, typing.Any]"
-  },
-  "generate_wireguard_keypair": {
-   "function": "() -> tuple[str, str]"
+   "function": "(auth_key: str | None = None, hostname: str | None = None) -> dict[str, typing.Any]"
   },
   "get_active_listening_ports": {
    "function": "() -> list[dict[str, typing.Any]]"
@@ -3603,9 +2335,6 @@
   "get_host_ip_config": {
    "function": "() -> dict[str, typing.Any]"
   },
-  "get_ip_forwarding_status": {
-   "function": "() -> bool"
-  },
   "get_mesh_vpn_status": {
    "function": "() -> dict[str, typing.Any]"
   },
@@ -3614,12 +2343,6 @@
   },
   "get_port_config": {
    "function": "(iface_name: str) -> dict[str, typing.Any]"
-  },
-  "get_taildrop_dir": {
-   "function": "() -> str"
-  },
-  "get_taildrop_inbox_files": {
-   "function": "() -> list[dict[str, typing.Any]]"
   },
   "get_vlans": {
    "function": "() -> list[dict[str, typing.Any]]"
@@ -3638,12 +2361,6 @@
   },
   "save_port_alias": {
    "function": "(iface_name: str, alias: str) -> str"
-  },
-  "set_ip_forwarding": {
-   "function": "(enable: bool) -> bool"
-  },
-  "toggle_wireguard_subnet_nat": {
-   "function": "(enable: bool, iface: str = 'wg0', out_iface: str = 'eth0') -> dict[str, typing.Any]"
   }
  }
 }

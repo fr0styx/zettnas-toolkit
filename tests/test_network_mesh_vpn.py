@@ -1,6 +1,7 @@
 import json
 from unittest.mock import MagicMock, patch
 
+import pytest
 from fastapi.testclient import TestClient
 
 from backend.hardware.network import (
@@ -22,13 +23,11 @@ def test_get_mesh_vpn_status_not_installed():
         patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(127, "not found")),
         patch("subprocess.run") as mock_subp,
     ):
-        mock_subp.return_value = MagicMock(returncode=0, stdout="wg0\n")
         status = get_mesh_vpn_status()
         assert status["tailscale"]["installed"] is False
         assert status["tailscale"]["active"] is False
         assert status["tailscale"]["container_mode"] is False
-        assert status["wireguard"]["installed"] is True
-        assert status["wireguard"]["active"] is True
+        assert "wireguard" not in status  # removed (decision D3)
 
 
 def test_get_mesh_vpn_status_container_running():
@@ -127,7 +126,7 @@ def test_get_mesh_vpn_status_exit_node_and_routes_separation():
         # Subnet routes must contain ONLY genuine LAN routes, NEVER 0.0.0.0/0 or ::/0
         assert ts["advertised_routes"] == ["192.168.1.0/24"]
         assert ts["is_subnet_router"] is True
-        assert ts["ssh_enabled"] is True
+        assert "ssh_enabled" not in ts  # Tailscale SSH removed (decision D5)
 
 
 def test_execute_tailscale_up_needs_login():
@@ -254,225 +253,61 @@ def test_deploy_tailscale_container_new_flow(tmp_path):
         assert res["auth_url"] == "https://login.tailscale.com/a/xyz999"
 
 
-def test_api_mesh_vpn_endpoints(client, token):
-    headers = {"Authorization": f"Bearer {token}"}
+GONE = [
+    ("post", "/api/network/mesh-vpn/tailscale/up"),
+    ("post", "/api/network/mesh-vpn/tailscale/down"),
+    ("post", "/api/network/mesh-vpn/tailscale/deploy"),
+    ("post", "/api/network/mesh-vpn/tailscale/set-ssh"),
+    ("post", "/api/network/mesh-vpn/tailscale/set-serve"),
+    ("post", "/api/network/mesh-vpn/tailscale/taildrop/receive"),
+    ("get", "/api/network/mesh-vpn/tailscale/taildrop/files"),
+    ("post", "/api/network/mesh-vpn/tailscale/ping"),
+    ("post", "/api/network/mesh-vpn/wireguard/client-config"),
+    ("get", "/api/network/mesh-vpn/wireguard/subnet-routing"),
+    ("post", "/api/network/mesh-vpn/wireguard/subnet-routing"),
+]
 
-    # 1. GET /api/network/mesh-vpn
+
+def test_api_mesh_vpn_endpoints(client, token):
+    """What stays (D5): the status, reaching things at home, home internet when away, signing in again."""
+    headers = {"Authorization": f"Bearer {token}"}
     with patch(
         "backend.hardware.network.get_mesh_vpn_status",
-        return_value={"tailscale": {"installed": False}, "wireguard": {"installed": True}},
+        return_value={"tailscale": {"installed": True, "active": True, "peers": []}},
     ):
         r = client.get("/api/network/mesh-vpn", headers=headers)
-        assert r.status_code == 200
-        assert r.json()["wireguard"]["installed"] is True
-
-    # 2. POST /api/network/mesh-vpn/tailscale/deploy
-    with patch(
-        "backend.hardware.network.deploy_tailscale_container",
-        return_value={
-            "status": "success",
-            "container_id": "testcid123",
-            "auth_url": "https://login.tailscale.com/a/test",
-        },
-    ):
-        r = client.post(
-            "/api/network/mesh-vpn/tailscale/deploy",
-            json={"hostname": "my-box", "accept_routes": True},
-            headers=headers,
-        )
-        assert r.status_code == 200
-        data = r.json()
-        assert data["status"] == "success"
-        assert data["container_id"] == "testcid123"
-        assert data["auth_url"] == "https://login.tailscale.com/a/test"
-
-    # 3. POST /api/network/mesh-vpn/tailscale/up
-    with patch(
-        "backend.hardware.network.execute_tailscale_up",
-        return_value={"status": "success", "code": 0, "output": "ok"},
-    ):
-        r = client.post(
-            "/api/network/mesh-vpn/tailscale/up",
-            json={"auth_key": "tskey-auth-xyz"},
-            headers=headers,
-        )
-        assert r.status_code == 200
-        assert r.json()["status"] == "success"
-
-    # 3b. POST /api/network/mesh-vpn/tailscale/down
-    with patch(
-        "backend.hardware.network.execute_tailscale_down",
-        return_value={"status": "success", "code": 0, "output": "ok"},
-    ):
-        r = client.post("/api/network/mesh-vpn/tailscale/down", headers=headers)
-        assert r.status_code == 200
-        assert r.json()["status"] == "success"
-
-    # 3c. POST /api/network/mesh-vpn/tailscale/down failure with fallback
-    with patch(
-        "backend.hardware.network.execute_tailscale_down",
-        return_value={"status": "error", "code": 1, "output": ""},
-    ):
-        r = client.post("/api/network/mesh-vpn/tailscale/down", headers=headers)
-        assert r.status_code == 400
-        assert r.json()["detail"] == "Tailscale disconnection failed"
-
-    # 4. POST /api/network/mesh-vpn/tailscale/set-routes
-    with patch(
-        "backend.hardware.network.execute_tailscale_set_routes",
-        return_value={"status": "success", "routes": "192.168.10.0/24", "enabled": True},
-    ):
+        assert r.status_code == 200 and r.json()["tailscale"]["active"] is True
+    with patch("backend.hardware.network.execute_tailscale_set_routes", return_value={"status": "success"}) as routes:
         r = client.post(
             "/api/network/mesh-vpn/tailscale/set-routes",
-            json={"routes": "192.168.10.0/24", "enabled": True},
+            json={"routes": "192.168.1.0/24", "enabled": True},
             headers=headers,
         )
-        assert r.status_code == 200
-        assert r.json()["routes"] == "192.168.10.0/24"
-
-    # 5. POST /api/network/mesh-vpn/tailscale/set-exit-node
+        assert r.status_code == 200 and routes.call_args.kwargs == {"routes": "192.168.1.0/24", "enabled": True}
     with patch(
-        "backend.hardware.network.execute_tailscale_set_exit_node",
-        return_value={"status": "success", "enabled": True},
-    ):
-        r = client.post(
-            "/api/network/mesh-vpn/tailscale/set-exit-node",
-            json={"enabled": True},
-            headers=headers,
-        )
-        assert r.status_code == 200
-        assert r.json()["enabled"] is True
-
-    # 6. POST /api/network/mesh-vpn/tailscale/set-ssh
-    with patch(
-        "backend.hardware.network.execute_tailscale_set_ssh",
-        return_value={"status": "success", "enabled": True},
-    ):
-        r = client.post(
-            "/api/network/mesh-vpn/tailscale/set-ssh",
-            json={"enabled": True},
-            headers=headers,
-        )
-        assert r.status_code == 200
-        assert r.json()["enabled"] is True
-
-    # 7. POST /api/network/mesh-vpn/tailscale/set-serve
-    with patch(
-        "backend.hardware.network.execute_tailscale_set_serve",
-        return_value={"status": "success", "serve_url": "https://test.ts.net", "enabled": True},
-    ):
-        r = client.post(
-            "/api/network/mesh-vpn/tailscale/set-serve",
-            json={"enabled": True, "funnel": False, "port": 8082},
-            headers=headers,
-        )
-        assert r.status_code == 200
-        assert r.json()["serve_url"] == "https://test.ts.net"
-
-    # 8. POST /api/network/mesh-vpn/tailscale/taildrop/receive
-    with patch(
-        "backend.hardware.network.execute_tailscale_taildrop_receive",
-        return_value={"status": "success", "count": 2, "files": []},
-    ):
-        r = client.post("/api/network/mesh-vpn/tailscale/taildrop/receive", headers=headers)
-        assert r.status_code == 200
-        assert r.json()["count"] == 2
-
-    # 9. GET /api/network/mesh-vpn/tailscale/taildrop/files
-    with patch(
-        "backend.hardware.network.get_taildrop_inbox_files",
-        return_value=[{"name": "photo.jpg", "size": 1024, "size_human": "1.0 KB"}],
-    ):
-        r = client.get("/api/network/mesh-vpn/tailscale/taildrop/files", headers=headers)
-        assert r.status_code == 200
-        assert len(r.json()["files"]) == 1
-
-    # 10. POST /api/network/mesh-vpn/tailscale/ping
-    with patch(
-        "backend.hardware.network.execute_tailscale_ping",
-        return_value={"status": "success", "peer": "100.80.20.1", "latency_ms": 12.5, "direct": True},
-    ):
-        r = client.post(
-            "/api/network/mesh-vpn/tailscale/ping",
-            json={"peer": "100.80.20.1"},
-            headers=headers,
-        )
-        assert r.status_code == 200
-        assert r.json()["latency_ms"] == 12.5
-
-    # 11. POST /api/network/mesh-vpn/tailscale/reauth
+        "backend.hardware.network.execute_tailscale_set_exit_node", return_value={"status": "success"}
+    ) as exit_node:
+        r = client.post("/api/network/mesh-vpn/tailscale/set-exit-node", json={"enabled": True}, headers=headers)
+        assert r.status_code == 200 and exit_node.call_args.kwargs == {"enabled": True}
     with patch(
         "backend.hardware.network.execute_tailscale_reauth",
-        return_value={"status": "needs_login", "auth_url": "https://login.tailscale.com/a/reauth123"},
+        return_value={"status": "needs_login", "auth_url": "https://login.tailscale.com/a/x"},
     ):
         r = client.post("/api/network/mesh-vpn/tailscale/reauth", headers=headers)
         assert r.status_code == 200
-        assert r.json()["auth_url"] == "https://login.tailscale.com/a/reauth123"
 
 
-def test_tailscale_extended_hardware_functions(tmp_path):
-    from backend.hardware.network import (
-        detect_local_subnets,
-        execute_tailscale_ping,
-        execute_tailscale_reauth,
-        execute_tailscale_set_exit_node,
-        execute_tailscale_set_routes,
-        execute_tailscale_set_serve,
-        execute_tailscale_set_ssh,
-        get_taildrop_inbox_files,
-    )
+@pytest.mark.parametrize("method, path", GONE)
+def test_removed_routes_say_what_replaced_them(client, token, method, path):
+    r = getattr(client, method)(path, headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 410 and r.json()["error"] == "removed" and r.json()["detail"]
 
-    # Routes
-    with patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, "ok")):
-        res = execute_tailscale_set_routes("192.168.1.0/24", enabled=True)
-        assert res["status"] == "ok"
-        res_dis = execute_tailscale_set_routes("", enabled=False)
-        assert res_dis["status"] == "ok"
 
-    # Exit node
-    with patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, "ok")):
-        res = execute_tailscale_set_exit_node(enabled=True)
-        assert res["status"] == "ok"
+def test_the_kept_tailscale_switches(tmp_path):
+    from backend.hardware.network import execute_tailscale_set_exit_node, execute_tailscale_set_routes
 
-    # SSH
-    with patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, "ok")):
-        res = execute_tailscale_set_ssh(enabled=True)
-        assert res["status"] == "ok"
-
-    # Ping
-    ping_out = "pong from test-peer (100.80.1.2) via 192.168.1.50:41641 in 8ms\n"
-    with patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, ping_out)):
-        res = execute_tailscale_ping("100.80.1.2")
-        assert res["status"] == "success"
-        assert res["latency_ms"] == 8.0
-        assert res["is_direct"] is True
-
-    # Reauth
-    reauth_out = "To authenticate, visit:\n\n\thttps://login.tailscale.com/a/reauth789\n"
-    with patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(1, reauth_out)):
-        res = execute_tailscale_reauth()
-        assert res["status"] == "needs_login"
-        assert res["auth_url"] == "https://login.tailscale.com/a/reauth789"
-
-    # Serve
-    with patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, "https://my-nas.ts.net")):
-        res = execute_tailscale_set_serve(True, False, 8082)
-        assert res["status"] == "ok"
-
-    # Taildrop inbox files
-    td_dir = tmp_path / "taildrop"
-    td_dir.mkdir()
-    sample_file = td_dir / "document.pdf"
-    sample_file.write_text("dummy content")
-    with patch("backend.hardware.net.tailscale.get_taildrop_dir", return_value=str(td_dir)):
-        files = get_taildrop_inbox_files()
-        assert len(files) == 1
-        assert files[0]["name"] == "document.pdf"
-
-    # Detect subnets
-    with patch(
-        "backend.hardware.net.common._parse_routes",
-        return_value=[{"destination": "192.168.10.0", "mask": "255.255.255.0", "iface": "eth0"}],
-    ):
-        subnets = detect_local_subnets()
-        assert "192.168.10.0/24" in subnets
+    with patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, "")) as run:
+        assert execute_tailscale_set_routes("192.168.1.0/24", enabled=True)["status"] in ("success", "ok")
+        execute_tailscale_set_routes("", enabled=False)
+        execute_tailscale_set_exit_node(enabled=True)
+    assert run.call_count >= 3

@@ -7,7 +7,6 @@ import pytest
 
 from backend.hardware.network import (
     _format_speed,
-    _get_wireguard_status,
     get_active_listening_ports,
 )
 from backend.services.samba_engine import SambaEngine, get_samba_engine
@@ -23,47 +22,6 @@ def test_5gbe_speed_detection():
     assert _format_speed(100, is_up=True) == "100 Mbps"
     assert _format_speed(0, is_up=False) == "Disconnected"
     assert _format_speed(None, is_up=True) == "Unknown"
-
-
-def test_wireguard_telemetry_dump_parsing():
-    """Verifies _get_wireguard_status parses wg show all dump and scrubs preshared keys."""
-    fake_dump = (
-        "wg0\tPRIVATE_KEY_HIDDEN\tPUBLIC_KEY_1111\t51820\toff\n"
-        "wg0\tPEER_PUBKEY_AAAABBBBCCCC\tSECRET_PSK_MUST_REDACT\t198.51.100.2:51820\t10.0.0.2/32\t1700000000\t1048576\t2097152\t25\n"
-        "wg0\tPEER_PUBKEY_DDDDEEEEFFFF\t(none)\t(none)\t10.0.0.3/32\t0\t0\t0\toff\n"
-    )
-
-    def fake_run(cmd, *args, **kwargs):
-        m = MagicMock()
-        m.returncode = 0
-        if cmd == ["wg", "show", "interfaces"]:
-            m.stdout = "wg0\n"
-        elif cmd == ["wg", "show", "all", "dump"]:
-            m.stdout = fake_dump
-        else:
-            m.stdout = ""
-        return m
-
-    with patch("subprocess.run", side_effect=fake_run), patch("time.time", return_value=1700000050):
-        status = _get_wireguard_status()
-        assert status["installed"] is True
-        assert status["active"] is True
-        assert status["interfaces"] == ["wg0"]
-        assert status["peers_count"] == 2
-
-        p1 = status["peers"][0]
-        assert "SECRET_PSK_MUST_REDACT" not in str(status)
-        assert p1["endpoint"] == "198.51.100.2:51820"
-        assert p1["allowed_ips"] == ["10.0.0.2/32"]
-        assert p1["latest_handshake"] == 1700000000
-        assert p1["latest_handshake_age"] == 50
-        assert p1["active"] is True
-        assert p1["transfer_rx_bytes"] == 1048576
-        assert p1["transfer_tx_bytes"] == 2097152
-
-        p2 = status["peers"][1]
-        assert p2["active"] is False
-        assert p2["endpoint"] == ""
 
 
 def test_listening_ports_discovery():

@@ -1,4 +1,4 @@
-"""The mesh VPN overview: Tailscale and WireGuard together.
+"""The mesh VPN overview: Tailscale (WireGuard was removed, decision D3).
 
 Part of backend/hardware/network.py, split out by ARC-5."""
 
@@ -6,7 +6,7 @@ from datetime import UTC
 from typing import Any
 
 from backend.config import logger
-from backend.hardware.net import tailscale, wireguard
+from backend.hardware.net import tailscale
 from backend.ignored_errors import ignored
 
 
@@ -26,7 +26,7 @@ def _key_days_left(key_exp: str) -> int | None:
 def get_mesh_vpn_status() -> dict[str, Any]:
     """
     Zero-Trust Mesh Hub detector:
-    Queries Tailscale daemon status (via CLI, Docker container, or local socket) and WireGuard kernel interfaces.
+    Queries Tailscale daemon status (via CLI, Docker container, or local socket).
     """
     import json
 
@@ -53,13 +53,6 @@ def get_mesh_vpn_status() -> dict[str, Any]:
         "exit_node_approved": False,
         "is_exit_node": False,
         "admin_console_url": "https://login.tailscale.com/admin/machines",
-        "ssh_enabled": False,
-        "serve_enabled": False,
-        "funnel_enabled": False,
-        "serve_url": "",
-        "taildrop_dir": "",
-        "taildrop_files_count": 0,
-        "taildrop_files": [],
     }
 
     ts_bin = tailscale._find_tailscale_bin()
@@ -71,12 +64,8 @@ def get_mesh_vpn_status() -> dict[str, Any]:
         if not c_info.get("running"):
             ts_info["active"] = False
             ts_info["backend_state"] = "Stopped"
-            ts_info["taildrop_dir"] = tailscale.get_taildrop_dir()
             ts_info["detected_subnets"] = tailscale.detect_local_subnets()
-            return {
-                "tailscale": ts_info,
-                "wireguard": wireguard._get_wireguard_status(),
-            }
+            return {"tailscale": ts_info}
 
     code, out = tailscale._run_tailscale_cmd(["status", "--json"], timeout=4.0)
     out_stripped = out.strip()
@@ -93,7 +82,6 @@ def get_mesh_vpn_status() -> dict[str, Any]:
             ts_info["tailnet"] = doc.get("MagicDNSSuffix", "")
             dns_name = doc.get("Self", {}).get("DNSName", "").rstrip(".")
             ts_info["dns_name"] = dns_name
-            ts_info["serve_url"] = f"https://{dns_name}" if dns_name else ""
 
             # Key Expiry
             key_exp = doc.get("Self", {}).get("KeyExpiry", "")
@@ -101,13 +89,12 @@ def get_mesh_vpn_status() -> dict[str, Any]:
             ts_info["key_expiry_days"] = key_days = _key_days_left(key_exp)
             ts_info["key_expired"] = (key_days == 0) if key_days is not None else False
 
-            # Check debug prefs for RunSSH and AdvertiseRoutes
+            # Check debug prefs for accepted and advertised routes
             p_routes = []
             p_code, p_out = tailscale._run_tailscale_cmd(["debug", "prefs"], timeout=2.0)
             if p_code == 0 and p_out.strip().startswith("{"):
                 try:
                     p_doc = json.loads(p_out.strip())
-                    ts_info["ssh_enabled"] = bool(p_doc.get("RunSSH", False))
                     ts_info["accept_routes"] = bool(p_doc.get("RouteAll", False))
                     p_routes = p_doc.get("AdvertiseRoutes") or []
                 except Exception:
@@ -166,19 +153,6 @@ def get_mesh_vpn_status() -> dict[str, Any]:
             ts_info["peers_count"] = len(peers_list)
             ts_info["auth_url"] = doc.get("AuthURL") or ""
 
-            # Check serve / funnel status
-            sv_code, sv_out = tailscale._run_tailscale_cmd(["serve", "status", "--json"], timeout=2.0)
-            if sv_code == 0 and sv_out.strip().startswith("{") and len(sv_out.strip()) > 2:
-                ts_info["serve_enabled"] = True
-                fn_code, fn_out = tailscale._run_tailscale_cmd(["funnel", "status", "--json"], timeout=2.0)
-                if fn_code == 0 and "AllowFunnel" in fn_out:
-                    ts_info["funnel_enabled"] = True
-
-            # Taildrop inbox files
-            ts_info["taildrop_dir"] = tailscale.get_taildrop_dir()
-            taildrop_files = tailscale.get_taildrop_inbox_files()
-            ts_info["taildrop_files_count"] = len(taildrop_files)
-            ts_info["taildrop_files"] = taildrop_files
         except Exception as e:
             logger.debug(f"[Network] Tailscale status json parse error: {e}")
     elif c_info.get("running") or ts_bin and "failed to connect to local tailscaled" not in out.lower():
@@ -194,7 +168,4 @@ def get_mesh_vpn_status() -> dict[str, Any]:
     else:
         ts_info["installed"] = False
 
-    return {
-        "tailscale": ts_info,
-        "wireguard": wireguard._get_wireguard_status(),
-    }
+    return {"tailscale": ts_info}

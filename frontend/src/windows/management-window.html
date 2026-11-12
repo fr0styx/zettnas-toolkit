@@ -1529,39 +1529,24 @@
             <!-- Sub-tab 2: WireGuard & Tailscale Mesh VPN -->
             <div id="mgmt-pane-network-wireguard" class="mgmt-tab-pane" style="display: none;">
               <div id="remote-access-mount"></div>
-              <div class="mgmt-card-intro wgd-row">
-                <div>
-                  <div class="mgmt-card-intro-title">
-                    <svg class="ic"><use href="#i-shield"/></svg>
-                    <span data-i18n="mgmt.wireguard_sec_title">Tailscale & WireGuard Zero-Trust Mesh VPN</span>
+              <div id="ts-details" hidden>
+                <div class="mgmt-card-intro wgd-row">
+                  <div>
+                    <div class="mgmt-card-intro-title">
+                      <svg class="ic"><use href="#i-shield"/></svg>
+                      <span data-i18n="net.ts_details_title">Tailscale details</span>
+                    </div>
+                    <div class="mgmt-card-intro-desc" data-i18n="net.ts_details_desc">This NAS on your private network, two extra uses, and the devices you can reach.</div>
                   </div>
-                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.wireguard_sec_desc">
-                    Zero-Trust peer mesh networking, Tailscale mesh overlay, and WireGuard site-to-site kernel subnet NAT routing.
+                  <div class="wgd-row-2">
+                    <button class="btn-pill-toggle" id="btn-refresh-wireguard" title="Refresh" data-i18n-title="vm.refresh"><span aria-hidden="true">🔄</span> <span data-i18n="vm.refresh">Refresh</span></button>
                   </div>
                 </div>
-                <div class="wgd-row-2">
-                  <div class="btn-group wgd-row-3" id="mesh-service-filter">
-                    <button class="btn-pill-toggle active" data-mesh-filter="all" data-i18n="mw.all">All</button>
-                    <button class="btn-pill-toggle" data-mesh-filter="tailscale">Tailscale</button>
-                    <button class="btn-pill-toggle" data-mesh-filter="wireguard" translate="no">WireGuard</button>
-                  </div>
-                  <button class="btn-pill-toggle" id="btn-wg-gen-client-config" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border-color: rgba(79, 216, 196, 0.4);"><span aria-hidden="true">🔑</span> <span data-i18n="ui.generate_client_conf">Generate Client .conf</span></button>
-                  <button class="btn-pill-toggle" id="btn-refresh-wireguard" title="Refresh Mesh VPN Status" data-i18n-title="ui.refresh_mesh_vpn_status"><span aria-hidden="true">🔄</span> <span data-i18n="vm.refresh">Refresh</span></button>
-                </div>
-              </div>
-
-              <div class="mgmt-detail-body">
-                <!-- Section 1: Tailscale Zero-Trust Mesh Overlay -->
-                <div class="network-section-header" id="section-header-tailscale">
-                  <span class="network-section-title" data-i18n="mw.tailscale_zero_trust_mesh_overlay">TAILSCALE ZERO-TRUST MESH OVERLAY</span>
-                  <span class="network-section-badge" id="tailscale-status-badge" data-sample>Checking...</span>
-                </div>
-
-                <div class="network-grid-two-col wgd-x" id="network-tailscale-container">
-                  <!-- Tailscale Telemetry Card -->
+                <div class="mgmt-detail-body">
+                  <div class="network-grid-two-col wgd-x" id="network-tailscale-container">
                   <div class="network-card" id="tailscale-telemetry-card">
                     <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-shield"/></svg> <span data-i18n="mw.tailscale_node_telemetry">Tailscale Node Telemetry</span></div>
+                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-shield"/></svg> <span data-i18n="net.ts_this_nas">This NAS on your tailnet</span></div>
                       <span class="mgmt-app-pill" id="ts-connection-pill" style="background:var(--lt-b-6c808426, rgba(108,128,132,0.15)); color:var(--muted);" data-sample>—</span>
                     </div>
                     <div class="wgd-col-xs">
@@ -1588,185 +1573,48 @@
                         <span class="wgd-muted" data-i18n="net.tailscale_key_expiry">Node Key Expiry:</span>
                         <div class="wgd-row-6">
                           <span id="ts-key-expiry-display" style="font-weight:600; color:var(--ok2, #3bf58b); font-size:var(--kb-fs-xs);">--</span>
-                          <button class="btn-pill-toggle is-small" id="btn-ts-reauth" style="display: none;" title="Re-authenticate node key" data-i18n-title="ui.re_authenticate_node_key"><span aria-hidden="true">⚡</span> <span data-i18n="net.tailscale_reauth_btn">Re-auth</span></button>
+                          <button class="btn-pill-toggle is-small" id="btn-ts-reauth" style="display: none;" title="Re-authenticate node key" data-i18n-title="ui.re_authenticate_node_key"><span aria-hidden="true">⚡</span> <span data-i18n="net.ts_sign_in_again">Sign in again</span></button>
                         </div>
                       </div>
                     </div>
                   </div>
-
-                  <!-- Tailscale Connection & Auth Card -->
-                  <div class="network-card" id="tailscale-controls-card">
+                  <div class="network-card" id="tailscale-uses-card">
                     <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-key"/></svg> <span data-i18n="mw.tailscale_connection_and_au">Tailscale Connection &amp; Auth</span></div>
-                      <button class="btn-pill-toggle is-danger is-small" id="btn-tailscale-down" style="display: none;"><span aria-hidden="true">🔌</span> <span data-i18n="remote.disconnect">Disconnect</span></button>
+                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-key"/></svg> <span data-i18n="net.ts_extra_uses">Two extra uses</span></div>
                     </div>
-                    <div class="wgd-xs" id="ts-controls-body">
-                      <!-- 1-Click Deploy Banner (shown when daemon is not installed) -->
-                      <div id="ts-deploy-banner" style="display:none; background:linear-gradient(135deg, rgba(79,216,196,0.12), rgba(99,102,241,0.08)); border:1px solid rgba(79,216,196,0.25); border-radius:8px; padding:12px; margin-bottom:12px;">
-                        <div class="wgd-row-xs-bold-accent">
-                          <span data-i18n="net.tailscale_1click_title">⚡ 1-Click Tailscale Container Deployment</span>
-                        </div>
-                        <div class="wgd-xs-2" data-i18n="net.tailscale_1click_desc">
-                          Installs Tailscale as an app, so you can reach this server from anywhere. Settings and sign-in are kept.
-                        </div>
-                      </div>
-
-                      <!-- Interactive Browser Authorization Prompt (shown when login URL captured) -->
-                      <div id="ts-auth-prompt" style="display:none; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.35); border-radius:8px; padding:12px; margin-bottom:12px;">
-                        <div class="wgd-row-xs-bold-warn">
-                          <span aria-hidden="true">👉</span> <span data-i18n="net.tailscale_signin_needed_title">Browser Authentication Required</span>
-                        </div>
-                        <div style="font-size:var(--kb-fs-xs); color:var(--lt-t-fef3c7ff, #fef3c7); line-height:1.4; margin-bottom:8px;" data-i18n="net.tailscale_auth_required_desc">
-                          To link this NAS node to your Tailnet, log in via your browser (supports Google, GitHub, Apple, Microsoft SSO):
-                        </div>
-                        <div class="wgd-row-7">
-                          <a id="ts-auth-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:#f59e0b; color:#000; font-weight:700; font-size:var(--kb-fs-xs); padding:5px 12px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
-                            <span aria-hidden="true">🔗</span> <span data-i18n="net.tailscale_open_login">Open Tailscale Login</span>
-                          </a>
-                          <button class="btn-pill-toggle" id="btn-copy-ts-auth-url">
-                            <span aria-hidden="true">📋</span> <span data-i18n="net.tailscale_copy_link">Copy Link</span>
-                          </button>
-                          <span class="wgd-xs-muted"><span aria-hidden="true">⏳</span> <span data-i18n="net.tailscale_waiting_auth">Waiting for authorization...</span></span>
-                        </div>
-                      </div>
-
-                      <!-- Disconnected State Form -->
-                      <div class="wgd-col" id="ts-connect-form">
-                        <div class="wgd-xs-muted-2" id="ts-form-intro" data-sample>
-                          Join your Zero-Trust Tailnet with a pre-authenticated auth key:
-                        </div>
-                        <div>
-                          <label class="wgd-xs-bold-muted" for="ts-auth-key-input" data-i18n="mw.auth_k_optional">Auth Key (Optional)</label>
-                          <input type="password" id="ts-auth-key-input" class="tz-select-input wgd-xs-strong-box" placeholder="tskey-auth-k123456789..." />
-                        </div>
-                        <div class="wgd-grid">
-                          <div>
-                            <label class="wgd-xs-bold-muted" for="ts-hostname-input" data-i18n="mw.custom_hostname">Custom Hostname</label>
-                            <input type="text" id="ts-hostname-input" class="tz-select-input wgd-xs-strong-box-2" placeholder="e.g. kiboto" />
-                          </div>
-                          <div class="wgd-row-8">
-                            <label class="wgd-row-xs">
-                              <input type="checkbox" id="ts-accept-routes-input" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
-                              <span data-i18n="mw.accept_routes">Accept Routes</span>
-                            </label>
-                            <div class="wgd-xs-muted" id="ts-route-conflict" role="status" hidden></div>
-                          </div>
-                        </div>
-                        <div class="wgd-row-9">
-                          <button class="btn-pill-toggle" id="btn-tailscale-up" style="background: rgba(79,216,196,0.15); color: var(--kb-text-accent); border-color: rgba(79,216,196,0.4);"><span aria-hidden="true">🚀</span> <span data-i18n="ui.connect_tailscale">Connect Tailscale</span></button>
-                        </div>
-                      </div>
-
-                      <!-- Connected State View -->
-                      <div class="wgd-x-2" id="ts-connected-view" style="display: none;">
-                        <div style="display:flex; align-items:center; gap:8px; color:var(--ok2, #3bf58b); font-weight:700; font-size:13px;">
-                          <span data-i18n="mw.node_active_on_tailnet">✓ Node Active on Tailnet</span>
-                        </div>
-                        <div class="wgd-xs-3" data-i18n="mw.this_appliance_is_securely_connected_to">
-                          This appliance is securely connected to your Tailscale mesh network. Traffic routed to this machine is end-to-end encrypted with WireGuard primitives.
-                        </div>
-
-                        <!-- Subnet Router Gateway (Capability 1) -->
+                    <div class="wgd-x-2">
                         <div class="wgd-col-box">
                           <div class="wgd-row-5">
                             <label class="wgd-row-xs-bold-strong">
                               <input type="checkbox" id="ts-subnet-router-toggle" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
-                              <span data-i18n="net.tailscale_subnet_router">Subnet Router Gateway (--advertise-routes)</span>
+                              <span data-i18n="net.ts_reach_home">Reach other things at home</span>
                             </label>
-                            <button class="btn-pill-toggle is-small" id="btn-ts-save-routes" data-i18n="net.tailscale_save_routes">Save Subnets</button>
+                            <button class="btn-pill-toggle is-small" id="btn-ts-save-routes" data-i18n="net.ts_save_networks">Save networks</button>
                           </div>
-                          <div class="wgd-xs-4" data-i18n="net.tailscale_subnet_desc">
-                            Advertise local LAN subnets to access devices remotely without per-device clients.
+                          <div class="wgd-xs-4" data-i18n="net.ts_reach_home_desc">
+                            Away from home, your phone or laptop can open other devices on your home network (a printer, a camera) through this NAS.
                           </div>
                           <input type="text" id="ts-subnet-routes-input" class="tz-select-input wgd-xs-strong-box-3" placeholder="e.g. 192.168.1.0/24" aria-label="e.g. 192.168.1.0/24" />
                         </div>
-
-                        <!-- Exit Node Gateway (Capability 2) -->
                         <div class="wgd-col-box-2">
                           <div class="wgd-row-5">
                             <label class="wgd-row-xs-bold-strong">
                               <input type="checkbox" id="ts-exit-node-toggle" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
-                              <span data-i18n="net.tailscale_exit_node">Exit Node Gateway (--advertise-exit-node)</span>
+                              <span data-i18n="net.ts_home_internet">Use your home internet when away</span>
                             </label>
                             <span class="mgmt-app-pill wgd-xs-5" id="ts-exit-node-pill" data-sample>—</span>
                           </div>
-                          <div class="wgd-xs-4" data-i18n="net.tailscale_exit_desc">
-                            Route all mobile/laptop internet traffic encrypted through this NAS when traveling.
+                          <div class="wgd-xs-4" data-i18n="net.ts_home_internet_desc">
+                            Your phone or laptop can send its internet traffic through this NAS, for example on hotel Wi-Fi.
                           </div>
                           <div id="ts-exit-node-approval-hint" style="display:none; font-size:var(--kb-fs-xs); padding:6px 10px; border-radius:6px; border:1px solid rgba(245,158,11,0.25); background:rgba(245,158,11,0.08); color:var(--kb-text-warn); line-height:1.4; margin-top:4px;">
                             <span aria-hidden="true">⚠️</span> <span data-i18n="mw.exit_node_approve">Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your</span> <a class="wgd-bold-accent" href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer"><span data-i18n="mw.tailscale_admin_console">Tailscale Admin Console</span> <span aria-hidden="true">↗</span></a> <span data-i18n="mw.exit_node_steps">(Machines → Edit route settings → Use as exit node).</span>
                           </div>
                         </div>
-
-                        <!-- Tailscale SSH (Capability 3) -->
-                        <div class="wgd-col-box-2">
-                          <div class="wgd-row-5">
-                            <label class="wgd-row-xs-bold-strong">
-                              <input type="checkbox" id="ts-ssh-toggle" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
-                              <span data-i18n="net.tailscale_ssh">Tailscale SSH (--ssh)</span>
-                            </label>
-                            <span class="mgmt-app-pill wgd-xs-5" id="ts-ssh-pill" data-sample>—</span>
-                          </div>
-                          <div class="wgd-xs-4" data-i18n="net.tailscale_ssh_desc">
-                            Authenticate SSH connections via Tailnet identity without passwords or SSH keys.
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
-                </div>
-
-                <!-- Extended Capabilities Row 2: Serve/Funnel & Taildrop (Capabilities 4 & 5) -->
-                <div class="network-grid-two-col wgd-x" id="network-tailscale-extended" style="display: none;">
-                  <!-- Tailscale Serve & Funnel Card -->
-                  <div class="network-card" id="tailscale-serve-card">
-                    <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-shield"/></svg> <span data-i18n="net.tailscale_serve">Tailscale Serve & Funnel (Instant TLS)</span></div>
-                      <span class="mgmt-app-pill wgd-xs-6" id="ts-serve-pill" data-sample>—</span>
-                    </div>
-                    <div class="wgd-col-xs">
-                      <div class="wgd-row-5">
-                        <label class="wgd-row-bold-strong">
-                          <input type="checkbox" id="ts-serve-toggle" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
-                          <span data-i18n="net.tailscale_enable_serve">Enable HTTPS on Tailnet (tailscale serve)</span>
-                        </label>
-                      </div>
-                      <div class="wgd-xs-7" data-i18n="net.tailscale_serve_desc">
-                        Generates automatic Let's Encrypt TLS certificates for your Tailnet domain and proxies directly to the Kiboto desktop port 8082 without browser warnings.
-                      </div>
-                      <div id="ts-serve-url-box" style="display:none; padding:8px 10px; background:rgba(79,216,196,0.08); border:1px solid rgba(79,216,196,0.2); border-radius:6px; font-size:var(--kb-fs-xs); justify-content:space-between; align-items:center;">
-                        <span class="wgd-xs-muted-2" data-i18n="mw.direct_https_url">Direct HTTPS URL:</span>
-                        <div class="wgd-row-6">
-                          <a class="wgd-semi-accent" id="ts-serve-url-link" href="#" target="_blank" rel="noopener noreferrer">https://--</a>
-                          <button class="btn-pill-toggle is-small" id="btn-copy-ts-serve-url"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
-                        </div>
-                      </div>
-                    </div>
                   </div>
-
-                  <!-- Taildrop Inbox Card -->
-                  <div class="network-card" id="tailscale-taildrop-card">
-                    <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-download"/></svg> <span data-i18n="net.tailscale_taildrop">Taildrop Inbox (Zero-Trust AirDrop)</span></div>
-                      <div class="wgd-row-4">
-                        <span class="mgmt-app-pill wgd-xs-6" id="ts-taildrop-badge">0 files</span>
-                        <button class="btn-pill-toggle is-small" id="btn-ts-taildrop-fetch" title="Fetch pending files from Taildrop queue" data-i18n-title="ui.fetch_pending_files_from_taildrop"><span aria-hidden="true">📥</span> <span data-i18n="net.tailscale_taildrop_fetch">Fetch</span></button>
-                        <button class="btn-pill-toggle is-small" id="btn-ts-taildrop-open" title="Open Taildrop folder in Files app" data-i18n-title="ui.open_taildrop_folder_in_files"><span aria-hidden="true">📂</span> <span data-i18n="net.tailscale_taildrop_open">Files</span></button>
-                      </div>
-                    </div>
-                    <div class="wgd-col-xs">
-                      <div class="wgd-xs-4" data-i18n="net.tailscale_taildrop_desc">
-                        Encrypted peer-to-peer file transfer from iPhones, Macs, Androids, and PCs directly to your NAS. Received files are saved in <code>/mnt/user/appdata/tailscale/taildrop</code>.
-                      </div>
-                      <div class="wgd-box" id="ts-taildrop-list">
-                        <div class="wgd-xs-muted-5" data-i18n="net.tailscale_taildrop_empty">No files in Taildrop inbox yet.</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Extended Capabilities Row 3: Interactive Mesh Peer Directory (Capability 6) -->
-                <div class="network-card wgd-x" id="tailscale-peers-card" style="display: none;">
+                  <div class="network-card wgd-x" id="tailscale-peers-card" style="display: none;">
                   <div class="network-card-header wgd-x-3">
                     <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-server"/></svg> <span data-i18n="net.tailscale_peers_title">Devices on your tailnet</span></div>
                     <div class="wgd-row-10">
@@ -1783,63 +1631,14 @@
                           <th class="wgd-x-5" data-i18n="mw.tailscale_ip">Tailscale IP</th>
                           <th class="wgd-x-5" data-i18n="mw.connection_route">Connection Route</th>
                           <th class="wgd-x-5" data-i18n="mw.status">Status</th>
-                          <th class="wgd-x-6" data-i18n="mw.latency_ping">Latency Ping</th>
                         </tr>
                       </thead>
                       <tbody id="ts-peers-table-body">
-                        <tr><td class="wgd-muted-2" colspan="6" data-i18n="mw.no_peers_detected">No peers detected.</td></tr>
+                        <tr><td class="wgd-muted-2" colspan="5" data-i18n="mw.no_peers_detected">No peers detected.</td></tr>
                       </tbody>
                     </table>
                   </div>
                 </div>
-
-                <!-- Section 2: WireGuard Point-to-Point Tunnel & Subnet Router -->
-                <div class="network-section-header" id="section-header-wireguard">
-                  <span class="network-section-title" data-i18n="mw.wireguard_point_to_point_tunnel_and">WIREGUARD POINT-TO-POINT TUNNEL & SUBNET ROUTER</span>
-                  <span class="network-section-badge" id="wg-tunnel-status-badge" data-sample>—</span>
-                </div>
-
-                <div class="network-grid-two-col" id="network-wireguard-container">
-                  <div class="network-card">
-                    <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-shield"/></svg> <span data-i18n="mw.wireguard_tunnel_status_wg0">WireGuard Tunnel Status (wg0)</span></div>
-                      <span class="mgmt-app-pill" id="wg-forwarding-pill" style="background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); color:var(--lt-t-3bf58bff, #3bf58b);" data-sample>—</span>
-                    </div>
-                    <div class="wgd-col-xs">
-                      <div class="wgd-row-box-2">
-                        <span class="wgd-muted" data-i18n="mw.public_k">Public Key:</span>
-                        <code class="wgd-xs-accent" id="wg-pubkey-display">--</code>
-                      </div>
-                      <div class="wgd-row-box-2">
-                        <span class="wgd-muted" data-i18n="mw.subnet_forwarding">Subnet Forwarding:</span>
-                        <span class="wgd-bold-ok" id="wg-ip-forward-status" data-sample>—</span>
-                      </div>
-                      <div class="wgd-row-5">
-                        <span class="wgd-muted" data-i18n="mw.subnet_nat_router">Subnet NAT Router:</span>
-                        <button class="btn-pill-toggle is-small" id="btn-toggle-wg-subnet-nat" data-i18n="net.wg_nat_toggle">Toggle NAT Routing</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="network-card" id="wg-client-conf-card">
-                    <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-key"/></svg> <span data-i18n="mw.client_configuration_conf">Client Configuration (.conf)</span></div>
-                      <div class="wgd-row-11">
-                        <button class="btn-pill-toggle is-small" id="btn-copy-wg-conf" style="display: none;" title="Copy WireGuard configuration to clipboard" data-i18n-title="ui.copy_wireguard_configuration_to_clipboard"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
-                        <button class="btn-pill-toggle is-small" id="btn-download-wg-conf" style="display: none;" title="Download WireGuard .conf profile" data-i18n-title="ui.download_wireguard_conf_profile"><span aria-hidden="true">📥</span> <span data-i18n="mw.export_conf">Export .conf</span></button>
-                      </div>
-                    </div>
-                    <div class="wgd-col-xs-2">
-                      <div class="wgd-xs-muted-2" data-i18n="mw.instant_peer_profile_with_curve25519_cryptograph">Instant peer profile with Curve25519 cryptographic keys. Scan QR with your phone or export configuration:</div>
-                      <div class="wgd-grid-2" id="wg-conf-body-grid">
-                        <pre id="wg-conf-preview" style="background:var(--kb-shade-30); border:1px solid var(--kb-line-8); border-radius:6px; padding:10px; font-size:var(--kb-fs-xs); max-height:160px; overflow:auto; color:var(--lt-t-a5f3fcff, #a5f3fc); font-family:monospace; margin:0; word-break:break-all; white-space:pre-wrap;">[Click 'Generate Client .conf' above]</pre>
-                        <div class="wgd-box-2" id="wg-qr-box" style="display: none;">
-                          <div id="wg-qr-canvas-wrap" style="background:#fff; padding:6px; border-radius:6px; line-height:0; display:inline-block; cursor:pointer;" title="Click to view full size" data-i18n-title="ui.click_to_view_full_size"></div>
-                          <span class="wgd-xs-bold-muted-2" data-i18n="mw.scan_with_wireguard">Scan with WireGuard</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>

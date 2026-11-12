@@ -10,13 +10,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from backend.hardware.chassis import ChassisEngine
-from backend.hardware.network import (
-    generate_wireguard_client_config,
-    generate_wireguard_keypair,
-    get_ip_forwarding_status,
-    set_ip_forwarding,
-    toggle_wireguard_subnet_nat,
-)
 from backend.services.media_engine import MediaEngine, detect_hardware_accelerator, read_total_ram_bytes
 from backend.services.replication_engine import ReplicationEngine, ReplicationJob
 
@@ -82,38 +75,6 @@ def test_replication_run_async_not_found(mock_replication_engine):
     engine = mock_replication_engine
     with pytest.raises(ValueError, match="not found"):
         engine.run_job_async("nonexistent-job-id")
-
-
-def test_wireguard_keypair_generation():
-    priv, pub = generate_wireguard_keypair()
-    assert isinstance(priv, str) and len(priv) >= 32
-    assert isinstance(pub, str) and len(pub) >= 32
-
-
-def test_wireguard_client_config_generation():
-    res = generate_wireguard_client_config(
-        client_name="macbook-pro",
-        client_ip="10.13.13.5/32",
-        server_endpoint="nas.mydomain.com:51820",
-        server_pubkey="server-public-key-example",
-        dns="1.1.1.1",
-        allowed_ips="0.0.0.0/0, ::/0",
-    )
-
-    assert res["client_name"] == "macbook-pro"
-    assert res["client_ip"] == "10.13.13.5/32"
-    conf = res["config_text"]
-    assert "[Interface]" in conf
-    assert "[Peer]" in conf
-    assert "Endpoint = nas.mydomain.com:51820" in conf
-    assert "AllowedIPs = 0.0.0.0/0, ::/0" in conf
-
-
-def test_wireguard_subnet_routing(monkeypatch):
-    monkeypatch.setattr("backend.hardware.net.wireguard.set_ip_forwarding", lambda x: True)
-    res = toggle_wireguard_subnet_nat(True, iface="wg0", out_iface="eth0")
-    assert res["enabled"] is True
-    assert res["ip_forwarding"] is True
 
 
 def test_media_engine_ram_gating(monkeypatch):

@@ -21,7 +21,7 @@ import { highlightEntry, mayNotOpen } from './management/sidebar-current.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
 import { fetchAndRenderAppCatalog, fetchAndRenderDockerContainers, presetCatalogSearch, refreshCatalogCountBadges, startDockerAutoRefresh, stopDockerAutoRefresh } from './management/docker.js';
 import { fetchAndRenderUpsTelemetry, initUpsDrawerControls, loadUpsConfigToDrawer, renderUpsTelemetry } from './management/ups.js';
-import { fetchAndRenderCopyHistory, fetchAndRenderNetworkTopology, fetchAndRenderReplication, fetchAndRenderWireguard, initNetworkControls } from './management/network.js';
+import { fetchAndRenderCopyHistory, fetchAndRenderNetworkTopology, fetchAndRenderReplication, fetchAndRenderTailscaleDetails, initNetworkControls } from './management/network.js';
 import { fetchAndRenderDisksInventory } from './management/disks.js';
 import { closeHttpsGuideModal, handleSecurityAdvisorClick } from './management/security.js';
 import { applySystemUpdate, closeDiagnosticsPreviewModal, copySupportMarkdown, downloadDiagnosticsBundle, fetchAndRenderSystemAbout, previewDiagnosticsSummary, revertSystemUpdate, setUpdateChannel, syncBackupJobForm } from './management/system.js';
@@ -758,7 +758,7 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-network-wireguard') {
       // COMP-01: the guided "Use from anywhere" card above the Tailscale details
       import('./remote-access.js').then((m) => m.installRemoteAccess(document.getElementById('remote-access-mount'))).catch(() => {});
-      fetchAndRenderWireguard();
+      fetchAndRenderTailscaleDetails();
     } else if (paneId === 'mgmt-pane-network-docker') {
       fetchAndRenderNetworkTopology();
     } else if (paneId === 'mgmt-pane-unraid') {
@@ -1764,7 +1764,7 @@ export function initManagement() {
   const refreshWgBtn = document.getElementById('btn-refresh-wireguard');
   if (refreshWgBtn) {
     refreshWgBtn.addEventListener('click', () => {
-      fetchAndRenderWireguard();
+      fetchAndRenderTailscaleDetails();
       showToast(t('toast.wireguard_mesh_status_refreshed', 'WireGuard mesh status refreshed.'), 'info');
     });
   }

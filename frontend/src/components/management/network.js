@@ -2,19 +2,16 @@
  * Mission Control: Copy history, replication, VPNs, topology, ports, bonds, bridges, VLANs, host IP.
  * Split out of management.js (ARCH-1); management.js re-exports everything here.
  */
-import { ZettEventBus } from '../../event-bus.js';
 import { applyNetCaps, canChange, portPayload, setNetCaps } from './net-host.js';
-import { makeDraggable } from '../dock.js';
 import { api } from '../../api.js';
 import { initNetworkPortsInspector, fetchListeningPorts } from '../network-manager.js';
 import { showToast, showConfirmToast } from '../../toast.js';
-import { escapeHtml, copyTextToClipboard, copyText } from '../../utils.js';
+import { escapeHtml, copyText } from '../../utils.js';
 import { t } from '../../i18n.js';
 
 // An icon next to translated words: screen readers skip it and the words stay plain (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
 import { formatBytes as formatSize, formatDateTime, formatFixed, formatNumber } from '../../format.js';
-import { showServeLink } from './ai.js';
 import { setIconLabel } from '../../ui/primitives.js';
 
 export async function fetchAndRenderCopyHistory() {
@@ -187,13 +184,6 @@ export async function fetchAndRenderReplication() {
   }
 }
 
-/** Why Accept Routes is off: another node offers a route over this NAS's own network. */
-export function routeConflictText(ts) {
-  const c = (ts && Array.isArray(ts.route_conflicts) && ts.route_conflicts[0]) || null;
-  if (!c) return '';
-  return t('net.ts_route_conflict', 'Accept Routes is off: {peer} offers {route}, the network this NAS is on. Accepting it would cut the NAS off from your home network.', { peer: c.peer, route: c.route });
-}
-
 export function renderTailscalePeersTable(peers, filterQuery = '') {
   const tbody = document.getElementById('ts-peers-table-body');
   const countPill = document.getElementById('ts-peer-count-pill');
@@ -216,7 +206,7 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
 
   if (filtered.length === 0) {
     tbody.innerHTML =
-      '<tr><td class="nw-muted-center-3" colspan="6">' + t('net.no_peer_match', 'No devices match the search.') + '</td></tr>';
+      '<tr><td class="nw-muted-center-3" colspan="5">' + t('net.no_peer_match', 'No devices match the search.') + '</td></tr>';
     return;
   }
 
@@ -240,8 +230,6 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
         ? '<span class="mgmt-app-pill" style="color:var(--lt-t-3bf58bff, #3bf58b); background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); font-size:var(--kb-fs-xs); padding:2px 7px;">' + t('net.online', 'Online') + '</span>'
         : '<span class="mgmt-app-pill nw-xs-muted-box">' + t('net.offline', 'Offline') + '</span>';
 
-      const safeIpId = (p.ip || 'no_ip').replace(/[^a-zA-Z0-9]/g, '_');
-
       return `
       <tr class="nw-xs-box">
         <td class="nw-x-4">
@@ -252,1036 +240,137 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
         <td class="nw-x-4"><code class="nw-xs-accent">${escapeHtml(p.ip || '--')}</code></td>
         <td class="nw-x-4">${routeBadge}</td>
         <td class="nw-x-4">${statusPill}</td>
-        <td class="nw-x-6">
-          <div class="nw-row">
-            <span class="nw-xs-bold" id="latency-${safeIpId}"></span>
-            <button class="btn-pill-toggle btn-ping-peer nw-xs-2" data-peer-ip="${escapeHtml(p.ip || '')}" ${!p.ip ? `disabled title="${escapeHtml(t('net.why_no_peer_ip', 'This device has no address to ping yet'))}"` : ''}>${ico('⚡')} ${t('net.ping', 'Ping')}</button>
-          </div>
-        </td>
       </tr>
     `;
     })
     .join('');
 }
 
-export async function fetchAndRenderWireguard() {
-  const ipFwdEl = document.getElementById('wg-ip-forward-status');
-  const pubkeyEl = document.getElementById('wg-pubkey-display');
-  const wgBadgeEl = document.getElementById('wg-tunnel-status-badge');
-  const wgFwdPill = document.getElementById('wg-forwarding-pill');
-  const previewEl = document.getElementById('wg-conf-preview');
-  const dlBtn = document.getElementById('btn-download-wg-conf');
-  const genBtn = document.getElementById('btn-wg-gen-client-config');
-  const natBtn = document.getElementById('btn-toggle-wg-subnet-nat');
-  const refreshBtn = document.getElementById('btn-refresh-wireguard');
+/** How long until the NAS's Tailscale key needs a new sign-in, as a sentence and a tone. */
+export function keyExpiryText(ts) {
+  const days = ts?.key_expiry_days;
+  if (days === null || days === undefined) return { text: t('net.ts_key_no_expiry', 'Never expires'), tone: 'ok' };
+  if (days > 14) return { text: t('net.expiry_days', 'Expires in {count, plural, one {# day} other {# days}} ({date})', { count: days, date: (ts.key_expiry || '').slice(0, 10) }), tone: 'ok' };
+  if (days > 0) return { text: t('net.expiry_soon', 'Expires in {count, plural, one {# day} other {# days}}', { count: days }), tone: 'warn' };
+  return { text: t('net.ts_key_expired', 'Expired: sign in again'), tone: 'crit' };
+}
 
-  // Tailscale elements
-  const tsBadgeEl = document.getElementById('tailscale-status-badge');
-  const tsPillEl = document.getElementById('ts-connection-pill');
-  const tsIpEl = document.getElementById('ts-ipv4-display');
-  const tsCopyIpBtn = document.getElementById('btn-copy-ts-ip');
-  const tsTailnetEl = document.getElementById('ts-tailnet-display');
-  const tsHostEl = document.getElementById('ts-hostname-display');
-  const tsPeersEl = document.getElementById('ts-peers-display');
-  const tsConnectForm = document.getElementById('ts-connect-form');
-  const tsConnectedView = document.getElementById('ts-connected-view');
-  const tsFormIntro = document.getElementById('ts-form-intro');
-  const tsAuthKeyInput = document.getElementById('ts-auth-key-input');
-  const tsHostnameInput = document.getElementById('ts-hostname-input');
-  const tsAcceptRoutesCb = document.getElementById('ts-accept-routes-input');
-  const tsUpBtn = document.getElementById('btn-tailscale-up');
-  const tsDownBtn = document.getElementById('btn-tailscale-down');
-  const tsDeployBanner = document.getElementById('ts-deploy-banner');
-  const tsDeployBtn = document.getElementById('btn-deploy-tailscale');
-  const tsAuthPrompt = document.getElementById('ts-auth-prompt');
-  const tsAuthLink = document.getElementById('ts-auth-link');
-  const tsCopyAuthUrlBtn = document.getElementById('btn-copy-ts-auth-url');
+/** The exit node's state in words (D5: "Use your home internet when away"). */
+export function homeInternetText(ts) {
+  if (ts?.is_exit_node) return t('net.ts_exit_in_use', 'In use');
+  if (ts?.exit_node_approved) return t('net.ts_exit_ready', 'Ready: your devices can choose this NAS');
+  if (ts?.advertise_exit_node) return t('net.pending_approval', 'Waiting for approval in the admin console');
+  return t('net.ts_exit_off', 'Off');
+}
 
-  const tsExtContainer = document.getElementById('network-tailscale-extended');
-  const tsPeersCard = document.getElementById('tailscale-peers-card');
+let _tsPeers = [];
 
-  try {
-    const meshData = await api.get('/api/network/mesh-vpn').catch(() => null);
-    if (meshData && meshData.tailscale) {
-      const ts = meshData.tailscale;
-      if (!ts.installed) {
-        if (tsBadgeEl) {
-          tsBadgeEl.textContent = t('ui.not_installed', 'Not Installed');
-          tsBadgeEl.style.color = 'var(--muted, #95a8ab)';
-          tsBadgeEl.style.borderColor = 'rgba(255,255,255,0.1)';
-        }
-        if (tsPillEl) {
-          tsPillEl.textContent = t('ui.daemon_not_found', 'App service not found');
-          tsPillEl.style.color = 'var(--muted, #95a8ab)';
-          tsPillEl.style.background = 'rgba(255,255,255,0.06)';
-        }
-        if (tsDeployBanner) tsDeployBanner.style.display = 'block';
-        if (tsFormIntro) {
-          tsFormIntro.textContent = t('ui.deploy_official_tailscale_container_or', 'Deploy official Tailscale container or provide auth key to connect instantly:');
-          tsFormIntro.style.color = '#f59e0b';
-        }
-        if (tsIpEl) tsIpEl.textContent = '--';
-        if (tsCopyIpBtn) tsCopyIpBtn.style.display = 'none';
-        if (tsTailnetEl) tsTailnetEl.textContent = '--';
-        if (tsHostEl) tsHostEl.textContent = '--';
-        if (tsPeersEl) tsPeersEl.textContent = t('ui.0_peers', '0 peers');
-        if (tsConnectForm) tsConnectForm.style.display = 'flex';
-        if (tsConnectedView) tsConnectedView.style.display = 'none';
-        if (tsDownBtn) tsDownBtn.style.display = 'none';
-        if (tsUpBtn) {
-          setIconLabel(tsUpBtn, '⚡', t('net.tailscale_deploy_btn', '1-Click Deploy Tailscale'));
-          tsUpBtn.dataset.mode = 'deploy';
-        }
-        if (tsExtContainer) {
-          tsExtContainer.style.display = 'none';
-          tsExtContainer.dataset.active = '0';
-        }
-        if (tsPeersCard) {
-          tsPeersCard.style.display = 'none';
-          tsPeersCard.dataset.active = '0';
-        }
-      } else if (ts.active) {
-        if (tsBadgeEl) {
-          tsBadgeEl.textContent = t('ui.active_connected', 'Active (Connected)');
-          tsBadgeEl.style.color = 'var(--ok2, #3bf58b)';
-          tsBadgeEl.style.borderColor = 'rgba(59,245,139,0.3)';
-        }
-        if (tsPillEl) {
-          tsPillEl.textContent = t('ldap.test_ok', 'Connected');
-          tsPillEl.style.color = '#3bf58b';
-          tsPillEl.style.background = 'rgba(59,245,139,0.12)';
-        }
-        if (tsDeployBanner) tsDeployBanner.style.display = 'none';
-        if (tsAuthPrompt) tsAuthPrompt.style.display = 'none';
-        if (window._tsAuthPollInterval) {
-          clearInterval(window._tsAuthPollInterval);
-          window._tsAuthPollInterval = null;
-        }
-        if (tsIpEl) tsIpEl.textContent = ts.ipv4 || '--';
-        if (tsCopyIpBtn) tsCopyIpBtn.style.display = ts.ipv4 ? 'inline-block' : 'none';
-        if (tsTailnetEl) tsTailnetEl.textContent = ts.tailnet || '--';
-        if (tsHostEl) tsHostEl.textContent = ts.hostname || '--';
-        if (tsPeersEl) tsPeersEl.textContent = `${ts.peers_count || 0} peer(s)`;
-        if (tsConnectForm) tsConnectForm.style.display = 'none';
-        if (tsConnectedView) tsConnectedView.style.display = 'flex';
-        if (tsDownBtn) tsDownBtn.style.display = 'inline-block';
-        if (tsUpBtn) {
-          setIconLabel(tsUpBtn, '🚀', t('ui.connect_tailscale', 'Connect Tailscale'));
-          tsUpBtn.dataset.mode = 'connect';
-        }
+/**
+ * The details under "Use from anywhere" (SET-16): this NAS on the tailnet, signing in again,
+ * reaching other things at home, home internet when away, and the devices. Connecting and
+ * disconnecting live in the card above; WireGuard, SSH, Serve, Taildrop and Ping were removed.
+ */
+export async function fetchAndRenderTailscaleDetails() {
+  const box = document.getElementById('ts-details');
+  const mesh = await api.get('/api/network/mesh-vpn').catch(() => null);
+  const ts = mesh?.tailscale || null;
+  if (box) box.hidden = !(ts && ts.active);
+  if (!ts || !ts.active) return;
 
-        // Show extended capability cards
-        if (tsExtContainer) {
-          tsExtContainer.style.display = 'grid';
-          tsExtContainer.dataset.active = '1';
-        }
-        if (tsPeersCard) {
-          tsPeersCard.style.display = 'block';
-          tsPeersCard.dataset.active = '1';
-        }
-
-        // 7. Node Key Expiry & Re-Auth
-        const keyExpiryDisplay = document.getElementById('ts-key-expiry-display');
-        const reauthBtn = document.getElementById('btn-ts-reauth');
-        if (keyExpiryDisplay) {
-          if (ts.key_expiry_days !== null && ts.key_expiry_days !== undefined) {
-            if (ts.key_expiry_days > 14) {
-              const dt = ts.key_expiry ? ts.key_expiry.slice(0, 10) : '';
-              keyExpiryDisplay.textContent = t('net.expiry_days', 'Expires in {count, plural, one {# day} other {# days}} ({date})', { count: ts.key_expiry_days, date: dt });
-              keyExpiryDisplay.style.color = 'var(--ok2, #3bf58b)';
-            } else if (ts.key_expiry_days > 0) {
-              keyExpiryDisplay.textContent = `⚠️ ${t('net.expiry_soon', 'Expires in {count, plural, one {# day} other {# days}}', { count: ts.key_expiry_days })}`;
-              keyExpiryDisplay.style.color = '#fbbf24';
-            } else {
-              setIconLabel(keyExpiryDisplay, '❌', t('ui.key_expired', 'Key Expired'));
-              keyExpiryDisplay.style.color = '#f87171';
-            }
-          } else {
-            keyExpiryDisplay.textContent = t('ui.key_expiry_disabled', 'Key Expiry Disabled');
-            keyExpiryDisplay.style.color = 'var(--ok2, #3bf58b)';
-          }
-        }
-        if (reauthBtn) reauthBtn.style.display = 'inline-block';
-
-        // Accept Routes as it is, and why it was turned off (a route over this NAS's own network)
-        const conflictBox = document.getElementById('ts-route-conflict');
-        if (conflictBox) {
-          conflictBox.textContent = routeConflictText(ts);
-          conflictBox.hidden = !conflictBox.textContent;
-        }
-        if (tsAcceptRoutesCb && typeof ts.accept_routes === 'boolean' && document.activeElement !== tsAcceptRoutesCb) {
-          /** @type {HTMLInputElement} */ (tsAcceptRoutesCb).checked = ts.accept_routes;
-        }
-
-        // 1. Subnet Router Gateway
-        const subnetToggle = document.getElementById('ts-subnet-router-toggle');
-        const subnetInput = document.getElementById('ts-subnet-routes-input');
-        if (subnetToggle) subnetToggle.checked = Boolean(ts.is_subnet_router);
-        if (subnetInput && document.activeElement !== subnetInput) {
-          const advRoutes = Array.isArray(ts.advertised_routes)
-            ? ts.advertised_routes.filter(r => r !== '0.0.0.0/0' && r !== '::/0').join(', ')
-            : (ts.advertised_routes || '');
-          const detRoutes = Array.isArray(ts.detected_subnets)
-            ? ts.detected_subnets.join(', ')
-            : ts.detected_subnets || '';
-          subnetInput.value = advRoutes || detRoutes;
-          if (!advRoutes && detRoutes) {
-            subnetInput.placeholder = detRoutes;
-          }
-        }
-
-        // 2. Exit Node Gateway
-        const exitNodeToggle = document.getElementById('ts-exit-node-toggle');
-        const exitNodePill = document.getElementById('ts-exit-node-pill');
-        const exitNodeHint = document.getElementById('ts-exit-node-approval-hint');
-        if (exitNodeToggle) exitNodeToggle.checked = Boolean(ts.advertise_exit_node);
-        if (exitNodePill) {
-          if (ts.is_exit_node) {
-            exitNodePill.textContent = t('ui.active_in_use', 'Active (In Use)');
-            exitNodePill.style.color = '#3bf58b';
-            exitNodePill.style.background = 'rgba(59,245,139,0.15)';
-            if (exitNodeHint) exitNodeHint.style.display = 'none';
-          } else if (ts.exit_node_approved) {
-            exitNodePill.textContent = t('ui.approved_available', 'Approved & Available');
-            exitNodePill.style.color = '#3bf58b';
-            exitNodePill.style.background = 'rgba(59,245,139,0.15)';
-            if (exitNodeHint) {
-              exitNodeHint.style.display = 'block';
-              exitNodeHint.innerHTML = '✅ Approved in Tailscale. Other devices on your Tailnet can now select this NAS as their Exit Node.';
-              exitNodeHint.style.color = 'var(--ok2, #3bf58b)';
-              exitNodeHint.style.background = 'rgba(59,245,139,0.08)';
-              exitNodeHint.style.borderColor = 'rgba(59,245,139,0.25)';
-            }
-          } else if (ts.advertise_exit_node) {
-            exitNodePill.innerHTML = '<a class="nw-accent" href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer">' + t('net.pending_approval', 'Waiting for approval in the admin console') + ' ↗</a>';
-            exitNodePill.style.color = '#4fd8c4';
-            exitNodePill.style.background = 'rgba(79,216,196,0.15)';
-            if (exitNodeHint) {
-              exitNodeHint.style.display = 'block';
-              exitNodeHint.innerHTML = '⚠️ ' + t('net.exit_hint', 'This NAS offers itself as an exit node. To let other devices send their traffic through it, approve it in the {link} (Machines → Edit route settings → Use as exit node).', { link: '<a class="nw-bold-accent" href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer">' + t('net.admin_console', 'Tailscale admin console') + ' ↗</a>' });
-              exitNodeHint.style.color = '#fbbf24';
-              exitNodeHint.style.background = 'rgba(245,158,11,0.08)';
-              exitNodeHint.style.borderColor = 'rgba(245,158,11,0.25)';
-            }
-          } else {
-            exitNodePill.textContent = t('ui.inactive', 'Inactive');
-            exitNodePill.style.color = 'var(--muted)';
-            exitNodePill.style.background = 'rgba(255,255,255,0.06)';
-            if (exitNodeHint) exitNodeHint.style.display = 'none';
-          }
-        }
-
-        // 3. Tailscale SSH
-        const sshToggle = document.getElementById('ts-ssh-toggle');
-        const sshPill = document.getElementById('ts-ssh-pill');
-        if (sshToggle) sshToggle.checked = Boolean(ts.ssh_enabled);
-        if (sshPill) {
-          sshPill.textContent = ts.ssh_enabled ? t('net.enabled', 'Enabled') : t('net.disabled', 'Disabled');
-          sshPill.style.color = ts.ssh_enabled ? '#3bf58b' : 'var(--muted)';
-          sshPill.style.background = ts.ssh_enabled
-            ? 'rgba(59,245,139,0.15)'
-            : 'rgba(255,255,255,0.06)';
-        }
-
-        // 4. Tailscale Serve & Funnel
-        const serveToggle = document.getElementById('ts-serve-toggle');
-        const servePill = document.getElementById('ts-serve-pill');
-        const serveBox = document.getElementById('ts-serve-url-box');
-        const serveLink = document.getElementById('ts-serve-url-link');
-        if (serveToggle) serveToggle.checked = Boolean(ts.serve_enabled);
-        if (servePill) {
-          servePill.textContent = ts.serve_enabled ? t('net.active', 'Active') : t('net.disabled', 'Disabled');
-          servePill.style.color = ts.serve_enabled ? '#3bf58b' : 'var(--muted)';
-          servePill.style.background = ts.serve_enabled
-            ? 'rgba(59,245,139,0.15)'
-            : 'rgba(255,255,255,0.06)';
-        }
-        if (serveBox && serveLink) {
-          if (ts.serve_enabled && ts.serve_url) {
-            serveBox.style.display = 'flex';
-            serveLink.href = ts.serve_url;
-            serveLink.textContent = ts.serve_url;
-          } else {
-            serveBox.style.display = 'none';
-          }
-        }
-
-        // 5. Taildrop Inbox
-        window._tsTaildropDir = ts.taildrop_dir || '/mnt/user/appdata/tailscale/taildrop';
-        const taildropBadge = document.getElementById('ts-taildrop-badge');
-        const taildropList = document.getElementById('ts-taildrop-list');
-        const files = ts.taildrop_files || [];
-        const filesCount = ts.taildrop_files_count !== undefined ? ts.taildrop_files_count : files.length;
-        if (taildropBadge) taildropBadge.textContent = `${filesCount} file(s)`;
-        if (taildropList) {
-          if (files.length === 0) {
-            taildropList.innerHTML =
-              '<div class="nw-xs-muted-center">' + t('net.no_taildrop', 'No files in the Taildrop inbox yet.') + '</div>';
-          } else {
-            taildropList.innerHTML = files
-              .map(
-                f => `
-              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid var(--kb-line-5); font-size:var(--kb-fs-xs); cursor:pointer; border-radius:4px; transition:background 0.2s;" data-hover-bg title="${t('ui.click_to_view_folder_in', 'Click to view folder in Files')}">
-                <span class="nw-semi-strong" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name)}</span>
-                <span class="nw-xs-muted">${escapeHtml(f.size_formatted)} · ${escapeHtml(f.modified_at)}</span>
-              </div>
-            `
-              )
-              .join('');
-          }
-        }
-
-        // 6. Interactive Mesh Peer Directory
-        window._tsPeersList = ts.peers || [];
-        renderTailscalePeersTable(window._tsPeersList);
-      } else {
-        const isNeedsLogin = ts.backend_state === 'NeedsLogin';
-        if (tsBadgeEl) {
-          tsBadgeEl.textContent = isNeedsLogin ? t('net.needs_login', 'Needs sign-in') : t('net.disconnected', 'Disconnected');
-          tsBadgeEl.style.color = '#f59e0b';
-          tsBadgeEl.style.borderColor = 'rgba(245,158,11,0.3)';
-        }
-        if (tsPillEl) {
-          tsPillEl.textContent = isNeedsLogin ? t('net.needs_login', 'Needs sign-in') : t('net.disconnected', 'Disconnected');
-          tsPillEl.style.color = '#f59e0b';
-          tsPillEl.style.background = 'rgba(245,158,11,0.12)';
-        }
-        if (tsDeployBanner) tsDeployBanner.style.display = 'none';
-        if (tsFormIntro) {
-          tsFormIntro.textContent = isNeedsLogin
-            ? t('net.login_prompt', 'Sign-in needed. Use the button below to sign in and join your tailnet:')
-            : t('net.join_prompt', 'Join your tailnet with a pre-authorised sign-in code:');
-          tsFormIntro.style.color = isNeedsLogin ? '#f59e0b' : 'var(--muted)';
-        }
-        if (tsIpEl) tsIpEl.textContent = '--';
-        if (tsCopyIpBtn) tsCopyIpBtn.style.display = 'none';
-        if (tsTailnetEl) tsTailnetEl.textContent = '--';
-        if (tsHostEl) tsHostEl.textContent = '--';
-        if (tsPeersEl) tsPeersEl.textContent = t('ui.0_peers', '0 peers');
-        if (tsConnectForm) tsConnectForm.style.display = 'flex';
-        if (tsConnectedView) tsConnectedView.style.display = 'none';
-        if (tsDownBtn) tsDownBtn.style.display = 'none';
-        if (tsExtContainer) {
-          tsExtContainer.style.display = 'none';
-          tsExtContainer.dataset.active = '0';
-        }
-        if (tsPeersCard) {
-          tsPeersCard.style.display = 'none';
-          tsPeersCard.dataset.active = '0';
-        }
-
-        if (isNeedsLogin) {
-          if (ts.auth_url) {
-            if (tsAuthPrompt) tsAuthPrompt.style.display = 'block';
-            if (tsAuthLink) tsAuthLink.href = ts.auth_url;
-            if (tsCopyAuthUrlBtn) {
-              tsCopyAuthUrlBtn.onclick = () => {
-                copyText(ts.auth_url)
-                  .then(() => showToast(t('toast.authorization_link_copied_to_clipboard', 'Authorization link copied to clipboard.'), 'success'))
-                  .catch(() => showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error'));
-              };
-            }
-            startTailscaleAuthPolling();
-          }
-          if (tsUpBtn) {
-            setIconLabel(tsUpBtn, '🔗', t('ui.log_in_to_tailscale', 'Log in to Tailscale'));
-            tsUpBtn.dataset.mode = 'login';
-            tsUpBtn.dataset.authUrl = ts.auth_url || '';
-          }
-        } else {
-          if (tsAuthPrompt) tsAuthPrompt.style.display = 'none';
-          if (tsUpBtn) {
-            setIconLabel(tsUpBtn, '🚀', t('ui.connect_tailscale', 'Connect Tailscale'));
-            tsUpBtn.dataset.mode = 'connect';
-            tsUpBtn.dataset.authUrl = '';
-          }
-        }
-      }
-    }
-  } catch (err) {
-    console.debug('[MeshVPN] Tailscale query error:', err);
+  const set = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  set('ts-connection-pill', t('ldap.test_ok', 'Connected'));
+  set('ts-ipv4-display', ts.ipv4 || '--');
+  set('ts-tailnet-display', ts.tailnet || '--');
+  set('ts-hostname-display', ts.hostname || '--');
+  set('ts-peers-display', t('net.ts_devices_n', '{n, plural, one {# device} other {# devices}}', { n: ts.peers_count || 0 }));
+  const copyIp = document.getElementById('btn-copy-ts-ip');
+  if (copyIp) copyIp.style.display = ts.ipv4 ? '' : 'none';
+  const expiry = keyExpiryText(ts);
+  const expiryEl = document.getElementById('ts-key-expiry-display');
+  if (expiryEl) {
+    expiryEl.textContent = expiry.text;
+    expiryEl.dataset.tone = expiry.tone;
   }
+  const reauth = document.getElementById('btn-ts-reauth');
+  if (reauth) reauth.style.display = '';
 
-  try {
-    const res = await api.get('/api/network/mesh-vpn/wireguard/subnet-routing').catch(() => null);
-    if (res && ipFwdEl) {
-      const isFwd = Boolean(res.ip_forwarding);
-      ipFwdEl.textContent = isFwd ? t('net.fwd_on', 'On (forwarding)') : t('net.disabled', 'Disabled');
-      ipFwdEl.style.color = isFwd ? 'var(--ok2, #3bf58b)' : 'var(--muted, #6c8084)';
-      if (wgBadgeEl) {
-        wgBadgeEl.textContent = res.enabled ? t('net.nat_on', 'NAT routing on') : t('net.wg_ready', 'Ready');
-        wgBadgeEl.style.color = res.enabled ? '#3bf58b' : '#4fd8c4';
-      }
-      if (wgFwdPill) {
-        wgFwdPill.textContent = res.enabled ? t('net.nat_short', 'NAT on') : t('net.wg_ready', 'Ready');
-        wgFwdPill.style.color = res.enabled ? '#3bf58b' : '#4fd8c4';
-      }
-    }
-  } catch (e) {}
+  const routesToggle = /** @type {HTMLInputElement | null} */ (document.getElementById('ts-subnet-router-toggle'));
+  const routesInput = /** @type {HTMLInputElement | null} */ (document.getElementById('ts-subnet-routes-input'));
+  if (routesToggle) routesToggle.checked = Boolean(ts.is_subnet_router);
+  if (routesInput && document.activeElement !== routesInput) {
+    const advertised = (ts.advertised_routes || []).filter((r) => r !== '0.0.0.0/0' && r !== '::/0').join(', ');
+    const detected = (ts.detected_subnets || []).join(', ');
+    routesInput.value = advertised || detected;
+    if (!advertised && detected) routesInput.placeholder = detected;
+  }
+  const exitToggle = /** @type {HTMLInputElement | null} */ (document.getElementById('ts-exit-node-toggle'));
+  if (exitToggle) exitToggle.checked = Boolean(ts.advertise_exit_node);
+  set('ts-exit-node-pill', homeInternetText(ts));
+  const hint = document.getElementById('ts-exit-node-approval-hint');
+  if (hint) hint.style.display = ts.advertise_exit_node && !ts.exit_node_approved ? '' : 'none';
 
-  async function deployTailscaleContainer(btn) {
-    const authKey = tsAuthKeyInput ? tsAuthKeyInput.value.trim() : '';
-    const hostname = tsHostnameInput ? tsHostnameInput.value.trim() : '';
-    const acceptRoutes = tsAcceptRoutesCb ? tsAcceptRoutesCb.checked : false;
-    const origText = btn ? btn.textContent : '';
+  _tsPeers = ts.peers || [];
+  const search = /** @type {HTMLInputElement | null} */ (document.getElementById('ts-peer-search'));
+  renderTailscalePeersTable(_tsPeers, search ? search.value : '');
+  bindTailscaleDetails();
+}
+
+function bindTailscaleDetails() {
+  const once = (id, event, fn) => {
+    const el = document.getElementById(id);
+    if (!el || el.dataset.bound) return;
+    el.dataset.bound = '1';
+    el.addEventListener(event, fn);
+  };
+  once('btn-copy-ts-ip', 'click', () => {
+    const ip = document.getElementById('ts-ipv4-display')?.textContent?.trim() || '';
+    if (!ip || ip === '--') return;
+    copyText(ip)
+      .then(() => showToast(t('toast.copied_tailscale_ip', 'Copied Tailscale IP: {ip}', { ip }), 'success'))
+      .catch(() => showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error'));
+  });
+  once('btn-ts-reauth', 'click', async () => {
     try {
-      if (btn) {
-        btn.disabled = true;
-        setIconLabel(btn, '⏳', t('net.tailscale_deploying', 'Deploying Container...'));
-      }
-      showToast(t('toast.deploying_official_tailscale_container_to_docker', 'Deploying official Tailscale container to Docker...'), 'info');
-
-      const res = await api.post('/api/network/mesh-vpn/tailscale/deploy', {
-        auth_key: authKey || null,
-        hostname: hostname || null,
-        accept_routes: acceptRoutes,
-      });
-
-      if (res && res.auth_url) {
-        try {
-          window.open(res.auth_url, '_blank', 'noopener,noreferrer');
-        } catch (e) {
-          console.warn('Popup blocked, falling back to on-screen prompt:', e);
-        }
-        if (tsAuthPrompt) tsAuthPrompt.style.display = 'block';
-        if (tsAuthLink) tsAuthLink.href = res.auth_url;
-        if (tsUpBtn) {
-          tsUpBtn.dataset.authUrl = res.auth_url;
-          tsUpBtn.dataset.mode = 'login';
-          setIconLabel(tsUpBtn, '🔗', t('ui.log_in_to_tailscale', 'Log in to Tailscale'));
-        }
-        if (tsCopyAuthUrlBtn) {
-          tsCopyAuthUrlBtn.onclick = () => {
-            copyText(res.auth_url)
-              .then(() => showToast(t('toast.authorization_link_copied_to_clipboard', 'Authorization link copied to clipboard.'), 'success'))
-              .catch(() => showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error'));
-          };
-        }
-        showToast(t('toast.tailscale_deployed_opening_authorization_window', 'Tailscale deployed! Opening authorization window...'), 'info');
-        startTailscaleAuthPolling();
+      const res = await api.post('/api/network/mesh-vpn/tailscale/reauth');
+      if (res?.auth_url) {
+        window.open(res.auth_url, '_blank', 'noopener,noreferrer');
+        showToast(t('toast.re_authentication_initiated_complete_in_your', 'Re-authentication initiated. Complete in your browser.'), 'info');
       } else {
-        showToast(t('toast.tailscale_container_deployed_and_connected', 'Tailscale container deployed and connected!'), 'success');
-        if (tsAuthPrompt) tsAuthPrompt.style.display = 'none';
-        fetchAndRenderWireguard();
+        showToast(t('toast.tailscale_node_re_authenticated_successfully', 'Tailscale node re-authenticated successfully.'), 'success');
       }
+      fetchAndRenderTailscaleDetails();
     } catch (err) {
-      showToast(t('toast.tailscale_deployment_failed', 'Tailscale deployment failed: {error}', { error: err.message }), 'error');
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        if (btn.dataset.mode === 'login') {
-          setIconLabel(btn, '🔗', t('ui.log_in_to_tailscale', 'Log in to Tailscale'));
-        } else {
-          btn.textContent = origText;
-        }
-      }
+      showToast(t('toast.re_authentication_failed', 'Re-authentication failed: {error}', { error: err.message }), 'error');
     }
-  }
-
-  function startTailscaleAuthPolling() {
-    if (window._tsAuthPollInterval) clearInterval(window._tsAuthPollInterval);
-    window._tsAuthPollInterval = setInterval(async () => {
-      try {
-        const mesh = await api.get('/api/network/mesh-vpn').catch(() => null);
-        if (mesh && mesh.tailscale && mesh.tailscale.active) {
-          clearInterval(window._tsAuthPollInterval);
-          window._tsAuthPollInterval = null;
-          if (tsAuthPrompt) tsAuthPrompt.style.display = 'none';
-          showToast(t('toast.tailscale_node_successfully_authorized_and_connected', 'Tailscale node successfully authorized and connected!'), 'success');
-          fetchAndRenderWireguard();
-        } else if (mesh && mesh.tailscale && mesh.tailscale.auth_url && tsAuthLink && tsAuthLink.href !== mesh.tailscale.auth_url) {
-          tsAuthLink.href = mesh.tailscale.auth_url;
-          if (tsUpBtn) tsUpBtn.dataset.authUrl = mesh.tailscale.auth_url;
-        }
-      } catch (_) {}
-    }, 2500);
-  }
-
-  if (tsDeployBtn && !tsDeployBtn._bound) {
-    tsDeployBtn._bound = true;
-    tsDeployBtn.addEventListener('click', () => deployTailscaleContainer(tsDeployBtn));
-  }
-
-  // Tailscale Up handler (single unified button for Deploy, Login, or Connect)
-  if (tsUpBtn && !tsUpBtn._bound) {
-    tsUpBtn._bound = true;
-    tsUpBtn.addEventListener('click', async () => {
-      const mode = tsUpBtn.dataset.mode;
-      if (mode === 'deploy') {
-        return deployTailscaleContainer(tsUpBtn);
-      }
-
-      const authKey = tsAuthKeyInput ? tsAuthKeyInput.value.trim() : '';
-      const hostname = tsHostnameInput ? tsHostnameInput.value.trim() : '';
-      const acceptRoutes = tsAcceptRoutesCb ? tsAcceptRoutesCb.checked : false;
-
-      // If user clicked 'Log in to Tailscale' and we already have an authUrl stored
-      if (mode === 'login' && !authKey && tsUpBtn.dataset.authUrl) {
-        try {
-          window.open(tsUpBtn.dataset.authUrl, '_blank', 'noopener,noreferrer');
-        } catch (_) {}
-        startTailscaleAuthPolling();
-        return;
-      }
-
-      const origText = tsUpBtn.textContent;
-      try {
-        tsUpBtn.disabled = true;
-        tsUpBtn.textContent = mode === 'login' ? `🔗 ${t('net.opening_login', 'Opening the sign-in…')}` : `🚀 ${t('net.connecting', 'Connecting…')}`;
-        const res = await api.post('/api/network/mesh-vpn/tailscale/up', {
-          auth_key: authKey || null,
-          hostname: hostname || null,
-          accept_routes: acceptRoutes,
-        });
-
-        if (res && res.auth_url) {
-          try {
-            window.open(res.auth_url, '_blank', 'noopener,noreferrer');
-          } catch (e) {
-            console.warn('Popup blocked, falling back to on-screen prompt:', e);
-          }
-          if (tsAuthPrompt) tsAuthPrompt.style.display = 'block';
-          if (tsAuthLink) tsAuthLink.href = res.auth_url;
-          tsUpBtn.dataset.authUrl = res.auth_url;
-          tsUpBtn.dataset.mode = 'login';
-          setIconLabel(tsUpBtn, '🔗', t('ui.log_in_to_tailscale', 'Log in to Tailscale'));
-          if (tsCopyAuthUrlBtn) {
-            tsCopyAuthUrlBtn.onclick = () => {
-              copyText(res.auth_url)
-                .then(() => showToast(t('toast.authorization_link_copied_to_clipboard', 'Authorization link copied to clipboard.'), 'success'))
-                .catch(() => showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error'));
-            };
-          }
-          showToast(t('toast.tailscale_login_opened_complete_authorization_in', 'Tailscale login opened! Complete authorization in your browser.'), 'info');
-          startTailscaleAuthPolling();
-        } else {
-          showToast(t('toast.connected_host_to_tailscale_mesh_network', 'Connected host to Tailscale mesh network.'), 'success');
-          if (tsAuthKeyInput) tsAuthKeyInput.value = '';
-          fetchAndRenderWireguard();
-        }
-      } catch (err) {
-        showToast(t('toast.tailscale_connection_failed', 'Tailscale connection failed: {error}', { error: err.message || 'Daemon error' }), 'error');
-      } finally {
-        tsUpBtn.disabled = false;
-        if (tsUpBtn.dataset.mode === 'login') {
-          setIconLabel(tsUpBtn, '🔗', t('ui.log_in_to_tailscale', 'Log in to Tailscale'));
-        } else if (tsUpBtn.dataset.mode === 'deploy') {
-          setIconLabel(tsUpBtn, '⚡', t('net.tailscale_deploy_btn', '1-Click Deploy Tailscale'));
-        } else {
-          setIconLabel(tsUpBtn, '🚀', t('ui.connect_tailscale', 'Connect Tailscale'));
-        }
-      }
-    });
-  }
-
-  // Tailscale Down handler
-  if (tsDownBtn && !tsDownBtn._bound) {
-    tsDownBtn._bound = true;
-    tsDownBtn.addEventListener('click', async () => {
-      try {
-        tsDownBtn.disabled = true;
-        await api.post('/api/network/mesh-vpn/tailscale/down');
-        showToast(t('toast.disconnected_from_tailscale_mesh_network', 'Disconnected from Tailscale mesh network.'), 'info');
-        fetchAndRenderWireguard();
-      } catch (err) {
-        showToast(t('toast.tailscale_disconnection_failed', 'Tailscale disconnection failed: {error}', { error: err.message || 'Daemon error' }), 'error');
-      } finally {
-        tsDownBtn.disabled = false;
-      }
-    });
-  }
-
-  // Copy Tailscale IP
-  if (tsCopyIpBtn && !tsCopyIpBtn._bound) {
-    tsCopyIpBtn._bound = true;
-    tsCopyIpBtn.addEventListener('click', () => {
-      const ip = tsIpEl ? tsIpEl.textContent.trim() : '';
-      if (ip && ip !== '--') {
-        copyText(ip)
-          .then(() => showToast(t('toast.copied_tailscale_ip', 'Copied Tailscale IP: {ip}', { ip: ip }), 'success'))
-          .catch(() => showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error'));
-      }
-    });
-  }
-
-  // 7. Node Key Re-Auth button
-  const btnTsReauth = document.getElementById('btn-ts-reauth');
-  if (btnTsReauth && !btnTsReauth._bound) {
-    btnTsReauth._bound = true;
-    btnTsReauth.addEventListener('click', async () => {
-      try {
-        btnTsReauth.disabled = true;
-        btnTsReauth.textContent = '⏳ ...';
-        const res = await api.post('/api/network/mesh-vpn/tailscale/reauth');
-        if (res && res.auth_url) {
-          try {
-            window.open(res.auth_url, '_blank', 'noopener,noreferrer');
-          } catch (_) {}
-          showToast(t('toast.re_authentication_initiated_complete_in_your', 'Re-authentication initiated. Complete in your browser.'), 'info');
-          startTailscaleAuthPolling();
-        } else {
-          showToast(t('toast.tailscale_node_re_authenticated_successfully', 'Tailscale node re-authenticated successfully.'), 'success');
-          fetchAndRenderWireguard();
-        }
-      } catch (err) {
-        showToast(t('toast.re_authentication_failed', 'Re-authentication failed: {error}', { error: err.message }), 'error');
-      } finally {
-        btnTsReauth.disabled = false;
-        setIconLabel(btnTsReauth, '⚡', t('net.tailscale_reauth_btn', 'Re-auth'));
-      }
-    });
-  }
-
-  // 1. Subnet Router Save & Toggle
-  const btnTsSaveRoutes = document.getElementById('btn-ts-save-routes');
-  const tsSubnetRoutesInput = document.getElementById('ts-subnet-routes-input');
-  const tsSubnetRouterToggle = document.getElementById('ts-subnet-router-toggle');
-  async function saveSubnetRoutes() {
-    if (!tsSubnetRoutesInput || !tsSubnetRouterToggle) return;
-    const routes = tsSubnetRoutesInput.value.trim();
-    const enabled = tsSubnetRouterToggle.checked;
+  });
+  const saveRoutes = async () => {
+    const routes = /** @type {HTMLInputElement | null} */ (document.getElementById('ts-subnet-routes-input'))?.value.trim() || '';
+    const enabled = Boolean(/** @type {HTMLInputElement | null} */ (document.getElementById('ts-subnet-router-toggle'))?.checked);
     try {
-      if (btnTsSaveRoutes) {
-        btnTsSaveRoutes.disabled = true;
-        btnTsSaveRoutes.textContent = '⏳ ...';
-      }
       await api.post('/api/network/mesh-vpn/tailscale/set-routes', { routes, enabled });
-      showToast(
-        enabled ? `Subnet routes advertised: ${routes}` : 'Subnet routes withdrawn.',
-        'success'
-      );
-      fetchAndRenderWireguard();
+      showToast(enabled ? t('net.ts_reach_home_on', 'Your devices can now reach {routes} through this NAS.', { routes }) : t('net.ts_reach_home_off', 'Reaching things at home is off.'), 'success');
+      fetchAndRenderTailscaleDetails();
     } catch (e) {
       showToast(t('toast.failed_to_update_subnet_routes', 'Failed to update subnet routes: {message}', { message: e.message }), 'error');
-    } finally {
-      if (btnTsSaveRoutes) {
-        btnTsSaveRoutes.disabled = false;
-        btnTsSaveRoutes.textContent = t('net.tailscale_save_routes', 'Save Subnets');
-      }
     }
-  }
-  if (btnTsSaveRoutes && !btnTsSaveRoutes._bound) {
-    btnTsSaveRoutes._bound = true;
-    btnTsSaveRoutes.addEventListener('click', saveSubnetRoutes);
-  }
-  if (tsSubnetRouterToggle && !tsSubnetRouterToggle._bound) {
-    tsSubnetRouterToggle._bound = true;
-    tsSubnetRouterToggle.addEventListener('change', saveSubnetRoutes);
-  }
-
-  // 2. Exit Node Toggle
-  const tsExitNodeToggle = document.getElementById('ts-exit-node-toggle');
-  if (tsExitNodeToggle && !tsExitNodeToggle._bound) {
-    tsExitNodeToggle._bound = true;
-    tsExitNodeToggle.addEventListener('change', async () => {
-      const enabled = tsExitNodeToggle.checked;
-      try {
-        await api.post('/api/network/mesh-vpn/tailscale/set-exit-node', { enabled });
-        showToast(
-          enabled ? 'Node advertised as Exit Node.' : 'Exit Node advertising disabled.',
-          'success'
-        );
-        fetchAndRenderWireguard();
-      } catch (e) {
-        showToast(t('toast.failed_to_set_exit_node', 'Failed to set exit node: {message}', { message: e.message }), 'error');
-      }
-    });
-  }
-
-  // 3. Tailscale SSH Toggle
-  const tsSshToggle = document.getElementById('ts-ssh-toggle');
-  if (tsSshToggle && !tsSshToggle._bound) {
-    tsSshToggle._bound = true;
-    tsSshToggle.addEventListener('change', async () => {
-      const enabled = tsSshToggle.checked;
-      try {
-        await api.post('/api/network/mesh-vpn/tailscale/set-ssh', { enabled });
-        showToast(enabled ? 'Tailscale SSH enabled.' : 'Tailscale SSH disabled.', 'success');
-        fetchAndRenderWireguard();
-      } catch (e) {
-        showToast(t('toast.failed_to_toggle_ssh', 'Failed to toggle SSH: {message}', { message: e.message }), 'error');
-      }
-    });
-  }
-
-  // 4. Tailscale Serve & Funnel Toggles
-  const tsServeToggle = document.getElementById('ts-serve-toggle');
-  async function triggerServeFunnelUpdate() {
-    const serve = tsServeToggle ? tsServeToggle.checked : false;
+  };
+  once('btn-ts-save-routes', 'click', saveRoutes);
+  once('ts-subnet-router-toggle', 'change', saveRoutes);
+  once('ts-exit-node-toggle', 'change', async (e) => {
+    const enabled = Boolean(/** @type {HTMLInputElement} */ (e.currentTarget).checked);
     try {
-      // HTTPS inside the tailnet only: Kiboto's own page is never put on the internet (SET-02)
-      const res = await api.post('/api/network/mesh-vpn/tailscale/set-serve', {
-        serve: tsServeToggle ? tsServeToggle.checked : true,
-        funnel: false,
-        port: 8082,
-      });
-      if (res && res.status === 'needs_approval' && res.approval_url) {
-        if (tsServeToggle) tsServeToggle.checked = Boolean(res.serve_enabled);
-        try {
-          window.open(res.approval_url, '_blank', 'noopener,noreferrer');
-        } catch (_) {}
-        const featName = res.feature === 'funnel' ? 'Funnel' : 'Serve';
-        showConfirmToast(
-          t('net.approve_title', 'Tailscale {feature} needs approval', { feature: featName }),
-          `${escapeHtml(t('net.approve_msg', 'Tailscale {feature} is not allowed on your tailnet yet. Approve this device in the Tailscale admin console:', { feature: featName }))}<br><br><a href="${escapeHtml(res.approval_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--kb-text-accent); text-decoration:underline; font-weight:bold; word-break:break-all;">${escapeHtml(res.approval_url)}</a><br><br>${escapeHtml(t('net.approve_after', 'After approving it in Tailscale, turn this switch on again.'))}`,
-          () => {
-            window.open(res.approval_url, '_blank', 'noopener,noreferrer');
-          },
-          null,
-          { confirmText: t('net.open_approval', 'Open the approval page'), cancelText: t('common.close', 'Close'), allowHtml: true }
-        );
-      } else if (res && res.status === 'error') {
-        if (tsServeToggle) tsServeToggle.checked = Boolean(res.serve_enabled);
-        showToast(t('toast.tailscale_configuration_error', 'Tailscale configuration error: {error}', { error: res.error || 'Operation failed' }), 'error');
-      } else {
-        if (serve && !res.serve_enabled) {
-          if (tsServeToggle) tsServeToggle.checked = false;
-          showToast(t('toast.tailscale_serve_could_not_be_activated', 'Tailscale Serve could not be activated. Check tailscaled daemon status.'), 'warn');
-        } else if (serve && res.serve_url) {
-          showServeLink(res.serve_url, false);
-        } else {
-          showToast(
-            serve
-              ? t('toast.ts_serve_on', 'Tailscale HTTPS Serve enabled on port 8082.')
-              : t('toast.ts_serve_off', 'Tailscale Serve disabled.'),
-            'success'
-          );
-        }
-      }
-      fetchAndRenderWireguard();
-    } catch (e) {
-      showToast(t('toast.failed_to_configure_tailscale_serve', 'Failed to configure Tailscale Serve: {message}', { message: e.message }), 'error');
-      fetchAndRenderWireguard();
+      await api.post('/api/network/mesh-vpn/tailscale/set-exit-node', { enabled });
+      showToast(enabled ? t('net.ts_home_internet_on', 'This NAS now offers your home internet to your devices.') : t('net.ts_home_internet_off', 'Home internet when away is off.'), 'success');
+      fetchAndRenderTailscaleDetails();
+    } catch (err) {
+      showToast(t('toast.failed_to_set_exit_node', 'Failed to set exit node: {message}', { message: err.message }), 'error');
     }
-  }
-  if (tsServeToggle && !tsServeToggle._bound) {
-    tsServeToggle._bound = true;
-    tsServeToggle.addEventListener('change', triggerServeFunnelUpdate);
-  }
-  const btnCopyServeUrl = document.getElementById('btn-copy-ts-serve-url');
-  if (btnCopyServeUrl && !btnCopyServeUrl._bound) {
-    btnCopyServeUrl._bound = true;
-    btnCopyServeUrl.addEventListener('click', () => {
-      const link = document.getElementById('ts-serve-url-link');
-      const url = link ? link.href : '';
-      if (url && url !== '#') {
-        copyText(url)
-          .then(() => showToast(t('toast.tailscale_https_url_copied_to_clipboard', 'Tailscale HTTPS URL copied to clipboard.'), 'success'))
-          .catch(() => showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error'));
-      }
-    });
-  }
-
-  // 5. Taildrop Inbox Actions
-  const btnTsTaildropFetch = document.getElementById('btn-ts-taildrop-fetch');
-  if (btnTsTaildropFetch && !btnTsTaildropFetch._bound) {
-    btnTsTaildropFetch._bound = true;
-    btnTsTaildropFetch.addEventListener('click', async () => {
-      try {
-        btnTsTaildropFetch.disabled = true;
-        btnTsTaildropFetch.textContent = '⏳ ...';
-        const res = await api.post('/api/network/mesh-vpn/tailscale/taildrop/receive');
-        showToast(
-          t('toast.taildrop_check_completed_file_s_available', 'Taildrop check completed. {count} file(s) available in inbox.', { count: res.count || 0 }),
-          'success'
-        );
-        fetchAndRenderWireguard();
-      } catch (e) {
-        showToast(t('toast.failed_to_fetch_taildrop_files', 'Failed to fetch Taildrop files: {message}', { message: e.message }), 'error');
-      } finally {
-        btnTsTaildropFetch.disabled = false;
-        setIconLabel(btnTsTaildropFetch, '📥', t('net.tailscale_taildrop_fetch', 'Fetch'));
-      }
-    });
-  }
-  const btnTsTaildropOpen = document.getElementById('btn-ts-taildrop-open');
-  if (btnTsTaildropOpen && !btnTsTaildropOpen._bound) {
-    btnTsTaildropOpen._bound = true;
-    btnTsTaildropOpen.addEventListener('click', () => {
-      const targetDir = window._tsTaildropDir || '/mnt/user/appdata/tailscale/taildrop';
-      if (typeof window.openFileManager === 'function') {
-        window.openFileManager(targetDir);
-      } else if (typeof window.navigateToPath === 'function') {
-        window.navigateToPath(targetDir);
-      } else {
-        ZettEventBus.emit('window:open', { id: 'file-manager-window', path: targetDir });
-      }
-    });
-  }
-
-  const taildropListEl = document.getElementById('ts-taildrop-list');
-  if (taildropListEl && !taildropListEl._bound) {
-    taildropListEl._bound = true;
-    taildropListEl.addEventListener('click', e => {
-      const item = e.target.closest('.taildrop-file-item');
-      if (item) {
-        const targetDir = window._tsTaildropDir || '/mnt/user/appdata/tailscale/taildrop';
-        if (typeof window.openFileManager === 'function') {
-          window.openFileManager(targetDir);
-        } else if (typeof window.navigateToPath === 'function') {
-          window.navigateToPath(targetDir);
-        } else {
-          ZettEventBus.emit('window:open', { id: 'file-manager-window', path: targetDir });
-        }
-      }
-    });
-  }
-
-  // 6. Peer search and Ping handler
-  const tsPeerSearch = document.getElementById('ts-peer-search');
-  if (tsPeerSearch && !tsPeerSearch._bound) {
-    tsPeerSearch._bound = true;
-    tsPeerSearch.addEventListener('input', () => {
-      renderTailscalePeersTable(window._tsPeersList || [], tsPeerSearch.value);
-    });
-  }
-  const tsPeersTableBody = document.getElementById('ts-peers-table-body');
-  if (tsPeersTableBody && !tsPeersTableBody._bound) {
-    tsPeersTableBody._bound = true;
-    tsPeersTableBody.addEventListener('click', async e => {
-      const pingBtn = e.target.closest('.btn-ping-peer');
-      if (!pingBtn) return;
-      const ip = pingBtn.dataset.peerIp;
-      if (!ip) return;
-      const safeIpId = ip.replace(/[^a-zA-Z0-9]/g, '_');
-      const resSpan = document.getElementById(`latency-${safeIpId}`);
-      try {
-        pingBtn.disabled = true;
-        pingBtn.textContent = '⏳ ...';
-        if (resSpan) {
-          resSpan.textContent = 'pinging...';
-          resSpan.style.color = 'var(--muted)';
-        }
-        const res = await api.post('/api/network/mesh-vpn/tailscale/ping', { peer: ip });
-        if (res && res.status === 'success') {
-          if (resSpan) {
-            resSpan.textContent = `⚡ ${res.latency}`;
-            resSpan.style.color = res.is_direct ? 'var(--ok2, #3bf58b)' : '#f59e0b';
-          }
-          showToast(t('toast.pinged', 'Pinged {ip}: {latency} ({route})', { ip: ip, latency: res.latency, route: res.route || 'direct' }), 'success');
-        } else {
-          if (resSpan) {
-            setIconLabel(resSpan, '❌', t('ui.failed_2', 'Failed'));
-            resSpan.style.color = '#f87171';
-          }
-          showToast(t('toast.ping_failed_or_timed_out', 'Ping {ip} failed or timed out.', { ip: ip }), 'warning');
-        }
-      } catch (err) {
-        if (resSpan) {
-          setIconLabel(resSpan, '❌', t('ui.error_3', 'Error'));
-          resSpan.style.color = '#f87171';
-        }
-      } finally {
-        pingBtn.disabled = false;
-        pingBtn.textContent = `⚡ ${t('net.ping', 'Ping')}`;
-      }
-    });
-  }
-
-  // Mesh Service Filter switcher
-  const filterContainer = document.getElementById('mesh-service-filter');
-  if (filterContainer && !filterContainer._bound) {
-    filterContainer._bound = true;
-    const filterBtns = filterContainer.querySelectorAll('button[data-mesh-filter]');
-    const tsHeader = document.getElementById('section-header-tailscale');
-    const tsContainer = document.getElementById('network-tailscale-container');
-    const tsExtended = document.getElementById('network-tailscale-extended');
-    const tsPeersBlock = document.getElementById('tailscale-peers-card');
-    const wgHeader = document.getElementById('section-header-wireguard');
-    const wgContainer = document.getElementById('network-wireguard-container');
-
-    filterBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        filterBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const mode = btn.dataset.meshFilter;
-        if (mode === 'tailscale') {
-          if (tsHeader) tsHeader.style.display = 'flex';
-          if (tsContainer) tsContainer.style.display = 'grid';
-          if (tsExtended && tsExtended.dataset.active === '1') tsExtended.style.display = 'grid';
-          if (tsPeersBlock && tsPeersBlock.dataset.active === '1') tsPeersBlock.style.display = 'block';
-          if (wgHeader) wgHeader.style.display = 'none';
-          if (wgContainer) wgContainer.style.display = 'none';
-        } else if (mode === 'wireguard') {
-          if (tsHeader) tsHeader.style.display = 'none';
-          if (tsContainer) tsContainer.style.display = 'none';
-          if (tsExtended) tsExtended.style.display = 'none';
-          if (tsPeersBlock) tsPeersBlock.style.display = 'none';
-          if (wgHeader) wgHeader.style.display = 'flex';
-          if (wgContainer) wgContainer.style.display = 'grid';
-        } else {
-          if (tsHeader) tsHeader.style.display = 'flex';
-          if (tsContainer) tsContainer.style.display = 'grid';
-          if (tsExtended && tsExtended.dataset.active === '1') tsExtended.style.display = 'grid';
-          if (tsPeersBlock && tsPeersBlock.dataset.active === '1') tsPeersBlock.style.display = 'block';
-          if (wgHeader) wgHeader.style.display = 'flex';
-          if (wgContainer) wgContainer.style.display = 'grid';
-        }
-      });
-    });
-  }
-
-  // Refresh button
-  if (refreshBtn && !refreshBtn._bound) {
-    refreshBtn._bound = true;
-    refreshBtn.addEventListener('click', () => {
-      fetchAndRenderWireguard();
-      showToast(t('toast.mesh_vpn_telemetry_refreshed', 'Remote access status refreshed.'), 'info');
-    });
-  }
-
-  if (genBtn && !genBtn._bound) {
-    genBtn._bound = true;
-    genBtn.addEventListener('click', async () => {
-      try {
-        genBtn.disabled = true;
-        setIconLabel(genBtn, '🔑', t('ui.generating_2', 'Generating...'));
-        const cfg = await api.post('/api/network/mesh-vpn/wireguard/client-config', {
-          server_endpoint: (window.location.hostname || '127.0.0.1') + ':51820',
-          client_address: '10.100.0.2/24',
-          allowed_ips: '0.0.0.0/0',
-          persistent_keepalive: 25,
-        });
-
-        const confText = cfg.config_text || cfg.config_content || '';
-        if (previewEl) {
-          previewEl.textContent = confText || JSON.stringify(cfg, null, 2);
-        }
-        if (pubkeyEl && cfg.public_key) {
-          pubkeyEl.textContent = cfg.public_key;
-        }
-
-        const copyBtn = document.getElementById('btn-copy-wg-conf');
-        if (copyBtn && confText) {
-          copyBtn.style.display = 'inline-block';
-          copyBtn.onclick = async () => {
-            await copyTextToClipboard(confText);
-            showToast(t('toast.wireguard_client_config_copied_to_clipboard', 'WireGuard client config copied to clipboard.'), 'success');
-          };
-        }
-
-        if (dlBtn && confText) {
-          dlBtn.style.display = 'inline-block';
-          dlBtn.onclick = () => {
-            const blob = new Blob([confText], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${cfg.client_name || 'kiboto-client'}.conf`;
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast(t('toast.downloaded_wireguard_conf_profile', 'Downloaded WireGuard .conf profile.'), 'info');
-          };
-        }
-
-        // Render QR Code (inline thumbnail and interactive click to enlarge)
-        const qrBox = document.getElementById('wg-qr-box');
-        const qrCanvasWrap = document.getElementById('wg-qr-canvas-wrap');
-        const modalQr = document.getElementById('modal-wg-qr');
-        const modalQrWrap = document.getElementById('modal-wg-qr-wrap');
-        const modalQrCloseBtn = document.getElementById('modal-wg-qr-close-btn');
-        const modalQrCopyBtn = document.getElementById('modal-wg-qr-copy-btn');
-        const modalQrDlBtn = document.getElementById('modal-wg-qr-dl-btn');
-
-        if (qrBox && qrCanvasWrap && confText) {
-          try {
-            // the QR library loads only when a QR code is shown (FE-02)
-            const { default: QRCode } = await import('qrcode');
-            const svgString = await QRCode.toString(confText, {
-              type: 'svg',
-              margin: 1,
-              width: 120,
-              color: {
-                dark: '#000000',
-                light: '#ffffff',
-              },
-            });
-            qrCanvasWrap.innerHTML = svgString;
-            qrBox.style.display = 'flex';
-
-            const openQrModal = async () => {
-              if (!modalQr) return;
-              if (modalQrWrap) {
-                const { default: QRCode } = await import('qrcode');
-                const largeSvg = await QRCode.toString(confText, {
-                  type: 'svg',
-                  margin: 2,
-                  width: 240,
-                  color: { dark: '#000000', light: '#ffffff' },
-                });
-                modalQrWrap.innerHTML = largeSvg;
-              }
-              const modalWin = modalQr.querySelector('.smart-modal-window');
-              const modalHdr = modalQr.querySelector('.smart-modal-header');
-              if (modalWin && modalHdr) makeDraggable(modalWin, modalHdr, 'modal-wg-qr');
-              modalQr.style.display = 'flex';
-              modalQr.classList.add('open');
-
-              const closeQrModal = () => {
-                modalQr.style.display = 'none';
-                modalQr.classList.remove('open');
-              };
-              if (modalQrCloseBtn) modalQrCloseBtn.onclick = closeQrModal;
-              modalQr.onclick = (e) => {
-                if (e.target === modalQr) closeQrModal();
-              };
-              if (modalQrCopyBtn) {
-                modalQrCopyBtn.onclick = async () => {
-                  await copyTextToClipboard(confText);
-                  showToast(t('toast.copied_wireguard_config_to_clipboard', 'Copied WireGuard config to clipboard.'), 'success');
-                };
-              }
-              if (modalQrDlBtn) {
-                modalQrDlBtn.onclick = () => {
-                  const blob = new Blob([confText], { type: 'text/plain' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `${cfg.client_name || 'kiboto-client'}.conf`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                  showToast(t('toast.exported_wireguard_conf_profile', 'Exported WireGuard .conf profile.'), 'info');
-                };
-              }
-            };
-
-            qrCanvasWrap.onclick = openQrModal;
-          } catch (qrErr) {
-            console.warn('[WireGuard] QR generation error:', qrErr);
-          }
-        }
-
-        showToast(t('toast.wireguard_curve25519_client_profile_generated', 'WireGuard Curve25519 client profile generated.'), 'success');
-      } catch (err) {
-        showToast(t('toast.failed_to_generate_wireguard_config', 'Failed to generate WireGuard config: {error}', { error: err.message }), 'error');
-      } finally {
-        genBtn.disabled = false;
-        setIconLabel(genBtn, '🔑', t('ui.generate_client_conf', 'Generate Client .conf'));
-      }
-    });
-  }
-
-  if (natBtn && !natBtn._bound) {
-    natBtn._bound = true;
-    natBtn.addEventListener('click', async () => {
-      try {
-        natBtn.disabled = true;
-        const curStatus = await api.get('/api/network/mesh-vpn/wireguard/subnet-routing');
-        const nextState = !curStatus.enabled;
-        const res = await api.post('/api/network/mesh-vpn/wireguard/subnet-routing', {
-          enabled: nextState,
-          interface: 'wg0',
-          out_interface: 'eth0',
-        });
-        showToast(res.enabled ? t('toast.wg_routing_enabled', 'WireGuard subnet routing enabled.') : t('toast.wg_routing_disabled', 'WireGuard subnet routing disabled.'), 'info');
-        fetchAndRenderWireguard();
-      } catch (err) {
-        showToast(t('toast.subnet_routing_toggle_failed', 'Subnet routing toggle failed: {error}', { error: err.message }), 'error');
-      } finally {
-        natBtn.disabled = false;
-      }
-    });
-  }
+  });
+  once('ts-peer-search', 'input', (e) => renderTailscalePeersTable(_tsPeers, /** @type {HTMLInputElement} */ (e.currentTarget).value));
+  once('btn-refresh-wireguard', 'click', () => fetchAndRenderTailscaleDetails());
 }
 
 export async function fetchAndRenderNetworkTopology() {
@@ -1662,7 +751,7 @@ export async function fetchAndRenderNetworkTopology() {
     }
 
     applyNetCaps(document);
-    fetchAndRenderWireguard();
+    fetchAndRenderTailscaleDetails();
     initNetworkControls();
   } catch (err) {
     console.warn('[Kiboto] Error fetching network topology:', err);

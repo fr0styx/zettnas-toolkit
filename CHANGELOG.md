@@ -627,6 +627,17 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   line at the top saying where to change them; the Apply and VLAN buttons are hidden. A port's
   nickname can still be saved.
 
+#### Changes
+
+- **Remote access is one card and a short list of details.** Under "Use from anywhere", the
+  Tailscale details show this NAS on your tailnet, "Sign in again", two switches in plain words
+  ("Reach other things at home", "Use your home internet when away") and your devices.
+- **Removed: WireGuard, Tailscale SSH, the Serve and Funnel switches, Taildrop, Ping and the old
+  connect form.** WireGuard never produced a working connection, Tailscale SSH opened the Tailscale
+  container instead of the NAS, and the old switches could put Kiboto's own page on the internet.
+  Connecting and HTTPS addresses stay in the "Use from anywhere" card. Old API routes answer 410
+  with what replaced them.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

@@ -45,7 +45,7 @@
  "frontend/src/components/management/doc-filters.js": 8,
  "frontend/src/components/management/docker.js": 163,
  "frontend/src/components/management/duplicates.js": 7,
- "frontend/src/components/management/network.js": 207,
+ "frontend/src/components/management/network.js": 98,
  "frontend/src/components/management/notifications.js": 44,
  "frontend/src/components/management/overview.js": 6,
  "frontend/src/components/management/photo-filters.js": 8,

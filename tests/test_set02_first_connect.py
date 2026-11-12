@@ -47,8 +47,8 @@ def test_connect_asks_first_when_tailscale_is_not_here(client, auth_headers, mon
     asked = client.post("/api/network/remote-access/connect", json={}, headers=auth_headers)
     assert asked.status_code == 428 and asked.json()["action"] == "network.tailscale_install"
     assert ran == []
-    deploy = client.post("/api/network/mesh-vpn/tailscale/deploy", json={}, headers=auth_headers)
-    assert deploy.status_code == 428 and deploy.json()["action"] == "network.tailscale_install"
+    # the old one-click deploy is gone (SET-16): the card above is the only way to install it
+    assert client.post("/api/network/mesh-vpn/tailscale/deploy", json={}, headers=auth_headers).status_code == 410
 
 
 @pytest.mark.real_confirmations

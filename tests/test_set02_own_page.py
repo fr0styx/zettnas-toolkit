@@ -15,37 +15,6 @@ from backend.services import public_links as pl
 DNS = "family-nas.tail1234.ts.net"
 
 
-def test_the_route_refuses_to_publish_kibotos_own_page(client, auth_headers, monkeypatch):
-    ran = []
-    monkeypatch.setattr("backend.hardware.network.execute_tailscale_set_serve", lambda **kw: ran.append(kw) or {})
-    res = client.post(
-        "/api/network/mesh-vpn/tailscale/set-serve",
-        json={"serve": True, "funnel": True, "port": 8082},
-        headers=auth_headers,
-    )
-    assert res.status_code == 400 and "never put on the internet" in res.text
-    assert ran == []
-    ok = client.post(
-        "/api/network/mesh-vpn/tailscale/set-serve", json={"serve": True, "port": 8082}, headers=auth_headers
-    )
-    assert ok.status_code == 200 and ran == [{"serve": True, "funnel": False, "port": 8082}]
-
-
-def test_the_switch_neither_publishes_nor_resets_funnel(monkeypatch):
-    calls = []
-
-    def fake(args, timeout=3.0):
-        calls.append(args)
-        return (0, "{}") if args[-1] == "--json" else (0, "")
-
-    monkeypatch.setattr(tailscale, "_run_tailscale_cmd", fake)
-    tailscale.execute_tailscale_set_serve(serve=True, funnel=True, port=8082)
-    tailscale.execute_tailscale_set_serve(serve=True, funnel=False, port=8082)
-    changing = [c for c in calls if c[0] == "funnel" and "status" not in c]
-    assert changing == []  # no "funnel --bg" and no "funnel reset"
-    assert ["serve", "--bg", "--yes", "8082"] in calls
-
-
 class FakeFunnel:
     def __init__(self, doc):
         self.doc, self.calls = doc, []
@@ -104,3 +73,16 @@ def test_the_api_names_the_port(client, auth_headers, funnel):
     assert refused.status_code == 400
     done = client.post("/api/network/public-links/close-port", json={"port": 443}, headers=auth_headers)
     assert done.status_code == 200 and done.json()["own_page_public"] == []
+
+
+def test_the_old_serve_switch_is_gone_and_publishes_nothing(client, auth_headers, monkeypatch):
+    """SET-16: the old Serve/Funnel pair could put Kiboto's own page on the internet; it is removed."""
+    ran = []
+    monkeypatch.setattr(tailscale, "_run_tailscale_cmd", lambda *a, **k: ran.append(a) or (0, ""))
+    res = client.post(
+        "/api/network/mesh-vpn/tailscale/set-serve",
+        json={"serve": True, "funnel": True, "port": 8082},
+        headers=auth_headers,
+    )
+    assert res.status_code == 410 and ran == []
+    assert not hasattr(tailscale, "execute_tailscale_set_serve")

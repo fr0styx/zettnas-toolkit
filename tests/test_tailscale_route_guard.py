@@ -78,18 +78,14 @@ def test_without_fallback_no_subnet_is_guessed(monkeypatch):
     assert tailscale.detect_local_subnets(fallback=False) == []
 
 
-def test_connecting_accepts_no_routes_unless_asked(monkeypatch):
+def test_connecting_never_accepts_routes(monkeypatch):
+    """Accept routes is no longer an option (D5): a route over the NAS's own network could cut it off."""
     from backend.hardware.net import tailscale_setup
 
     calls = []
     monkeypatch.setattr(tailscale, "_get_tailscale_container_info", lambda: {"exists": False})
     monkeypatch.setattr(tailscale, "_run_tailscale_cmd", lambda args, timeout=10.0: (calls.append(args), (0, ""))[1])
-    monkeypatch.setattr(
-        tailscale, "guard_lan_routes", lambda *a, **k: [{"peer": "router", "route": "192.168.50.0/24", "lan": "x"}]
-    )
     tailscale_setup.execute_tailscale_up(auth_key="tskey-test")
     assert "--accept-routes" not in calls[0]
-    calls.clear()
-    res = tailscale_setup.execute_tailscale_up(auth_key="tskey-test", accept_routes=True)
-    assert "--accept-routes" in calls[0]
-    assert "router offers 192.168.50.0/24" in json.dumps(res)
+    with pytest.raises(TypeError):
+        tailscale_setup.execute_tailscale_up(auth_key="tskey-test", accept_routes=True)

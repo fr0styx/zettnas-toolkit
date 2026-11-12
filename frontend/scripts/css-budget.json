@@ -1,9 +1,9 @@
 {
   "important": 3345,
   "buttonClasses": 75,
-  "inlineStyles": 1379,
+  "inlineStyles": 1357,
   "emojiIcons": 2,
-  "colours": 3950,
+  "colours": 3877,
   "primitiveUses": 4,
   "importantPerFile": {
     "frontend/index.html": 64,
@@ -71,7 +71,7 @@
     "frontend/src/components/management/ai.js": 306,
     "frontend/src/components/management/disks.js": 1,
     "frontend/src/components/management/docker.js": 133,
-    "frontend/src/components/management/network.js": 76,
+    "frontend/src/components/management/network.js": 25,
     "frontend/src/components/management/notifications.js": 8,
     "frontend/src/components/management/security.js": 25,
     "frontend/src/components/management/system.js": 23,
@@ -160,6 +160,6 @@
     "frontend/src/utils.js": 1,
     "frontend/src/vm-console-direct.css": 2,
     "frontend/src/windows/drawer.html": 116,
-    "frontend/src/windows/management-window.html": 507
+    "frontend/src/windows/management-window.html": 485
   }
 }
