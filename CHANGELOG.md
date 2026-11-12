@@ -64,6 +64,10 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **The Network dialogs work with a keyboard**: focus goes into a dialog when it opens, Tab stays
   inside, Escape closes it, and focus returns to the button that opened it.
 
+#### Fixes
+
+- **Away from home's connect choices are easy to tap on a phone**: each is a full row.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 
