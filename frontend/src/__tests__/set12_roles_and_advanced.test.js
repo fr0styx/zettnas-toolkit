@@ -50,7 +50,9 @@ describe('rights and the Advanced switch', () => {
     hideUnusable(document, owner); // the same browser, another person
     expect(item('mgmt-sec-vms').hidden).toBe(false);
     ov.applyAdvanced(false);
-    expect(item('mgmt-sec-vms').hidden).toBe(true);
+    // X1 (SET-18): Advanced is a sidebar group that is always there; the switch hides no page
+    expect(item('mgmt-sec-vms').hidden).toBe(false);
+    expect(card('mgmt-sec-vms').hidden).toBe(true); // the Overview's advanced cards still follow it
     expect(item('mgmt-sec-docker').hidden).toBe(false);
   });
 
@@ -86,12 +88,12 @@ describe('rights and the Advanced switch', () => {
     tidyHeadings(document);
   });
 
-  it('switching Advanced off on one of its pages goes back to the Overview, and a failed save is said', async () => {
+  it('switching Advanced off keeps the page that is open (X1), and a failed save is said', async () => {
     const overview = vi.fn();
     document.getElementById('e-overview').addEventListener('click', overview);
     api.put.mockRejectedValueOnce(new Error('offline'));
     await ov.setAdvanced(false);
-    expect(overview).toHaveBeenCalledTimes(1);
+    expect(overview).not.toHaveBeenCalled(); // X1: the page stays in the sidebar, so nobody is moved off it
     expect(showToast).toHaveBeenCalledWith('That choice could not be saved to your account. It holds in this browser for now.', 'error');
     api.put.mockResolvedValueOnce({});
     vi.clearAllMocks();

@@ -20,7 +20,7 @@ describe('Overview and Advanced (UX-1, UX-2)', () => {
     vi.clearAllMocks();
   });
 
-  it('keeps every place for existing setups, and hides the advanced ones when switched off', () => {
+  it('keeps every place for existing setups; switched off it hides advanced cards, never a sidebar page', () => {
     ov.installAdvancedSwitch();
     const sw = document.getElementById('mgmt-advanced-switch');
     expect(sw.checked).toBe(true);
@@ -28,8 +28,9 @@ describe('Overview and Advanced (UX-1, UX-2)', () => {
     sw.checked = false;
     sw.dispatchEvent(new Event('change'));
     expect(localStorage.getItem('kiboto_advanced')).toBe('0');
-    expect(document.querySelector('.mgmt-sidebar-item[data-mgmt-target="mgmt-sec-vms"]').hidden).toBe(true);
-    expect(document.querySelector('.mgmt-sidebar-item[data-mgmt-target="mgmt-sec-network"]').hidden).toBe(true);
+    // X1 (SET-18): the sidebar's Advanced group stays; the switch hides tools and Overview cards, not pages
+    expect(document.querySelector('.mgmt-sidebar-item[data-mgmt-target="mgmt-sec-vms"]').hidden).toBe(false);
+    expect(document.querySelector('.mgmt-sidebar-item[data-mgmt-target="mgmt-sec-network"]').hidden).toBe(false);
     expect(document.querySelector('.mgmt-app-card[data-mgmt-target="mgmt-sec-vms"]').hidden).toBe(true);
     expect(document.querySelector('.mgmt-sidebar-item[data-mgmt-target="mgmt-sec-storage"]').hidden).toBe(false);
     ov.installAdvancedSwitch(); // a second call only re-applies

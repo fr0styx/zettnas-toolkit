@@ -50,6 +50,8 @@ let _selectedIndex = 0;
 let _isOpen = false;
 
 export function initSpotlight() {
+  // the desktop's right-click menu and Settings' "Search settings" open it without loading this file
+  /** @type {any} */ (window).openSpotlight = openSpotlight;
   if (document.getElementById('spotlight-palette-overlay')) return;
 
   const overlayHtml = `

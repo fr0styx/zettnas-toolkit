@@ -202,12 +202,12 @@ describe('a change of language reaches what is built once', () => {
     installAdvancedSwitch();
     const tile = document.querySelector('[data-phone-open="users"] span');
     const caption = document.querySelector('.mgmt-advanced-row strong');
-    expect(tile.textContent).toBe('Users');
+    expect(tile.textContent).toBe('People'); // the sidebar's name (SET-18, X2)
     expect(document.querySelector('.mgmt-advanced-row .mgmt-advanced-icon')).toBeTruthy(); // what a narrow sidebar shows
     await setLanguage('de');
-    expect(tile.textContent).toBe('Benutzer');
-    expect(caption.textContent).toBe('Erweitert');
-    expect(document.querySelector('.mgmt-advanced-row').title).toBe('Erweitert');
+    expect(tile.textContent).toBe('Personen');
+    expect(caption.textContent).toBe('Erweiterte Werkzeuge');
+    expect(document.querySelector('.mgmt-advanced-row').title).toBe('Auf dem Schreibtisch, im Dock und auf dem Telefon sowie Expertendetails in Fenstern');
     expect(document.querySelector('[data-phone-tab="home"] span').getAttribute('data-i18n')).toBe('phone.home');
     document.querySelectorAll('#l [data-i18n], #t [data-i18n]').forEach((el) => expect(el.textContent).not.toBe(el.getAttribute('data-i18n')));
   });

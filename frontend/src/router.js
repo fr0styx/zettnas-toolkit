@@ -1,6 +1,7 @@
 /**
  * Deep links (UX-4): #/apps, #/apps/catalog, #/files, #/storage, #/shares, #/backup, #/users,
- * #/network, #/power, #/ai, #/vms, #/settings open the one place that does that job.
+ * #/network, #/power, #/ai, #/vms, #/settings open the one place that does that job; the sidebar's
+ * names since SET-18 too: #/people, #/folders, #/kib, #/away, #/notifications, #/security, #/general.
  */
 import { ZettEventBus } from './event-bus.js';
 
@@ -30,6 +31,19 @@ export const ROUTES = {
   appearance: () => section('mgmt-sec-wallpaper'),
   overview: () => section('management-hub-view'),
 };
+
+// the sidebar's names (SET-18, X2), as one small table: the older names above keep working
+for (const [name, id] of Object.entries({
+  people: 'pane-users',
+  folders: 'pane-storage-shares',
+  kib: 'sec-ai',
+  away: 'pane-network-wireguard',
+  notifications: 'pane-notifications',
+  security: 'pane-security',
+  general: 'pane-about',
+  connections: 'pane-security',
+  calendar: 'sec-calendar',
+})) ROUTES[name] = () => section(`mgmt-${id}`);
 
 /** Opens a section of the Settings window by its id. */
 function section(id) {

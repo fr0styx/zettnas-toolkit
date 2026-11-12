@@ -27,7 +27,7 @@ import { closeHttpsGuideModal, handleSecurityAdvisorClick } from './management/s
 import { applySystemUpdate, closeDiagnosticsPreviewModal, copySupportMarkdown, downloadDiagnosticsBundle, fetchAndRenderSystemAbout, previewDiagnosticsSummary, revertSystemUpdate, setUpdateChannel, syncBackupJobForm } from './management/system.js';
 import { openChannelConfigModal, saveCurrentChannelModal, saveNotificationsConfig, testAllNotificationChannels, testSingleChannel } from './management/notifications.js';
 import { fetchAndRenderAppBackups, fetchAndRenderBackupJobs, fetchAndRenderSystemSnapshots } from './management/backup.js';
-import { installAdvancedSwitch, renderStatusSummary } from './management/overview.js';
+import { installAdvancedSwitch, installSidebarGroups, renderStatusSummary } from './management/overview.js';
 import { installHealthSignal } from './management/health-signal.js';
 import { _aiSelectedColor, _aiSelectedScene, _getActiveAiSearchQuery, _renderAiRagInitialEmptyState, fetchAndRenderAiStatus, initAiKnowledgeEngine, runAiVisualSearch, setAiVisualFiltersDrawerOpen } from './management/ai.js';
 import { formatFixed } from '../format.js';
@@ -1287,6 +1287,11 @@ export function initManagement() {
         if (typeof window.openFileManager === 'function') window.openFileManager();
         return;
       }
+      if (item.dataset.mgmtAction === 'search') {
+        // "Search settings" (X2): Spotlight finds pages and tabs; its own settings field comes with SET-20
+        /** @type {any} */ (window).openSpotlight?.();
+        return;
+      }
       if (targetId === 'management-hub-view') {
         showHub();
       } else if (targetId) {
@@ -1296,7 +1301,8 @@ export function initManagement() {
     });
   });
 
-  installAdvancedSwitch(); // UX-2: the everyday places, with the rest behind Advanced
+  installAdvancedSwitch(); // "Show advanced tools": expert details and tools; it hides no page (X1)
+  installSidebarGroups();
   installHealthSignal(); // the opt-in anonymous weekly report, under Software Updates
 
   // Hub cards click listener

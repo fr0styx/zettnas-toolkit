@@ -38,7 +38,8 @@ ZettEventBus.on?.('advanced:changed', ({ on } = {}) => applyAdvanced(on));
 
 /** Shows or hides the advanced places in the sidebar and on the Overview. */
 export function applyAdvanced(on = advancedOn(), root = document) {
-  root.querySelectorAll('.mgmt-sidebar-item, .mgmt-app-card').forEach((el) => {
+  // the sidebar's Advanced group is always there (X1): the switch no longer hides a page from it
+  root.querySelectorAll('.mgmt-app-card').forEach((el) => {
     // one reason among others: it wrote `hidden` itself and so showed what the person's rights hide
     const s = el.dataset.mgmtTarget;
     if (ADVANCED_SECTIONS.includes(s)) mark(el, ADVANCED_OFF, !on && isAdvancedSection(s)); // Power while it matters (SET-15)
@@ -55,12 +56,12 @@ export function installAdvancedSwitch(root = document) {
   row.className = 'mgmt-advanced-row';
   // the texts carry their keys, so a change of language reaches them; the icon is what a narrow
   // sidebar shows, where the switch was a bare checkbox with no name (SET-12)
-  row.title = t('mgmt.advanced', 'Advanced');
-  row.setAttribute('data-i18n-title', 'mgmt.advanced');
+  row.title = t('mgmt.advanced_desc', 'On the desktop, dock and phone, and expert details in windows');
+  row.setAttribute('data-i18n-title', 'mgmt.advanced_desc');
   row.innerHTML = `<input type="checkbox" id="mgmt-advanced-switch" role="switch">
     <svg class="mgmt-sidebar-svg mgmt-advanced-icon" aria-hidden="true"><use href="#i-sliders"/></svg>
-    <span><strong data-i18n="mgmt.advanced">${escapeHtml(t('mgmt.advanced', 'Advanced'))}</strong>
-    <small data-i18n="mgmt.advanced_desc">${escapeHtml(t('mgmt.advanced_desc', 'Virtual machines, network, hardware, power, activity'))}</small></span>`;
+    <span><strong data-i18n="mgmt.advanced">${escapeHtml(t('mgmt.advanced', 'Show advanced tools'))}</strong>
+    <small data-i18n="mgmt.advanced_desc">${escapeHtml(t('mgmt.advanced_desc', 'On the desktop, dock and phone, and expert details in windows'))}</small></span>`;
   nav.appendChild(row);
   row.querySelector('input').addEventListener('change', (e) => setAdvanced(e.target.checked));
   applyAdvanced();
@@ -195,4 +196,37 @@ export async function renderStatusSummary(root = document) {
   box.innerHTML = statusHtml(summary, protection) + protectionHtml(protection);
   announceChange('status-summary', statusSentence(summary, protection)); // UX-28: only when it changes
   return summary;
+}
+
+const GROUP_PREF = 'kiboto_sidebar_advanced_open';
+
+/** Opens or folds the sidebar's Advanced group (X1); this browser remembers it. */
+export function setAdvancedGroup(open, root = document) {
+  const toggle = root.getElementById ? root.getElementById('mgmt-advanced-group') : null;
+  const nav = root.querySelector('.mgmt-sidebar-nav');
+  if (!toggle || !nav) return;
+  toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  nav.classList.toggle('advanced-folded', !open);
+  try {
+    localStorage.setItem(GROUP_PREF, open ? '1' : '0');
+  } catch {
+    /* private window: it opens again next time */
+  }
+}
+
+/** Folded until someone opens it: the sidebar then fits the default window (SET-17 measured 941 px open). */
+function groupOpen() {
+  try {
+    return localStorage.getItem(GROUP_PREF) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function installSidebarGroups(root = document) {
+  const toggle = root.getElementById ? root.getElementById('mgmt-advanced-group') : null;
+  if (!toggle || toggle.dataset.bound) return;
+  toggle.dataset.bound = '1';
+  toggle.addEventListener('click', () => setAdvancedGroup(toggle.getAttribute('aria-expanded') !== 'true', root));
+  setAdvancedGroup(groupOpen(), root);
 }

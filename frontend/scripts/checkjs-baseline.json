@@ -39,7 +39,7 @@
  "frontend/src/components/invites.js": 4,
  "frontend/src/components/jobs-centre.js": 3,
  "frontend/src/components/led-control.js": 41,
- "frontend/src/components/management.js": 113,
+ "frontend/src/components/management.js": 114,
  "frontend/src/components/management/ai.js": 213,
  "frontend/src/components/management/backup.js": 7,
  "frontend/src/components/management/doc-filters.js": 8,

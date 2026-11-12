@@ -21,6 +21,14 @@ export const ROUTE_SCOPES = {
   vms: ['vms:manage', 'vms:read'],
   activity: ['logs:read'],
   hardware: ['hardware:read'],
+  // the sidebar's new entries (X2): the household's set-up is for those who may change settings
+  people: ['users:read'],
+  folders: ['shares:manage', 'storage:admin'],
+  kib: ['system:config'],
+  away: ['system:config'],
+  notifications: ['system:config'],
+  security: ['system:config'],
+  connections: ['system:config'],
 };
 
 /** The server's rule (backend/auth.py has_scope): "*", "*:read" for reads, "area:*", exact. */

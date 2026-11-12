@@ -650,6 +650,20 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Three hard-to-read labels.** The security check's red badges, the File Explorer's current folder
   in light mode and its "More actions" button on narrow windows now have enough contrast.
 
+#### Changes
+
+- **A new Settings sidebar.** Search settings, Overview, Activity and Calendar at the top, then Files &
+  backups (Storage, Shared folders, Backup), People & access (People, Away from home, Notifications),
+  This NAS (Kib, Appearance, Security, General), and an Advanced group (Network, Power, Hardware,
+  Virtual machines, Connections) that is always there and opens with a click. Files and Apps open as
+  their own windows. It fits the default window in all five languages; family members see only what
+  they may open.
+- **"Show advanced tools" replaces the Advanced switch.** It shows expert details and tools on the
+  desktop, dock and phone; it no longer hides pages from the sidebar.
+- **Links to the new names** (#/people, #/folders, #/kib, #/away, #/notifications, #/security,
+  #/general, #/connections, #/calendar); every older link still works. German uses "Sicherung" for
+  backups.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

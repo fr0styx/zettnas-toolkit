@@ -226,3 +226,51 @@
   opacity: 0.6;
   cursor: default;
 }
+
+/* SET-17 (X1): the Advanced group, always there, folds and opens */
+.mgmt-sidebar-group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mgmt-group-chevron {
+  width: 10px;
+  height: 10px;
+  transition: transform 0.15s ease;
+}
+.mgmt-sidebar-group-toggle[aria-expanded="false"] .mgmt-group-chevron {
+  transform: rotate(-90deg);
+}
+.mgmt-sidebar-nav.advanced-folded [data-group="advanced"] {
+  display: none;
+}
+
+/* SET-17: 13 entries and four headings fit the default window (586 px of sidebar) */
+@media (min-width: 769px) {
+  .mgmt-sidebar-nav .mgmt-sidebar-item {
+    padding-top: 3px; /* 26 px rows: above the 24 px pointer target, and Calendar fits too */
+    padding-bottom: 3px;
+    line-height: 1.25; /* Chinese fonts set taller lines on "normal" */
+  }
+  .mgmt-sidebar-nav .mgmt-sidebar-category {
+    padding-top: 8px;
+    padding-bottom: 2px;
+    margin-top: 2px;
+    line-height: 1.25;
+    letter-spacing: 0;
+  }
+  .mgmt-sidebar .mgmt-advanced-row {
+    align-items: center;
+    line-height: 1.25;
+  }
+  .mgmt-sidebar .mgmt-advanced-row small {
+    display: none;
+  }
+}
