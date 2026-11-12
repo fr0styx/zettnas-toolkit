@@ -3682,6 +3682,7 @@ export default {
   "remote.netbird_key": "设置密钥",
   "remote.netbird_server": "你自己的 NetBird 服务器（可选）",
   "remote.load_failed": "Kiboto 无法读取在外如何访问这台 NAS。",
+  "remote.look_only": "只有可以更改设置的人才能连接这台 NAS。",
   "exposure.word_off": "已关闭",
   "exposure.word_private": "私有",
   "exposure.word_public": "公开",

@@ -3682,6 +3682,7 @@ export default {
   "remote.netbird_key": "Setup-Schlüssel",
   "remote.netbird_server": "Ihr eigener NetBird-Server (optional)",
   "remote.load_failed": "Kiboto konnte nicht lesen, wie dieses NAS von unterwegs erreichbar ist.",
+  "remote.look_only": "Nur wer Einstellungen ändern darf, kann dieses NAS verbinden.",
   "exposure.word_off": "Geschlossen",
   "exposure.word_private": "Privat",
   "exposure.word_public": "Öffentlich",

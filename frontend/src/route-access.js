@@ -105,6 +105,7 @@ export function routeOf(el) {
 
 ZettEventBus.on?.('session:user', (user) => {
   _user = user;
+  /** @type {any} */ (globalThis).kibotoUser = user; // for windows that load later (remote-access)
   hideUnusable(document, user);
   leavePage(NO_ACCESS); // the page that was open may be one this account cannot use
 });

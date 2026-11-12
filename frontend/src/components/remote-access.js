@@ -228,10 +228,32 @@ async function connectedView(s) {
 
 /** The card's body for a status from GET /api/network/remote-access. */
 export async function remoteBody(s, nb = null) {
+  const body = await viewFor(s, nb);
+  return mayChange() ? body : lookOnly(body);
+}
+
+async function viewFor(s, nb) {
   if (s.state === 'Running') return connectedView(s);
   if (nb && nb.state === 'Connected' && nb.ip) return netbirdView(nb);
   if (s.state === 'NeedsLogin' && s.auth_url) return signInView(s);
   return connectForm();
+}
+
+/** Whether this account may connect, disconnect or publish (the server's rule for system:config);
+ *  yes until known. The account comes from route-access, read from the page so this window's code
+ *  doesn't pull route-access into the first load. */
+export function mayChange(user = /** @type {any} */ (globalThis).kibotoUser) {
+  const scopes = (user && user.scopes) || [];
+  return !user || ['*', 'system:*', 'system:config'].some((s) => scopes.includes(s));
+}
+
+/** For someone who may only look: what is shown stays, the form and buttons that the server would
+ *  refuse go, and the shared note says why (network report F1). */
+export function lookOnly(body) {
+  if (body.matches('form')) return stateBlock('readonly', { text: t('remote.look_only', 'Only someone who may change settings can connect this NAS.') });
+  body.querySelectorAll('.remote-actions, form').forEach((n) => n.remove());
+  body.append(stateBlock('readonly'));
+  return body;
 }
 
 export async function renderRemoteAccess(card, s = null) {

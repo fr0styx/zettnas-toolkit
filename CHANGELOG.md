@@ -32,6 +32,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **The Network page says when it can't read the layout**, on every part, with Try again. Before,
   the tiles showed "--" and the switch and Docker parts said "Loading…" for ever.
 
+#### Fixes
+
+- **People who may only look see Away from home without buttons that would be refused.** The
+  connection stays visible; the connect form, Disconnect and Turn on HTTPS are replaced by a note.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 
