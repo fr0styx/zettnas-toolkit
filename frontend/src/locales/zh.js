@@ -1581,6 +1581,8 @@ export default {
   "widget.ups_gauge_desc": "电池电量健康、负载功率与续航时间监控。",
   "widget.ai_accelerator": "AI 神经算力加速器",
   "widget.ai_accelerator_desc": "实时 Intel AI Boost NPU 与 Arc GPU 双算力表盘及运行主频。",
+  "widget.move_up": "上移{name}",
+  "widget.move_down": "下移{name}",
   "workspace.title": "虚拟桌面",
   "workspace.1": "工作区 1",
   "workspace.2": "工作区 2",

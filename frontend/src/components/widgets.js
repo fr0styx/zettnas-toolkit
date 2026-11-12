@@ -593,7 +593,70 @@ export function syncWidgetSettingsUI() {
       }
     });
   }
+  if (list) refreshWidgetMoveButtons(list);
   applyAdvancedToWidgets(); // UX-24
+}
+
+/** The widget ids in the order the Settings list shows them. */
+export function widgetOrder(list) {
+  return Array.from(list.querySelectorAll('.widget-sortable-item'))
+    .map((el) => /** @type {HTMLElement} */ (el).dataset.widgetId)
+    .filter(Boolean);
+}
+
+function _widgetRowName(row) {
+  return row.querySelector('.wdg-xs-bold-strong')?.textContent?.trim() || row.dataset.widgetId || '';
+}
+
+/** Names the move buttons in the current language and switches off the ones at the list's ends. */
+export function refreshWidgetMoveButtons(list) {
+  const rows = Array.from(list.querySelectorAll('.widget-sortable-item'));
+  rows.forEach((row, i) => {
+    const name = _widgetRowName(row);
+    row.querySelectorAll('.widget-move-btn').forEach((b) => {
+      const btn = /** @type {HTMLButtonElement} */ (b);
+      const up = btn.dataset.move === 'up';
+      btn.disabled = up ? i === 0 : i === rows.length - 1;
+      const label = up ? t('widget.move_up', 'Move {name} up', { name }) : t('widget.move_down', 'Move {name} down', { name });
+      btn.setAttribute('aria-label', label);
+      btn.title = label;
+    });
+  });
+}
+
+/** Moves a widget row one place up or down, saves the order and keeps the keyboard focus on it. */
+export function moveWidgetRow(list, row, dir, save) {
+  const rows = Array.from(list.querySelectorAll('.widget-sortable-item'));
+  const i = rows.indexOf(row);
+  const j = dir === 'up' ? i - 1 : i + 1;
+  if (i < 0 || j < 0 || j >= rows.length) return;
+  list.insertBefore(row, dir === 'up' ? rows[j] : rows[j].nextSibling);
+  refreshWidgetMoveButtons(list);
+  save(widgetOrder(list));
+  const same = row.querySelector(`.widget-move-btn[data-move="${dir}"]`);
+  const target = same && !same.disabled ? same : row.querySelector('.widget-move-btn:not(:disabled)');
+  target?.focus();
+}
+
+/** Up and down buttons on each widget row, so the order can be changed without dragging (APP-C). */
+export function addWidgetMoveButtons(list, save) {
+  list.querySelectorAll('.widget-sortable-item').forEach((row) => {
+    if (row.querySelector('.widget-move')) return;
+    const box = document.createElement('div');
+    box.className = 'widget-move';
+    for (const dir of ['up', 'down']) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'widget-move-btn';
+      b.dataset.move = dir;
+      b.textContent = dir === 'up' ? '↑' : '↓';
+      b.addEventListener('mousedown', (e) => e.stopPropagation());
+      b.addEventListener('click', () => moveWidgetRow(list, row, dir, save));
+      box.appendChild(b);
+    }
+    row.insertBefore(box, row.querySelector('input[type="checkbox"]'));
+  });
+  refreshWidgetMoveButtons(list);
 }
 
 /* =========================================================================
@@ -1833,13 +1896,11 @@ export function setupWidgetSettingsEvents() {
           sortableList.insertBefore(draggedItem, item.nextSibling);
         }
 
-        const newOrder = Array.from(sortableList.querySelectorAll('.widget-sortable-item'))
-          .map((el) => el.dataset.widgetId)
-          .filter(Boolean);
-
-        saveWidgetConfig({ order: newOrder });
+        refreshWidgetMoveButtons(sortableList);
+        saveWidgetConfig({ order: widgetOrder(sortableList) });
       });
     });
+    addWidgetMoveButtons(sortableList, (order) => saveWidgetConfig({ order }));
   }
 
   if (resetBtn) {

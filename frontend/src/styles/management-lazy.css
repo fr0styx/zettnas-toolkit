@@ -92,3 +92,35 @@
   #mgmt-sec-wallpaper .color-chip-btn { width: 44px; height: 44px; }
   #mgmt-pane-theme [class^="thm-row"], #mgmt-pane-theme .theme-backup-share-wrap { flex-wrap: wrap; gap: 8px; }
 }
+
+/* APP-C: widget order without dragging */
+.widget-move {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  margin-right: 10px;
+}
+.widget-move-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--kb-line-18);
+  background: transparent;
+  color: var(--kb-text-soft);
+  cursor: pointer;
+  line-height: 1;
+}
+.widget-move-btn:hover:not(:disabled) {
+  background: var(--kb-glaze-10);
+  color: var(--lt-ink-brand, var(--accent-cyan));
+}
+.widget-move-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+@media (max-width: 600px) {
+  .widget-move-btn {
+    width: 44px;
+    height: 44px;
+  }
+}

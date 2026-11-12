@@ -1553,6 +1553,8 @@ export default {
   "widget.ups_gauge_desc": "Battery integrity, load wattage, and runtime monitor.",
   "widget.ai_accelerator": "AI Accelerators",
   "widget.ai_accelerator_desc": "Real-time Intel AI Boost NPU & Arc GPU utilization dials and clock speeds.",
+  "widget.move_up": "Move {name} up",
+  "widget.move_down": "Move {name} down",
   "workspace.title": "Workspaces",
   "workspace.1": "Workspace 1",
   "workspace.2": "Workspace 2",

@@ -1591,6 +1591,8 @@ export default {
   "widget.ups_gauge_desc": "Intégrité de la batterie, puissance de charge et autonomie.",
   "widget.ai_accelerator": "Accélérateurs IA",
   "widget.ai_accelerator_desc": "Cadrans d'utilisation et fréquences en temps réel du NPU Intel AI Boost et du GPU Arc.",
+  "widget.move_up": "Monter {name}",
+  "widget.move_down": "Descendre {name}",
   "workspace.title": "Espaces de travail",
   "workspace.1": "Espace 1",
   "workspace.2": "Espace 2",

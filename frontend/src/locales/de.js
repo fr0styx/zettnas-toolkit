@@ -1581,6 +1581,8 @@ export default {
   "widget.ups_gauge_desc": "Batteriezustand, Lastleistung und Laufzeitüberwachung.",
   "widget.ai_accelerator": "KI-Beschleuniger",
   "widget.ai_accelerator_desc": "Echtzeit-Auslastungsanzeigen und Taktraten für Intel AI Boost NPU und Arc GPU.",
+  "widget.move_up": "{name} nach oben",
+  "widget.move_down": "{name} nach unten",
   "workspace.title": "Arbeitsbereiche",
   "workspace.1": "Arbeitsbereich 1",
   "workspace.2": "Arbeitsbereich 2",

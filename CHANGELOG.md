@@ -593,6 +593,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Spanish speaks to you one way throughout.** The last formal "usted" sentences (confirmations,
   hints, error advice) now use "tú", like the rest of the Spanish app.
 
+#### Changes
+
+- **Widgets can be reordered without dragging.** Each widget in Desktop → Widgets has up and down
+  buttons, named for the widget, so the order can be changed with a keyboard, a screen reader or a
+  phone, where dragging did not work.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
