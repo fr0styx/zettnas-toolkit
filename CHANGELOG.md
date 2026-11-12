@@ -673,6 +673,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   its own, Kiboto connects Immich's sign-in again at the new address by itself and leaves an alert
   with the addresses to add in your sign-in provider.
 
+#### Fixes
+
+- **True black is black.** It only darkened the tab strip; now windows, their title bars, the top bar,
+  the dock and the desktop widgets are solid black with no glass, and cards inside sit just off black,
+  in every theme.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

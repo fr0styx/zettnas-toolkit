@@ -43,6 +43,9 @@ body.theme-oled {
   --bg: #000000;
   --card: #080808;
   --card-hi: #121212;
+  --c-bg: var(--bg); /* the surfaces since APP-A read these: Lagoon set none of them (owner, 12 Nov) */
+  --c-raised: var(--card-hi);
+  --c-neutral-soft: var(--card-hi);
   --fg: #ffffff;
   --muted: #888888;
   --track: #181818;
@@ -60,3 +63,15 @@ body.theme-oled {
 .theme-mini[data-theme-id="moss"] { --m-dark: #1d2620; --m-light: #e7efe8; --m-p: #98c275; --m-pl: #52762f; }
 .theme-mini[data-theme-id="heather"] { --m-dark: #25222c; --m-light: #eeebf4; --m-p: #c69ef4; --m-pl: #7a55a1; }
 .theme-mini[data-theme-id="canyon"] { --m-dark: #292318; --m-light: #f9eada; --m-p: #f39a66; --m-pl: #9d522c; }
+
+/* True black: windows, bars, the dock and widgets solid black with no glass, so an OLED screen
+   switches those pixels off; cards inside sit just off black. It only changed the tab strip before. */
+body.theme-oled:not(.theme-light) :is(.os-window, .management-window, .smart-modal-window, .file-manager-window, .suite-navbar, .os-dock, .desktop-widget, .smart-modal-header, .os-window-header) {
+  /* !important like Eco mode: the windows set their glass with stronger selectors */
+  background: var(--c-bg) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+body.theme-oled:not(.theme-light) :is(.drawer-card, .network-card, .mgmt-app-card) {
+  background: var(--c-raised) !important;
+}
