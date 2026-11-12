@@ -86,6 +86,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   links are gone; every page is in the sidebar. The Storage tile never says "healthy" while the
   status shows a drive warning.
 
+#### Changes
+
+- **My account, for everyone.** Your password, two-step sign-in and passkeys, where you're signed in,
+  your data and (for administrators) API keys are now on one page: Settings → My account, also under
+  your name in the top bar. They were split between Security and People.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

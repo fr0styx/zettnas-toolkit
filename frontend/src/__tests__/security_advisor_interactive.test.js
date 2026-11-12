@@ -123,7 +123,7 @@ describe('Security Advisor Hardening Checklist - Interactive Configuration Routi
 
     handleSecurityAdvisorClick('admin_mfa');
 
-    expect(window.openManagementWindow).toHaveBeenCalledWith('mgmt-sec-system-group', 'mgmt-pane-users', 'users-pane-2fa');
+    expect(window.openManagementWindow).toHaveBeenCalledWith('mgmt-sec-system-group', 'mgmt-pane-account'); // two-step sign-in lives in My account (SET-19)
 
     vi.advanceTimersByTime(160);
     expect(scrollSpy).toHaveBeenCalled();

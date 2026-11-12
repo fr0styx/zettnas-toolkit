@@ -2,7 +2,7 @@ import { syncWidgetSettingsUI } from './widgets.js';
 import { isNvmeDrive } from './temp-rule.js';
 import { refreshAndSay } from './refresh-say.js';
 import { askPower, isShuttingDown, powerToast } from './vm/power.js';
-import { loadSecurityPane, loadNotificationsPane } from './management/admin-panes.js';
+import { loadAccountPane, loadSecurityPane, loadNotificationsPane } from './management/admin-panes.js';
 import { kibPaneFor, loadKibExtras } from './management/kib-access.js';
 import { setIconLabel } from '../ui/primitives.js';
 import { syncDesktopThemeUI, openDrawer, restoreHardwareTabsToManagement } from './settings.js';
@@ -146,6 +146,7 @@ export const SUBPANE_MAP = {
   'mgmt-pane-security': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-security' },
   'mgmt-sec-users': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-users' },
   'mgmt-pane-users': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-users' },
+  'mgmt-pane-account': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-account' }, // My account (SET-19)
   'mgmt-sec-backups': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' },
   'mgmt-pane-backups': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-backups' },
   'mgmt-sec-notifications': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-notifications' },
@@ -856,6 +857,8 @@ export function initManagement() {
       loadSecurityPane(); // an administrator's set-up only for administrators (SET-03)
     } else if (paneId === 'mgmt-pane-notifications') {
       loadNotificationsPane();
+    } else if (paneId === 'mgmt-pane-account') {
+      loadAccountPane();
     } else if (paneId === 'mgmt-pane-users') {
       import('./users.js').then((m) => m.loadUsersPane(subTabId || 'users-pane-list'));
     } else if (paneId === 'mgmt-pane-about') {

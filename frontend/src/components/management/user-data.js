@@ -57,9 +57,10 @@ export function renderUserData(card, user, own) {
   });
 }
 
-/** Security pane: the card for your own account, after the sign-in cards. */
+/** My account: the card for your own account (SET-19; it stood in Security after the sign-in cards). */
 export async function installMyData(root = document) {
-  const anchor = root.getElementById('sec-ldap-card');
+  const mount = root.getElementById('account-data-mount');
+  const anchor = mount || root.getElementById('sec-ldap-card');
   if (!anchor || root.getElementById(CARD_ID)) return;
   let me;
   try {
@@ -70,7 +71,8 @@ export async function installMyData(root = document) {
   const user = me.user || me;
   if (!user || !user.id) return;
   const card = Object.assign(document.createElement('div'), { id: CARD_ID, className: 'kb-card kb-card--divided' });
-  anchor.insertAdjacentElement('afterend', card);
+  if (mount) mount.append(card);
+  else anchor.insertAdjacentElement('afterend', card);
   renderUserData(card, user, true);
 }
 

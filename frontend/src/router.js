@@ -38,6 +38,7 @@ for (const [name, id] of Object.entries({
   folders: 'pane-storage-shares',
   kib: 'sec-ai',
   away: 'pane-network-wireguard',
+  account: 'pane-account', // My account, for every role (SET-19)
   sharing: 'pane-network-services', // share links, apps and family from anywhere (SET-24)
   notifications: 'pane-notifications',
   security: 'pane-security',

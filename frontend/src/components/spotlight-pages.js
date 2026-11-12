@@ -20,6 +20,7 @@ export const PAGES = [
   ['notifications', 'mgmt.sidebar_notifications', 'Notifications', 'sp.kw_notifications', 'alerts, email, push, telegram, messages'],
   ['kib', 'mgmt.sidebar_kib', 'Kib', 'sp.kw_kib', 'ai, assistant, ask, chat, search my files'],
   ['appearance', 'mgmt.sidebar_appearance', 'Appearance', 'sp.kw_appearance', 'theme, dark, light, wallpaper, colour, color, look, dock, widgets'],
+  ['account', 'account.title', 'My account', 'sp.kw_account', 'my account, password, two-step, passkey, sign out, my data, devices'],
   ['security', 'mgmt.sidebar_security', 'Security', 'sp.kw_security', 'password, two-step, 2fa, sign-in, passkey, security check'],
   ['general', 'mgmt.sidebar_general', 'General', 'sp.kw_general', 'update, version, language, time, about, name'],
   ['network', 'mgmt.sidebar_network', 'Network', 'sp.kw_network', 'ip, address, ethernet, ports, wifi'],
@@ -46,8 +47,8 @@ export const TABS = [
 export const TASKS = [
   ['add_person', 'people', '', 'Add a person', 'invite, new user, family member, account'],
   ['child', 'people', '', 'Make an account for a child', 'kid, child, son, daughter, hours'],
-  ['password', 'security', '', 'Change my password', 'password, sign-in, forgot'],
-  ['two_step', 'security', '', 'Turn on two-step sign-in', '2fa, code, authenticator'],
+  ['password', 'account', '', 'Change my password', 'password, sign-in, forgot'],
+  ['two_step', 'account', '', 'Turn on two-step sign-in', '2fa, code, authenticator'],
   ['dark', 'appearance', '', 'Switch between dark and light', 'dark mode, light mode, night'],
   ['wallpaper', 'appearance', '', 'Change the wallpaper', 'background, picture'],
   ['time_zone', 'general', 'mgmt-pane-language', 'Set the time zone', 'clock, time'],

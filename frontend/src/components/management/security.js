@@ -83,7 +83,7 @@ export function handleSecurityAdvisorClick(checkId) {
     case 'sec_superadmin_mfa':
     case 'mfa_admins': {
       if (typeof window.openManagementWindow === 'function') {
-        window.openManagementWindow('mgmt-sec-system-group', 'mgmt-pane-users', 'users-pane-2fa');
+        window.openManagementWindow('mgmt-sec-system-group', 'mgmt-pane-account');
       }
       setTimeout(() => {
         const mfaCard = document.getElementById('mfa-status-card') || document.getElementById('users-pane-2fa');

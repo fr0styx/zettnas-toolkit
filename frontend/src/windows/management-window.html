@@ -2773,6 +2773,10 @@
           <div id="mgmt-sec-system-group" class="mgmt-detail-card" style="display: none;">
             <div class="mgmt-sticky-subnav">
               <div class="mgmt-inner-tabs" role="tablist">
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-account" id="mgmt-tab-account" data-route="account">
+                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-users"/></svg>
+                  <span data-i18n="account.title">My account</span>
+                </button>
                 <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-security" id="mgmt-tab-security">
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chip"/></svg>
                   <span data-i18n="mgmt.subtab_security">Security</span>
@@ -2803,6 +2807,150 @@
                 </button>
               </div>
             </div>
+            <!-- My account (SET-19 stage 3, decision X4): a person's own sign-in things, for every role -->
+            <div id="mgmt-pane-account" class="mgmt-tab-pane" style="display: none;">
+              <div class="mgmt-card-intro">
+                <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-users"/></svg> <span data-i18n="account.title">My account</span></div>
+                <div class="mgmt-card-intro-desc" data-i18n="account.desc">Your password, two-step sign-in and passkeys, where you are signed in, and your data.</div>
+              </div>
+              <div class="mgmt-detail-body account-body">
+                <section class="account-section" aria-labelledby="acc-pwd-title">
+                  <h3 id="acc-pwd-title" class="account-h" data-i18n="account.password">Password</h3>
+              <div class="sec-box-2">
+                <div class="sec-grid">
+                  <div>
+                    <label class="sec-xs-bold-warn" for="sec-new-pwd" data-i18n="mgmt.sec_new_pwd">NEW PASSWORD (Optional)</label>
+                    <input type="password" id="sec-new-pwd" class="tz-select-input sec-strong-box" placeholder="New password (min. 8 characters)" data-i18n-placeholder="ui.new_password_min_8_characters" minlength="8" autocomplete="new-password">
+                  </div>
+                  <div>
+                    <label class="sec-xs-bold-warn" for="sec-confirm-pwd" data-i18n="mgmt.sec_confirm_pwd">Confirm new password</label>
+                    <input type="password" id="sec-confirm-pwd" class="tz-select-input sec-strong-box" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" autocomplete="new-password">
+                  </div>
+                </div>
+                <div id="sec-pwd-mismatch-msg" style="display:none; color:var(--crit, #ff6b6b); font-size: var(--kb-fs-xs); font-weight:600; margin-top:6px; align-items:center; gap:4px;">
+                  <span aria-hidden="true">⚠️</span> <span data-i18n="mgmt.sec_err_pwd_mismatch">New passwords do not match. Please verify and try again.</span>
+                </div>
+              </div>
+
+              <div class="sec-box-2">
+                <label class="sec-xs-bold-ok" for="sec-cur-pwd" data-i18n="mgmt.sec_cur_pwd">CURRENT PASSWORD (Required to commit changes)</label>
+                <input type="password" id="sec-cur-pwd" class="tz-select-input sec-strong-box" placeholder="Enter current password" data-i18n-placeholder="ui.enter_current_password">
+              </div>
+
+              <div class="sec-row-3">
+                <button id="sec-save-btn" class="suite-toolkit-btn sec-grow"><span aria-hidden="true">💾</span> <span data-i18n="mgmt.sec_save">Save</span></button>
+                <button id="sec-logout-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px; background: rgba(220,50,50,0.12); color: var(--crit); border-color: rgba(220,50,50,0.3);" data-i18n="mgmt.sec_logout">Sign out</button>
+              </div>
+
+                </section>
+                <section class="account-section" aria-labelledby="acc-2fa-title">
+                  <h3 id="acc-2fa-title" class="account-h" data-i18n="account.two_step">Two-step sign-in and passkeys</h3>
+            <!-- Subpane 3: 2FA Self-Service -->
+            <div id="users-pane-2fa" class="users-subpane">
+              <div id="mfa-status-card" class="drawer-card usr-box">
+                <div class="usr-row-2">
+                  <div class="usr-row-3">
+                    <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(79,216,196,0.15); border: 1px solid rgba(79,216,196,0.3); display:flex; align-items:center; justify-content:center; font-size: 20px;">
+                      🛡️
+                    </div>
+                    <div>
+                      <div class="usr-base-bold-strong" data-i18n="users.2fa_card_title">Two-step sign-in</div>
+                      <div class="usr-xs-muted" data-i18n="users.2fa_card_desc">After the password, a code from an app on your phone.</div>
+                    </div>
+                  </div>
+                  <div>
+                    <span id="mfa-status-badge" style="font-size: var(--kb-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 20px; background: rgba(239,68,68,0.15); color: var(--lt-t-fca5a5ff, #fca5a5); border: 1px solid rgba(239,68,68,0.3);" data-i18n="users.2fa_badge_off">Off</span>
+                  </div>
+                </div>
+                <div class="usr-sm-soft" id="mfa-status-desc" data-i18n="users.2fa_desc_off">
+                  Two-step sign-in is off. Turn it on, and a stolen password alone can't open your account.
+                </div>
+                <div class="usr-row-4">
+                  <button type="button" id="btn-enable-2fa" class="btn-save-preset usr-sm" data-i18n="users.2fa_set_up">
+                    Set up two-step sign-in
+                  </button>
+                  <button type="button" id="btn-disable-2fa" class="suite-toolkit-btn danger usr-sm" style="display: none;" data-i18n="users.2fa_turn_off">
+                    Turn off two-step sign-in
+                  </button>
+                  <button type="button" id="btn-smb-password" class="btn-pill-toggle" hidden data-i18n="smb.make">Shared folders password</button>
+                </div>
+                <p id="smb-password-why" class="smb-pw-why" hidden data-i18n="smb.why">With two-step sign-in on, your account password no longer opens the shared folders over the network. Make a separate password for them here.</p>
+                <div id="smb-password-box" class="smb-pw-box" hidden></div>
+              </div>
+            </div>
+
+                </section>
+                <section class="account-section">
+            <div id="users-pane-sessions" class="users-subpane">
+              <div class="users-bar">
+                <div>
+                  <div class="users-bar-title" data-i18n="users.sessions_title">Signed-in browsers and devices</div>
+                  <div class="users-bar-desc" data-i18n="users.sessions_desc">Sign out anything you don't recognise.</div>
+                </div>
+                <div class="users-bar-actions">
+                  <button type="button" id="btn-refresh-sessions" class="btn-pill-toggle" data-i18n="common.refresh">
+                    🔄 Refresh
+                  </button>
+                  <button type="button" id="btn-revoke-all-sessions" class="suite-toolkit-btn danger users-bar-btn is-xs" data-i18n="users.sign_out_others">
+                    Sign out everywhere else
+                  </button>
+                </div>
+              </div>
+              <div class="table-container users-table-wrap" tabindex="0">
+                <table class="kb-datatable kb-datatable--roomy users-table users-table--narrow">
+                  <thead>
+                    <tr class="users-thead">
+                      <th data-i18n="users.col_device">Browser or device</th>
+                      <th data-i18n="users.col_ip">IP address</th>
+                      <th data-i18n="users.col_first">Signed in</th>
+                      <th data-i18n="users.col_last">Last active</th>
+                      <th class="is-end" data-i18n="users.col_actions">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sessions-table-body">
+                    <!-- Populated via users.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+                </section>
+                <section class="account-section" aria-labelledby="acc-data-title">
+                  <h3 id="acc-data-title" class="account-h" data-i18n="account.data">My data</h3>
+                  <div id="account-data-mount"></div>
+                </section>
+                <section class="account-section" aria-labelledby="acc-api-title" data-admin-only>
+                  <h3 id="acc-api-title" class="account-h" data-i18n="account.api_keys">API keys</h3>
+              <div class="sec-box-4" data-admin-only>
+                <div class="sec-row-4">
+                  <span class="sec-sm-bold-strong" data-i18n="settings.api_tokens">API Tokens & Automation Keys</span>
+                </div>
+                <div class="sec-xs-muted-2" data-i18n="mw.generate_scoped_api_tkns_for_third">
+                  Generate scoped API tokens for third-party integrations (e.g., Home Assistant, Prometheus, or backup automation).
+                </div>
+                <div class="sec-col-2" id="api-tokens-list">
+                  <div class="sec-xs-muted-3" data-i18n="mw.loading">Loading...</div>
+                </div>
+                <div class="sec-row-5">
+                  <input type="text" id="new-token-name" placeholder="Token Name (e.g. Home Assistant)" data-i18n-placeholder="ui.token_name_e_g_home" class="tz-select-input sec-sm-strong-box-grow" aria-label="Token Name (e.g. Home Assistant)" data-i18n-aria-label="ui.token_name_e_g_home">
+                  <button id="btn-generate-token" class="btn-pill-toggle" style="color: var(--lt-ink-brand, var(--brand, #4fd8c4)); border-color: rgba(79,216,196,0.35); background: rgba(79,216,196,0.12);" data-i18n="mw.generate">Generate</button>
+                </div>
+                <label for="new-token-kind" class="kb-sub is-spaced" data-i18n="tokens.kind_label">What it may do</label>
+                <select id="new-token-kind" class="tz-select-input kb-token-kind">
+                  <option value="files-read" data-i18n="tokens.kind_files_read">Read files</option>
+                  <option value="files-write" data-i18n="tokens.kind_files_write">Read and change files</option>
+                  <option value="monitoring" data-i18n="tokens.kind_monitoring">See how the server is doing (monitoring)</option>
+                  <option value="mcp" data-i18n="tokens.kind_mcp">An AI assistant (MCP): search and read files</option>
+                  <option value="full" data-i18n="tokens.kind_full">Everything you can do (only for a tool you trust completely)</option>
+                </select>
+                <label for="new-token-folders" class="kb-sub is-spaced" data-i18n="tokens.folders_label">Only these folders (optional, one per line)</label>
+                <textarea id="new-token-folders" class="tz-select-input kb-token-folders" rows="2" placeholder="/mnt/user/Documents" data-i18n-placeholder="tokens.folders_placeholder"></textarea>
+                <div id="api-token-created" class="kb-token-created" role="status" hidden></div>
+              </div>
+                </section>
+              </div>
+            </div>
+
             <div id="mgmt-pane-security" class="mgmt-tab-pane sec-x">
           <div class="mgmt-card-intro">
             <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.sec_title">Account Security & Credentials</span></div>
@@ -2832,32 +2980,6 @@
           <div class="mgmt-detail-body">
             <div class="sec-col">
 
-              <div class="sec-box-2">
-                <div class="sec-grid">
-                  <div>
-                    <label class="sec-xs-bold-warn" for="sec-new-pwd" data-i18n="mgmt.sec_new_pwd">NEW PASSWORD (Optional)</label>
-                    <input type="password" id="sec-new-pwd" class="tz-select-input sec-strong-box" placeholder="New password (min. 8 characters)" data-i18n-placeholder="ui.new_password_min_8_characters" minlength="8" autocomplete="new-password">
-                  </div>
-                  <div>
-                    <label class="sec-xs-bold-warn" for="sec-confirm-pwd" data-i18n="mgmt.sec_confirm_pwd">Confirm new password</label>
-                    <input type="password" id="sec-confirm-pwd" class="tz-select-input sec-strong-box" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" autocomplete="new-password">
-                  </div>
-                </div>
-                <div id="sec-pwd-mismatch-msg" style="display:none; color:var(--crit, #ff6b6b); font-size: var(--kb-fs-xs); font-weight:600; margin-top:6px; align-items:center; gap:4px;">
-                  <span aria-hidden="true">⚠️</span> <span data-i18n="mgmt.sec_err_pwd_mismatch">New passwords do not match. Please verify and try again.</span>
-                </div>
-              </div>
-
-              <div class="sec-box-2">
-                <label class="sec-xs-bold-ok" for="sec-cur-pwd" data-i18n="mgmt.sec_cur_pwd">CURRENT PASSWORD (Required to commit changes)</label>
-                <input type="password" id="sec-cur-pwd" class="tz-select-input sec-strong-box" placeholder="Enter current password" data-i18n-placeholder="ui.enter_current_password">
-              </div>
-
-              <div class="sec-row-3">
-                <button id="sec-save-btn" class="suite-toolkit-btn sec-grow"><span aria-hidden="true">💾</span> <span data-i18n="mgmt.sec_save">Save</span></button>
-                <button id="sec-logout-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px; background: rgba(220,50,50,0.12); color: var(--crit); border-color: rgba(220,50,50,0.3);" data-i18n="mgmt.sec_logout">Sign out</button>
-              </div>
-
               <div class="sec-box-3" data-admin-only>
                 <button id="btn-launch-setup-wizard" class="btn-save-preset" style="width: 100%; justify-content:center; padding: 10px; font-size: var(--kb-fs-sm); background: rgba(224, 122, 56, 0.15); border-color: rgba(224, 122, 56, 0.4); color: var(--lt-t-f5f9f9ff, #f5f9f9);"><span aria-hidden="true">🚀</span> <span data-i18n="mgmt.sec_wizard">Launch Initial Hardware Setup Wizard</span></button>
               </div>
@@ -2869,41 +2991,7 @@
               <div id="file-activity-mount" class="kb-card kb-card--divided" hidden data-admin-only></div>
 
               <!-- Scoped API Tokens -->
-              <div class="sec-box-4" data-admin-only>
-                <div class="sec-row-4">
-                  <span class="sec-sm-bold-strong" data-i18n="settings.api_tokens">API Tokens & Automation Keys</span>
-                </div>
-                <div class="sec-xs-muted-2" data-i18n="mw.generate_scoped_api_tkns_for_third">
-                  Generate scoped API tokens for third-party integrations (e.g., Home Assistant, Prometheus, or backup automation).
-                </div>
-                <div class="sec-col-2" id="api-tokens-list">
-                  <div class="sec-xs-muted-3" data-i18n="mw.loading">Loading...</div>
-                </div>
-                <div class="sec-row-5">
-                  <input type="text" id="new-token-name" placeholder="Token Name (e.g. Home Assistant)" data-i18n-placeholder="ui.token_name_e_g_home" class="tz-select-input sec-sm-strong-box-grow" aria-label="Token Name (e.g. Home Assistant)" data-i18n-aria-label="ui.token_name_e_g_home">
-                  <button id="btn-generate-token" class="btn-pill-toggle" style="color: var(--lt-ink-brand, var(--brand, #4fd8c4)); border-color: rgba(79,216,196,0.35); background: rgba(79,216,196,0.12);" data-i18n="mw.generate">Generate</button>
-                </div>
-                <label for="new-token-kind" class="kb-sub is-spaced" data-i18n="tokens.kind_label">What it may do</label>
-                <select id="new-token-kind" class="tz-select-input kb-token-kind">
-                  <option value="files-read" data-i18n="tokens.kind_files_read">Read files</option>
-                  <option value="files-write" data-i18n="tokens.kind_files_write">Read and change files</option>
-                  <option value="monitoring" data-i18n="tokens.kind_monitoring">See how the server is doing (monitoring)</option>
-                  <option value="mcp" data-i18n="tokens.kind_mcp">An AI assistant (MCP): search and read files</option>
-                  <option value="full" data-i18n="tokens.kind_full">Everything you can do (only for a tool you trust completely)</option>
-                </select>
-                <label for="new-token-folders" class="kb-sub is-spaced" data-i18n="tokens.folders_label">Only these folders (optional, one per line)</label>
-                <textarea id="new-token-folders" class="tz-select-input kb-token-folders" rows="2" placeholder="/mnt/user/Documents" data-i18n-placeholder="tokens.folders_placeholder"></textarea>
-                <div id="api-token-created" class="kb-token-created" role="status" hidden></div>
-              </div>
 
-              <!-- Two-Factor Authentication Quick Access -->
-              <div style="border-top: 1px solid var(--kb-line-6); margin-top: 14px; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; background: rgba(79,216,196,0.05); border: 1px solid rgba(79,216,196,0.2); border-radius: 8px; padding: 12px 14px;">
-                <div>
-                  <div class="sec-sm-bold-strong"><span aria-hidden="true">🛡️</span> <span data-i18n="mw.two_factor_2fa">Two-Factor Authentication (2FA)</span></div>
-                  <div class="sec-xs-muted-4" data-i18n="mw.protect_your_account_with_rfc_6238">Protect your account with RFC 6238 TOTP authenticator app verification.</div>
-                </div>
-                <button type="button" class="btn-pill-toggle" id="btn-jump-to-2fa" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border-color: rgba(79,216,196,0.4);" data-i18n="sec.configure_2fa">Set up two-step sign-in →</button>
-              </div>
             </div>
           </div>
         </div>
@@ -2987,77 +3075,6 @@
             </div>
 
             <!-- Subpane 2: Active Sessions -->
-            <div id="users-pane-sessions" class="users-subpane">
-              <div class="users-bar">
-                <div>
-                  <div class="users-bar-title" data-i18n="users.sessions_title">Signed-in browsers and devices</div>
-                  <div class="users-bar-desc" data-i18n="users.sessions_desc">Sign out anything you don't recognise.</div>
-                </div>
-                <div class="users-bar-actions">
-                  <button type="button" id="btn-refresh-sessions" class="btn-pill-toggle" data-i18n="common.refresh">
-                    🔄 Refresh
-                  </button>
-                  <button type="button" id="btn-revoke-all-sessions" class="suite-toolkit-btn danger users-bar-btn is-xs" data-i18n="users.sign_out_others">
-                    Sign out everywhere else
-                  </button>
-                </div>
-              </div>
-              <div class="table-container users-table-wrap" tabindex="0">
-                <table class="kb-datatable kb-datatable--roomy users-table users-table--narrow">
-                  <thead>
-                    <tr class="users-thead">
-                      <th data-i18n="users.col_device">Browser or device</th>
-                      <th data-i18n="users.col_ip">IP address</th>
-                      <th data-i18n="users.col_first">Signed in</th>
-                      <th data-i18n="users.col_last">Last active</th>
-                      <th class="is-end" data-i18n="users.col_actions">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="sessions-table-body">
-                    <!-- Populated via users.js -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Subpane 3: 2FA Self-Service -->
-            <div id="users-pane-2fa" class="users-subpane">
-              <div id="mfa-status-card" class="drawer-card usr-box">
-                <div class="usr-row-2">
-                  <div class="usr-row-3">
-                    <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(79,216,196,0.15); border: 1px solid rgba(79,216,196,0.3); display:flex; align-items:center; justify-content:center; font-size: 20px;">
-                      🛡️
-                    </div>
-                    <div>
-                      <div class="usr-base-bold-strong" data-i18n="users.2fa_card_title">Two-step sign-in</div>
-                      <div class="usr-xs-muted" data-i18n="users.2fa_card_desc">After the password, a code from an app on your phone.</div>
-                    </div>
-                  </div>
-                  <div>
-                    <span id="mfa-status-badge" style="font-size: var(--kb-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 20px; background: rgba(239,68,68,0.15); color: var(--lt-t-fca5a5ff, #fca5a5); border: 1px solid rgba(239,68,68,0.3);" data-i18n="users.2fa_badge_off">Off</span>
-                  </div>
-                </div>
-                <div class="usr-sm-soft" id="mfa-status-desc" data-i18n="users.2fa_desc_off">
-                  Two-step sign-in is off. Turn it on, and a stolen password alone can't open your account.
-                </div>
-                <div class="usr-row-4">
-                  <button type="button" id="btn-enable-2fa" class="btn-save-preset usr-sm" data-i18n="users.2fa_set_up">
-                    Set up two-step sign-in
-                  </button>
-                  <button type="button" id="btn-disable-2fa" class="suite-toolkit-btn danger usr-sm" style="display: none;" data-i18n="users.2fa_turn_off">
-                    Turn off two-step sign-in
-                  </button>
-                  <button type="button" id="btn-smb-password" class="btn-pill-toggle" hidden data-i18n="smb.make">Shared folders password</button>
-                </div>
-                <p id="smb-password-why" class="smb-pw-why" hidden data-i18n="smb.why">With two-step sign-in on, your account password no longer opens the shared folders over the network. Make a separate password for them here.</p>
-                <div id="smb-password-box" class="smb-pw-box" hidden></div>
-                <div class="usr-row-box">
-                  <div class="usr-xs-muted" data-i18n="users.2fa_more">Change your username, password or API keys?</div>
-                  <button type="button" class="btn-pill-toggle usr-strong" id="btn-jump-to-security" data-i18n="users.2fa_more_btn">Account and password →</button>
-                </div>
-              </div>
-            </div>
-
             <section class="invite-card" aria-labelledby="users-away-title">
               <h4 id="users-away-title" class="invite-title" data-i18n="users.away_title">Family from anywhere</h4>
               <p class="invite-meta" data-i18n="users.away_desc">Let the people in your home open Kiboto and their photos when they are out, through Tailscale.</p>

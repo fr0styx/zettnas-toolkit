@@ -19,6 +19,7 @@ const ASKED = [
   ['update', 'General'],
   ['samba', 'Shared folders'],
   ['what happened', 'Activity'],
+  ['sign out', 'My account'],
   ['time zone', 'Time, Language & Region'],
   ['fan curve', 'Fans'],
   ['dropbox', 'Remote & Cloud Storage'],

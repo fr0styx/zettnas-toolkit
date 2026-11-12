@@ -329,7 +329,7 @@ describe('People pane (users.js)', () => {
     window.openManagementWindow = vi.fn();
     byId('btn-jump-to-security').click();
     byId('btn-jump-to-2fa').click();
-    expect(window.openManagementWindow.mock.calls).toEqual([['mgmt-pane-security'], ['mgmt-pane-users', null, 'users-pane-2fa']]);
+    expect(window.openManagementWindow.mock.calls).toEqual([['mgmt-pane-account'], ['mgmt-pane-account']]); // My account (SET-19)
     delete window.openManagementWindow;
   });
 

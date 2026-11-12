@@ -102,7 +102,7 @@ function bindUsersPane() {
     btnJumpToSecurity.dataset.bound = 'true';
     btnJumpToSecurity.onclick = () => {
       if (typeof window.openManagementWindow === 'function') {
-        window.openManagementWindow('mgmt-pane-security');
+        window.openManagementWindow('mgmt-pane-account');
       }
     };
   }
@@ -112,7 +112,7 @@ function bindUsersPane() {
     btnJumpTo2fa.dataset.bound = 'true';
     btnJumpTo2fa.onclick = () => {
       if (typeof window.openManagementWindow === 'function') {
-        window.openManagementWindow('mgmt-pane-users', null, 'users-pane-2fa');
+        window.openManagementWindow('mgmt-pane-account');
       }
     };
   }
@@ -165,9 +165,16 @@ export async function loadUsersPane(focusPart = 'users-pane-list') {
   if (fc) import('./family-calendar.js').then((m) => m.renderFamilyCalendar(fc)); // NFEAT-7
   const fsm = document.getElementById('family-signin-mount');
   if (fsm) import('./family-signin.js').then((m) => m.renderFamilySignin(fsm)); // NFEAT-6
+  switchUsersSubtab(focusPart);
+}
+
+/** My account's parts: the two-step card (with passkeys), the shared-folders password and the
+ *  signed-in devices, for every role (SET-19). */
+export async function loadAccountParts() {
+  initUsersManagement();
+  await fetchCurrentProfile();
   loadSessionsList();
   load2FAStatus();
-  switchUsersSubtab(focusPart);
 }
 
 export async function loadUsersList() {

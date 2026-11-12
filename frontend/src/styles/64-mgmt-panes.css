@@ -175,33 +175,33 @@
 #mgmt-pane-screensaver .scr-row-5 { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
 
 /* The mgmt-pane-security pane: classes instead of inline styles (NUX-15), same look */
-#mgmt-pane-security .sec-x { display: block; }
-#mgmt-pane-security .sec-row { display: flex; justify-content: space-between; align-items: center; }
-#mgmt-pane-security .sec-row-sm-bold-strong { font-size: var(--kb-fs-sm); font-weight: 700; color: var(--kb-text-strong); display: flex; align-items: center; gap: 6px; }
-#mgmt-pane-security .sec-brand { width: 14px; height: 14px; color: var(--lt-ink-brand, var(--accent-cyan)); }
-#mgmt-pane-security .sec-col-xs { display: flex; flex-direction: column; gap: 6px; font-size: var(--kb-fs-xs); }
-#mgmt-pane-security .sec-box { padding-top: 8px; border-top: 1px solid var(--kb-line-8); }
-#mgmt-pane-security .sec-row-2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-#mgmt-pane-security .sec-xs-muted { font-size: var(--kb-fs-xs); color: var(--muted); }
-#mgmt-pane-security .sec-col { display: flex; flex-direction: column; gap: 14px; }
-#mgmt-pane-security .sec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-#mgmt-pane-security .sec-xs-bold-muted { display: block; font-size: var(--kb-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.5px; }
-#mgmt-pane-security .sec-strong-box { width: 100%; border: 1px solid var(--kb-line-12); background: var(--kb-shade-25); padding: 8px 10px; color: var(--kb-text-strong); }
-#mgmt-pane-security .sec-box-2 { border-top: 1px solid var(--kb-line-6); padding-top: 12px; }
-#mgmt-pane-security .sec-xs-bold-warn { display: block; font-size: var(--kb-fs-xs); font-weight: 700; color: var(--warn); margin-bottom: 4px; letter-spacing: 0.5px; }
-#mgmt-pane-security .sec-xs-bold-ok { display: block; font-size: var(--kb-fs-xs); font-weight: 700; color: var(--ok2); margin-bottom: 4px; letter-spacing: 0.5px; }
-#mgmt-pane-security .sec-row-3 { display: flex; gap: 10px; margin-top: 6px; }
-#mgmt-pane-security .sec-grow { flex: 1; justify-content: center; padding: 10px; }
-#mgmt-pane-security .sec-box-3 { border-top: 1px solid var(--kb-line-6); margin-top: 4px; padding-top: 14px; }
-#mgmt-pane-security .sec-box-4 { border-top: 1px solid var(--kb-line-6); margin-top: 14px; padding-top: 14px; }
-#mgmt-pane-security .sec-row-4 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-#mgmt-pane-security .sec-sm-bold-strong { font-weight: 700; font-size: var(--kb-fs-sm); color: var(--kb-text-strong); }
-#mgmt-pane-security .sec-xs-muted-2 { font-size: var(--kb-fs-xs); color: var(--muted); margin-bottom: 12px; line-height: 1.4; }
-#mgmt-pane-security .sec-col-2 { margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
-#mgmt-pane-security .sec-xs-muted-3 { font-size: var(--kb-fs-xs); color: var(--muted); text-align: center; }
-#mgmt-pane-security .sec-row-5 { display: flex; gap: 8px; }
-#mgmt-pane-security .sec-sm-strong-box-grow { flex: 1; background: var(--kb-shade-25); border: 1px solid var(--kb-line-12); color: var(--kb-text-strong); padding: 7px 12px; font-size: var(--kb-fs-sm); border-radius: 6px; }
-#mgmt-pane-security .sec-xs-muted-4 { font-size: var(--kb-fs-xs); color: var(--muted); margin-top: 2px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-x { display: block; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-row { display: flex; justify-content: space-between; align-items: center; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-row-sm-bold-strong { font-size: var(--kb-fs-sm); font-weight: 700; color: var(--kb-text-strong); display: flex; align-items: center; gap: 6px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-brand { width: 14px; height: 14px; color: var(--lt-ink-brand, var(--accent-cyan)); }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-col-xs { display: flex; flex-direction: column; gap: 6px; font-size: var(--kb-fs-xs); }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-box { padding-top: 8px; border-top: 1px solid var(--kb-line-8); }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-row-2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-xs-muted { font-size: var(--kb-fs-xs); color: var(--muted); }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-col { display: flex; flex-direction: column; gap: 14px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-xs-bold-muted { display: block; font-size: var(--kb-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.5px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-strong-box { width: 100%; border: 1px solid var(--kb-line-12); background: var(--kb-shade-25); padding: 8px 10px; color: var(--kb-text-strong); }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-box-2 { border-top: 1px solid var(--kb-line-6); padding-top: 12px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-xs-bold-warn { display: block; font-size: var(--kb-fs-xs); font-weight: 700; color: var(--warn); margin-bottom: 4px; letter-spacing: 0.5px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-xs-bold-ok { display: block; font-size: var(--kb-fs-xs); font-weight: 700; color: var(--ok2); margin-bottom: 4px; letter-spacing: 0.5px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-row-3 { display: flex; gap: 10px; margin-top: 6px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-grow { flex: 1; justify-content: center; padding: 10px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-box-3 { border-top: 1px solid var(--kb-line-6); margin-top: 4px; padding-top: 14px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-box-4 { border-top: 1px solid var(--kb-line-6); margin-top: 14px; padding-top: 14px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-row-4 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-sm-bold-strong { font-weight: 700; font-size: var(--kb-fs-sm); color: var(--kb-text-strong); }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-xs-muted-2 { font-size: var(--kb-fs-xs); color: var(--muted); margin-bottom: 12px; line-height: 1.4; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-col-2 { margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-xs-muted-3 { font-size: var(--kb-fs-xs); color: var(--muted); text-align: center; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-row-5 { display: flex; gap: 8px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-sm-strong-box-grow { flex: 1; background: var(--kb-shade-25); border: 1px solid var(--kb-line-12); color: var(--kb-text-strong); padding: 7px 12px; font-size: var(--kb-fs-sm); border-radius: 6px; }
+:is(#mgmt-pane-security, #mgmt-pane-account) .sec-xs-muted-4 { font-size: var(--kb-fs-xs); color: var(--muted); margin-top: 2px; }
 
 /* The mgmt-pane-ai-index pane: classes instead of inline styles (NUX-15), same look */
 #mgmt-pane-ai-index .aix-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
@@ -728,17 +728,17 @@
 #mgmt-pane-storage-shares .sshr-box { background: transparent; border-color: var(--border, var(--kb-line-15)); color: var(--text, var(--kb-text)); }
 
 /* The mgmt-pane-users pane: classes instead of inline styles (NUX-15), same look */
-#mgmt-pane-users .usr-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-#mgmt-pane-users .usr-box { padding: 18px; background: var(--kb-glaze-3); border-radius: 8px; border: 1px solid var(--kb-line-8); }
-#mgmt-pane-users .usr-row-2 { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
-#mgmt-pane-users .usr-row-3 { display: flex; align-items: center; gap: 12px; }
-#mgmt-pane-users .usr-base-bold-strong { font-size: var(--kb-fs); font-weight: 700; color: var(--kb-text-strong); }
-#mgmt-pane-users .usr-xs-muted { font-size: var(--kb-fs-xs); color: var(--muted); }
-#mgmt-pane-users .usr-sm-soft { font-size: var(--kb-fs-sm); line-height: 1.5; color: var(--kb-text-soft); margin-bottom: 16px; }
-#mgmt-pane-users .usr-row-4 { display: flex; gap: 10px; }
-#mgmt-pane-users .usr-sm { padding: 8px 16px; font-size: var(--kb-fs-sm); }
-#mgmt-pane-users .usr-row-box { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--kb-line-8); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-#mgmt-pane-users .usr-strong { color: var(--kb-text-strong); }
+:is(#mgmt-pane-users, #mgmt-pane-account) .usr-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+:is(#mgmt-pane-users, #mgmt-pane-account) .usr-box { padding: 18px; background: var(--kb-glaze-3); border-radius: 8px; border: 1px solid var(--kb-line-8); }
+:is(#mgmt-pane-users, #mgmt-pane-account) .usr-row-2 { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+:is(#mgmt-pane-users, #mgmt-pane-account) .usr-row-3 { display: flex; align-items: center; gap: 12px; }
+:is(#mgmt-pane-users, #mgmt-pane-account) .usr-base-bold-strong { font-size: var(--kb-fs); font-weight: 700; color: var(--kb-text-strong); }
+:is(#mgmt-pane-users, #mgmt-pane-account) .usr-xs-muted { font-size: var(--kb-fs-xs); color: var(--muted); }
+:is(#mgmt-pane-users, #mgmt-pane-account) .usr-sm-soft { font-size: var(--kb-fs-sm); line-height: 1.5; color: var(--kb-text-soft); margin-bottom: 16px; }
+:is(#mgmt-pane-users, #mgmt-pane-account) .usr-row-4 { display: flex; gap: 10px; }
+:is(#mgmt-pane-users, #mgmt-pane-account) .usr-sm { padding: 8px 16px; font-size: var(--kb-fs-sm); }
+:is(#mgmt-pane-users, #mgmt-pane-account) .usr-row-box { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--kb-line-8); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+:is(#mgmt-pane-users, #mgmt-pane-account) .usr-strong { color: var(--kb-text-strong); }
 
 /* Chassis, pools, shares and remotes (chassis-visualizer.js): classes instead of inline styles (NUX-15), same look */
 :is(#management-modal-overlay, #chassis-config-modal-overlay, #modal-btrfs-snapshots, #modal-create-network-share, #modal-create-storage-pool, #modal-new-cloud-remote, #modal-rename-storage-pool, #modal-sftp-users, #modal-webdav-config) .cv-row { display: flex; align-items: center; gap: 6px; overflow: hidden; }

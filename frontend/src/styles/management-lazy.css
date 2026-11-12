@@ -284,3 +284,8 @@
 .mgmt-hub-tile-line { font-size: var(--kb-fs-xs); color: var(--muted); min-height: 1.2em; }
 .mgmt-hub-gs { grid-column: 1 / -1; position: static; width: auto; max-width: none; margin-top: 4px; }
 
+/* SET-19: My account */
+.account-body { display: flex; flex-direction: column; gap: 18px; }
+.account-section { display: flex; flex-direction: column; gap: 10px; }
+.account-h { margin: 0; font-size: var(--kb-fs-md, 15px); color: var(--c-text); }
+

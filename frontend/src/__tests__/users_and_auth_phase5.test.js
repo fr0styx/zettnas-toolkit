@@ -182,6 +182,6 @@ describe('Phase 5: Multi-User Identity, RBAC & Desktop Lock UI', () => {
 
     openMgmtSpy.mockClear();
     btnSecurity.click();
-    expect(openMgmtSpy).toHaveBeenCalledWith('mgmt-pane-users', null, 'users-pane-2fa');
+    expect(openMgmtSpy).toHaveBeenCalledWith('mgmt-pane-account', null, null); // "My account" (SET-19)
   });
 });

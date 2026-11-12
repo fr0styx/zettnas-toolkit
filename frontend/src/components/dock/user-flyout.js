@@ -50,7 +50,7 @@ export function toggleUserProfileFlyout(anchorEl) {
           <span class="ufl-ico">👥</span> <span>${escapeHtml(t('dock.uf_people', 'People and permissions'))}</span>
         </button>
         <button class="user-flyout-btn ufl-btn" id="btn-flyout-security">
-          <span class="ufl-ico">🛡️</span> <span>${escapeHtml(t('dock.uf_security', 'Sign-in security'))}</span>
+          <span class="ufl-ico">🛡️</span> <span>${escapeHtml(t('account.title', 'My account'))}</span>
         </button>
         <div class="ufl-sep"></div>
         <button class="user-flyout-btn ufl-btn-soft" id="btn-flyout-switch">
@@ -115,7 +115,7 @@ export function toggleUserProfileFlyout(anchorEl) {
     document.getElementById('btn-flyout-security').addEventListener('click', () => {
       flyout.style.display = 'none';
       resetFlyoutTrigger();
-      openMgmtPane('mgmt-pane-users', 'users-pane-2fa');
+      openMgmtPane('mgmt-pane-account');
     });
 
     document.getElementById('btn-flyout-switch').addEventListener('click', () => {

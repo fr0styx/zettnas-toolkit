@@ -11,7 +11,7 @@ const html = readFileSync('frontend/src/windows/management-window.html', 'utf8')
 
 describe('the four Settings tabs carry no fixed English (SET-14)', () => {
   it('the 2FA button and the uptime heading are translated', () => {
-    expect(html).toMatch(/id="btn-jump-to-2fa"[^>]*data-i18n="sec.configure_2fa"/);
+    expect(html).toMatch(/id="mgmt-tab-account"[\s\S]*?data-i18n="account.title"/); // the 2FA shortcut became My account (SET-19)
     expect(html).toContain('data-i18n="mw.uptime_caps"');
     expect(html).not.toContain('>Configure 2FA');
   });
