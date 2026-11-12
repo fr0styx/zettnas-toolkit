@@ -2,7 +2,33 @@
 
 Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep that name.
 
-## Unreleased
+## v2.0.2 (2026-11-12)
+### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
+
+The second half of the Settings review. Pages no longer show sample values or say "Everything is fine"
+when they don't know; the event log keeps what happened and opens the page that deals with it; Apps,
+Shares, Virtual machines, Power and Kib say only what is true. Appearance has five themes in dark and
+light, saved with your account. Settings has a new sidebar with search. The Network page shows what
+the host really has. Away from home is one card for Tailscale or NetBird, under a line that says what
+reaches the NAS from outside, and the Tailscale options you keep survive restarts. Where Kiboto manages the host, a pool can be deleted with its drives erased.
+
+#### Before you upgrade
+
+- **Kids and guests keep only the folders shared with them.** On an install where they could still
+  open every shared folder, the first start of 2.0.2 applies the security check's fix once, as new
+  installs have had since 2.0.1, and an alert names who changed. Share a folder with someone again in
+  Shared folders if they need it.
+- **WireGuard, Tailscale SSH, Taildrop, Ping and the old Serve and Funnel switches are gone.** Their API
+  calls answer 410 with what replaced them. Tailscale itself, "Reach other things at home", "Use your
+  home internet when away", share links, apps and family access from anywhere stay.
+- **Network settings Kiboto cannot apply are refused.** On Unraid and other hosts that manage their own
+  network, changing an address, bond, bridge, VLAN, speed or packet size answers 409 with where to
+  change it (in Unraid: Settings → Network Settings). Addresses saved but never applied are cleared.
+  New Docker networks are bridge networks.
+- **Settings pages have new names and places.** Old links and bookmarks still open the right page.
+- **"Clear all" in the bell and the "Clear Event Log" button are gone**; entries leave by themselves
+  after 90 days. `DELETE /api/events/clear` still works and records who cleared the log.
+
 
 #### Fixes
 
