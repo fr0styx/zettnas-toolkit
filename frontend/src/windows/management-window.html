@@ -280,29 +280,14 @@
         <div id="mgmt-sec-wallpaper" class="mgmt-detail-card" style="display: none;">
           <div class="mgmt-sticky-subnav">
             <div class="mgmt-inner-tabs" role="tablist">
-              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-wallpaper">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-screen"/></svg>
-                <span data-i18n="mgmt.subtab_wallpaper">Wallpaper</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-theme">
+              <!-- APP-C: two tabs. A tab shows every pane in data-tab-panes; a link to any of them opens it -->
+              <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-theme" data-tab-panes="mgmt-pane-theme mgmt-pane-wallpaper mgmt-pane-glass">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
-                <span data-i18n="mgmt.subtab_theme">Desktop Theme</span>
+                <span data-i18n="mgmt.subtab_look">Look</span>
               </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-glass">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
-                <span data-i18n="mgmt.subtab_glass">Glass & Effects</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-dock">
+              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-dock" data-tab-panes="mgmt-pane-dock mgmt-pane-widgets mgmt-pane-screensaver">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
-                <span data-i18n="mgmt.subtab_dock">Dock & Desktop</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-screensaver">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-clock"/></svg>
-                <span data-i18n="mgmt.subtab_screensaver">Screensaver</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-widgets">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
-                <span data-i18n="mgmt.subtab_widgets">Widgets</span>
+                <span data-i18n="mgmt.subtab_desktop">Desktop</span>
               </button>
               <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-calendar" id="mgmt-tab-calendar">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-calendar"/></svg>
@@ -361,105 +346,8 @@
             </div>
           </div>
 
-          <!-- Sub-tab 1: Wallpaper & Backgrounds Gallery -->
-          <div id="mgmt-pane-wallpaper" class="mgmt-tab-pane" style="display: block;">
-            <div class="mgmt-card-intro">
-              <div class="mgmt-card-intro-title">
-                <svg class="ic"><use href="#i-screen"/></svg> 
-                <span data-i18n="mgmt.wallpaper_title">Desktop Wallpapers & Backgrounds</span>
-              </div>
-              <div class="mgmt-card-intro-desc" data-i18n="mgmt.wallpaper_desc">
-                Browse high-resolution desktop backgrounds. Click any image to instantly preview and set it on your desktop workspace.
-              </div>
-            </div>
-            <div class="mgmt-detail-body">
-              <div class="wallpaper-gallery-container">
-                <!-- Toolbar: Filter & Actions -->
-                <div class="wallpaper-gallery-toolbar">
-                  <div class="wallpaper-filter-pills">
-                    <button class="wallpaper-cat-pill active" data-cat="all" data-i18n="mw.all">All</button>
-                    <button class="wallpaper-cat-pill" data-cat="gradient" data-i18n="mw.gradient">Gradient</button>
-                    <button class="wallpaper-cat-pill" data-cat="scenic" data-i18n="mw.scenic">Scenic</button>
-                    <button class="wallpaper-cat-pill" data-cat="cyber" data-i18n="mw.cyberpunk">Cyberpunk</button>
-                    <button class="wallpaper-cat-pill" data-cat="oled">OLED</button>
-                    <span id="wallpaper-count-badge" class="wallpaper-count-badge" data-sample>—</span>
-                  </div>
-                  <div class="wallpaper-toolbar-actions">
-                    <input type="file" id="wallpaper-upload" accept="image/*" style="display:none;">
-                    <button class="btn-pill-toggle btn-primary-accent" id="wallpaper-upload-btn" data-action="click-target" data-target="wallpaper-upload">
-                      <svg class="ic wlp-size"><use href="#i-upload"/></svg>
-                      <span data-i18n="mgmt.wallpaper_upload">Upload Wallpaper</span>
-                    </button>
-                    <button class="btn-pill-toggle" id="wallpaper-default-btn" title="Revert to default desktop theme gradient" data-i18n-title="ui.revert_to_default_desktop_theme">
-                      <span data-i18n="mgmt.wallpaper_theme_default">Theme Gradient</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Interactive Wallpaper Visual Grid -->
-                <div id="wallpaper-gallery-grid" class="wallpaper-gallery-grid" role="group" aria-label="Desktop Wallpapers" data-i18n-aria-label="ui.desktop_wallpapers">
-                  <div class="wallpaper-loading-state">
-                    <span class="wlp-xs-muted" data-i18n="mw.loading_wallpaper_gallery">Loading wallpaper gallery...</span>
-                  </div>
-                </div>
-
-                <!-- Wallpaper Readability & Contrast Controls -->
-                <div class="wallpaper-readability-drawer drawer-card wlp-box">
-                  <div class="wlp-row">
-                    <div>
-                      <div class="wlp-row-xs-bold-strong">
-                        <svg class="ic wlp-size-2"><use href="#i-sliders"/></svg>
-                        <span data-i18n="mgmt.wallpaper_readability_title">Wallpaper Readability & Contrast</span>
-                      </div>
-                      <div class="wlp-xs-muted-2" data-i18n="mgmt.wallpaper_readability_desc">
-                        Enhance desktop icon and widget legibility over bright or busy photographic backgrounds.
-                      </div>
-                    </div>
-                    <button id="wallpaper-readability-reset-btn" class="btn-pill-toggle is-small" title="Reset dimming and blur to defaults" data-i18n-title="ui.reset_dimming_and_blur_to" data-i18n="mgmt.reset_defaults">↺ Reset Defaults</button>
-                  </div>
-
-                  <div class="wlp-grid">
-                    <!-- 1. Dimming Slider -->
-                    <div>
-                      <div class="wlp-row-2">
-                        <label class="wlp-xs-bold-muted" for="wallpaper-dim-slider" data-i18n="mgmt.wallpaper_dim_label">Wallpaper dimming</label>
-                        <span id="wallpaper-dim-val" style="font-size: var(--kb-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #33cdb8)); font-weight: 600;">15%</span>
-                      </div>
-                      <input type="range" id="wallpaper-dim-slider" min="0" max="70" value="15" step="1" class="tz-range-slider wlp-size-3" aria-label="Wallpaper Dimming Percentage" data-i18n-aria-label="ui.wallpaper_dimming_percentage">
-                      <div class="wlp-row-xs-muted">
-                        <span data-sample>0% (Off)</span>
-                        <span data-sample>35% (Medium)</span>
-                        <span data-sample>70% (Dark)</span>
-                      </div>
-                    </div>
-
-                    <!-- 2. Desktop Blur Slider -->
-                    <div>
-                      <div class="wlp-row-2">
-                        <label class="wlp-xs-bold-muted" for="wallpaper-blur-slider" data-i18n="mgmt.wallpaper_blur_label">Background blur</label>
-                        <span id="wallpaper-blur-val" style="font-size: var(--kb-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #33cdb8)); font-weight: 600;">0px</span>
-                      </div>
-                      <input type="range" id="wallpaper-blur-slider" min="0" max="30" value="0" step="1" class="tz-range-slider wlp-size-3" aria-label="Desktop Blur Radius" data-i18n-aria-label="ui.desktop_blur_radius">
-                      <div class="wlp-row-xs-muted">
-                        <span data-sample>0px (Crisp)</span>
-                        <span data-sample>15px (Soft)</span>
-                        <span data-sample>30px (Frosted)</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Hidden elements for test and script compatibility -->
-                <select id="wallpaper-select" style="display:none;"><option value="" data-i18n="mw.default_gradient">Default Gradient</option></select>
-                <button id="wallpaper-clear-btn" style="display:none;" data-i18n="mw.set_active_wallpaper">Set Active Wallpaper</button>
-                <button id="wallpaper-rename-btn" style="display:none;" data-i18n="mw.rename">Rename</button>
-                <button id="wallpaper-delete-btn" style="display:none;" data-i18n="mw.delete">Delete</button>
-              </div>
-            </div>
-          </div>
-
           <!-- Sub-tab: Desktop Theme & Accent -->
-          <div id="mgmt-pane-theme" class="mgmt-tab-pane" style="display: none;">
+          <div id="mgmt-pane-theme" class="mgmt-tab-pane" style="display: block;">
             <div class="mgmt-card-intro">
               <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-sliders"/></svg> <span data-i18n="mgmt.theme_title">Desktop Theme & Accent</span></div>
               <div class="mgmt-card-intro-desc" data-i18n="mgmt.theme_desc">Personalize the color palette, windows, and accent styling of your Kiboto desktop environment.</div>
@@ -572,15 +460,112 @@
                     <input type="file" id="theme-import-file" accept=".json,.kiboto-theme.json,.zett-theme.json" style="display:none;">
                     <button type="button" id="theme-export-btn" class="btn-pill-toggle is-small"><span aria-hidden="true">⬆</span> <span data-i18n="settings.theme_export_btn">Export Theme</span></button>
                     <button type="button" id="theme-import-btn" class="btn-pill-toggle is-small"><span aria-hidden="true">⬇</span> <span data-i18n="settings.theme_import_btn">Import Theme</span></button>
-                    <button type="button" id="theme-reset-all-btn" class="btn-pill-toggle danger is-danger is-small" data-i18n="settings.theme_reset_all_btn">↺ Restore Defaults</button>
+                    <button type="button" id="theme-reset-all-btn" class="btn-pill-toggle danger is-danger is-small" data-i18n="settings.theme_reset_all_btn">↺ Reset look</button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
+          <!-- Sub-tab 1: Wallpaper & Backgrounds Gallery -->
+          <div id="mgmt-pane-wallpaper" class="mgmt-tab-pane" style="display: block;">
+            <div class="mgmt-card-intro">
+              <div class="mgmt-card-intro-title">
+                <svg class="ic"><use href="#i-screen"/></svg> 
+                <span data-i18n="mgmt.wallpaper_title">Desktop Wallpapers & Backgrounds</span>
+              </div>
+              <div class="mgmt-card-intro-desc" data-i18n="mgmt.wallpaper_desc">
+                Browse high-resolution desktop backgrounds. Click any image to instantly preview and set it on your desktop workspace.
+              </div>
+            </div>
+            <div class="mgmt-detail-body">
+              <div class="wallpaper-gallery-container">
+                <!-- Toolbar: Filter & Actions -->
+                <div class="wallpaper-gallery-toolbar">
+                  <div class="wallpaper-filter-pills">
+                    <button class="wallpaper-cat-pill active" data-cat="all" data-i18n="mw.all">All</button>
+                    <button class="wallpaper-cat-pill" data-cat="gradient" data-i18n="mw.gradient">Gradient</button>
+                    <button class="wallpaper-cat-pill" data-cat="scenic" data-i18n="mw.scenic">Scenic</button>
+                    <button class="wallpaper-cat-pill" data-cat="cyber" data-i18n="mw.cyberpunk">Cyberpunk</button>
+                    <button class="wallpaper-cat-pill" data-cat="oled">OLED</button>
+                    <span id="wallpaper-count-badge" class="wallpaper-count-badge" data-sample>—</span>
+                  </div>
+                  <div class="wallpaper-toolbar-actions">
+                    <input type="file" id="wallpaper-upload" accept="image/*" style="display:none;">
+                    <button class="btn-pill-toggle btn-primary-accent" id="wallpaper-upload-btn" data-action="click-target" data-target="wallpaper-upload">
+                      <svg class="ic wlp-size"><use href="#i-upload"/></svg>
+                      <span data-i18n="mgmt.wallpaper_upload">Upload Wallpaper</span>
+                    </button>
+                    <button class="btn-pill-toggle" id="wallpaper-default-btn" title="Revert to default desktop theme gradient" data-i18n-title="ui.revert_to_default_desktop_theme">
+                      <span data-i18n="mgmt.wallpaper_theme_default">Theme Gradient</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Interactive Wallpaper Visual Grid -->
+                <div id="wallpaper-gallery-grid" class="wallpaper-gallery-grid" role="group" aria-label="Desktop Wallpapers" data-i18n-aria-label="ui.desktop_wallpapers">
+                  <div class="wallpaper-loading-state">
+                    <span class="wlp-xs-muted" data-i18n="mw.loading_wallpaper_gallery">Loading wallpaper gallery...</span>
+                  </div>
+                </div>
+
+                <!-- Wallpaper Readability & Contrast Controls -->
+                <div class="wallpaper-readability-drawer drawer-card wlp-box">
+                  <div class="wlp-row">
+                    <div>
+                      <div class="wlp-row-xs-bold-strong">
+                        <svg class="ic wlp-size-2"><use href="#i-sliders"/></svg>
+                        <span data-i18n="mgmt.wallpaper_readability_title">Wallpaper Readability & Contrast</span>
+                      </div>
+                      <div class="wlp-xs-muted-2" data-i18n="mgmt.wallpaper_readability_desc">
+                        Enhance desktop icon and widget legibility over bright or busy photographic backgrounds.
+                      </div>
+                    </div>
+                    <button id="wallpaper-readability-reset-btn" class="btn-pill-toggle is-small" title="Reset dimming and blur to defaults" data-i18n-title="ui.reset_dimming_and_blur_to" data-i18n="mgmt.reset_defaults">↺ Reset Defaults</button>
+                  </div>
+
+                  <div class="wlp-grid">
+                    <!-- 1. Dimming Slider -->
+                    <div>
+                      <div class="wlp-row-2">
+                        <label class="wlp-xs-bold-muted" for="wallpaper-dim-slider" data-i18n="mgmt.wallpaper_dim_label">Wallpaper dimming</label>
+                        <span id="wallpaper-dim-val" style="font-size: var(--kb-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #33cdb8)); font-weight: 600;">15%</span>
+                      </div>
+                      <input type="range" id="wallpaper-dim-slider" min="0" max="70" value="15" step="1" class="tz-range-slider wlp-size-3" aria-label="Wallpaper Dimming Percentage" data-i18n-aria-label="ui.wallpaper_dimming_percentage">
+                      <div class="wlp-row-xs-muted">
+                        <span data-sample>0% (Off)</span>
+                        <span data-sample>35% (Medium)</span>
+                        <span data-sample>70% (Dark)</span>
+                      </div>
+                    </div>
+
+                    <!-- 2. Desktop Blur Slider -->
+                    <div>
+                      <div class="wlp-row-2">
+                        <label class="wlp-xs-bold-muted" for="wallpaper-blur-slider" data-i18n="mgmt.wallpaper_blur_label">Background blur</label>
+                        <span id="wallpaper-blur-val" style="font-size: var(--kb-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #33cdb8)); font-weight: 600;">0px</span>
+                      </div>
+                      <input type="range" id="wallpaper-blur-slider" min="0" max="30" value="0" step="1" class="tz-range-slider wlp-size-3" aria-label="Desktop Blur Radius" data-i18n-aria-label="ui.desktop_blur_radius">
+                      <div class="wlp-row-xs-muted">
+                        <span data-sample>0px (Crisp)</span>
+                        <span data-sample>15px (Soft)</span>
+                        <span data-sample>30px (Frosted)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Hidden elements for test and script compatibility -->
+                <select id="wallpaper-select" style="display:none;"><option value="" data-i18n="mw.default_gradient">Default Gradient</option></select>
+                <button id="wallpaper-clear-btn" style="display:none;" data-i18n="mw.set_active_wallpaper">Set Active Wallpaper</button>
+                <button id="wallpaper-rename-btn" style="display:none;" data-i18n="mw.rename">Rename</button>
+                <button id="wallpaper-delete-btn" style="display:none;" data-i18n="mw.delete">Delete</button>
+              </div>
+            </div>
+          </div>
+
           <!-- Sub-tab: Glass & Visual Effects -->
-          <div id="mgmt-pane-glass" class="mgmt-tab-pane" style="display: none;">
+          <div id="mgmt-pane-glass" class="mgmt-tab-pane" style="display: block;">
             <div class="mgmt-card-intro">
               <div class="mgmt-card-intro-title">
                 <svg class="ic"><use href="#i-sliders"/></svg> 
@@ -698,6 +683,9 @@
               </div>
               <div class="mgmt-card-intro-desc" data-i18n="mgmt.dock_sec_desc">
                 Customize screen placement, parabolic magnification curve, icon scale, and auto-hide behaviors for your desktop dock.
+              </div>
+              <div class="thm-x">
+                <button type="button" id="desktop-reset-btn" class="btn-pill-toggle is-small" data-i18n="settings.desktop_reset_btn">↺ Reset desktop</button>
               </div>
             </div>
 

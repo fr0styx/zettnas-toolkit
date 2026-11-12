@@ -536,6 +536,25 @@ export async function chooseHostMode(p, btn, profileBtns) {
   }
 }
 
+/** The panes a tab shows: its data-tab-panes (Appearance's Look and Desktop hold several, APP-C), or its target. */
+export function tabPanes(tab) {
+  const list = tab?.dataset?.tabPanes;
+  return list ? list.split(/\s+/).filter(Boolean) : [tab?.dataset?.tabTarget].filter(Boolean);
+}
+
+/** The tab of a card that shows paneId, so a link to any pane of Look or Desktop opens its tab. */
+export function tabForPane(card, paneId) {
+  return [...card.querySelectorAll('.mgmt-inner-tab')].find((t) => tabPanes(t).includes(paneId)) || null;
+}
+
+/** Shows the panes of one tab and hides the card's others. */
+export function showPanes(card, panes) {
+  card.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
+    const isMatch = panes.includes(p.id) || (p.id === 'mgmt-pane-docker' && panes.includes('mgmt-pane-docker-catalog'));
+    p.style.display = isMatch ? (p.id === 'mgmt-pane-ai-chat' ? 'flex' : 'block') : 'none';
+  });
+}
+
 export function initManagement() {
   window.__updateManagementTelemetry = updateManagementTelemetry;
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) {
@@ -707,10 +726,7 @@ export function initManagement() {
     const parent = document.getElementById(parentId);
     if (!parent) return;
     const activeTabBtn = parent.querySelector('.mgmt-inner-tab.active');
-    if (activeTabBtn) {
-      const paneId = activeTabBtn.dataset.tabTarget;
-      triggerSubTabLoad(paneId);
-    }
+    if (activeTabBtn) tabPanes(activeTabBtn).forEach((p) => triggerSubTabLoad(p));
   }
 
   function triggerSubTabLoad(paneId, subTabId = null) {
@@ -1180,8 +1196,9 @@ export function initManagement() {
     const parentCard = document.getElementById(targetId);
     if (parentCard) {
       if (desiredSubPane) {
+        const paneTab = tabForPane(parentCard, desiredSubPane);
         parentCard.querySelectorAll('.mgmt-inner-tab').forEach((t) => {
-          const isActive = t.dataset.tabTarget === desiredSubPane;
+          const isActive = paneTab ? t === paneTab : t.dataset.tabTarget === desiredSubPane;
           t.classList.toggle('active', isActive);
           t.setAttribute('aria-selected', isActive ? 'true' : 'false');
           if (isActive && typeof t.scrollIntoView === 'function') {
@@ -1191,11 +1208,10 @@ export function initManagement() {
             }
           }
         });
-        parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
-          const isMatch = p.id === desiredSubPane || (p.id === 'mgmt-pane-docker' && desiredSubPane === 'mgmt-pane-docker-catalog');
-          p.style.display = isMatch ? (p.id === 'mgmt-pane-ai-chat' ? 'flex' : 'block') : 'none';
-        });
-        triggerSubTabLoad(desiredSubPane, subTabId);
+        const panes = paneTab ? tabPanes(paneTab) : [desiredSubPane];
+        showPanes(parentCard, panes);
+        panes.forEach((p) => triggerSubTabLoad(p, p === desiredSubPane ? subTabId : null));
+        if (panes[0] !== desiredSubPane) document.getElementById(desiredSubPane)?.scrollIntoView?.({ block: 'start' });
       } else {
         let activeTabBtn = parentCard.querySelector('.mgmt-inner-tab.active');
         if (!activeTabBtn) {
@@ -1203,17 +1219,14 @@ export function initManagement() {
           if (activeTabBtn) activeTabBtn.classList.add('active');
         }
         if (activeTabBtn) {
-          const paneId = activeTabBtn.dataset.tabTarget;
           parentCard.querySelectorAll('.mgmt-inner-tab').forEach((t) => {
             const isActive = t === activeTabBtn;
             t.classList.toggle('active', isActive);
             t.setAttribute('aria-selected', isActive ? 'true' : 'false');
           });
-          parentCard.querySelectorAll('.mgmt-tab-pane').forEach((p) => {
-            const isMatch = p.id === paneId || (p.id === 'mgmt-pane-docker' && paneId === 'mgmt-pane-docker-catalog');
-            p.style.display = isMatch ? (p.id === 'mgmt-pane-ai-chat' ? 'flex' : 'block') : 'none';
-          });
-          triggerSubTabLoad(paneId, subTabId);
+          const panes = tabPanes(activeTabBtn);
+          showPanes(parentCard, panes);
+          panes.forEach((p, i) => triggerSubTabLoad(p, i === 0 ? subTabId : null));
         } else {
           const singlePane = parentCard.querySelector('.mgmt-tab-pane');
           if (singlePane) {
@@ -1249,14 +1262,8 @@ export function initManagement() {
       
       // Update tab panes
       const targetPaneId = tab.dataset.tabTarget;
-      parentCard.querySelectorAll('.mgmt-tab-pane').forEach(p => {
-        const isMatch = p.id === targetPaneId || (p.id === 'mgmt-pane-docker' && targetPaneId === 'mgmt-pane-docker-catalog');
-        if (isMatch) {
-          p.style.display = p.id === 'mgmt-pane-ai-chat' ? 'flex' : 'block';
-        } else {
-          p.style.display = 'none';
-        }
-      });
+      const panes = tabPanes(tab);
+      showPanes(parentCard, panes);
       
       // Reset scroll position to top of pane when switching sub-tabs
       const contentPane = tab.closest('.mgmt-content-pane') || document.querySelector('.mgmt-content-pane');
@@ -1264,7 +1271,7 @@ export function initManagement() {
         contentPane.scrollTop = 0;
       }
 
-      triggerSubTabLoad(targetPaneId);
+      panes.forEach((p) => triggerSubTabLoad(p));
       highlightEntry(parentCard.id, targetPaneId); // "Users" and "Backup" are entries of their own (SET-12)
       saveOpenWindowsState();
     });

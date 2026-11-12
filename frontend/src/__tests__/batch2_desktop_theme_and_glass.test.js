@@ -34,8 +34,8 @@ describe('Batch 2: Glassmorphism, Wallpaper Readability, OLED Theme & Specular G
     expect(html).toContain('id="wallpaper-blur-val"');
     expect(html).toContain('id="wallpaper-readability-reset-btn"');
 
-    // 3. Glass & Effects inner tab button and subpane
-    expect(html).toContain('data-tab-target="mgmt-pane-glass"');
+    // 3. Glass & Effects: a pane of the Look tab (APP-C)
+    expect(html).toMatch(/data-tab-panes="[^"]*mgmt-pane-glass[^"]*"/);
     expect(html).toContain('id="mgmt-pane-glass"');
     expect(html).toContain('id="glass-blur-slider"');
     expect(html).toContain('id="glass-blur-val"');

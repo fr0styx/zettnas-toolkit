@@ -561,6 +561,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   "Failed"; old entries are removed on time also when nobody uses Kib. The page says that Kids and
   Guests start switched off on a new install (not after an upgrade).
 
+#### Changes
+
+- **Appearance has two tabs: Look and Desktop.** Look holds the theme, mode, wallpaper and glass
+  effects on one page; Desktop holds the dock, widgets and screen saver. Each has its own reset
+  ("Reset look", "Reset desktop"), both with Undo. Links that opened one of the old tabs open the
+  tab it is on now.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

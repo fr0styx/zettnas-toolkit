@@ -1197,7 +1197,7 @@ let _appearanceUndoTimer = null;
 export function exportThemeBundle() {
   let savedBlur = 24, savedOpacity = 72, savedRadius = '12px', savedGlow = false;
   let savedDim = 15, savedBlurWp = 0;
-  let savedDockPos = 'bottom', savedDockSize = 'medium', savedDockMag = 1.4, savedDockAutoHide = false;
+  let savedDockPos = 'bottom', savedDockSize = 'medium', savedDockMag = true, savedDockScale = 1.45, savedDockAutoHide = false;
   let savedEco = false;
 
   try {
@@ -1211,7 +1211,8 @@ export function exportThemeBundle() {
 
     if (localStorage.getItem('kiboto_dock_position')) savedDockPos = localStorage.getItem('kiboto_dock_position');
     if (localStorage.getItem('kiboto_dock_size')) savedDockSize = localStorage.getItem('kiboto_dock_size');
-    if (localStorage.getItem('kiboto_dock_magnification') !== null) savedDockMag = parseFloat(localStorage.getItem('kiboto_dock_magnification'));
+    if (localStorage.getItem('kiboto_dock_magnification') !== null) savedDockMag = localStorage.getItem('kiboto_dock_magnification') !== 'false';
+    if (localStorage.getItem('kiboto_dock_scale') !== null) savedDockScale = parseFloat(localStorage.getItem('kiboto_dock_scale'));
     if (localStorage.getItem('kiboto_dock_autohide') !== null) savedDockAutoHide = localStorage.getItem('kiboto_dock_autohide') === 'true';
 
     if (localStorage.getItem('kiboto_eco_mode') !== null) savedEco = localStorage.getItem('kiboto_eco_mode') === 'true';
@@ -1240,6 +1241,7 @@ export function exportThemeBundle() {
       position: savedDockPos,
       size: savedDockSize,
       magnification: savedDockMag,
+      scale: savedDockScale,
       autohide: savedDockAutoHide
     },
     performance: {
@@ -1291,7 +1293,14 @@ export function importThemeBundle(file) {
 
       // Apply dock settings
       if (data.dock) {
-        applyDockSettings(data.dock.position || 'bottom', data.dock.size || 'medium', data.dock.magnification ?? 1.4, data.dock.autohide ?? false, true);
+        applyDockSettings(
+          data.dock.position || 'bottom',
+          data.dock.magnification !== false && data.dock.magnification !== 'false',
+          typeof data.dock.scale === 'number' ? data.dock.scale : 1.45,
+          data.dock.size || 'medium',
+          data.dock.autohide === true,
+          true
+        );
       }
 
       // Apply eco mode
@@ -1333,12 +1342,26 @@ function takeAppearanceSnapshot() {
       dockPos: localStorage.getItem('kiboto_dock_position'),
       dockSize: localStorage.getItem('kiboto_dock_size'),
       dockMag: localStorage.getItem('kiboto_dock_magnification'),
+      dockScale: localStorage.getItem('kiboto_dock_scale'),
       dockAutoHide: localStorage.getItem('kiboto_dock_autohide'),
       ecoMode: localStorage.getItem('kiboto_eco_mode')
     };
   } catch (e) {}
 }
 
+/** Reset desktop (APP-C): the dock back to its defaults, with Undo. The look is reset on its own. */
+export function restoreDesktopDefaultsWithUndo() {
+  takeAppearanceSnapshot();
+  applyDockSettings('bottom', true, 1.45, 'medium', false, true); // the dock's own defaults
+  clearTimeout(_appearanceUndoTimer);
+  showActionToast(t('settings.desktop_reset', 'The desktop is back to its defaults.'), `↺ ${t('settings.undo_10s', 'Undo (10 s)')}`, () => {
+    const snap = _appearanceUndoSnapshot;
+    if (!snap) return;
+    applyDockSettings(snap.dockPos || 'bottom', snap.dockMag !== 'false', snap.dockScale ? parseFloat(snap.dockScale) : 1.45, snap.dockSize || 'medium', snap.dockAutoHide === 'true', true);
+  });
+}
+
+/** Reset look (APP-C): mode, theme, tint, accent, glass, wallpaper readability and eco mode, with Undo. */
 export function restoreAppearanceDefaultsWithUndo() {
   takeAppearanceSnapshot();
 
@@ -1352,9 +1375,6 @@ export function restoreAppearanceDefaultsWithUndo() {
 
   // 3. Reset wallpaper readability
   applyWallpaperReadability(15, 0, true);
-
-  // 4. Reset dock
-  applyDockSettings('bottom', 'medium', 1.4, false, true);
 
   // 5. Reset eco mode
   document.body.removeAttribute('data-performance-mode');
@@ -1390,13 +1410,6 @@ export function restoreAppearanceDefaultsWithUndo() {
       true
     );
 
-    applyDockSettings(
-      snap.dockPos || 'bottom',
-      snap.dockSize || 'medium',
-      snap.dockMag !== null ? parseFloat(snap.dockMag) : 1.4,
-      snap.dockAutoHide === 'true',
-      true
-    );
 
     if (snap.ecoMode === 'true') {
       document.body.setAttribute('data-performance-mode', 'eco');
@@ -1527,6 +1540,7 @@ export function initDesktopThemeControls() {
       restoreAppearanceDefaultsWithUndo();
     });
   }
+  $('desktop-reset-btn')?.addEventListener('click', () => restoreDesktopDefaultsWithUndo());
 
   ZettEventBus.on('desktop_theme:changed', () => {
     syncDesktopThemeUI();
