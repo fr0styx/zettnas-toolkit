@@ -211,12 +211,13 @@ def test_publishing_before_signing_in_is_refused(cli):
         remote_access.publish()
 
 
-def test_disconnect_stops_serving_and_leaves(cli):
+def test_disconnect_leaves_and_keeps_the_https_addresses(cli):
     remote_access.connect()
     cli.sign_in()
     remote_access.publish()
     s = remote_access.disconnect()
-    assert ["serve", "reset"] in cli.calls() and ["down"] in cli.calls()
+    # SET-16: Disconnect no longer wipes the HTTPS set-up; nothing is reachable while it is down
+    assert ["serve", "reset"] not in cli.calls() and ["down"] in cli.calls()
     assert s["state"] == "Stopped" and s["addresses"] == {}
 
 

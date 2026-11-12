@@ -687,6 +687,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   tool lists and whose on-disk label carries the pool's id are erased; one drive that cannot be
   confirmed refuses the whole erase. Unraid's pools are still deleted in Unraid.
 
+#### Fixes
+
+- **Tailscale's two options survive restarts.** "Reach other things at home" and "Use your home
+  internet when away" turned themselves off after every restart, sign-in or reconnect; Kiboto now
+  keeps them and applies them again.
+- **Disconnect no longer wipes the HTTPS addresses** of Kiboto, Immich and the apps; they are back
+  when Tailscale reconnects.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

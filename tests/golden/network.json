@@ -1527,6 +1527,18 @@
      "tskey-auth-example",
      "--hostname",
      "nas"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "set",
+     "--advertise-routes=not-a-route",
+     "--advertise-exit-node=true"
     ]
    ],
    "result": {
@@ -1889,6 +1901,26 @@
      "tskey-auth-example",
      "--hostname",
      "nas"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "set",
+     "--advertise-routes=not-a-route",
+     "--advertise-exit-node=true"
+    ],
+    [
+     "run",
+     "tailscale",
+     "set",
+     "--advertise-routes=not-a-route",
+     "--advertise-exit-node=true"
     ]
    ],
    "result": {
@@ -2051,6 +2083,18 @@
      "tskey-auth-example",
      "--hostname",
      "nas"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "set",
+     "--advertise-routes=not-a-route",
+     "--advertise-exit-node=true"
     ]
    ],
    "result": {

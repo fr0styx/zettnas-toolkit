@@ -270,6 +270,8 @@ def execute_tailscale_set_routes(routes: str, enabled: bool = True) -> dict[str,
         clean_routes = ",".join(parts)
     cmd = ["set", f"--advertise-routes={clean_routes}"]
     code, out = _run_tailscale_cmd(cmd, timeout=8.0)
+    if code == 0:
+        update_settings(kept_routes=clean_routes)  # applied again after every start (reapply_kept)
     return {
         "status": "ok" if code == 0 else "error",
         "code": code,
@@ -284,6 +286,8 @@ def execute_tailscale_set_exit_node(enabled: bool) -> dict[str, Any]:
     val = "true" if enabled else "false"
     cmd = ["set", f"--advertise-exit-node={val}"]
     code, out = _run_tailscale_cmd(cmd, timeout=8.0)
+    if code == 0:
+        update_settings(kept_exit_node=bool(enabled))
     return {
         "status": "ok" if code == 0 else "error",
         "code": code,
@@ -316,3 +320,22 @@ def execute_tailscale_reauth() -> dict[str, Any]:
 
 
 run_tailscale_cmd = _run_tailscale_cmd  # shared with public share links (NFEAT-2)
+
+
+def reapply_kept() -> list[str]:
+    """Applies the two switches the owner kept (D5) again: "reach other things at home" and "home
+    internet when away". Every `tailscale up --reset` (connect, sign in again, the container's start)
+    cleared them, so they were off after each restart (network report B7). Returns what it set."""
+    s = settings()
+    args = []
+    if "kept_routes" in s:
+        args.append(f"--advertise-routes={s['kept_routes']}")
+    if "kept_exit_node" in s:
+        args.append(f"--advertise-exit-node={'true' if s['kept_exit_node'] else 'false'}")
+    if not args:
+        return []
+    code, out = _run_tailscale_cmd(["set", *args], timeout=8.0)
+    if code != 0:
+        logger.warning("[Tailscale] the kept options were not applied again: %s", (out or "").strip()[:200])
+        return []
+    return args

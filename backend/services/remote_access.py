@@ -237,7 +237,7 @@ def _drop_gone_apps(wanted: set[int]) -> None:
 
 
 def disconnect() -> dict[str, Any]:
-    """Stops serving and leaves the tailnet; the node stays signed in for next time."""
-    tailscale.run_cli(["serve", "reset"], timeout=5.0)
+    """Leaves the tailnet; the node stays signed in, and its HTTPS addresses stay set up for next
+    time (SET-16: Disconnect no longer wipes them; nothing is reachable while it is down)."""
     tailscale_setup.execute_tailscale_down()
     return status()

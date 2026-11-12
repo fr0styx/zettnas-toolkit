@@ -63,6 +63,7 @@ def execute_tailscale_up(
         }
 
     if code == 0:
+        tailscale.reapply_kept()  # --reset above cleared the owner's two switches (SET-16, B7)
         return {
             "status": "success",
             "code": 0,

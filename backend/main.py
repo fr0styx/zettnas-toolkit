@@ -460,6 +460,24 @@ def _start_home_assistant() -> None:
     home_assistant.start()
 
 
+def _reapply_tailscale_options() -> None:
+    """The owner's two Tailscale switches again once Tailscale is up: its container starts with
+    --reset, which cleared them at every restart (SET-16, network report B7)."""
+    import time as _time
+
+    from backend.hardware.net import tailscale
+
+    if not {"kept_routes", "kept_exit_node"} & set(tailscale.settings()):
+        return  # nothing to apply: no polling at all
+    for _ in range(10):  # up to five minutes for the container to come up
+        _time.sleep(30)
+        try:
+            if tailscale.installed() and tailscale.reapply_kept():
+                return
+        except (OSError, ValueError, RuntimeError):
+            logger.debug("[Main] Tailscale options not applied yet", exc_info=True)
+
+
 def _rejoin_app_networks() -> None:
     """Kiboto back on the networks it shares with apps, which an update leaves behind (NSEC-10)."""
     from backend.services.app_networks import rejoin
@@ -579,6 +597,7 @@ async def lifespan(app: FastAPI):
     threading.Thread(target=_open_encrypted_folders, name="EncryptedFolders", daemon=True).start()
     threading.Thread(target=_rejoin_app_networks, name="AppNetworks", daemon=True).start()
     threading.Thread(target=_refresh_share_access, name="ShareAccess", daemon=True).start()
+    threading.Thread(target=_reapply_tailscale_options, name="TailscaleOptions", daemon=True).start()
     _start_home_assistant()
     try:
         yield
