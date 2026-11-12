@@ -1020,12 +1020,7 @@ export function syncDesktopThemeUI() {
   document.querySelectorAll('.desktop-theme-preset').forEach((card) => {
     const isThis = card.dataset.themeId === curTheme;
     card.classList.toggle('active', isThis);
-    card.setAttribute('aria-checked', isThis ? 'true' : 'false');
-    if (isThis) {
-      card.setAttribute('aria-selected', 'true');
-    } else {
-      card.removeAttribute('aria-selected');
-    }
+    card.setAttribute('aria-checked', isThis ? 'true' : 'false'); // a radio: aria-selected is not allowed
   });
 
   const badge = $('desktop-theme-active-badge');

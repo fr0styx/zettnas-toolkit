@@ -583,6 +583,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   cards stack, the mode buttons fill the width, the colour swatches are easy to tap and no row runs
   off the screen.
 
+#### Fixes
+
+- **Theme cards and the accent picker read correctly to screen readers.** The theme cards say which
+  one is chosen the way a radio button does, and the colour picker is named by its label.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

@@ -86,3 +86,12 @@ describe('theme files keep the dock as the dock stores it', () => {
     expect(applyDockSettings).toHaveBeenCalledWith('top', false, 1.2, 'large', true, true);
   });
 });
+
+describe('APP-C: the Look tab passes the accessibility scan', () => {
+  it('labels the accent picker and marks theme cards as radios only', () => {
+    const html = fs.readFileSync(path.resolve(__dirname, '../windows/management-window.html'), 'utf8');
+    expect(html).toContain('for="desktop-custom-color-picker"');
+    const src = fs.readFileSync(path.resolve(__dirname, '../components/settings.js'), 'utf8');
+    expect(src).not.toMatch(/card\.(set|remove)Attribute\('aria-selected'/);
+  });
+});
