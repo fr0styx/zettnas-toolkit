@@ -73,3 +73,13 @@ describe("phone mode: pages, tabs and status (UX-13)", () => {
     expect(val("net")).toBe("↓ 2 KB/s ↑ 3.0 MB/s");
   });
 });
+
+describe("every Settings page within two taps on a phone (Overview 7a)", () => {
+  it("has tiles for Appearance, Calendar and Hardware, and Hardware follows Advanced", async () => {
+    const { TILES } = await import("../components/phone-shell.js");
+    const routes = TILES().map(([route]) => route);
+    for (const r of ["appearance", "calendar", "hardware"]) expect(routes).toContain(r);
+    const { ADVANCED_ROUTES } = await import("../advanced.js");
+    expect(ADVANCED_ROUTES).toContain("hardware");
+  });
+});

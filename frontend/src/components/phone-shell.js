@@ -39,8 +39,11 @@ export const TILES = () => [
   ['users', t('mgmt.sidebar_people', 'People'), '#i-users', 'mgmt.sidebar_people'],
   ['away', t('mgmt.sidebar_away', 'Away from home'), '#i-globe', 'mgmt.sidebar_away'],
   ['ai', t('mgmt.sidebar_kib', 'Kib'), '#i-kib', 'mgmt.sidebar_kib'],
+  ['appearance', t('mgmt.sidebar_appearance', 'Appearance'), '#i-screen', 'mgmt.sidebar_appearance'], // every page within two taps on a phone (Overview 7a)
+  ['calendar', t('mgmt.sidebar_calendar', 'Calendar'), '#i-calendar', 'mgmt.sidebar_calendar'],
   ['power', t('mgmt.sidebar_ups', 'Power'), '#i-bolt', 'mgmt.sidebar_ups'],
   ['network', t('mgmt.sidebar_network', 'Network'), '#i-net', 'mgmt.sidebar_network'],
+  ['hardware', t('mgmt.sidebar_hardware', 'Hardware'), '#i-fan', 'mgmt.sidebar_hardware'],
   ['vms', t('mgmt.sidebar_vms', 'Virtual machines'), '#i-vm', 'mgmt.sidebar_vms'],
   ['activity', t('mgmt.sidebar_activity', 'Activity'), '#i-clock', 'mgmt.sidebar_activity'],
   ['settings', t('mgmt.sidebar_system', 'Settings'), '#i-shield', 'mgmt.sidebar_system'],

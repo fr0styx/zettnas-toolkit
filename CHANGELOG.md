@@ -73,6 +73,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Search settings answers everyday tasks**: "add a person", "dark mode", "fan noise", "get a file
   back", "power cut" and about a dozen more, in five languages, each with the page it opens.
 
+#### Changes
+
+- **On a phone, Appearance, Calendar and Hardware have tiles**, so every Settings page is within two
+  taps. Hardware shows with "Show advanced tools", like Power and Network.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 
