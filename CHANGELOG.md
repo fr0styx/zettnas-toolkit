@@ -568,6 +568,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   ("Reset look", "Reset desktop"), both with Undo. Links that opened one of the old tabs open the
   tab it is on now.
 
+#### Changes
+
+- **Time, Language & Region is in Settings now**, beside Notifications and About. The clock widget,
+  the top bar and every other way in open it there.
+- **Calendar has its own place** in Mission Control's sidebar, under Appearance; the calendar widget
+  opens it.
+- A link into a section now starts at its top, or at the part it names.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

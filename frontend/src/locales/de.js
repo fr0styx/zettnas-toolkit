@@ -7419,4 +7419,5 @@ export default {
   "mgmt.subtab_desktop": "Schreibtisch",
   "settings.desktop_reset_btn": "↺ Schreibtisch zurücksetzen",
   "settings.desktop_reset": "Der Schreibtisch ist wieder auf den Standardwerten.",
+  "mgmt.sidebar_calendar": "Kalender",
 };

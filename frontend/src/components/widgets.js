@@ -2271,7 +2271,7 @@ async function showServerZoneChoice() {
 
 export async function openTimezoneModal() {
   if (typeof window.openManagementWindow === 'function') {
-    window.openManagementWindow('mgmt-sec-wallpaper', 'mgmt-pane-language');
+    window.openManagementWindow('mgmt-sec-system-group', 'mgmt-pane-language'); // Settings since APP-C
   }
   // The pop-up is part of Mission Control's markup, inserted when first needed (FE-04)
   let modal = document.getElementById('modal-clock-timezone');
@@ -2728,7 +2728,7 @@ window.fetchCalendarFeeds = fetchCalendarFeeds;
 
 export async function openCalendarModal(initialDateKey) {
   if (typeof window.openManagementWindow === 'function') {
-    window.openManagementWindow('mgmt-sec-wallpaper', 'mgmt-pane-calendar');
+    window.openManagementWindow('mgmt-sec-calendar', 'mgmt-pane-calendar'); // its own section since APP-C
   }
   // The pop-up is part of Mission Control's markup, inserted when first needed (FE-04)
   let modal = document.getElementById('modal-calendar-notes');

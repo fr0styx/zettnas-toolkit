@@ -7,7 +7,7 @@ vi.mock('../components/dock.js', () => ({ applyDockSettings: vi.fn() }));
 import { showActionToast } from '../toast.js';
 import { applyDockSettings } from '../components/dock.js';
 import { showPanes, tabForPane, tabPanes } from '../components/management.js';
-import { restoreDesktopDefaultsWithUndo } from '../components/settings.js';
+import { exportThemeBundle, importThemeBundle, restoreDesktopDefaultsWithUndo } from '../components/settings.js';
 
 const html = fs.readFileSync(path.resolve(__dirname, '../windows/management-window.html'), 'utf8');
 
@@ -43,5 +43,46 @@ describe('Appearance in two tabs, Look and Desktop (APP-C)', () => {
     applyDockSettings.mockClear();
     undo();
     expect(applyDockSettings).toHaveBeenCalledOnce();
+  });
+});
+
+describe('theme files keep the dock as the dock stores it', () => {
+  it('export reads the magnify switch and the scale', () => {
+    localStorage.setItem('kiboto_dock_magnification', 'false');
+    localStorage.setItem('kiboto_dock_scale', '1.6');
+    let blob = null;
+    const realCreate = URL.createObjectURL;
+    URL.createObjectURL = (b) => { blob = b; return 'blob:x'; };
+    URL.revokeObjectURL = () => {};
+    exportThemeBundle();
+    URL.createObjectURL = realCreate;
+    return blob.text().then((txt) => {
+      const dock = JSON.parse(txt).dock;
+      expect(dock.magnification).toBe(false);
+      expect(dock.scale).toBe(1.6);
+    });
+  });
+
+  it('import passes position, magnify, scale, size and auto-hide in that order', async () => {
+    applyDockSettings.mockClear();
+    const file = new File([JSON.stringify({ format: 'kiboto-theme', theme: 'lagoon', dock: { position: 'left', magnification: false, scale: 1.3, size: 'small', autohide: true } })], 't.json');
+    importThemeBundle(file);
+    await vi.waitFor(() => expect(applyDockSettings).toHaveBeenCalledWith('left', false, 1.3, 'small', true, true));
+    applyDockSettings.mockClear();
+    importThemeBundle(new File([JSON.stringify({ format: 'kiboto-theme', theme: 'lagoon', dock: {} })], 'u.json'));
+    await vi.waitFor(() => expect(applyDockSettings).toHaveBeenCalledWith('bottom', true, 1.45, 'medium', false, true));
+  });
+
+  it('the desktop reset\'s Undo restores the stored dock, and does nothing without a snapshot', () => {
+    localStorage.setItem('kiboto_dock_position', 'top');
+    localStorage.setItem('kiboto_dock_magnification', 'false');
+    localStorage.setItem('kiboto_dock_scale', '1.2');
+    localStorage.setItem('kiboto_dock_size', 'large');
+    localStorage.setItem('kiboto_dock_autohide', 'true');
+    restoreDesktopDefaultsWithUndo();
+    const undo = showActionToast.mock.calls.at(-1)[2];
+    applyDockSettings.mockClear();
+    undo();
+    expect(applyDockSettings).toHaveBeenCalledWith('top', false, 1.2, 'large', true, true);
   });
 });

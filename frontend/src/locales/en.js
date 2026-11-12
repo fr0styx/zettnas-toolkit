@@ -7419,4 +7419,5 @@ export default {
   "mgmt.subtab_desktop": "Desktop",
   "settings.desktop_reset_btn": "↺ Reset desktop",
   "settings.desktop_reset": "The desktop is back to its defaults.",
+  "mgmt.sidebar_calendar": "Calendar",
 };

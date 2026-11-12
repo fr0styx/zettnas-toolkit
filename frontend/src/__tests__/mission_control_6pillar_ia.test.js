@@ -65,6 +65,7 @@ describe('Mission Control 6-Pillar Information Architecture & Hardware Agnostici
       'mgmt-sec-ups',
       'mgmt-sec-system-group',
       'mgmt-sec-wallpaper',
+      'mgmt-sec-calendar', // its own section since APP-C
       'mgmt-sec-ai'
     ]);
 

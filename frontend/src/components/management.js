@@ -168,16 +168,16 @@ export const SUBPANE_MAP = {
   'mgmt-sec-dock': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-dock' },
   'mgmt-pane-screensaver': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-screensaver' },
   'mgmt-sec-screensaver': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-screensaver' },
-  'mgmt-sec-calendar': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-calendar' },
-  'mgmt-pane-calendar': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-calendar' },
-  'calendar': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-calendar' },
-  'mgmt-sec-language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
-  'mgmt-pane-language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
-  'timezone': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
-  'clock': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
-  'time': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
-  'language': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
-  'region': { section: 'mgmt-sec-wallpaper', pane: 'mgmt-pane-language' },
+  'mgmt-sec-calendar': { section: 'mgmt-sec-calendar', pane: 'mgmt-pane-calendar' },
+  'mgmt-pane-calendar': { section: 'mgmt-sec-calendar', pane: 'mgmt-pane-calendar' },
+  'calendar': { section: 'mgmt-sec-calendar', pane: 'mgmt-pane-calendar' },
+  'mgmt-sec-language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
+  'mgmt-pane-language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
+  'timezone': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
+  'clock': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
+  'time': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
+  'language': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
+  'region': { section: 'mgmt-sec-system-group', pane: 'mgmt-pane-language' },
 
   // --- Pillar 8: AI Knowledge & Visual Search (Kib) ---
   'ai': { section: 'mgmt-sec-ai', pane: 'mgmt-pane-ai-chat' },
@@ -722,13 +722,6 @@ export function initManagement() {
   
 
 
-  function triggerActiveSubTab(parentId) {
-    const parent = document.getElementById(parentId);
-    if (!parent) return;
-    const activeTabBtn = parent.querySelector('.mgmt-inner-tab.active');
-    if (activeTabBtn) tabPanes(activeTabBtn).forEach((p) => triggerSubTabLoad(p));
-  }
-
   function triggerSubTabLoad(paneId, subTabId = null) {
     if (paneId === 'mgmt-pane-widgets') {
       if (typeof syncWidgetSettingsUI === 'function') syncWidgetSettingsUI();
@@ -1158,6 +1151,8 @@ export function initManagement() {
     let sectionName = t('mgmt.title', 'Settings');
     if (targetId === 'mgmt-sec-wallpaper') {
       sectionName = t('mgmt.appearance_title', 'Appearance');
+    } else if (targetId === 'mgmt-sec-calendar') {
+      sectionName = t('mgmt.sidebar_calendar', 'Calendar');
     } else if (targetId === 'mgmt-sec-activity') {
       sectionName = t('mgmt.activity_title', 'Dashboard & Telemetry');
     } else if (targetId === 'mgmt-sec-network') {
@@ -1211,6 +1206,9 @@ export function initManagement() {
         const panes = paneTab ? tabPanes(paneTab) : [desiredSubPane];
         showPanes(parentCard, panes);
         panes.forEach((p) => triggerSubTabLoad(p, p === desiredSubPane ? subTabId : null));
+        // the section starts at the top, or at the pane the link names when it is not the tab's first
+        const contentPane = parentCard.closest('.mgmt-content-pane') || document.querySelector('.mgmt-content-pane');
+        if (contentPane) contentPane.scrollTop = 0;
         if (panes[0] !== desiredSubPane) document.getElementById(desiredSubPane)?.scrollIntoView?.({ block: 'start' });
       } else {
         let activeTabBtn = parentCard.querySelector('.mgmt-inner-tab.active');

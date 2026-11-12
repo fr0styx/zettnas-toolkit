@@ -12,6 +12,7 @@
 @import './63-duplicates.css';
 @import './64-mgmt-panes.css';
 @import './77-mc-lists.css';
+@import './34-desktop-twin-preview.css'; /* the desktop preview, shown only in Appearance (first-load budget) */
 
 /* The security check's rows: loaded with Mission Control's own sheet, not on every page (first-load budget, SET-14) */
 .sec-advisor-item {
@@ -79,3 +80,6 @@
 .look-tint { display: grid; gap: 4px; margin-top: 14px; max-width: 360px; }
 .look-tint input[type="range"] { width: 100%; accent-color: var(--brand); }
 .look-tint-ends { display: flex; justify-content: space-between; color: var(--c-muted); font-size: 13px; }
+
+/* a link to a pane further down a tab (APP-C) stops below the sticky tab bar, not under it */
+.mgmt-detail-card .mgmt-tab-pane { scroll-margin-top: 72px; }

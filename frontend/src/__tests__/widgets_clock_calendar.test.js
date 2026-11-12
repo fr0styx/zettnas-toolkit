@@ -334,7 +334,7 @@ describe('Desktop Widgets - Time Clock & Calendar Modal Interactivity', () => {
 
       openTimezoneModal();
 
-      expect(openMgmtSpy).toHaveBeenCalledWith('mgmt-sec-wallpaper', 'mgmt-pane-language');
+      expect(openMgmtSpy).toHaveBeenCalledWith('mgmt-sec-system-group', 'mgmt-pane-language'); // Settings since APP-C
     });
 
     it('calls window.openManagementWindow with calendar section and subtab when openCalendarModal is invoked', () => {
@@ -343,7 +343,7 @@ describe('Desktop Widgets - Time Clock & Calendar Modal Interactivity', () => {
 
       openCalendarModal('2026-10-19');
 
-      expect(openMgmtSpy).toHaveBeenCalledWith('mgmt-sec-wallpaper', 'mgmt-pane-calendar');
+      expect(openMgmtSpy).toHaveBeenCalledWith('mgmt-sec-calendar', 'mgmt-pane-calendar'); // its own section since APP-C
     });
 
     it('initializes timezone list and clock preview with initTimezoneControls without crashing', () => {

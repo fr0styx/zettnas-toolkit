@@ -7419,4 +7419,5 @@ export default {
   "mgmt.subtab_desktop": "Escritorio",
   "settings.desktop_reset_btn": "↺ Restablecer escritorio",
   "settings.desktop_reset": "El escritorio ha vuelto a los valores predeterminados.",
+  "mgmt.sidebar_calendar": "Calendario",
 };

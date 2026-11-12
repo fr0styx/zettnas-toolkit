@@ -7419,4 +7419,5 @@ export default {
   "mgmt.subtab_desktop": "Bureau",
   "settings.desktop_reset_btn": "↺ Réinitialiser le bureau",
   "settings.desktop_reset": "Le bureau est revenu aux valeurs par défaut.",
+  "mgmt.sidebar_calendar": "Calendrier",
 };

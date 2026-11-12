@@ -89,6 +89,10 @@
             <svg class="mgmt-sidebar-svg"><use href="#i-screen"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_appearance">Appearance</span>
           </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-calendar" data-route="calendar" title="Calendar" data-i18n-title="mgmt.sidebar_calendar">
+            <svg class="mgmt-sidebar-svg"><use href="#i-calendar"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_calendar">Calendar</span>
+          </button>
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" title="Settings" data-i18n-title="mgmt.sidebar_system">
             <svg class="mgmt-sidebar-svg"><use href="#i-shield"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_system">Settings</span>
@@ -288,14 +292,6 @@
               <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-dock" data-tab-panes="mgmt-pane-dock mgmt-pane-widgets mgmt-pane-screensaver">
                 <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-grid"/></svg>
                 <span data-i18n="mgmt.subtab_desktop">Desktop</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-calendar" id="mgmt-tab-calendar">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-calendar"/></svg>
-                <span data-i18n="mgmt.subtab_calendar">Calendar & Agenda</span>
-              </button>
-              <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-language" id="mgmt-tab-language">
-                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
-                <span data-i18n="mgmt.subtab_language">Time, Language & Region</span>
               </button>
             </div>
           </div>
@@ -1221,8 +1217,12 @@
             </div>
           </div>
 
-          <!-- Sub-tab 7: Calendar & Day Reminders Pane -->
-          <div id="mgmt-pane-calendar" class="mgmt-tab-pane" style="display: none;">
+
+        </div>
+
+        <!-- Calendar: its own section since APP-C (it was a tab of Appearance) -->
+        <div id="mgmt-sec-calendar" class="mgmt-detail-card" style="display: none;">
+          <div id="mgmt-pane-calendar" class="mgmt-tab-pane" style="display: block;">
             <div class="mgmt-card-intro cal-row">
               <div>
                 <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-calendar"/></svg> <span data-i18n="cal.modal_title">Calendar & Day Reminders</span></div>
@@ -1351,113 +1351,6 @@
                 </div>
 
               </div>
-            </div>
-          </div>
-
-          <!-- Sub-tab 8: Display Language, Timezone & Regional Settings Pane -->
-          <div id="mgmt-pane-language" class="mgmt-tab-pane" style="display: none;">
-            <div class="mgmt-card-intro">
-              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="settings.language_title">Time, Language & Regional Settings</span></div>
-              <div class="mgmt-card-intro-desc" data-i18n="settings.language_desc">Select your preferred system language, desktop timezone, and clock display formatting.</div>
-            </div>
-            <div class="mgmt-detail-body lng-col">
-              
-              <!-- Timezone & Clock Settings Card -->
-              <div id="modal-clock-timezone" class="drawer-card lng-box">
-                <div class="card-headline lng-x">
-                  <span class="card-head-title lng-row-fs14-bold">
-                    <span class="lng-fs16">🕒</span>
-                    <span data-i18n="tz.modal_title">Timezone & Clock Settings</span>
-                  </span>
-                  <div class="lng-xs-muted" data-i18n="tz.card_desc">Your time zone and 12 or 24 hours, for every time Kiboto shows you, on every device you sign in to.</div>
-                </div>
-
-                <!-- Live Clock Preview Card -->
-                <div class="tz-preview-card lng-row-box">
-                  <div class="lng-col-2">
-                    <div style="font-size: var(--kb-fs-xs); text-transform: uppercase; font-weight: 700; color: var(--lt-ink-brand, var(--brand, #33cdb8)); letter-spacing: 0.8px;" data-i18n="tz.preview_label">Active Clock Preview</div>
-                    <div class="lng-row">
-                      <div class="lng-fs32-bold-strong" id="modal-tz-preview-time">--:--</div>
-                      <div class="lng-fs18-strong" id="modal-tz-preview-sec">:--</div>
-                      <div id="modal-tz-preview-ampm" style="font-size: 13px; font-weight: 800; color: var(--lt-ink-brand, var(--brand, #33cdb8));"></div>
-                    </div>
-                    <div class="lng-xs-muted-2" id="modal-tz-preview-date">--</div>
-                  </div>
-                  <div class="lng-col-3">
-                    <div id="modal-tz-active-pill" class="suite-badge" style="background: var(--lt-b-33cdb826, rgba(51,205,184,0.15)); color: var(--lt-ink-brand, var(--brand, #33cdb8)); border-color: var(--lt-r-33cdb859, rgba(51,205,184,0.35)); font-size: var(--kb-fs-xs); font-weight: 700; padding: 3px 10px; border-radius: 6px;" data-sample>—</div>
-                    <!-- 12H / 24H Toggle -->
-                    <div class="tz-format-toggle-group lng-row-box-2" role="radiogroup" aria-label="Clock format" data-i18n-aria-label="tz.format">
-                      <button type="button" id="btn-tz-fmt-12" class="tz-fmt-btn lng-xs-bold-muted-box" role="radio" aria-checked="false" data-i18n="tz.h12">12 h</button>
-                      <button type="button" id="btn-tz-fmt-24" class="tz-fmt-btn active" role="radio" aria-checked="true" style="padding: 4px 10px; font-size: var(--kb-fs-xs); font-weight: 700; border: none; background: var(--brand, #33cdb8); color: var(--accent-contrast-fg); border-radius: 4px; cursor: pointer;" data-i18n="tz.h24">24 h</button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Quick Action / Auto-detect -->
-                <div class="lng-row-2">
-                  <div class="lng-xs-bold" data-i18n="tz.select_heading">Select Desktop Timezone</div>
-                  <button type="button" id="btn-tz-use-browser" class="btn-pill-toggle lng-strong-box">
-                    📍 <span data-i18n="tz.use_local">Use Local System Timezone</span>
-                  </button>
-                </div>
-
-                <!-- Search Input & Region Filter Pills -->
-                <div class="lng-col-4">
-                  <input type="text" id="tz-search-input" class="tz-select-input lng-xs-strong-box" placeholder="Search cities, countries, or timezones (e.g. New York, Tokyo, London, Berlin, UTC)..." data-i18n-placeholder="ui.search_cities_countries_or_timezones" aria-label="Search cities, countries, or timezones (e.g. New York, Tokyo, London, Berlin, UTC)..." data-i18n-aria-label="ui.search_cities_countries_or_timezones" />
-                  <div class="lng-row-3" id="tz-region-pills">
-                    <button type="button" class="tz-region-pill active" data-region="all" data-i18n="tz.region_all">All</button>
-                    <button type="button" class="tz-region-pill" data-region="Americas" data-i18n="tz.region_americas">Americas</button>
-                    <button type="button" class="tz-region-pill" data-region="Europe" data-i18n="tz.region_europe">Europe</button>
-                    <button type="button" class="tz-region-pill" data-region="Asia" data-i18n="tz.region_asia">Asia</button>
-                    <button type="button" class="tz-region-pill" data-region="Pacific" data-i18n="tz.region_pacific">Pacific</button>
-                    <button type="button" class="tz-region-pill" data-region="UTC" translate="no">UTC / GMT</button>
-                  </div>
-                </div>
-
-                <!-- Timezone List Scroll Area -->
-                <div class="lng-col-box" id="tz-items-list" tabindex="0" role="listbox" aria-label="Time zones" data-i18n-aria-label="ui.time_zones">
-                  <!-- Populated dynamically via JS -->
-                </div>
-
-                <!-- Custom IANA Input -->
-                <div class="lng-row-4">
-                  <label class="lng-xs-bold-muted" for="tz-custom-input" data-i18n="tz.custom">Other zone (IANA name):</label>
-                  <input class="lng-xs-strong-box-grow" type="text" id="tz-custom-input" placeholder="e.g. America/Toronto, Asia/Seoul, UTC" data-i18n-placeholder="ph.timezone" />
-                  <button type="button" id="btn-tz-apply-custom" class="btn-pill-toggle lng-x-2" data-i18n="tz.use_zone">Use it</button>
-                </div>
-
-                <label class="tz-server-row" id="tz-server-row" hidden>
-                  <input type="checkbox" id="tz-apply-server">
-                  <span data-i18n="tz.apply_server">Also the server and the front screen: schedules, logs and alerts follow it</span>
-                </label>
-
-                <!-- Save Actions -->
-                <div class="lng-row-box-3">
-                  <button type="button" id="modal-clock-tz-cancel-btn" class="btn-pill-toggle is-small" data-i18n="tz.undo">Discard changes</button>
-                  <button type="button" id="modal-clock-tz-save-btn" class="btn-pill-toggle is-primary is-small" data-i18n="tz.save">Save</button>
-                </div>
-              </div>
-
-              <!-- Display Language & Localization Card -->
-              <div class="drawer-card lng-box">
-                <div class="card-headline">
-                  <span class="card-head-title lng-fs14-bold" data-i18n="settings.language_title">Display Language & Localization</span>
-                </div>
-                <div class="lng-xs-muted-3" data-i18n="settings.language_desc">
-                  Select your preferred language for the Web Studio desktop and hardware management controls.
-                </div>
-                <div class="lng-x-3">
-                  <label class="lng-xs-bold-muted-2" for="mgmt-lang-select" data-i18n="settings.select_language">Language</label>
-                  <select id="mgmt-lang-select" class="language-picker-select tz-select-input lng-fs13-strong-box">
-                    <option value="en" lang="en" translate="no">English</option>
-                    <option value="de" lang="de" translate="no">Deutsch</option>
-                    <option value="zh" lang="zh">简体中文</option>
-                    <option value="fr" lang="fr" translate="no">Français</option>
-                    <option value="es" lang="es" translate="no">Español</option>
-                  </select>
-                </div>
-              </div>
-
             </div>
           </div>
         </div>
@@ -3248,6 +3141,10 @@
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                   <span data-i18n="mgmt.subtab_events">Event Log</span>
                 </button>
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-language" id="mgmt-tab-language">
+                <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
+                <span data-i18n="mgmt.subtab_language">Time, Language & Region</span>
+              </button>
                 <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-about" id="mgmt-tab-about">
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-globe"/></svg>
                   <span data-i18n="mgmt.subtab_about">About & Updates</span>
@@ -4048,6 +3945,112 @@
             </div>
           </div>
         </div>
+          <!-- Time, Language & Region (moved here from Appearance, APP-C) -->
+          <div id="mgmt-pane-language" class="mgmt-tab-pane" style="display: none;">
+            <div class="mgmt-card-intro">
+              <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="settings.language_title">Time, Language & Regional Settings</span></div>
+              <div class="mgmt-card-intro-desc" data-i18n="settings.language_desc">Select your preferred system language, desktop timezone, and clock display formatting.</div>
+            </div>
+            <div class="mgmt-detail-body lng-col">
+              
+              <!-- Timezone & Clock Settings Card -->
+              <div id="modal-clock-timezone" class="drawer-card lng-box">
+                <div class="card-headline lng-x">
+                  <span class="card-head-title lng-row-fs14-bold">
+                    <span class="lng-fs16">🕒</span>
+                    <span data-i18n="tz.modal_title">Timezone & Clock Settings</span>
+                  </span>
+                  <div class="lng-xs-muted" data-i18n="tz.card_desc">Your time zone and 12 or 24 hours, for every time Kiboto shows you, on every device you sign in to.</div>
+                </div>
+
+                <!-- Live Clock Preview Card -->
+                <div class="tz-preview-card lng-row-box">
+                  <div class="lng-col-2">
+                    <div style="font-size: var(--kb-fs-xs); text-transform: uppercase; font-weight: 700; color: var(--lt-ink-brand, var(--brand, #33cdb8)); letter-spacing: 0.8px;" data-i18n="tz.preview_label">Active Clock Preview</div>
+                    <div class="lng-row">
+                      <div class="lng-fs32-bold-strong" id="modal-tz-preview-time">--:--</div>
+                      <div class="lng-fs18-strong" id="modal-tz-preview-sec">:--</div>
+                      <div id="modal-tz-preview-ampm" style="font-size: 13px; font-weight: 800; color: var(--lt-ink-brand, var(--brand, #33cdb8));"></div>
+                    </div>
+                    <div class="lng-xs-muted-2" id="modal-tz-preview-date">--</div>
+                  </div>
+                  <div class="lng-col-3">
+                    <div id="modal-tz-active-pill" class="suite-badge" style="background: var(--lt-b-33cdb826, rgba(51,205,184,0.15)); color: var(--lt-ink-brand, var(--brand, #33cdb8)); border-color: var(--lt-r-33cdb859, rgba(51,205,184,0.35)); font-size: var(--kb-fs-xs); font-weight: 700; padding: 3px 10px; border-radius: 6px;" data-sample>—</div>
+                    <!-- 12H / 24H Toggle -->
+                    <div class="tz-format-toggle-group lng-row-box-2" role="radiogroup" aria-label="Clock format" data-i18n-aria-label="tz.format">
+                      <button type="button" id="btn-tz-fmt-12" class="tz-fmt-btn lng-xs-bold-muted-box" role="radio" aria-checked="false" data-i18n="tz.h12">12 h</button>
+                      <button type="button" id="btn-tz-fmt-24" class="tz-fmt-btn active" role="radio" aria-checked="true" style="padding: 4px 10px; font-size: var(--kb-fs-xs); font-weight: 700; border: none; background: var(--brand, #33cdb8); color: var(--accent-contrast-fg); border-radius: 4px; cursor: pointer;" data-i18n="tz.h24">24 h</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quick Action / Auto-detect -->
+                <div class="lng-row-2">
+                  <div class="lng-xs-bold" data-i18n="tz.select_heading">Select Desktop Timezone</div>
+                  <button type="button" id="btn-tz-use-browser" class="btn-pill-toggle lng-strong-box">
+                    📍 <span data-i18n="tz.use_local">Use Local System Timezone</span>
+                  </button>
+                </div>
+
+                <!-- Search Input & Region Filter Pills -->
+                <div class="lng-col-4">
+                  <input type="text" id="tz-search-input" class="tz-select-input lng-xs-strong-box" placeholder="Search cities, countries, or timezones (e.g. New York, Tokyo, London, Berlin, UTC)..." data-i18n-placeholder="ui.search_cities_countries_or_timezones" aria-label="Search cities, countries, or timezones (e.g. New York, Tokyo, London, Berlin, UTC)..." data-i18n-aria-label="ui.search_cities_countries_or_timezones" />
+                  <div class="lng-row-3" id="tz-region-pills">
+                    <button type="button" class="tz-region-pill active" data-region="all" data-i18n="tz.region_all">All</button>
+                    <button type="button" class="tz-region-pill" data-region="Americas" data-i18n="tz.region_americas">Americas</button>
+                    <button type="button" class="tz-region-pill" data-region="Europe" data-i18n="tz.region_europe">Europe</button>
+                    <button type="button" class="tz-region-pill" data-region="Asia" data-i18n="tz.region_asia">Asia</button>
+                    <button type="button" class="tz-region-pill" data-region="Pacific" data-i18n="tz.region_pacific">Pacific</button>
+                    <button type="button" class="tz-region-pill" data-region="UTC" translate="no">UTC / GMT</button>
+                  </div>
+                </div>
+
+                <!-- Timezone List Scroll Area -->
+                <div class="lng-col-box" id="tz-items-list" tabindex="0" role="listbox" aria-label="Time zones" data-i18n-aria-label="ui.time_zones">
+                  <!-- Populated dynamically via JS -->
+                </div>
+
+                <!-- Custom IANA Input -->
+                <div class="lng-row-4">
+                  <label class="lng-xs-bold-muted" for="tz-custom-input" data-i18n="tz.custom">Other zone (IANA name):</label>
+                  <input class="lng-xs-strong-box-grow" type="text" id="tz-custom-input" placeholder="e.g. America/Toronto, Asia/Seoul, UTC" data-i18n-placeholder="ph.timezone" />
+                  <button type="button" id="btn-tz-apply-custom" class="btn-pill-toggle lng-x-2" data-i18n="tz.use_zone">Use it</button>
+                </div>
+
+                <label class="tz-server-row" id="tz-server-row" hidden>
+                  <input type="checkbox" id="tz-apply-server">
+                  <span data-i18n="tz.apply_server">Also the server and the front screen: schedules, logs and alerts follow it</span>
+                </label>
+
+                <!-- Save Actions -->
+                <div class="lng-row-box-3">
+                  <button type="button" id="modal-clock-tz-cancel-btn" class="btn-pill-toggle is-small" data-i18n="tz.undo">Discard changes</button>
+                  <button type="button" id="modal-clock-tz-save-btn" class="btn-pill-toggle is-primary is-small" data-i18n="tz.save">Save</button>
+                </div>
+              </div>
+
+              <!-- Display Language & Localization Card -->
+              <div class="drawer-card lng-box">
+                <div class="card-headline">
+                  <span class="card-head-title lng-fs14-bold" data-i18n="settings.language_title">Display Language & Localization</span>
+                </div>
+                <div class="lng-xs-muted-3" data-i18n="settings.language_desc">
+                  Select your preferred language for the Web Studio desktop and hardware management controls.
+                </div>
+                <div class="lng-x-3">
+                  <label class="lng-xs-bold-muted-2" for="mgmt-lang-select" data-i18n="settings.select_language">Language</label>
+                  <select id="mgmt-lang-select" class="language-picker-select tz-select-input lng-fs13-strong-box">
+                    <option value="en" lang="en" translate="no">English</option>
+                    <option value="de" lang="de" translate="no">Deutsch</option>
+                    <option value="zh" lang="zh">简体中文</option>
+                    <option value="fr" lang="fr" translate="no">Français</option>
+                    <option value="es" lang="es" translate="no">Español</option>
+                  </select>
+                </div>
+              </div>
+
+            </div>
+          </div>
           </div>
 
           <!-- 8. AI Knowledge & Visual Search Engine (mgmt-sec-ai) -->
