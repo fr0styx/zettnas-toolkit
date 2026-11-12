@@ -59,29 +59,19 @@ def get_host_ip_config() -> dict[str, Any]:
 
     primary_iface = summary.get("primary_interface") or available_ifaces[0]
     unraid_cfg = unraid_file._parse_unraid_network_cfg()
-    saved_cfg = common.load_network_config()
-    persisted_host = saved_cfg.get("host_ip_config", {})
-
-    # Mode determination
-    if "mode" in persisted_host:
-        mode = persisted_host["mode"]
-    elif "USE_DHCP[0]" in unraid_cfg:
+    # what the host has: a value saved by an older version but never applied is not shown (SET-16)
+    if "USE_DHCP[0]" in unraid_cfg:
         mode = "dhcp" if unraid_cfg["USE_DHCP[0]"].lower() == "yes" else "static"
     else:
         mode = "static" if summary.get("primary_ip") and summary["primary_ip"] != "?" else "dhcp"
 
     # Current IP
-    current_ip = (
-        persisted_host.get("ip_address")
-        or unraid_cfg.get("IPADDR[0]")
-        or summary.get("primary_ip")
-        or topology.read_ip()
-    )
+    current_ip = unraid_cfg.get("IPADDR[0]") or summary.get("primary_ip") or topology.read_ip()
     if current_ip == "?":
         current_ip = ""
 
     # Netmask & CIDR
-    netmask = persisted_host.get("netmask") or unraid_cfg.get("NETMASK[0]")
+    netmask = unraid_cfg.get("NETMASK[0]")
     if not netmask:
         for r in routes:
             if r.get("iface") == primary_iface and r.get("mask") and r["mask"] != "0.0.0.0":
@@ -92,7 +82,7 @@ def get_host_ip_config() -> dict[str, Any]:
     cidr = common._mask_to_cidr(netmask)
 
     # Gateway
-    gateway = persisted_host.get("gateway") or unraid_cfg.get("GATEWAY[0]") or summary.get("default_gateway") or ""
+    gateway = unraid_cfg.get("GATEWAY[0]") or summary.get("default_gateway") or ""
 
     # DNS
     dns_servers = list(summary.get("dns_servers") or [])
@@ -101,8 +91,8 @@ def get_host_ip_config() -> dict[str, Any]:
     if unraid_cfg.get("DNS_SERVER2") and unraid_cfg["DNS_SERVER2"] not in dns_servers:
         dns_servers.append(unraid_cfg["DNS_SERVER2"])
 
-    dns1 = persisted_host.get("dns1") or (dns_servers[0] if len(dns_servers) > 0 else "")
-    dns2 = persisted_host.get("dns2") or (dns_servers[1] if len(dns_servers) > 1 else "")
+    dns1 = dns_servers[0] if len(dns_servers) > 0 else ""
+    dns2 = dns_servers[1] if len(dns_servers) > 1 else ""
 
     return {
         "status": "ok",

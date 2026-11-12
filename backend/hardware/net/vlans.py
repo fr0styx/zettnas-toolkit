@@ -47,7 +47,6 @@ def get_vlans() -> list[dict[str, Any]]:
     sys_net_dir = common._find_sys_net_dir()
     routes = common._parse_routes()
     saved_cfg = common.load_network_config()
-    saved_vlans = saved_cfg.get("vlans", {})
     proc_vlans = _parse_proc_net_vlan()
 
     vlans: list[dict[str, Any]] = []
@@ -87,15 +86,7 @@ def get_vlans() -> list[dict[str, Any]]:
                         if not vlan_id:
                             vlan_id = int(vid_cand)
 
-                # 4. Check persistent config
-                if iface in saved_vlans:
-                    is_vlan = True
-                    if not parent:
-                        parent = saved_vlans[iface].get("parent", "")
-                    if not vlan_id:
-                        vlan_id = int(saved_vlans[iface].get("vlan_id", 0))
-
-                # 5. Match parent from lower_* symlink only if already confirmed as VLAN
+                # 4. Match parent from lower_* symlink only if already confirmed as VLAN
                 if is_vlan and not parent:
                     try:
                         for entry in os.listdir(iface_dir):
@@ -129,9 +120,7 @@ def get_vlans() -> list[dict[str, Any]]:
                             vlan_ip = f"{r.get('destination')}/{r.get('cidr')}"
                             break
 
-                    alias = saved_vlans.get(iface, {}).get("alias", "")
-                    if not alias:
-                        alias = saved_cfg.get("aliases", {}).get(iface, "")
+                    alias = saved_cfg.get("aliases", {}).get(iface, "")
 
                     vlans.append(
                         {
@@ -151,26 +140,6 @@ def get_vlans() -> list[dict[str, Any]]:
                     )
         except Exception as e:
             logger.debug(f"Error enumerating VLAN interfaces: {e}")
-
-    # Merge any saved VLANs that are currently offline or down
-    for vname, vdata in saved_vlans.items():
-        if vname not in discovered_names:
-            vlans.append(
-                {
-                    "name": vname,
-                    "parent": vdata.get("parent", ""),
-                    "vlan_id": int(vdata.get("vlan_id", 0)),
-                    "alias": vdata.get("alias", ""),
-                    "carrier": 0,
-                    "is_up": False,
-                    "speed_human": "Disconnected",
-                    "mtu": 1500,
-                    "mac": "",
-                    "ip_address": "",
-                    "rx_bytes": 0,
-                    "tx_bytes": 0,
-                }
-            )
 
     return sorted(vlans, key=lambda v: (v.get("parent", ""), v.get("vlan_id", 0)))
 

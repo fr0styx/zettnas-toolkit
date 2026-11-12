@@ -243,13 +243,14 @@ class TestVlans:
     def test_proc_vlan_config(self, sysnet):
         assert net._parse_proc_net_vlan() == {"vlan20": {"vlan_id": 20, "parent": "eth1"}}
 
-    def test_discovers_vlans_and_keeps_saved_ones(self, sysnet):
+    def test_discovers_vlans_and_lists_only_real_ones(self, sysnet):
+        # a VLAN saved by an older version but never created in the kernel is no longer listed
+        # for ever as down (SET-16, network report B4); its nickname moved to the nicknames
         vlans = {v["name"]: v for v in net.get_vlans()}
-        assert set(vlans) == {"eth0.10", "vlan20", "eth2.30"}
+        assert set(vlans) == {"eth0.10", "vlan20"}
         assert vlans["eth0.10"]["vlan_id"] == 10 and vlans["eth0.10"]["parent"] == "eth0"
         assert vlans["eth0.10"]["alias"] == "Cameras" and vlans["eth0.10"]["ip_address"] == "10.10.0.0/24"
         assert vlans["vlan20"]["parent"] == "eth1" and not vlans["vlan20"]["is_up"]
-        assert vlans["eth2.30"]["speed_human"] == "Disconnected" and vlans["eth2.30"]["alias"] == "IoT"
 
 
 class TestHostIp:

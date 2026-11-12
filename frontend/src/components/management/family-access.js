@@ -4,6 +4,7 @@
  * guided page to send them.
  */
 import { api } from '../../api.js';
+import { installNeedsTailscale, needsTailscaleHtml } from './needs-tailscale.js';
 import '../../styles/80-public-apps.css'; // the list and warning styles it shares with Apps from anywhere
 import { t } from '../../i18n.js';
 import { showToast } from '../../toast.js';
@@ -60,7 +61,7 @@ function personHtml(user, p, canInvite) {
 
 /** The card's body from the status and the Kiboto users. */
 export function familyAccessHtml(st, users) {
-  if (!st.tailscale) return `<div class="nsv-xs-muted">${esc(t('pl.no_tailscale', 'Needs Tailscale: connect it in Network → WireGuard & Tailscale first.'))}</div>`;
+  if (!st.tailscale) return (installNeedsTailscale(), needsTailscaleHtml(esc));
   if (st.headscale) return `<div class="nsv-xs-muted">${esc(t('fa.headscale', 'This NAS uses your own Headscale server: give each person a key from it instead. Share invites are a Tailscale service.'))}</div>`;
   const byUser = new Map(st.people.map((p) => [String(p.user_id), p]));
   const rows = users.filter((u) => u.status === 'active').map((u) => personHtml(u, byUser.get(String(u.id)), st.has_key)).join('');

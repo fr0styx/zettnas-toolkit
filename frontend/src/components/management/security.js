@@ -293,7 +293,7 @@ export async function fetchAndRenderSecurityPosture() {
       container.innerHTML = data.checks.map(c => {
         const state = checkState(c);
         const passIcon = { ok: '✔', tip: 'ℹ', look: '✖' }[state];
-        const passColor = { ok: 'var(--lt-t-22c55eff, #22c55e)', tip: 'var(--kb-text-muted)', look: 'var(--lt-t-ef4444ff, #ef4444)' }[state];
+        const passColor = { ok: 'var(--lt-t-22c55eff, #22c55e)', tip: 'var(--kb-text-muted)', look: 'var(--lt-t-fca5a5ff, #fca5a5)' }[state]; // the lighter red passes 4.5:1 on the dark row
         const badgeBg = c.passed ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)';
         const actionText = c.passed ? t('sec.action_review', 'Review ➔') : t('sec.action_configure', 'Configure ➔');
         return `

@@ -3,6 +3,7 @@
  * the internet through Tailscale Funnel, on a port of its own. Kiboto's own page never goes there.
  */
 import { api } from '../../api.js';
+import { installNeedsTailscale, needsTailscaleHtml } from './needs-tailscale.js';
 import '../../styles/80-public-apps.css'; // loads with the card, not on every page
 import { t } from '../../i18n.js';
 import { showToast } from '../../toast.js';
@@ -27,7 +28,7 @@ export function publishedHtml(p) {
 /** The card's body: what is published, and the form to publish another. */
 export function publicAppsHtml(st) {
   if (!st.tailscale) {
-    return `<div class="nsv-xs-muted">${escapeHtml(t('pl.no_tailscale', 'Needs Tailscale: connect it in Network → WireGuard & Tailscale first.'))}</div>`;
+    return (installNeedsTailscale(), needsTailscaleHtml(escapeHtml));
   }
   const list = st.published.length
     ? `<ul class="pa-list">${st.published.map(publishedHtml).join('')}</ul>`

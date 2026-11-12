@@ -1,9 +1,9 @@
 {
-  "important": 3345,
+  "important": 3347,
   "buttonClasses": 75,
-  "inlineStyles": 1357,
+  "inlineStyles": 1350,
   "emojiIcons": 2,
-  "colours": 3877,
+  "colours": 3868,
   "primitiveUses": 4,
   "importantPerFile": {
     "frontend/index.html": 64,
@@ -28,7 +28,7 @@
     "frontend/src/styles/22-window-snap.css": 2,
     "frontend/src/styles/23-mobile-stacked.css": 890,
     "frontend/src/styles/24-tablet-bottom-sheet.css": 919,
-    "frontend/src/styles/25-mobile-ergonomics.css": 433,
+    "frontend/src/styles/25-mobile-ergonomics.css": 435,
     "frontend/src/styles/26-desktop-widgets.css": 37,
     "frontend/src/styles/27-chassis-twin.css": 2,
     "frontend/src/styles/28-spotlight-resize.css": 12,
@@ -64,7 +64,7 @@
     "frontend/src/components/events.js": 7,
     "frontend/src/components/fan-control.js": 44,
     "frontend/src/components/file-manager-helpers.js": 8,
-    "frontend/src/components/file-manager.js": 35,
+    "frontend/src/components/file-manager.js": 34,
     "frontend/src/components/file-preview-modal.js": 6,
     "frontend/src/components/led-control.js": 10,
     "frontend/src/components/management.js": 23,
@@ -160,6 +160,6 @@
     "frontend/src/utils.js": 1,
     "frontend/src/vm-console-direct.css": 2,
     "frontend/src/windows/drawer.html": 116,
-    "frontend/src/windows/management-window.html": 485
+    "frontend/src/windows/management-window.html": 477
   }
 }

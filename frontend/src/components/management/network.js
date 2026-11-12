@@ -3,6 +3,7 @@
  * Split out of management.js (ARCH-1); management.js re-exports everything here.
  */
 import { applyNetCaps, canChange, portPayload, setNetCaps } from './net-host.js';
+import { installNeedsTailscale } from './needs-tailscale.js';
 import { api } from '../../api.js';
 import { initNetworkPortsInspector, fetchListeningPorts } from '../network-manager.js';
 import { showToast, showConfirmToast } from '../../toast.js';
@@ -419,13 +420,6 @@ export async function fetchAndRenderNetworkTopology() {
     if (kpiContainers) kpiContainers.textContent = t('net.containers_attached', '{count, plural, one {# container attached} other {# containers attached}}', { count: summary.docker_containers_count || 0 });
     if (activeBadge) activeBadge.textContent = t('net.active_count', '{count} active', { count: summary.active_physical || 0 });
 
-    // Check if a canary watchdog test is active on host
-    if (summary.canary && summary.canary.is_active && summary.canary.expires_in > 0) {
-      const canaryModal = document.getElementById('network-canary-overlay');
-      if (canaryModal && canaryModal.style.display !== 'flex') {
-        openCanaryModal(summary.canary);
-      }
-    }
 
     // 2. Render Hardware Switch Ports (Front-Panel Faceplate)
     if (switchFaceplate) {
@@ -960,8 +954,6 @@ export async function submitDockerNetworkCreate() {
   }
 }
 
-let _canaryInterval = null;
-let _currentCanaryId = null;
 
 export async function openHostIpConfigModal() {
   const overlay = document.getElementById('network-host-config-overlay');
@@ -1050,7 +1042,7 @@ export async function applyHostIpConfig() {
 
   if (applyBtn) {
     applyBtn.disabled = true;
-    applyBtn.textContent = t('ui.arming_watchdog', 'Arming Watchdog...');
+    applyBtn.textContent = t('ui.saving', 'Saving...');
   }
 
   try {
@@ -1062,127 +1054,18 @@ export async function applyHostIpConfig() {
       gateway,
       dns1,
       dns2,
-      timeout_sec: 60
     });
 
+    // only a host Kiboto manages takes the change (SET-16, D2); elsewhere the server says where to make it
     closeHostIpConfigModal();
-    openCanaryModal(res);
+    showToast(res?.message || t('ui.saved', 'Saved!'), 'success');
+    fetchAndRenderNetworkTopology();
   } catch (err) {
     showToast(err.message || 'Failed to apply host network configuration', 'error');
   } finally {
     if (applyBtn) {
       applyBtn.disabled = false;
-      applyBtn.textContent = t('net.apply_canary_btn', 'Test & Apply (60s Canary)');
-    }
-  }
-}
-
-export function openCanaryModal(canaryData) {
-  const overlay = document.getElementById('network-canary-overlay');
-  if (!overlay) return;
-
-  _currentCanaryId = canaryData?.canary_id || null;
-  let remaining = canaryData?.expires_in || 60;
-
-  const digits = document.getElementById('net-canary-timer-digits');
-  const circle = document.getElementById('net-canary-timer-circle');
-  const targetUrlEl = document.getElementById('net-canary-target-url');
-  const openLink = document.getElementById('net-canary-open-link');
-  const revertingMsg = document.getElementById('net-canary-reverting-msg');
-  const confirmBtn = document.getElementById('net-canary-confirm-btn');
-
-  if (revertingMsg) revertingMsg.style.display = 'none';
-  if (confirmBtn) confirmBtn.disabled = false;
-  if (circle) circle.classList.remove('danger');
-  if (digits) digits.textContent = String(remaining);
-
-  const targetUrl = canaryData?.target_url || (canaryData?.target_ip ? `http://${canaryData.target_ip}:8082` : window.location.origin);
-  if (targetUrlEl) targetUrlEl.textContent = targetUrl;
-  if (openLink) openLink.href = targetUrl;
-
-  overlay.classList.add('open');
-  overlay.style.display = 'flex';
-
-  if (_canaryInterval) {
-    clearInterval(_canaryInterval);
-    _canaryInterval = null;
-  }
-
-  _canaryInterval = setInterval(() => {
-    remaining -= 1;
-    if (digits) digits.textContent = String(Math.max(0, remaining));
-
-    if (remaining <= 15 && circle) {
-      circle.classList.add('danger');
-    }
-
-    if (remaining <= 0) {
-      clearInterval(_canaryInterval);
-      _canaryInterval = null;
-      if (revertingMsg) revertingMsg.style.display = 'block';
-      if (confirmBtn) confirmBtn.disabled = true;
-      showToast(t('net.canary_reverted_toast', 'Host network settings reverted to previous configuration.'), 'info');
-      setTimeout(() => {
-        closeCanaryModal();
-        fetchAndRenderNetworkTopology();
-      }, 3500);
-    }
-  }, 1000);
-}
-
-export function closeCanaryModal() {
-  if (_canaryInterval) {
-    clearInterval(_canaryInterval);
-    _canaryInterval = null;
-  }
-  const overlay = document.getElementById('network-canary-overlay');
-  if (overlay) {
-    overlay.classList.remove('open');
-    overlay.style.display = 'none';
-  }
-  _currentCanaryId = null;
-}
-
-export async function confirmCanaryConfig() {
-  const confirmBtn = document.getElementById('net-canary-confirm-btn');
-  if (confirmBtn) {
-    confirmBtn.disabled = true;
-    confirmBtn.textContent = t('ui.confirming', 'Confirming...');
-  }
-
-  try {
-    await api.post('/api/network/host/confirm', { canary_id: _currentCanaryId });
-    showToast(t('net.canary_confirmed_toast', 'Host network settings confirmed and permanently saved.'), 'success');
-    closeCanaryModal();
-    fetchAndRenderNetworkTopology();
-  } catch (err) {
-    showToast(err.message || 'Failed to confirm host network configuration', 'error');
-  } finally {
-    if (confirmBtn) {
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = t('net.canary_confirm_btn', 'Confirm & Keep Settings');
-    }
-  }
-}
-
-export async function revertCanaryConfig() {
-  const revertBtn = document.getElementById('net-canary-revert-btn');
-  if (revertBtn) {
-    revertBtn.disabled = true;
-    revertBtn.textContent = t('ui.reverting', 'Reverting...');
-  }
-
-  try {
-    await api.post('/api/network/host/revert', { canary_id: _currentCanaryId });
-    showToast(t('net.canary_reverted_toast', 'Host network settings reverted to previous configuration.'), 'info');
-    closeCanaryModal();
-    fetchAndRenderNetworkTopology();
-  } catch (err) {
-    showToast(err.message || 'Failed to revert host network configuration', 'error');
-  } finally {
-    if (revertBtn) {
-      revertBtn.disabled = false;
-      revertBtn.textContent = t('net.canary_revert_btn', 'Revert Changes Now');
+      applyBtn.textContent = t('net.apply_address', 'Apply');
     }
   }
 }
@@ -1488,6 +1371,7 @@ export async function deleteVlanSubinterface(vlanName) {
 }
 
 export function initNetworkControls() {
+  installNeedsTailscale();
   initNetworkPortsInspector();
   const servicesBtn = /** @type {HTMLElement | null} */ (document.querySelector('[data-tab-target="mgmt-pane-network-services"]'));
   if (servicesBtn && !servicesBtn.dataset.boundNasName) {
@@ -1594,17 +1478,6 @@ export function initNetworkControls() {
     }
   });
 
-  const canaryConfirm = document.getElementById('net-canary-confirm-btn');
-  if (canaryConfirm && !canaryConfirm.dataset.bound) {
-    canaryConfirm.dataset.bound = '1';
-    canaryConfirm.addEventListener('click', confirmCanaryConfig);
-  }
-
-  const canaryRevert = document.getElementById('net-canary-revert-btn');
-  if (canaryRevert && !canaryRevert.dataset.bound) {
-    canaryRevert.dataset.bound = '1';
-    canaryRevert.addEventListener('click', revertCanaryConfig);
-  }
 
   const portClose = document.getElementById('net-port-cfg-close-btn');
   if (portClose && !portClose.dataset.bound) {

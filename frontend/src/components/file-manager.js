@@ -1796,7 +1796,7 @@ export class FileManagerWindow {
       span.style.padding = '2px 4px';
       span.style.borderRadius = '4px';
       span.style.cursor = isLast ? 'text' : 'pointer';
-      span.style.color = isLast ? 'var(--accent-cyan, #33cdb8)' : 'var(--fg)';
+      span.style.color = isLast ? 'var(--c-primary-text)' : 'var(--fg)'; // the theme's text-safe primary, light or dark
       span.style.fontWeight = isLast ? 'bold' : 'normal';
       span.style.fontFamily = 'monospace';
       span.style.whiteSpace = 'nowrap';

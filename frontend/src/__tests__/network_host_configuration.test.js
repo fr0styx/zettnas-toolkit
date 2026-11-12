@@ -3,16 +3,12 @@ import {
   openHostIpConfigModal,
   closeHostIpConfigModal,
   applyHostIpConfig,
-  openCanaryModal,
-  closeCanaryModal,
-  confirmCanaryConfig,
-  revertCanaryConfig,
   initNetworkControls,
 } from '../components/management.js';
 import { api } from '../api.js';
 import * as toast from '../toast.js';
 
-describe('Host IP & DNS Administration with 60s Canary Watchdog (Tier 2)', () => {
+describe('Host IP & DNS dialog (SET-16: no trial; only a host Kiboto manages takes the change)', () => {
   let container;
 
   beforeEach(() => {
@@ -52,24 +48,12 @@ describe('Host IP & DNS Administration with 60s Canary Watchdog (Tier 2)', () =>
         <button id="net-host-cfg-apply-btn"></button>
       </div>
 
-      <!-- Canary Watchdog Modal -->
-      <div id="network-canary-overlay" style="display: none;">
-        <div id="net-canary-timer-circle">
-          <span id="net-canary-timer-digits">60</span>
-        </div>
-        <span id="net-canary-target-url"></span>
-        <a id="net-canary-open-link" href="#"></a>
-        <div id="net-canary-reverting-msg" style="display: none;"></div>
-        <button id="net-canary-confirm-btn"></button>
-        <button id="net-canary-revert-btn"></button>
-      </div>
     `;
     document.body.appendChild(container);
     initNetworkControls();
   });
 
   afterEach(() => {
-    closeCanaryModal();
     container?.remove();
     vi.restoreAllMocks();
     vi.useRealTimers();
@@ -87,7 +71,6 @@ describe('Host IP & DNS Administration with 60s Canary Watchdog (Tier 2)', () =>
     dns1: '192.168.1.1',
     dns2: '1.1.1.1',
     dns_servers: ['192.168.1.1', '1.1.1.1'],
-    canary: { is_active: false, expires_in: 0 },
   };
 
   it('opens Host IP modal and populates static IP, gateway, and DNS fields', async () => {
@@ -149,26 +132,14 @@ describe('Host IP & DNS Administration with 60s Canary Watchdog (Tier 2)', () =>
     expect(cloudflareDns.classList.contains('active')).toBe(true);
   });
 
-  it('arms 60s Canary Watchdog when applying host IP changes', async () => {
-    vi.spyOn(api, 'get').mockResolvedValueOnce(mockHostConfig);
+  it('sends the address and says what the server answered, with no trial countdown', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(mockHostConfig);
     await openHostIpConfigModal();
-
-    // Change IP
     document.getElementById('net-host-ip-input').value = '192.168.1.51';
     document.getElementById('net-host-gateway-input').value = '192.168.1.1';
-
-    const mockCanaryResponse = {
-      status: 'testing',
-      canary_id: 'test_canary_abc',
-      expires_in: 60,
-      target_ip: '192.168.1.51',
-      target_url: 'http://192.168.1.51:8082',
-    };
-
-    const postSpy = vi.spyOn(api, 'post').mockResolvedValueOnce(mockCanaryResponse);
-
+    const toastSpy = vi.spyOn(toast, 'showToast').mockImplementation(() => {});
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValueOnce({ status: 'ok', message: 'Address saved' });
     await applyHostIpConfig();
-
     expect(postSpy).toHaveBeenCalledWith('/api/network/host/apply', {
       mode: 'static',
       interface: 'br0',
@@ -177,59 +148,20 @@ describe('Host IP & DNS Administration with 60s Canary Watchdog (Tier 2)', () =>
       gateway: '192.168.1.1',
       dns1: '192.168.1.1',
       dns2: '1.1.1.1',
-      timeout_sec: 60,
     });
-
-    // Host config modal should close, Canary modal should open
     expect(document.getElementById('network-host-config-overlay').style.display).toBe('none');
-    const canaryModal = document.getElementById('network-canary-overlay');
-    expect(canaryModal.style.display).toBe('flex');
-    expect(document.getElementById('net-canary-timer-digits').textContent).toBe('60');
-    expect(document.getElementById('net-canary-target-url').textContent).toBe('http://192.168.1.51:8082');
-
-    // Advance timer 10s
-    vi.advanceTimersByTime(10000);
-    expect(document.getElementById('net-canary-timer-digits').textContent).toBe('50');
-
-    // Advance timer to dangerous threshold (<= 15s)
-    vi.advanceTimersByTime(36000);
-    expect(document.getElementById('net-canary-timer-digits').textContent).toBe('14');
-    expect(document.getElementById('net-canary-timer-circle').classList.contains('danger')).toBe(true);
+    expect(toastSpy).toHaveBeenCalledWith('Address saved', 'success');
+    expect(document.getElementById('network-canary-overlay')).toBeNull();
   });
 
-  it('confirms Canary settings and closes modal on confirm', async () => {
-    openCanaryModal({
-      canary_id: 'canary_123',
-      expires_in: 60,
-      target_url: 'http://192.168.1.51:8082',
-    });
-
-    const postSpy = vi.spyOn(api, 'post').mockResolvedValueOnce({ status: 'confirmed' });
+  it('shows the refusal of a host Kiboto does not manage', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue(mockHostConfig);
+    await openHostIpConfigModal();
+    document.getElementById('net-host-ip-input').value = '192.168.1.51';
+    document.getElementById('net-host-gateway-input').value = '192.168.1.1';
     const toastSpy = vi.spyOn(toast, 'showToast').mockImplementation(() => {});
-    vi.spyOn(api, 'get').mockResolvedValueOnce({ status: 'ok', summary: {}, physical_interfaces: [] });
-
-    await confirmCanaryConfig();
-
-    expect(postSpy).toHaveBeenCalledWith('/api/network/host/confirm', { canary_id: 'canary_123' });
-    expect(toastSpy).toHaveBeenCalledWith(expect.any(String), 'success');
-    expect(document.getElementById('network-canary-overlay').style.display).toBe('none');
-  });
-
-  it('reverts Canary settings and closes modal on revert', async () => {
-    openCanaryModal({
-      canary_id: 'canary_456',
-      expires_in: 60,
-      target_url: 'http://192.168.1.51:8082',
-    });
-
-    const postSpy = vi.spyOn(api, 'post').mockResolvedValueOnce({ status: 'reverted' });
-    const toastSpy = vi.spyOn(toast, 'showToast').mockImplementation(() => {});
-    vi.spyOn(api, 'get').mockResolvedValueOnce({ status: 'ok', summary: {}, physical_interfaces: [] });
-
-    await revertCanaryConfig();
-
-    expect(postSpy).toHaveBeenCalledWith('/api/network/host/revert', { canary_id: 'canary_456' });
-    expect(toastSpy).toHaveBeenCalledWith(expect.any(String), 'info');
-    expect(document.getElementById('network-canary-overlay').style.display).toBe('none');
+    vi.spyOn(api, 'post').mockRejectedValueOnce(new Error('This is changed in Unraid: Settings, Network Settings, not in Kiboto.'));
+    await applyHostIpConfig();
+    expect(toastSpy).toHaveBeenCalledWith(expect.stringContaining('Unraid'), 'error');
   });
 });

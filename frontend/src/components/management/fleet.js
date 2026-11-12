@@ -3,6 +3,7 @@
  * over the tailnet, shows each paired box at a glance and sets up backups on each other's box.
  */
 import { api } from '../../api.js';
+import { installNeedsTailscale, needsTailscaleHtml } from './needs-tailscale.js';
 import '../../styles/83-fleet.css'; // loads with the card, not on every page
 import { formatBytes, formatDateTime } from '../../format.js';
 import { t } from '../../i18n.js';
@@ -49,7 +50,7 @@ function peerHtml(p) {
 
 /** The card's body. */
 export function fleetHtml(st) {
-  if (!st.address) return `<div class="nsv-xs-muted">${esc(t('pl.no_tailscale', 'Needs Tailscale: connect it in Network → WireGuard & Tailscale first.'))}</div>`;
+  if (!st.address) return (installNeedsTailscale(), needsTailscaleHtml(esc));
   const list = st.peers.length
     ? `<ul class="pa-list">${st.peers.map(peerHtml).join('')}</ul>`
     : `<div class="nsv-xs-muted">${esc(t('fleet.none', 'No other Kiboto box is paired with this one.'))}</div>`;

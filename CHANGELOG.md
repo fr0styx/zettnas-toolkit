@@ -638,6 +638,18 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   Connecting and HTTPS addresses stay in the "Use from anywhere" card. Old API routes answer 410
   with what replaced them.
 
+#### Changes
+
+- **The network page shows what the host has, nothing saved on the side.** An address "trial" or a
+  VLAN that an older version saved but never applied is forgotten once (a VLAN's nickname is kept),
+  and the 60-second trial dialog is gone. The tab is called "Remote access", and the cards that need
+  Tailscale have a "Connect Tailscale" button. New Docker networks are bridge networks only.
+
+#### Fixes
+
+- **Three hard-to-read labels.** The security check's red badges, the File Explorer's current folder
+  in light mode and its "More actions" button on narrow windows now have enough contrast.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

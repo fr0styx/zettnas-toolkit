@@ -481,3 +481,68 @@ def test_the_layout_says_what_this_host_lets_kiboto_change(client, token):
     assert r.status_code == 200
     host = r.json()["host"]
     assert host["managed"] is False and "where" in host and host["can_change"]["address"] is False
+
+
+def test_settings_saved_but_never_applied_are_forgotten_once(tmp_path):
+    """SET-16: an older version saved an address "trial" and VLANs that never reached the host."""
+    import json
+
+    from backend.hardware.net import common
+
+    path = tmp_path / "network_config.json"
+    path.write_text(
+        json.dumps(
+            {
+                "aliases": {"eth0": "Uplink"},
+                "ports": {},
+                "host_ip_config": {"mode": "static", "ip_address": "10.9.9.9"},
+                "host_ip_staged": {"ip_address": "10.9.9.9"},
+                "vlans": {
+                    "eth0.30": {"parent": "eth0", "vlan_id": 30, "alias": "Cameras"},
+                    "eth0.40": {"parent": "eth0", "vlan_id": 40},
+                },
+            }
+        )
+    )
+    with patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(path)):
+        cfg = common.load_network_config()
+        assert cfg["aliases"] == {"eth0": "Uplink", "eth0.30": "Cameras"}
+        assert not set(common.UNAPPLIED_KEYS) & set(cfg)
+        on_disk = json.loads(path.read_text())
+        assert not set(common.UNAPPLIED_KEYS) & set(on_disk) and on_disk["aliases"]["eth0.30"] == "Cameras"
+        assert common.forget_unapplied(dict(on_disk)) is False  # nothing left to forget
+
+
+def test_the_address_shown_is_the_host_s_not_a_saved_trial(tmp_path):
+    import json
+
+    path = tmp_path / "network_config.json"
+    path.write_text(
+        json.dumps(
+            {"aliases": {}, "host_ip_config": {"mode": "static", "ip_address": "10.9.9.9", "gateway": "10.9.9.1"}}
+        )
+    )
+    topo = {
+        "summary": {
+            "primary_ip": "192.168.1.50",
+            "primary_interface": "br0",
+            "default_gateway": "192.168.1.1",
+            "dns_servers": ["192.168.1.1"],
+        },
+        "routes": [],
+        "physical_interfaces": [{"name": "eth0"}],
+        "bridges": [{"name": "br0"}],
+        "bonds": [],
+    }
+    with (
+        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(path)),
+        patch("backend.hardware.net.topology.get_network_topology", return_value=topo),
+        patch("backend.hardware.net.unraid_cfg._parse_unraid_network_cfg", return_value={}),
+    ):
+        cfg = get_host_ip_config()
+    assert cfg["ip_address"] == "192.168.1.50" and cfg["gateway"] == "192.168.1.1"
+
+
+def test_only_bridge_docker_networks_are_created():
+    res = create_docker_network("cams", "macvlan")
+    assert res["status"] == "error" and "bridge" in res["message"]

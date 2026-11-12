@@ -1392,7 +1392,7 @@
                 </button>
                 <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-wireguard">
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-shield"/></svg>
-                  <span data-i18n="mgmt.subtab_network_wireguard">WireGuard & Tailscale</span>
+                  <span data-i18n="mgmt.subtab_network_wireguard">Remote access</span>
                 </button>
                 <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-docker">
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-docker"/></svg>
@@ -4727,8 +4727,6 @@
         <label class="ndc-xs-bold-muted" for="net-docker-driver-select" data-i18n="net.docker_driver_label">Driver</label>
         <select id="net-docker-driver-select" class="tz-select-input ndc-size">
           <option value="bridge" data-i18n="mw.bridge_isolated_host_bridge">bridge (Isolated host bridge)</option>
-          <option value="macvlan" data-i18n="mw.macvlan_direct_lan_ip_assignment">macvlan (Direct LAN IP assignment)</option>
-          <option value="ipvlan" data-i18n="mw.ipvlan_direct_l2_l3_lan_assignment">ipvlan (Direct L2/L3 LAN assignment)</option>
         </select>
       </div>
       <div>
@@ -4853,50 +4851,6 @@
 </div>
 
 <!-- 60-Second Canary Rollback Watchdog Overlay Modal -->
-<div id="network-canary-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-canary-title" style="display: none; z-index: 9600;">
-  <div class="smart-modal-window" style="max-width: 480px; width: 92%; box-shadow: 0 30px 80px rgba(0,0,0,0.95), 0 0 40px rgba(245, 158, 11, 0.3); border: 1px solid rgba(245, 158, 11, 0.5); background: var(--lt-b-0e1c1ef5, rgba(14, 28, 30, 0.96));">
-    <div class="smart-modal-header" style="cursor: default; border-bottom: 1px solid rgba(245, 158, 11, 0.3);">
-      <span class="smart-modal-title can-row-warn" id="net-canary-title">
-        <span class="canary-pulsing-dot"></span>
-        <span data-i18n="net.canary_title">Network Canary Watchdog Active</span>
-      </span>
-    </div>
-    <div class="smart-modal-body can-col">
-      <!-- Circular Countdown Timer -->
-      <div class="canary-countdown-wrap">
-        <div class="canary-timer-circle" id="net-canary-timer-circle">
-          <span id="net-canary-timer-digits" class="canary-digits">60</span>
-          <span class="canary-unit" data-i18n="mw.seconds">SECONDS</span>
-        </div>
-      </div>
-
-      <div class="can-fs13" data-i18n="net.canary_desc">
-        New IP settings applied. A 60-second safety countdown is active to prevent accidental lockout. Please confirm that you can connect before the timer expires.
-      </div>
-
-      <!-- Target Address Box -->
-      <div class="can-xs-box" id="net-canary-dest-card">
-        <div class="can-xs-muted" data-i18n="net.canary_redirect_hint">If host IP changed, open the new address in a new tab to confirm:</div>
-        <div style="display: flex; justify-content: center; align-items: center; gap: 8px; font-family: var(--font-mono, monospace); font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); font-size: 13px;">
-          <span id="net-canary-target-url">http://--:8082</span>
-          <a id="net-canary-open-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size: var(--kb-fs-xs); padding: 2px 8px; color: var(--lt-ink-brand, var(--accent-cyan)); border-color: rgba(79,216,196,0.4);"><span data-i18n="overview.open">Open</span> <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-
-      <!-- Reverting message (hidden by default) -->
-      <div class="can-xs-semi" id="net-canary-reverting-msg" style="display: none;" data-i18n="net.canary_reverting">
-        Timer expired or reverted. Restoring previous network settings...
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="can-row">
-        <button id="net-canary-revert-btn" type="button" class="btn-pill-toggle is-danger" style="flex: 1; background: rgba(248, 113, 113, 0.1);" data-i18n="net.canary_revert_btn">Revert Changes Now</button>
-        <button id="net-canary-confirm-btn" type="button" class="btn-pill-toggle active is-primary can-grow" data-i18n="net.canary_confirm_btn">Confirm & Keep Settings</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- Bonding Mode & Link Aggregation Configuration Modal -->
 <div id="network-bond-config-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="net-bond-cfg-title" style="display: none;">
   <div class="smart-modal-window" style="max-width: 520px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(79, 216, 196, 0.18); border: 1px solid var(--kb-line-14);">

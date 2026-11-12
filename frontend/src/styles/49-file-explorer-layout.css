@@ -44,7 +44,7 @@
   }
   .fm-row .fm-col-actions { opacity: 1; }
   .fm-col-actions .fm-act-btn:not(.fm-act-more-sheet) { display: none; }
-  .fm-col-actions .fm-act-more-sheet { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; min-height: 32px; }
+  .fm-col-actions .fm-act-more-sheet { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; min-height: 32px; color: var(--c-text); }
   .fm-row-thumb { width: 30px; height: 30px; }
   .fm-new-win-btn, .fm-organize-btn, .fm-btn-view-compact, .fm-btn-inspector-toggle { display: none; }
   .fm-search-input { width: 84px; }

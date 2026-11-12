@@ -530,7 +530,7 @@
    "call": "create_docker_network bad",
    "commands": [],
    "result": {
-    "message": "Invalid network name",
+    "message": "Only bridge networks are created here.",
     "status": "error"
    }
   },

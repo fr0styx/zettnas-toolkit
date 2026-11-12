@@ -180,8 +180,27 @@ def _get_dns_servers() -> list[str]:
     return servers
 
 
+# Settings older versions saved without ever applying them to the host (network report B2 to B4):
+# an address "trial", its staging copy and VLANs that never existed in the kernel (SET-16)
+UNAPPLIED_KEYS = ("host_ip_config", "host_ip_staged", "vlans")
+
+
+def forget_unapplied(cfg: dict[str, Any]) -> bool:
+    """Drops the settings that were saved but never applied; a VLAN's nickname moves to the nicknames.
+
+    Returns True when something was dropped."""
+    found = [k for k in UNAPPLIED_KEYS if k in cfg]
+    aliases = cfg.setdefault("aliases", {})
+    for name, vlan in (cfg.get("vlans") or {}).items():
+        if isinstance(vlan, dict) and vlan.get("alias") and name not in aliases:
+            aliases[name] = vlan["alias"]
+    for k in found:
+        cfg.pop(k, None)
+    return bool(found)
+
+
 def load_network_config() -> dict[str, Any]:
-    """Load persistent network configuration (aliases and port settings)."""
+    """Load persistent network configuration (Kiboto's own port nicknames)."""
     cfg = read_json(NETWORK_CONFIG_FILE, None)
     if not isinstance(cfg, dict):
         cfg = {"aliases": {}, "ports": {}}
@@ -189,6 +208,8 @@ def load_network_config() -> dict[str, Any]:
         cfg["aliases"] = {}
     if "ports" not in cfg:
         cfg["ports"] = {}
+    if forget_unapplied(cfg):
+        save_network_config(cfg)
     return cfg
 
 

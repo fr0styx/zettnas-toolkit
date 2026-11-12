@@ -90,6 +90,9 @@ def get_port_config(iface_name: str) -> dict[str, Any]:
 
 def create_docker_network(name: str, driver: str = "bridge", subnet: str = "", gateway: str = "") -> dict[str, Any]:
     """Create a new Docker network via Docker engine API."""
+    if (driver or "bridge") != "bridge":
+        # macvlan and ipvlan need the parent port, which nothing here asks for (network report B8)
+        return {"status": "error", "message": "Only bridge networks are created here."}
     docker_sock = common._docker_sock_path()
     if not os.path.exists(docker_sock):
         return {"status": "error", "message": "Docker socket not accessible"}
