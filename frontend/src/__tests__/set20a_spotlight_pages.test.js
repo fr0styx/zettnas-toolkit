@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { setLanguage } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
 import { initSpotlight, openSpotlight, closeSpotlight, filterSpotlightResults, loadSpotlightPages, relabelSpotlight } from '../components/spotlight.js';
-import { PAGES, TABS, pageItems, tabItems, words } from '../components/spotlight-pages.js';
+import { PAGES, TABS, TASKS, pageItems, tabItems, taskItems, words } from '../components/spotlight-pages.js';
 
 const titles = () => [...document.querySelectorAll('#spotlight-results .spotlight-result-item')].map((e) => e.textContent);
 
@@ -22,6 +22,10 @@ const ASKED = [
   ['time zone', 'Time, Language & Region'],
   ['fan curve', 'Fans'],
   ['dropbox', 'Remote & Cloud Storage'],
+  ['dark mode', 'Switch between dark and light'],
+  ['fan noise', 'Make the fans quieter'],
+  ['add a person', 'Add a person'],
+  ['deleted', 'Get a file back'],
 ];
 
 describe('Spotlight finds Settings pages (SET-20)', () => {
@@ -52,6 +56,15 @@ describe('Spotlight finds Settings pages (SET-20)', () => {
     expect(window.openManagementSection).toHaveBeenCalledWith('mgmt-pane-events');
     delete window.openManagementSection;
     expect(() => tabItems()[0].run()).not.toThrow();
+    expect(taskItems()).toHaveLength(TASKS.length);
+    const fans = taskItems().find((i) => i.id === 'task-fans');
+    expect(fans.subtitle).toBe('Hardware · Settings');
+    window.openManagementSection = vi.fn();
+    fans.run();
+    expect(window.openManagementSection).toHaveBeenCalledWith('mgmt-pane-hardware-fans');
+    taskItems().find((i) => i.id === 'task-share').run();
+    expect(window.openManagementSection).toHaveBeenCalledWith('mgmt-pane-storage-shares');
+    delete window.openManagementSection;
   });
 
   it('hides a page this account cannot open', () => {
@@ -66,6 +79,8 @@ describe('Spotlight finds Settings pages (SET-20)', () => {
     await setLanguage('de');
     relabelSpotlight();
     openSpotlight();
+    filterSpotlightResults('passwort ändern');
+    expect(titles().some((x) => x.includes('Mein Passwort ändern'))).toBe(true);
     filterSpotlightResults('lüfter');
     expect(titles().some((x) => x.includes('Hardware'))).toBe(true);
     filterSpotlightResults('battery');

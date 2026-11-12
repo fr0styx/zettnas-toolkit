@@ -42,6 +42,28 @@ export const TABS = [
   ['network', 'mgmt-pane-network-services', 'mgmt.subtab_network_services', 'File Sharing Services', 'sp.kw_t_sharing', 'share links, public, funnel, apps from anywhere, family access'],
 ];
 
+// everyday tasks (Overview 6b): [id, the page that holds it, its tab or '', task, words]
+export const TASKS = [
+  ['add_person', 'people', '', 'Add a person', 'invite, new user, family member, account'],
+  ['child', 'people', '', 'Make an account for a child', 'kid, child, son, daughter, hours'],
+  ['password', 'security', '', 'Change my password', 'password, sign-in, forgot'],
+  ['two_step', 'security', '', 'Turn on two-step sign-in', '2fa, code, authenticator'],
+  ['dark', 'appearance', '', 'Switch between dark and light', 'dark mode, light mode, night'],
+  ['wallpaper', 'appearance', '', 'Change the wallpaper', 'background, picture'],
+  ['time_zone', 'general', 'mgmt-pane-language', 'Set the time zone', 'clock, time'],
+  ['language', 'general', 'mgmt-pane-language', 'Change the language', 'english, deutsch, français, español, 中文'],
+  ['update', 'general', '', 'Update Kiboto', 'upgrade, new version'],
+  ['power_cut', 'power', '', 'Get ready for a power cut', 'ups, battery, outage'],
+  ['fans', 'hardware', 'mgmt-pane-hardware-fans', 'Make the fans quieter', 'fan noise, loud, quiet'],
+  ['share', 'folders', '', 'Share a folder', 'new share, network folder'],
+  ['backup', 'backup', '', 'Back up my files', 'copy, safe, external disk'],
+  ['restore', 'backup', '', 'Get a file back', 'restore, deleted, yesterday'],
+  ['phone', 'away', '', 'Open Kiboto on my phone away from home', 'remote, outside, travel'],
+  ['alerts', 'notifications', '', 'Get alerts on my phone', 'push, telegram, email'],
+  ['drives', 'storage', 'mgmt-pane-chassis-twin', "Check my drives' health", 'smart, failing, disk'],
+  ['space', 'storage', '', 'See what uses the space', 'full, space, usage'],
+];
+
 /** "a, b , c" as ["a", "b", "c"], lower case. */
 export function words(list) {
   return String(list || '')
@@ -76,5 +98,20 @@ export function tabItems() {
     route,
     keywords: [...new Set([...words(t(wordsKey, english)), ...words(english)])],
     run: () => /** @type {any} */ (window).openManagementSection?.(pane),
+  }));
+}
+
+/** Spotlight entries for everyday tasks; the line under each says which page it opens. */
+export function taskItems() {
+  const pageName = Object.fromEntries(PAGES.map(([route, nameKey, name]) => [route, t(nameKey, name)]));
+  return TASKS.map(([id, route, pane, task, english]) => ({
+    id: `task-${id}`,
+    title: t(`sp.task_${id}`, task),
+    subtitle: t('sp.task_sub', '{page} · Settings', { page: pageName[route] || route }),
+    icon: '⚙️',
+    category: 'setting',
+    route,
+    keywords: [...new Set([...words(t(`sp.kw_task_${id}`, english)), ...words(english)])],
+    run: () => (pane ? /** @type {any} */ (window).openManagementSection?.(pane) : openRoute(`#/${route}`)),
   }));
 }
