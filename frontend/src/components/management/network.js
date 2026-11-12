@@ -1402,9 +1402,6 @@ export function initNetworkControls() {
     servicesBtn.dataset.boundNasName = '1';
     // NFEAT-8: <name>.local, loaded when its tab opens
     servicesBtn.addEventListener('click', () => import('./nas-name.js').then((m) => m.loadNasNameCard()));
-    servicesBtn.addEventListener('click', () => import('./public-links.js').then((m) => m.loadPublicLinksCard()));
-    servicesBtn.addEventListener('click', () => import('./public-apps.js').then((m) => m.loadPublicAppsCard())); // RES-6
-    servicesBtn.addEventListener('click', () => import('./family-access.js').then((m) => m.loadFamilyAccessCard())); // NFEAT-1
     servicesBtn.addEventListener('click', () => import('./fleet.js').then((m) => m.loadFleetCard())); // RES-9
     servicesBtn.addEventListener('click', () => import('./home-assistant.js').then((m) => m.loadHomeAssistantCard()));
   }

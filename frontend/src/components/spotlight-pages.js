@@ -40,7 +40,7 @@ export const TABS = [
   ['storage', 'mgmt-pane-storage-remotes', 'mgmt.subtab_remotes', 'Remote & Cloud Storage', 'sp.kw_t_cloud', 'cloud, google drive, dropbox, s3, onedrive'],
   ['appearance', 'mgmt-pane-dock', 'mgmt.subtab_desktop', 'Desktop', 'sp.kw_t_desktop', 'dock, widgets, screen saver'],
   ['kib', 'mgmt-pane-ai-chat', 'ai.tab_chat', 'Ask Kib', 'sp.kw_t_ask', 'chat, question, ask'],
-  ['network', 'mgmt-pane-network-services', 'mgmt.subtab_network_services', 'File Sharing Services', 'sp.kw_t_sharing', 'share links, public, funnel, apps from anywhere, family access'],
+  ['away', 'mgmt-pane-network-wireguard', 'away.cards_title', 'Share links, apps and family from anywhere', 'sp.kw_t_sharing', 'share links, public, funnel, apps from anywhere, family access'],
 ];
 
 // everyday tasks (Overview 6b): [id, the page that holds it, its tab or '', task, words]

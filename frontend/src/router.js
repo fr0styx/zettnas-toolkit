@@ -39,7 +39,7 @@ for (const [name, id] of Object.entries({
   kib: 'sec-ai',
   away: 'pane-network-wireguard',
   account: 'pane-account', // My account, for every role (SET-19)
-  sharing: 'pane-network-services', // share links, apps and family from anywhere (SET-24)
+  sharing: 'pane-network-wireguard', // share links, apps and family access from anywhere: Away from home (SET-24)
   notifications: 'pane-notifications',
   security: 'pane-security',
   general: 'pane-about',

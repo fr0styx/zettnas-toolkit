@@ -13,7 +13,7 @@ const $ = (id) => document.getElementById(id);
 /** The status line under the title. */
 export function publicLinksStatus(st) {
   if (st.error) return st.error;
-  if (!st.tailscale) return t('pl.no_tailscale_where', 'Needs Tailscale: connect it in Network → Remote access first.');
+  if (!st.tailscale) return t('pl.no_tailscale_where', 'Needs Tailscale: connect it above, under Use from anywhere.');
   if (st.pending) return t('funnel.waiting_links', 'Share links go on the internet as soon as both are done.');
   if (st.approval_url) return t('pl.approve', 'Tailscale asks the tailnet owner to allow Funnel first.');
   if (!st.enabled) return t('pl.off', 'Off: share links work at home and on your tailnet.');

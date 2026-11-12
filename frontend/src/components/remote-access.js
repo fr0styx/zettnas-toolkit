@@ -320,6 +320,15 @@ export function showLoadFailed(card, err) {
   card.replaceChildren(stateBlock('failed', { text, detail: String(err?.message || ''), retry: () => renderRemoteAccess(card) }));
 }
 
+/** Share links, apps and family from anywhere live on Away from home too (SET-24); they load with it. */
+export function loadAwayCards(doc = document) {
+  if (!doc.getElementById('away-cards-grid')) return false;
+  import('./management/public-links.js').then((m) => m.loadPublicLinksCard()).catch(() => {});
+  import('./management/public-apps.js').then((m) => m.loadPublicAppsCard()).catch(() => {});
+  import('./management/family-access.js').then((m) => m.loadFamilyAccessCard()).catch(() => {});
+  return true;
+}
+
 /** The line above the card says again what reaches the NAS, after the card changed. */
 export function refreshExposure() {
   const line = document.getElementById(LINE_ID);
@@ -343,5 +352,6 @@ export async function installRemoteAccess(mount) {
     mount.append(card);
   }
   installExposure(mount);
+  loadAwayCards();
   await renderRemoteAccess(card);
 }

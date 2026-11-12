@@ -52,4 +52,10 @@ describe('SET-24: what reaches the NAS from outside', () => {
     expect(line.hidden).toBe(true);
     expect(ex.installExposure(null)).toBeNull();
   });
+
+  it('Away from home loads the share-links, apps and family cards when it has their grid (SET-24)', () => {
+    expect(ra.loadAwayCards()).toBe(false);
+    document.body.innerHTML = '<div id="away-cards-grid"></div>';
+    expect(ra.loadAwayCards()).toBe(true);
+  });
 });

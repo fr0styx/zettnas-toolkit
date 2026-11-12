@@ -19,7 +19,7 @@ describe('Shared folders: Away from home', () => {
     const { ROUTES } = await import('../router.js');
     window.openManagementSection = vi.fn();
     ROUTES.sharing();
-    expect(window.openManagementSection).toHaveBeenCalledWith('mgmt-pane-network-services');
+    expect(window.openManagementSection).toHaveBeenCalledWith('mgmt-pane-network-wireguard');
     delete window.openManagementSection;
   });
 });

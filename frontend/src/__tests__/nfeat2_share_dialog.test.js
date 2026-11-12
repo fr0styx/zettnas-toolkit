@@ -53,7 +53,7 @@ describe('share dialog (NFEAT-2)', () => {
     expect(away.hidden).toBe(false);
     window.openManagementWindow = vi.fn();
     away.click();
-    expect(window.openManagementWindow).toHaveBeenCalledWith('mgmt-sec-network', 'mgmt-pane-network-services');
+    expect(window.openManagementWindow).toHaveBeenCalledWith('mgmt-sec-network', 'mgmt-pane-network-wireguard');
     delete window.openManagementWindow;
   });
 

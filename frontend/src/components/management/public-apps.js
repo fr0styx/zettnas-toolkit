@@ -59,7 +59,7 @@ export function publicAppsHtml(st) {
 function cardShell() {
   let card = $('pa-card');
   if (card) return card;
-  const grid = $('network-services-grid');
+  const grid = $('away-cards-grid') || $('network-services-grid'); // Away from home since SET-24
   if (!grid) return null;
   card = document.createElement('div');
   card.className = 'nsv-col-box';

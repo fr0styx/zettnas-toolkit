@@ -289,3 +289,5 @@
 .account-section { display: flex; flex-direction: column; gap: 10px; }
 .account-h { margin: 0; font-size: var(--kb-fs-md, 15px); color: var(--c-text); }
 
+/* SET-24: Away from home's cards */
+.away-section { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }

@@ -4208,10 +4208,10 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
   modal.querySelector('#fm-share-expires')?.focus();
 }
 
-/** Opens the card that turns share links on from anywhere (Network, Sharing tab; SET-24). */
+/** Opens the card that turns share links on from anywhere (Away from home; SET-24). */
 export function openShareLinksSettings() {
   const open = /** @type {any} */ (window).openManagementWindow;
-  if (typeof open === 'function') open('mgmt-sec-network', 'mgmt-pane-network-services');
+  if (typeof open === 'function') open('mgmt-sec-network', 'mgmt-pane-network-wireguard');
 }
 
 /** A link that works only at home gets a way to change that, which closes the dialog first. */

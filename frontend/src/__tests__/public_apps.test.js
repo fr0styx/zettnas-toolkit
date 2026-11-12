@@ -76,4 +76,10 @@ describe('apps from anywhere (RES-6)', () => {
     await loadPublicAppsCard();
     expect(api.get).not.toHaveBeenCalled();
   });
+
+  it('goes on Away from home when that grid is there (SET-24)', async () => {
+    document.body.innerHTML = '<div id="away-cards-grid"></div><div id="network-services-grid"></div>';
+    await loadPublicAppsCard();
+    expect(document.getElementById('pa-card').parentElement.id).toBe('away-cards-grid');
+  });
 });

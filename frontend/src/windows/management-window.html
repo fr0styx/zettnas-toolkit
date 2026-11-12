@@ -1392,6 +1392,27 @@
             <!-- Sub-tab 2: WireGuard & Tailscale Mesh VPN -->
             <div id="mgmt-pane-network-wireguard" class="mgmt-tab-pane" style="display: none;">
               <div id="remote-access-mount"></div>
+              <section class="away-section" aria-labelledby="away-cards-title">
+                <h3 id="away-cards-title" class="account-h" data-i18n="away.cards_title">Share links, apps and family from anywhere</h3>
+                <div class="nsv-grid" id="away-cards-grid">
+                  <!-- Share links from anywhere, through Tailscale Funnel (NFEAT-2) -->
+                  <div class="nsv-col-box" id="pl-card">
+                    <div class="nsv-row-3">
+                      <div class="nsv-row-4">
+                        <span class="nsv-fs18" aria-hidden="true">🌍</span>
+                        <div>
+                          <div class="nsv-fs13-bold-strong" id="pl-title" data-i18n="pl.title">Share links from anywhere</div>
+                          <div class="nsv-xs-muted" id="pl-status" aria-live="polite">…</div>
+                        </div>
+                      </div>
+                      <button type="button" class="btn-pill-toggle" id="pl-toggle" aria-pressed="false" aria-labelledby="pl-title" data-i18n="nas_name.btn_off">Off</button>
+                    </div>
+                    <div class="nsv-xs-muted-2" data-i18n="pl.help">Only the share links are published, through Tailscale Funnel: the rest of the NAS stays private. No router changes. Big downloads go through Tailscale's relays, so they are slower than at home.</div>
+                    <a class="nsv-xs-muted-2" id="pl-approve" href="#" target="_blank" rel="noopener" hidden data-i18n="pl.approve_link">Allow Funnel in Tailscale, then turn it on again</a>
+                  </div>
+
+                </div>
+              </section>
               <div id="ts-details" hidden>
                 <div class="mgmt-card-intro wgd-row">
                   <div>
@@ -1548,22 +1569,6 @@
               </div>
               <div class="mgmt-detail-body">
                 <div class="nsv-grid" id="network-services-grid">
-                  <!-- Share links from anywhere, through Tailscale Funnel (NFEAT-2) -->
-                  <div class="nsv-col-box" id="pl-card">
-                    <div class="nsv-row-3">
-                      <div class="nsv-row-4">
-                        <span class="nsv-fs18" aria-hidden="true">🌍</span>
-                        <div>
-                          <div class="nsv-fs13-bold-strong" id="pl-title" data-i18n="pl.title">Share links from anywhere</div>
-                          <div class="nsv-xs-muted" id="pl-status" aria-live="polite">…</div>
-                        </div>
-                      </div>
-                      <button type="button" class="btn-pill-toggle" id="pl-toggle" aria-pressed="false" aria-labelledby="pl-title" data-i18n="nas_name.btn_off">Off</button>
-                    </div>
-                    <div class="nsv-xs-muted-2" data-i18n="pl.help">Only the share links are published, through Tailscale Funnel: the rest of the NAS stays private. No router changes. Big downloads go through Tailscale's relays, so they are slower than at home.</div>
-                    <a class="nsv-xs-muted-2" id="pl-approve" href="#" target="_blank" rel="noopener" hidden data-i18n="pl.approve_link">Allow Funnel in Tailscale, then turn it on again</a>
-                  </div>
-
                   <!-- Find this NAS by name (NFEAT-8) -->
                   <div class="nsv-col-box" id="nas-name-card">
                     <div class="nsv-row-3">
@@ -1587,50 +1592,6 @@
                     <div class="nsv-xs-muted-2" id="nas-name-old" hidden></div>
                   </div>
 
-                  <!-- Samba SMB3 Card -->
-                  <div class="nsv-col-box">
-                    <div class="nsv-row-3">
-                      <div class="nsv-row-4">
-                        <span class="nsv-fs18">🗂️</span>
-                        <div>
-                          <div class="nsv-fs13-bold-strong" data-i18n="mw.samba_smb3_cifs">Samba (SMB3 / CIFS)</div>
-                          <div class="nsv-xs-muted" data-i18n="mw.port_445_macos_time_machine_vfs">Port 445 • macOS Time Machine (vfs_fruit)</div>
-                        </div>
-                      </div>
-                      
-                    </div>
-                    <div class="nsv-xs-muted-2" data-i18n="mw.high_performance_windows_and_macos_network">High-performance Windows & macOS network share access with isolated user permissions.</div>
-                  </div>
-
-                  <!-- NFSv4 Card -->
-                  <div class="nsv-col-box">
-                    <div class="nsv-row-3">
-                      <div class="nsv-row-4">
-                        <span class="nsv-fs18">⚡</span>
-                        <div>
-                          <div class="nsv-fs13-bold-strong" data-i18n="mw.network_file_system_nfsv4">Network File System (NFSv4)</div>
-                          <div class="nsv-xs-muted" data-i18n="mw.port_2049_unix_linux_posix_mounts">Port 2049 • UNIX / Linux POSIX Mounts</div>
-                        </div>
-                      </div>
-                      
-                    </div>
-                    <div class="nsv-xs-muted-2" data-i18n="mw.line_rate_kernel_nfs_exports_scoped">Line-rate kernel NFS exports scoped to client subnets with granular squash rules.</div>
-                  </div>
-
-                  <!-- Inbound SFTP Card -->
-                  <div class="nsv-col-box">
-                    <div class="nsv-row-3">
-                      <div class="nsv-row-4">
-                        <span class="nsv-fs18">🔒</span>
-                        <div>
-                          <div class="nsv-fs13-bold-strong" data-i18n="mw.inbound_sftp_daemon">Inbound SFTP Daemon</div>
-                          <div class="nsv-xs-muted" data-i18n="mw.port_2222_chrooted_ssh_subsystem">Port 2222 • Chrooted SSH Subsystem</div>
-                        </div>
-                      </div>
-                      
-                    </div>
-                    <div class="nsv-xs-muted-2" data-i18n="mw.chroot_jail_file_transport_over_ssh">Chroot jail file transport over SSH key authentication without shell access.</div>
-                  </div>
                 </div>
               </div>
             </div>
