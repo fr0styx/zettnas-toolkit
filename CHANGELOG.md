@@ -2,6 +2,15 @@
 
 Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep that name.
 
+## Unreleased
+
+#### Changes
+
+- **Search settings finds the pages.** Spotlight (and "Search settings" in the sidebar) now lists
+  every Settings page, found by its name or everyday words: "tailscale" finds Away from home,
+  "battery" finds Power, "kids" finds People, in your language and in English. Pages your account
+  can't open are left out.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

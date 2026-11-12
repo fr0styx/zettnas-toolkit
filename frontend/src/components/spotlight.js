@@ -18,7 +18,7 @@ const openContainerInspector = (...args) =>
 import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
 import { ADVANCED_SPOTLIGHT, advancedOn } from '../advanced.js';
-import { canRun, currentUser } from '../route-access.js';
+import { canOpen, canRun, currentUser } from '../route-access.js';
 // Destructive actions always ask first (FE-07).
 function confirmThen(title, msg, action) {
   return new Promise((resolve, reject) => {
@@ -127,6 +127,14 @@ export function relabelSpotlight() {
   before.forEach((i) => {
     if (!own.has(i.id)) _spotlightItems.push(i);
   });
+  if (_pages) _pages.pageItems().forEach(registerSpotlightItem); // the page names in the new language
+}
+
+let _pages = null;
+/** The Settings pages as entries (SET-20), loaded the first time Spotlight opens. */
+export async function loadSpotlightPages() {
+  if (!_pages) _pages = await import('./spotlight-pages.js');
+  _pages.pageItems().forEach(registerSpotlightItem);
 }
 
 // The typed commands, the same in every language
@@ -351,6 +359,11 @@ export function openSpotlight(initialQuery = '') {
   input.value = initialQuery;
   filterSpotlightResults(initialQuery);
   setTimeout(() => input.focus(), 30);
+  loadSpotlightPages()
+    .then(() => {
+      if (_isOpen) filterSpotlightResults(/** @type {HTMLInputElement} */ (input).value);
+    })
+    .catch(() => {});
 }
 
 export function closeSpotlight() {
@@ -370,6 +383,7 @@ export function filterSpotlightResults(query = '') {
   let matched = _spotlightItems.filter((item) => {
     if (ADVANCED_SPOTLIGHT.includes(item.id) && !advancedOn()) return false; // UX-23
     if (!canRun(item.id, currentUser())) return false; // only what this account may do (NUX-5)
+    if (item.route && !canOpen(item.route, currentUser())) return false; // a page this account can't open
     if (!q) return true;
     if (q.startsWith('>') && item.category === 'action') {
       const subq = q.slice(1).trim();
