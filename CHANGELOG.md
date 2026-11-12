@@ -735,6 +735,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Getting started has a step for using Kiboto away from home.** It is ticked once Tailscale or
   NetBird connects this NAS, and Open goes to Away from home.
 
+#### Changes
+
+- **Shared folders leads to Away from home**, for opening your folders from your phone or laptop
+  anywhere without opening your router.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 
