@@ -92,6 +92,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   your data and (for administrators) API keys are now on one page: Settings → My account, also under
   your name in the top bar. They were split between Security and People.
 
+#### Fixes
+
+- **Ejecting a memory card no longer waits on every disk**: it flushes only the card itself. Before, one
+  disk that stopped answering could leave the eject waiting for ever.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

@@ -577,3 +577,18 @@ def search_as_system(monkeypatch):
         return real(res.SYSTEM_PRINCIPAL if principal is None else principal, table_alias)
 
     monkeypatch.setattr(res.RagSearchMixin, "_build_rbac_clause", staticmethod(as_system))
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _no_host_flush(tmp_path_factory):
+    """Tests never flush the host's disks. A global `sync` waits for every disk; on 12 Nov 2026
+    one failed drive on the build machine left it waiting for ever, and the test with it.
+    A `sync` that does nothing goes first on PATH (no wrapper, so process counts stay right)."""
+    fake = tmp_path_factory.mktemp("fakebin")
+    (fake / "sync").write_text("#!/bin/sh\nexit 0\n")
+    (fake / "sync").chmod(0o755)
+    old_path, old_sync = os.environ.get("PATH", ""), os.sync
+    os.environ["PATH"] = f"{fake}{os.pathsep}{old_path}"
+    os.sync = lambda: None
+    yield
+    os.environ["PATH"], os.sync = old_path, old_sync

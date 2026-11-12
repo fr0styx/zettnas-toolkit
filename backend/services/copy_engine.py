@@ -244,20 +244,17 @@ def rescan_media_slots(force_usb_reset: bool = True):
 def eject_media_slot(slot: str = "sd"):
     """
     Safely eject the specified media slot:
-    1. Flushes OS filesystem buffers via sync.
+    1. Flushes the card's own filesystem (never a global sync: one stuck disk elsewhere left a
+       global sync waiting for ever, and a process stuck in the kernel can't be timed out).
     2. Unmounts any active temporary mounts.
     3. Marks the slot as ejected so it won't prompt for auto-ingest again while remaining in slot.
     4. Clears pending_ingest.
     """
     global _EJECTED_SLOTS, _PREV_MEDIA_SLOTS
-    try:
-        subprocess.run(["sync"], timeout=5.0)
-    except Exception:
-        ignored("backend.services.copy_engine.eject_media_slot")
-
-    # Unmount if mounted under /mnt/disks or /media
+    # Flush and unmount if mounted under /mnt/disks or /media
     for mount_check in glob.glob(f"/mnt/disks/{slot}*") + glob.glob(f"/media/{slot}*"):
         try:
+            subprocess.run(["sync", "-f", mount_check], timeout=5.0)
             subprocess.run(["umount", mount_check], timeout=3.0)
         except Exception:
             ignored("backend.services.copy_engine.eject_media_slot")

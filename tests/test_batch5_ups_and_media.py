@@ -297,3 +297,20 @@ class TestBatch5UpsAndMedia(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_eject_flushes_only_the_cards_own_filesystem(monkeypatch, tmp_path):
+    """No global sync on eject (12 Nov 2026: a global sync waited for ever on a failed disk)."""
+    import glob as _glob
+    import subprocess as _sp
+
+    from backend.services import copy_engine
+
+    calls = []
+    monkeypatch.setattr(_sp, "run", lambda args, *a, **k: calls.append(list(args)) or _sp.CompletedProcess(args, 0))
+    monkeypatch.setattr(
+        _glob, "glob", lambda pattern: ["/mnt/disks/sd1"] if pattern.startswith("/mnt/disks/sd") else []
+    )
+    copy_engine.eject_media_slot("sd")
+    assert calls == [["sync", "-f", "/mnt/disks/sd1"], ["umount", "/mnt/disks/sd1"]]
+    assert ["sync"] not in calls
