@@ -272,7 +272,19 @@ let _tsPeers = [];
  * reaching other things at home, home internet when away, and the devices. Connecting and
  * disconnecting live in the card above; WireGuard, SSH, Serve, Taildrop and Ping were removed.
  */
-export async function fetchAndRenderTailscaleDetails() {
+/** One load at a time: a second call while one runs gets the same answer (network report C4: the
+ *  section and its tab each started one, so every open read the same things twice). */
+export function sharedLoad(load) {
+  let running = null;
+  return () => {
+    if (!running) running = Promise.resolve(load()).finally(() => (running = null));
+    return running;
+  };
+}
+
+export const fetchAndRenderTailscaleDetails = sharedLoad(loadTailscaleDetails);
+
+async function loadTailscaleDetails() {
   const box = document.getElementById('ts-details');
   const mesh = await api.get('/api/network/mesh-vpn').catch(() => null);
   const ts = mesh?.tailscale || null;
@@ -375,7 +387,9 @@ function bindTailscaleDetails() {
   once('btn-refresh-wireguard', 'click', () => fetchAndRenderTailscaleDetails());
 }
 
-export async function fetchAndRenderNetworkTopology() {
+export const fetchAndRenderNetworkTopology = sharedLoad(loadNetworkTopology);
+
+async function loadNetworkTopology() {
   const switchFaceplate = document.getElementById('network-switch-faceplate');
   const physicalTbody = document.getElementById('network-physical-tbody');
   const bridgesContainer = document.getElementById('network-bridges-container');
@@ -744,8 +758,7 @@ export async function fetchAndRenderNetworkTopology() {
     }
 
     applyNetCaps(document);
-    fetchAndRenderTailscaleDetails();
-    initNetworkControls();
+    initNetworkControls(); // the Tailscale details load with their own tab, not with every layout read (C4)
   } catch (err) {
     console.warn('[Kiboto] Error fetching network topology:', err);
     showTopologyFailed(err?.message || String(err));

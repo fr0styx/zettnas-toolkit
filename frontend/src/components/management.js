@@ -1766,14 +1766,8 @@ export function initManagement() {
     }
   }
 
-  // WireGuard refresh button
-  const refreshWgBtn = document.getElementById('btn-refresh-wireguard');
-  if (refreshWgBtn) {
-    refreshWgBtn.addEventListener('click', () => {
-      fetchAndRenderTailscaleDetails();
-      showToast(t('toast.wireguard_mesh_status_refreshed', 'WireGuard mesh status refreshed.'), 'info');
-    });
-  }
+  // the Tailscale details' Refresh is wired once, in network.js (C4: a second listener here read
+  // everything twice and said "WireGuard", which is gone)
 
   // Check for updates and release channel toggles
   const checkUpdatesBtn = document.getElementById('btn-check-updates');

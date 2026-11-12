@@ -4528,7 +4528,6 @@ export default {
   "toast.webdav_configuration_saved_and_server_restarted": "Configuración de WebDAV guardada y servidor reiniciado.",
   "toast.webdav_server_restarted": "Servidor WebDAV reiniciado.",
   "toast.widgets_reset_to_defaults": "Widgets restablecidos",
-  "toast.wireguard_mesh_status_refreshed": "Estado de WireGuard actualizado.",
   "toast.request_sent_for": "Solicitud {act} enviada para {cname}...",
   "toast.stack_deployed_and_running": "Stack {appId} desplegado y en marcha.",
   "toast.self_test_started_on_dev": "Autoprueba {type} iniciada en /dev/{dev}",

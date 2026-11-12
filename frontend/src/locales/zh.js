@@ -4528,7 +4528,6 @@ export default {
   "toast.webdav_configuration_saved_and_server_restarted": "WebDAV 配置已保存，服务器已重启！",
   "toast.webdav_server_restarted": "WebDAV 服务器已重启。",
   "toast.widgets_reset_to_defaults": "小组件已恢复默认",
-  "toast.wireguard_mesh_status_refreshed": "WireGuard 状态已刷新。",
   "toast.request_sent_for": "已发送 {cname} 的{act}请求...",
   "toast.stack_deployed_and_running": "{appId} 堆栈已部署并运行！",
   "toast.self_test_started_on_dev": "已在 /dev/{dev} 上开始{type}自检",

@@ -42,6 +42,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **The Funnel checklist stops asking when you close its window.** The share-links and apps cards
   asked Tailscale every 5 seconds for 15 minutes, even with the window closed.
 
+#### Fixes
+
+- **Opening the Network page reads each thing once.** It read the layout and the Tailscale details
+  twice, and Refresh on the Tailscale details did everything twice with two messages.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 
