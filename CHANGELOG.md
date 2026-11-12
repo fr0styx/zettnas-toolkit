@@ -37,6 +37,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **People who may only look see Away from home without buttons that would be refused.** The
   connection stays visible; the connect form, Disconnect and Turn on HTTPS are replaced by a note.
 
+#### Fixes
+
+- **The Funnel checklist stops asking when you close its window.** The share-links and apps cards
+  asked Tailscale every 5 seconds for 15 minutes, even with the window closed.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

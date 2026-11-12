@@ -104,7 +104,7 @@ export async function refreshPublicLinks(started = Date.now()) {
   try {
     const st = await api.get('/api/network/public-links');
     renderPublicLinks(st);
-    if ($('pl-card')) recheckWhileOpen(st.funnel, refreshPublicLinks, undefined, started);
+    if ($('pl-card')) recheckWhileOpen(st.funnel, refreshPublicLinks, undefined, started, $('pl-card'));
   } catch (err) {
     $('pl-status').textContent = /** @type {Error} */ (err).message || '';
   }

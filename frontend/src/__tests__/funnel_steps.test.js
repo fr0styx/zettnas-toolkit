@@ -33,4 +33,22 @@ describe('the steps only the tailnet owner can do (Funnel)', () => {
     expect(recheckWhileOpen({ ...NOT, headscale: true }, reload, timers)).toBeNull();
     expect(recheckWhileOpen(NOT, reload, timers, Date.now() - RECHECK_FOR_MS - 1)).toBeNull();
   });
+
+  it('stops asking once the card is hidden or gone (C3)', () => {
+    const calls = [];
+    const fake = { setTimeout: (fn) => (calls.push(fn), calls.length), clearTimeout: () => {} };
+    const reload = vi.fn();
+    document.body.innerHTML = '<div id="win"><div id="card"></div></div>';
+    const card = document.getElementById('card');
+    expect(recheckWhileOpen(NOT, reload, fake, Date.now(), card)).toBe(1);
+    document.getElementById('win').hidden = true;
+    calls[0]();
+    expect(reload).not.toHaveBeenCalled();
+    expect(recheckWhileOpen(NOT, reload, fake, Date.now(), card)).toBeNull();
+    document.getElementById('win').hidden = false;
+    expect(recheckWhileOpen(NOT, reload, fake, Date.now(), card)).toBe(2);
+    calls[1]();
+    expect(reload).toHaveBeenCalledTimes(1);
+    document.body.innerHTML = '';
+  });
 });

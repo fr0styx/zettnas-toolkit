@@ -120,7 +120,7 @@ export async function refreshPublicApps(started = Date.now()) {
   try {
     const st = await api.get('/api/network/public-apps');
     renderPublicApps(st);
-    if ($('pa-card')) recheckWhileOpen(st.funnel, refreshPublicApps, undefined, started);
+    if ($('pa-card')) recheckWhileOpen(st.funnel, refreshPublicApps, undefined, started, $('pa-card'));
   } catch (err) {
     const body = $('pa-body');
     if (body) body.textContent = /** @type {Error} */ (err).message || '';

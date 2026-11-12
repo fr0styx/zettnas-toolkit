@@ -5,6 +5,7 @@
  */
 import { t } from '../../i18n.js';
 import { escapeHtml } from '../../utils.js';
+import { isOpen } from '../../poll-while-open.js';
 
 export const RECHECK_MS = 5000;
 export const RECHECK_FOR_MS = 15 * 60 * 1000;
@@ -34,9 +35,13 @@ export function funnelStepsHtml(f, waiting = '') {
   </div>`;
 }
 
-/** Looks again every few seconds while steps are open (for a while), then stops by itself. */
-export function recheckWhileOpen(f, reload, timers = { setTimeout, clearTimeout }, started = Date.now()) {
+/** Looks again every few seconds while steps are open (for a while), then stops by itself, and at
+ *  once when `card` is hidden or gone: a closed window asked 360 times a visit (network report C3). */
+export function recheckWhileOpen(f, reload, timers = { setTimeout, clearTimeout }, started = Date.now(), card = null) {
   if (!f || f.ready || !f.connected || f.headscale) return null;
   if (Date.now() - started > RECHECK_FOR_MS) return null;
-  return timers.setTimeout(() => reload(started), RECHECK_MS);
+  if (card && !isOpen(card)) return null;
+  return timers.setTimeout(() => {
+    if (!card || isOpen(card)) reload(started);
+  }, RECHECK_MS);
 }
