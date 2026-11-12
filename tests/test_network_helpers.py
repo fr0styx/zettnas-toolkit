@@ -288,6 +288,27 @@ class TestHostIp:
         monkeypatch.setattr(net.common, "_find_proc_net_path", lambda name: None)
         assert net.read_ip() == "?"
 
+    def test_a_file_without_an_address_setting_is_not_guessed_from(self, tmp_path, monkeypatch):
+        f = tmp_path / "network.cfg"
+        f.write_text('DNS_SERVER1="192.168.1.1"\nGATEWAY="192.168.1.254"\n')
+        monkeypatch.setattr(net.common, "HOST_IP_SOURCES", (str(f),))
+        monkeypatch.setattr(net.common, "_find_proc_net_path", lambda name: None)
+        assert net.read_ip() == "?"  # not the DNS server (network report B8)
+
+    def test_read_again_after_a_while(self, tmp_path, monkeypatch):
+        from backend.hardware.net import topology
+
+        f = tmp_path / "interfaces"
+        f.write_text("iface eth0 inet static\n  address 10.20.30.40\n")
+        monkeypatch.setattr(net.common, "HOST_IP_SOURCES", (str(f),))
+        clock = [1000.0]
+        monkeypatch.setattr(topology.time, "monotonic", lambda: clock[0])
+        assert net.read_ip() == "10.20.30.40"
+        f.write_text("iface eth0 inet static\n  address 10.20.30.41\n")
+        assert net.read_ip() == "10.20.30.40"  # cached
+        clock[0] += topology.IP_CACHE_S + 1
+        assert net.read_ip() == "10.20.30.41"
+
 
 def test_a_tailscale_timeout_reports_what_it_printed(monkeypatch):
     """TimeoutExpired carries bytes even with text=True; the reply is still text (ARC-5 type fix)."""

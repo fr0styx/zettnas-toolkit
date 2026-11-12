@@ -500,12 +500,25 @@ def read_network_rates():
     }
 
 
+IP_CACHE_S = 600  # the address is read again after this, so a new DHCP lease shows (network report B8)
+_FOUND_AT = [0.0]
+
+
+def _found(ip: str) -> str:
+    Z_STATE.discovered_host_ip = ip
+    _FOUND_AT[0] = time.monotonic()
+    return ip
+
+
 def read_ip():
+    """The NAS's address: the setting, else the host's network file (IPADDR / address), else the
+    host's own local addresses. Never "the first address in the file", which could be the DNS
+    server or the gateway (network report B8)."""
     env_ip = _settings.current("host_ip")
     if env_ip:
         return env_ip
 
-    if getattr(Z_STATE, "discovered_host_ip", None):
+    if getattr(Z_STATE, "discovered_host_ip", None) and time.monotonic() - _FOUND_AT[0] < IP_CACHE_S:
         return Z_STATE.discovered_host_ip
 
     # 1. Check known network configs
@@ -519,14 +532,7 @@ def read_ip():
                     ip_match = re.search(r"address\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})", content)
 
                 if ip_match:
-                    Z_STATE.discovered_host_ip = ip_match.group(1)
-                    return Z_STATE.discovered_host_ip
-
-                matches = re.findall(r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})", content)
-                for ip in matches:
-                    if not (ip.startswith("127.") or ip.startswith("172.") or ip.endswith(".255") or ip == "0.0.0.0"):
-                        Z_STATE.discovered_host_ip = ip
-                        return ip
+                    return _found(ip_match.group(1))
             except Exception as e:
                 logger.debug(f"Silenced exception: {e}")
 
@@ -548,8 +554,7 @@ def read_ip():
                             or candidate_ip.endswith(".255")
                             or candidate_ip == "0.0.0.0"
                         ):
-                            Z_STATE.discovered_host_ip = candidate_ip
-                            return candidate_ip
+                            return _found(candidate_ip)
         except Exception:
             ignored("backend.hardware.network.read_ip")
 

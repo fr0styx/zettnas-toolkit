@@ -52,6 +52,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Plain names on the Network page**: its title is "Network" (it was "Visual Network & Virtual Switch
   Inspector"), and the bond dialog lists "Ports in this bond".
 
+#### Fixes
+
+- **The NAS's address is read, not guessed.** Without an address line in the host's network file,
+  Kiboto took the first address it found there, which could be the DNS server or the router; it now
+  asks the host's own network instead. A new address from the router also shows within 10 minutes
+  instead of after a restart of Kiboto.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 
