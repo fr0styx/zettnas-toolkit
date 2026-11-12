@@ -59,6 +59,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   asks the host's own network instead. A new address from the router also shows within 10 minutes
   instead of after a restart of Kiboto.
 
+#### Fixes
+
+- **The Network dialogs work with a keyboard**: focus goes into a dialog when it opens, Tab stays
+  inside, Escape closes it, and focus returns to the button that opened it.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

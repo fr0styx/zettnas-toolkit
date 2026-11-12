@@ -10,6 +10,7 @@ import { showToast, showConfirmToast } from '../../toast.js';
 import { escapeHtml, copyText } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { stateBlock } from '../state-block.js';
+import { showNetDialog, hideNetDialog } from './net-dialog.js';
 
 // An icon next to translated words: screen readers skip it and the words stay plain (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
@@ -811,8 +812,7 @@ export async function openNetworkPortModal(ifaceName) {
 
   if (titleIface) titleIface.textContent = ifaceName.toUpperCase();
 
-  overlay.classList.add('open');
-  overlay.style.display = 'flex';
+  showNetDialog(overlay, closeNetworkPortModal);
 
   try {
     const data = await api.get(`/api/network/port/${encodeURIComponent(ifaceName)}`);
@@ -879,8 +879,7 @@ export async function openNetworkPortModal(ifaceName) {
 export function closeNetworkPortModal() {
   const overlay = document.getElementById('network-port-config-overlay');
   if (overlay) {
-    overlay.classList.remove('open');
-    overlay.style.display = 'none';
+    hideNetDialog(overlay);
   }
   _currentPortIface = null;
 }
@@ -940,15 +939,13 @@ export function openDockerNetworkCreateModal() {
   if (subnetInput) subnetInput.value = '';
   if (gwInput) gwInput.value = '';
 
-  overlay.classList.add('open');
-  overlay.style.display = 'flex';
+  showNetDialog(overlay, closeDockerNetworkCreateModal);
 }
 
 export function closeDockerNetworkCreateModal() {
   const overlay = document.getElementById('network-docker-create-overlay');
   if (overlay) {
-    overlay.classList.remove('open');
-    overlay.style.display = 'none';
+    hideNetDialog(overlay);
   }
 }
 
@@ -1035,8 +1032,7 @@ export async function openHostIpConfigModal() {
       btn.classList.toggle('active', btn.dataset.netmask === (data.netmask || '255.255.255.0'));
     });
 
-    overlay.classList.add('open');
-    overlay.style.display = 'flex';
+    showNetDialog(overlay, closeHostIpConfigModal);
   } catch (err) {
     showToast(t('toast.failed_to_load_host_network_config', 'Failed to load host network config: {error}', { error: err.message || err }), 'error');
   }
@@ -1046,8 +1042,7 @@ export async function openHostIpConfigModal() {
 export function closeHostIpConfigModal() {
   const overlay = document.getElementById('network-host-config-overlay');
   if (overlay) {
-    overlay.classList.remove('open');
-    overlay.style.display = 'none';
+    hideNetDialog(overlay);
   }
 }
 
@@ -1151,8 +1146,7 @@ export async function openBondConfigModal(bondName) {
       }
     }
 
-    overlay.classList.add('open');
-    overlay.style.display = 'flex';
+    showNetDialog(overlay, closeBondConfigModal);
   } catch (err) {
     showToast(t('toast.failed_to_load_bond_configuration', 'Failed to load bond configuration: {error}', { error: err.message || err }), 'error');
   }
@@ -1162,8 +1156,7 @@ export async function openBondConfigModal(bondName) {
 export function closeBondConfigModal() {
   const overlay = document.getElementById('network-bond-config-overlay');
   if (overlay) {
-    overlay.classList.remove('open');
-    overlay.style.display = 'none';
+    hideNetDialog(overlay);
   }
   _currentBondName = null;
 }
@@ -1256,8 +1249,7 @@ export async function openBridgeConfigModal(brName) {
       }
     }
 
-    overlay.classList.add('open');
-    overlay.style.display = 'flex';
+    showNetDialog(overlay, closeBridgeConfigModal);
   } catch (err) {
     showToast(t('toast.failed_to_load_bridge_configuration', 'Failed to load bridge configuration: {error}', { error: err.message || err }), 'error');
   }
@@ -1267,8 +1259,7 @@ export async function openBridgeConfigModal(brName) {
 export function closeBridgeConfigModal() {
   const overlay = document.getElementById('network-bridge-config-overlay');
   if (overlay) {
-    overlay.classList.remove('open');
-    overlay.style.display = 'none';
+    hideNetDialog(overlay);
   }
   _currentBridgeName = null;
 }
@@ -1322,8 +1313,7 @@ export async function openCreateVlanModal() {
   if (idInput) idInput.value = '';
   if (aliasInput) aliasInput.value = '';
 
-  overlay.classList.add('open');
-  overlay.style.display = 'flex';
+  showNetDialog(overlay, closeCreateVlanModal);
 
   try {
     const topo = await api.get('/api/system/network-topology');
@@ -1345,8 +1335,7 @@ export async function openCreateVlanModal() {
 export function closeCreateVlanModal() {
   const overlay = document.getElementById('network-vlan-create-overlay');
   if (overlay) {
-    overlay.classList.remove('open');
-    overlay.style.display = 'none';
+    hideNetDialog(overlay);
   }
 }
 
