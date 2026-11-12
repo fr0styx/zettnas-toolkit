@@ -9,6 +9,7 @@ import { initNetworkPortsInspector, fetchListeningPorts } from '../network-manag
 import { showToast, showConfirmToast } from '../../toast.js';
 import { escapeHtml, copyText } from '../../utils.js';
 import { t } from '../../i18n.js';
+import { stateBlock } from '../state-block.js';
 
 // An icon next to translated words: screen readers skip it and the words stay plain (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
@@ -396,9 +397,7 @@ export async function fetchAndRenderNetworkTopology() {
   try {
     const topo = await api.get('/api/system/network-topology');
     if (!topo || topo.status !== 'ok') {
-      if (physicalTbody) {
-        physicalTbody.innerHTML = `<tr><td class="nw-crit-center" colspan="8">${escapeHtml(t('net.topo_failed', 'Could not load the network layout: {error}', { error: topo?.message || t('toast.unknown_error', 'Unknown error') }))}</td></tr>`;
-      }
+      showTopologyFailed(topo?.message || t('toast.unknown_error', 'Unknown error'));
       return;
     }
 
@@ -749,9 +748,32 @@ export async function fetchAndRenderNetworkTopology() {
     initNetworkControls();
   } catch (err) {
     console.warn('[Kiboto] Error fetching network topology:', err);
-    if (physicalTbody) {
-      physicalTbody.innerHTML = `<tr><td class="nw-crit-center" colspan="10">${escapeHtml(t('net.topo_failed', 'Could not load the network layout: {error}', { error: err.message || String(err) }))}</td></tr>`;
-    }
+    showTopologyFailed(err?.message || String(err));
+  }
+}
+
+const TOPO_PARTS = ['network-switch-faceplate', 'network-bridges-container', 'network-docker-container'];
+const TOPO_TILES = ['net-kpi-ip', 'net-kpi-gw', 'net-kpi-speed'];
+
+/** Every part of the Network page says the layout could not be read, with Try again: only the
+ *  table did, while the tiles kept "--" and the other parts "Loading…" (network report F1). */
+export function showTopologyFailed(error) {
+  const tbody = document.getElementById('network-physical-tbody');
+  if (tbody) {
+    const cell = document.createElement('td');
+    cell.className = 'nw-crit-center';
+    cell.colSpan = 10;
+    cell.textContent = t('net.topo_failed', 'Could not load the network layout: {error}', { error });
+    const row = document.createElement('tr');
+    row.append(cell);
+    tbody.replaceChildren(row);
+  }
+  for (const id of TOPO_PARTS) {
+    document.getElementById(id)?.replaceChildren(stateBlock('failed', { detail: error, retry: () => fetchAndRenderNetworkTopology() }));
+  }
+  for (const id of TOPO_TILES) {
+    const tile = document.getElementById(id);
+    if (tile) tile.textContent = t('net.unknown', 'Unknown');
   }
 }
 

@@ -243,7 +243,7 @@
   "buttons": 0,
   "globals": 0,
   "styles": 16,
-  "templates": 10
+  "templates": 8
  },
  "frontend/src/components/management/overview.js": {
   "buttons": 0,

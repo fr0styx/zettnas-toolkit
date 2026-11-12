@@ -6170,6 +6170,7 @@ export default {
   "net.disconnected": "已断开",
   "net.connected": "已连接",
   "net.topo_failed": "无法加载网络拓扑：{error}",
+  "net.unknown": "未知",
   "net.via": "经由 {iface}",
   "net.ports_online": "{active}/{total} 个端口在线",
   "net.networks_count": "{count} 个网络",

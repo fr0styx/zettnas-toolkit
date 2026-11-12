@@ -6170,6 +6170,7 @@ export default {
   "net.disconnected": "Getrennt",
   "net.connected": "Verbunden",
   "net.topo_failed": "Netzwerkaufbau konnte nicht geladen werden: {error}",
+  "net.unknown": "Unbekannt",
   "net.via": "Über {iface}",
   "net.ports_online": "{active} von {total, plural, one {# Port} other {# Ports}} online",
   "net.networks_count": "{count, plural, one {# Netzwerk} other {# Netzwerke}}",

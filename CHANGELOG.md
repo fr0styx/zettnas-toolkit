@@ -27,6 +27,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Away from home says when it can't read the state.** The "Use from anywhere" card disappeared when
   its state could not be read; it now says so, with the reason and Try again.
 
+#### Fixes
+
+- **The Network page says when it can't read the layout**, on every part, with Try again. Before,
+  the tiles showed "--" and the switch and Docker parts said "Loading…" for ever.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

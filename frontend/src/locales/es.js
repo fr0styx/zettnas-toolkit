@@ -6170,6 +6170,7 @@ export default {
   "net.disconnected": "Desconectado",
   "net.connected": "Conectado",
   "net.topo_failed": "No se pudo cargar la topología de red: {error}",
+  "net.unknown": "Desconocido",
   "net.via": "Vía {iface}",
   "net.ports_online": "{active} de {total, plural, one {# puerto} other {# puertos}} en línea",
   "net.networks_count": "{count, plural, one {# red} other {# redes}}",
