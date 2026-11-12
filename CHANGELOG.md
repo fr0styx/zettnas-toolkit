@@ -47,6 +47,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Opening the Network page reads each thing once.** It read the layout and the Tailscale details
   twice, and Refresh on the Tailscale details did everything twice with two messages.
 
+#### Fixes
+
+- **Plain names on the Network page**: its title is "Network" (it was "Visual Network & Virtual Switch
+  Inspector"), and the bond dialog lists "Ports in this bond".
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

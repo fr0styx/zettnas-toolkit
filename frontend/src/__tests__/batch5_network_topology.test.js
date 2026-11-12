@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { fetchAndRenderNetworkTopology } from '../components/management.js';
 import { api } from '../api.js';
 
-describe('Batch 5: Interactive Visual Network & Virtual Switch Inspector UI', () => {
+describe('Batch 5: the Network page layout', () => {
   let container;
 
   beforeEach(() => {
