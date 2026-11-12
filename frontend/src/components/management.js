@@ -2,7 +2,7 @@ import { syncWidgetSettingsUI } from './widgets.js';
 import { isNvmeDrive } from './temp-rule.js';
 import { refreshAndSay } from './refresh-say.js';
 import { askPower, isShuttingDown, powerToast } from './vm/power.js';
-import { loadAccountPane, loadSecurityPane, loadNotificationsPane } from './management/admin-panes.js';
+import { loadAccountPane, loadBackupExtras, loadSecurityPane, loadNotificationsPane } from './management/admin-panes.js';
 import { kibPaneFor, loadKibExtras } from './management/kib-access.js';
 import { setIconLabel } from '../ui/primitives.js';
 import { syncDesktopThemeUI, openDrawer, restoreHardwareTabsToManagement } from './settings.js';
@@ -849,6 +849,7 @@ export function initManagement() {
         // phone backup sits with the other backups (UX-26)
         import('./phone-backup.js').then((p) => p.installPhoneBackup(document.getElementById('phone-backup-mount'))).catch(() => {});
         import('./management/protection.js').then((p) => p.installProtectionJobs(document.getElementById('protection-jobs-mount'))).catch(() => {});
+        loadBackupExtras();
       }
       fetchAndRenderBackupJobs();
       fetchAndRenderSystemSnapshots();

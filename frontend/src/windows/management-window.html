@@ -3047,6 +3047,8 @@
             <!-- Notifications & Alerts Pane -->
             <div id="mgmt-pane-notifications" class="mgmt-tab-pane" style="display: none;">
               <div id="push-device-card" class="kb-card kb-card--boxed"></div>
+              <!-- Home Assistant: alerts and sensors to your smart home (moved from Network, SET-24) -->
+              <div class="nsv-grid" id="notif-ha-grid" data-admin-only></div>
               <div class="mgmt-card-intro nt-head" data-admin-only>
                 <div>
                   <div class="mgmt-card-intro-title">
@@ -3280,6 +3282,8 @@
           </div>
         </div>
             <div id="mgmt-pane-backups" class="mgmt-tab-pane" style="display: none;">
+              <!-- Your Kiboto boxes: a buddy backup to another Kiboto (moved from Network, SET-24) -->
+              <div class="nsv-grid" id="backup-fleet-grid"></div>
           <div class="mgmt-card-intro">
             <div class="mgmt-card-intro-title" role="heading" aria-level="2"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.backups_title">Backups, Snapshots & Disaster Recovery</span></div>
             <div class="mgmt-card-intro-desc" data-i18n="mgmt.backups_desc">Automated 3-2-1 backup pipelines, point-in-time storage snapshots, application state archives, and system configuration restoration.</div>

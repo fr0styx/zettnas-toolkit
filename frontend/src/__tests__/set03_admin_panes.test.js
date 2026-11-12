@@ -1,6 +1,6 @@
 /** SET-03: the Security and Notifications tabs load an administrator's set-up for administrators only. */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { loadAccountPane, loadSecurityPane, loadNotificationsPane } from '../components/management/admin-panes.js';
+import { loadAccountPane, loadBackupExtras, loadSecurityPane, loadNotificationsPane } from '../components/management/admin-panes.js';
 import '../route-access.js';
 import { ZettEventBus } from '../event-bus.js';
 import { fetchAndRenderSecurityPosture } from '../components/management/security.js';
@@ -20,6 +20,8 @@ vi.mock('../components/file-activity.js', () => ({ renderFileActivity: vi.fn() }
 vi.mock('../components/sso.js', () => ({ renderSsoPanel: vi.fn(), renderLdapPanel: vi.fn() }));
 vi.mock('../components/management/user-data.js', () => ({ installMyData: vi.fn() }));
 vi.mock('../components/users.js', () => ({ loadAccountParts: vi.fn() }));
+vi.mock('../components/management/home-assistant.js', () => ({ loadHomeAssistantCard: vi.fn() }));
+vi.mock('../components/management/fleet.js', () => ({ loadFleetCard: vi.fn() }));
 vi.mock('../components/push-card.js', () => ({ renderPushCard: vi.fn() }));
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
@@ -82,3 +84,31 @@ describe('My account (SET-19, decision X4)', () => {
     expect(renderApiTokens).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('cards moved from Network (SET-24)', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('Home Assistant loads with Notifications for administrators only', async () => {
+    const { loadHomeAssistantCard } = await import('../components/management/home-assistant.js');
+    document.body.innerHTML = '<div id="mgmt-pane-notifications"><div id="notif-ha-grid" data-admin-only></div></div>';
+    ZettEventBus.emit('session:user', { scopes: ['system:view'] });
+    loadNotificationsPane();
+    await flush();
+    expect(loadHomeAssistantCard).not.toHaveBeenCalled();
+    ZettEventBus.emit('session:user', { scopes: ['*'] });
+    loadNotificationsPane();
+    await flush();
+    expect(loadHomeAssistantCard).toHaveBeenCalledTimes(1);
+  });
+
+  it('your other Kiboto boxes load with Backup', async () => {
+    const { loadFleetCard } = await import('../components/management/fleet.js');
+    document.body.innerHTML = '';
+    expect(loadBackupExtras()).toBe(false);
+    document.body.innerHTML = '<div id="backup-fleet-grid"></div>';
+    expect(loadBackupExtras()).toBe(true);
+    await flush();
+    expect(loadFleetCard).toHaveBeenCalledTimes(1);
+  });
+});
+

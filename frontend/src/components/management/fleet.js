@@ -147,7 +147,7 @@ function onSubmit(e) {
 function cardShell() {
   let card = $('fleet-card');
   if (card) return card;
-  const grid = $('network-services-grid');
+  const grid = $('backup-fleet-grid') || $('network-services-grid'); // on Backup since SET-24
   if (!grid) return null;
   card = document.createElement('div');
   card.className = 'nsv-col-box';

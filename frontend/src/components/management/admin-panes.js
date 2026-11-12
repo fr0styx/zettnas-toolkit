@@ -34,6 +34,15 @@ export function loadAccountPane() {
 export function loadNotificationsPane() {
   const adminToo = !hideAdminOnly(document.getElementById('mgmt-pane-notifications'));
   if (adminToo) fetchAndRenderNotificationConfig();
+  if (adminToo) import('./home-assistant.js').then((m) => m.loadHomeAssistantCard()).catch(() => {}); // from Network (SET-24)
   import('../push-card.js').then((m) => m.renderPushCard()).catch(() => {});
   return adminToo;
 }
+
+/** Backup's extras: your other Kiboto boxes, whose main use is a buddy backup (moved from Network, SET-24). */
+export function loadBackupExtras(doc = document) {
+  if (!doc.getElementById('backup-fleet-grid')) return false;
+  import('./fleet.js').then((m) => m.loadFleetCard()).catch(() => {});
+  return true;
+}
+

@@ -330,17 +330,17 @@
 #mgmt-pane-dock .dck-row-4 { display: flex; justify-content: space-between; align-items: center; }
 
 /* The mgmt-pane-network-services pane: classes instead of inline styles (NUX-15), same look */
-:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard) .nsv-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard) .nsv-row-2 { display: flex; gap: 8px; align-items: center; }
-:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard) .nsv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
-:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard) .nsv-col-box { background: var(--kb-glaze-3); border: 1px solid var(--kb-line-7); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
-:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard) .nsv-row-3 { display: flex; justify-content: space-between; align-items: center; }
-:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard) .nsv-row-4 { display: flex; align-items: center; gap: 8px; }
-:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard) .nsv-fs18 { font-size: 18px; }
-:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard) .nsv-fs13-bold-strong { font-weight: 700; font-size: 13px; color: var(--kb-text-strong); }
-:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard) .nsv-xs-muted { font-size: var(--kb-fs-xs); color: var(--muted); }
-:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard) .nsv-xs-muted-2 { font-size: var(--kb-fs-xs); color: var(--muted); line-height: 1.4; }
-:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard) .nas-name-input { flex: 1; min-width: 0; padding: 6px 10px; background: var(--kb-shade-30); border: 1px solid var(--kb-line-15); border-radius: 6px; color: var(--kb-text-strong); font-family: monospace; font-size: var(--kb-fs-xs); }
+:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard, #mgmt-pane-backups, #mgmt-pane-notifications) .nsv-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard, #mgmt-pane-backups, #mgmt-pane-notifications) .nsv-row-2 { display: flex; gap: 8px; align-items: center; }
+:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard, #mgmt-pane-backups, #mgmt-pane-notifications) .nsv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard, #mgmt-pane-backups, #mgmt-pane-notifications) .nsv-col-box { background: var(--kb-glaze-3); border: 1px solid var(--kb-line-7); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard, #mgmt-pane-backups, #mgmt-pane-notifications) .nsv-row-3 { display: flex; justify-content: space-between; align-items: center; }
+:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard, #mgmt-pane-backups, #mgmt-pane-notifications) .nsv-row-4 { display: flex; align-items: center; gap: 8px; }
+:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard, #mgmt-pane-backups, #mgmt-pane-notifications) .nsv-fs18 { font-size: 18px; }
+:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard, #mgmt-pane-backups, #mgmt-pane-notifications) .nsv-fs13-bold-strong { font-weight: 700; font-size: 13px; color: var(--kb-text-strong); }
+:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard, #mgmt-pane-backups, #mgmt-pane-notifications) .nsv-xs-muted { font-size: var(--kb-fs-xs); color: var(--muted); }
+:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard, #mgmt-pane-backups, #mgmt-pane-notifications) .nsv-xs-muted-2 { font-size: var(--kb-fs-xs); color: var(--muted); line-height: 1.4; }
+:is(#mgmt-pane-network-services, #mgmt-pane-network-wireguard, #mgmt-pane-backups, #mgmt-pane-notifications) .nas-name-input { flex: 1; min-width: 0; padding: 6px 10px; background: var(--kb-shade-30); border: 1px solid var(--kb-line-15); border-radius: 6px; color: var(--kb-text-strong); font-family: monospace; font-size: var(--kb-fs-xs); }
 
 /* The mgmt-pane-unraid pane: classes instead of inline styles (NUX-15), same look */
 #mgmt-pane-unraid .unr-row { display: flex; justify-content: space-between; align-items: center; }

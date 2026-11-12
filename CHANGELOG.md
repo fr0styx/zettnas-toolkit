@@ -103,6 +103,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   anywhere moved there from Network's Advanced tabs. The three fixed Samba, NFS and SFTP cards are gone
   (Shared folders shows their real state).
 
+#### Changes
+
+- **Your other Kiboto boxes are on Backups, Home Assistant is on Notifications**: both moved from
+  Network's Advanced tabs to the page that is about what they do.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

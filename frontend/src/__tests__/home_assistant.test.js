@@ -56,4 +56,10 @@ describe('Home Assistant card (RES-5)', () => {
     await loadHomeAssistantCard();
     expect(document.getElementById('ha-card').hidden).toBe(true);
   });
+
+  it('builds into its new place when that is there (SET-24)', async () => {
+    document.body.innerHTML = '<div id="notif-ha-grid"></div><div id="network-services-grid"></div>';
+    await loadHomeAssistantCard();
+    expect(document.getElementById('ha-card').parentElement.id).toBe('notif-ha-grid');
+  });
 });

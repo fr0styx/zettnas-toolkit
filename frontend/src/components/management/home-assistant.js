@@ -49,7 +49,7 @@ export function haFormValues(form) {
 }
 
 export async function loadHomeAssistantCard() {
-  const grid = document.getElementById('network-services-grid');
+  const grid = document.getElementById('notif-ha-grid') || document.getElementById('network-services-grid'); // on Notifications since SET-24
   if (!grid) return;
   let card = document.getElementById('ha-card');
   if (!card) {
