@@ -679,6 +679,14 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   the dock and the desktop widgets are solid black with no glass, and cards inside sit just off black,
   in every theme.
 
+#### Changes
+
+- **Delete a pool and erase its drives.** On a host Kiboto manages, a ZFS, Btrfs or mdadm pool has
+  "Delete and erase drives": it first lists exactly which drives would be erased and which shared
+  folders stop working, then asks for the pool's name and your password. Only drives the pool's own
+  tool lists and whose on-disk label carries the pool's id are erased; one drive that cannot be
+  confirmed refuses the whole erase. Unraid's pools are still deleted in Unraid.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

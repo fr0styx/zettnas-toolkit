@@ -1092,6 +1092,27 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             raise RuntimeError(f"{pool.name} could not be unmounted: {(err or out or 'it is in use').strip()}")
         return {"status": "destroyed", "pool_id": pool.id, "mountpoint": pool.mountpoint, "unmount_code": code}
 
+    def erase_plan(self, pool_id: str) -> dict[str, Any]:
+        """The drives a pool's own tool lists, each confirmed by its on-disk label (S29)."""
+        from backend.hardware.pal import pool_erase
+
+        try:
+            return pool_erase.plan(self.resolve_pool(pool_id), self._run_cmd)
+        except pool_erase.EraseRefused as e:
+            raise RuntimeError(str(e)) from e
+
+    def erase_pool(self, pool_id: str) -> dict[str, Any]:
+        """Deletes the pool and erases exactly the drives the plan confirmed (S29)."""
+        from backend.hardware.pal import pool_erase
+
+        try:
+            p = pool_erase.plan(self.resolve_pool(pool_id), self._run_cmd)
+            erased = pool_erase.execute(p, self._run_cmd)
+        except pool_erase.EraseRefused as e:
+            raise RuntimeError(str(e)) from e
+        logger.warning("[Storage] pool %s deleted, drives erased: %s", p["pool"], erased)
+        return {"status": "erased", "pool_id": p["pool"], "drives": erased}
+
     def export_pool(self, pool_id: str, force: bool = False) -> dict[str, Any]:
         """Safely flushes dirty write cache, checks active file handles, and exports or unmounts a storage pool."""
         pool = self.resolve_pool(pool_id)

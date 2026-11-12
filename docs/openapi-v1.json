@@ -30177,6 +30177,22 @@
     "title": "PhotoImportStart",
     "type": "object"
    },
+   "PoolEraseRequest": {
+    "properties": {
+     "confirm_name": {
+      "default": "",
+      "title": "Confirm Name",
+      "type": "string"
+     },
+     "current_password": {
+      "default": "",
+      "title": "Current Password",
+      "type": "string"
+     }
+    },
+    "title": "PoolEraseRequest",
+    "type": "object"
+   },
    "PortConfigUpdateRequest": {
     "properties": {
      "alias": {
@@ -65191,6 +65207,118 @@
      }
     },
     "summary": "Delete Storage Pool",
+    "tags": [
+     "Storage Subsystem & PAL"
+    ],
+    "x-required-scopes": [
+     "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/storage/pools/{pool_id}/erase": {
+   "post": {
+    "description": "Deletes the pool and erases its drives: only drives its own tool lists and whose labels carry\nits id; one that cannot be confirmed refuses the whole erase (S29).",
+    "operationId": "erase_storage_pool_api_v1_storage_pools__pool_id__erase_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pool_id",
+      "required": true,
+      "schema": {
+       "pattern": "^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$",
+       "title": "Pool Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PoolEraseRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Erase Storage Pool Api V1 Storage Pools  Pool Id  Erase Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Erase Storage Pool",
+    "tags": [
+     "Storage Subsystem & PAL"
+    ],
+    "x-required-scopes": [
+     "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/storage/pools/{pool_id}/erase-plan": {
+   "get": {
+    "description": "Which drives \"Delete pool and erase its drives\" would erase, each confirmed on disk (S29).",
+    "operationId": "get_pool_erase_plan_api_v1_storage_pools__pool_id__erase_plan_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pool_id",
+      "required": true,
+      "schema": {
+       "pattern": "^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$",
+       "title": "Pool Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Pool Erase Plan Api V1 Storage Pools  Pool Id  Erase Plan Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Get Pool Erase Plan",
     "tags": [
      "Storage Subsystem & PAL"
     ],

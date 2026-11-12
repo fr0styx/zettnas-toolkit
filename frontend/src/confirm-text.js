@@ -8,6 +8,7 @@ const ACTIONS = {
   'fs.trash.empty': ['Empty the Recycle Bin', 'Permanently delete everything in every Recycle Bin? This can\'t be undone.', true],
   'storage.pool.create': ['Create the pool', 'Create a storage pool? Everything on the selected disks is erased.', true],
   'storage.pool.delete': ['Delete the pool', 'Delete the storage pool {target}? Its data is lost.', true],
+  'storage.pool.erase': ['Delete and erase', 'Delete the storage pool {target} and erase its drives? Everything on them is lost.', true],
   'storage.snapshot.delete': ['Delete the snapshot', 'Delete the snapshot {target}?', true],
   'share.delete': ['Delete the share', 'Delete the share {target}?', true],
   'users.delete': ['Delete the account', 'Delete the account {target}?', true],

@@ -34,6 +34,7 @@ ACTIONS: dict[str, str] = {
     "fs.trash.empty": "Permanently delete everything in the trash",
     "storage.pool.create": "Create a storage pool, erasing the selected disks",
     "storage.pool.delete": "Delete storage pool {target}",
+    "storage.pool.erase": "Delete storage pool {target} and erase its drives. Everything on them is lost",
     "storage.snapshot.delete": "Delete snapshot {target}",
     "share.delete": "Delete share {target}",
     "users.delete": "Delete user {target}",

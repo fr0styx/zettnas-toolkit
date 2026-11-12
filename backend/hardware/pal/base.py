@@ -252,6 +252,15 @@ class StoragePlatformAdapter(ABC):
         """Destroys a storage pool (Active Provisioner mode only)."""
         ...
 
+    def erase_plan(self, pool_id: str) -> dict[str, Any]:
+        """What "Delete pool and erase its drives" would erase (S29). Only a host Kiboto manages
+        offers it; elsewhere the host's own settings delete pools (decision B)."""
+        raise PlatformCapabilityError("Delete this pool in the host system's own storage settings.")
+
+    def erase_pool(self, pool_id: str) -> dict[str, Any]:
+        """Deletes the pool and erases its confirmed drives (S29)."""
+        raise PlatformCapabilityError("Delete this pool in the host system's own storage settings.")
+
     @abstractmethod
     def create_share(
         self,

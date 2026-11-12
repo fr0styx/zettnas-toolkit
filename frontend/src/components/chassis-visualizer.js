@@ -701,6 +701,7 @@ function buildPoolBlockInner(pool, isObserver, can = { scrub: true }) {
       ${!isObserver ? `<button class="btn-pool-rename btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name)}" title="${t('ui.rename_storage_pool', 'Rename storage pool')}">${ico('✏️')} ${t('chassis.rename', 'Rename')}</button>` : ''}
       ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--kb-text-warn);" title="${t('ui.safely_flush_dirty_cache_and', 'Safely flush dirty cache and detach pool')}">${ico('⏏️')} ${t('chassis.eject', 'Safely eject')}</button>` : ''}
       ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle is-danger" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.destroy_storage_pool', 'Destroy storage pool')}">${ico('🗑️')} ${t('chassis.destroy', 'Destroy')}</button>` : ''}
+      ${eraseButtonHtml(pool)}
     </div>
   `;
 }
@@ -748,6 +749,13 @@ function bindTopologyTreeEvents(tree, container) {
       const pid = renameBtn.dataset.poolId;
       const pname = renameBtn.dataset.poolName || pid;
       openRenameStoragePoolModal(pid, pname, () => fetchAndRenderStorageTopology(container));
+      return;
+    }
+
+    const eraseBtn = e.target.closest('.btn-pool-erase');
+    if (eraseBtn) {
+      e.stopPropagation();
+      erasePool(eraseBtn.dataset.poolId, () => fetchAndRenderStorageTopology(container));
       return;
     }
 
@@ -3159,5 +3167,46 @@ export function openRenameStoragePoolModal(poolId, currentName, onSuccess) {
         }
       }
     };
+  }
+}
+
+/** "Delete pool and erase its drives" (S29): only where the server can confirm the pool's drives. */
+export function eraseButtonHtml(pool) {
+  if (!pool || !pool.erasable) return '';
+  return `<button class="btn-pool-erase btn-pill-toggle is-danger" data-pool-id="${escapeHtml(pool.id)}">${escapeHtml(t('chassis.erase_pool', 'Delete and erase drives'))}</button>`;
+}
+
+/**
+ * Shows exactly which drives would be erased and which shared folders stop working, asks for the
+ * pool's name and the password, then erases. Returns true when it did.
+ */
+export async function erasePool(pid, done = () => {}) {
+  let plan;
+  try {
+    plan = await api.get(`/api/storage/pools/${encodeURIComponent(pid)}/erase-plan`);
+  } catch (err) {
+    showToast(err.message || t('chassis.erase_refused', 'This pool cannot be erased with certainty.'), 'error');
+    return false;
+  }
+  const shares = (plan.shares || []).length ? t('chassis.erase_shares', 'These shared folders stop working: {shares}.', { shares: plan.shares.join(', ') }) : '';
+  const msg = `${t('chassis.erase_pool_msg', 'Everything on these drives is lost: {drives}.', { drives: (plan.drives || []).join(', ') })} ${shares}`.trim();
+  const ok = await new Promise((resolve) =>
+    showDangerConfirm(t('chassis.erase_pool_title', 'Delete {pool} and erase its drives', { pool: pid }), msg, () => resolve(true), () => resolve(false), {
+      okText: t('chassis.erase_ok', 'Delete and erase'),
+      typeToConfirm: pid,
+      allowHtml: false,
+    }),
+  );
+  if (!ok) return false;
+  const password = await askPoolPrompt(t('chassis.confirm_pwd_title', 'Confirm with your password'), t('chassis.erase_pwd_msg', 'Enter your Kiboto password to erase the drives.'), 'password');
+  if (password === null) return false;
+  try {
+    const res = await api.post(`/api/storage/pools/${encodeURIComponent(pid)}/erase`, { confirm_name: pid, current_password: password }, { confirmed: true });
+    showToast(t('chassis.erased', '{pool} deleted; {n, plural, one {# drive} other {# drives}} erased.', { pool: pid, n: (res.drives || []).length }), 'success');
+    done();
+    return true;
+  } catch (err) {
+    showToast(err.message || t('chassis.erase_refused', 'This pool cannot be erased with certainty.'), 'error');
+    return false;
   }
 }

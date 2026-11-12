@@ -46,6 +46,7 @@
  "alert.security.api_token_created": "已创建 API 令牌",
  "alert.security.confirm_storage_pool_create": "已创建存储池（硬盘已清空）",
  "alert.security.confirm_storage_pool_delete": "已删除存储池",
+ "alert.security.confirm_storage_pool_erase": "已删除存储池并清空硬盘",
  "alert.security.confirm_system_restore": "已从备份恢复设置",
  "alert.security.confirm_updates_revert": "Kiboto 已退回到之前的版本",
  "alert.security.confirm_users_delete": "已删除用户账户",

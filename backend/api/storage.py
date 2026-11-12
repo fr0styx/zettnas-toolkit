@@ -178,8 +178,18 @@ def get_storage_pools() -> dict[str, Any]:
         "can_trigger_scrub": bool(adapter.get_capabilities().can_trigger_scrub),
         "can_export_pools": bool(adapter.get_capabilities().can_export_pools),
         "is_busy": adapter.is_storage_busy(),
-        "pools": [p.model_dump() for p in pools],
+        "pools": [_with_erasable(p.model_dump(), p, adapter) for p in pools],
     }
+
+
+def _with_erasable(row: dict[str, Any], pool: Any, adapter: Any) -> dict[str, Any]:
+    """Whether "Delete pool and erase its drives" is offered (S29): a host Kiboto manages, and a
+    ZFS, Btrfs or mdadm pool, whose own tool names its drives."""
+    from backend.hardware.pal import pool_erase
+
+    caps = adapter.get_capabilities()
+    row["erasable"] = bool(caps.can_destroy_pools and not caps.is_observer_mode and pool_erase.kind_of(pool))
+    return row
 
 
 @router.get("/shares", dependencies=[Depends(require_scope("storage:read", "shares:read", "system:view"))])
@@ -601,6 +611,64 @@ def delete_storage_pool(pool_id: PoolId) -> dict[str, Any]:
         )
     try:
         return adapter.destroy_pool(pool_id=pool_id)
+    except PlatformCapabilityError as e:
+        raise HTTPException(status_code=403, detail=str(e)) from e
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
+
+
+class PoolEraseRequest(BaseModel):
+    confirm_name: str = ""
+    current_password: str = ""
+
+
+def _erase_guard(pool_id: str, req: PoolEraseRequest, principal: AuthenticatedPrincipal) -> Any:
+    """The typed name and the password, as for creating a pool; then the platform decides."""
+    from backend.passwords import verify_password
+    from backend.users_db import get_user_by_username
+
+    if req.confirm_name != pool_id:
+        raise HTTPException(status_code=400, detail="Type the pool's name to delete it.")
+    user = get_user_by_username(principal.username)
+    if not user or not verify_password(req.current_password or "", user.get("password_hash", "")):
+        raise HTTPException(status_code=403, detail="Your password was not right.")
+    return get_storage_platform()
+
+
+@router.get("/pools/{pool_id}/erase-plan", dependencies=[Depends(require_scope("storage:admin"))])
+def get_pool_erase_plan(pool_id: PoolId) -> dict[str, Any]:
+    """Which drives "Delete pool and erase its drives" would erase, each confirmed on disk (S29)."""
+    adapter = get_storage_platform()
+    try:
+        plan = adapter.erase_plan(pool_id)
+    except PlatformCapabilityError as e:
+        raise HTTPException(status_code=403, detail=str(e)) from e
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
+    shares = [
+        sh.name
+        for sh in adapter.list_shares()
+        if plan.get("mountpoint") and str(sh.mountpoint or "").startswith(plan["mountpoint"])
+    ]
+    return {**plan, "shares": shares}
+
+
+@router.post(
+    "/pools/{pool_id}/erase",
+    dependencies=[Depends(require_scope("storage:admin")), Depends(require_confirmation("storage.pool.erase"))],
+)
+def erase_storage_pool(
+    pool_id: PoolId, req: PoolEraseRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+) -> dict[str, Any]:
+    """Deletes the pool and erases its drives: only drives its own tool lists and whose labels carry
+    its id; one that cannot be confirmed refuses the whole erase (S29)."""
+    adapter = _erase_guard(pool_id, req, principal)
+    try:
+        return adapter.erase_pool(pool_id)
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e)) from e
     except LookupError as e:

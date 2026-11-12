@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-710 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+712 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -787,6 +787,8 @@ request and response schemas.
 | `GET` | `/api/v1/storage/pools/discover` | any of `storage:admin`, `storage:read` | Discovers unimported or detachable external storage pools (e.g |
 | `POST` | `/api/v1/storage/pools/import` | `storage:admin` | Imports an external storage pool into the platform |
 | `DELETE` | `/api/v1/storage/pools/{pool_id}` | `storage:admin` | Destroys/unmounts a storage pool |
+| `POST` | `/api/v1/storage/pools/{pool_id}/erase` | `storage:admin` | Deletes the pool and erases its drives: only drives its own tool lists and whose labels carry its id; one that cannot be confirmed refuse… |
+| `GET` | `/api/v1/storage/pools/{pool_id}/erase-plan` | `storage:admin` | Which drives "Delete pool and erase its drives" would erase, each confirmed on disk (S29) |
 | `POST` | `/api/v1/storage/pools/{pool_id}/export` | `storage:admin` | Gracefully flushes dirty write cache, terminates active handles, and exports/unmounts a storage pool for safe physical detachment |
 | `POST` | `/api/v1/storage/pools/{pool_id}/rename` | `storage:admin` | Renames an existing storage pool (OpenZFS or Btrfs) and creates an atomic backwards-compatibility symlink to preserve Docker container vo… |
 | `GET` | `/api/v1/storage/pools/{pool_id}/snapshots` | any of `storage:read`, `storage:admin` | Lists filesystem subvolume snapshots for a storage pool |
