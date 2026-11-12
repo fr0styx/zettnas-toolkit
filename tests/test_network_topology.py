@@ -473,3 +473,11 @@ def test_docker_network_routes_still_answer(client, token):
         r = client.post("/api/network/docker/create", json={"name": "test_net", "driver": "bridge"}, headers=headers)
         assert r.status_code == 200 and r.json()["id"] == "net789"
         assert client.delete("/api/network/docker/net789", headers=headers).json()["status"] == "ok"
+
+
+def test_the_layout_says_what_this_host_lets_kiboto_change(client, token):
+    with patch("backend.hardware.network.get_network_topology", return_value={"status": "ok", "summary": {}}):
+        r = client.get("/api/system/network-topology", headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 200
+    host = r.json()["host"]
+    assert host["managed"] is False and "where" in host and host["can_change"]["address"] is False

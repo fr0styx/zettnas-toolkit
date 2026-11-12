@@ -1502,7 +1502,7 @@
                 <!-- 802.1Q VLAN Sub-Interfaces -->
                 <div class="network-section-header net-row-4">
                   <span class="network-section-title" data-i18n="mw.vlan_sub_interfaces_802_1q_tagging">VLAN SUB-INTERFACES (802.1Q TAGGING)</span>
-                  <button class="btn-pill-toggle is-small" id="btn-open-create-vlan-modal" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border-color: rgba(79, 216, 196, 0.4);" data-i18n="net.create_vlan_btn">+ Add VLAN</button>
+                  <button class="btn-pill-toggle is-small" id="btn-open-create-vlan-modal" data-net-edit="vlan" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border-color: rgba(79, 216, 196, 0.4);" data-i18n="net.create_vlan_btn">+ Add VLAN</button>
                 </div>
                 <div class="network-table-wrap" id="network-vlan-table-wrap" tabindex="0">
                   <table class="copy-history-table">
@@ -4830,6 +4830,7 @@
       </div>
     </div>
     <div class="smart-modal-body pcfg-col">
+      <p class="net-host-note pcfg-xs-muted net-host-note-top" data-net-for="mtu speed wake_on_lan" hidden></p>
       <!-- Port Alias -->
       <div>
         <label class="pcfg-xs-bold-muted" for="net-port-alias-input" data-i18n="net.alias_label">Port Friendly Alias</label>
@@ -4841,9 +4842,9 @@
       <div>
         <label class="pcfg-xs-bold-muted" for="net-port-mtu-input" data-i18n="net.mtu_label">MTU (Maximum Transmission Unit)</label>
         <div class="pcfg-row-2">
-          <button type="button" class="btn-pill-toggle net-mtu-preset" data-mtu="1500" id="net-mtu-preset-1500" data-sample>1500 (Standard)</button>
-          <button type="button" class="btn-pill-toggle net-mtu-preset" data-mtu="9000" id="net-mtu-preset-9000" data-sample>9000 (Jumbo Frames)</button>
-          <input type="number" id="net-port-mtu-input" min="68" max="9216" value="1500" class="tz-text-input pcfg-size-2" />
+          <button type="button" class="btn-pill-toggle net-mtu-preset" data-net-setting="mtu" data-mtu="1500" id="net-mtu-preset-1500" data-sample>1500 (Standard)</button>
+          <button type="button" class="btn-pill-toggle net-mtu-preset" data-net-setting="mtu" data-mtu="9000" id="net-mtu-preset-9000" data-sample>9000 (Jumbo Frames)</button>
+          <input type="number" data-net-setting="mtu" id="net-port-mtu-input" min="68" max="9216" value="1500" class="tz-text-input pcfg-size-2" />
         </div>
         <div class="pcfg-xs-muted-2" data-i18n="net.mtu_hint">Use 9000 Jumbo Frames for high-throughput 10GbE point-to-point connections.</div>
       </div>
@@ -4855,7 +4856,7 @@
           <div class="pcfg-xs-muted-2" id="net-port-wol-desc" data-i18n="net.wol_hint">Permit network magic packet wakeups from sleep/standby.</div>
         </div>
         <label class="switch pcfg-x-2">
-          <input type="checkbox" id="net-port-wol-toggle" />
+          <input type="checkbox" data-net-setting="wake_on_lan" id="net-port-wol-toggle" />
           <span class="slider round"></span>
         </label>
       </div>
@@ -4872,7 +4873,7 @@
       <!-- Link Negotiation Speed -->
       <div>
         <label class="pcfg-xs-bold-muted" for="net-port-speed-select" data-i18n="net.speed_label">Link Negotiation / Speed</label>
-        <select id="net-port-speed-select" class="tz-select-input pcfg-size">
+        <select data-net-setting="speed" id="net-port-speed-select" class="tz-select-input pcfg-size">
           <option value="auto" data-i18n="net.speed_auto">Auto-Negotiate (Recommended)</option>
           <option value="10000" data-sample>10,000 Mbps Full-Duplex (10GbE)</option>
           <option value="2500" data-sample>2,500 Mbps Full-Duplex (2.5GbE)</option>
@@ -4965,19 +4966,20 @@
       </div>
     </div>
     <div class="smart-modal-body hcfg-col">
+      <p class="net-host-note hcfg-xs-muted-2 net-host-note-top" data-net-for="address" hidden></p>
       <!-- Protocol Mode Segmented Switch -->
       <div>
         <label class="hcfg-xs-bold-muted" data-i18n="net.host_proto_label">IPv4 Assignment Protocol</label>
         <div class="hcfg-row-2">
-          <button type="button" class="btn-pill-toggle net-proto-btn active hcfg-grow" data-proto="static" id="net-proto-btn-static" data-i18n="net.proto_static">Static IP Configuration</button>
-          <button type="button" class="btn-pill-toggle net-proto-btn hcfg-grow" data-proto="dhcp" id="net-proto-btn-dhcp" data-i18n="net.proto_dhcp">DHCP (Auto-Assign)</button>
+          <button type="button" class="btn-pill-toggle net-proto-btn active hcfg-grow" data-proto="static" id="net-proto-btn-static" data-net-setting="address" data-i18n="net.proto_static">Static IP Configuration</button>
+          <button type="button" class="btn-pill-toggle net-proto-btn hcfg-grow" data-proto="dhcp" id="net-proto-btn-dhcp" data-net-setting="address" data-i18n="net.proto_dhcp">DHCP (Auto-Assign)</button>
         </div>
       </div>
 
       <!-- Interface Selector -->
       <div>
         <label class="hcfg-xs-bold-muted" for="net-host-iface-select" data-i18n="net.host_iface_label">Target Interface</label>
-        <select id="net-host-iface-select" class="tz-select-input hcfg-size">
+        <select id="net-host-iface-select" data-net-setting="address" class="tz-select-input hcfg-size">
           <!-- Populated dynamically: br0, bond0, eth0... -->
         </select>
       </div>
@@ -4987,7 +4989,7 @@
         <!-- IPv4 Address -->
         <div>
           <label class="hcfg-xs-bold-muted" for="net-host-ip-input" data-i18n="net.ip_label">IPv4 Address</label>
-          <input type="text" id="net-host-ip-input" class="tz-text-input hcfg-size" placeholder="e.g. 192.168.1.50" maxlength="32" autocomplete="off" />
+          <input type="text" id="net-host-ip-input" data-net-setting="address" class="tz-text-input hcfg-size" placeholder="e.g. 192.168.1.50" maxlength="32" autocomplete="off" />
           <div class="hcfg-xs-muted" data-i18n="net.ip_hint">Static host IP address.</div>
         </div>
 
@@ -4995,17 +4997,17 @@
         <div>
           <label class="hcfg-xs-bold-muted" for="net-host-netmask-input" data-i18n="net.netmask_label">Subnet Mask</label>
           <div class="hcfg-row-3">
-            <button type="button" class="btn-pill-toggle net-cidr-preset" data-netmask="255.255.255.0">/24 (255.255.255.0)</button>
-            <button type="button" class="btn-pill-toggle net-cidr-preset" data-netmask="255.255.0.0">/16 (255.255.0.0)</button>
-            <button type="button" class="btn-pill-toggle net-cidr-preset" data-netmask="255.0.0.0">/8 (255.0.0.0)</button>
+            <button type="button" class="btn-pill-toggle net-cidr-preset" data-net-setting="address" data-netmask="255.255.255.0">/24 (255.255.255.0)</button>
+            <button type="button" class="btn-pill-toggle net-cidr-preset" data-net-setting="address" data-netmask="255.255.0.0">/16 (255.255.0.0)</button>
+            <button type="button" class="btn-pill-toggle net-cidr-preset" data-net-setting="address" data-netmask="255.0.0.0">/8 (255.0.0.0)</button>
           </div>
-          <input type="text" id="net-host-netmask-input" class="tz-text-input hcfg-size" value="255.255.255.0" maxlength="32" autocomplete="off" />
+          <input type="text" id="net-host-netmask-input" data-net-setting="address" class="tz-text-input hcfg-size" value="255.255.255.0" maxlength="32" autocomplete="off" />
         </div>
 
         <!-- Default Gateway -->
         <div>
           <label class="hcfg-xs-bold-muted" for="net-host-gateway-input" data-i18n="net.gw_label">Default Gateway</label>
-          <input type="text" id="net-host-gateway-input" class="tz-text-input hcfg-size" placeholder="e.g. 192.168.1.1" maxlength="32" autocomplete="off" />
+          <input type="text" id="net-host-gateway-input" data-net-setting="address" class="tz-text-input hcfg-size" placeholder="e.g. 192.168.1.1" maxlength="32" autocomplete="off" />
           <div class="hcfg-xs-muted" data-i18n="net.gw_hint">Upstream router/gateway IP address.</div>
         </div>
       </div>
@@ -5015,19 +5017,19 @@
         <div class="hcfg-row-4">
           <label class="hcfg-xs-bold-muted-2" data-i18n="net.dns1_label">DNS Nameservers</label>
           <div class="hcfg-row-5">
-            <button type="button" class="btn-pill-toggle net-dns-preset is-small" data-dns1="1.1.1.1" data-dns2="1.0.0.1" translate="no">Cloudflare</button>
-            <button type="button" class="btn-pill-toggle net-dns-preset is-small" data-dns1="8.8.8.8" data-dns2="8.8.4.4" translate="no">Google</button>
-            <button type="button" class="btn-pill-toggle net-dns-preset is-small" data-dns1="9.9.9.9" data-dns2="149.112.112.112" translate="no">Quad9</button>
+            <button type="button" class="btn-pill-toggle net-dns-preset is-small" data-net-setting="address" data-dns1="1.1.1.1" data-dns2="1.0.0.1" translate="no">Cloudflare</button>
+            <button type="button" class="btn-pill-toggle net-dns-preset is-small" data-net-setting="address" data-dns1="8.8.8.8" data-dns2="8.8.4.4" translate="no">Google</button>
+            <button type="button" class="btn-pill-toggle net-dns-preset is-small" data-net-setting="address" data-dns1="9.9.9.9" data-dns2="149.112.112.112" translate="no">Quad9</button>
           </div>
         </div>
         <div class="hcfg-grid">
           <div>
             <label class="hcfg-xs-muted-2" for="net-host-dns1-input" data-i18n="net.dns1_label">Primary DNS</label>
-            <input type="text" id="net-host-dns1-input" class="tz-text-input hcfg-size" placeholder="e.g. 1.1.1.1" maxlength="32" autocomplete="off" />
+            <input type="text" id="net-host-dns1-input" data-net-setting="address" class="tz-text-input hcfg-size" placeholder="e.g. 1.1.1.1" maxlength="32" autocomplete="off" />
           </div>
           <div>
             <label class="hcfg-xs-muted-2" for="net-host-dns2-input" data-i18n="net.dns2_label">Secondary DNS</label>
-            <input type="text" id="net-host-dns2-input" class="tz-text-input hcfg-size" placeholder="e.g. 8.8.8.8" maxlength="32" autocomplete="off" />
+            <input type="text" id="net-host-dns2-input" data-net-setting="address" class="tz-text-input hcfg-size" placeholder="e.g. 8.8.8.8" maxlength="32" autocomplete="off" />
           </div>
         </div>
       </div>
@@ -5043,7 +5045,7 @@
       <!-- Modal Footer -->
       <div class="hcfg-row-box">
         <button id="net-host-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
-        <button id="net-host-cfg-apply-btn" type="button" class="btn-pill-toggle active is-primary">
+        <button id="net-host-cfg-apply-btn" data-net-edit="address" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.apply_canary_btn">Test & Apply (60s Canary)</span>
         </button>
       </div>
@@ -5113,7 +5115,7 @@
       <!-- Bonding Mode Selection -->
       <div>
         <label class="bond-xs-bold-muted" for="net-bond-mode-select" data-i18n="net.bond_mode_label">Bonding Mode (Aggregation Policy)</label>
-        <select id="net-bond-mode-select" class="tz-select-input bond-size">
+        <select data-net-setting="bond" id="net-bond-mode-select" class="tz-select-input bond-size">
           <option value="1" data-i18n="mw.mode_1_active_backup_failover_redundancy">Mode 1: Active-Backup (Failover / Redundancy - Recommended for Unmanaged Switches)</option>
           <option value="4" data-i18n="mw.mode_4_ieee_802_3ad_lacp">Mode 4: IEEE 802.3ad LACP (Dynamic Link Aggregation - Requires LACP Switch)</option>
           <option value="6" data-i18n="mw.mode_6_balance_alb_adaptive_load">Mode 6: Balance-ALB (Adaptive Load Balancing - No Switch Config)</option>
@@ -5128,7 +5130,7 @@
       <!-- Enslaved Member Interfaces -->
       <div>
         <label class="bond-xs-bold-muted" data-i18n="net.bond_slaves_label">Enslaved Physical Interfaces</label>
-        <div id="net-bond-slaves-container" class="network-member-checkbox-list bond-col-box">
+        <div data-net-setting="bond" id="net-bond-slaves-container" class="network-member-checkbox-list bond-col-box">
           <!-- Dynamically populated with physical NIC checkboxes: eth0, eth1, etc. -->
         </div>
         <div class="bond-xs-muted-2" data-i18n="net.bond_slaves_hint">Select the physical Ethernet jacks participating in this bonding group.</div>
@@ -5137,7 +5139,7 @@
       <!-- MII Monitoring Interval -->
       <div>
         <label class="bond-xs-bold-muted" for="net-bond-miimon-input" data-i18n="net.bond_miimon_label">MII Link Monitoring Interval (ms)</label>
-        <input type="number" id="net-bond-miimon-input" class="tz-text-input bond-size-2" min="10" max="1000" step="10" value="100" />
+        <input type="number" data-net-setting="bond" id="net-bond-miimon-input" class="tz-text-input bond-size-2" min="10" max="1000" step="10" value="100" />
         <div class="bond-xs-muted-3" data-i18n="net.bond_miimon_hint">Frequency in milliseconds to inspect carrier link health (default: 100ms).</div>
       </div>
 
@@ -5151,8 +5153,9 @@
 
       <!-- Footer Buttons -->
       <div class="bond-row-box">
+        <p class="net-host-note bond-xs-muted" data-net-for="bond" hidden></p>
         <button id="net-bond-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
-        <button id="net-bond-cfg-save-btn" type="button" class="btn-pill-toggle active is-primary">
+        <button id="net-bond-cfg-save-btn" data-net-edit="bond" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.save_bond_btn">Save Bonding Config</span>
         </button>
       </div>
@@ -5178,8 +5181,8 @@
       <div>
         <label class="brg-xs-bold-muted" data-i18n="net.bridge_stp_label">Spanning Tree Protocol (STP)</label>
         <div class="brg-row-2">
-          <button type="button" class="btn-pill-toggle net-stp-toggle-btn active brg-grow" data-stp="true" id="net-stp-btn-enable" data-i18n="net.stp_enabled">Enabled (Loop Protection)</button>
-          <button type="button" class="btn-pill-toggle net-stp-toggle-btn brg-grow" data-stp="false" id="net-stp-btn-disable" data-i18n="net.stp_disabled">Disabled (Faster Link)</button>
+          <button type="button" class="btn-pill-toggle net-stp-toggle-btn active brg-grow" data-stp="true" id="net-stp-btn-enable" data-net-setting="bridge" data-i18n="net.stp_enabled">Enabled (Loop Protection)</button>
+          <button type="button" class="btn-pill-toggle net-stp-toggle-btn brg-grow" data-stp="false" id="net-stp-btn-disable" data-net-setting="bridge" data-i18n="net.stp_disabled">Disabled (Faster Link)</button>
         </div>
         <div class="brg-xs-muted" data-i18n="net.stp_hint">
           Prevents Ethernet bridge loops and broadcast storms when bridging multiple interfaces connected to switches.
@@ -5189,14 +5192,14 @@
       <!-- Forward Delay -->
       <div>
         <label class="brg-xs-bold-muted" for="net-bridge-fd-input" data-i18n="net.bridge_fd_label">Forward Delay (Seconds)</label>
-        <input type="number" id="net-bridge-fd-input" class="tz-text-input brg-size" min="0" max="30" step="1" value="0" />
+        <input type="number" data-net-setting="bridge" id="net-bridge-fd-input" class="tz-text-input brg-size" min="0" max="30" step="1" value="0" />
         <div class="brg-xs-muted-2" data-i18n="net.bridge_fd_hint">Time spent in listening and learning states before forwarding (0s recommended when STP is disabled, 15s standard for STP).</div>
       </div>
 
       <!-- Bridge Member Interfaces -->
       <div>
         <label class="brg-xs-bold-muted" data-i18n="net.bridge_members_label">Bridge Member Interfaces</label>
-        <div id="net-bridge-members-container" class="network-member-checkbox-list brg-col-box">
+        <div data-net-setting="bridge" id="net-bridge-members-container" class="network-member-checkbox-list brg-col-box">
           <!-- Dynamically populated with bond0, eth0, etc. -->
         </div>
         <div class="brg-xs-muted-3" data-i18n="net.bridge_members_hint">Select interfaces bound directly to this bridge.</div>
@@ -5204,8 +5207,9 @@
 
       <!-- Footer Buttons -->
       <div class="brg-row-box">
+        <p class="net-host-note brg-xs-muted" data-net-for="bridge" hidden></p>
         <button id="net-bridge-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
-        <button id="net-bridge-cfg-save-btn" type="button" class="btn-pill-toggle active is-primary">
+        <button id="net-bridge-cfg-save-btn" data-net-edit="bridge" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.save_bridge_btn">Save Bridge Config</span>
         </button>
       </div>

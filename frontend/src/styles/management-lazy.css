@@ -212,3 +212,17 @@
     width: 56px;
   }
 }
+
+/* SET-16: where a network setting is changed, at the top of its dialog */
+.net-host-note-top {
+  margin: 0 0 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--kb-line-18);
+  background: var(--kb-glaze-4);
+}
+.is-readonly,
+[data-net-setting]:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

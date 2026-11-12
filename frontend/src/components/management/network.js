@@ -3,6 +3,7 @@
  * Split out of management.js (ARCH-1); management.js re-exports everything here.
  */
 import { ZettEventBus } from '../../event-bus.js';
+import { applyNetCaps, canChange, portPayload, setNetCaps } from './net-host.js';
 import { makeDraggable } from '../dock.js';
 import { api } from '../../api.js';
 import { initNetworkPortsInspector, fetchListeningPorts } from '../network-manager.js';
@@ -1311,6 +1312,7 @@ export async function fetchAndRenderNetworkTopology() {
       return;
     }
 
+    setNetCaps(topo.host); // what this host lets Kiboto change (SET-16, D2)
     const summary = topo.summary || {};
     const physical = topo.physical_interfaces || [];
     const bonds = topo.bonds || [];
@@ -1559,7 +1561,7 @@ export async function fetchAndRenderNetworkTopology() {
                 <div>↓ ${rxFmt} / ↑ ${txFmt}</div>
               </td>
               <td class="nw-x-2">
-                <button class="btn-pill-toggle btn-delete-vlan is-danger is-small" data-vlan="${escapeHtml(v.name)}" title="${t('ui.delete_vlan', 'Delete VLAN')}">🗑</button>
+                <button class="btn-pill-toggle btn-delete-vlan is-danger is-small" data-net-edit="vlan" data-vlan="${escapeHtml(v.name)}" title="${t('ui.delete_vlan', 'Delete VLAN')}">🗑</button>
               </td>
             </tr>
           `;
@@ -1659,6 +1661,7 @@ export async function fetchAndRenderNetworkTopology() {
       });
     }
 
+    applyNetCaps(document);
     fetchAndRenderWireguard();
     initNetworkControls();
   } catch (err) {
@@ -1749,6 +1752,10 @@ export async function openNetworkPortModal(ifaceName) {
   } catch (err) {
     showToast(t('toast.failed_to_load_port_config', 'Failed to load port config: {error}', { error: err.message || err }), 'error');
   }
+  applyNetCaps(overlay);
+  const save = document.getElementById('net-port-cfg-save-btn');
+  const wiring = canChange('mtu') || canChange('speed') || canChange('wake_on_lan');
+  if (save) save.textContent = wiring ? t('net.save_port_cfg', 'Save & Apply') : t('net.save_nickname', 'Save nickname');
 }
 
 export function closeNetworkPortModal() {
@@ -1775,7 +1782,7 @@ export async function saveNetworkPortConfig() {
   const autoneg = speedVal === 'auto';
   const speed = autoneg ? null : parseInt(speedVal, 10);
 
-  if (isNaN(mtu) || mtu < 68 || mtu > 9216) {
+  if (canChange('mtu') && (isNaN(mtu) || mtu < 68 || mtu > 9216)) {
     showToast(t('toast.mtu_must_be_an_integer_between', 'MTU must be an integer between 68 and 9216'), 'error');
     return;
   }
@@ -1786,14 +1793,8 @@ export async function saveNetworkPortConfig() {
   }
 
   try {
-    await api.post(`/api/network/port/${encodeURIComponent(_currentPortIface)}`, {
-      alias,
-      mtu,
-      wol_enabled,
-      autoneg,
-      speed,
-      duplex: 'full'
-    });
+    // the nickname always; packet size, speed and Wake-on-LAN only where this host lets Kiboto change them
+    await api.post(`/api/network/port/${encodeURIComponent(_currentPortIface)}`, portPayload({ alias, mtu, wol_enabled, autoneg, speed }));
     showToast(t('net.port_saved_toast', 'Port configuration saved successfully'), 'success');
     closeNetworkPortModal();
     fetchAndRenderNetworkTopology();
@@ -1802,7 +1803,7 @@ export async function saveNetworkPortConfig() {
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
-      saveBtn.textContent = t('net.save_port_cfg', 'Save & Apply');
+      saveBtn.textContent = canChange('mtu') || canChange('speed') || canChange('wake_on_lan') ? t('net.save_port_cfg', 'Save & Apply') : t('net.save_nickname', 'Save nickname');
     }
   }
 }
@@ -1923,6 +1924,7 @@ export async function openHostIpConfigModal() {
   } catch (err) {
     showToast(t('toast.failed_to_load_host_network_config', 'Failed to load host network config: {error}', { error: err.message || err }), 'error');
   }
+  applyNetCaps(document.getElementById('network-host-config-overlay'));
 }
 
 export function closeHostIpConfigModal() {
@@ -2147,6 +2149,7 @@ export async function openBondConfigModal(bondName) {
   } catch (err) {
     showToast(t('toast.failed_to_load_bond_configuration', 'Failed to load bond configuration: {error}', { error: err.message || err }), 'error');
   }
+  applyNetCaps(document.getElementById('network-bond-config-overlay'));
 }
 
 export function closeBondConfigModal() {
@@ -2251,6 +2254,7 @@ export async function openBridgeConfigModal(brName) {
   } catch (err) {
     showToast(t('toast.failed_to_load_bridge_configuration', 'Failed to load bridge configuration: {error}', { error: err.message || err }), 'error');
   }
+  applyNetCaps(document.getElementById('network-bridge-config-overlay'));
 }
 
 export function closeBridgeConfigModal() {

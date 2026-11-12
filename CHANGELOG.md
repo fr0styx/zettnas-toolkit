@@ -620,6 +620,13 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   change it ("Unraid: Settings, Network Settings"). Port nicknames are still saved. The same
   routes will make the changes on Kiboto's own OS images.
 
+#### Changes
+
+- **The network dialogs show what Kiboto may change.** On Unraid and other hosts whose own settings
+  own the network, the address, port, bond and bridge dialogs show their values read-only with one
+  line at the top saying where to change them; the Apply and VLAN buttons are hidden. A port's
+  nickname can still be saved.
+
 ## v2.0.1 (2026-11-11)
 ### 🛡️ A safety pass over every Settings page, passkeys, and the family's apps from anywhere
 

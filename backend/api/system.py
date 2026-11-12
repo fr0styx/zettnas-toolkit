@@ -1833,9 +1833,16 @@ async def system_network_topology():
     link negotiation speeds (10GbE / 2.5GbE / 1GbE / 100M), duplex, MTU,
     bonding, bridges, and Docker bridge IP mappings.
     """
+    from backend.hardware.net.host import current_host
     from backend.hardware.network import get_network_topology
 
-    return await asyncio.to_thread(get_network_topology)
+    def _with_host() -> dict:
+        topo = get_network_topology()
+        # what this host lets Kiboto change, so the page draws fields or read-only rows (SET-16, D2)
+        topo["host"] = current_host().capabilities()
+        return topo
+
+    return await asyncio.to_thread(_with_host)
 
 
 @router.get(

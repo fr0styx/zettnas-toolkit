@@ -11,6 +11,7 @@ import {
 } from '../components/management.js';
 import { api } from '../api.js';
 import * as toast from '../toast.js';
+import { setNetCaps } from '../components/management/net-host.js';
 
 describe('Network Port Configuration & Docker Network Fleet Management', () => {
   let container;
@@ -180,6 +181,8 @@ describe('Network Port Configuration & Docker Network Fleet Management', () => {
   });
 
   it('saves updated port configuration and triggers refresh', async () => {
+    // a host Kiboto manages (its own OS image): the wiring is sent too (SET-16, D2)
+    setNetCaps({ managed: true, where: 'system', can_change: { mtu: true, speed: true, wake_on_lan: true } });
     const mockPortData = {
       status: 'ok',
       interface: { name: 'eth1', mtu: 1500, is_up: true },
