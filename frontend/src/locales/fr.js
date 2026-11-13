@@ -7485,5 +7485,9 @@ export default {
   "net.port_driver": "Pilote",
   "net.port_part_of": "Fait partie de",
   "net.port_traffic": "Reçu / envoyé",
-  "net.port_name_btn": "Nommer ce port"
+  "net.port_name_btn": "Nommer ce port",
+  "net.ts_opts_title": "Options Tailscale",
+  "net.ts_opts_off": "Tailscale n'est pas connecté : ces options ne sont pas disponibles.",
+  "net.ts_opts_connect": "Se connecter dans Hors de chez vous",
+  "net.ts_details_desc2": "Ce NAS sur Tailscale et les appareils que vous pouvez joindre. Ses options Tailscale sont sur la page Réseau."
 };

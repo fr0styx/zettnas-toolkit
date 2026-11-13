@@ -7485,5 +7485,9 @@ export default {
   "net.port_driver": "Treiber",
   "net.port_part_of": "Teil von",
   "net.port_traffic": "Empfangen / gesendet",
-  "net.port_name_btn": "Diesen Anschluss benennen"
+  "net.port_name_btn": "Diesen Anschluss benennen",
+  "net.ts_opts_title": "Tailscale-Optionen",
+  "net.ts_opts_off": "Tailscale ist nicht verbunden, daher sind diese Optionen nicht verfügbar.",
+  "net.ts_opts_connect": "Unter „Unterwegs“ verbinden",
+  "net.ts_details_desc2": "Dieses NAS in Tailscale und die Geräte, die Sie erreichen. Seine Tailscale-Optionen finden Sie auf der Seite Netzwerk."
 };

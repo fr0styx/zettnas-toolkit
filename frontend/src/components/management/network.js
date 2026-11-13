@@ -11,7 +11,7 @@ import { escapeHtml, copyText } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { stateBlock } from '../state-block.js';
 import { showNetDialog, hideNetDialog } from './net-dialog.js';
-import { renderHome, renderPortRows } from './network-home.js';
+import { renderHome, renderPortRows, showTailscaleOptions } from './network-home.js';
 
 // An icon next to translated words: screen readers skip it and the words stay plain (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
@@ -291,6 +291,7 @@ async function loadTailscaleDetails() {
   const mesh = await api.get('/api/network/mesh-vpn').catch(() => null);
   const ts = mesh?.tailscale || null;
   if (box) box.hidden = !(ts && ts.active);
+  showTailscaleOptions(Boolean(ts && ts.active));
   if (!ts || !ts.active) return;
 
   const set = (id, text) => {
@@ -1258,6 +1259,7 @@ export function loadNetworkPage() {
   fetchAndRenderNetworkTopology();
   import('./nas-name.js').then((m) => m.loadNasNameCard()).catch(() => {});
   fetchListeningPorts();
+  fetchAndRenderTailscaleDetails(); // its options are a section of this page (SET-24 n)
 }
 
 export function initNetworkControls() {

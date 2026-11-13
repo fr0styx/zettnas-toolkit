@@ -20,7 +20,7 @@ describe('SET-24 l: Network is one page, Away from home its own', () => {
     expect(sec.querySelector('.mgmt-inner-tab, .mgmt-sticky-subnav')).toBeNull();
     expect(sec.querySelectorAll('.mgmt-tab-pane').length).toBe(1);
     const titles = [...sec.querySelectorAll('.net-page-section h3')].map((h) => h.getAttribute('data-i18n'));
-    expect(titles).toEqual(['net.home_title', 'net.ports_hw_title', 'net.wiring_title', 'net.answers_title']);
+    expect(titles).toEqual(['net.home_title', 'net.ports_hw_title', 'net.ts_opts_title', 'net.wiring_title', 'net.answers_title']);
     for (const s of sec.querySelectorAll('.net-page-section')) {
       expect(document.getElementById(/** @type {string} */ (s.getAttribute('aria-labelledby')))).not.toBeNull();
     }
@@ -32,6 +32,14 @@ describe('SET-24 l: Network is one page, Away from home its own', () => {
     }
     for (const id of ['net-kpi-docker', 'net-kpi-ip', 'network-switch-faceplate', 'network-physical-tbody']) expect(document.getElementById(id), id).toBeNull(); // SET-24 m
     expect(html).not.toContain('mw.virtual_fleet');
+  });
+
+  it('the Tailscale options are on Network now, not in Away from home (SET-24 n)', () => {
+    for (const id of ['ts-subnet-router-toggle', 'ts-exit-node-toggle', 'ts-subnet-routes-input', 'btn-ts-save-routes']) {
+      expect(document.getElementById(id)?.closest('#net-sec-tailscale'), id).not.toBeNull();
+    }
+    expect(document.querySelector('#mgmt-sec-away #tailscale-uses-card')).toBeNull();
+    expect(document.querySelector('#net-ts-off a')?.getAttribute('href')).toBe('#/away');
   });
 
   it('Away from home is its own page, opened from its sidebar entry', () => {

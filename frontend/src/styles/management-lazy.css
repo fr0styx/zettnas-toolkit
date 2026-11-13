@@ -291,6 +291,7 @@
 .net-page-section { margin-top: 26px; }
 .net-page-section:first-child { margin-top: 0; }
 .net-page-section > .account-h { margin-bottom: 10px; }
+.net-link { color: var(--kb-text-accent); font-weight: 600; }
 /* Network: This NAS at home and one row per port (SET-24 m) */
 .net-home { margin-bottom: 14px; }
 .net-home-line { margin: 0 0 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--kb-fs-md, 15px); }

@@ -123,6 +123,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Network says where the NAS answers at home** in one sentence, with Copy, and shows one row per
   network port (Connected or Not connected, and the speed) instead of a drawn switch and a wide table.
 
+#### Changes
+
+- **Tailscale options are on Network**: "Reach other things at home" and "Use your home internet when
+  away" moved there from Away from home.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

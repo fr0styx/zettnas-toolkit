@@ -132,7 +132,7 @@
 #mgmt-pane-network-wireguard .wgd-row-2 { display: flex; gap: 8px; align-items: center; }
 #mgmt-pane-network-wireguard .wgd-row-3 { display: flex; gap: 4px; margin-right: 4px; }
 #mgmt-pane-network-wireguard .wgd-x { margin-bottom: 24px; }
-#mgmt-pane-network-wireguard .wgd-size { width: 14px; height: 14px; }
+:is(#mgmt-pane-network-wireguard, #net-sec-tailscale) .wgd-size { width: 14px; height: 14px; }
 #mgmt-pane-network-wireguard .wgd-col-xs { padding: 12px; font-size: var(--kb-fs-xs); display: flex; flex-direction: column; gap: 8px; }
 #mgmt-pane-network-wireguard .wgd-row-box { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--kb-line-5); padding-bottom: 6px; }
 #mgmt-pane-network-wireguard .wgd-muted { color: var(--muted); }
@@ -140,7 +140,7 @@
 #mgmt-pane-network-wireguard .wgd-xs-semi-accent { font-size: var(--kb-fs-xs); color: var(--kb-text-accent); font-weight: 600; }
 #mgmt-pane-network-wireguard .wgd-row-box-2 { display: flex; justify-content: space-between; border-bottom: 1px solid var(--kb-line-5); padding-bottom: 6px; }
 #mgmt-pane-network-wireguard .wgd-semi-strong { font-weight: 600; color: var(--kb-text-strong); }
-#mgmt-pane-network-wireguard .wgd-row-5 { display: flex; justify-content: space-between; align-items: center; }
+:is(#mgmt-pane-network-wireguard, #net-sec-tailscale) .wgd-row-5 { display: flex; justify-content: space-between; align-items: center; }
 #mgmt-pane-network-wireguard .wgd-row-6 { display: flex; align-items: center; gap: 8px; }
 #mgmt-pane-network-wireguard .wgd-xs { padding: 12px; font-size: var(--kb-fs-xs); }
 #mgmt-pane-network-wireguard .wgd-row-xs-bold-accent { font-weight: 700; color: var(--kb-text-accent); font-size: var(--kb-fs-xs); display: flex; align-items: center; gap: 6px; }
@@ -157,15 +157,15 @@
 #mgmt-pane-network-wireguard .wgd-row-8 { display: flex; align-items: flex-end; padding-bottom: 6px; }
 #mgmt-pane-network-wireguard .wgd-row-xs { display: flex; align-items: center; gap: 6px; font-size: var(--kb-fs-xs); color: var(--text-sub); cursor: pointer; }
 #mgmt-pane-network-wireguard .wgd-row-9 { display: flex; justify-content: flex-end; margin-top: 2px; }
-#mgmt-pane-network-wireguard .wgd-x-2 { flex-direction: column; gap: 10px; }
+:is(#mgmt-pane-network-wireguard, #net-sec-tailscale) .wgd-x-2 { flex-direction: column; gap: 10px; }
 #mgmt-pane-network-wireguard .wgd-xs-3 { color: var(--text-sub); font-size: var(--kb-fs-xs); line-height: 1.4; }
-#mgmt-pane-network-wireguard .wgd-col-box { border-top: 1px solid var(--kb-line-8); padding-top: 8px; display: flex; flex-direction: column; gap: 6px; }
-#mgmt-pane-network-wireguard .wgd-row-xs-bold-strong { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: var(--kb-fs-xs); color: var(--kb-text-strong); cursor: pointer; }
-#mgmt-pane-network-wireguard .wgd-xs-4 { font-size: var(--kb-fs-xs); color: var(--text-sub); line-height: 1.3; }
-#mgmt-pane-network-wireguard .wgd-xs-strong-box-3 { border: 1px solid var(--kb-line-12); background: var(--kb-shade-30); padding: 4px 8px; color: var(--kb-text-strong); border-radius: 5px; font-size: var(--kb-fs-xs); font-family: monospace; }
-#mgmt-pane-network-wireguard .wgd-col-box-2 { border-top: 1px solid var(--kb-line-8); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; }
-#mgmt-pane-network-wireguard .wgd-xs-5 { font-size: var(--kb-fs-xs); padding: 2px 7px; }
-#mgmt-pane-network-wireguard .wgd-bold-accent { color: var(--kb-text-accent); text-decoration: underline; font-weight: 700; }
+:is(#mgmt-pane-network-wireguard, #net-sec-tailscale) .wgd-col-box { border-top: 1px solid var(--kb-line-8); padding-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+:is(#mgmt-pane-network-wireguard, #net-sec-tailscale) .wgd-row-xs-bold-strong { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: var(--kb-fs-xs); color: var(--kb-text-strong); cursor: pointer; }
+:is(#mgmt-pane-network-wireguard, #net-sec-tailscale) .wgd-xs-4 { font-size: var(--kb-fs-xs); color: var(--text-sub); line-height: 1.3; }
+:is(#mgmt-pane-network-wireguard, #net-sec-tailscale) .wgd-xs-strong-box-3 { border: 1px solid var(--kb-line-12); background: var(--kb-shade-30); padding: 4px 8px; color: var(--kb-text-strong); border-radius: 5px; font-size: var(--kb-fs-xs); font-family: monospace; }
+:is(#mgmt-pane-network-wireguard, #net-sec-tailscale) .wgd-col-box-2 { border-top: 1px solid var(--kb-line-8); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+:is(#mgmt-pane-network-wireguard, #net-sec-tailscale) .wgd-xs-5 { font-size: var(--kb-fs-xs); padding: 2px 7px; }
+:is(#mgmt-pane-network-wireguard, #net-sec-tailscale) .wgd-bold-accent { color: var(--kb-text-accent); text-decoration: underline; font-weight: 700; }
 #mgmt-pane-network-wireguard .wgd-xs-6 { font-size: var(--kb-fs-xs); padding: 2px 8px; }
 #mgmt-pane-network-wireguard .wgd-row-bold-strong { display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--kb-text-strong); cursor: pointer; }
 #mgmt-pane-network-wireguard .wgd-xs-7 { font-size: var(--kb-fs-xs); color: var(--text-sub); line-height: 1.4; }

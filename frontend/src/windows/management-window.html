@@ -1296,6 +1296,45 @@
                 <ul id="net-port-rows" class="net-port-rows" aria-labelledby="net-ports-hw-title"></ul>
                 </section>
 
+                <section id="net-sec-tailscale" class="net-page-section" aria-labelledby="net-ts-title">
+                  <h3 class="account-h" id="net-ts-title" data-i18n="net.ts_opts_title">Tailscale options</h3>
+                  <p class="mgmt-card-intro-desc" id="net-ts-off"><span data-i18n="net.ts_opts_off">Tailscale is not connected, so these options are not available.</span> <a class="net-link" href="#/away" data-i18n="net.ts_opts_connect">Connect in Away from home</a></p>
+                  <div id="net-ts-opts" hidden>
+                  <div class="network-card" id="tailscale-uses-card">
+                    <div class="wgd-x-2">
+                        <div class="wgd-col-box">
+                          <div class="wgd-row-5">
+                            <label class="wgd-row-xs-bold-strong">
+                              <input type="checkbox" id="ts-subnet-router-toggle" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
+                              <span data-i18n="net.ts_reach_home">Reach other things at home</span>
+                            </label>
+                            <button class="btn-pill-toggle is-small" id="btn-ts-save-routes" data-i18n="net.ts_save_networks">Save networks</button>
+                          </div>
+                          <div class="wgd-xs-4" data-i18n="net.ts_reach_home_desc">
+                            Away from home, your phone or laptop can open other devices on your home network (a printer, a camera) through this NAS.
+                          </div>
+                          <input type="text" id="ts-subnet-routes-input" class="tz-select-input wgd-xs-strong-box-3" placeholder="e.g. 192.168.1.0/24" aria-label="e.g. 192.168.1.0/24" />
+                        </div>
+                        <div class="wgd-col-box-2">
+                          <div class="wgd-row-5">
+                            <label class="wgd-row-xs-bold-strong">
+                              <input type="checkbox" id="ts-exit-node-toggle" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
+                              <span data-i18n="net.ts_home_internet">Use your home internet when away</span>
+                            </label>
+                            <span class="mgmt-app-pill wgd-xs-5" id="ts-exit-node-pill" data-sample>—</span>
+                          </div>
+                          <div class="wgd-xs-4" data-i18n="net.ts_home_internet_desc">
+                            Your phone or laptop can send its internet traffic through this NAS, for example on hotel Wi-Fi.
+                          </div>
+                          <div id="ts-exit-node-approval-hint" style="display:none; font-size:var(--kb-fs-xs); padding:6px 10px; border-radius:6px; border:1px solid rgba(245,158,11,0.25); background:rgba(245,158,11,0.08); color:var(--kb-text-warn); line-height:1.4; margin-top:4px;">
+                            <span aria-hidden="true">⚠️</span> <span data-i18n="mw.exit_node_approve">Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your</span> <a class="wgd-bold-accent" href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer"><span data-i18n="mw.tailscale_admin_console">Tailscale Admin Console</span> <span aria-hidden="true">↗</span></a> <span data-i18n="mw.exit_node_steps">(Machines → Edit route settings → Use as exit node).</span>
+                          </div>
+                        </div>
+                    </div>
+                  </div>
+                  </div>
+                </section>
+
                 <section id="net-sec-wiring" class="net-page-section" aria-labelledby="net-wiring-title">
                   <h3 class="account-h" id="net-wiring-title" data-i18n="net.wiring_title">Wiring</h3>
                   <p class="mgmt-card-intro-desc" data-i18n="net.wiring_desc">Bonds, bridges and VLANs, as the NAS has them.</p>
@@ -1400,7 +1439,7 @@
                       <svg class="ic"><use href="#i-shield"/></svg>
                       <span data-i18n="net.ts_details_title">Tailscale details</span>
                     </div>
-                    <div class="mgmt-card-intro-desc" data-i18n="net.ts_details_desc">This NAS on your private network, two extra uses, and the devices you can reach.</div>
+                    <div class="mgmt-card-intro-desc" data-i18n="net.ts_details_desc2">This NAS on Tailscale and the devices you can reach. Its Tailscale options are on the Network page.</div>
                   </div>
                   <div class="wgd-row-2">
                     <button class="btn-pill-toggle" id="btn-refresh-wireguard" title="Refresh" data-i18n-title="vm.refresh"><span aria-hidden="true">🔄</span> <span data-i18n="vm.refresh">Refresh</span></button>
@@ -1440,41 +1479,6 @@
                           <button class="btn-pill-toggle is-small" id="btn-ts-reauth" style="display: none;" title="Re-authenticate node key" data-i18n-title="ui.re_authenticate_node_key"><span aria-hidden="true">⚡</span> <span data-i18n="net.ts_sign_in_again">Sign in again</span></button>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                  <div class="network-card" id="tailscale-uses-card">
-                    <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic wgd-size"><use href="#i-key"/></svg> <span data-i18n="net.ts_extra_uses">Two extra uses</span></div>
-                    </div>
-                    <div class="wgd-x-2">
-                        <div class="wgd-col-box">
-                          <div class="wgd-row-5">
-                            <label class="wgd-row-xs-bold-strong">
-                              <input type="checkbox" id="ts-subnet-router-toggle" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
-                              <span data-i18n="net.ts_reach_home">Reach other things at home</span>
-                            </label>
-                            <button class="btn-pill-toggle is-small" id="btn-ts-save-routes" data-i18n="net.ts_save_networks">Save networks</button>
-                          </div>
-                          <div class="wgd-xs-4" data-i18n="net.ts_reach_home_desc">
-                            Away from home, your phone or laptop can open other devices on your home network (a printer, a camera) through this NAS.
-                          </div>
-                          <input type="text" id="ts-subnet-routes-input" class="tz-select-input wgd-xs-strong-box-3" placeholder="e.g. 192.168.1.0/24" aria-label="e.g. 192.168.1.0/24" />
-                        </div>
-                        <div class="wgd-col-box-2">
-                          <div class="wgd-row-5">
-                            <label class="wgd-row-xs-bold-strong">
-                              <input type="checkbox" id="ts-exit-node-toggle" style="accent-color:var(--accent-cyan-hi, #4fd8c4);" />
-                              <span data-i18n="net.ts_home_internet">Use your home internet when away</span>
-                            </label>
-                            <span class="mgmt-app-pill wgd-xs-5" id="ts-exit-node-pill" data-sample>—</span>
-                          </div>
-                          <div class="wgd-xs-4" data-i18n="net.ts_home_internet_desc">
-                            Your phone or laptop can send its internet traffic through this NAS, for example on hotel Wi-Fi.
-                          </div>
-                          <div id="ts-exit-node-approval-hint" style="display:none; font-size:var(--kb-fs-xs); padding:6px 10px; border-radius:6px; border:1px solid rgba(245,158,11,0.25); background:rgba(245,158,11,0.08); color:var(--kb-text-warn); line-height:1.4; margin-top:4px;">
-                            <span aria-hidden="true">⚠️</span> <span data-i18n="mw.exit_node_approve">Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your</span> <a class="wgd-bold-accent" href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer"><span data-i18n="mw.tailscale_admin_console">Tailscale Admin Console</span> <span aria-hidden="true">↗</span></a> <span data-i18n="mw.exit_node_steps">(Machines → Edit route settings → Use as exit node).</span>
-                          </div>
-                        </div>
                     </div>
                   </div>
                   </div>

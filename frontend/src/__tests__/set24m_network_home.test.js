@@ -5,7 +5,7 @@ vi.mock('../toast.js', () => ({ showToast, showConfirmToast: vi.fn() }));
 const copyText = vi.fn(() => Promise.resolve());
 vi.mock('../utils.js', async (orig) => ({ ...(await orig()), copyText }));
 
-const { homeHtml, portRowsHtml, renderHome, renderPortRows } = await import('../components/management/network-home.js');
+const { homeHtml, portRowsHtml, renderHome, renderPortRows, showTailscaleOptions } = await import('../components/management/network-home.js');
 
 describe('SET-24 m: This NAS at home and the port rows', () => {
   beforeEach(() => {
@@ -54,5 +54,17 @@ describe('SET-24 m: This NAS at home and the port rows', () => {
   it('a port named by its owner shows that name with the port beside it', () => {
     expect(portRowsHtml([{ name: 'eth2', alias: 'To the TV', is_up: false }])).toContain('To the TV (eth2)');
     expect(portRowsHtml([])).toContain('No network ports found.');
+  });
+
+  it('Tailscale options show while Tailscale is connected, otherwise the way to connect it (SET-24 n)', () => {
+    document.body.innerHTML = '<p id="net-ts-off"></p><div id="net-ts-opts" hidden></div>';
+    showTailscaleOptions(true);
+    expect(document.getElementById('net-ts-opts')?.hidden).toBe(false);
+    expect(document.getElementById('net-ts-off')?.hidden).toBe(true);
+    showTailscaleOptions(false);
+    expect(document.getElementById('net-ts-opts')?.hidden).toBe(true);
+    expect(document.getElementById('net-ts-off')?.hidden).toBe(false);
+    document.body.innerHTML = '';
+    expect(() => showTailscaleOptions(true)).not.toThrow();
   });
 });

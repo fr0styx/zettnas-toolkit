@@ -62,6 +62,15 @@ export function portRowsHtml(physical = []) {
     .join('');
 }
 
+/** Network's Tailscale options show while Tailscale is connected; otherwise one sentence with a
+ *  link to Away from home (SET-24 n: they were in Away from home's Tailscale details). */
+export function showTailscaleOptions(on, doc = document) {
+  const opts = doc.getElementById('net-ts-opts');
+  const off = doc.getElementById('net-ts-off');
+  if (opts) opts.hidden = !on;
+  if (off) off.hidden = on;
+}
+
 /** Fills This NAS at home; Copy copies the address. */
 export function renderHome(box, summary) {
   if (!box) return;

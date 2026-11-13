@@ -7485,5 +7485,9 @@ export default {
   "net.port_driver": "驱动",
   "net.port_part_of": "属于",
   "net.port_traffic": "接收 / 发送",
-  "net.port_name_btn": "为此端口命名"
+  "net.port_name_btn": "为此端口命名",
+  "net.ts_opts_title": "Tailscale 选项",
+  "net.ts_opts_off": "Tailscale 未连接，因此这些选项不可用。",
+  "net.ts_opts_connect": "在“外出访问”中连接",
+  "net.ts_details_desc2": "这台 NAS 在 Tailscale 上的信息，以及你能访问的设备。它的 Tailscale 选项在“网络”页面。"
 };
