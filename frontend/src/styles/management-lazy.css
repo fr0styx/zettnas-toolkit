@@ -291,6 +291,23 @@
 .net-page-section { margin-top: 26px; }
 .net-page-section:first-child { margin-top: 0; }
 .net-page-section > .account-h { margin-bottom: 10px; }
+/* Network: This NAS at home and one row per port (SET-24 m) */
+.net-home { margin-bottom: 14px; }
+.net-home-line { margin: 0 0 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--kb-fs-md, 15px); }
+.net-home-hint { margin: 0 0 8px; font-size: var(--kb-fs-xs); color: var(--muted); }
+:is(.net-home-details, .net-port-details) > summary { cursor: pointer; font-size: var(--kb-fs-xs); color: var(--muted); }
+.net-dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 8px 0; font-size: var(--kb-fs-xs); }
+.net-dl dt { color: var(--muted); }
+.net-dl dd { margin: 0; font-family: var(--font-mono); overflow-wrap: anywhere; }
+.net-port-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.net-port-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 6px 16px; padding: 10px 14px; border: 1px solid var(--kb-line-5); border-radius: 12px; }
+.net-port-name { font-weight: 700; overflow-wrap: anywhere; }
+.net-port-state { display: inline-flex; align-items: center; gap: 6px; }
+.net-port-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.net-port-row.is-up .net-port-dot { background: var(--ok2, #3bf58b); }
+.net-port-speed { color: var(--muted); font-variant-numeric: tabular-nums; }
+.net-port-details { grid-column: 1 / -1; }
+.net-port-empty { color: var(--muted); font-size: var(--kb-fs-xs); }
 .account-h { margin: 0; font-size: var(--kb-fs-md, 15px); color: var(--c-text); }
 
 /* SET-24: Away from home's cards */

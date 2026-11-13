@@ -1,9 +1,9 @@
 {
   "important": 3352,
   "buttonClasses": 75,
-  "inlineStyles": 1322,
+  "inlineStyles": 1316,
   "emojiIcons": 2,
-  "colours": 3830,
+  "colours": 3821,
   "primitiveUses": 4,
   "importantPerFile": {
     "frontend/index.html": 64,
@@ -72,7 +72,7 @@
     "frontend/src/components/management/ai.js": 306,
     "frontend/src/components/management/disks.js": 1,
     "frontend/src/components/management/docker.js": 133,
-    "frontend/src/components/management/network.js": 25,
+    "frontend/src/components/management/network.js": 17,
     "frontend/src/components/management/notifications.js": 8,
     "frontend/src/components/management/security.js": 25,
     "frontend/src/components/management/system.js": 23,
@@ -156,11 +156,11 @@
     "frontend/src/styles/77-mc-lists.css": 8,
     "frontend/src/styles/78-storage-analyzer.css": 12,
     "frontend/src/styles/80-public-apps.css": 1,
-    "frontend/src/styles/management-lazy.css": 4,
+    "frontend/src/styles/management-lazy.css": 5,
     "frontend/src/toast.js": 31,
     "frontend/src/utils.js": 1,
     "frontend/src/vm-console-direct.css": 2,
     "frontend/src/windows/drawer.html": 116,
-    "frontend/src/windows/management-window.html": 439
+    "frontend/src/windows/management-window.html": 437
   }
 }

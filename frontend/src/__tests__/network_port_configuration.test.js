@@ -19,17 +19,8 @@ describe('Network Port Configuration & Docker Network Fleet Management', () => {
   beforeEach(() => {
     container = document.createElement('div');
     container.innerHTML = `
-      <div id="net-kpi-ip">--</div>
-      <div id="net-kpi-iface">--</div>
-      <div id="net-kpi-gw">--</div>
-      <div id="net-kpi-dns">--</div>
-      <div id="net-kpi-speed">--</div>
-      <div id="net-kpi-carrier">--</div>
-      <div id="net-kpi-docker">--</div>
-      <div id="net-kpi-containers">--</div>
-      <div id="net-active-ports-badge">--</div>
-      <div id="network-switch-faceplate"></div>
-      <table><tbody id="network-physical-tbody"></tbody></table>
+      <div id="net-home"></div>
+      <ul id="net-port-rows"></ul>
       <div id="network-bridges-container"></div>
       <div id="network-docker-container"></div>
       <button id="btn-create-docker-net"></button>
@@ -124,23 +115,20 @@ describe('Network Port Configuration & Docker Network Fleet Management', () => {
     ],
   };
 
-  it('renders port alias tag and clickable jack on faceplate and inventory table', async () => {
+  it('a port row shows its name and opens "Name this port" (SET-24 m)', async () => {
     vi.spyOn(api, 'get').mockResolvedValueOnce(mockTopology);
 
     await fetchAndRenderNetworkTopology();
 
-    const faceplate = document.getElementById('network-switch-faceplate');
-    const jack = faceplate.querySelector('.switch-port-jack');
-    expect(jack).toBeTruthy();
-    expect(jack.classList.contains('clickable')).toBe(true);
-    expect(jack.dataset.iface).toBe('eth1');
-    expect(jack.textContent).toContain('Direct 10G to Workstation');
-
-    const tbody = document.getElementById('network-physical-tbody');
-    expect(tbody.textContent).toContain('Direct 10G to Workstation');
-    const configBtn = tbody.querySelector('.btn-config-port');
-    expect(configBtn).toBeTruthy();
-    expect(configBtn.dataset.iface).toBe('eth1');
+    const row = document.querySelector('.net-port-row[data-iface="eth1"]');
+    expect(row).toBeTruthy();
+    expect(row.querySelector('.net-port-name').textContent).toBe('Direct 10G to Workstation (eth1)');
+    const nameBtn = row.querySelector('[data-name-port="eth1"]');
+    expect(nameBtn).toBeTruthy();
+    const get = vi.spyOn(api, 'get').mockResolvedValue({ status: 'ok', interface: { name: 'eth1' }, alias: '', mtu: 1500 });
+    get.mockClear();
+    nameBtn.click();
+    await vi.waitFor(() => expect(get.mock.calls.some(([url]) => String(url).includes('eth1'))).toBe(true));
   });
 
   it('opens port configuration modal and populates port settings and hardware attributes', async () => {

@@ -118,6 +118,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Network is one page**: This NAS at home, Network ports, Wiring and What answers on this NAS, one
   under the other, with no tabs. **Away from home** is a page of its own in the sidebar.
 
+#### Changes
+
+- **Network says where the NAS answers at home** in one sentence, with Copy, and shows one row per
+  network port (Connected or Not connected, and the speed) instead of a drawn switch and a wide table.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

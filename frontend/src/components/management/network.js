@@ -11,10 +11,11 @@ import { escapeHtml, copyText } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { stateBlock } from '../state-block.js';
 import { showNetDialog, hideNetDialog } from './net-dialog.js';
+import { renderHome, renderPortRows } from './network-home.js';
 
 // An icon next to translated words: screen readers skip it and the words stay plain (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
-import { formatBytes as formatSize, formatDateTime, formatFixed, formatNumber } from '../../format.js';
+import { formatBytes as formatSize, formatDateTime, formatFixed } from '../../format.js';
 import { setIconLabel } from '../../ui/primitives.js';
 
 export async function fetchAndRenderCopyHistory() {
@@ -391,21 +392,10 @@ function bindTailscaleDetails() {
 export const fetchAndRenderNetworkTopology = sharedLoad(loadNetworkTopology);
 
 async function loadNetworkTopology() {
-  const switchFaceplate = document.getElementById('network-switch-faceplate');
-  const physicalTbody = document.getElementById('network-physical-tbody');
+  const homeBox = document.getElementById('net-home');
+  const portRows = document.getElementById('net-port-rows');
   const bridgesContainer = document.getElementById('network-bridges-container');
   const dockerContainer = document.getElementById('network-docker-container');
-  const activeBadge = document.getElementById('net-active-ports-badge');
-
-  // KPI elements
-  const kpiIp = document.getElementById('net-kpi-ip');
-  const kpiIface = document.getElementById('net-kpi-iface');
-  const kpiGw = document.getElementById('net-kpi-gw');
-  const kpiDns = document.getElementById('net-kpi-dns');
-  const kpiSpeed = document.getElementById('net-kpi-speed');
-  const kpiCarrier = document.getElementById('net-kpi-carrier');
-  const kpiDocker = document.getElementById('net-kpi-docker');
-  const kpiContainers = document.getElementById('net-kpi-containers');
 
   const fmtBytes = (bytes) => formatSize(bytes);
 
@@ -423,135 +413,9 @@ async function loadNetworkTopology() {
     const bridges = topo.bridges || [];
     const dockerNets = topo.docker_networks || [];
 
-    // 1. Update KPIs
-    if (kpiIp) kpiIp.textContent = summary.primary_ip || '--';
-    if (kpiIface) kpiIface.textContent = t('net.via', 'Via {iface}', { iface: summary.primary_interface || 'eth0' });
-    if (kpiGw) kpiGw.textContent = summary.default_gateway || '--';
-    if (kpiDns) kpiDns.textContent = `DNS: ${(summary.dns_servers || []).join(', ') || 'Auto'}`;
-    if (kpiSpeed) kpiSpeed.textContent = summary.max_speed || '--';
-    if (kpiCarrier) kpiCarrier.textContent = t('net.ports_online', '{active} of {total, plural, one {# port} other {# ports}} online', { active: summary.active_physical || 0, total: summary.total_physical || 0 });
-    if (kpiDocker) kpiDocker.textContent = t('net.networks_count', '{count, plural, one {# network} other {# networks}}', { count: summary.docker_networks_count || 0 });
-    if (kpiContainers) kpiContainers.textContent = t('net.containers_attached', '{count, plural, one {# container attached} other {# containers attached}}', { count: summary.docker_containers_count || 0 });
-    if (activeBadge) activeBadge.textContent = t('net.active_count', '{count} active', { count: summary.active_physical || 0 });
-
-
-    // 2. Render Hardware Switch Ports (Front-Panel Faceplate)
-    if (switchFaceplate) {
-      if (physical.length === 0) {
-        switchFaceplate.innerHTML = `<div class="nw-xs-muted-3">${t('net.no_nics', 'No network ports found.')}</div>`;
-      } else {
-        switchFaceplate.innerHTML = physical.map((nic) => {
-          const isUp = Boolean(nic.is_up);
-          const is10G = (nic.speed_mbps || 0) >= 2500;
-          const speedPillClass = isUp ? (is10G ? 'speed-10g' : '') : 'speed-down';
-          const linkLedClass = isUp ? 'led-link-on' : '';
-          const speedLedClass = isUp ? (is10G ? 'led-speed-10g' : 'led-speed-gig') : '';
-
-          return `
-            <div class="switch-port-jack ${isUp ? 'is-active' : ''} clickable" data-iface="${escapeHtml(nic.name)}" title="${escapeHtml(t('net.configure', 'Set up {name}', { name: nic.name }))}">
-              <div class="switch-port-top">
-                <div class="switch-port-id">
-                  <svg style="width:12px; height:12px; fill:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #6c8084)'};"><circle cx="6" cy="6" r="4"/></svg>
-                  ${escapeHtml(nic.name.toUpperCase())}
-                  ${nic.alias ? `<span class="switch-port-alias-tag" title="${escapeHtml(nic.alias)}">${escapeHtml(nic.alias)}</span>` : ''}
-                </div>
-                <div class="switch-port-leds">
-                  <div class="switch-led-group">
-                    <span class="switch-led-lbl">LNK</span>
-                    <span class="switch-led-dot ${linkLedClass}"></span>
-                  </div>
-                  <div class="switch-led-group">
-                    <span class="switch-led-lbl">ACT</span>
-                    <span class="switch-led-dot ${speedLedClass}"></span>
-                  </div>
-                </div>
-              </div>
-              <div class="switch-port-socket">
-                <svg viewBox="0 0 24 24">
-                  <rect x="3" y="5" width="18" height="14" rx="2" />
-                  <path d="M7 15v-4h10v4M9 11V8h6v3" />
-                </svg>
-              </div>
-              <div class="switch-port-badge-row">
-                <span class="switch-speed-pill ${speedPillClass}">${escapeHtml(nic.speed_human || (isUp ? t('net.connected', 'Connected') : t('net.disconnected', 'Disconnected')))}</span>
-                <span class="nw-xs-muted-2">${nic.duplex === 'full' ? 'Full Duplex' : nic.duplex}</span>
-              </div>
-              <div class="switch-port-meta">
-                <div>MAC: ${escapeHtml(nic.mac || 'N/A')}</div>
-                ${nic.master ? `<div class="nw-brand">${escapeHtml(t('net.master', 'Master: {name}', { name: nic.master }))}</div>` : ''}
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        switchFaceplate.querySelectorAll('.switch-port-jack.clickable').forEach((jack) => {
-          jack.addEventListener('click', () => {
-            const iface = jack.dataset.iface;
-            if (iface) openNetworkPortModal(iface);
-          });
-        });
-      }
-    }
-
-    // 3. Render Physical Interfaces Detailed Table
-    if (physicalTbody) {
-      if (physical.length === 0) {
-        physicalTbody.innerHTML = `<tr><td class="nw-muted-center" colspan="10">${t('net.no_nics', 'No network ports found.')}</td></tr>`;
-      } else {
-        physicalTbody.innerHTML = physical.map((nic) => {
-          const isUp = Boolean(nic.is_up);
-          const rxFmt = fmtBytes(nic.rx_bytes);
-          const txFmt = fmtBytes(nic.tx_bytes);
-
-          return `
-            <tr>
-              <td>
-                <div class="nw-row-bold-mono">
-                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #6c8084)'};"></span>
-                  ${escapeHtml(nic.name)}
-                </div>
-              </td>
-              <td>
-                ${nic.alias ? `<span class="switch-port-alias-tag" title="${escapeHtml(nic.alias)}">${escapeHtml(nic.alias)}</span>` : '<span class="nw-xs-muted">--</span>'}
-              </td>
-              <td>
-                <span class="switch-speed-pill ${isUp ? 'speed-10g' : 'speed-down'}">
-                  ${isUp ? 'UP / CARRIER' : 'DOWN'}
-                </span>
-              </td>
-              <td>
-                <span style="font-weight:600; color:${isUp ? '#f5f9f9' : 'var(--muted)'};">${escapeHtml(nic.speed_human)}</span>
-                <span class="nw-xs-muted-4">(${escapeHtml(nic.duplex)})</span>
-              </td>
-              <td class="nw-xs-mono">${escapeHtml(nic.mac || '--')}</td>
-              <td class="nw-mono-2">${escapeHtml(String(nic.mtu || 1500))}</td>
-              <td>
-                ${nic.master ? `<span class="network-member-pill" style="color:var(--lt-ink-brand, var(--accent-cyan)); border-color:rgba(79,216,196,0.3);">${escapeHtml(nic.master)}</span>` : `<span class="nw-muted">${t('net.standalone', 'Standalone')}</span>`}
-              </td>
-              <td class="nw-xs-mono">
-                <div>↓ ${rxFmt} <span class="nw-xs-muted-2">(${formatNumber(nic.rx_packets || 0)} pkts)</span></div>
-                <div>↑ ${txFmt} <span class="nw-xs-muted-2">(${formatNumber(nic.tx_packets || 0)} pkts)</span></div>
-              </td>
-              <td class="nw-xs-muted-2">
-                <div>${escapeHtml(nic.driver || t('net.generic', 'Generic'))}</div>
-                <div class="nw-xs-mono">${escapeHtml(nic.pci_slot || '--')}</div>
-              </td>
-              <td class="nw-x-2">
-                <button class="btn-pill-toggle btn-config-port is-small" data-iface="${escapeHtml(nic.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border-color: rgba(79,216,196,0.3);">${t('net.configure_port', 'Configure')}</button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-
-        physicalTbody.querySelectorAll('.btn-config-port').forEach((btn) => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const iface = btn.dataset.iface;
-            if (iface) openNetworkPortModal(iface);
-          });
-        });
-      }
-    }
+    // 1. This NAS at home, 2. one row per port (SET-24 m)
+    renderHome(homeBox, summary);
+    renderPortRows(portRows, physical, openNetworkPortModal);
 
     // 4. Render Virtual Switches, Bonds & Bridges
     if (bridgesContainer) {
@@ -766,28 +630,22 @@ async function loadNetworkTopology() {
   }
 }
 
-const TOPO_PARTS = ['network-switch-faceplate', 'network-bridges-container', 'network-docker-container'];
-const TOPO_TILES = ['net-kpi-ip', 'net-kpi-gw', 'net-kpi-speed'];
+const TOPO_PARTS = ['net-port-rows', 'network-bridges-container', 'network-docker-container'];
 
 /** Every part of the Network page says the layout could not be read, with Try again: only the
  *  table did, while the tiles kept "--" and the other parts "Loading…" (network report F1). */
 export function showTopologyFailed(error) {
-  const tbody = document.getElementById('network-physical-tbody');
-  if (tbody) {
-    const cell = document.createElement('td');
-    cell.className = 'nw-crit-center';
-    cell.colSpan = 10;
-    cell.textContent = t('net.topo_failed', 'Could not load the network layout: {error}', { error });
-    const row = document.createElement('tr');
-    row.append(cell);
-    tbody.replaceChildren(row);
-  }
+  const home = document.getElementById('net-home');
+  if (home) home.textContent = t('net.topo_failed', 'Could not load the network layout: {error}', { error });
   for (const id of TOPO_PARTS) {
-    document.getElementById(id)?.replaceChildren(stateBlock('failed', { detail: error, retry: () => fetchAndRenderNetworkTopology() }));
-  }
-  for (const id of TOPO_TILES) {
-    const tile = document.getElementById(id);
-    if (tile) tile.textContent = t('net.unknown', 'Unknown');
+    const part = document.getElementById(id);
+    if (!part) continue;
+    const block = stateBlock('failed', { detail: error, retry: () => fetchAndRenderNetworkTopology() });
+    if (part.tagName === 'UL') {
+      const item = document.createElement('li'); // a list holds only items
+      item.append(block);
+      part.replaceChildren(item);
+    } else part.replaceChildren(block);
   }
 }
 
@@ -1412,12 +1270,6 @@ export function initNetworkControls() {
       e.stopPropagation();
       openHostIpConfigModal();
     });
-  }
-
-  const kpiIpCard = document.getElementById('net-kpi-ip-card');
-  if (kpiIpCard && !kpiIpCard.dataset.bound) {
-    kpiIpCard.dataset.bound = '1';
-    kpiIpCard.addEventListener('click', () => openHostIpConfigModal());
   }
 
   const hostIpClose = document.getElementById('net-host-cfg-close-btn');

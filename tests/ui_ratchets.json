@@ -242,8 +242,8 @@
  "frontend/src/components/management/network.js": {
   "buttons": 0,
   "globals": 0,
-  "styles": 16,
-  "templates": 8
+  "styles": 11,
+  "templates": 6
  },
  "frontend/src/components/management/overview.js": {
   "buttons": 0,
@@ -512,7 +512,7 @@
  "frontend/src/windows/management-window.html": {
   "buttons": 6,
   "globals": 0,
-  "styles": 479,
+  "styles": 478,
   "templates": 0
  }
 }

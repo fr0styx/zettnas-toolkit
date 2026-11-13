@@ -1263,27 +1263,7 @@
               <div class="mgmt-detail-body">
                 <section id="mgmt-pane-network-services" class="net-page-section" aria-labelledby="net-home-title">
                   <h3 class="account-h" id="net-home-title" data-i18n="net.home_title">This NAS at home</h3>
-                <!-- 4 KPI Metrics Header -->
-                <div class="network-kpi-grid">
-                  <div class="network-kpi-card" id="net-kpi-ip-card">
-                    <div class="net-row-3">
-                      <div class="network-kpi-label" data-i18n="mw.primary_host_ip">Primary Host IP</div>
-                      <button class="btn-pill-toggle is-small" id="btn-open-host-ip-modal" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border-color: rgba(79, 216, 196, 0.35); text-transform: none; margin-top: -2px;"><span aria-hidden="true">⚙️</span> <span data-i18n="net.host_cfg_btn">Configure</span></button>
-                    </div>
-                    <div class="network-kpi-val" id="net-kpi-ip">--</div>
-                    <div class="network-kpi-sub" id="net-kpi-iface">--</div>
-                  </div>
-                  <div class="network-kpi-card">
-                    <div class="network-kpi-label" data-i18n="mw.default_gateway">Default Gateway</div>
-                    <div class="network-kpi-val" id="net-kpi-gw">--</div>
-                    <div class="network-kpi-sub" id="net-kpi-dns">DNS: --</div>
-                  </div>
-                  <div class="network-kpi-card">
-                    <div class="network-kpi-label" data-i18n="mw.max_link_speed">Max Link Speed</div>
-                    <div class="network-kpi-val text-emerald" id="net-kpi-speed">--</div>
-                    <div class="network-kpi-sub" id="net-kpi-carrier">--</div>
-                  </div>
-                </div>
+                <div id="net-home" class="net-home" aria-live="polite"></div>
                 <div class="nsv-grid" id="network-services-grid">
                   <!-- Find this NAS by name (NFEAT-8) -->
                   <div class="nsv-col-box" id="nas-name-card">
@@ -1291,11 +1271,11 @@
                       <div class="nsv-row-4">
                         <span class="nsv-fs18" aria-hidden="true">🔎</span>
                         <div>
-                          <div class="nsv-fs13-bold-strong" data-i18n="nas_name.title">Find this NAS by name</div>
+                          <div class="nsv-fs13-bold-strong" id="nas-name-title" data-i18n="nas_name.title">Find this NAS by name</div>
                           <div class="nsv-xs-muted" id="nas-name-status" aria-live="polite">…</div>
                         </div>
                       </div>
-                      <button type="button" class="btn-pill-toggle" id="nas-name-toggle" aria-pressed="false" aria-labelledby="nas-name-title-label" data-i18n="nas_name.btn_off">Off</button>
+                      <button type="button" class="btn-pill-toggle" id="nas-name-toggle" aria-pressed="false" aria-labelledby="nas-name-title nas-name-toggle" aria-describedby="nas-name-title-label" data-i18n="nas_name.btn_off">Off</button>
                     </div>
                     <div class="nsv-xs-muted-2" id="nas-name-title-label" data-i18n="nas_name.help">Computers and phones on this network reach the NAS by name: in a browser, in Finder and as \\name.local in Windows.</div>
                     <div class="nsv-row-4">
@@ -1313,42 +1293,7 @@
 
                 <section id="net-sec-ports" class="net-page-section" aria-labelledby="net-ports-hw-title">
                   <h3 class="account-h" id="net-ports-hw-title" data-i18n="net.ports_hw_title">Network ports</h3>
-                <!-- Visual Front-Panel Switch Jack Matrix -->
-                <div class="network-section-header">
-                  <span class="network-section-title" data-i18n="mw.hardware_switch_ports_physical_jacks">HARDWARE SWITCH PORTS (PHYSICAL JACKS)</span>
-                  <span class="network-section-badge" id="net-active-ports-badge" data-sample>—</span>
-                </div>
-                <div class="network-switch-chassis" id="network-switch-chassis">
-                  <div class="network-switch-faceplate" id="network-switch-faceplate">
-                    <!-- Populated dynamically with RJ45/SFP+ jacks and live status LEDs -->
-                  </div>
-                </div>
-
-                <!-- Physical Interfaces Detailed Table -->
-                <div class="network-section-header net-x">
-                  <span class="network-section-title" data-i18n="mw.physical_interfaces_inventory">PHYSICAL INTERFACES INVENTORY</span>
-                </div>
-                <div class="network-table-wrap" tabindex="0">
-                  <table class="copy-history-table">
-                    <thead>
-                      <tr>
-                        <th data-i18n="mw.interface">Interface</th>
-                        <th data-i18n="mw.alias_role">Alias / Role</th>
-                        <th data-i18n="mw.carrier_and_state">Carrier & State</th>
-                        <th data-i18n="mw.speed_duplex">Speed / Duplex</th>
-                        <th data-i18n="mw.mac_address">MAC Address</th>
-                        <th>MTU</th>
-                        <th data-i18n="mw.master_bond">Master / Bond</th>
-                        <th data-i18n="mw.cumulative_rx_tx">Cumulative Rx / Tx</th>
-                        <th data-i18n="mw.hardware_driver">Hardware / Driver</th>
-                        <th class="net-x-2" data-i18n="mw.action">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody id="network-physical-tbody">
-                      <tr><td class="net-muted" colspan="10" data-i18n="mw.loading_network_interfaces">Loading network interfaces...</td></tr>
-                    </tbody>
-                  </table>
-                </div>
+                <ul id="net-port-rows" class="net-port-rows" aria-labelledby="net-ports-hw-title"></ul>
                 </section>
 
                 <section id="net-sec-wiring" class="net-page-section" aria-labelledby="net-wiring-title">

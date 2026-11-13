@@ -55,10 +55,7 @@ describe('network settings states (NUX-20)', () => {
 describe('network layout with missing parts (NUX-20)', () => {
   beforeEach(() => {
     document.body.innerHTML = `
-      <div id="net-kpi-ip"></div><div id="net-kpi-iface"></div><div id="net-kpi-gw"></div><div id="net-kpi-dns"></div>
-      <div id="net-kpi-speed"></div><div id="net-kpi-carrier"></div><div id="net-kpi-docker"></div><div id="net-kpi-containers"></div>
-      <div id="net-active-ports-badge"></div><div id="network-switch-faceplate"></div>
-      <table><tbody id="network-physical-tbody"></tbody></table>
+      <div id="net-home"></div><ul id="net-port-rows"></ul>
       <div id="network-bridges-container"></div><div id="network-docker-container"></div>
       <table><tbody id="network-vlan-tbody"></tbody></table>`;
   });
@@ -67,13 +64,8 @@ describe('network layout with missing parts (NUX-20)', () => {
   it('falls back to plain words when the host says little', async () => {
     vi.spyOn(api, 'get').mockResolvedValue({ status: 'ok', summary: {}, physical_interfaces: [], bonds: [], bridges: [], docker_networks: [], vlans: [] });
     await fetchAndRenderNetworkTopology();
-    expect(byId('net-kpi-iface').textContent).toBe('Via eth0');
-    expect(byId('net-kpi-carrier').textContent).toBe('0 of 0 ports online');
-    expect(byId('net-kpi-docker').textContent).toBe('0 networks');
-    expect(byId('net-kpi-containers').textContent).toBe('0 containers attached');
-    expect(byId('net-active-ports-badge').textContent).toBe('0 active');
-    expect(byId('network-switch-faceplate').textContent).toBe('No network ports found.');
-    expect(byId('network-physical-tbody').textContent).toBe('No network ports found.');
+    expect(byId('net-home').textContent).toBe("Kiboto could not read this NAS's address.");
+    expect(byId('net-port-rows').textContent).toBe('No network ports found.');
     expect(byId('network-bridges-container').textContent).toBe('No virtual bridges or bonds yet.');
     expect(byId('network-vlan-tbody').textContent).toBe('No VLANs yet. Add one to tag a port.');
     expect(byId('network-docker-container').textContent).toBe('No Docker bridge networks in use.');
@@ -90,13 +82,13 @@ describe('network layout with missing parts (NUX-20)', () => {
       vlans: [],
     });
     await fetchAndRenderNetworkTopology();
-    const face = byId('network-switch-faceplate').textContent;
-    expect(face).toContain('Connected');
-    expect(face).toContain('Master: br0');
-    expect(byId('network-switch-faceplate').querySelector('[data-iface="eth0"]').getAttribute('title')).toBe('Set up eth0');
-    const table = byId('network-physical-tbody').textContent;
-    expect(table).toContain('Standalone');
-    expect(table).toContain('Generic');
+    const eth0 = /** @type {HTMLElement} */ (document.querySelector('.net-port-row[data-iface="eth0"]'));
+    expect(eth0.querySelector('.net-port-state')?.textContent).toBe('Connected');
+    expect(eth0.querySelector('.net-dl')?.textContent).toBe(''); // nothing known, nothing made up
+    const eth1 = /** @type {HTMLElement} */ (document.querySelector('.net-port-row[data-iface="eth1"]'));
+    expect(eth1.querySelector('.net-port-state')?.textContent).toBe('Not connected');
+    expect(eth1.querySelector('.net-port-speed')?.textContent).toBe('');
+    expect(eth1.querySelector('.net-dl')?.textContent).toBe('DriverigcPart ofbr0');
     const virt = byId('network-bridges-container').textContent;
     expect(virt).toContain('Bridge: br0');
     expect(virt).toContain('No members');
@@ -107,16 +99,15 @@ describe('network layout with missing parts (NUX-20)', () => {
     expect(docker).toContain('Subnet: 172.30.0.0/16');
     expect(docker).not.toContain('Gateway:');
     expect(docker).toContain('No containers attached');
-    expect(byId('net-kpi-containers').textContent).toBe('1 container attached');
   });
 
   it('says when the layout could not be read', async () => {
     const get = vi.spyOn(api, 'get').mockResolvedValue({ status: 'error' });
     await fetchAndRenderNetworkTopology();
-    expect(byId('network-physical-tbody').textContent).toBe('Could not load the network layout: Unknown error');
+    expect(byId('net-home').textContent).toBe('Could not load the network layout: Unknown error');
     get.mockRejectedValue(new Error('no route'));
     await fetchAndRenderNetworkTopology();
-    expect(byId('network-physical-tbody').textContent).toBe('Could not load the network layout: no route');
+    expect(byId('net-home').textContent).toBe('Could not load the network layout: no route');
   });
 });
 

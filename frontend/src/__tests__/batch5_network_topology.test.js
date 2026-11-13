@@ -8,17 +8,8 @@ describe('Batch 5: the Network page layout', () => {
   beforeEach(() => {
     container = document.createElement('div');
     container.innerHTML = `
-      <div id="net-kpi-ip">--</div>
-      <div id="net-kpi-iface">--</div>
-      <div id="net-kpi-gw">--</div>
-      <div id="net-kpi-dns">--</div>
-      <div id="net-kpi-speed">--</div>
-      <div id="net-kpi-carrier">--</div>
-      <div id="net-kpi-docker">--</div>
-      <div id="net-kpi-containers">--</div>
-      <div id="net-active-ports-badge">--</div>
-      <div id="network-switch-faceplate"></div>
-      <table><tbody id="network-physical-tbody"></tbody></table>
+      <div id="net-home"></div>
+      <ul id="net-port-rows"></ul>
       <div id="network-bridges-container"></div>
       <div id="network-docker-container"></div>
     `;
@@ -129,60 +120,47 @@ describe('Batch 5: the Network page layout', () => {
     ],
   };
 
-  it('updates 4-KPI metric cards correctly from summary', async () => {
+  it('says where the NAS answers at home, with the router and name servers under Details (SET-24 m)', async () => {
     vi.spyOn(api, 'get').mockResolvedValueOnce(mockTopology);
 
     await fetchAndRenderNetworkTopology();
 
-    expect(document.getElementById('net-kpi-ip').textContent).toBe('192.168.1.50');
-    expect(document.getElementById('net-kpi-iface').textContent).toBe('Via br0');
-    expect(document.getElementById('net-kpi-gw').textContent).toBe('192.168.1.1');
-    expect(document.getElementById('net-kpi-dns').textContent).toContain('192.168.1.1');
-    expect(document.getElementById('net-kpi-speed').textContent).toBe('10 Gbps');
-    expect(document.getElementById('net-kpi-carrier').textContent).toBe('1 of 2 ports online');
-    expect(document.getElementById('net-kpi-docker').textContent).toBe('3 networks');
-    expect(document.getElementById('net-active-ports-badge').textContent).toBe('1 active');
+    const home = document.getElementById('net-home');
+    expect(home.querySelector('.net-home-line').textContent).toContain('At home, this NAS answers at 192.168.1.50.');
+    expect(home.querySelector('[data-copy]').dataset.copy).toBe('192.168.1.50');
+    const details = home.querySelector('.net-home-details').textContent;
+    expect(details).toContain('192.168.1.1, 1.1.1.1');
+    expect(details).toContain('br0');
+    expect(home.querySelector('#btn-open-host-ip-modal')).not.toBeNull();
   });
 
-  it('renders front-panel visual switch jack matrix with active LEDs and speed pills', async () => {
+  it('one row per port, with Connected or Not connected in words and the speed (SET-24 m)', async () => {
     vi.spyOn(api, 'get').mockResolvedValueOnce(mockTopology);
 
     await fetchAndRenderNetworkTopology();
 
-    const faceplate = document.getElementById('network-switch-faceplate');
-    const jacks = faceplate.querySelectorAll('.switch-port-jack');
-    expect(jacks.length).toBe(2);
-
-    // First jack (eth1 - active 10G)
-    const eth1Jack = Array.from(jacks).find((j) => j.textContent.includes('ETH1'));
-    expect(eth1Jack).toBeTruthy();
-    expect(eth1Jack.classList.contains('is-active')).toBe(true);
-    expect(eth1Jack.querySelector('.led-link-on')).toBeTruthy();
-    expect(eth1Jack.querySelector('.led-speed-10g')).toBeTruthy();
-    expect(eth1Jack.querySelector('.speed-10g').textContent).toBe('10 Gbps');
-    expect(eth1Jack.textContent).toContain('Master: bond0');
-
-    // Second jack (eth0 - disconnected)
-    const eth0Jack = Array.from(jacks).find((j) => j.textContent.includes('ETH0'));
-    expect(eth0Jack).toBeTruthy();
-    expect(eth0Jack.classList.contains('is-active')).toBe(false);
-    expect(eth0Jack.querySelector('.speed-down').textContent).toBe('Disconnected');
-  });
-
-  it('renders physical interfaces detailed table with MAC and throughput counters', async () => {
-    vi.spyOn(api, 'get').mockResolvedValueOnce(mockTopology);
-
-    await fetchAndRenderNetworkTopology();
-
-    const tbody = document.getElementById('network-physical-tbody');
-    const rows = tbody.querySelectorAll('tr');
+    const rows = document.querySelectorAll('#net-port-rows .net-port-row');
     expect(rows.length).toBe(2);
+    const eth1 = document.querySelector('.net-port-row[data-iface="eth1"]');
+    expect(eth1.classList.contains('is-up')).toBe(true);
+    expect(eth1.querySelector('.net-port-state').textContent).toBe('Connected');
+    expect(eth1.querySelector('.net-port-speed').textContent).toBe('10 Gbps');
+    const eth0 = document.querySelector('.net-port-row[data-iface="eth0"]');
+    expect(eth0.querySelector('.net-port-state').textContent).toBe('Not connected');
+    expect(eth0.querySelector('.net-port-speed').textContent).toBe(''); // not the host's English "Disconnected"
+  });
 
-    expect(tbody.textContent).toContain('eth1');
-    expect(tbody.textContent).toContain('04:a1:6f:d0:13:59');
-    expect(tbody.textContent).toContain('UP / CARRIER');
-    expect(tbody.textContent).toContain('r8169');
-    expect(tbody.textContent).toContain('0000:5a:00.0');
+  it('a port\'s details carry its hardware address, driver, bond and traffic', async () => {
+    vi.spyOn(api, 'get').mockResolvedValueOnce(mockTopology);
+
+    await fetchAndRenderNetworkTopology();
+
+    const details = document.querySelector('.net-port-row[data-iface="eth1"] .net-port-details').textContent;
+    expect(details).toContain('04:a1:6f:d0:13:59');
+    expect(details).toContain('r8169');
+    expect(details).toContain('bond0');
+    expect(details).toContain('Received / sent');
+    expect(document.querySelector('.net-port-row[data-iface="eth0"] .net-port-details').textContent).not.toContain('Received / sent');
   });
 
   it('renders host bridges and bonding groups card grid', async () => {
@@ -218,8 +196,7 @@ describe('Batch 5: the Network page layout', () => {
 
     await fetchAndRenderNetworkTopology();
 
-    const tbody = document.getElementById('network-physical-tbody');
-    expect(tbody.textContent).toContain('Could not load the network layout');
-    expect(tbody.textContent).toContain('Connection lost');
+    expect(document.getElementById('net-home').textContent).toBe('Could not load the network layout: Connection lost');
+    expect(document.querySelector('#net-port-rows > li .state-block.is-failed')).not.toBeNull();
   });
 });

@@ -27,10 +27,10 @@ describe('SET-24 l: Network is one page, Away from home its own', () => {
   });
 
   it('keeps every part the page code fills, and drops the Virtual Fleet tile', () => {
-    for (const id of ['nas-name-card', 'net-kpi-ip', 'net-kpi-gw', 'net-kpi-speed', 'network-switch-faceplate', 'network-physical-tbody', 'network-bridges-container', 'network-vlan-tbody', 'net-listening-ports-tbody', 'net-ports-search', 'btn-refresh-net-ports']) {
+    for (const id of ['nas-name-card', 'net-home', 'net-port-rows', 'network-bridges-container', 'network-vlan-tbody', 'net-listening-ports-tbody', 'net-ports-search', 'btn-refresh-net-ports']) {
       expect(document.getElementById(id)?.closest('#mgmt-pane-network'), id).not.toBeNull();
     }
-    expect(document.getElementById('net-kpi-docker')).toBeNull();
+    for (const id of ['net-kpi-docker', 'net-kpi-ip', 'network-switch-faceplate', 'network-physical-tbody']) expect(document.getElementById(id), id).toBeNull(); // SET-24 m
     expect(html).not.toContain('mw.virtual_fleet');
   });
 
