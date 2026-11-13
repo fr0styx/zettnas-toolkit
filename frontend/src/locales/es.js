@@ -7459,4 +7459,6 @@ export default {
   "settings.desktop_reset_btn": "↺ Restablecer escritorio",
   "settings.desktop_reset": "El escritorio ha vuelto a los valores predeterminados.",
   "mgmt.sidebar_calendar": "Calendario",
+  "apps.experts_nets": "Para expertos: redes de Docker",
+  "apps.experts_nets_desc": "Las redes por las que tus apps se comunican. La mayoría de las apps no necesita una propia."
 };

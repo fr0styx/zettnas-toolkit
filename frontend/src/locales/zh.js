@@ -7459,4 +7459,6 @@ export default {
   "settings.desktop_reset_btn": "↺ 重置桌面",
   "settings.desktop_reset": "桌面已恢复为默认设置。",
   "mgmt.sidebar_calendar": "日历",
+  "apps.experts_nets": "专家选项：Docker 网络",
+  "apps.experts_nets_desc": "你的应用之间相互通信所用的网络。大多数应用不需要自己的网络。"
 };

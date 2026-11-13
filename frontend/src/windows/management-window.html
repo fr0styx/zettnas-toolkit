@@ -1257,10 +1257,6 @@
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-shield"/></svg>
                   <span data-i18n="mgmt.subtab_network_wireguard">Remote access</span>
                 </button>
-                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-docker">
-                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-docker"/></svg>
-                  <span data-i18n="mgmt.subtab_network_docker">Docker Networks</span>
-                </button>
                 <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-services">
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                   <span data-i18n="mgmt.subtab_network_services">File Sharing Services</span>
@@ -1523,30 +1519,6 @@
                     </table>
                   </div>
                 </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Sub-tab 3: Docker Networks -->
-            <div id="mgmt-pane-network-docker" class="mgmt-tab-pane" style="display: none;">
-              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                <div>
-                  <div class="mgmt-card-intro-title">
-                    <svg class="ic"><use href="#i-docker"/></svg>
-                    <span data-i18n="mgmt.docker_net_title">Docker Bridge Networks & Container Allocations</span>
-                  </div>
-                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.docker_net_desc">
-                    Docker bridge routing subnets, default gateways, and container IP address bindings.
-                  </div>
-                </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                  <button class="btn-pill-toggle" id="btn-create-docker-net" style="color: var(--lt-ink-brand, var(--accent-cyan-hi, #4fd8c4)); border-color: rgba(79, 216, 196, 0.4);" data-i18n="net.create_docker_net">+ Create Network</button>
-                </div>
-              </div>
-
-              <div class="mgmt-detail-body">
-                <div class="network-docker-list" id="network-docker-container">
-                  <!-- Populated dynamically with docker network cards and attached container pills -->
                 </div>
               </div>
             </div>

@@ -18,6 +18,7 @@ import { makeDraggable, bringToFront } from './dock.js';
 import { openContainerInspector, openContainerDeleteModal } from './container-modal.js';
 import { openStackModal, openStackPickerModal } from './stack-modal.js';
 import { openNetworkMap } from './container-network-map.js';
+import { appsDockerNetsHtml, installAppsDockerNets } from './apps-docker-nets.js';
 import {
   createContainerRow as createSharedContainerRow,
   updateContainerRow as updateSharedContainerRow,
@@ -196,6 +197,7 @@ export function initContainersManager() {
               <button class="btn-bulk-action btn-bulk-cancel" data-bulk="cancel" title="${t('ui.deselect_all', 'Deselect all')}">✕</button>
             </div>
           </div>
+          ${appsDockerNetsHtml()}
           <div class="cwm-x-4" id="cw-docker-catalog-wrap" style="display: none;">
             <div class="cwm-row-box">
               <div class="cw-catalog-filter-pills cwm-row-5">
@@ -343,6 +345,7 @@ export function initContainersManager() {
 
   const btnNetmap = document.getElementById('btn-cw-netmap');
   if (btnNetmap) btnNetmap.onclick = () => openNetworkMap();
+  installAppsDockerNets(containersWindow);
 
   const btnStacks = document.getElementById('btn-cw-stacks');
   if (btnStacks) {
@@ -379,6 +382,7 @@ export function initContainersManager() {
       const filterPills = containersWindow ? containersWindow.querySelector('.cw-docker-filter-pills') : null;
 
       _cwInCatalogView = !_cwInCatalogView;
+      document.getElementById('apps-docker-nets')?.toggleAttribute('hidden', _cwInCatalogView); // installed apps only
       const hBar = document.getElementById('cw-docker-table-sticky-scroll');
       if (_cwInCatalogView) {
         if (tableWrap) tableWrap.style.display = 'none';

@@ -25,3 +25,35 @@
 #containers-manager-window .cwm-x-5 { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
 #containers-manager-window .cwm-muted-center-2 { text-align: center; color: var(--muted); padding: 24px; grid-column: 1 / -1; }
 #containers-manager-window .cwm-box-2 { padding: 0; border: 0; }
+
+/* For experts: Docker networks, folded under the installed apps (SET-24) */
+.apps-experts {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--kb-line-5);
+  border-radius: 12px;
+}
+.apps-experts > summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.apps-experts[open] > summary {
+  margin-bottom: 12px;
+}
+.apps-experts-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.apps-experts-desc {
+  margin: 0;
+  font-size: var(--kb-fs-xs);
+  color: var(--muted);
+}
+.apps-experts :is(.nw-xs-muted-2, .nw-xs-muted-3) {
+  font-size: var(--kb-fs-xs);
+  color: var(--muted);
+}

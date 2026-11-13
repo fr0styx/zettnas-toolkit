@@ -7459,4 +7459,6 @@ export default {
   "settings.desktop_reset_btn": "↺ Schreibtisch zurücksetzen",
   "settings.desktop_reset": "Der Schreibtisch ist wieder auf den Standardwerten.",
   "mgmt.sidebar_calendar": "Kalender",
+  "apps.experts_nets": "Für Fachleute: Docker-Netzwerke",
+  "apps.experts_nets_desc": "Die Netzwerke, über die sich Ihre Apps erreichen. Die meisten Apps brauchen kein eigenes."
 };

@@ -113,7 +113,6 @@ export const SUBPANE_MAP = {
   'mgmt-pane-network': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
   'mgmt-pane-network-physical': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
   'mgmt-pane-network-wireguard': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-wireguard' },
-  'mgmt-pane-network-docker': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-docker' },
   'mgmt-pane-network-services': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-services' },
   'mgmt-pane-network-ports': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-ports' },
   'ports': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-ports' },
@@ -760,8 +759,6 @@ export function initManagement() {
       // COMP-01: the guided "Use from anywhere" card above the Tailscale details
       import('./remote-access.js').then((m) => m.installRemoteAccess(document.getElementById('remote-access-mount'))).catch(() => {});
       fetchAndRenderTailscaleDetails();
-    } else if (paneId === 'mgmt-pane-network-docker') {
-      fetchAndRenderNetworkTopology();
     } else if (paneId === 'mgmt-pane-unraid') {
       if (state.lastStats) updateManagementTelemetry(state.lastStats);
     } else if (paneId === 'mgmt-pane-hardware-lcd') {

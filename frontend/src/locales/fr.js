@@ -7459,4 +7459,6 @@ export default {
   "settings.desktop_reset_btn": "↺ Réinitialiser le bureau",
   "settings.desktop_reset": "Le bureau est revenu aux valeurs par défaut.",
   "mgmt.sidebar_calendar": "Calendrier",
+  "apps.experts_nets": "Pour les experts : réseaux Docker",
+  "apps.experts_nets_desc": "Les réseaux par lesquels vos applications se joignent. La plupart des applications n'en ont pas besoin."
 };

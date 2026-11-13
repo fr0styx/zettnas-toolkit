@@ -108,6 +108,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Your other Kiboto boxes are on Backups, Home Assistant is on Notifications**: both moved from
   Network's Advanced tabs to the page that is about what they do.
 
+#### Changes
+
+- **Docker networks are in Apps**: under the installed apps, folded as "For experts: Docker networks".
+  Network no longer has a Docker tab.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

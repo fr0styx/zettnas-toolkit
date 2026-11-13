@@ -7459,4 +7459,6 @@ export default {
   "settings.desktop_reset_btn": "↺ Reset desktop",
   "settings.desktop_reset": "The desktop is back to its defaults.",
   "mgmt.sidebar_calendar": "Calendar",
+  "apps.experts_nets": "For experts: Docker networks",
+  "apps.experts_nets_desc": "The networks your apps use to reach each other. Most apps need none of their own."
 };
