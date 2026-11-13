@@ -62,6 +62,7 @@ LINKS: tuple[tuple[str, str], ...] = (
     ("unraid_error", "storage"),
     ("default_login", "settings"),
     ("two_factor_off", "users"),
+    ("lost_device", "users"),
     ("security", "settings"),
     ("drive_", "drives"),
     ("smart_", "drives"),

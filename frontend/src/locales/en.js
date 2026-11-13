@@ -7489,5 +7489,21 @@ export default {
   "net.ts_opts_title": "Tailscale options",
   "net.ts_opts_off": "Tailscale is not connected, so these options are not available.",
   "net.ts_opts_connect": "Connect in Away from home",
-  "net.ts_details_desc2": "This NAS on Tailscale and the devices you can reach. Its Tailscale options are on the Network page."
+  "net.ts_details_desc2": "This NAS on Tailscale and the devices you can reach. Its Tailscale options are on the Network page.",
+  "ev.lost_device_signed_out.title": "Signed out everywhere",
+  "ev.lost_device_signed_out.msg": "{admin} signed {user} out on every device.",
+  "ev.lost_device_two_step.title": "Two-step sign-in turned off",
+  "ev.lost_device_two_step.msg": "{admin} turned off two-step sign-in for {user}.",
+  "lost.title": "Lost phone or tablet?",
+  "lost.help": "Sign {name} out on every device. If their two-step code was on that phone, turn it off too, so they can set it up on a new one. They are told.",
+  "lost.sign_out": "Sign out on every device",
+  "lost.two_step": "Turn off two-step sign-in",
+  "lost.own_pw": "Your own password",
+  "lost.go": "Do this now",
+  "lost.choose": "Choose at least one of the two.",
+  "lost.done_signed_out": "{n, plural, one {Ended # session of {name}.} other {Ended # sessions of {name}.}}",
+  "lost.done_none": "{name} was not signed in anywhere.",
+  "lost.done_two_step": "Two-step sign-in is off for {name}.",
+  "lost.done_told": "They were told.",
+  "lost.done_not_told": "Kiboto could not tell them: they have no alerts or email set up."
 };

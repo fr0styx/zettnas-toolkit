@@ -7489,5 +7489,21 @@ export default {
   "net.ts_opts_title": "Tailscale-Optionen",
   "net.ts_opts_off": "Tailscale ist nicht verbunden, daher sind diese Optionen nicht verfügbar.",
   "net.ts_opts_connect": "Unter „Unterwegs“ verbinden",
-  "net.ts_details_desc2": "Dieses NAS in Tailscale und die Geräte, die Sie erreichen. Seine Tailscale-Optionen finden Sie auf der Seite Netzwerk."
+  "net.ts_details_desc2": "Dieses NAS in Tailscale und die Geräte, die Sie erreichen. Seine Tailscale-Optionen finden Sie auf der Seite Netzwerk.",
+  "ev.lost_device_signed_out.title": "Überall abgemeldet",
+  "ev.lost_device_signed_out.msg": "{admin} hat {user} auf allen Geräten abgemeldet.",
+  "ev.lost_device_two_step.title": "Zweistufige Anmeldung ausgeschaltet",
+  "ev.lost_device_two_step.msg": "{admin} hat die zweistufige Anmeldung für {user} ausgeschaltet.",
+  "lost.title": "Telefon oder Tablet verloren?",
+  "lost.help": "Melden Sie {name} auf allen Geräten ab. War der Code für die zweistufige Anmeldung auf diesem Telefon, schalten Sie ihn ebenfalls aus, damit er auf einem neuen eingerichtet werden kann. Die Person wird benachrichtigt.",
+  "lost.sign_out": "Auf allen Geräten abmelden",
+  "lost.two_step": "Zweistufige Anmeldung ausschalten",
+  "lost.own_pw": "Ihr eigenes Passwort",
+  "lost.go": "Jetzt ausführen",
+  "lost.choose": "Wählen Sie mindestens eine der beiden Möglichkeiten.",
+  "lost.done_signed_out": "{n, plural, one {# Sitzung von {name} beendet.} other {# Sitzungen von {name} beendet.}}",
+  "lost.done_none": "{name} war nirgends angemeldet.",
+  "lost.done_two_step": "Die zweistufige Anmeldung ist für {name} ausgeschaltet.",
+  "lost.done_told": "Die Person wurde benachrichtigt.",
+  "lost.done_not_told": "Kiboto konnte die Person nicht benachrichtigen: Für sie sind keine Benachrichtigungen oder E-Mail eingerichtet."
 };

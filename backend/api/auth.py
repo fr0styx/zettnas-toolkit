@@ -1416,6 +1416,66 @@ def delete_user_endpoint(
         return error_response(400, str(e))
 
 
+class LostDeviceRequest(BaseModel):
+    current_password: str = Field(default="", max_length=256)
+    sign_out: bool = True
+    turn_off_two_step: bool = False
+
+
+def _person_below(user_id: str, principal: AuthenticatedPrincipal) -> dict[str, Any]:
+    """The person an administrator acts for: they exist and can't do more than the caller (SEC-26)."""
+    target = get_user_by_id(user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found.")
+    if not _role_within(list(principal.scopes or []), target.get("role_id")):
+        raise HTTPException(status_code=403, detail="You can't do this for someone with more rights than you.")
+    return target
+
+
+@router.get("/users/{user_id}/sessions")
+def person_sessions(user_id: str, principal: AuthenticatedPrincipal = Depends(require_scope("users:write"))):  # noqa: B008
+    """Where someone is signed in (Users decision 8): a short id per session, never its hash."""
+    from backend.services import lost_device
+
+    _person_below(user_id, principal)
+    return {"sessions": lost_device.sessions_of(user_id)}
+
+
+@router.post("/users/{user_id}/lost-device")
+async def person_lost_device(
+    user_id: str,
+    data: LostDeviceRequest,
+    request: Request,
+    principal: AuthenticatedPrincipal = Depends(require_scope("users:write")),  # noqa: B008
+):
+    """A lost phone or tablet (Users decision 8): sign the person out everywhere and, if asked,
+    turn off their two-step code. The administrator's own password; logged; the person is told."""
+    from backend.services import lost_device
+
+    if principal.user_id == user_id:
+        return error_response(400, "For your own account, use My account.", error="own_account")
+    target = _person_below(user_id, principal)
+    if not (data.sign_out or data.turn_off_two_step):
+        return error_response(
+            400, "Choose what to do: sign out, turn off two-step sign-in, or both.", error="nothing_chosen"
+        )
+    caller = _get_authenticated_user(request)
+    if not caller or not _is_person_session(caller):
+        return error_response(403, "Only a person signed in to Kiboto can do this.", error="session_required")
+    key = f"lost-device:{principal.user_id}"
+    wait = _lockout_remaining(key)
+    if wait > 0:
+        return _rate_limited(wait)
+    if not await _verify_current_password(caller, data.current_password):
+        _register_failure(key, is_ip=False)
+        # 403, not 401: a 401 reads as "your own session ended" (SET-10)
+        return error_response(403, "Enter your own password to do this.", error="invalid_credentials")
+    _clear_failures(key)
+    done = lost_device.carry_out(target, data.sign_out, data.turn_off_two_step)
+    told = lost_device.record(target, principal.user_id, principal.username, _client_ip(request), done)
+    return {"status": "ok", **done, "told": told}
+
+
 @router.post("/users/admin/disable", dependencies=[Depends(require_scope("users:manage", "users:write"))])
 def disable_default_admin_endpoint(
     request: Request,

@@ -128,6 +128,12 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Tailscale options are on Network**: "Reach other things at home" and "Use your home internet when
   away" moved there from Away from home.
 
+#### Changes
+
+- **Lost phone or tablet?** An administrator can sign someone out on every device and turn off their
+  two-step code, so they can set it up on a new phone. It needs the administrator's own password, and
+  the person is told.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

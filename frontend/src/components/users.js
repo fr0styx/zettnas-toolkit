@@ -401,6 +401,7 @@ export function showEditUserModal(user) {
 
   import('./management/user-data.js').then((m) => m.installUserDataFor(modal, user)).catch(() => {}); // B8
   import('./passkeys-card.js').then((m) => m.installPasskeyResetFor(modal, user)).catch(() => {}); // RES-3
+  import('./management/lost-device.js').then((m) => m.installLostDeviceFor(modal, user, getCurrentUser())).catch(() => {}); // SET-19
   // COMP-13: sign-in hours, for accounts that don't manage people
   const hoursBox = document.getElementById('edit-user-hours');
   const limitable = (role) => !['superadmin', 'storage_admin'].includes(role);

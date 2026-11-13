@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-716 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+718 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -132,7 +132,9 @@ request and response schemas.
 | `DELETE` | `/api/v1/users/{user_id}` | `users:delete` | Delete User Endpoint |
 | `GET` | `/api/v1/users/{user_id}` | signed in | Get User Detail |
 | `PUT` | `/api/v1/users/{user_id}` | signed in | Update User Endpoint |
+| `POST` | `/api/v1/users/{user_id}/lost-device` | `users:write` ⏱ | A lost phone or tablet (Users decision 8): sign the person out everywhere and, if asked, turn off their two-step code |
 | `POST` | `/api/v1/users/{user_id}/password` | signed in ⏱ | Change User Password |
+| `GET` | `/api/v1/users/{user_id}/sessions` | `users:write` | Where someone is signed in (Users decision 8): a short id per session, never its hash |
 
 ### Backup
 

@@ -7489,5 +7489,21 @@ export default {
   "net.ts_opts_title": "Opciones de Tailscale",
   "net.ts_opts_off": "Tailscale no está conectado, así que estas opciones no están disponibles.",
   "net.ts_opts_connect": "Conectar en Fuera de casa",
-  "net.ts_details_desc2": "Este NAS en Tailscale y los dispositivos a los que llegas. Sus opciones de Tailscale están en la página Red."
+  "net.ts_details_desc2": "Este NAS en Tailscale y los dispositivos a los que llegas. Sus opciones de Tailscale están en la página Red.",
+  "ev.lost_device_signed_out.title": "Sesión cerrada en todas partes",
+  "ev.lost_device_signed_out.msg": "{admin} cerró la sesión de {user} en todos sus dispositivos.",
+  "ev.lost_device_two_step.title": "Inicio de sesión en dos pasos desactivado",
+  "ev.lost_device_two_step.msg": "{admin} desactivó el inicio de sesión en dos pasos de {user}.",
+  "lost.title": "¿Teléfono o tableta perdidos?",
+  "lost.help": "Cierra la sesión de {name} en todos sus dispositivos. Si su código de inicio de sesión en dos pasos estaba en ese teléfono, desactívalo también para que pueda configurarlo en uno nuevo. Se le avisa.",
+  "lost.sign_out": "Cerrar sesión en todos los dispositivos",
+  "lost.two_step": "Desactivar el inicio de sesión en dos pasos",
+  "lost.own_pw": "Tu propia contraseña",
+  "lost.go": "Hacerlo ahora",
+  "lost.choose": "Elige al menos una de las dos opciones.",
+  "lost.done_signed_out": "{n, plural, one {Se cerró # sesión de {name}.} other {Se cerraron # sesiones de {name}.}}",
+  "lost.done_none": "{name} no tenía ninguna sesión abierta.",
+  "lost.done_two_step": "El inicio de sesión en dos pasos está desactivado para {name}.",
+  "lost.done_told": "Se le avisó.",
+  "lost.done_not_told": "Kiboto no pudo avisarle: no tiene alertas ni correo configurados."
 };

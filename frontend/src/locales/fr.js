@@ -7489,5 +7489,21 @@ export default {
   "net.ts_opts_title": "Options Tailscale",
   "net.ts_opts_off": "Tailscale n'est pas connecté : ces options ne sont pas disponibles.",
   "net.ts_opts_connect": "Se connecter dans Hors de chez vous",
-  "net.ts_details_desc2": "Ce NAS sur Tailscale et les appareils que vous pouvez joindre. Ses options Tailscale sont sur la page Réseau."
+  "net.ts_details_desc2": "Ce NAS sur Tailscale et les appareils que vous pouvez joindre. Ses options Tailscale sont sur la page Réseau.",
+  "ev.lost_device_signed_out.title": "Déconnecté partout",
+  "ev.lost_device_signed_out.msg": "{admin} a déconnecté {user} sur tous ses appareils.",
+  "ev.lost_device_two_step.title": "Connexion en deux étapes désactivée",
+  "ev.lost_device_two_step.msg": "{admin} a désactivé la connexion en deux étapes de {user}.",
+  "lost.title": "Téléphone ou tablette perdu ?",
+  "lost.help": "Déconnectez {name} sur tous ses appareils. Si son code de connexion en deux étapes était sur ce téléphone, désactivez-le aussi pour qu'il puisse être configuré sur un nouveau. La personne est prévenue.",
+  "lost.sign_out": "Déconnecter sur tous les appareils",
+  "lost.two_step": "Désactiver la connexion en deux étapes",
+  "lost.own_pw": "Votre propre mot de passe",
+  "lost.go": "Le faire maintenant",
+  "lost.choose": "Choisissez au moins l'une des deux options.",
+  "lost.done_signed_out": "{n, plural, one {# session de {name} fermée.} other {# sessions de {name} fermées.}}",
+  "lost.done_none": "{name} n'était connecté nulle part.",
+  "lost.done_two_step": "La connexion en deux étapes est désactivée pour {name}.",
+  "lost.done_told": "La personne a été prévenue.",
+  "lost.done_not_told": "Kiboto n'a pas pu prévenir la personne : aucune alerte ni adresse e-mail n'est configurée pour elle."
 };

@@ -291,6 +291,12 @@
 .net-page-section { margin-top: 26px; }
 .net-page-section:first-child { margin-top: 0; }
 .net-page-section > .account-h { margin-bottom: 10px; }
+/* A person's edit dialog: Lost phone or tablet? (SET-19) */
+.lost-device { margin: 12px 0 16px; font-size: var(--kb-fs-sm, 13px); }
+.lost-device > p { margin: 0 0 6px; font-size: var(--kb-fs-xs); color: var(--muted); line-height: 1.45; }
+.lost-device > summary { cursor: pointer; font-weight: 700; }
+.lost-device[open] > summary { margin-bottom: 8px; }
+.lost-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; flex-wrap: wrap; }
 .net-link { color: var(--kb-text-accent); font-weight: 600; }
 /* Network: This NAS at home and one row per port (SET-24 m) */
 .net-home { margin-bottom: 14px; }

@@ -7489,5 +7489,21 @@ export default {
   "net.ts_opts_title": "Tailscale 选项",
   "net.ts_opts_off": "Tailscale 未连接，因此这些选项不可用。",
   "net.ts_opts_connect": "在“外出访问”中连接",
-  "net.ts_details_desc2": "这台 NAS 在 Tailscale 上的信息，以及你能访问的设备。它的 Tailscale 选项在“网络”页面。"
+  "net.ts_details_desc2": "这台 NAS 在 Tailscale 上的信息，以及你能访问的设备。它的 Tailscale 选项在“网络”页面。",
+  "ev.lost_device_signed_out.title": "已在所有设备上退出",
+  "ev.lost_device_signed_out.msg": "{admin} 已让 {user} 在所有设备上退出登录。",
+  "ev.lost_device_two_step.title": "两步登录已关闭",
+  "ev.lost_device_two_step.msg": "{admin} 已为 {user} 关闭两步登录。",
+  "lost.title": "手机或平板丢了？",
+  "lost.help": "让 {name} 在所有设备上退出登录。如果两步登录的验证码在那部手机上，也一并关闭，这样就能在新手机上重新设置。系统会通知对方。",
+  "lost.sign_out": "在所有设备上退出登录",
+  "lost.two_step": "关闭两步登录",
+  "lost.own_pw": "你自己的密码",
+  "lost.go": "立即执行",
+  "lost.choose": "请至少选择一项。",
+  "lost.done_signed_out": "{n, plural, other {已结束 {name} 的 # 个会话。}}",
+  "lost.done_none": "{name} 没有在任何设备上登录。",
+  "lost.done_two_step": "{name} 的两步登录已关闭。",
+  "lost.done_told": "已通知对方。",
+  "lost.done_not_told": "Kiboto 无法通知对方：对方没有设置提醒或电子邮件。"
 };

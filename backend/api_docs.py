@@ -87,6 +87,7 @@ OWN_RATE_LIMITS = {
     "POST /auth/me/smb-password": "Wrong passwords lock this for the account for a while.",
     "POST /security": "Wrong current passwords lock password changes from this address for a while.",
     "POST /users/{user_id}/password": "Wrong current passwords lock this account's password changes for a while.",
+    "POST /users/{user_id}/lost-device": "Wrong own passwords lock this for the administrator for a while.",
     "GET /invite/{token}": "20 attempts an hour per address.",
     "POST /invite/{token}/accept": "20 attempts an hour per address.",
     "GET /fs/shared/{token}": "120 requests a minute per address; 5 wrong passwords in 10 minutes block the address.",

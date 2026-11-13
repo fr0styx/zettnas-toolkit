@@ -26315,6 +26315,28 @@
     "title": "LookPreference",
     "type": "object"
    },
+   "LostDeviceRequest": {
+    "properties": {
+     "current_password": {
+      "default": "",
+      "maxLength": 256,
+      "title": "Current Password",
+      "type": "string"
+     },
+     "sign_out": {
+      "default": true,
+      "title": "Sign Out",
+      "type": "boolean"
+     },
+     "turn_off_two_step": {
+      "default": false,
+      "title": "Turn Off Two Step",
+      "type": "boolean"
+     }
+    },
+    "title": "LostDeviceRequest",
+    "type": "object"
+   },
    "McpEndpointResponse": {
     "additionalProperties": true,
     "description": "POST /mcp",
@@ -69263,6 +69285,68 @@
     ]
    }
   },
+  "/api/v1/users/{user_id}/lost-device": {
+   "post": {
+    "description": "A lost phone or tablet (Users decision 8): sign the person out everywhere and, if asked,\nturn off their two-step code. The administrator's own password; logged; the person is told.",
+    "operationId": "person_lost_device_api_v1_users__user_id__lost_device_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "user_id",
+      "required": true,
+      "schema": {
+       "title": "User Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LostDeviceRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
+     }
+    },
+    "summary": "Person Lost Device",
+    "tags": [
+     "Authentication & Security"
+    ],
+    "x-rate-limit": {
+     "description": "Wrong own passwords lock this for the administrator for a while."
+    },
+    "x-required-scopes": [
+     "users:write"
+    ]
+   }
+  },
   "/api/v1/users/{user_id}/passkeys": {
    "delete": {
     "description": "Removes every passkey of a person who lost their devices (an administrator, for an account whose\nrole they could give).",
@@ -69367,6 +69451,52 @@
     "x-rate-limit": {
      "description": "Wrong current passwords lock this account's password changes for a while."
     }
+   }
+  },
+  "/api/v1/users/{user_id}/sessions": {
+   "get": {
+    "description": "Where someone is signed in (Users decision 8): a short id per session, never its hash.",
+    "operationId": "person_sessions_api_v1_users__user_id__sessions_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "user_id",
+      "required": true,
+      "schema": {
+       "title": "User Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Person Sessions",
+    "tags": [
+     "Authentication & Security"
+    ],
+    "x-required-scopes": [
+     "users:write"
+    ]
    }
   },
   "/api/v1/vms": {
