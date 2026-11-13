@@ -245,7 +245,9 @@ def init_users_db(db_path: str | None = None) -> None:
                 uses INTEGER NOT NULL DEFAULT 0,
                 created_by TEXT,
                 created_at REAL NOT NULL,
-                expires_at REAL NOT NULL
+                expires_at REAL NOT NULL,
+                shares_json TEXT DEFAULT '{}',
+                signin_hours_json TEXT DEFAULT ''
             );
         """)
 
@@ -1543,8 +1545,18 @@ def _invite_hash(token: str) -> str:
 
 
 def create_invite(
-    role_id: str, days: int, max_uses: int, note: str, created_by: str, quota_bytes: int = 0, db_path: str | None = None
+    role_id: str,
+    days: int,
+    max_uses: int,
+    note: str,
+    created_by: str,
+    quota_bytes: int = 0,
+    db_path: str | None = None,
+    shares: dict[str, str] | None = None,
+    signin_hours: dict[str, Any] | None = None,
 ) -> tuple[str, dict[str, Any]]:
+    """shares: {share name: "read" or "write"}; signin_hours as backend/signin_hours.py keeps them
+    (SET-19: the invite gives them with the role)."""
     import secrets as _secrets
 
     token = _secrets.token_urlsafe(24)
@@ -1559,11 +1571,13 @@ def create_invite(
         "created_by": created_by,
         "created_at": now,
         "expires_at": now + max(1, int(days)) * 86400,
+        "shares": dict(shares or {}),
+        "signin_hours": signin_hours or None,
     }
     with users_db_session(db_path) as conn:
         conn.execute(
-            "INSERT INTO invites (id, token_hash, role_id, quota_bytes, note, max_uses, uses, created_by, created_at, expires_at)"
-            " VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)",
+            "INSERT INTO invites (id, token_hash, role_id, quota_bytes, note, max_uses, uses, created_by, created_at, expires_at,"
+            " shares_json, signin_hours_json) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)",
             (
                 inv["id"],
                 _invite_hash(token),
@@ -1574,18 +1588,44 @@ def create_invite(
                 created_by,
                 now,
                 inv["expires_at"],
+                json.dumps(inv["shares"]),
+                json.dumps(signin_hours) if signin_hours else "",
             ),
         )
     return token, inv
 
 
+def invite_extras(row: dict[str, Any]) -> dict[str, Any]:
+    """An invite row's folders and hours, read back (anything unreadable counts as none)."""
+    try:
+        shares = json.loads(row.get("shares_json") or "{}")
+    except (TypeError, ValueError):
+        shares = {}
+    try:
+        hours = json.loads(row.get("signin_hours_json") or "null")
+    except (TypeError, ValueError):
+        hours = None
+    return {
+        "shares": shares if isinstance(shares, dict) else {},
+        "signin_hours": hours if isinstance(hours, dict) else None,
+    }
+
+
 def list_invites(db_path: str | None = None) -> list[dict[str, Any]]:
     with users_db_session(db_path, readonly=True) as conn:
         rows = conn.execute(
-            "SELECT id, role_id, quota_bytes, note, max_uses, uses, created_by, created_at, expires_at FROM invites ORDER BY created_at DESC"
+            "SELECT id, role_id, quota_bytes, note, max_uses, uses, created_by, created_at, expires_at, shares_json,"
+            " signin_hours_json FROM invites ORDER BY created_at DESC"
         ).fetchall()
     now = time.time()
-    return [dict(r) | {"active": r["uses"] < r["max_uses"] and r["expires_at"] > now} for r in rows]
+    out = []
+    for r in rows:
+        row = dict(r)
+        extras = invite_extras(row)
+        row.pop("shares_json", None)
+        row.pop("signin_hours_json", None)
+        out.append(row | extras | {"active": r["uses"] < r["max_uses"] and r["expires_at"] > now})
+    return out
 
 
 def lookup_invite(token: str, db_path: str | None = None) -> dict[str, Any] | None:

@@ -41409,6 +41409,30 @@
       "default": "share_user",
       "title": "Role Id",
       "type": "string"
+     },
+     "shares": {
+      "additionalProperties": {
+       "enum": [
+        "read",
+        "write"
+       ],
+       "type": "string"
+      },
+      "maxProperties": 100,
+      "title": "Shares",
+      "type": "object"
+     },
+     "signin_hours": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Signin Hours"
      }
     },
     "title": "InviteIn",

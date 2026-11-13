@@ -7505,5 +7505,12 @@ export default {
   "lost.done_none": "{name} war nirgends angemeldet.",
   "lost.done_two_step": "Die zweistufige Anmeldung ist für {name} ausgeschaltet.",
   "lost.done_told": "Die Person wurde benachrichtigt.",
-  "lost.done_not_told": "Kiboto konnte die Person nicht benachrichtigen: Für sie sind keine Benachrichtigungen oder E-Mail eingerichtet."
+  "lost.done_not_told": "Kiboto konnte die Person nicht benachrichtigen: Für sie sind keine Benachrichtigungen oder E-Mail eingerichtet.",
+  "invite.folder_none": "Kein Zugriff",
+  "invite.folder_read": "Darf öffnen",
+  "invite.folder_write": "Darf ändern",
+  "invite.folders": "Freigegebene Ordner",
+  "invite.hours": "Anmeldezeiten",
+  "invite.folders_n": "{n, plural, one {# Ordner} other {# Ordner}}",
+  "invite.with_hours": "mit Anmeldezeiten"
 };

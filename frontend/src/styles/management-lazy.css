@@ -297,6 +297,11 @@
 .lost-device > summary { cursor: pointer; font-weight: 700; }
 .lost-device[open] > summary { margin-bottom: 8px; }
 .lost-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; flex-wrap: wrap; }
+/* Invites: folders and hours (SET-19) */
+:is(.invite-shares, .invite-hours) { border: 1px solid var(--kb-line-5); border-radius: 10px; padding: 8px 12px; margin: 0; }
+:is(.invite-shares, .invite-hours) > legend { font-size: var(--kb-fs-xs); color: var(--muted); padding: 0 4px; }
+:is(.invite-shares, .invite-hours) { flex: 1 1 100%; }
+.invite-form .invite-share { flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; margin: 4px 0; color: var(--c-text); font-size: var(--kb-fs-sm, 13px); }
 .net-link { color: var(--kb-text-accent); font-weight: 600; }
 /* Network: This NAS at home and one row per port (SET-24 m) */
 .net-home { margin-bottom: 14px; }

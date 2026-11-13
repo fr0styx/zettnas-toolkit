@@ -7505,5 +7505,12 @@ export default {
   "lost.done_none": "{name} n'était connecté nulle part.",
   "lost.done_two_step": "La connexion en deux étapes est désactivée pour {name}.",
   "lost.done_told": "La personne a été prévenue.",
-  "lost.done_not_told": "Kiboto n'a pas pu prévenir la personne : aucune alerte ni adresse e-mail n'est configurée pour elle."
+  "lost.done_not_told": "Kiboto n'a pas pu prévenir la personne : aucune alerte ni adresse e-mail n'est configurée pour elle.",
+  "invite.folder_none": "Aucun accès",
+  "invite.folder_read": "Peut ouvrir",
+  "invite.folder_write": "Peut modifier",
+  "invite.folders": "Dossiers partagés",
+  "invite.hours": "Heures de connexion",
+  "invite.folders_n": "{n, plural, one {# dossier} other {# dossiers}}",
+  "invite.with_hours": "avec heures de connexion"
 };

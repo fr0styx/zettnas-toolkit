@@ -7505,5 +7505,12 @@ export default {
   "lost.done_none": "{name} no tenía ninguna sesión abierta.",
   "lost.done_two_step": "El inicio de sesión en dos pasos está desactivado para {name}.",
   "lost.done_told": "Se le avisó.",
-  "lost.done_not_told": "Kiboto no pudo avisarle: no tiene alertas ni correo configurados."
+  "lost.done_not_told": "Kiboto no pudo avisarle: no tiene alertas ni correo configurados.",
+  "invite.folder_none": "Sin acceso",
+  "invite.folder_read": "Puede abrir",
+  "invite.folder_write": "Puede cambiar",
+  "invite.folders": "Carpetas compartidas",
+  "invite.hours": "Horario de acceso",
+  "invite.folders_n": "{n, plural, one {# carpeta} other {# carpetas}}",
+  "invite.with_hours": "con horario de acceso"
 };

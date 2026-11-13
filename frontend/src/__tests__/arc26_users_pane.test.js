@@ -17,7 +17,7 @@ vi.mock('../components/share-access.js', () => ({
   openShareAccessModal: vi.fn(),
   shareChoicesHtml: (shares) => shares.map((s) => `<select data-add-user-share="${s.name}"><option value="read" selected>r</option></select>`).join(''),
 }));
-vi.mock('../components/invites.js', () => ({ renderInvites: vi.fn() }));
+vi.mock('../components/invites-admin.js', () => ({ renderInvites: vi.fn() }));
 vi.mock('../management-dom.js', () => ({ onManagementDom: (fn) => fn() }));
 vi.mock('../utils.js', async (orig) => ({ ...(await orig()), copyText: vi.fn() }));
 

@@ -81,6 +81,16 @@ def save_config(cfg: dict[str, Any]) -> dict[str, Any]:
     return clean
 
 
+def grant(username: str, levels: dict[str, str]) -> dict[str, Any]:
+    """Gives one person these levels on these shares ({share: "read" | "write"}), keeping the rest.
+    For an invite's folders (SET-19)."""
+    cfg = load_config()
+    for share, level in levels.items():
+        entry = cfg["shares"].setdefault(share, {"users": {}})
+        entry.setdefault("users", {})[username.lower()] = level
+    return save_config(cfg)
+
+
 def share_level(cfg: dict[str, Any], share: str, username: str, role_id: str) -> str:
     """The level share access gives this person on this share, Samba's own lists left out
     (the lists Kiboto writes into smb.conf come from this: B11, SEC-28)."""

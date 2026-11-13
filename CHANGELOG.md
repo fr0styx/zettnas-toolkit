@@ -134,6 +134,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
   two-step code, so they can set it up on a new phone. It needs the administrator's own password, and
   the person is told.
 
+#### Changes
+
+- **An invite can carry shared folders and sign-in hours**: choose what the person may open or change
+  and when they may be signed in; they get it when they accept the invite.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

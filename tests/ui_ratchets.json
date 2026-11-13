@@ -179,11 +179,17 @@
   "styles": 0,
   "templates": 1
  },
+ "frontend/src/components/invites-admin.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 0,
+  "templates": 1
+ },
  "frontend/src/components/invites.js": {
   "buttons": 0,
   "globals": 0,
   "styles": 0,
-  "templates": 3
+  "templates": 2
  },
  "frontend/src/components/jobs-centre.js": {
   "buttons": 0,

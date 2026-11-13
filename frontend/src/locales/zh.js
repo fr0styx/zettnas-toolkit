@@ -7505,5 +7505,12 @@ export default {
   "lost.done_none": "{name} 没有在任何设备上登录。",
   "lost.done_two_step": "{name} 的两步登录已关闭。",
   "lost.done_told": "已通知对方。",
-  "lost.done_not_told": "Kiboto 无法通知对方：对方没有设置提醒或电子邮件。"
+  "lost.done_not_told": "Kiboto 无法通知对方：对方没有设置提醒或电子邮件。",
+  "invite.folder_none": "无访问权限",
+  "invite.folder_read": "可以打开",
+  "invite.folder_write": "可以修改",
+  "invite.folders": "共享文件夹",
+  "invite.hours": "登录时段",
+  "invite.folders_n": "{n, plural, other {# 个文件夹}}",
+  "invite.with_hours": "设有登录时段"
 };

@@ -23,7 +23,7 @@ import { grantShares, openShareAccessModal, shareChoicesHtml } from './share-acc
 
 import { formatDateTime } from '../format.js';
 import { setServerAdvanced } from '../advanced.js';
-import { renderInvites } from './invites.js';
+import { renderInvites } from './invites-admin.js';
 import { emptyRowHtml } from './empty-state.js';
 // The signed-in person's state lives in session.js (PERF-9); re-exported for older imports
 export { setCurrentUser, getCurrentUser, fetchCurrentProfile, updateUserInterfaceElements, formatRole };

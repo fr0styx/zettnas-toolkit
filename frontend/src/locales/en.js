@@ -7505,5 +7505,12 @@ export default {
   "lost.done_none": "{name} was not signed in anywhere.",
   "lost.done_two_step": "Two-step sign-in is off for {name}.",
   "lost.done_told": "They were told.",
-  "lost.done_not_told": "Kiboto could not tell them: they have no alerts or email set up."
+  "lost.done_not_told": "Kiboto could not tell them: they have no alerts or email set up.",
+  "invite.folder_none": "No access",
+  "invite.folder_read": "Can open",
+  "invite.folder_write": "Can change",
+  "invite.folders": "Shared folders",
+  "invite.hours": "Sign-in hours",
+  "invite.folders_n": "{n, plural, one {# folder} other {# folders}}",
+  "invite.with_hours": "with sign-in hours"
 };

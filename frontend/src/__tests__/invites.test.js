@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { invitesHtml, inviteTokenFromHash } from '../components/invites.js';
+import { inviteTokenFromHash } from '../components/invites.js';
+import { invitesHtml } from '../components/invites-admin.js';
 
 describe('invite links (Batch 6)', () => {
   it('reads the token from the link', () => {

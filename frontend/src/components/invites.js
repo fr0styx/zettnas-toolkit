@@ -2,85 +2,15 @@
  * Invite links (Batch 6): administrators create them in Users; the invited person opens
  * /#/invite/<token> while signed out, picks a username and password, and signs in.
  */
-import { api } from '../api.js';
-import { escapeHtml, copyTextToClipboard } from '../utils.js';
+import { escapeHtml } from '../utils.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
-import { formatDateTime } from '../format.js';
 
-const ROLES = () => [
+export const ROLES = () => [
   ['share_user', t('invite.role_member', 'Family member')],
   ['kid', t('invite.role_kid', 'Kid')],
   ['guest', t('invite.role_guest', 'Guest (read-only)')],
 ];
-
-export function invitesHtml(invites) {
-  const names = Object.fromEntries(ROLES());
-  const rows = invites.length
-    ? invites
-        .map(
-          (i) => `<li class="invite-row${i.active ? '' : ' is-used'}">
-        <span class="invite-role">${escapeHtml(names[i.role_id] || i.role_id)}</span>
-        <span class="invite-meta">${escapeHtml(i.note || '')} · ${escapeHtml(t('invite.uses', '{u} of {m} used', { u: i.uses, m: i.max_uses }))} · ${escapeHtml(
-          t('invite.expires', 'until {d}', { d: formatDateTime(i.expires_at * 1000) }),
-        )}</span>
-        ${i.active ? `<button type="button" class="btn-pill-toggle is-small is-danger" data-invite-revoke="${escapeHtml(i.id)}">${escapeHtml(t('invite.revoke', 'Revoke'))}</button>` : ''}
-      </li>`,
-        )
-        .join('')
-    : `<li class="invite-meta">${escapeHtml(t('invite.none', 'No invites yet.'))}</li>`;
-  return `<ul class="invite-list">${rows}</ul>
-    <form class="invite-form" data-invite-form>
-      <label>${escapeHtml(t('invite.role', 'As'))}<select name="role_id">${ROLES()
-        .map(([id, name]) => `<option value="${id}">${escapeHtml(name)}</option>`)
-        .join('')}</select></label>
-      <label>${escapeHtml(t('invite.note', 'For'))}<input name="note" maxlength="120" placeholder="${escapeHtml(t('invite.note_ph', 'Grandma'))}"></label>
-      <label>${escapeHtml(t('invite.days', 'Valid for days'))}<input name="days" type="number" min="1" max="90" value="7"></label>
-      <label>${escapeHtml(t('invite.quota', 'Space (GB, 0 = no limit)'))}<input name="quota_gb" type="number" min="0" value="0"></label>
-      <button type="submit" class="btn-pill-toggle is-primary">${escapeHtml(t('invite.create', 'Create invite link'))}</button>
-    </form>
-    <div class="invite-link" data-invite-link hidden></div>`;
-}
-
-export async function renderInvites(mount) {
-  if (!mount) return;
-  try {
-    const { invites } = await api.get('/api/invites');
-    mount.innerHTML = invitesHtml(invites || []);
-  } catch (e) {
-    mount.hidden = true; // not allowed to manage users
-    return;
-  }
-  mount.querySelector('[data-invite-form]')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const f = new FormData(e.target);
-    try {
-      const res = await api.post('/api/invites', {
-        role_id: f.get('role_id'),
-        note: f.get('note'),
-        days: Number(f.get('days')),
-        quota_gb: Number(f.get('quota_gb')),
-        max_uses: 1,
-      });
-      const url = `${window.location.origin}${window.location.pathname}${res.link.replace(/^\//, '')}`;
-      await renderInvites(mount);
-      const box = mount.querySelector('[data-invite-link]');
-      box.hidden = false;
-      box.innerHTML = `<p>${escapeHtml(t('invite.share_once', 'Send this link to them. It works once and is shown only now:'))}</p>
-        <code>${escapeHtml(url)}</code>
-        <button type="button" class="btn-pill-toggle is-small" data-invite-copy>${escapeHtml(t('ui.copy_url', 'Copy URL'))}</button>`;
-      box.querySelector('[data-invite-copy]').onclick = () => copyTextToClipboard(url).then(() => showToast(t('ui.copied', 'Copied'), 'info'));
-    } catch (err) {
-      showToast(err.message || String(err), 'error');
-    }
-  });
-  mount.querySelectorAll('[data-invite-revoke]').forEach((b) =>
-    b.addEventListener('click', async () => {
-      await api.delete(`/api/invites/${encodeURIComponent(b.dataset.inviteRevoke)}`);
-      renderInvites(mount);
-    }),
-  );
-}
 
 export function inviteTokenFromHash(hash) {
   const m = /^#\/invite\/([A-Za-z0-9_-]{16,100})$/.exec(hash || '');

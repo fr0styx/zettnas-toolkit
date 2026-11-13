@@ -59,6 +59,9 @@ COLUMN_UPGRADES: dict[str, list[tuple[str, str, str]]] = {
         ("api_tokens", "last_client", "TEXT DEFAULT ''"),
         # COMP-13: when a family account may be signed in (backend/signin_hours.py)
         ("users", "signin_hours_json", "TEXT DEFAULT ''"),
+        # SET-19: what an invite gives besides its role (Users decision 11)
+        ("invites", "shares_json", "TEXT DEFAULT '{}'"),
+        ("invites", "signin_hours_json", "TEXT DEFAULT ''"),
     ],
     "history.db": [
         ("metrics", "net_rx_bytes_sec", "REAL DEFAULT 0.0"),
