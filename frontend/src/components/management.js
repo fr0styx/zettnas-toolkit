@@ -21,7 +21,7 @@ import { highlightEntry, mayNotOpen } from './management/sidebar-current.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
 import { fetchAndRenderAppCatalog, fetchAndRenderDockerContainers, presetCatalogSearch, refreshCatalogCountBadges, startDockerAutoRefresh, stopDockerAutoRefresh } from './management/docker.js';
 import { fetchAndRenderUpsTelemetry, initUpsDrawerControls, loadUpsConfigToDrawer, renderUpsTelemetry } from './management/ups.js';
-import { fetchAndRenderCopyHistory, fetchAndRenderNetworkTopology, fetchAndRenderReplication, fetchAndRenderTailscaleDetails, initNetworkControls } from './management/network.js';
+import { fetchAndRenderCopyHistory, fetchAndRenderNetworkTopology, fetchAndRenderReplication, fetchAndRenderTailscaleDetails, initNetworkControls, loadNetworkPage } from './management/network.js';
 import { fetchAndRenderDisksInventory } from './management/disks.js';
 import { closeHttpsGuideModal, handleSecurityAdvisorClick } from './management/security.js';
 import { applySystemUpdate, closeDiagnosticsPreviewModal, copySupportMarkdown, downloadDiagnosticsBundle, fetchAndRenderSystemAbout, previewDiagnosticsSummary, revertSystemUpdate, setUpdateChannel, syncBackupJobForm } from './management/system.js';
@@ -112,10 +112,11 @@ export const SUBPANE_MAP = {
   'mgmt-sec-network': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
   'mgmt-pane-network': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
   'mgmt-pane-network-physical': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
-  'mgmt-pane-network-wireguard': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-wireguard' },
-  'mgmt-pane-network-services': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-services' },
-  'mgmt-pane-network-ports': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-ports' },
-  'ports': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network-ports' },
+  'mgmt-pane-network-wireguard': { section: 'mgmt-sec-away', pane: 'mgmt-pane-network-wireguard' },
+  'mgmt-sec-away': { section: 'mgmt-sec-away', pane: 'mgmt-pane-network-wireguard' }, // Away from home, its own page (SET-24)
+  'mgmt-pane-network-services': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' }, // sections of one page now (SET-24)
+  'mgmt-pane-network-ports': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
+  'ports': { section: 'mgmt-sec-network', pane: 'mgmt-pane-network' },
 
   // --- Pillar 6: Hardware & Profiles ---
   'hardware': { section: 'mgmt-sec-hardware', pane: 'mgmt-pane-unraid' },
@@ -754,7 +755,7 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-copy') {
       fetchAndRenderCopyHistory();
     } else if (paneId === 'mgmt-pane-network' || paneId === 'mgmt-pane-network-physical') {
-      fetchAndRenderNetworkTopology();
+      loadNetworkPage();
     } else if (paneId === 'mgmt-pane-network-wireguard') {
       // COMP-01: the guided "Use from anywhere" card above the Tailscale details
       import('./remote-access.js').then((m) => m.installRemoteAccess(document.getElementById('remote-access-mount'))).catch(() => {});
@@ -1094,6 +1095,11 @@ export function initManagement() {
     } else if (SUBPANE_MAP[targetId]) {
       targetId = SUBPANE_MAP[targetId].section;
     }
+    const named = desiredSubPane ? document.getElementById(desiredSubPane) : null;
+    const scrollTo = named && !named.classList.contains('mgmt-tab-pane') ? named : null; // a section of a one-page pane (SET-24)
+    if (scrollTo) desiredSubPane = scrollTo.closest('.mgmt-tab-pane')?.id || desiredSubPane;
+    const home = (scrollTo || named)?.closest('.mgmt-detail-card');
+    if (home && home.id !== targetId) targetId = home.id; // a pane that moved to its own page
     if (targetId === 'mgmt-sec-docker' && typeof window.openContainersManager === 'function') {
       // Apps live in one place, the Apps window (UX-4)
       window.openContainersManager({ view: desiredSubPane === 'mgmt-pane-docker-catalog' ? 'catalog' : 'installed' });
@@ -1173,6 +1179,8 @@ export function initManagement() {
         sectionName = t('mgmt.hardware_title', 'Hardware & Profiles');
         if (typeof restoreHardwareTabsToManagement === 'function') restoreHardwareTabsToManagement();
         if (state.lastStats || state.latestStats) updateManagementTelemetry(state.lastStats || state.latestStats);
+      } else if (targetId === 'mgmt-sec-away') {
+        sectionName = t('mgmt.sidebar_away', 'Away from home');
       } else if (targetId === 'mgmt-sec-storage') {
         sectionName = t('mgmt.storage_title', 'Storage & Disks');
       } else if (targetId === 'mgmt-sec-ups') {
@@ -1210,7 +1218,7 @@ export function initManagement() {
         // the section starts at the top, or at the pane the link names when it is not the tab's first
         const contentPane = parentCard.closest('.mgmt-content-pane') || document.querySelector('.mgmt-content-pane');
         if (contentPane) contentPane.scrollTop = 0;
-        if (panes[0] !== desiredSubPane) document.getElementById(desiredSubPane)?.scrollIntoView?.({ block: 'start' });
+        (scrollTo || (panes[0] !== desiredSubPane ? document.getElementById(desiredSubPane) : null))?.scrollIntoView?.({ block: 'start' });
       } else {
         let activeTabBtn = parentCard.querySelector('.mgmt-inner-tab.active');
         if (!activeTabBtn) {

@@ -13,7 +13,7 @@ describe('needs Tailscale', () => {
     installNeedsTailscale(); // once is enough
     document.querySelector('[data-open-remote-access]').click();
     expect(open).toHaveBeenCalledTimes(1);
-    expect(open).toHaveBeenCalledWith('mgmt-sec-network', 'mgmt-pane-network-wireguard');
+    expect(open).toHaveBeenCalledWith('mgmt-sec-away', 'mgmt-pane-network-wireguard');
     document.body.click(); // a click elsewhere opens nothing
     expect(open).toHaveBeenCalledTimes(1);
   });
@@ -23,14 +23,14 @@ describe('needs Tailscale', () => {
     expect(() => openRemoteAccess()).not.toThrow();
   });
 
-  it('the cards that need Tailscale use it, and the tab is called Remote access', async () => {
+  it('the cards that need Tailscale use it, and the page is called Away from home', async () => {
     const { readFileSync } = await import('node:fs');
     const { resolve } = await import('node:path');
     for (const f of ['public-apps', 'family-access', 'fleet']) {
       expect(readFileSync(resolve(__dirname, `../components/management/${f}.js`), 'utf8')).toContain('needsTailscaleHtml(');
     }
     const html = readFileSync(resolve(__dirname, '../windows/management-window.html'), 'utf8');
-    expect(html).toContain('data-i18n="mgmt.subtab_network_wireguard">Remote access');
+    expect(html).toContain('data-mgmt-target="mgmt-sec-away" data-mgmt-pane="mgmt-pane-network-wireguard" data-route="away" title="Away from home"'); // its own page (SET-24)
     expect(html).not.toContain('network-canary-overlay');
     expect(html).not.toContain('value="macvlan"');
   });

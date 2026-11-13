@@ -7460,5 +7460,12 @@ export default {
   "settings.desktop_reset": "El escritorio ha vuelto a los valores predeterminados.",
   "mgmt.sidebar_calendar": "Calendario",
   "apps.experts_nets": "Para expertos: redes de Docker",
-  "apps.experts_nets_desc": "Las redes por las que tus apps se comunican. La mayoría de las apps no necesita una propia."
+  "apps.experts_nets_desc": "Las redes por las que tus apps se comunican. La mayoría de las apps no necesita una propia.",
+  "net.page_desc": "Cómo está conectado este NAS en casa y qué responde en él.",
+  "net.home_title": "Este NAS en casa",
+  "net.ports_hw_title": "Puertos de red",
+  "net.wiring_title": "Cableado",
+  "net.wiring_desc": "Agregados, puentes y VLAN, tal como los tiene el NAS.",
+  "net.answers_title": "Lo que responde en este NAS",
+  "net.answers_desc": "Cada puerto que responde en el NAS, y el servicio o la app que hay detrás."
 };

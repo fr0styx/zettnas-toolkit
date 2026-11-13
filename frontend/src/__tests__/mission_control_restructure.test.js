@@ -288,8 +288,8 @@ describe('Mission Control Navigation Restructure & Hardware Agnosticism', () => 
 
     // Pillar 5: Network & Sharing
     expect(SUBPANE_MAP['network']).toEqual({ section: 'mgmt-sec-network', pane: 'mgmt-pane-network' });
-    expect(SUBPANE_MAP['mgmt-pane-network-services']).toEqual({ section: 'mgmt-sec-network', pane: 'mgmt-pane-network-services' });
-    expect(SUBPANE_MAP['mgmt-pane-network-wireguard']).toEqual({ section: 'mgmt-sec-network', pane: 'mgmt-pane-network-wireguard' });
+    expect(SUBPANE_MAP['mgmt-pane-network-services']).toEqual({ section: 'mgmt-sec-network', pane: 'mgmt-pane-network' }); // one page (SET-24)
+    expect(SUBPANE_MAP['mgmt-pane-network-wireguard']).toEqual({ section: 'mgmt-sec-away', pane: 'mgmt-pane-network-wireguard' }); // its own page (SET-24)
     expect(SUBPANE_MAP['mgmt-pane-network-docker']).toBeUndefined(); // Docker networks are in the Apps window (SET-24)
 
     // Pillar 6: Hardware & Profiles

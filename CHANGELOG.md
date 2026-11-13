@@ -113,6 +113,11 @@ Kiboto was called ZettNAS before 2.0; the sections for earlier releases keep tha
 - **Docker networks are in Apps**: under the installed apps, folded as "For experts: Docker networks".
   Network no longer has a Docker tab.
 
+#### Changes
+
+- **Network is one page**: This NAS at home, Network ports, Wiring and What answers on this NAS, one
+  under the other, with no tabs. **Away from home** is a page of its own in the sidebar.
+
 ## v2.0.2 (2026-11-12)
 ### 🧭 A new Settings sidebar, five themes, honest pages, and remote access cut down to what works
 

@@ -287,6 +287,10 @@
 /* SET-19: My account */
 .account-body { display: flex; flex-direction: column; gap: 18px; }
 .account-section { display: flex; flex-direction: column; gap: 10px; }
+/* Network as one page: titled sections (SET-24) */
+.net-page-section { margin-top: 26px; }
+.net-page-section:first-child { margin-top: 0; }
+.net-page-section > .account-h { margin-bottom: 10px; }
 .account-h { margin: 0; font-size: var(--kb-fs-md, 15px); color: var(--c-text); }
 
 /* SET-24: Away from home's cards */

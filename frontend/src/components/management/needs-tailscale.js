@@ -12,7 +12,7 @@ export function needsTailscaleHtml(esc) {
 /** Opens Network → Remote access. */
 export function openRemoteAccess() {
   const open = /** @type {any} */ (window).openManagementWindow;
-  if (typeof open === 'function') open('mgmt-sec-network', 'mgmt-pane-network-wireguard');
+  if (typeof open === 'function') open('mgmt-sec-away', 'mgmt-pane-network-wireguard');
 }
 
 let _installed = false;

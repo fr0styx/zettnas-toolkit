@@ -4211,7 +4211,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
 /** Opens the card that turns share links on from anywhere (Away from home; SET-24). */
 export function openShareLinksSettings() {
   const open = /** @type {any} */ (window).openManagementWindow;
-  if (typeof open === 'function') open('mgmt-sec-network', 'mgmt-pane-network-wireguard');
+  if (typeof open === 'function') open('mgmt-sec-away', 'mgmt-pane-network-wireguard');
 }
 
 /** A link that works only at home gets a way to change that, which closes the dialog first. */

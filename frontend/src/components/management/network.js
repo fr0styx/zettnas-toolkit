@@ -1394,20 +1394,17 @@ export async function deleteVlanSubinterface(vlanName) {
   );
 }
 
+/** Network is one page (SET-24): the layout, the name card (NFEAT-8) and what answers load
+ *  together; each loaded with its own tab before. */
+export function loadNetworkPage() {
+  fetchAndRenderNetworkTopology();
+  import('./nas-name.js').then((m) => m.loadNasNameCard()).catch(() => {});
+  fetchListeningPorts();
+}
+
 export function initNetworkControls() {
   installNeedsTailscale();
   initNetworkPortsInspector();
-  const servicesBtn = /** @type {HTMLElement | null} */ (document.querySelector('[data-tab-target="mgmt-pane-network-services"]'));
-  if (servicesBtn && !servicesBtn.dataset.boundNasName) {
-    servicesBtn.dataset.boundNasName = '1';
-    // NFEAT-8: <name>.local, loaded when its tab opens
-    servicesBtn.addEventListener('click', () => import('./nas-name.js').then((m) => m.loadNasNameCard()));
-  }
-  const portsBtn = document.querySelector('[data-tab-target="mgmt-pane-network-ports"]');
-  if (portsBtn && !portsBtn.dataset.boundFetch) {
-    portsBtn.dataset.boundFetch = '1';
-    portsBtn.addEventListener('click', () => fetchListeningPorts());
-  }
   const btnOpenHostIp = document.getElementById('btn-open-host-ip-modal');
   if (btnOpenHostIp && !btnOpenHostIp.dataset.bound) {
     btnOpenHostIp.dataset.bound = '1';

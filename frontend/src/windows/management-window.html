@@ -57,7 +57,7 @@
             <svg class="mgmt-sidebar-svg"><use href="#i-users"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_people">People</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-network" data-mgmt-pane="mgmt-pane-network-wireguard" data-route="away" title="Away from home" data-i18n-title="mgmt.sidebar_away">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-away" data-mgmt-pane="mgmt-pane-network-wireguard" data-route="away" title="Away from home" data-i18n-title="mgmt.sidebar_away">
             <svg class="mgmt-sidebar-svg"><use href="#i-globe"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_away">Away from home</span>
           </button>
@@ -1244,31 +1244,8 @@
             </div>
           </div>
 
-          <!-- 3. Network & Virtual Switch Inspector (Standalone Top-Level Section) -->
+          <!-- 3. Network: one page of titled sections, no tabs (SET-24) -->
           <div id="mgmt-sec-network" class="mgmt-detail-card" style="display: none;">
-            <!-- Inner Tab Bar for Network & Switch -->
-            <div class="mgmt-sticky-subnav">
-              <div class="mgmt-inner-tabs" role="tablist">
-                <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-network">
-                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-net"/></svg>
-                  <span data-i18n="mgmt.subtab_network_physical">Switch & Physical</span>
-                </button>
-                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-wireguard">
-                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-shield"/></svg>
-                  <span data-i18n="mgmt.subtab_network_wireguard">Remote access</span>
-                </button>
-                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-services">
-                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
-                  <span data-i18n="mgmt.subtab_network_services">File Sharing Services</span>
-                </button>
-                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-network-ports">
-                  <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-terminal"/></svg>
-                  <span data-i18n="mgmt.subtab_network_ports">Ports & Listeners</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Sub-tab 1: Visual Network & Physical Switch -->
             <div id="mgmt-pane-network" class="mgmt-tab-pane" style="display: block;">
               <div class="mgmt-card-intro net-row">
                 <div>
@@ -1276,9 +1253,7 @@
                     <svg class="ic"><use href="#i-net"/></svg>
                     <span data-i18n="mgmt.network_sec_title">Network</span>
                   </div>
-                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.network_sec_desc">
-                    Host interface carriers, link negotiation speeds (10GbE / 2.5GbE / 1GbE), bridges, and physical switch faceplate.
-                  </div>
+                  <div class="mgmt-card-intro-desc" data-i18n="net.page_desc">How this NAS is connected at home, and what answers on it.</div>
                 </div>
                 <div class="net-row-2">
                   <button class="btn-pill-toggle" id="btn-refresh-network-topology" title="Refresh Network Topology" data-i18n-title="ui.refresh_network_topology"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
@@ -1286,6 +1261,8 @@
               </div>
 
               <div class="mgmt-detail-body">
+                <section id="mgmt-pane-network-services" class="net-page-section" aria-labelledby="net-home-title">
+                  <h3 class="account-h" id="net-home-title" data-i18n="net.home_title">This NAS at home</h3>
                 <!-- 4 KPI Metrics Header -->
                 <div class="network-kpi-grid">
                   <div class="network-kpi-card" id="net-kpi-ip-card">
@@ -1306,13 +1283,36 @@
                     <div class="network-kpi-val text-emerald" id="net-kpi-speed">--</div>
                     <div class="network-kpi-sub" id="net-kpi-carrier">--</div>
                   </div>
-                  <div class="network-kpi-card">
-                    <div class="network-kpi-label" data-i18n="mw.virtual_fleet">Virtual Fleet</div>
-                    <div class="network-kpi-val" id="net-kpi-docker">--</div>
-                    <div class="network-kpi-sub" id="net-kpi-containers">--</div>
-                  </div>
                 </div>
+                <div class="nsv-grid" id="network-services-grid">
+                  <!-- Find this NAS by name (NFEAT-8) -->
+                  <div class="nsv-col-box" id="nas-name-card">
+                    <div class="nsv-row-3">
+                      <div class="nsv-row-4">
+                        <span class="nsv-fs18" aria-hidden="true">🔎</span>
+                        <div>
+                          <div class="nsv-fs13-bold-strong" data-i18n="nas_name.title">Find this NAS by name</div>
+                          <div class="nsv-xs-muted" id="nas-name-status" aria-live="polite">…</div>
+                        </div>
+                      </div>
+                      <button type="button" class="btn-pill-toggle" id="nas-name-toggle" aria-pressed="false" aria-labelledby="nas-name-title-label" data-i18n="nas_name.btn_off">Off</button>
+                    </div>
+                    <div class="nsv-xs-muted-2" id="nas-name-title-label" data-i18n="nas_name.help">Computers and phones on this network reach the NAS by name: in a browser, in Finder and as \\name.local in Windows.</div>
+                    <div class="nsv-row-4">
+                      <label class="nsv-xs-muted" for="nas-name-input" data-i18n="nas_name.label">Name</label>
+                      <input type="text" class="nas-name-input" id="nas-name-input" spellcheck="false" autocomplete="off" maxlength="63" />
+                      <span class="nsv-xs-muted" translate="no">.local</span>
+                      <button type="button" class="btn-pill-toggle is-small" id="nas-name-save" data-i18n="nas_name.save">Save</button>
+                    </div>
+                    <a class="nsv-xs-muted-2" id="nas-name-link" href="#" target="_blank" rel="noopener" hidden></a>
+                    <div class="nsv-xs-muted-2" id="nas-name-old" hidden></div>
+                  </div>
 
+                </div>
+                </section>
+
+                <section id="net-sec-ports" class="net-page-section" aria-labelledby="net-ports-hw-title">
+                  <h3 class="account-h" id="net-ports-hw-title" data-i18n="net.ports_hw_title">Network ports</h3>
                 <!-- Visual Front-Panel Switch Jack Matrix -->
                 <div class="network-section-header">
                   <span class="network-section-title" data-i18n="mw.hardware_switch_ports_physical_jacks">HARDWARE SWITCH PORTS (PHYSICAL JACKS)</span>
@@ -1349,7 +1349,11 @@
                     </tbody>
                   </table>
                 </div>
+                </section>
 
+                <section id="net-sec-wiring" class="net-page-section" aria-labelledby="net-wiring-title">
+                  <h3 class="account-h" id="net-wiring-title" data-i18n="net.wiring_title">Wiring</h3>
+                  <p class="mgmt-card-intro-desc" data-i18n="net.wiring_desc">Bonds, bridges and VLANs, as the NAS has them.</p>
                 <!-- Virtual Switches, Bonds & Bridges -->
                 <div class="network-section-header net-x">
                   <span class="network-section-title" data-i18n="mw.host_bridges_and_bonding_groups">HOST BRIDGES & BONDING GROUPS</span>
@@ -1382,11 +1386,46 @@
                     </tbody>
                   </table>
                 </div>
+                </section>
               </div>
-            </div>
 
-            <!-- Sub-tab 2: WireGuard & Tailscale Mesh VPN -->
-            <div id="mgmt-pane-network-wireguard" class="mgmt-tab-pane" style="display: none;">
+                        <section id="mgmt-pane-network-ports" class="net-page-section" aria-labelledby="net-answers-title">
+              <div class="mgmt-card-intro nport-row">
+                <div>
+                  <h3 class="account-h" id="net-answers-title" data-i18n="net.answers_title">What answers on this NAS</h3>
+                  <div class="mgmt-card-intro-desc" data-i18n="net.answers_desc">Every port that answers on the NAS, and the service or app behind it.</div>
+                </div>
+                <div class="nport-row-2">
+                  <input type="text" id="net-ports-search" class="ci-input nport-xs" placeholder="Filter port, service, container..." data-i18n-placeholder="ui.filter_port_service_container" aria-label="Filter port, service, container..." data-i18n-aria-label="ui.filter_port_service_container">
+                  <button class="btn-pill-toggle" id="btn-refresh-net-ports"><span aria-hidden="true">🔄</span> <span data-i18n="mw.refresh_ports">Refresh Ports</span></button>
+                </div>
+              </div>
+              <div class="mgmt-detail-body">
+                <div class="table-wrap nport-x" tabindex="0">
+                  <table class="ci-table" id="table-net-listening-ports">
+                    <thead>
+                      <tr>
+                        <th class="nport-size" data-i18n="mw.port">Port</th>
+                        <th class="nport-size-2" data-i18n="mw.proto">Proto</th>
+                        <th class="nport-size-3" data-i18n="mw.bind_ip">Bind IP</th>
+                        <th data-i18n="mw.service_protocol">Service / Protocol</th>
+                        <th data-i18n="mw.container_process">Container / Process</th>
+                        <th class="nport-size-4" data-i18n="mw.status">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="net-listening-ports-tbody">
+                      <tr><td class="nport-muted" colspan="6" data-i18n="mw.loading_active_listening_sockets">Loading active listening sockets...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+            </div>
+          </div>
+
+          <!-- Away from home: its own page (SET-24; it was a tab of Network) -->
+          <div id="mgmt-sec-away" class="mgmt-detail-card" style="display: none;">
+            <div id="mgmt-pane-network-wireguard" class="mgmt-tab-pane" style="display: block;">
               <div id="remote-access-mount"></div>
               <section class="away-section" aria-labelledby="away-cards-title">
                 <h3 id="away-cards-title" class="account-h" data-i18n="away.cards_title">Share links, apps and family from anywhere</h3>
@@ -1519,89 +1558,6 @@
                     </table>
                   </div>
                 </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Sub-tab 4: File Sharing Services (Samba / NFS / SFTP) -->
-            <div id="mgmt-pane-network-services" class="mgmt-tab-pane" style="display: none;">
-              <div class="mgmt-card-intro nsv-row">
-                <div>
-                  <div class="mgmt-card-intro-title">
-                    <svg class="ic"><use href="#i-storage"/></svg>
-                    <span data-i18n="mgmt.subtab_network_services">File Sharing Protocols & Daemon Services</span>
-                  </div>
-                  <div class="mgmt-card-intro-desc" data-i18n="mw.daemon_status_and_line_rate_protocol">
-                    Daemon status and line-rate protocol listeners for Samba (SMB3), NFSv4, and Inbound SFTP.
-                  </div>
-                </div>
-                <div class="nsv-row-2">
-                  <button class="btn-pill-toggle" id="btn-goto-storage-shares">📁 <span data-i18n="mgmt.subtab_shares">Manage Network Shares</span> ➔</button>
-                </div>
-              </div>
-              <div class="mgmt-detail-body">
-                <div class="nsv-grid" id="network-services-grid">
-                  <!-- Find this NAS by name (NFEAT-8) -->
-                  <div class="nsv-col-box" id="nas-name-card">
-                    <div class="nsv-row-3">
-                      <div class="nsv-row-4">
-                        <span class="nsv-fs18" aria-hidden="true">🔎</span>
-                        <div>
-                          <div class="nsv-fs13-bold-strong" data-i18n="nas_name.title">Find this NAS by name</div>
-                          <div class="nsv-xs-muted" id="nas-name-status" aria-live="polite">…</div>
-                        </div>
-                      </div>
-                      <button type="button" class="btn-pill-toggle" id="nas-name-toggle" aria-pressed="false" aria-labelledby="nas-name-title-label" data-i18n="nas_name.btn_off">Off</button>
-                    </div>
-                    <div class="nsv-xs-muted-2" id="nas-name-title-label" data-i18n="nas_name.help">Computers and phones on this network reach the NAS by name: in a browser, in Finder and as \\name.local in Windows.</div>
-                    <div class="nsv-row-4">
-                      <label class="nsv-xs-muted" for="nas-name-input" data-i18n="nas_name.label">Name</label>
-                      <input type="text" class="nas-name-input" id="nas-name-input" spellcheck="false" autocomplete="off" maxlength="63" />
-                      <span class="nsv-xs-muted" translate="no">.local</span>
-                      <button type="button" class="btn-pill-toggle is-small" id="nas-name-save" data-i18n="nas_name.save">Save</button>
-                    </div>
-                    <a class="nsv-xs-muted-2" id="nas-name-link" href="#" target="_blank" rel="noopener" hidden></a>
-                    <div class="nsv-xs-muted-2" id="nas-name-old" hidden></div>
-                  </div>
-
-                </div>
-              </div>
-            </div>
-
-            <!-- Sub-tab 5: Ports & Listeners -->
-            <div id="mgmt-pane-network-ports" class="mgmt-tab-pane" style="display: none;">
-              <div class="mgmt-card-intro nport-row">
-                <div>
-                  <div class="mgmt-card-intro-title">
-                    <svg class="ic"><use href="#i-terminal"/></svg>
-                    <span data-i18n="mgmt.network_ports_title">Active Listening Ports & Sockets</span>
-                  </div>
-                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.network_ports_desc">
-                    Real-time host socket inspector correlating listening TCP and UDP ports with NAS services and Docker containers.
-                  </div>
-                </div>
-                <div class="nport-row-2">
-                  <input type="text" id="net-ports-search" class="ci-input nport-xs" placeholder="Filter port, service, container..." data-i18n-placeholder="ui.filter_port_service_container" aria-label="Filter port, service, container..." data-i18n-aria-label="ui.filter_port_service_container">
-                  <button class="btn-pill-toggle" id="btn-refresh-net-ports"><span aria-hidden="true">🔄</span> <span data-i18n="mw.refresh_ports">Refresh Ports</span></button>
-                </div>
-              </div>
-              <div class="mgmt-detail-body">
-                <div class="table-wrap nport-x" tabindex="0">
-                  <table class="ci-table" id="table-net-listening-ports">
-                    <thead>
-                      <tr>
-                        <th class="nport-size" data-i18n="mw.port">Port</th>
-                        <th class="nport-size-2" data-i18n="mw.proto">Proto</th>
-                        <th class="nport-size-3" data-i18n="mw.bind_ip">Bind IP</th>
-                        <th data-i18n="mw.service_protocol">Service / Protocol</th>
-                        <th data-i18n="mw.container_process">Container / Process</th>
-                        <th class="nport-size-4" data-i18n="mw.status">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody id="net-listening-ports-tbody">
-                      <tr><td class="nport-muted" colspan="6" data-i18n="mw.loading_active_listening_sockets">Loading active listening sockets...</td></tr>
-                    </tbody>
-                  </table>
                 </div>
               </div>
             </div>

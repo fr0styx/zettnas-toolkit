@@ -61,6 +61,7 @@ describe('Mission Control 6-Pillar Information Architecture & Hardware Agnostici
       'mgmt-sec-docker',
       'mgmt-sec-vms',
       'mgmt-sec-network',
+      'mgmt-sec-away', // Away from home, its own page (SET-24)
       'mgmt-sec-hardware',
       'mgmt-sec-ups',
       'mgmt-sec-system-group',

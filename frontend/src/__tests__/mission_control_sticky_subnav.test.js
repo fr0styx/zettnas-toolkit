@@ -11,7 +11,7 @@ describe('Mission Control Fixated Sticky Sub-Navigation Bar', () => {
 
     const expectedSections = [
       'mgmt-sec-wallpaper',
-      'mgmt-sec-network',
+      // not Network: one page of sections since SET-24
       'mgmt-sec-docker',
       'mgmt-sec-vms',
       'mgmt-sec-hardware',

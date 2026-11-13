@@ -7460,5 +7460,12 @@ export default {
   "settings.desktop_reset": "桌面已恢复为默认设置。",
   "mgmt.sidebar_calendar": "日历",
   "apps.experts_nets": "专家选项：Docker 网络",
-  "apps.experts_nets_desc": "你的应用之间相互通信所用的网络。大多数应用不需要自己的网络。"
+  "apps.experts_nets_desc": "你的应用之间相互通信所用的网络。大多数应用不需要自己的网络。",
+  "net.page_desc": "这台 NAS 在家中如何连接，以及哪些服务在上面响应。",
+  "net.home_title": "家中的这台 NAS",
+  "net.ports_hw_title": "网络端口",
+  "net.wiring_title": "接线",
+  "net.wiring_desc": "NAS 上现有的链路聚合、网桥和 VLAN。",
+  "net.answers_title": "这台 NAS 上有哪些服务在响应",
+  "net.answers_desc": "NAS 上每个正在响应的端口，以及背后的服务或应用。"
 };
